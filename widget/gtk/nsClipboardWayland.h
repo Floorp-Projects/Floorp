@@ -13,27 +13,24 @@
 #include <nsTArray.h>
 
 #include "mozilla/Mutex.h"
+#include "mozilla/Maybe.h"
 #include "nsIThread.h"
-#include "mozilla/UniquePtr.h"
 #include "nsClipboard.h"
 #include "nsWaylandDisplay.h"
 
-class nsRetrievalContextWayland : public nsRetrievalContext {
+class nsRetrievalContextWayland final : public nsRetrievalContext {
  public:
   nsRetrievalContextWayland();
 
   // Successful call of GetClipboardData()/GetClipboardText() needs to be paired
   // with ReleaseClipboardData().
-  virtual const char* GetClipboardData(const char* aMimeType,
-                                       int32_t aWhichClipboard,
-                                       uint32_t* aContentLength) override;
-  virtual const char* GetClipboardText(int32_t aWhichClipboard) override;
-  virtual void ReleaseClipboardData(const char** aClipboardData) override;
+  ClipboardData GetClipboardData(const char* aMimeType,
+                                 int32_t aWhichClipboard) override;
+  mozilla::GUniquePtr<char> GetClipboardText(int32_t aWhichClipboard) override;
 
   // GetTargets() uses clipboard data internally so it can't be used between
   // GetClipboardData()/GetClipboardText() and ReleaseClipboardData() calls.
-  virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
-                              int* aTargetNum) override;
+  ClipboardTargets GetTargets(int32_t aWhichClipboard) override;
 
   void TransferClipboardData(ClipboardDataType aDataType,
                              int aClipboardRequestNumber, const void* aData);
@@ -41,13 +38,11 @@ class nsRetrievalContextWayland : public nsRetrievalContext {
   bool HasSelectionSupport(void) override { return true; }
 
  private:
-  bool WaitForClipboardContent();
+  ClipboardData WaitForClipboardContent();
+  int PrepareNewClipboardRequest();
 
- private:
-  int mClipboardRequestNumber;
-  bool mClipboardDataReceived;
-  char* mClipboardData;
-  uint32_t mClipboardDataLength;
+  int mClipboardRequestNumber = 0;
+  mozilla::Maybe<ClipboardData> mClipboardData;
   mozilla::Mutex mMutex;
 };
 

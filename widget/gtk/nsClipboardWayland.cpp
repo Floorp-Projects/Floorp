@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -28,12 +28,8 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-nsRetrievalContextWayland::nsRetrievalContextWayland(void)
-    : mClipboardRequestNumber(0),
-      mClipboardDataReceived(),
-      mClipboardData(nullptr),
-      mClipboardDataLength(0),
-      mMutex("nsRetrievalContextWayland") {}
+nsRetrievalContextWayland::nsRetrievalContextWayland()
+    : mMutex("nsRetrievalContextWayland") {}
 
 struct AsyncClipboardData {
   AsyncClipboardData(ClipboardDataType aDataType, int aClipboardRequestNumber,
@@ -50,7 +46,7 @@ static void wayland_clipboard_contents_received_async(
     GtkClipboard* clipboard, GtkSelectionData* selection_data, gpointer data) {
   LOGCLIP("wayland_clipboard_contents_received_async() selection_data = %p\n",
           selection_data);
-  AsyncClipboardData* fastTrack = static_cast<AsyncClipboardData*>(data);
+  auto* fastTrack = static_cast<AsyncClipboardData*>(data);
   fastTrack->mRetrievalContex->TransferClipboardData(
       fastTrack->mDataType, fastTrack->mClipboardRequestNumber, selection_data);
   delete fastTrack;
@@ -59,7 +55,7 @@ static void wayland_clipboard_contents_received_async(
 static void wayland_clipboard_text_received(GtkClipboard* clipboard,
                                             const gchar* text, gpointer data) {
   LOGCLIP("wayland_clipboard_text_received() text = %p\n", text);
-  AsyncClipboardData* fastTrack = static_cast<AsyncClipboardData*>(data);
+  auto* fastTrack = static_cast<AsyncClipboardData*>(data);
   fastTrack->mRetrievalContex->TransferClipboardData(
       fastTrack->mDataType, fastTrack->mClipboardRequestNumber, (void*)text);
   delete fastTrack;
@@ -79,17 +75,18 @@ void nsRetrievalContextWayland::TransferClipboardData(
   }
   LOGCLIP("    request number matches\n");
 
-  MOZ_RELEASE_ASSERT(mClipboardData == nullptr && mClipboardDataLength == 0,
+  MOZ_RELEASE_ASSERT(mClipboardData.isNothing(),
                      "Clipboard contains old data?");
 
-  int dataLength = 0;
-  if (aDataType == CLIPBOARD_TARGETS || aDataType == CLIPBOARD_DATA) {
+  uint32_t dataLength = 0;
+  if (aDataType == ClipboardDataType::Targets ||
+      aDataType == ClipboardDataType::Data) {
     dataLength = gtk_selection_data_get_length((GtkSelectionData*)aData);
   } else {
     dataLength = aData ? strlen((const char*)aData) : 0;
   }
 
-  mClipboardDataReceived = true;
+  mClipboardData = Some(ClipboardData());
 
   // Negative size means no data or data error.
   if (dataLength <= 0) {
@@ -98,119 +95,81 @@ void nsRetrievalContextWayland::TransferClipboardData(
   }
 
   switch (aDataType) {
-    case CLIPBOARD_TARGETS: {
+    case ClipboardDataType::Targets: {
       LOGCLIP("    getting %d bytes of clipboard targets.\n", dataLength);
       gint n_targets = 0;
       GdkAtom* targets = nullptr;
       if (!gtk_selection_data_get_targets((GtkSelectionData*)aData, &targets,
                                           &n_targets) ||
           !n_targets) {
-        // We failed to get targes
+        // We failed to get targets
         return;
       }
-      mClipboardData = reinterpret_cast<char*>(targets);
-      mClipboardDataLength = n_targets;
+      mClipboardData->SetTargets(
+          ClipboardTargets{GUniquePtr<GdkAtom>(targets), uint32_t(n_targets)});
       break;
     }
-    case CLIPBOARD_TEXT: {
+    case ClipboardDataType::Text: {
       LOGCLIP("    getting %d bytes of text.\n", dataLength);
-      mClipboardDataLength = dataLength;
-      mClipboardData = reinterpret_cast<char*>(
-          g_malloc(sizeof(char) * (mClipboardDataLength + 1)));
-      memcpy(mClipboardData, aData, sizeof(char) * mClipboardDataLength);
-      mClipboardData[mClipboardDataLength] = '\0';
-      LOGCLIP("    done, mClipboardData = %p\n", mClipboardData);
+      mClipboardData->SetText(
+          Span(static_cast<const char*>(aData), dataLength));
+      LOGCLIP("    done, mClipboardData = %p\n", mClipboardData->mData.get());
       break;
     }
-    case CLIPBOARD_DATA: {
+    case ClipboardDataType::Data: {
       LOGCLIP("    getting %d bytes of data.\n", dataLength);
-      mClipboardDataLength = dataLength;
-      mClipboardData = reinterpret_cast<char*>(
-          g_malloc(sizeof(char) * mClipboardDataLength));
-      memcpy(mClipboardData,
-             gtk_selection_data_get_data((GtkSelectionData*)aData),
-             sizeof(char) * mClipboardDataLength);
-      LOGCLIP("    done, mClipboardData = %p\n", mClipboardData);
+      mClipboardData->SetData(Span(
+          gtk_selection_data_get_data((GtkSelectionData*)aData), dataLength));
+      LOGCLIP("    done, mClipboardData = %p\n", mClipboardData->mData.get());
       break;
     }
   }
 }
 
-GdkAtom* nsRetrievalContextWayland::GetTargets(int32_t aWhichClipboard,
-                                               int* aTargetNum) {
+ClipboardTargets nsRetrievalContextWayland::GetTargets(
+    int32_t aWhichClipboard) {
   LOGCLIP("nsRetrievalContextWayland::GetTargets()\n");
 
   if (!mMutex.TryLock()) {
     LOGCLIP("  nsRetrievalContextWayland is already used!\n");
-    *aTargetNum = 0;
-    return nullptr;
+    return {};
   }
   auto releaseLock = MakeScopeExit([&] { mMutex.Unlock(); });
 
-  MOZ_RELEASE_ASSERT(mClipboardData == nullptr && mClipboardDataLength == 0,
-                     "Clipboard contains old data?");
+  int clipboardRequest = PrepareNewClipboardRequest();
 
   GdkAtom selection = GetSelectionAtom(aWhichClipboard);
-  mClipboardDataReceived = false;
-  mClipboardRequestNumber++;
   gtk_clipboard_request_contents(
       gtk_clipboard_get(selection), gdk_atom_intern("TARGETS", FALSE),
       wayland_clipboard_contents_received_async,
-      new AsyncClipboardData(CLIPBOARD_TARGETS, mClipboardRequestNumber, this));
+      new AsyncClipboardData(ClipboardDataType::Targets, clipboardRequest,
+                             this));
 
-  if (!WaitForClipboardContent()) {
-    *aTargetNum = 0;
-    return nullptr;
-  }
-
-  // mClipboardDataLength is only signed integer, see
-  // nsRetrievalContextWayland::TransferClipboardData()
-  *aTargetNum = (int)mClipboardDataLength;
-  GdkAtom* targets = static_cast<GdkAtom*>((void*)mClipboardData);
-
-  mClipboardDataLength = 0;
-  mClipboardData = nullptr;
-
-  return targets;
+  return WaitForClipboardContent().ExtractTargets();
 }
 
-const char* nsRetrievalContextWayland::GetClipboardData(
-    const char* aMimeType, int32_t aWhichClipboard, uint32_t* aContentLength) {
+ClipboardData nsRetrievalContextWayland::GetClipboardData(
+    const char* aMimeType, int32_t aWhichClipboard) {
   LOGCLIP("nsRetrievalContextWayland::GetClipboardData() mime %s\n", aMimeType);
 
   if (!mMutex.TryLock()) {
     LOGCLIP("  nsRetrievalContextWayland is already used!\n");
-    *aContentLength = 0;
-    return nullptr;
+    return {};
   }
   auto releaseLock = MakeScopeExit([&] { mMutex.Unlock(); });
 
-  MOZ_RELEASE_ASSERT(mClipboardData == nullptr && mClipboardDataLength == 0,
-                     "Clipboard contains old data?");
+  int clipboardRequest = PrepareNewClipboardRequest();
 
   GdkAtom selection = GetSelectionAtom(aWhichClipboard);
-  mClipboardDataReceived = false;
-  mClipboardRequestNumber++;
   gtk_clipboard_request_contents(
       gtk_clipboard_get(selection), gdk_atom_intern(aMimeType, FALSE),
       wayland_clipboard_contents_received_async,
-      new AsyncClipboardData(CLIPBOARD_DATA, mClipboardRequestNumber, this));
+      new AsyncClipboardData(ClipboardDataType::Data, clipboardRequest, this));
 
-  if (!WaitForClipboardContent()) {
-    *aContentLength = 0;
-    return nullptr;
-  }
-
-  *aContentLength = mClipboardDataLength;
-  const char* data = mClipboardData;
-
-  mClipboardDataLength = 0;
-  mClipboardData = nullptr;
-
-  return data;
+  return WaitForClipboardContent();
 }
 
-const char* nsRetrievalContextWayland::GetClipboardText(
+GUniquePtr<char> nsRetrievalContextWayland::GetClipboardText(
     int32_t aWhichClipboard) {
   GdkAtom selection = GetSelectionAtom(aWhichClipboard);
 
@@ -223,32 +182,26 @@ const char* nsRetrievalContextWayland::GetClipboardText(
   }
   auto releaseLock = MakeScopeExit([&] { mMutex.Unlock(); });
 
-  MOZ_RELEASE_ASSERT(mClipboardData == nullptr && mClipboardDataLength == 0,
-                     "Clipboard contains old data?");
-
-  mClipboardDataReceived = false;
-  mClipboardRequestNumber++;
+  int clipboardRequest = PrepareNewClipboardRequest();
   gtk_clipboard_request_text(
       gtk_clipboard_get(selection), wayland_clipboard_text_received,
-      new AsyncClipboardData(CLIPBOARD_TEXT, mClipboardRequestNumber, this));
+      new AsyncClipboardData(ClipboardDataType::Text, clipboardRequest, this));
 
-  if (!WaitForClipboardContent()) {
-    return nullptr;
-  }
-
-  const char* data = mClipboardData;
-
-  mClipboardDataLength = 0;
-  mClipboardData = nullptr;
-
-  return data;
+  return WaitForClipboardContent().mData;
 }
 
-bool nsRetrievalContextWayland::WaitForClipboardContent() {
+int nsRetrievalContextWayland::PrepareNewClipboardRequest() {
+  MOZ_DIAGNOSTIC_ASSERT(mClipboardData.isNothing(),
+                        "Clipboard contains old data?");
+  mClipboardData.reset();
+  return ++mClipboardRequestNumber;
+}
+
+ClipboardData nsRetrievalContextWayland::WaitForClipboardContent() {
   int iteration = 1;
 
   PRTime entryTime = PR_Now();
-  while (!mClipboardDataReceived) {
+  while (mClipboardData.isNothing()) {
     if (iteration++ > kClipboardFastIterationNum) {
       /* sleep for 10 ms/iteration */
       PR_Sleep(PR_MillisecondsToInterval(10));
@@ -262,15 +215,8 @@ bool nsRetrievalContextWayland::WaitForClipboardContent() {
     gtk_main_iteration();
   }
 
-  if (!mClipboardDataReceived) {
-    mClipboardDataLength = 0;
-    mClipboardData = nullptr;
+  if (mClipboardData.isNothing()) {
+    return {};
   }
-  return mClipboardDataReceived;
-}
-
-void nsRetrievalContextWayland::ReleaseClipboardData(
-    const char** aClipboardData) {
-  g_free((void*)*aClipboardData);
-  *aClipboardData = nullptr;
+  return mClipboardData.extract();
 }
