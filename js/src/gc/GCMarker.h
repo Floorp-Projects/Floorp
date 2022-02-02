@@ -376,7 +376,8 @@ class GCMarker final : public JSTracer {
   // Mark through edges whose target color depends on the colors of two source
   // entities (eg a WeakMap and one of its keys), and push the target onto the
   // mark stack.
-  void markEphemeronEdges(gc::EphemeronEdgeVector& edges);
+  void markEphemeronEdges(gc::EphemeronEdgeVector& edges,
+                          gc::CellColor srcColor);
 
   size_t getMarkCount() const { return markCount; }
   void clearMarkCount() { markCount = 0; }

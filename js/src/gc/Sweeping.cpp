@@ -471,14 +471,20 @@ void GCRuntime::waitBackgroundFreeEnd() { freeTask.join(); }
 template <class ZoneIterT>
 IncrementalProgress GCRuntime::markWeakReferences(
     SliceBudget& incrementalBudget) {
+  MOZ_ASSERT(!marker.isWeakMarking());
+
   gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP_MARK_WEAK);
 
   auto unlimited = SliceBudget::unlimited();
   SliceBudget& budget =
       marker.incrementalWeakMapMarkingEnabled ? incrementalBudget : unlimited;
 
-  // We may have already entered weak marking mode.
-  if (!marker.isWeakMarking() && marker.enterWeakMarkingMode()) {
+  // Ensure we don't return to the mutator while we're still in weak marking
+  // mode.
+  auto leaveOnExit =
+      mozilla::MakeScopeExit([&] { marker.leaveWeakMarkingMode(); });
+
+  if (marker.enterWeakMarkingMode()) {
     // Do not rely on the information about not-yet-marked weak keys that have
     // been collected by barriers. Clear out the gcEphemeronEdges entries and
     // rebuild the full table. Note that this a cross-zone operation; delegate
@@ -495,19 +501,10 @@ IncrementalProgress GCRuntime::markWeakReferences(
 
     for (ZoneIterT zone(this); !zone.done(); zone.next()) {
       if (zone->enterWeakMarkingMode(&marker, budget) == NotFinished) {
-        MOZ_ASSERT(marker.incrementalWeakMapMarkingEnabled);
-        marker.leaveWeakMarkingMode();
         return NotFinished;
       }
     }
   }
-
-  // This is not strictly necessary; if we yield here, we could run the mutator
-  // in weak marking mode and unmark gray would end up doing the key lookups.
-  // But it seems better to not slow down barriers. Re-entering weak marking
-  // mode will be fast since already-processed markables have been removed.
-  auto leaveOnExit =
-      mozilla::MakeScopeExit([&] { marker.leaveWeakMarkingMode(); });
 
   bool markedAny = true;
   while (markedAny) {
