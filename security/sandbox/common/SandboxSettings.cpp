@@ -6,6 +6,8 @@
 
 #include "mozilla/SandboxSettings.h"
 #include "mozISandboxSettings.h"
+#include "nsIXULRuntime.h"
+#include "nsServiceManagerUtils.h"
 
 #include "mozilla/Components.h"
 #include "mozilla/Preferences.h"
@@ -79,10 +81,38 @@ const char* ContentWin32kLockdownStateToString(
   MOZ_CRASH("Should never reach here");
 }
 
+bool InSafeMode() {
+  static bool sSafeModeInitialized = false;
+  static bool sInSafeMode = false;
+
+  if (!sSafeModeInitialized) {
+    sSafeModeInitialized = true;
+    nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
+    if (xr) {
+      xr->GetInSafeMode(&sInSafeMode);
+    } else {
+      MOZ_CRASH("could not get service");
+    }
+  }
+  return sInSafeMode;
+}
+
 ContentWin32kLockdownState GetContentWin32kLockdownState() {
 #ifdef XP_WIN
   static ContentWin32kLockdownState result = [] {
     ContentWin32kLockdownState state = [] {
+      if (InSafeMode()) {
+        return ContentWin32kLockdownState::DisabledBySafeMode;
+      }
+
+      if (PR_GetEnv("MOZ_ENABLE_WIN32K")) {
+        return ContentWin32kLockdownState::DisabledByEnvVar;
+      }
+
+      if (!mozilla::BrowserTabsRemoteAutostart()) {
+        return ContentWin32kLockdownState::DisabledByE10S;
+      }
+
       if (!IsWin8OrLater()) {
         return ContentWin32kLockdownState::OperatingSystemNotSupported;
       }
@@ -97,6 +127,11 @@ ContentWin32kLockdownState GetContentWin32kLockdownState() {
         return ContentWin32kLockdownState::MissingWebRender;
       }
 
+      // Non-native theming is required as well
+      if (!StaticPrefs::widget_non_native_theme_enabled()) {
+        return ContentWin32kLockdownState::MissingNonNativeTheming;
+      }
+
       // Win32k Lockdown requires Remote WebGL, but it may be disabled on
       // certain hardware or virtual machines.
       if (!gfx::gfxVars::AllowWebglOop() ||
@@ -104,14 +139,30 @@ ContentWin32kLockdownState GetContentWin32kLockdownState() {
         return ContentWin32kLockdownState::MissingRemoteWebGL;
       }
 
-      // It's important that this goes last, as we'd like to know in
-      // telemetry and crash reporting if the only thing holding the user
-      // back from Win32k Lockdown is the-lack-of-asking-for-it
-      if (!StaticPrefs::security_sandbox_content_win32k_disable()) {
-        return ContentWin32kLockdownState::PrefNotSet;
+      bool prefSetByUser =
+          Preferences::HasUserValue("security.sandbox.content.win32k-disable");
+      bool prefValue =
+          Preferences::GetBool("security.sandbox.content.win32k-disable", false,
+                               PrefValueKind::User);
+      bool defaultValue =
+          Preferences::GetBool("security.sandbox.content.win32k-disable", false,
+                               PrefValueKind::Default);
+
+      if (prefSetByUser) {
+        if (prefValue) {
+          return ContentWin32kLockdownState::EnabledByUserPref;
+        } else {
+          return ContentWin32kLockdownState::DisabledByUserPref;
+        }
       }
 
-      return ContentWin32kLockdownState::LockdownEnabled;
+      // enrollment pref
+
+      if (defaultValue) {
+        return ContentWin32kLockdownState::EnabledByDefault;
+      } else {
+        return ContentWin32kLockdownState::DisabledByDefault;
+      }
     }();
 
     const char* stateStr = ContentWin32kLockdownStateToString(state);
