@@ -11514,6 +11514,17 @@
   value: false
   mirror: always
 
+# Enrollment preferences for the win32k experiment, set and managed by Normandy
+- name: security.sandbox.content.win32k-experiment.enrollmentStatus
+  type: uint32_t
+  value: 0
+  mirror: never
+
+- name: security.sandbox.content.win32k-experiment.startupEnrollmentStatus
+  type: uint32_t
+  value: 0
+  mirror: never
+
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   # Note: win32k is currently _not_ disabled for GMP due to intermittent test
   # failures, where the GMP process fails very early. See bug 1449348.
