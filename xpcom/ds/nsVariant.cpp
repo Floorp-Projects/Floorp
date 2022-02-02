@@ -14,6 +14,7 @@
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsCRTGlue.h"
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Printf.h"
 
@@ -463,7 +464,7 @@ static nsresult CloneArray(uint16_t aInType, const nsIID* aInIID,
 #define CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(Ctype_, min_, max_)       \
   case nsIDataType::VTYPE_DOUBLE: {                                           \
     double value = tempData.u.mDoubleValue;                                   \
-    if (value < (min_) || value > (max_)) {                                   \
+    if (mozilla::IsNaN(value) || value < (min_) || value > (max_)) {          \
       return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                               \
     }                                                                         \
     *aResult = (Ctype_)value;                                                 \
@@ -585,10 +586,15 @@ nsresult nsDiscriminatedUnion::ConvertToInt64(int64_t* aResult) const {
     case nsIDataType::VTYPE_UINT32:
       *aResult = tempData.u.mUint32Value;
       return rv;
-    case nsIDataType::VTYPE_DOUBLE:
+    case nsIDataType::VTYPE_DOUBLE: {
+      double value = tempData.u.mDoubleValue;
+      if (mozilla::IsNaN(value)) {
+        return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+      }
       // XXX should check for data loss here!
-      *aResult = tempData.u.mDoubleValue;
+      *aResult = value;
       return rv;
+    }
     default:
       NS_ERROR("bad type returned from ToManageableNumber");
       return NS_ERROR_CANNOT_CONVERT_DATA;
