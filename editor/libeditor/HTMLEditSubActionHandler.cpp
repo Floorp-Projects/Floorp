@@ -466,12 +466,15 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
       }
     }
 
-    // clean up any empty nodes in the selection
-    rv = RemoveEmptyNodesIn(
-        MOZ_KnownLive(*TopLevelEditSubActionDataRef().mChangedRange));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::RemoveEmptyNodesIn() failed");
-      return rv;
+    // Clean up any empty nodes in the changed range unless they are inserted
+    // intentionally.
+    if (TopLevelEditSubActionDataRef().mNeedsToCleanUpEmptyElements) {
+      nsresult rv = RemoveEmptyNodesIn(
+          MOZ_KnownLive(*TopLevelEditSubActionDataRef().mChangedRange));
+      if (NS_FAILED(rv)) {
+        NS_WARNING("HTMLEditor::RemoveEmptyNodesIn() failed");
+        return rv;
+      }
     }
 
     // attempt to transform any unneeded nbsp's into spaces after doing various
@@ -634,7 +637,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
     // If the selection is in empty inline HTML elements, we should delete
     // them unless it's inserted intentionally.
     if (mPlaceholderBatch &&
-        TopLevelEditSubActionDataRef().mNeedsToCleanUpEmptyInlineElements &&
+        TopLevelEditSubActionDataRef().mNeedsToCleanUpEmptyElements &&
         SelectionRef().IsCollapsed() && SelectionRef().GetFocusNode()) {
       RefPtr<Element> mostDistantEmptyInlineAncestor = nullptr;
       for (Element* ancestor :
