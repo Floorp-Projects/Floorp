@@ -38,8 +38,9 @@ class nsRetrievalContextWayland final : public nsRetrievalContext {
   bool HasSelectionSupport(void) override { return true; }
 
  private:
+  ClipboardData WaitForClipboardData(ClipboardDataType, int32_t aWhichClipboard,
+                                     const char* aMimeType = nullptr);
   ClipboardData WaitForClipboardContent();
-  int PrepareNewClipboardRequest();
 
   int mClipboardRequestNumber = 0;
   mozilla::Maybe<ClipboardData> mClipboardData;
