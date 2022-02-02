@@ -3595,21 +3595,6 @@
 ## Exposure Prefs: To ensure the DOM Streams don't expose more
 # than existing JS Streams implementation, we want to hide some
 # interfaces from the global until later.
-- name: dom.streams.readable_byte_stream_controller.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: dom.streams.readable_stream_byob_reader.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: dom.streams.readable_stream_byob_request.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: dom.streams.readable_stream_default_controller.enabled
   type: RelaxedAtomicBool
   value: false
@@ -3621,7 +3606,7 @@
   mirror: always
 
 # DON'T enable, there are known issues!
-- name: dom.streams.byte_streams
+- name: dom.streams.byte_streams.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
