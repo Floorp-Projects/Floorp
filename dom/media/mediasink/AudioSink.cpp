@@ -198,7 +198,6 @@ void AudioSink::SetPlaying(bool aPlaying) {
 }
 
 nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
-  mAudioStream = new AudioStream(*this);
   // When AudioQueue is empty, there is no way to know the channel layout of
   // the coming audio data, so we use the predefined channel map instead.
   AudioConfig::ChannelLayout::ChannelMap channelMap =
@@ -208,8 +207,9 @@ nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
   // mOutputChannels into SMPTE format, so there is no need to worry if
   // StaticPrefs::accessibility_monoaudio_enable() or
   // StaticPrefs::media_forcestereo_enabled() is applied.
-  nsresult rv = mAudioStream->Init(mOutputChannels, channelMap, mOutputRate,
-                                   mAudioDevice);
+  mAudioStream =
+      new AudioStream(*this, mOutputRate, mOutputChannels, channelMap);
+  nsresult rv = mAudioStream->Init(mAudioDevice);
   if (NS_FAILED(rv)) {
     mAudioStream->Shutdown();
     mAudioStream = nullptr;
@@ -479,7 +479,11 @@ uint32_t AudioSink::PushProcessedAudio(AudioData* aData) {
   if (!aData || !aData->Frames()) {
     return 0;
   }
-  mProcessedQueue.Push(aData);
+  int framesToEnqueue = static_cast<int>(aData->Frames() * aData->mChannels);
+                               aData->Frames() * aData->mChannels);
+  NS_WARNING_ASSERTION(
+      rv == static_cast<int>(aData->Frames() * aData->mChannels),
+      "AudioSink ring buffer over-run, can't push new data");
   mProcessedQueueLength += FramesToUsecs(aData->Frames(), mOutputRate).value();
   return aData->Frames();
 }
@@ -531,7 +535,12 @@ uint32_t AudioSink::DrainConverter(uint32_t aMaxFrames) {
   if (!data) {
     return 0;
   }
-  mProcessedQueue.Push(data);
+  int framesToEnqueue = static_cast<int>(data->mChannels * data->Frames());
+  DebugOnly<int> rv = mSPSCQueue->Enqueue(data->Data().Elements(),
+                               data->mChannels * data->Frames());
+  NS_WARNING_ASSERTION(
+      rv == static_cast<int>(data->Frames() * data->mChannels),
+      "AudioSink ring buffer over-run when draining, can't push new data");
   return data->Frames();
 }
 
