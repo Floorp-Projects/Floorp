@@ -37,6 +37,9 @@ function submitHandler(request, response) {
 }
 
 add_task(async function setup() {
+  // This ensures the infobar is not shown in this test.
+  const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+  sinon.stub(BrowserSearch, "removalOfSearchEngineNotificationBox");
   // Ensure the initial init is complete.
   await Services.search.init();
 
@@ -88,6 +91,7 @@ add_task(async function setup() {
     await PlacesUtils.history.clear();
     gCUITestUtils.removeSearchBar();
     await settingsWritten;
+    sinon.restore();
   });
 });
 
