@@ -8,7 +8,6 @@ add_task(async function test_first_time_save() {
     set: [
       [FTU_PREF, true],
       [ENABLED_AUTOFILL_ADDRESSES_PREF, true],
-      [AUTOFILL_ADDRESSES_AVAILABLE_PREF, "on"],
       [ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, true],
     ],
   });
@@ -53,13 +52,6 @@ add_task(async function test_first_time_save() {
 });
 
 add_task(async function test_non_first_time_save() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [ENABLED_AUTOFILL_ADDRESSES_PREF, true],
-      [AUTOFILL_ADDRESSES_AVAILABLE_PREF, "on"],
-      [ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, true],
-    ],
-  });
   let addresses = await getAddresses();
   let ftuPref = SpecialPowers.getBoolPref(FTU_PREF);
   is(ftuPref, false, "First time use flag is false");
@@ -86,7 +78,6 @@ add_task(async function test_non_first_time_save() {
 
   addresses = await getAddresses();
   is(addresses.length, 2, "Another address saved");
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_first_time_save_with_sync_account() {
@@ -94,7 +85,6 @@ add_task(async function test_first_time_save_with_sync_account() {
     set: [
       [FTU_PREF, true],
       [ENABLED_AUTOFILL_ADDRESSES_PREF, true],
-      [AUTOFILL_ADDRESSES_AVAILABLE_PREF, "on"],
       [SYNC_USERNAME_PREF, "foo@bar.com"],
     ],
   });
@@ -147,5 +137,4 @@ add_task(async function test_first_time_save_with_sync_account() {
 
   let ftuPref = SpecialPowers.getBoolPref(FTU_PREF);
   is(ftuPref, false, "First time use flag is false");
-  await SpecialPowers.popPrefEnv();
 });
