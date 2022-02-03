@@ -404,9 +404,10 @@ impl YamlHelper for Yaml {
             Yaml::Array(ref array) => {
                 let transform = array.iter().fold(
                     LayoutTransform::identity(),
-                    |u, yaml| match yaml.as_transform(transform_origin) {
-                        Some(ref transform) => transform.then(&u),
-                        None => u,
+                    |u, yaml| if let Some(transform) = yaml.as_transform(transform_origin) {
+                        transform.then(&u)
+                    } else {
+                        u
                     },
                 );
                 Some(transform)
@@ -622,10 +623,10 @@ impl YamlHelper for Yaml {
                     panic!("Invalid filter data specified, func type array doesn't have five entries: {:?}", self);
                 }
                 let func_types: Vec<ComponentTransferFuncType> =
-                    func_types_p.into_iter().map(|x| { match StringEnum::from_str(&x) {
-                        Some(y) => y,
-                        None => panic!("Invalid filter data specified, invalid func type name: {:?}", self),
-                    }}).collect();
+                    func_types_p.into_iter().map(|x|
+                        StringEnum::from_str(&x).unwrap_or_else(||
+                            panic!("Invalid filter data specified, invalid func type name: {:?}", self))
+                    ).collect();
                 if let Some(r_values_p) = array[1].as_vec_f32() {
                     if let Some(g_values_p) = array[2].as_vec_f32() {
                         if let Some(b_values_p) = array[3].as_vec_f32() {
