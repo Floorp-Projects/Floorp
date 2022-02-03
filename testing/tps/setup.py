@@ -2,29 +2,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
 
 from setuptools import setup, find_packages
-import sys
 
 version = "0.6"
 
 deps = [
     "httplib2 == 0.9.2",
     "mozfile >= 1.2",
-    "mozhttpd == 0.7",
-    "mozinfo >= 0.10",
-    "mozinstall == 1.16",
-    "mozprocess == 0.26",
+    "wptserve >= 3.0",
+    "mozinfo >= 1.2",
+    "mozinstall == 2.0.1",
+    "mozprocess == 1.3",
     "mozprofile ~= 2.1",
-    "mozrunner ~= 7.2",
-    "mozversion == 1.5",
+    "mozrunner ~= 8.2",
+    "mozversion == 2.3",
     "PyYAML >= 4.0",
 ]
-
-# we only support python 2.6+ right now
-assert sys.version_info[0] == 2
-assert sys.version_info[1] >= 6
 
 setup(
     name="tps",
