@@ -464,28 +464,43 @@ void AudioStream::Shutdown() {
 
 int64_t AudioStream::GetPosition() {
   TRACE("AudioStream::GetPosition");
+#ifndef XP_MACOSX
   MonitorAutoLock mon(mMonitor);
+#endif
   int64_t frames = GetPositionInFramesUnlocked();
   return frames >= 0 ? mAudioClock.GetPosition(frames) : -1;
 }
 
 int64_t AudioStream::GetPositionInFrames() {
   TRACE("AudioStream::GetPositionInFrames");
+#ifndef XP_MACOSX
   MonitorAutoLock mon(mMonitor);
+#endif
   int64_t frames = GetPositionInFramesUnlocked();
+
   return frames >= 0 ? mAudioClock.GetPositionInFrames(frames) : -1;
 }
 
 int64_t AudioStream::GetPositionInFramesUnlocked() {
   TRACE("AudioStream::GetPositionInFramesUnlocked");
+#ifndef XP_MACOSX
   mMonitor.AssertCurrentThreadOwns();
+#endif
 
   if (mState == ERRORED) {
     return -1;
   }
 
   uint64_t position = 0;
-  if (InvokeCubeb(cubeb_stream_get_position, &position) != CUBEB_OK) {
+  int rv;
+
+#ifndef XP_MACOSX
+  rv = InvokeCubeb(cubeb_stream_get_position, &position);
+#else
+  rv = cubeb_stream_get_position(mCubebStream.get(), &position);
+#endif
+
+  if (rv != CUBEB_OK) {
     return -1;
   }
   return static_cast<int64_t>(std::min<uint64_t>(position, INT64_MAX));
@@ -600,10 +615,10 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
     CubebUtils::GetAudioThreadRegistry()->Register(mAudioThreadId);
   }
   WebCore::DenormalDisabler disabler;
+  MonitorAutoLock lock(mMonitor);
 
   TRACE_AUDIO_CALLBACK_BUDGET(aFrames, mAudioClock.GetInputRate());
   TRACE("AudioStream::DataCallback");
-  MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != SHUTDOWN, "No data callback after shutdown");
 
   if (SoftRealTimeLimitReached()) {
@@ -639,6 +654,10 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
   // Always send audible frames first, and silent frames later.
   // Otherwise it will break the assumption of FrameHistory.
   if (!mDataSource.Ended()) {
+#ifndef XP_MACOSX
+    MonitorAutoLock mon(mMonitor);
+#endif
+    printf("Update frame history: +%ld\n", aFrames - writer.Available());
     mAudioClock.UpdateFrameHistory(aFrames - writer.Available(),
                                    writer.Available());
     if (writer.Available() > 0) {
@@ -693,15 +712,44 @@ void AudioClock::Init(uint32_t aRate) {
 }
 
 void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun) {
+  // Flush the local items, if any, and then attempt to enqueue the current
+  // item. This is only a fallback mechanism, under non-critical load this is
+  // just going to enqueue an item in the queue.
+  while (!mAudioThreadCallbackInfo.IsEmpty()) {
+    CallbackInfo& info = mAudioThreadCallbackInfo[0];
+    int enqueued = mCallbackInfoQueue.Enqueue(info);
+    // Still full, keep it audio-thread side for now.
+    if (enqueued != 1) {
+      break;
+    }
+    mAudioThreadCallbackInfo.RemoveElementAt(0);
+  }
+  CallbackInfo info(aServiced, aUnderrun, mOutRate);
+  int enqueued = mCallbackInfoQueue.Enqueue(info);
+  if (enqueued != 1) {
+    NS_WARNING(
+        "mCallbackInfoQueue full, storing the values in the audio thread.");
+    mAudioThreadCallbackInfo.AppendElement(info);
+  }
+#else
   mFrameHistory->Append(aServiced, aUnderrun, mOutRate);
+#endif
 }
 
-int64_t AudioClock::GetPositionInFrames(int64_t aFrames) const {
+int64_t AudioClock::GetPositionInFrames(int64_t aFrames) {
   CheckedInt64 v = UsecsToFrames(GetPosition(aFrames), mInRate);
   return v.isValid() ? v.value() : -1;
 }
 
-int64_t AudioClock::GetPosition(int64_t frames) const {
+int64_t AudioClock::GetPosition(int64_t frames) {
+#ifdef XP_MACOSX
+  // Dequeue all history info, and apply them before returning the position
+  // based on frame history.
+  CallbackInfo info;
+  while (mCallbackInfoQueue.Dequeue(&info, 1)) {
+    mFrameHistory->Append(info.mServiced, info.mUnderrun, info.mOutputRate);
+  }
+#endif
   return mFrameHistory->GetPosition(frames);
 }
 
