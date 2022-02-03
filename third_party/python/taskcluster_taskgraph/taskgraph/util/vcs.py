@@ -23,9 +23,13 @@ class Repository(ABC):
         if self.binary is None:
             raise OSError(f"{self.tool} not found!")
 
+        self._env = os.environ.copy()
+
     def run(self, *args: str):
         cmd = (self.binary,) + args
-        return subprocess.check_output(cmd, cwd=self.path, universal_newlines=True)
+        return subprocess.check_output(
+            cmd, cwd=self.path, env=self._env, universal_newlines=True
+        )
 
     @abstractproperty
     def tool(self) -> str:
@@ -70,6 +74,10 @@ class Repository(ABC):
 
 class HgRepository(Repository):
     tool = "hg"
+
+    def __init__(self, *args, **kwargs):
+        super(HgRepository, self).__init__(*args, **kwargs)
+        self._env["HGPLAIN"] = "1"
 
     @property
     def head_ref(self):
