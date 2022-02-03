@@ -1802,6 +1802,7 @@ this.VideoControlsImplWidget = class {
         var attrName = aPaused ? "playlabel" : "pauselabel";
         var value = this.playButton.getAttribute(attrName);
         this.playButton.setAttribute("aria-label", value);
+        this.clickToPlay.setAttribute("aria-label", value);
       },
 
       get isEffectivelyMuted() {
