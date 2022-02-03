@@ -138,11 +138,6 @@
 <p>%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>
 <a href="%2$s">Learn more</a></p>]]></string>
 
-    <!-- Toast shown to the user when they are activating the secret dev menu
-    The first parameter is number of long clicks left to enable the menu -->
-    <string name="about_debug_menu_toast_progress">Debug menu: %1$d click(s) left to enable</string>
-    <string name="about_debug_menu_toast_done">Debug menu enabled</string>
-
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privacy &amp; Security</string>
 
@@ -638,13 +633,6 @@
 
     <!-- Preference for studies summary-->
     <string name="preference_studies_summary">Firefox may install and run studies from time to time.</string>
-
-    <!-- Secret Settings Strings -->
-    <!-- Label for the secret settings preference -->
-    <string name="preference_secret_settings">Secret Settings</string>
-
-    <!-- Label for using the nimbus collections preview -->
-    <string name="preference_use_nimbus_preview">Use Nimbus Preview Collection (requires restart)</string>
 
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Learn more</string>
