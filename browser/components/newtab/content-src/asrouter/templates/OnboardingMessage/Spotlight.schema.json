@@ -25,12 +25,34 @@
           "enum": ["logo-and-content"]
         },
         "logo": {
+          "type": "object",
           "properties": {
-            "imageURL": {
+            "size": {
               "type": "string",
-              "description": "URL for image to use with the content"
+              "description": "The logo size."
             }
-          }
+          },
+          "oneOf": [
+            {
+              "properties": {
+                "imageURL": {
+                  "type": "string",
+                  "description": "URL for image to use with the content"
+                }
+              },
+              "required": ["imageURL"]
+            },
+            {
+              "properties": {
+                "imageId": {
+                  "type": "string",
+                  "description": "The ID for a remotely hosted image"
+                }
+              },
+              "required": ["imageURL"]
+            }
+          ],
+          "additionalProperties": false
         },
         "logoImageURL": {
           "type": "string",
