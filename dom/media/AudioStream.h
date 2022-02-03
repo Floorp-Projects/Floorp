@@ -53,14 +53,10 @@ struct CallbackInfo {
 
 class AudioClock {
  public:
-  AudioClock();
-
-  // Initialize the clock with the current sampling rate.
-  // Need to be called before querying the clock.
-  void Init(uint32_t aRate);
+  explicit AudioClock(uint32_t aInRate);
 
   // Update the number of samples that has been written in the audio backend.
-  // Called on the state machine thread.
+  // Called on the audio thread only.
   void UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun);
 
   /**
@@ -98,6 +94,10 @@ class AudioClock {
   // Output rate in Hz (characteristic of the playback rate). Written on the
   // audio thread, read on either thread.
   Atomic<uint32_t> mOutRate;
+  // Input rate in Hz (characteristic of the media being played).
+  const uint32_t mInRate;
+  // True if the we are timestretching, false if we are resampling. Accessed on the
+  // audio thread only.
   bool mPreservesPitch;
   // The history of frames sent to the audio engine in each DataCallback.
   // Only accessed from non-audio threads on macOS, accessed on both threads and
@@ -227,15 +227,14 @@ class AudioStream final {
     virtual ~DataSource() = default;
   };
 
-  explicit AudioStream(DataSource& aSource);
-
-  // Initialize the audio stream. aNumChannels is the number of audio
-  // channels (1 for mono, 2 for stereo, etc), aChannelMap is the indicator for
-  // channel layout(mono, stereo, 5.1 or 7.1 ) and aRate is the sample rate
+  // aOutputChannels is the number of audio channels (1 for mono, 2 for stereo,
+  // etc), aChannelMap is the indicator for channel layout(mono, stereo, 5.1 or
+  // 7.1 ). Initialize the audio stream.and aRate is the sample rate
   // (22050Hz, 44100Hz, etc).
-  nsresult Init(uint32_t aNumChannels,
-                AudioConfig::ChannelLayout::ChannelMap aChannelMap,
-                uint32_t aRate, AudioDeviceInfo* aSinkInfo);
+  AudioStream(DataSource& aSource, uint32_t aInRate, uint32_t aOutputChannels,
+              AudioConfig::ChannelLayout::ChannelMap aChannelMap);
+
+  nsresult Init(AudioDeviceInfo* aSinkInfo);
 
   // Closes the stream. All future use of the stream is an error.
   void Shutdown();
@@ -330,8 +329,8 @@ class AudioStream final {
   // The monitor is held to protect all access to member variables below.
   Monitor mMonitor;
 
-  uint32_t mChannels;
-  uint32_t mOutChannels;
+  const uint32_t mOutChannels;
+  const AudioConfig::ChannelLayout::ChannelMap mChannelMap;
   AudioClock mAudioClock;
 
   WavDumper mDumpFile;
