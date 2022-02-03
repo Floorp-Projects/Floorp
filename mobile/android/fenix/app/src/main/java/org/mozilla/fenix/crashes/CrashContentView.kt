@@ -10,7 +10,7 @@ import android.view.LayoutInflater
 import androidx.annotation.VisibleForTesting
 import androidx.constraintlayout.widget.ConstraintLayout
 import org.mozilla.fenix.R
-import org.mozilla.fenix.databinding.FragmentCrashReporterBinding
+import org.mozilla.fenix.databinding.ViewCrashReporterBinding
 import org.mozilla.fenix.ext.increaseTapArea
 
 /**
@@ -24,7 +24,7 @@ class CrashContentView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     @VisibleForTesting
-    internal lateinit var binding: FragmentCrashReporterBinding
+    internal lateinit var binding: ViewCrashReporterBinding
     @VisibleForTesting val isBindingInitialized
         get() = ::binding.isInitialized
     @VisibleForTesting
@@ -60,7 +60,7 @@ class CrashContentView @JvmOverloads constructor(
 
     @VisibleForTesting
     internal fun inflate() {
-        binding = FragmentCrashReporterBinding.inflate(LayoutInflater.from(context), this, true)
+        binding = ViewCrashReporterBinding.inflate(LayoutInflater.from(context), this, true)
     }
 
     @VisibleForTesting
