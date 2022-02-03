@@ -357,6 +357,14 @@ void DocAccessible::DocType(nsAString& aType) const {
   if (docType) docType->GetPublicId(aType);
 }
 
+void DocAccessible::QueueCacheUpdate(LocalAccessible* aAcc,
+                                     uint64_t aNewDomain) {
+  uint64_t& domain = mQueuedCacheUpdates.LookupOrInsert(aAcc, 0);
+  domain |= aNewDomain;
+
+  Controller()->ScheduleProcessing();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // LocalAccessible
 
@@ -933,10 +941,6 @@ void DocAccessible::ContentRemoved(nsIContent* aChildNode,
   ContentRemoved(aChildNode);
 }
 
-void DocAccessible::MarkForBoundsProcessing(LocalAccessible* aAcc) {
-  mMaybeBoundsChanged.EnsureInserted(aAcc);
-}
-
 void DocAccessible::ParentChainChanged(nsIContent* aContent) {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1388,16 +1392,19 @@ void DocAccessible::ProcessInvalidationList() {
   mInvalidationList.Clear();
 }
 
-void DocAccessible::ProcessBoundsChanged() {
+void DocAccessible::ProcessQueuedCacheUpdates() {
   if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return;
   }
 
   nsTArray<CacheData> data;
-  for (auto* acc : mMaybeBoundsChanged) {
+  for (auto iter = mQueuedCacheUpdates.Iter(); !iter.Done(); iter.Next()) {
+    LocalAccessible* acc = iter.Key();
+    uint64_t domain = iter.UserData();
     if (!acc->IsDefunct()) {
-      RefPtr<AccAttributes> fields = acc->BundleFieldsForCache(
-          CacheDomain::Bounds, CacheUpdateType::Update);
+      RefPtr<AccAttributes> fields =
+          acc->BundleFieldsForCache(domain, CacheUpdateType::Update);
+
       if (fields->Count()) {
         data.AppendElement(CacheData(
             acc->IsDoc() ? 0 : reinterpret_cast<uint64_t>(acc->UniqueID()),
@@ -1406,7 +1413,7 @@ void DocAccessible::ProcessBoundsChanged() {
     }
   }
 
-  mMaybeBoundsChanged.Clear();
+  mQueuedCacheUpdates.Clear();
 
   if (data.Length()) {
     IPCDoc()->SendCache(CacheUpdateType::Update, data, true);
