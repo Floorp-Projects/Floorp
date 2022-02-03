@@ -470,11 +470,9 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
     REQUEST_NEEDS_ANIMATION_RESET = 1 << 0,
     // Set if the request is currently tracked with the document.
     REQUEST_IS_TRACKED = 1 << 1,
-    // Set if the request is animated.
-    REQUEST_IS_ANIMATED = 1 << 2,
     // Set if this is an imageset request, such as from <img srcset> or
     // <picture>
-    REQUEST_IS_IMAGESET = 1 << 3,
+    REQUEST_IS_IMAGESET = 1 << 2,
   };
 
   // If the image was blocked or if there was an error loading, it's nice to
