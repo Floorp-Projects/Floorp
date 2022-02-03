@@ -7,14 +7,14 @@
  * https://html.spec.whatwg.org/#the-offscreencanvas-interface
  */
 
-typedef (ImageBitmapRenderingContext or WebGLRenderingContext or WebGL2RenderingContext or GPUCanvasContext) OffscreenRenderingContext;
+typedef (OffscreenCanvasRenderingContext2D or ImageBitmapRenderingContext or WebGLRenderingContext or WebGL2RenderingContext or GPUCanvasContext) OffscreenRenderingContext;
 
 dictionary ImageEncodeOptions {
   DOMString type = "image/png";
   unrestricted double quality;
 };
 
-enum OffscreenRenderingContextId { /* "2d", */ "bitmaprenderer", "webgl", "webgl2", "webgpu" };
+enum OffscreenRenderingContextId { "2d", "bitmaprenderer", "webgl", "webgl2", "webgpu" };
 
 [Exposed=(Window,Worker),
  Func="CanvasUtils::IsOffscreenCanvasEnabled"]
