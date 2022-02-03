@@ -15,6 +15,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SurfaceFromElementResult.h"
 #include "mozilla/UniquePtr.h"
@@ -208,13 +209,23 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   bool IsPointInPath(JSContext* aCx, double aX, double aY,
                      const CanvasWindingRule& aWinding,
                      nsIPrincipal& aSubjectPrincipal);
+  bool IsPointInPath(JSContext* aCx, double aX, double aY,
+                     const CanvasWindingRule& aWinding,
+                     Maybe<nsIPrincipal*> aSubjectPrincipal);
   bool IsPointInPath(JSContext* aCx, const CanvasPath& aPath, double aX,
                      double aY, const CanvasWindingRule& aWinding,
                      nsIPrincipal&);
+  bool IsPointInPath(JSContext* aCx, const CanvasPath& aPath, double aX,
+                     double aY, const CanvasWindingRule& aWinding,
+                     Maybe<nsIPrincipal*>);
   bool IsPointInStroke(JSContext* aCx, double aX, double aY,
                        nsIPrincipal& aSubjectPrincipal);
+  bool IsPointInStroke(JSContext* aCx, double aX, double aY,
+                       Maybe<nsIPrincipal*> aSubjectPrincipal);
   bool IsPointInStroke(JSContext* aCx, const CanvasPath& aPath, double aX,
                        double aY, nsIPrincipal&);
+  bool IsPointInStroke(JSContext* aCx, const CanvasPath& aPath, double aX,
+                       double aY, Maybe<nsIPrincipal*>);
   void FillText(const nsAString& aText, double aX, double aY,
                 const Optional<double>& aMaxWidth,
                 mozilla::ErrorResult& aError);
@@ -254,6 +265,9 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
                                            int32_t aSw, int32_t aSh,
                                            nsIPrincipal& aSubjectPrincipal,
                                            ErrorResult&);
+  already_AddRefed<ImageData> GetImageData(
+      JSContext*, int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
+      Maybe<nsIPrincipal*> aSubjectPrincipal, ErrorResult&);
   void PutImageData(ImageData&, int32_t aDx, int32_t aDy, ErrorResult&);
   void PutImageData(ImageData&, int32_t aDx, int32_t aDy, int32_t aDirtyX,
                     int32_t aDirtyY, int32_t aDirtyWidth, int32_t aDirtyHeight,
@@ -514,7 +528,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
  protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
                              uint32_t aWidth, uint32_t aHeight,
-                             nsIPrincipal& aSubjectPrincipal,
+                             Maybe<nsIPrincipal*> aSubjectPrincipal,
                              JSObject** aRetval);
 
   void PutImageData_explicit(int32_t aX, int32_t aY, ImageData&,
