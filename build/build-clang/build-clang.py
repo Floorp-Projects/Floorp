@@ -214,9 +214,6 @@ def build_one_stage(
     assertions,
     libcxx_include_dir,
     build_wasm,
-    compiler_rt_source_dir=None,
-    runtimes_source_link=None,
-    compiler_rt_source_link=None,
     is_final_stage=False,
     pgo_phase=None,
 ):
@@ -846,8 +843,6 @@ if __name__ == "__main__":
             is_final_stage=(stages == 1),
         )
 
-    runtimes_source_link = llvm_source_dir + "/runtimes/compiler-rt"
-
     if stages >= 2 and skip_stages < 2:
         stage2_dir = build_dir + "/stage2"
         stage2_inst_dir = stage2_dir + "/" + package_name
@@ -875,9 +870,6 @@ if __name__ == "__main__":
             assertions,
             libcxx_include_dir,
             build_wasm,
-            compiler_rt_source_dir,
-            runtimes_source_link,
-            compiler_rt_source_link,
             is_final_stage=(stages == 2),
             pgo_phase=pgo_phase,
         )
@@ -908,9 +900,6 @@ if __name__ == "__main__":
             assertions,
             libcxx_include_dir,
             build_wasm,
-            compiler_rt_source_dir,
-            runtimes_source_link,
-            compiler_rt_source_link,
             (stages == 3),
         )
 
@@ -951,9 +940,6 @@ if __name__ == "__main__":
             assertions,
             libcxx_include_dir,
             build_wasm,
-            compiler_rt_source_dir,
-            runtimes_source_link,
-            compiler_rt_source_link,
             (stages == 4),
             pgo_phase=pgo_phase,
         )
