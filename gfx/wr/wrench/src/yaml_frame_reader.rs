@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 use euclid::SideOffsets2D;
 use gleam::gl;
 use image::GenericImageView;
@@ -436,22 +435,24 @@ impl YamlFrameReader {
     }
 
     fn build(&mut self, wrench: &mut Wrench) {
-        let mut yaml_doc = YamlLoader::load_from_str(&self.yaml_string)
+        let yaml = YamlLoader::load_from_str(&self.yaml_string)
+            .map(|mut yaml| {
+                assert_eq!(yaml.len(), 1);
+                yaml.pop().unwrap()
+            })
             .expect("Failed to parse YAML file");
-        assert_eq!(yaml_doc.len(), 1);
 
         self.reset();
 
-        let yaml = yaml_doc.pop().unwrap();
         if let Some(pipelines) = yaml["pipelines"].as_vec() {
             for pipeline in pipelines {
                 self.build_pipeline(wrench, pipeline["id"].as_pipeline_id().unwrap(), pipeline);
             }
         }
 
-        assert!(!yaml["root"].is_badvalue(), "Missing root stacking context");
-        let root_pipeline_id = wrench.root_pipeline_id;
-        self.build_pipeline(wrench, root_pipeline_id, &yaml["root"]);
+        let root_stacking_context = &yaml["root"];
+        assert_ne!(*root_stacking_context, Yaml::BadValue);
+        self.build_pipeline(wrench, wrench.root_pipeline_id, root_stacking_context);
 
         // If replaying the same frame during interactive use, the frame gets rebuilt,
         // but the external image handler has already been consumed by the renderer.
@@ -1551,6 +1552,7 @@ impl YamlFrameReader {
         wrench: &mut Wrench,
         yaml: &Yaml,
     ) {
+        let yaml_items = yaml.as_vec().expect("yaml is Vec");
         // A very large number (but safely far away from finite limits of f32)
         let big_number = 1.0e30;
         // A rect that should in practical terms serve as a no-op for clipping
@@ -1558,7 +1560,7 @@ impl YamlFrameReader {
             LayoutPoint::new(-big_number / 2.0, -big_number / 2.0),
             LayoutSize::new(big_number, big_number));
 
-        for item in yaml.as_vec().unwrap() {
+        for item in yaml_items {
             let item_type = Self::get_item_type_from_yaml(item);
 
             // We never skip stacking contexts and reference frames because
@@ -1583,49 +1585,39 @@ impl YamlFrameReader {
             let complex_clip = self.get_complex_clip_for_item(item);
             let clip_rect = item["clip-rect"].as_rect().unwrap_or(full_clip);
 
-            let mut pushed_clip = false;
-            if let Some(complex_clip) = complex_clip {
-                match item_type {
-                    "clip" | "clip-chain" | "scroll-frame" => {},
-                    _ => {
-                        let id = dl.define_clip_rounded_rect(
-                            &self.top_space_and_clip(),
-                            complex_clip,
-                        );
-                        self.clip_id_stack.push(id);
-                        pushed_clip = true;
-                    }
+            let pushed_clip = complex_clip.map_or(false, |complex_clip| {
+                if matches!(item_type, "clip" | "clip-chain" | "scroll-frame") {
+                    false
+                } else {
+                    let id = dl.define_clip_rounded_rect(
+                        &self.top_space_and_clip(),
+                        complex_clip,
+                    );
+                    self.clip_id_stack.push(id);
+                    true
                 }
-            }
+            });
 
-            let space_and_clip = self.top_space_and_clip();
+            let SpaceAndClipInfo {
+                spatial_id,
+                clip_id,
+            } = self.top_space_and_clip();
+
             let mut flags = PrimitiveFlags::default();
-            if let Some(is_backface_visible) = item["backface-visible"].as_bool() {
-                if is_backface_visible {
-                    flags.insert(PrimitiveFlags::IS_BACKFACE_VISIBLE);
-                } else {
-                    flags.remove(PrimitiveFlags::IS_BACKFACE_VISIBLE);
-                }
-            }
-            if let Some(is_scrollbar_container) = item["scrollbar-container"].as_bool() {
-                if is_scrollbar_container {
-                    flags.insert(PrimitiveFlags::IS_SCROLLBAR_CONTAINER);
-                } else {
-                    flags.remove(PrimitiveFlags::IS_SCROLLBAR_CONTAINER);
-                }
-            }
-            if let Some(prefer_compositor_surface) = item["prefer-compositor-surface"].as_bool() {
-                if prefer_compositor_surface {
-                    flags.insert(PrimitiveFlags::PREFER_COMPOSITOR_SURFACE);
-                } else {
-                    flags.remove(PrimitiveFlags::PREFER_COMPOSITOR_SURFACE);
+            for (key, flag) in [
+                ("backface-visible", PrimitiveFlags::IS_BACKFACE_VISIBLE),
+                ("scrollbar-container", PrimitiveFlags::IS_SCROLLBAR_CONTAINER),
+                ("prefer-compositor-surface", PrimitiveFlags::PREFER_COMPOSITOR_SURFACE),
+            ] {
+                if let Some(value) = item[key].as_bool() {
+                    flags.set(flag, value);
                 }
             }
 
             let mut info = CommonItemProperties {
                 clip_rect,
-                clip_id: space_and_clip.clip_id,
-                spatial_id: space_and_clip.spatial_id,
+                clip_id,
+                spatial_id,
                 flags,
             };
 
@@ -1798,12 +1790,11 @@ impl YamlFrameReader {
         &'a self,
         yaml: &'a Yaml,
     ) -> &'a Yaml {
-        if let Some(ref keyframes) = self.keyframes {
+        if let Some(keyframes) = &self.keyframes {
             if let Some(s) = yaml.as_str() {
-                let prefix: &str = "key(";
-                let suffix: &str = ")";
-                if s.starts_with(prefix) && s.ends_with(suffix) {
-                    let key = &s[prefix.len() .. s.len() - 1];
+                const PREFIX: &str = "key(";
+                const SUFFIX: &str = ")";
+                if let Some(key) = s.strip_prefix(PREFIX).and_then(|s| s.strip_suffix(SUFFIX)) {
                     return &keyframes[key][self.requested_frame];
                 }
             }
@@ -2066,12 +2057,8 @@ impl YamlFrameReader {
         let filter_primitives = yaml["filter-primitives"].as_vec_filter_primitive().unwrap_or_default();
 
         let mut flags = StackingContextFlags::empty();
-        if is_backdrop_root {
-            flags |= StackingContextFlags::IS_BACKDROP_ROOT;
-        }
-        if is_blend_container {
-            flags |= StackingContextFlags::IS_BLEND_CONTAINER;
-        }
+        flags.set(StackingContextFlags::IS_BACKDROP_ROOT, is_backdrop_root);
+        flags.set(StackingContextFlags::IS_BLEND_CONTAINER, is_blend_container);
 
         dl.push_stacking_context(
             bounds.min,
@@ -2129,10 +2116,8 @@ impl WrenchThing for YamlFrameReader {
 
         // If YAML isn't read yet, or watching source file, reload from disk.
         if self.yaml_string.is_empty() || self.watch_source {
-            let mut file = File::open(&self.yaml_path)
-                .unwrap_or_else(|_| panic!("YAML '{:?}' doesn't exist", self.yaml_path));
-            self.yaml_string.clear();
-            file.read_to_string(&mut self.yaml_string).unwrap();
+            self.yaml_string = std::fs::read_to_string(&self.yaml_path)
+                 .unwrap_or_else(|_| panic!("YAML '{:?}' doesn't exist", self.yaml_path));
             should_build_yaml = true;
         }
 

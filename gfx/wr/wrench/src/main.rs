@@ -792,14 +792,10 @@ fn render<'a>(
         wrench.document_id = captured.document_id;
         Box::new(captured) as Box<dyn WrenchThing>
     } else {
-        let extension = input_path
-            .extension()
-            .expect("Tried to render with an unknown file type.")
-            .to_str()
-            .expect("Tried to render with an unknown file type.");
-
-        match extension {
-            "yaml" => Box::new(YamlFrameReader::new_from_args(subargs)) as Box<dyn WrenchThing>,
+        match input_path.extension().and_then(std::ffi::OsStr::to_str) {
+            Some("yaml") => {
+                Box::new(YamlFrameReader::new_from_args(subargs)) as Box<dyn WrenchThing>
+            }
             _ => panic!("Tried to render with an unknown file type."),
         }
     };
@@ -826,21 +822,17 @@ fn render<'a>(
 
     let mut body = |wrench: &mut Wrench, events: Vec<winit::Event>| {
         let mut do_frame = false;
-        let mut do_render = false;
+        let mut do_render = !events.is_empty();
 
         for event in events {
             match event {
-                winit::Event::Awakened => {
-                    do_render = true;
-                }
+                winit::Event::Awakened => {}
                 winit::Event::WindowEvent { event, .. } => match event {
                     winit::WindowEvent::CloseRequested => {
                         return winit::ControlFlow::Break;
                     }
                     winit::WindowEvent::Refresh |
-                    winit::WindowEvent::Focused(..) => {
-                        do_render = true;
-                    }
+                    winit::WindowEvent::Focused(..) => {}
                     winit::WindowEvent::CursorMoved { position: LogicalPosition { x, y }, .. } => {
                         cursor_position = WorldPoint::new(x as f32, y as f32);
                         wrench.renderer.set_cursor_position(
@@ -849,7 +841,6 @@ fn render<'a>(
                                 cursor_position.y.round() as i32,
                             ),
                         );
-                        do_render = true;
                     }
                     winit::WindowEvent::KeyboardInput {
                         input: winit::KeyboardInput {
@@ -865,37 +856,30 @@ fn render<'a>(
                         VirtualKeyCode::B => {
                             debug_flags.toggle(DebugFlags::INVALIDATION_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::P => {
                             debug_flags.toggle(DebugFlags::PROFILER_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::O => {
                             debug_flags.toggle(DebugFlags::RENDER_TARGET_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::I => {
                             debug_flags.toggle(DebugFlags::TEXTURE_CACHE_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::D => {
                             debug_flags.toggle(DebugFlags::PICTURE_CACHING_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::Q => {
                             debug_flags.toggle(DebugFlags::GPU_TIME_QUERIES | DebugFlags::GPU_SAMPLE_QUERIES);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::V => {
                             debug_flags.toggle(DebugFlags::SHOW_OVERDRAW);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::G => {
                             debug_flags.toggle(DebugFlags::GPU_CACHE_DBG);
@@ -906,31 +890,32 @@ fn render<'a>(
                             txn.set_root_pipeline(wrench.root_pipeline_id);
                             wrench.api.send_transaction(wrench.document_id, txn);
 
+                            do_render = false;
                             do_frame = true;
                         }
                         VirtualKeyCode::M => {
                             wrench.api.notify_memory_pressure();
-                            do_render = true;
                         }
                         VirtualKeyCode::L => {
                             do_loop = !do_loop;
-                            do_render = true;
                         }
                         VirtualKeyCode::Left => {
                             thing.prev_frame();
+                            do_render = false;
                             do_frame = true;
                         }
                         VirtualKeyCode::Right => {
                             thing.next_frame();
+                            do_render = false;
                             do_frame = true;
                         }
                         VirtualKeyCode::H => {
                             show_help = !show_help;
-                            do_render = true;
                         }
                         VirtualKeyCode::C => {
                             let path = PathBuf::from("../captures/wrench");
                             wrench.api.save_capture(path, CaptureBits::all());
+                            do_render = false;
                         }
                         VirtualKeyCode::X => {
                             let results = wrench.api.hit_test(
@@ -943,22 +928,22 @@ fn render<'a>(
                                 println!("  • {:?}", item);
                             }
                             println!();
+                            do_render = false;
                         }
                         VirtualKeyCode::Z => {
                             debug_flags.toggle(DebugFlags::ZOOM_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::Y => {
                             println!("Clearing all caches...");
                             wrench.api.send_debug_cmd(DebugCommand::ClearCaches(ClearCache::all()));
                             do_frame = true;
                         }
-                        _ => {}
+                        _other_virtual_keycode => { do_render = false; }
                     }
-                    _ => {}
+                    _other_window_event => { do_render = false; }
                 },
-                _ => {}
+                _other_event => { do_render = false; }
             }
         }
 
