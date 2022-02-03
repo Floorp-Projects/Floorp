@@ -845,7 +845,7 @@ impl YamlFrameReader {
         };
 
         let bounds = self.resolve_rect(&item[bounds_key]);
-        let color = self.resolve_colorf(&item["color"], ColorF::BLACK);
+        let color = self.resolve_colorf(&item["color"]).unwrap_or(ColorF::BLACK);
         dl.push_rect(info, bounds, color);
     }
 
@@ -1800,11 +1800,9 @@ impl YamlFrameReader {
     fn resolve_colorf(
         &self,
         yaml: &Yaml,
-        default: ColorF,
-    ) -> ColorF {
+    ) -> Option<ColorF> {
         self.resolve_binding(yaml)
             .as_colorf()
-            .unwrap_or(default)
     }
 
     fn resolve_rect(
