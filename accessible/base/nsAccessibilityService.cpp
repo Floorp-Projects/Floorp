@@ -366,8 +366,7 @@ void nsAccessibilityService::NotifyOfPossibleBoundsChange(
     if (document) {
       LocalAccessible* accessible = document->GetAccessible(aContent);
       if (accessible) {
-        document->MarkForBoundsProcessing(accessible);
-        document->Controller()->ScheduleProcessing();
+        document->QueueCacheUpdate(accessible, CacheDomain::Bounds);
       }
     }
   }
