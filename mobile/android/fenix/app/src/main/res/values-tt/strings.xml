@@ -1884,6 +1884,14 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Баш тарту</string>
 
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">Көйләүләр</string>
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">Безнең иганәчеләр һәм сезнең хосусыйлыгыз</string>
+
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">Спонсорланган</string>
+
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">Актив булмаган таблар</string>
