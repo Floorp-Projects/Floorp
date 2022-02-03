@@ -122,6 +122,7 @@ class SearchDialogController(
 
     override fun handleEditingCancelled() {
         clearToolbarFocus()
+        dismissDialog()
     }
 
     override fun handleTextChanged(text: String) {
