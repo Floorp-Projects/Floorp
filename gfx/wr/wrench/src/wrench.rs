@@ -11,11 +11,9 @@ use dwrote;
 use font_loader::system_fonts;
 use winit::EventsLoopProxy;
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Receiver;
-use time;
-use webrender;
 use webrender::api::*;
 use webrender::render_api::*;
 use webrender::api::units::*;
@@ -163,12 +161,12 @@ impl CapturedSequence {
         }
     }
 
-    fn scene_root(root: &PathBuf, scene: u32) -> PathBuf {
+    fn scene_root(root: &Path, scene: u32) -> PathBuf {
         let path = format!("scenes/{:05}", scene);
         root.join(path)
     }
 
-    fn frame_root(root: &PathBuf, scene: u32, frame: u32) -> PathBuf {
+    fn frame_root(root: &Path, scene: u32, frame: u32) -> PathBuf {
         let path = format!("scenes/{:05}/frames/{:05}", scene, frame);
         root.join(path)
     }
@@ -219,6 +217,7 @@ pub struct Wrench {
 }
 
 impl Wrench {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         window: &mut WindowWrapper,
         proxy: Option<EventsLoopProxy>,
@@ -629,10 +628,10 @@ impl Wrench {
         self.renderer.device.begin_frame(); // next line might compile shaders:
         let dr = self.renderer.debug_renderer().unwrap();
 
-        for ref co in &color_and_offset {
+        for co in &color_and_offset {
             let x = 15.0 + co.1;
             let mut y = 15.0 + co.1 + dr.line_height();
-            for ref line in &help_lines {
+            for line in &help_lines {
                 dr.add_text(x, y, line, co.0.into(), None);
                 y += dr.line_height();
             }

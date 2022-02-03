@@ -4,7 +4,6 @@
 
 use crate::NotifierEvent;
 use crate::WindowWrapper;
-use serde_json;
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -36,7 +35,7 @@ impl BenchmarkManifest {
     pub fn new(manifest: &Path) -> BenchmarkManifest {
         let dir = manifest.parent().unwrap();
         let f =
-            File::open(manifest).expect(&format!("couldn't open manifest: {}", manifest.display()));
+            File::open(manifest).unwrap_or_else(|_| panic!("couldn't open manifest: {}", manifest.display()));
         let file = BufReader::new(&f);
 
         let mut benchmarks = Vec::new();
@@ -68,7 +67,7 @@ impl BenchmarkManifest {
         }
 
         BenchmarkManifest {
-            benchmarks: benchmarks,
+            benchmarks,
         }
     }
 }
@@ -222,7 +221,7 @@ impl<'a> PerfHarness<'a> {
                 cpu_frame_profiles.extend(cpu_profiles);
                 gpu_frame_profiles.extend(gpu_profiles);
             }
-            frame_count = frame_count + 1;
+            frame_count += 1;
         }
 
         // Ensure the draw calls match in every sample.
@@ -260,7 +259,7 @@ where
     F: Fn(&T) -> u64,
 {
     let mut samples: Vec<u64> = profiles.iter().map(f).collect();
-    samples.sort();
+    samples.sort_unstable();
     let useful_samples = &samples[SAMPLE_EXCLUDE_COUNT .. samples.len() - SAMPLE_EXCLUDE_COUNT];
     let total_time: u64 = useful_samples.iter().sum();
     TestProfileRange {
@@ -317,12 +316,10 @@ pub fn compare(first_filename: &str, second_filename: &str) {
         let paint_time0 = test0.paint_time_ns.avg as f32 / 1000000.0;
         let paint_time1 = test1.paint_time_ns.avg as f32 / 1000000.0;
 
-        let draw_calls_color = if test0.draw_calls == test1.draw_calls {
-            COLOR_DEFAULT
-        } else if test0.draw_calls > test1.draw_calls {
-            COLOR_GREEN
-        } else {
-            COLOR_RED
+        let draw_calls_color = match test0.draw_calls.cmp(&test1.draw_calls) {
+            std::cmp::Ordering::Equal => COLOR_DEFAULT,
+            std::cmp::Ordering::Greater => COLOR_GREEN,
+            std::cmp::Ordering::Less => COLOR_RED,
         };
 
         let composite_time_color = select_color(composite_time0, composite_time1);

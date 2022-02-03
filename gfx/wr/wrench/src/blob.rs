@@ -19,11 +19,11 @@ pub fn serialize_blob(color: ColorU) -> Arc<Vec<u8>> {
 
 fn deserialize_blob(blob: &[u8]) -> Result<ColorU, ()> {
     let mut iter = blob.iter();
-    return match (iter.next(), iter.next(), iter.next(), iter.next()) {
+    match (iter.next(), iter.next(), iter.next(), iter.next()) {
         (Some(&r), Some(&g), Some(&b), Some(&a)) => Ok(ColorU::new(r, g, b, a)),
         (Some(&a), None, None, None) => Ok(ColorU::new(a, a, a, a)),
         _ => Err(()),
-    };
+    }
 }
 
 // perform floor((x * a) / 255. + 0.5) see "Three wrongs make a right" for derivation
@@ -78,7 +78,7 @@ fn render_blob(
                 ImageFormat::BGRA8 => {
                     let a = color.a * checker + tc;
                     let pixel_offset = ((y * descriptor.rect.width() + x) * 4) as usize;
-                    texels[pixel_offset + 0] = premul(color.b * checker + tc, a);
+                    texels[pixel_offset    ] = premul(color.b * checker + tc, a);
                     texels[pixel_offset + 1] = premul(color.g * checker + tc, a);
                     texels[pixel_offset + 2] = premul(color.r * checker + tc, a);
                     texels[pixel_offset + 3] = a;
@@ -161,7 +161,7 @@ impl BlobImageHandler for CheckerboardRenderer {
         requests: &[BlobImageParams],
     ) {
         if !requests.is_empty() {
-            (self.callbacks.lock().unwrap().request)(&requests);
+            (self.callbacks.lock().unwrap().request)(requests);
         }
     }
 
@@ -191,7 +191,7 @@ impl AsyncBlobImageRasterizer for Rasterizer {
         requests: &[BlobImageParams],
         _low_priority: bool
     ) -> Vec<(BlobImageRequest, BlobImageResult)> {
-        let requests: Vec<Command> = requests.into_iter().map(
+        let requests: Vec<Command> = requests.iter().map(
             |item| {
                 let (color, tile_size) = self.image_cmds[&item.request.key];
 

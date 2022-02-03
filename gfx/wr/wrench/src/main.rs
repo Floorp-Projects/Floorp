@@ -147,10 +147,7 @@ pub struct HeadlessEventIterater;
 impl WindowWrapper {
     #[cfg(feature = "software")]
     fn upload_software_to_native(&self) {
-        match *self {
-            WindowWrapper::Headless(..) => return,
-            _ => {}
-        }
+        if matches!(*self, WindowWrapper::Headless(..)) { return }
         let swgl = match self.software_gl() {
             Some(swgl) => swgl,
             None => return,
@@ -277,7 +274,7 @@ impl WindowWrapper {
             WindowWrapper::Headless(_, ref gl, ref swgl) => {
                 match swgl {
                     #[cfg(feature = "software")]
-                    Some(ref swgl) => Rc::new(swgl.clone()),
+                    Some(ref swgl) => Rc::new(*swgl),
                     None => gl.clone(),
                     #[cfg(not(feature = "software"))]
                     _ => panic!(),
@@ -394,7 +391,7 @@ fn make_window(
         None => {
             let gl = match sw_ctx {
                 #[cfg(feature = "software")]
-                Some(ref sw_ctx) => Rc::new(sw_ctx.clone()),
+                Some(ref sw_ctx) => Rc::new(*sw_ctx),
                 None => {
                     match gl::GlType::default() {
                         gl::GlType::Gl => unsafe {
@@ -479,7 +476,7 @@ impl RenderNotifier for Notifier {
 
 fn create_notifier() -> (Box<dyn RenderNotifier>, Receiver<NotifierEvent>) {
     let (tx, rx) = channel();
-    (Box::new(Notifier { tx: tx }), rx)
+    (Box::new(Notifier { tx }), rx)
 }
 
 fn rawtest(mut wrench: Wrench, window: &mut WindowWrapper, rx: Receiver<NotifierEvent>) {
@@ -499,7 +496,7 @@ fn reftest<'a>(
     } else {
         Path::new("reftests/reftest.list")
     };
-    let specific_reftest = subargs.value_of("REFTEST").map(|x| Path::new(x));
+    let specific_reftest = subargs.value_of("REFTEST").map(Path::new);
     let mut reftest_options = ReftestOptions::default();
     if let Some(allow_max_diff) = subargs.value_of("fuzz_tolerance") {
         reftest_options.allow_max_difference = allow_max_diff.parse().unwrap_or(1);
@@ -541,13 +538,13 @@ fn main() {
 
         if let Ok(wrench_args) = fs::read_to_string("/sdcard/wrench/args") {
             for line in wrench_args.lines() {
-                if line.starts_with("env: ") {
-                    let envvar = &line[5..];
-                    if let Some(ix) = envvar.find('=') {
-                        std::env::set_var(&envvar[0..ix], &envvar[ix + 1..]);
+                if let Some(envvar) = line.strip_prefix("env: ") {
+                    if let Some((lhs, rhs)) = envvar.split_once('=') {
+                        std::env::set_var(lhs, rhs);
                     } else {
                         std::env::set_var(envvar, "");
                     }
+
                     continue;
                 }
                 for arg in line.split_whitespace() {
@@ -562,7 +559,7 @@ fn main() {
     };
 
     // handle some global arguments
-    let res_path = args.value_of("shaders").map(|s| PathBuf::from(s));
+    let res_path = args.value_of("shaders").map(PathBuf::from);
     let size = args.value_of("size")
         .map(|s| if s == "720p" {
             DeviceIntSize::new(1280, 720)
@@ -640,9 +637,9 @@ fn main() {
     );
     let dim = window.get_inner_size();
 
-    let needs_frame_notifier = ["perf", "reftest", "png", "rawtest", "test_invalidation"]
-        .iter()
-        .any(|s| args.subcommand_matches(s).is_some());
+    let needs_frame_notifier = args.subcommand_name().map_or(false, |name| {
+        ["perf", "reftest", "png", "rawtest", "test_invalidation"].contains(&name)
+    });
     let (notifier, rx) = if needs_frame_notifier {
         let (notifier, rx) = create_notifier();
         (Some(notifier), Some(rx))
@@ -669,7 +666,7 @@ fn main() {
     );
 
     if let Some(ui_str) = args.value_of("profiler_ui") {
-        wrench.renderer.set_profiler_ui(&ui_str);
+        wrench.renderer.set_profiler_ui(ui_str);
     }
 
     window.update(&mut wrench);
@@ -704,7 +701,7 @@ fn main() {
     } else if let Some(subargs) = args.subcommand_matches("reftest") {
         // Exit with an error code in order to ensure the CI job fails.
         process::exit(reftest(wrench, &mut window, subargs, rx.unwrap()) as _);
-    } else if let Some(_) = args.subcommand_matches("rawtest") {
+    } else if args.subcommand_matches("rawtest").is_some() {
         rawtest(wrench, &mut window, rx.unwrap());
         return;
     } else if let Some(subargs) = args.subcommand_matches("perf") {
@@ -724,10 +721,7 @@ fn main() {
                                        warmup_frames,
                                        sample_count);
 
-        let benchmark = match subargs.value_of("benchmark") {
-            Some(path) => path,
-            None => "benchmarks/benchmarks.list"
-        };
+        let benchmark = subargs.value_of("benchmark").unwrap_or("benchmarks/benchmarks.list");
         println!("Benchmark: {}", benchmark);
         let base_manifest = Path::new(benchmark);
 
@@ -741,7 +735,7 @@ fn main() {
         }
         harness.run(base_manifest, &filename, as_csv);
         return;
-    } else if let Some(_) = args.subcommand_matches("test_invalidation") {
+    } else if args.subcommand_matches("test_invalidation").is_some() {
         let harness = test_invalidation::TestHarness::new(
             &mut wrench,
             &mut window,
@@ -754,11 +748,11 @@ fn main() {
         let second_filename = subargs.value_of("second_filename").unwrap();
         perf::compare(first_filename, second_filename);
         return;
-    } else if let Some(_) = args.subcommand_matches("test_init") {
+    } else if args.subcommand_matches("test_init").is_some() {
         // Wrench::new() unwraps the Renderer initialization, so if
         // we reach this point then we have initialized successfully.
         println!("Initialization successful");
-    } else if let Some(_) = args.subcommand_matches("test_shaders") {
+    } else if args.subcommand_matches("test_shaders").is_some() {
         test_shaders::test_shaders();
     } else {
         panic!("Should never have gotten here! {:?}", args);
@@ -948,7 +942,7 @@ fn render<'a>(
                             for item in &results.items {
                                 println!("  • {:?}", item);
                             }
-                            println!("");
+                            println!();
                         }
                         VirtualKeyCode::Z => {
                             debug_flags.toggle(DebugFlags::ZOOM_DBG);
