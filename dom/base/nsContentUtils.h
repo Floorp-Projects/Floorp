@@ -44,7 +44,6 @@
 #include "nsCOMPtr.h"
 #include "nsHashtablesFwd.h"
 #include "nsIContentPolicy.h"
-#include "nsID.h"
 #include "nsINode.h"
 #include "nsIScriptError.h"
 #include "nsIThread.h"
@@ -110,7 +109,6 @@ class nsIStringBundleService;
 class nsISupports;
 class nsITransferable;
 class nsIURI;
-class nsIUUIDGenerator;
 class nsIWidget;
 class nsIXPConnect;
 class nsNodeInfoManager;
@@ -1269,16 +1267,6 @@ class nsContentUtils {
    *                  is zero)
    */
   static void SandboxFlagsToString(uint32_t aFlags, nsAString& aString);
-
-  /**
-   * Helper function that generates a UUID.
-   */
-  static nsresult GenerateUUIDInPlace(nsID& aUUID);
-
-  /**
-   * Infallable (with an assertion) helper function that generates a UUID.
-   */
-  static nsID GenerateUUID();
 
   static bool PrefetchPreloadEnabled(nsIDocShell* aDocShell);
 
@@ -3380,7 +3368,6 @@ class nsContentUtils {
   static nsIPrincipal* sNullSubjectPrincipal;
 
   static nsIIOService* sIOService;
-  static nsIUUIDGenerator* sUUIDGenerator;
 
   static nsIConsoleService* sConsoleService;
 

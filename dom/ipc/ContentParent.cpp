@@ -4070,8 +4070,7 @@ void ContentParent::KillHard(const char* aReason) {
     return;
   }
 
-  if (!KillProcess(otherProcessHandle, base::PROCESS_END_KILLED_BY_USER,
-                   false)) {
+  if (!KillProcess(otherProcessHandle, base::PROCESS_END_KILLED_BY_USER)) {
     NS_WARNING("failed to kill subprocess!");
   }
 

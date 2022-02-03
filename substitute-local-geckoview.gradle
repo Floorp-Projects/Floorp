@@ -54,12 +54,15 @@ def loadMozconfig() {
             machEnv(topsrcdir),
             new File(ext.has('topobjdir') ? ext.get('topobjdir') : topsrcdir))
     def standardOutput = new ByteArrayOutputStream()
-    proc.consumeProcessOutput(standardOutput, standardOutput)
+    def standardError = new ByteArrayOutputStream()
+    proc.consumeProcessOutput(standardOutput, standardError)
     proc.waitFor()
 
     // Only show the output if something went wrong.
     if (proc.exitValue() != 0) {
-        throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${proc.exitValue()}:\n\n${standardOutput.toString()}")
+        throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${proc.exitValue()}:\n\n"
+                + "stdout:\n${standardOutput.toString()}\n\n"
+                + "stderr:\n${standardError.toString()}")
     }
 
     def slurper = new JsonSlurper()

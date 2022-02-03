@@ -18,8 +18,8 @@ Known parameters
      - On Windows, ``-osint`` serves two purposes.  Most importantly, it signals
        that the command line is untrusted and must be sanitized.  Command lines
        with ``-osint`` are rejected unless they are of exactly the form
-       ``firefox.exe -osint -url URL``: refer to `the EnsureCommandLineSafe
-       function
+       ``firefox.exe -osint -url URL`` or ``firefox.exe -osint -private-window URL``:
+       refer to `the EnsureCommandLineSafe function
        <https://searchfox.org/mozilla-central/rev/ead7da2d9c5400bc7034ff3f06a030531bd7e5b9/toolkit/xre/CmdLineAndEnvUtils.h#196>`_.
        These command lines are produced by apps delegating to Firefox, and the
        resulting URL may not be correctly quoted.  The sanitization process

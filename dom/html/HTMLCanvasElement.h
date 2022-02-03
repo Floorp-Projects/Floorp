@@ -83,23 +83,18 @@ class HTMLCanvasElementObserver final : public nsIObserver {
  * FrameCaptureListener is used by captureStream() as a way of getting video
  * frames from the canvas. On a refresh driver tick after something has been
  * drawn to the canvas since the last such tick, all registered
- * FrameCaptureListeners whose `mFrameCaptureRequested` equals `true`,
- * will be given a copy of the just-painted canvas.
+ * FrameCaptureListeners that report true for FrameCaptureRequested() will be
+ * given a copy of the just-painted canvas.
  * All FrameCaptureListeners get the same copy.
  */
 class FrameCaptureListener : public SupportsWeakPtr {
  public:
-  FrameCaptureListener() : mFrameCaptureRequested(false) {}
-
-  /*
-   * Called when a frame capture is desired on next paint.
-   */
-  void RequestFrameCapture() { mFrameCaptureRequested = true; }
+  FrameCaptureListener() = default;
 
   /*
    * Indicates to the canvas whether or not this listener has requested a frame.
    */
-  bool FrameCaptureRequested() const { return mFrameCaptureRequested; }
+  virtual bool FrameCaptureRequested(const TimeStamp& aTime) const = 0;
 
   /*
    * Interface through which new video frames will be provided while
@@ -110,8 +105,6 @@ class FrameCaptureListener : public SupportsWeakPtr {
 
  protected:
   virtual ~FrameCaptureListener() = default;
-
-  bool mFrameCaptureRequested;
 };
 
 class HTMLCanvasElement final : public nsGenericHTMLElement,
@@ -249,7 +242,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
    * Returns true when there is at least one registered FrameCaptureListener
    * that has requested a frame capture.
    */
-  bool IsFrameCaptureRequested() const;
+  bool IsFrameCaptureRequested(const TimeStamp& aTime) const;
 
   /*
    * Processes destroyed FrameCaptureListeners and removes them if necessary.

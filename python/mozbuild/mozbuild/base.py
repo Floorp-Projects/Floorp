@@ -25,6 +25,7 @@ from mozversioncontrol import (
     HgRepository,
     InvalidRepoPath,
     MissingConfigureInfo,
+    MissingVCSTool,
 )
 
 from .backend.configenvironment import (
@@ -456,7 +457,11 @@ class MozbuildObject(ProcessExecutionMixin):
         # If we don't have a configure context, fall back to auto-detection.
         try:
             return get_repository_from_build_config(self)
-        except (BuildEnvironmentNotFoundException, MissingConfigureInfo):
+        except (
+            BuildEnvironmentNotFoundException,
+            MissingConfigureInfo,
+            MissingVCSTool,
+        ):
             pass
 
         return get_repository_object(self.topsrcdir)

@@ -169,11 +169,13 @@ add_task(async function() {
 
   info("Open a popup");
   const originalTab = gBrowser.selectedTab;
+  let onSwitchedHost = hud.toolbox.once("host-changed");
   await ContentTask.spawn(gBrowser.selectedBrowser, [IFRAME_PATH], function(
     path
   ) {
     content.open(`https://test2.example.org/${path}?id=popup`);
   });
+  await onSwitchedHost;
 
   // Wait until the popup is rendered in the context selector
   // and that it is automatically switched to (aria-checked==true).
@@ -217,11 +219,13 @@ add_task(async function() {
   ok(true, "The context was set to the popup document");
 
   info("Open a second popup and reload the original tab");
+  onSwitchedHost = hud.toolbox.once("host-changed");
   await ContentTask.spawn(originalTab.linkedBrowser, [IFRAME_PATH], function(
     path
   ) {
     content.open(`https://test2.example.org/${path}?id=popup2`);
   });
+  await onSwitchedHost;
 
   // Reloading the tab while having two popups opened used to
   // generate exception in the context selector component

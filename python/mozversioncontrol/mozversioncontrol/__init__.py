@@ -737,7 +737,7 @@ def get_repository_from_env():
         import buildconfig
 
         return get_repository_from_build_config(buildconfig)
-    except ImportError:
+    except (ImportError, MissingVCSTool):
         pass
 
     paths_to_check = [Path.cwd(), *Path.cwd().parents]

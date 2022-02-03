@@ -928,7 +928,7 @@ class CancelingRunnable final : public Runnable {
 } /* anonymous namespace */
 
 nsString ComputeWorkerPrivateId() {
-  nsID uuid = nsContentUtils::GenerateUUID();
+  nsID uuid = nsID::GenerateUUID();
   return NSID_TrimBracketsUTF16(uuid);
 }
 
@@ -2426,7 +2426,7 @@ WorkerPrivate::ComputeAgentClusterIdAndCoop(WorkerPrivate* aParent,
     RefPtr<DocGroup> docGroup = doc->GetDocGroup();
 
     nsID agentClusterId =
-        docGroup ? docGroup->AgentClusterId() : nsContentUtils::GenerateUUID();
+        docGroup ? docGroup->AgentClusterId() : nsID::GenerateUUID();
 
     BrowsingContext* bc = aLoadInfo->mWindow->GetBrowsingContext();
     MOZ_DIAGNOSTIC_ASSERT(bc);
@@ -2435,7 +2435,7 @@ WorkerPrivate::ComputeAgentClusterIdAndCoop(WorkerPrivate* aParent,
 
   // If the window object was failed to be set into the WorkerLoadInfo, we
   // make the worker into another agent cluster group instead of failures.
-  return {nsContentUtils::GenerateUUID(), agentClusterCoop};
+  return {nsID::GenerateUUID(), agentClusterCoop};
 }
 
 // static
