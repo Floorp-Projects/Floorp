@@ -953,7 +953,7 @@ private val Event.wrapper: EventWrapper<*>?
                 Wallpapers.wallpaperSelected.record(
                     Wallpapers.WallpaperSelectedExtra(
                         name = this.wallpaper.name,
-                        themeCollection = this.wallpaper.themeCollection::class.simpleName,
+                        themeCollection = this.wallpaper::class.simpleName,
                     ),
                 )
             }
@@ -963,7 +963,7 @@ private val Event.wrapper: EventWrapper<*>?
                 Wallpapers.wallpaperSwitched.record(
                     Wallpapers.WallpaperSwitchedExtra(
                         name = this.wallpaper.name,
-                        themeCollection = this.wallpaper.themeCollection::class.simpleName,
+                        themeCollection = this.wallpaper::class.simpleName,
                     ),
                 )
             }

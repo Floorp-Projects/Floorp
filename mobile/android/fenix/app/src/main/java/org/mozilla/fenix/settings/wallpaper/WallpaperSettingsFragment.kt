@@ -49,7 +49,7 @@ class WallpaperSettingsFragment : Fragment() {
                     var currentWallpaper by remember { mutableStateOf(wallpaperManager.currentWallpaper) }
                     var wallpapersSwitchedByLogo by remember { mutableStateOf(settings.wallpapersSwitchedByLogoTap) }
                     WallpaperSettings(
-                        wallpapers = wallpaperManager.availableWallpapers,
+                        wallpapers = wallpaperManager.wallpapers,
                         defaultWallpaper = WallpaperManager.defaultWallpaper,
                         loadWallpaperResource = {
                             wallpaperManager.loadSavedWallpaper(requireContext(), it)

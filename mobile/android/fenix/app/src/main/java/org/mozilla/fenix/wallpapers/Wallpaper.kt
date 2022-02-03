@@ -4,79 +4,62 @@
 
 package org.mozilla.fenix.wallpapers
 
-import android.content.Context
-import android.content.res.Configuration
-import org.mozilla.fenix.R
+import androidx.annotation.DrawableRes
+import java.util.Date
 
 /**
- * A class that represents an available wallpaper and its state.
- * @property name Indicates the name of this wallpaper.
- * @property portraitPath A file path for the portrait version of this wallpaper.
- * @property landscapePath A file path for the landscape version of this wallpaper.
- * @property isDark Indicates if the most predominant color on the wallpaper is dark.
- * @property themeCollection The theme collection this wallpaper belongs to.
+ * Type hierarchy defining the various wallpapers that are available as home screen backgrounds.
+ * @property name The name of the wallpaper.
  */
-data class Wallpaper(
-    val name: String,
-    val themeCollection: WallpaperThemeCollection,
-)
+sealed class Wallpaper {
+    abstract val name: String
 
-/**
- * A type hierarchy representing the different theme collections [Wallpaper]s belong to.
- */
-enum class WallpaperThemeCollection(val origin: WallpaperOrigin) {
-    NONE(WallpaperOrigin.LOCAL),
-    FIREFOX(WallpaperOrigin.LOCAL),
-    FOCUS(WallpaperOrigin.REMOTE),
-}
+    /**
+     * The default wallpaper. This uses the standard color resource to as a background, instead of
+     * loading a bitmap.
+     */
+    object Default : Wallpaper() {
+        override val name = "default"
+    }
 
-/**
- * The parent directory name of a wallpaper. Since wallpapers that are [WallpaperOrigin.LOCAL] are
- * stored in drawables, this extension is not applicable to them.
- */
-val WallpaperThemeCollection.directoryName: String get() = when (this) {
-    WallpaperThemeCollection.NONE,
-    WallpaperThemeCollection.FIREFOX -> ""
-    WallpaperThemeCollection.FOCUS -> "focus"
-}
+    /**
+     * Wallpapers that are included directly in the shipped APK.
+     *
+     * @property drawableId The drawable bitmap used as the background.
+     */
+    sealed class Local : Wallpaper() {
+        abstract val drawableId: Int
+        data class Firefox(override val name: String, @DrawableRes override val drawableId: Int) : Local()
+    }
 
-/**
- * Types defining whether a [Wallpaper] is delivered through a remote source or is included locally
- * in the APK.
- */
-enum class WallpaperOrigin {
-    LOCAL,
-    REMOTE,
-}
+    /**
+     * Wallpapers that need to be fetched from a network resource.
+     *
+     * @property expirationDate Optional date at which this wallpaper should no longer be available.
+     */
+    sealed class Remote : Wallpaper() {
+        abstract val expirationDate: Date?
+        data class Focus(override val name: String, override val expirationDate: Date? = null) : Remote()
 
-val Wallpaper.drawableId: Int get() = when (name) {
-    "amethyst" -> R.drawable.amethyst
-    "cerulean" -> R.drawable.cerulean
-    "sunrise" -> R.drawable.sunrise
-    else -> -1
-}
+        /**
+         * If a user had previously selected a wallpaper, they are allowed to retain it even if
+         * the wallpaper is otherwise expired. This type exists as a wrapper around that current
+         * wallpaper.
+         */
+        data class Expired(override val name: String) : Remote() {
+            override val expirationDate: Date? = null
+        }
+    }
 
-/**
- * Get the expected local path on disk for a wallpaper. This will differ depending
- * on orientation and app theme.
- */
-fun Wallpaper.getLocalPathFromContext(context: Context): String {
-    val orientation = if (context.isLandscape()) "landscape" else "portrait"
-    val theme = if (context.isDark()) "dark" else "light"
-    return getLocalPath(orientation, theme)
-}
-
-/**
- * Get the expected local path on disk for a wallpaper if orientation and app theme are known.
- */
-fun Wallpaper.getLocalPath(orientation: String, theme: String): String =
-    "$orientation/$theme/${themeCollection.directoryName}/$name.png"
-
-private fun Context.isLandscape(): Boolean {
-    return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-}
-
-private fun Context.isDark(): Boolean {
-    return resources.configuration.uiMode and
-        Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+    companion object {
+        /**
+         * Defines the standard path at which a wallpaper resource is kept on disk.
+         *
+         * @param orientation One of landscape/portrait.
+         * @param theme One of dark/light.
+         * @param name The name of the wallpaper.
+         */
+        fun getBaseLocalPath(orientation: String, theme: String, name: String): String =
+            "wallpapers/$orientation/$theme/$name.png"
+    }
 }

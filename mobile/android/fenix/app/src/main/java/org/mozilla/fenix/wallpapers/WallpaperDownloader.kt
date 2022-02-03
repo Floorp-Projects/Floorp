@@ -35,8 +35,8 @@ class WallpaperDownloader(
      * found at a remote path in the form:
      * <WALLPAPER_URL>/<resolution>/<orientation>/<app theme>/<wallpaper theme>/<wallpaper name>.png
      */
-    suspend fun downloadWallpaper(wallpaper: Wallpaper) = withContext(Dispatchers.IO) {
-        for (metadata in wallpaper.toMetadata()) {
+    suspend fun downloadWallpaper(wallpaper: Wallpaper.Remote) = withContext(Dispatchers.IO) {
+        for (metadata in wallpaper.toMetadata(context)) {
             val localFile = File(context.filesDir.absolutePath, metadata.localPath)
             if (localFile.exists()) continue
             val request = Request(
@@ -62,18 +62,15 @@ class WallpaperDownloader(
 
     private data class WallpaperMetadata(val remotePath: String, val localPath: String)
 
-    private fun Wallpaper.toMetadata(): List<WallpaperMetadata> = when (themeCollection.origin) {
-        WallpaperOrigin.LOCAL -> listOf()
-        WallpaperOrigin.REMOTE -> {
-            listOf("landscape", "portrait").flatMap { orientation ->
-                listOf("light", "dark").map { theme ->
-                    val basePath = getLocalPath(orientation, theme)
-                    val remotePath = "${context.resolutionSegment()}/$basePath"
-                    WallpaperMetadata(remotePath, basePath)
-                }
+    private fun Wallpaper.Remote.toMetadata(context: Context): List<WallpaperMetadata> =
+        listOf("landscape", "portrait").flatMap { orientation ->
+            listOf("light", "dark").map { theme ->
+                val remoteParent = this::class.simpleName!!.lowercase()
+                val localPath = "wallpapers/$orientation/$theme/$name.png"
+                val remotePath = "${context.resolutionSegment()}/$orientation/$theme/$remoteParent$name.png"
+                WallpaperMetadata(remotePath, localPath)
             }
         }
-    }
 
     @Suppress("MagicNumber")
     private fun Context.resolutionSegment(): String = when (resources.displayMetrics.densityDpi) {

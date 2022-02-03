@@ -87,7 +87,7 @@ fun WallpaperSettings(
             SnackbarHost(hostState = hostState) {
                 WallpaperSnackbar(onViewWallpaper)
             }
-        }
+        },
     ) {
         Column {
             WallpaperThumbnails(
@@ -292,7 +292,7 @@ private fun WallpaperThumbnailsPreview() {
             loadWallpaperResource = {
                 wallpaperManager.loadSavedWallpaper(context, it)
             },
-            wallpapers = wallpaperManager.availableWallpapers,
+            wallpapers = wallpaperManager.wallpapers,
             selectedWallpaper = wallpaperManager.currentWallpaper,
             onSelectWallpaper = {},
             onViewWallpaper = {},
