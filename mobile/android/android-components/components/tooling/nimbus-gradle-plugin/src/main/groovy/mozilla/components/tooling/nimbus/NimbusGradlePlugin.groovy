@@ -171,7 +171,7 @@ class NimbusPlugin implements Plugin<Project> {
         // a) this plugin is going to live in the AS repo (eventually)
         // See https://github.com/mozilla-mobile/android-components/issues/11422 for tying this
         // to a version that is specified in buildSrc/src/main/java/Dependencies.kt
-        return "90.0.0"
+        return "91.0.1"
     }
 
     // Try one or more hosts to download the given file.
@@ -257,7 +257,7 @@ class NimbusPlugin implements Plugin<Project> {
         String osPart
         String os = System.getProperty("os.name").toLowerCase()
         if (os.contains("win")) {
-            osPart = "windows"
+            osPart = "pc-windows-gnu"
         } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
             osPart = "unknown-linux-musl"
         } else if (os.contains("mac")) {
@@ -282,7 +282,12 @@ class NimbusPlugin implements Plugin<Project> {
     }
 
     static def getFMLPath(Project project) {
-        return [getFMLRoot(project), "nimbus-fml"].join(File.separator)
+        String os = System.getProperty("os.name").toLowerCase()
+        String binaryName = "nimbus-fml"
+        if (os.contains("win")) {
+            binaryName = "nimbus-fml.exe"
+        }
+        return [getFMLRoot(project), binaryName].join(File.separator)
     }
 
     def setupVariantTasks(variant, project, extension, oneTimeTasks, isLibrary = false) {
