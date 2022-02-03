@@ -12,6 +12,12 @@ loader.lazyRequireGetter(
   "devtools/shared/DevToolsUtils"
 );
 loader.lazyRequireGetter(this, "ChromeUtils");
+loader.lazyRequireGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm",
+  true
+);
 
 const SHEET_TYPE = {
   agent: "AGENT_SHEET",
@@ -878,6 +884,49 @@ exports.isRemoteFrame = isRemoteFrame;
  * @returns {Boolean}
  */
 function isFrameWithChildTarget(targetActor, node) {
+  // If the iframe is blocked because of CSP, it won't have a document (and no associated targets)
+  if (isFrameBlockedByCSP(node)) {
+    return false;
+  }
+
   return isRemoteFrame(node) || (isIframe(node) && targetActor.ignoreSubFrames);
 }
+
 exports.isFrameWithChildTarget = isFrameWithChildTarget;
+
+/**
+ * Check if the provided node is representing a frame that is blocked by CSP.
+ *
+ * @param {DOMNode} node
+ * @returns {Boolean}
+ */
+function isFrameBlockedByCSP(node) {
+  if (!isIframe(node)) {
+    return false;
+  }
+
+  if (!node.src) {
+    return false;
+  }
+
+  let uri;
+  try {
+    uri = NetUtil.newURI(node.src);
+  } catch (e) {
+    return false;
+  }
+
+  const res = node.ownerDocument.csp.shouldLoad(
+    Ci.nsIContentPolicy.TYPE_SUBDOCUMENT,
+    null, // nsICSPEventListener
+    uri,
+    null, // aOriginalURIIfRedirect
+    false, // aSendViolationReports
+    null, // aNonce
+    false // aParserCreated
+  );
+
+  return res !== Ci.nsIContentPolicy.ACCEPT;
+}
+
+exports.isFrameBlockedByCSP = isFrameBlockedByCSP;

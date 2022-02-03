@@ -10,14 +10,26 @@ const TEST_URI = `https://example.com/document-builder.sjs?html=${encodeURICompo
   <iframe src="https://example.org/document-builder.sjs?html=Hello"></iframe>
 `)}&headers=content-security-policy:default-src 'self'`;
 
-add_task(async function() {
-  const { inspector } = await openInspectorForURL(TEST_URI);
-  const container = await getContainerForSelector("iframe", inspector);
-  await expandContainer(inspector, container);
+const BYPASS_WALKERFRONT_CHILDREN_IFRAME_GUARD_PREF =
+  "devtools.testing.bypass-walker-children-iframe-guard";
 
-  const h1Container = await getContainerForSelector("h1", inspector);
-  ok(
-    h1Container.elt.isConnected,
-    "Inspector panel did not freeze/crash when expanding the blocked-by-csp iframe"
+add_task(async function() {
+  await pushPref(BYPASS_WALKERFRONT_CHILDREN_IFRAME_GUARD_PREF, true);
+  const { inspector } = await openInspectorForURL(TEST_URI);
+  let container = await getContainerForSelector("iframe", inspector);
+  is(
+    container.expander.style.visibility,
+    "hidden",
+    "Expand icon is hidden, even without the safe guard in WalkerFront#children"
+  );
+
+  info("Reload the page and do same assertion with the guard");
+  Services.prefs.clearUserPref(BYPASS_WALKERFRONT_CHILDREN_IFRAME_GUARD_PREF);
+  await reloadBrowser();
+  container = await getContainerForSelector("iframe", inspector);
+  is(
+    container.expander.style.visibility,
+    "hidden",
+    "Expand icon is still hidden"
   );
 });
