@@ -879,8 +879,8 @@ nsresult MaybeStoreStreamForBackgroundThread(nsIInterceptedChannel* aChannel,
       Maybe<BodyStreamVariant>& body = aIPCRequest.body();
       body.emplace(ParentToParentStream());
 
-      MOZ_TRY(nsContentUtils::GenerateUUIDInPlace(
-          body->get_ParentToParentStream().uuid()));
+      MOZ_TRY(
+          nsID::GenerateUUIDInPlace(body->get_ParentToParentStream().uuid()));
 
       auto storageOrErr = RemoteLazyInputStreamStorage::Get();
       if (NS_WARN_IF(storageOrErr.isErr())) {

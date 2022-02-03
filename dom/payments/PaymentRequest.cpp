@@ -654,7 +654,7 @@ already_AddRefed<PaymentRequest> PaymentRequest::CreatePaymentRequest(
     nsPIDOMWindowInner* aWindow, ErrorResult& aRv) {
   // Generate a unique id for identification
   nsID uuid;
-  if (NS_WARN_IF(NS_FAILED(nsContentUtils::GenerateUUIDInPlace(uuid)))) {
+  if (NS_WARN_IF(NS_FAILED(nsID::GenerateUUIDInPlace(uuid)))) {
     aRv.ThrowAbortError(
         "Failed to create an internal UUID for the PaymentRequest");
     return nullptr;
