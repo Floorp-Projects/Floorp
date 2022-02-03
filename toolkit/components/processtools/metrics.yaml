@@ -13,6 +13,55 @@
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 
 power:
+  cpu_time_per_process_type_ms:
+    type: labeled_counter
+    description: >
+      CPU time used by each process type in ms.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1747138
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1747138
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - florian@mozilla.com
+    expires: never
+    labels: &per_process_type_labels
+      - parent.active
+      - parent.active.playing-audio
+      - parent.active.playing-video
+      - parent.inactive
+      - parent.inactive.playing-audio
+      - parent.inactive.playing-video
+      - prealloc
+      - privilegedabout
+      - rdd
+      - socket
+      - web.background
+      - web.background-perceivable
+      - web.foreground
+      - extension
+      - gpu
+      - gmplugin
+      - utility
+    telemetry_mirror: POWER_CPU_TIME_PER_PROCESS_TYPE_MS
+
+  gpu_time_per_process_type_ms:
+    type: labeled_counter
+    description: >
+      GPU time used by each process type in ms.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1747138
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1747138
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - florian@mozilla.com
+    expires: never
+    labels: *per_process_type_labels
+    telemetry_mirror: POWER_GPU_TIME_PER_PROCESS_TYPE_MS
+
   total_cpu_time_ms:
     type: counter
     description: >
@@ -46,5 +95,3 @@ power:
       - florian@mozilla.com
     expires: never
     telemetry_mirror: POWER_TOTAL_GPU_TIME_MS
-    no_lint:
-      - COMMON_PREFIX
