@@ -310,6 +310,8 @@ fn is_image_opaque(format: ImageFormat, bytes: &[u8]) -> bool {
     }
 }
 
+struct IsRoot(bool);
+
 pub struct YamlFrameReader {
     yaml_path: PathBuf,
     aux_dir: PathBuf,
@@ -483,7 +485,7 @@ impl YamlFrameReader {
             spatial_id: SpatialId::new(0, PipelineId::dummy()),
             flags: PrimitiveFlags::default(),
         };
-        self.add_stacking_context_from_yaml(&mut builder, wrench, yaml, true, &mut info);
+        self.add_stacking_context_from_yaml(&mut builder, wrench, yaml, IsRoot(true), &mut info);
         self.display_lists.push(builder.end());
 
         assert_eq!(self.clip_id_stack.len(), 1);
@@ -1633,7 +1635,7 @@ impl YamlFrameReader {
                 "box-shadow" => self.handle_box_shadow(dl, item, &mut info),
                 "iframe" => self.handle_iframe(dl, item, &mut info),
                 "stacking-context" => {
-                    self.add_stacking_context_from_yaml(dl, wrench, item, false, &mut info)
+                    self.add_stacking_context_from_yaml(dl, wrench, item, IsRoot(false), &mut info)
                 }
                 "reference-frame" => self.handle_reference_frame(dl, wrench, item),
                 "shadow" => self.handle_push_shadow(dl, item, &mut info),
@@ -2001,7 +2003,7 @@ impl YamlFrameReader {
         dl: &mut DisplayListBuilder,
         wrench: &mut Wrench,
         yaml: &Yaml,
-        is_root: bool,
+        IsRoot(is_root): IsRoot,
         info: &mut CommonItemProperties,
     ) {
         let default_bounds = LayoutRect::from_size(wrench.window_size_f32());
