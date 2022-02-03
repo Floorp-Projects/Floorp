@@ -54,6 +54,9 @@ def run_telemetry(tests, binary=None, topsrcdir=None, **kwargs):
 
     os.environ["MOZ_IGNORE_NSS_SHUTDOWN_LEAKS"] = "1"
 
+    # Causes Firefox to crash when using non-local connections.
+    os.environ["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
+
     if not args.logger:
         args.logger = commandline.setup_logging(
             "Telemetry Client Tests", args, {"mach": sys.stdout}
