@@ -557,11 +557,6 @@ SearchService.prototype = {
    *   An object representing the search engine settings.
    */
   async _loadEngines(settings) {
-    // Get user's current settings and search engine before we load engines from
-    // config. These values will be compared after engines are loaded.
-    let prevMetaData = { ...settings?.metaData };
-    let prevCurrentEngine = prevMetaData.current;
-
     logConsole.debug("_loadEngines: start");
     let { engines, privateDefault } = await this._fetchEngineSelectorEngines();
     this._setDefaultAndOrdersFromSelector(engines, privateDefault);
@@ -590,23 +585,6 @@ SearchService.prototype = {
     this._loadEnginesMetadataFromSettings(settings.engines);
 
     logConsole.debug("_loadEngines: done");
-
-    // If the defaultEngine has changed and the user's search settings are the
-    // same, notify user their engine has been removed.
-    let newCurrentEngine = this._getEngineDefault(false)?.name;
-
-    if (
-      prevCurrentEngine &&
-      newCurrentEngine !== prevCurrentEngine &&
-      prevMetaData &&
-      settings.metaData &&
-      !this._hasSettingsMetaDataChanged(prevMetaData, settings.metaData)
-    ) {
-      this._showRemovalOfSearchEngineNotificationBox(
-        prevCurrentEngine,
-        newCurrentEngine
-      );
-    }
   },
 
   /**
@@ -682,9 +660,8 @@ SearchService.prototype = {
 
   async _reloadEngines(settings) {
     // Capture the current engine state, in case we need to notify below.
-    let prevCurrentEngine = this._currentEngine;
-    let prevPrivateEngine = this._currentPrivateEngine;
-    let prevMetaData = { ...settings?.metaData };
+    const prevCurrentEngine = this._currentEngine;
+    const prevPrivateEngine = this._currentPrivateEngine;
 
     // Ensure that we don't set the useSavedOrder flag whilst we're doing this.
     // This isn't a user action, so we shouldn't be switching it.
@@ -797,21 +774,6 @@ SearchService.prototype = {
     // Now set the sort out the default engines and notify as appropriate.
     this._currentEngine = null;
     this._currentPrivateEngine = null;
-    // If the user's default is one of the private engines that is being removed,
-    // reset the stored setting, so that we correctly detect the change in
-    // in default.
-    if (
-      prevCurrentEngine &&
-      enginesToRemove.some(e => e.name == prevCurrentEngine.name)
-    ) {
-      this._settings.setAttribute("current", "");
-    }
-    if (
-      prevPrivateEngine &&
-      enginesToRemove.some(e => e.name == prevPrivateEngine.name)
-    ) {
-      this._settings.setAttribute("private", "");
-    }
 
     this._setDefaultAndOrdersFromSelector(
       originalConfigEngines,
@@ -833,19 +795,7 @@ SearchService.prototype = {
           SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
         );
       }
-
-      if (
-        prevMetaData &&
-        settings.metaData &&
-        !this._hasSettingsMetaDataChanged(prevMetaData, settings.metaData)
-      ) {
-        this._showRemovalOfSearchEngineNotificationBox(
-          prevCurrentEngine.name,
-          this.defaultEngine.name
-        );
-      }
     }
-
     if (
       this._separatePrivateDefault &&
       prevPrivateEngine &&
@@ -2193,7 +2143,11 @@ SearchService.prototype = {
     // to pick a new current engine. As soon as we return it, this new
     // current engine will become user-visible, so we should persist it.
     // by calling the setter.
-    this._setEngineDefault(privateMode, newDefault);
+    if (privateMode) {
+      this.defaultPrivateEngine = newDefault;
+    } else {
+      this.defaultEngine = newDefault;
+    }
 
     return this[currentEngineProp];
   },
@@ -2209,6 +2163,7 @@ SearchService.prototype = {
    *   The appropriate search engine, or null if one could not be determined.
    */
   _getEngineDefault(privateMode) {
+    this._ensureInitialized();
     const currentEngineProp = privateMode
       ? "_currentPrivateEngine"
       : "_currentEngine";
@@ -2220,7 +2175,7 @@ SearchService.prototype = {
     // No default loaded, so find it from settings.
     const attributeName = privateMode ? "private" : "current";
     let name = this._settings.getAttribute(attributeName);
-    let engine = this._engines.get(name) || null;
+    let engine = this.getEngineByName(name);
     if (
       engine &&
       (engine.isAppProvided ||
@@ -2255,6 +2210,7 @@ SearchService.prototype = {
    *   The search engine to select
    */
   _setEngineDefault(privateMode, newEngine) {
+    this._ensureInitialized();
     // Sometimes we get wrapped nsISearchEngine objects (external XPCOM callers),
     // and sometimes we get raw Engine JS objects (callers in this file), so
     // handle both.
@@ -2268,7 +2224,7 @@ SearchService.prototype = {
       );
     }
 
-    const newCurrentEngine = this._engines.get(newEngine.name);
+    const newCurrentEngine = this.getEngineByName(newEngine.name);
     if (!newCurrentEngine) {
       throw Components.Exception(
         "Can't find engine in store!",
@@ -2339,22 +2295,18 @@ SearchService.prototype = {
   },
 
   get defaultEngine() {
-    this._ensureInitialized();
     return this._getEngineDefault(false);
   },
 
   set defaultEngine(newEngine) {
-    this._ensureInitialized();
     this._setEngineDefault(false, newEngine);
   },
 
   get defaultPrivateEngine() {
-    this._ensureInitialized();
     return this._getEngineDefault(this._separatePrivateDefault);
   },
 
   set defaultPrivateEngine(newEngine) {
-    this._ensureInitialized();
     if (!this._separatePrivateDefaultPrefValue) {
       Services.prefs.setBoolPref(
         SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
@@ -2872,48 +2824,6 @@ SearchService.prototype = {
     "nsIObserver",
     "nsITimerCallback",
   ]),
-
-  /**
-   * @param {object} prevMetaDataObj
-   *   settings metaData Object
-   * @param {object} currentMetaDataObj
-   *   settings metaData Object
-   * @returns {boolean}
-   *    Returns true if the metaData objects have different properties values.
-   */
-  _hasSettingsMetaDataChanged(prevMetaDataObj, currentMetaDataObj) {
-    let metaDataProperties = [
-      "locale",
-      "region",
-      "channel",
-      "experiment",
-      "distroID",
-    ];
-
-    return metaDataProperties.some(
-      p => prevMetaDataObj?.[p] != currentMetaDataObj?.[p]
-    );
-  },
-
-  /**
-   * Shows an infobar to notify the user their default search engine has been
-   * removed and replaced by a new default search engine.
-   *
-   * @param {string} prevCurrentEngine
-   *   The engine that was previously the default engine and is to be replaced.
-   * @param {string} newCurrentEngine
-   *   The engine that will be the new the default engine.
-   */
-  _showRemovalOfSearchEngineNotificationBox(
-    prevCurrentEngine,
-    newCurrentEngine
-  ) {
-    let win = Services.wm.getMostRecentBrowserWindow();
-    win.BrowserSearch.removalOfSearchEngineNotificationBox(
-      prevCurrentEngine,
-      newCurrentEngine
-    );
-  },
 };
 
 var engineUpdateService = {

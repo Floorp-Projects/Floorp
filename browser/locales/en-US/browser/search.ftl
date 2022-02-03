@@ -28,11 +28,3 @@ searchbar-input =
 
 searchbar-icon =
     .tooltiptext = Search
-
-## Infobar shown when search engine is removed and replaced.
-## Variables
-## $oldEngine (String) - the search engine to be removed.
-## $newEngine (String) - the search engine to replace the removed search engine.
-
-remove-search-engine-message = <strong>Your default search engine has been changed.</strong> { -brand-short-name } no longer supports { $oldEngine }. { $newEngine } is now your default search engine. To change to another default search engine, go to settings. <label data-l10n-name="remove-search-engine-article">Learn more</label>
-remove-search-engine-button = OK
