@@ -96,8 +96,8 @@ class AudioClock {
   Atomic<uint32_t> mOutRate;
   // Input rate in Hz (characteristic of the media being played).
   const uint32_t mInRate;
-  // True if the we are timestretching, false if we are resampling. Accessed on the
-  // audio thread only.
+  // True if the we are timestretching, false if we are resampling. Accessed on
+  // the audio thread only.
   bool mPreservesPitch;
   // The history of frames sent to the audio engine in each DataCallback.
   // Only accessed from non-audio threads on macOS, accessed on both threads and
@@ -158,7 +158,7 @@ class AudioBufferCursor {
  * A helper class to encapsulate pointer arithmetic and provide means to modify
  * the underlying audio buffer.
  */
-class AudioBufferWriter : private AudioBufferCursor {
+class AudioBufferWriter : public AudioBufferCursor {
  public:
   AudioBufferWriter(Span<AudioDataValue> aSpan, uint32_t aChannels,
                     uint32_t aFrames)
@@ -217,9 +217,9 @@ class AudioStream final {
 
   class DataSource {
    public:
-    // Return a chunk which contains at most aFrames frames or zero if no
-    // frames in the source at all.
-    virtual UniquePtr<Chunk> PopFrames(uint32_t aFrames) = 0;
+    // Attempt to acquire aFrames frames of audio, and returns the number of
+    // frames successfuly acquired.
+    virtual uint32_t PopFrames(AudioDataValue* aAudio, uint32_t aFrames) = 0;
     // Return true if no more data will be added to the source.
     virtual bool Ended() const = 0;
 
