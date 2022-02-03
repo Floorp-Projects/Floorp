@@ -4,13 +4,6 @@
 const kDefaultEngineName = "engine1";
 
 add_task(async function setup() {
-  // Stub removal of search engine notification box.
-  // This ensures that BrowserSearch.win is not accessed in this test.
-  sinon.stub(
-    await Services.search.wrappedJSObject,
-    "_showRemovalOfSearchEngineNotificationBox"
-  );
-
   useHttpServer();
   await AddonTestUtils.promiseStartupManager();
   await SearchTestUtils.useTestEngines("data1");

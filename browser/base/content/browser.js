@@ -4278,57 +4278,6 @@ const BrowserSearch = {
     var where = newWindowPref == 3 ? "tab" : "window";
     openTrustedLinkIn(this.searchEnginesURL, where);
   },
-
-  /**
-   * Infobar to notify the user's search engine has been removed
-   * and replaced with an application default search engine.
-   *
-   * @param {string} oldEngine
-   *   name of the engine to be moved and replaced.
-   * @param {string} newEngine
-   *   name of the application default engine to replaced the removed engine.
-   */
-  removalOfSearchEngineNotificationBox(oldEngine, newEngine) {
-    let messageFragment = document.createDocumentFragment();
-    let message = document.createElement("span");
-    let link = document.createXULElement("label", {
-      is: "text-link",
-    });
-
-    link.href = Services.urlFormatter.formatURLPref(
-      "browser.search.searchEngineRemoval"
-    );
-    link.setAttribute("data-l10n-name", "remove-search-engine-article");
-    document.l10n.setAttributes(message, "remove-search-engine-message", {
-      oldEngine,
-      newEngine,
-    });
-
-    message.appendChild(link);
-    messageFragment.appendChild(message);
-
-    let button = [
-      {
-        "l10n-id": "remove-search-engine-button",
-        primary: true,
-        callback() {
-          const notificationBox = gNotificationBox.getNotificationWithValue(
-            "search-engine-removal"
-          );
-          gNotificationBox.removeNotification(notificationBox);
-        },
-      },
-    ];
-
-    gNotificationBox.appendNotification(
-      "search-engine-removal",
-      {
-        label: messageFragment,
-        priority: gNotificationBox.PRIORITY_SYSTEM,
-      },
-      button
-    );
-  },
 };
 
 XPCOMUtils.defineConstant(this, "BrowserSearch", BrowserSearch);
