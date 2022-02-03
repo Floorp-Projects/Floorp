@@ -230,7 +230,6 @@
 
     <!-- Top site colors -->
     <color name="top_site_pin_icon_color">@color/photonDarkGrey80</color>
-    <color name="top_sites_border_color">@color/photonLightGrey30</color>
 
     <!-- Quick action buttons-->
     <color name="quick_action_reader_appearance_icon">#482166</color>

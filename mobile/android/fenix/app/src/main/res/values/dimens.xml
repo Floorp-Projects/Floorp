@@ -194,7 +194,6 @@
     <dimen name="top_sites_card_padding">12dp</dimen>
     <dimen name="top_sites_card_elevation">6dp</dimen>
     <dimen name="top_sites_card_radius">8dp</dimen>
-    <dimen name="top_sites_card_stroke_width">1dp</dimen>
 
     <!-- Credit Cards Fragment -->
     <dimen name="credit_cards_saved_cards_item_margin_start">16dp</dimen>

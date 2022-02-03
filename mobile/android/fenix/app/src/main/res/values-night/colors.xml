@@ -155,7 +155,6 @@
 
     <!--Top site colors -->
     <color name="top_site_pin_icon_color">@color/photonLightGrey20</color>
-    <color name="top_sites_border_color">@color/photonDarkGrey90</color>
 
     <!-- Search Widget -->
     <color name="search_widget_background">@color/inset_normal_theme</color>

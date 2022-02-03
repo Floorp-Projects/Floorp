@@ -626,8 +626,6 @@
         <item name="cardBackgroundColor">?mozac_widget_favicon_background_color</item>
         <item name="cardCornerRadius">@dimen/top_sites_card_radius</item>
         <item name="cardElevation">@dimen/top_sites_card_elevation</item>
-        <item name="strokeColor">@color/top_sites_border_color</item>
-        <item name="strokeWidth">@dimen/top_sites_card_stroke_width</item>
     </style>
 
     <style name="topSiteFavicon">
