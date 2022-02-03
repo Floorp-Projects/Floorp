@@ -450,7 +450,7 @@ bool ScaledFontMac::GetWRFontInstanceOptions(
     options.flags |= wr::FontInstanceFlags::FONT_SMOOTHING;
   }
   if (mApplySyntheticBold) {
-    options.flags |= wr::FontInstanceFlags::SYNTHETIC_BOLD;
+    options.flags |= wr::FontInstanceFlags::MULTISTRIKE_BOLD;
   }
   if (mHasColorGlyphs) {
     options.flags |= wr::FontInstanceFlags::EMBEDDED_BITMAPS;
@@ -472,7 +472,7 @@ ScaledFontMac::InstanceData::InstanceData(
     if (!(aOptions->flags & wr::FontInstanceFlags::FONT_SMOOTHING)) {
       mUseFontSmoothing = false;
     }
-    if (aOptions->flags & wr::FontInstanceFlags::SYNTHETIC_BOLD) {
+    if (aOptions->flags & wr::FontInstanceFlags::MULTISTRIKE_BOLD) {
       mApplySyntheticBold = true;
     }
     if (aOptions->flags & wr::FontInstanceFlags::EMBEDDED_BITMAPS) {

@@ -605,7 +605,7 @@ impl FontInstance {
 
     #[allow(dead_code)]
     pub fn get_extra_strikes(&self, x_scale: f64) -> usize {
-        if self.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
+        if self.flags.contains(FontInstanceFlags::MULTISTRIKE_BOLD) {
             let mut bold_offset = self.size.to_f64_px() / 48.0;
             if bold_offset < 1.0 {
                 bold_offset = 0.25 + 0.75 * bold_offset;
@@ -770,6 +770,119 @@ impl GlyphFormat {
             GlyphFormat::ColorBitmap => ImageFormat::BGRA8,
         }
     }
+}
+
+#[allow(dead_code)]
+#[inline]
+fn blend_strike_pixel(dest: u8, src: u32, src_alpha: u32) -> u8 {
+    // Assume premultiplied alpha such that src and dest are already multiplied
+    // by their respective alpha values and in range 0..=255. The rounded over
+    // blend is then (src * 255 + dest * (255 - src_alpha) + 128) / 255.
+    // We approximate (x + 128) / 255 as (x + 128 + ((x + 128) >> 8)) >> 8.
+    let x = src * 255 + dest as u32 * (255 - src_alpha) + 128;
+    ((x + (x >> 8)) >> 8) as u8
+}
+
+// Blends a single strike at a given offset into a destination buffer, assuming
+// the destination has been allocated with enough extra space to accommodate the
+// offset.
+#[allow(dead_code)]
+fn blend_strike(
+    dest_bitmap: &mut [u8],
+    src_bitmap: &[u8],
+    width: usize,
+    height: usize,
+    subpixel_mask: bool,
+    offset: f64,
+) {
+    let dest_stride = dest_bitmap.len() / height;
+    let src_stride = width * 4;
+    let offset_integer = offset.floor() as usize * 4;
+    let offset_fract = (offset.fract() * 256.0) as u32;
+    for (src_row, dest_row) in src_bitmap.chunks(src_stride).zip(dest_bitmap.chunks_mut(dest_stride)) {
+        let mut prev_px = [0u32; 4];
+        let dest_row_offset = &mut dest_row[offset_integer .. offset_integer + src_stride];
+        for (src, dest) in src_row.chunks(4).zip(dest_row_offset.chunks_mut(4)) {
+            let px = [src[0] as u32, src[1] as u32, src[2] as u32, src[3] as u32];
+            // Blend current pixel with previous pixel based on fractional offset.
+            let next_px = [px[0] * offset_fract,
+                           px[1] * offset_fract,
+                           px[2] * offset_fract,
+                           px[3] * offset_fract];
+            let offset_px = [(((px[0] << 8) - next_px[0]) + prev_px[0] + 128) >> 8,
+                             (((px[1] << 8) - next_px[1]) + prev_px[1] + 128) >> 8,
+                             (((px[2] << 8) - next_px[2]) + prev_px[2] + 128) >> 8,
+                             (((px[3] << 8) - next_px[3]) + prev_px[3] + 128) >> 8];
+            if subpixel_mask {
+                // Subpixel masks assume each component is an independent weight.
+                dest[0] = blend_strike_pixel(dest[0], offset_px[0], offset_px[0]);
+                dest[1] = blend_strike_pixel(dest[1], offset_px[1], offset_px[1]);
+                dest[2] = blend_strike_pixel(dest[2], offset_px[2], offset_px[2]);
+                dest[3] = blend_strike_pixel(dest[3], offset_px[3], offset_px[3]);
+            } else {
+                // Otherwise assume we have a premultiplied alpha BGRA value.
+                dest[0] = blend_strike_pixel(dest[0], offset_px[0], offset_px[3]);
+                dest[1] = blend_strike_pixel(dest[1], offset_px[1], offset_px[3]);
+                dest[2] = blend_strike_pixel(dest[2], offset_px[2], offset_px[3]);
+                dest[3] = blend_strike_pixel(dest[3], offset_px[3], offset_px[3]);
+            }
+            // Save the remainder for blending onto the next pixel.
+            prev_px = next_px;
+        }
+        if offset_fract > 0 {
+            // When there is fractional offset, there will be a remaining value
+            // from the previous pixel but no next pixel, so just use that.
+            let dest = &mut dest_row[offset_integer + src_stride .. ];
+            let offset_px = [(prev_px[0] + 128) >> 8,
+                             (prev_px[1] + 128) >> 8,
+                             (prev_px[2] + 128) >> 8,
+                             (prev_px[3] + 128) >> 8];
+            if subpixel_mask {
+                dest[0] = blend_strike_pixel(dest[0], offset_px[0], offset_px[0]);
+                dest[1] = blend_strike_pixel(dest[1], offset_px[1], offset_px[1]);
+                dest[2] = blend_strike_pixel(dest[2], offset_px[2], offset_px[2]);
+                dest[3] = blend_strike_pixel(dest[3], offset_px[3], offset_px[3]);
+            } else {
+                dest[0] = blend_strike_pixel(dest[0], offset_px[0], offset_px[3]);
+                dest[1] = blend_strike_pixel(dest[1], offset_px[1], offset_px[3]);
+                dest[2] = blend_strike_pixel(dest[2], offset_px[2], offset_px[3]);
+                dest[3] = blend_strike_pixel(dest[3], offset_px[3], offset_px[3]);
+            }
+        }
+    }
+}
+
+// Applies multistrike bold to a source bitmap. This assumes the source bitmap
+// is a tighly packed slice of BGRA pixel values of exactly the specified width
+// and height. The specified extra strikes and pixel step control where to put
+// each strike. The pixel step is allowed to have a fractional offset and does
+// not strictly need to be integer.
+#[allow(dead_code)]
+pub fn apply_multistrike_bold(
+    src_bitmap: &[u8],
+    width: usize,
+    height: usize,
+    subpixel_mask: bool,
+    extra_strikes: usize,
+    pixel_step: f64,
+) -> (Vec<u8>, usize) {
+    let src_stride = width * 4;
+    // The amount of extra width added to the bitmap from the extra strikes.
+    let extra_width = (extra_strikes as f64 * pixel_step).ceil() as usize;
+    let dest_width = width + extra_width;
+    let dest_stride = dest_width * 4;
+    // Zero out the initial bitmap so any extra width is cleared.
+    let mut dest_bitmap = vec![0u8; dest_stride * height];
+    for (src_row, dest_row) in src_bitmap.chunks(src_stride).zip(dest_bitmap.chunks_mut(dest_stride)) {
+        // Copy the initial bitmap strike rows directly from the source.
+        dest_row[0 .. src_stride].copy_from_slice(src_row);
+    }
+    // Finally blend each extra strike in turn.
+    for i in 1 ..= extra_strikes {
+        let offset = i as f64 * pixel_step;
+        blend_strike(&mut dest_bitmap, src_bitmap, width, height, subpixel_mask, offset);
+    }
+    (dest_bitmap, dest_width)
 }
 
 pub struct RasterizedGlyph {
