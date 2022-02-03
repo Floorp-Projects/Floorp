@@ -18,6 +18,7 @@
 #  include "mozilla/Result.h"
 #  include "mozilla/TimeStamp.h"
 #  include "mozilla/UniquePtr.h"
+#  include "mozilla/SPSCQueue.h"
 #  include "nsCOMPtr.h"
 #  include "nsThreadUtils.h"
 #  include "WavDumper.h"
@@ -38,6 +39,18 @@ class AudioStream;
 class FrameHistory;
 class AudioConfig;
 
+// A struct that contains the number of frames serviced or underrun by a
+// callback, alongside the sample-rate for this callback (in case of playback
+// rate change, it can be variable).
+struct CallbackInfo {
+  CallbackInfo() = default;
+  CallbackInfo(uint32_t aServiced, uint32_t aUnderrun, uint32_t aOutputRate)
+      : mServiced(aServiced), mUnderrun(aUnderrun), mOutputRate(aOutputRate) {}
+  uint32_t mServiced = 0;
+  uint32_t mUnderrun = 0;
+  uint32_t mOutputRate = 0;
+};
+
 class AudioClock {
  public:
   AudioClock();
@@ -55,14 +68,14 @@ class AudioClock {
    * @return The playback position in frames of the stream,
    *         adjusted by playback rate changes and underrun frames.
    */
-  int64_t GetPositionInFrames(int64_t aFrames) const;
+  int64_t GetPositionInFrames(int64_t aFrames);
 
   /**
    * @param frames The playback position in frames of the audio engine.
    * @return The playback position in microseconds of the stream,
    *         adjusted by playback rate changes and underrun frames.
    */
-  int64_t GetPosition(int64_t frames) const;
+  int64_t GetPosition(int64_t frames);
 
   // Set the playback rate.
   // Called on the audio thread.
@@ -82,13 +95,21 @@ class AudioClock {
 
  private:
   // Output rate in Hz (characteristic of the playback rate)
-  uint32_t mOutRate;
+  Atomic<uint32_t> mOutRate;
   // Input rate in Hz (characteristic of the media being played)
-  uint32_t mInRate;
-  // True if the we are timestretching, false if we are resampling.
   bool mPreservesPitch;
   // The history of frames sent to the audio engine in each DataCallback.
   const UniquePtr<FrameHistory> mFrameHistory;
+#  ifdef XP_MACOSX
+  // Enqueued on the audio thread, dequeued from the other thread. The maximum
+  // size of this queue has been chosen empirically.
+  SPSCQueue<CallbackInfo> mCallbackInfoQueue{100};
+  // If it isn't possible to send the callback info to the non-audio thread,
+  // store them here until it's possible to send them. This is an unlikely
+  // fallback path. The size of this array has been chosen empirically. Only
+  // ever accessed on the audio thread.
+  AutoTArray<CallbackInfo, 5> mAudioThreadCallbackInfo;
+#  endif
 };
 
 /*
