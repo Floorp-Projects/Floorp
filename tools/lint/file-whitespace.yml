@@ -187,6 +187,10 @@ file-whitespace:
         - devtools/client/styleeditor/test/sourcemap-css/test-stylus.css
         - dom/bindings/test/file_barewordGetsWindow_frame1.html
         - dom/bindings/test/file_barewordGetsWindow_frame2.html
+        - devtools/perfdocs/index.rst
+        - python/mozperftest/perfdocs/running.rst
+        - python/mozperftest/perfdocs/vision.rst
+        - python/mozperftest/perfdocs/writing.rst
     extensions:
         - .c
         - .cc
