@@ -319,8 +319,6 @@ pub struct YamlFrameReader {
 
     display_lists: Vec<(PipelineId, BuiltDisplayList)>,
 
-    include_only: Vec<String>,
-
     watch_source: bool,
     list_resources: bool,
 
@@ -364,7 +362,6 @@ impl YamlFrameReader {
             aux_dir: yaml_path.parent().unwrap().to_owned(),
             frame_count: 0,
             display_lists: Vec::new(),
-            include_only: vec![],
             scroll_offsets: HashMap::new(),
             fonts: HashMap::new(),
             font_instances: HashMap::new(),
@@ -426,8 +423,6 @@ impl YamlFrameReader {
         });
         y.list_resources = args.is_present("list-resources");
         y.watch_source = args.is_present("watch");
-        y.include_only = args.values_of("include")
-            .map(|v| v.map(|s| s.to_owned()).collect()).unwrap_or_default();
         y
     }
 
@@ -1556,14 +1551,6 @@ impl YamlFrameReader {
 
         for item in yaml_items {
             let item_type = Self::get_item_type_from_yaml(item);
-
-            // We never skip stacking contexts and reference frames because
-            // they are structural elements of the display list.
-            if item_type != "stacking-context" &&
-                item_type != "reference-frame" &&
-                self.include_only.iter().any(|t| t == item_type) {
-                continue;
-            }
 
             let (set_clip_id, set_scroll_id) = self.to_clip_and_scroll_info(
                 &item["clip-and-scroll"],
