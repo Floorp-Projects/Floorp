@@ -172,3 +172,5 @@ so users don't have to provide them in the command line::
 To use this hook module, it can be passed to the `--hooks` option::
 
     $  ./mach perftest --hooks hooks.py perftest_example.js
+
+
