@@ -5572,6 +5572,11 @@
   value: false
   mirror: always
 
+- name: gfx.will-change.ignore-opacity
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # We expose two prefs: gfx.webrender.all and gfx.webrender.enabled.
 # The first enables WR+additional features, and the second just enables WR.
 # For developer convenience, building with --enable-webrender=true or just
