@@ -25,17 +25,9 @@ add_task(async function test_openPreferences_spotlight() {
   ]) {
     if (
       arg == "privacy-credit-card-autofill" &&
-      Services.prefs.getCharPref(
-        "extensions.formautofill.creditCards.supported"
-      ) == "off"
-    ) {
-      continue;
-    }
-    if (
-      arg == "privacy-address-autofill" &&
-      Services.prefs.getCharPref(
-        "extensions.formautofill.addresses.supported"
-      ) == "off"
+      !Services.prefs.getBoolPref(
+        "extensions.formautofill.creditCards.available"
+      )
     ) {
       continue;
     }
