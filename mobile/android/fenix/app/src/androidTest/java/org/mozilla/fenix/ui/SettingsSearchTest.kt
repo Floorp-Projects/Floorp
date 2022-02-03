@@ -1,8 +1,6 @@
 package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -19,7 +17,6 @@ import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 class SettingsSearchTest {
-    private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     private lateinit var mockWebServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
 
@@ -72,31 +69,52 @@ class SettingsSearchTest {
     }
 
     @Test
-    fun toggleShowVisitedSitesAndBookmarks() {
-        // Bookmarks a few websites, toggles the history and bookmarks setting to off, then verifies if the visited and bookmarked websites do not show in the suggestions.
+    fun toggleSearchBookmarksAndHistoryTest() {
+        // Bookmarks 2 websites, toggles the bookmarks and history search settings off,
+        // then verifies if the websites do not show in the suggestions.
         val page1 = getGenericAsset(mockWebServer, 1)
         val page2 = getGenericAsset(mockWebServer, 2)
-        val page3 = getGenericAsset(mockWebServer, 3)
 
-        homeScreen {
-        }.openNavigationToolbar {
+        navigationToolbar {
         }.enterURLAndEnterToBrowser(page1.url) {
+            verifyUrl(page1.url.toString())
         }.openThreeDotMenu {
-        }.bookmarkPage { }
-
+        }.bookmarkPage {
+        }.openTabDrawer {
+            closeTab()
+        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(page2.url) {
             verifyUrl(page2.url.toString())
         }.openThreeDotMenu {
-        }.bookmarkPage { }
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(page3.url) {
-            mDevice.waitForIdle()
+        }.bookmarkPage {
+        }.openTabDrawer {
+            closeTab()
         }
-
-        navigationToolbar {
-            verifyNoHistoryBookmarks()
+        // Verifies that bookmarks & history suggestions are shown
+        homeScreen {
+        }.openSearch {
+            typeSearch("test")
+            expandSearchSuggestionsList()
+            verifySearchEngineSuggestionResults(activityTestRule, "Test_Page_1")
+            verifySearchEngineSuggestionResults(activityTestRule, "Test_Page_2")
+        }.dismissSearchBar {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            // Disables the search bookmarks & history settings
+            verifySearchBookmarks()
+            switchSearchBookmarksToggle()
+            switchSearchHistoryToggle()
+            exitMenu()
+        }
+        // Verifies that bookmarks and history suggestions are not shown
+        homeScreen {
+        }.openSearch {
+            typeSearch("test")
+            expandSearchSuggestionsList()
+            verifyNoSuggestionsAreDisplayed(activityTestRule, "Test_Page_1")
+            verifyNoSuggestionsAreDisplayed(activityTestRule, "Test_Page_2")
         }
     }
 

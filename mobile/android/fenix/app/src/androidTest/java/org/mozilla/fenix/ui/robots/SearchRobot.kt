@@ -200,6 +200,10 @@ class SearchRobot {
         pasteText.click()
     }
 
+    fun expandSearchSuggestionsList() {
+        awesomeBar.swipeUp(2)
+    }
+
     fun verifyPastedToolbarText(expectedText: String) = assertPastedToolbarText(expectedText)
 
     class Transition {
@@ -284,7 +288,7 @@ private fun assertSearchEngineURL(searchEngineName: String) {
         TestAssetHelper.waitingTime
     )
     onView(allOf(withText(startsWith("${searchEngineName.lowercase()}.com"))))
-        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun assertSearchEngineResults(rule: ComposeTestRule, searchEngineName: String, count: Int) {
@@ -303,21 +307,19 @@ private fun assertSearchEngineResults(rule: ComposeTestRule, searchEngineName: S
 private fun assertSearchEngineSuggestionResults(rule: ComposeTestRule, searchResult: String) {
     rule.waitForIdle()
 
-    mDevice.waitForObjects(
-        mDevice.findObject(
-            UiSelector().textContains(searchResult)
-        )
+    assertTrue(
+        mDevice.findObject(UiSelector().textContains(searchResult))
+            .waitForExists(waitingTime)
     )
-
-    rule.onNodeWithText(searchResult)
-        .assertExists()
 }
 
 private fun assertNoSuggestionsAreDisplayed(rule: ComposeTestRule, searchTerm: String) {
     rule.waitForIdle()
 
-    rule.onNodeWithText(searchTerm)
-        .assertDoesNotExist()
+    assertFalse(
+        mDevice.findObject(UiSelector().textContains(searchTerm))
+            .waitForExists(waitingTime)
+    )
 }
 
 private fun assertSearchView() =
@@ -350,11 +352,11 @@ private fun assertSearchButton() =
 
 private fun assertSearchWithText() =
     onView(allOf(withText("THIS TIME, SEARCH WITH:")))
-        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertSearchSettings() =
     onView(allOf(withText("Default search engine")))
-        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertSearchBarEmpty() =
     assertTrue(
@@ -465,5 +467,8 @@ private fun assertPastedToolbarText(expectedText: String) {
         )
     ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
+
+private val awesomeBar =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))
 
 private val voiceSearchButton = mDevice.findObject(UiSelector().description("Voice search"))
