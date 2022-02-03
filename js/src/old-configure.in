@@ -91,7 +91,6 @@ if test "$target" != "$host"; then
 else
     AC_PROG_CC
     AC_PROG_CXX
-    MOZ_PATH_PROGS(AS, $AS as, $CC)
 fi
 
 MOZ_TOOL_VARIABLES
