@@ -220,6 +220,9 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
         env["RUST_BACKTRACE"] = "1"
         env["MOZ_IGNORE_NSS_SHUTDOWN_LEAKS"] = "1"
 
+        # Causes Firefox to crash when using non-local connections.
+        env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
+
         # If code coverage is enabled, set GCOV_PREFIX env variable
         if self.config.get("code_coverage"):
             env["GCOV_PREFIX"] = self.gcov_dir
