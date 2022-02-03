@@ -1041,12 +1041,6 @@ bool nsImageRenderer::IsRasterImage() {
          mImageContainer->GetType() == imgIContainer::TYPE_RASTER;
 }
 
-bool nsImageRenderer::IsAnimatedImage() {
-  bool animated = false;
-  return mImageContainer &&
-         NS_SUCCEEDED(mImageContainer->GetAnimated(&animated)) && animated;
-}
-
 already_AddRefed<imgIContainer> nsImageRenderer::GetImage() {
   return do_AddRef(mImageContainer);
 }
