@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { ContentTaskUtils } = ChromeUtils.import(
-  "resource://testing-common/ContentTaskUtils.jsm"
-);
-
 let { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
@@ -111,7 +107,7 @@ add_task(async function test_aboutpreferences_event_telemetry() {
     "category-more-from-mozilla"
   );
 
-  let clickedPromise = ContentTaskUtils.waitForEvent(
+  let clickedPromise = BrowserTestUtils.waitForEvent(
     moreFromMozillaCategory,
     "click"
   );
@@ -333,5 +329,50 @@ add_task(async function test_aboutpreferences_search() {
   Assert.ok(BrowserTestUtils.is_hidden(vpn), "VPN hidden");
   Assert.ok(BrowserTestUtils.is_visible(rally), "Rally shown");
 
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_aboutpreferences_clickBtnRally() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.preferences.moreFromMozilla", true],
+      ["browser.preferences.moreFromMozilla.template", "simple"],
+    ],
+  });
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let tab = gBrowser.selectedTab;
+
+  let expectedUrl = new URL("https://rally.mozilla.org");
+  expectedUrl.searchParams.set("utm_source", "about-prefs");
+  expectedUrl.searchParams.set("utm_campaign", "morefrommozilla");
+  expectedUrl.searchParams.set("utm_medium", "firefox-desktop");
+  expectedUrl.searchParams.set("utm_content", "fxvt-113-a-na");
+  expectedUrl.searchParams.set(
+    "entrypoint_experiment",
+    "morefrommozilla-experiment-1846"
+  );
+  expectedUrl.searchParams.set("entrypoint_variation", "treatment-simple");
+
+  let tabOpened = BrowserTestUtils.waitForDocLoadAndStopIt(
+    expectedUrl.toString(),
+    gBrowser,
+    channel => {
+      Assert.equal(
+        channel.originalURI.spec,
+        expectedUrl.toString(),
+        "URL matched"
+      );
+      return true;
+    }
+  );
+  let rallyButton = doc.getElementById("simple-mozillaRally");
+  rallyButton.click();
+
+  await tabOpened;
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   BrowserTestUtils.removeTab(tab);
 });
