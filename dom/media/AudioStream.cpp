@@ -504,7 +504,8 @@ void AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
   }
 
   while (aWriter.Available() > 0) {
-    uint32_t count = mDataSource.PopFrames(aWriter.Ptr(), aWriter.Available());
+    uint32_t count = mDataSource.PopFrames(aWriter.Ptr(), aWriter.Available(),
+                                           mAudioThreadChanged);
     if (count == 0) {
       break;
     }
@@ -534,7 +535,8 @@ void AudioStream::GetTimeStretched(AudioBufferWriter& aWriter) {
     }
     buf.SetLength(size.value());
     // ensure no variable channel count or something like that
-    uint32_t count = mDataSource.PopFrames(buf.Elements(), toPopFrames);
+    uint32_t count =
+        mDataSource.PopFrames(buf.Elements(), toPopFrames, mAudioThreadChanged);
     if (count == 0) {
       break;
     }
@@ -553,8 +555,10 @@ bool AudioStream::CheckThreadIdChanged() {
   ProfilerThreadId id = profiler_current_thread_id();
   if (id != mAudioThreadId) {
     mAudioThreadId = id;
+    mAudioThreadChanged = true;
     return true;
   }
+  mAudioThreadChanged = false;
   return false;
 }
 
@@ -619,7 +623,7 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
     MonitorAutoLock mon(mMonitor);
 #endif
     mAudioClock.UpdateFrameHistory(aFrames - writer.Available(),
-                                   writer.Available());
+                                   writer.Available(), mAudioThreadChanged);
     if (writer.Available() > 0) {
       TRACE_COMMENT("AudioStream::DataCallback", "Underrun: %d frames missing",
                     writer.Available());
@@ -636,7 +640,7 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
 #ifndef XP_MACOSX
     MonitorAutoLock mon(mMonitor);
 #endif
-    mAudioClock.UpdateFrameHistory(aFrames - writer.Available(), 0);
+    mAudioClock.UpdateFrameHistory(aFrames - writer.Available(), 0, mAudioThreadChanged);
   }
 
   mDumpFile.Write(static_cast<const AudioDataValue*>(aBuffer),
@@ -673,22 +677,24 @@ AudioClock::AudioClock(uint32_t aInRate)
       mPreservesPitch(true),
       mFrameHistory(new FrameHistory()) {}
 
-void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun) {
+void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun, bool aAudioThreadChanged) {
+#ifdef XP_MACOSX
+  if (aAudioThreadChanged) {
+    mCallbackInfoQueue.ResetThreadIds();
+  }
   // Flush the local items, if any, and then attempt to enqueue the current
   // item. This is only a fallback mechanism, under non-critical load this is
   // just going to enqueue an item in the queue.
   while (!mAudioThreadCallbackInfo.IsEmpty()) {
     CallbackInfo& info = mAudioThreadCallbackInfo[0];
-    int enqueued = mCallbackInfoQueue.Enqueue(info);
-    // Still full, keep it audio-thread side for now.
-    if (enqueued != 1) {
+    // If still full, keep it audio-thread side for now.
+    if (mCallbackInfoQueue.Enqueue(info) != 1) {
       break;
     }
     mAudioThreadCallbackInfo.RemoveElementAt(0);
   }
   CallbackInfo info(aServiced, aUnderrun, mOutRate);
-  int enqueued = mCallbackInfoQueue.Enqueue(info);
-  if (enqueued != 1) {
+  if (mCallbackInfoQueue.Enqueue(info) != 1) {
     NS_WARNING(
         "mCallbackInfoQueue full, storing the values in the audio thread.");
     mAudioThreadCallbackInfo.AppendElement(info);
