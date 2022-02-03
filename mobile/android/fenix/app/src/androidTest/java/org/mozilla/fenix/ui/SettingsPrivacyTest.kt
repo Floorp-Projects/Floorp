@@ -283,6 +283,26 @@ class SettingsPrivacyTest {
         }
     }
 
+    @SmokeTest
+    @Test
+    fun verifyMultipleLoginsSelectionsTest() {
+        val loginPage = "https://mozilla-mobile.github.io/testapp/loginForm"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            fillAndSubmitLoginCredentials("mozilla", "firefox")
+            saveLoginFromPrompt("Save")
+            fillAndSubmitLoginCredentials("firefox", "mozilla")
+            saveLoginFromPrompt("Save")
+            clearUserNameLoginCredential()
+            clickSuggestedLoginsButton()
+            verifySuggestedUserName("firefox")
+            verifySuggestedUserName("mozilla")
+            clickLoginSuggestion("mozilla")
+            verifyPrefilledLoginCredentials("mozilla")
+        }
+    }
+
     @Test
     fun verifyPrivateBrowsingMenuItemsTest() {
         homeScreen {
@@ -574,7 +594,7 @@ class SettingsPrivacyTest {
 
             addToHomeScreen {
             }.searchAndOpenHomeScreenShortcut(shortcutTitle) {
-                verifyPrefilledLoginCredentials("mozilla", shortcutTitle)
+                verifyPrefilledPWALoginCredentials("mozilla", shortcutTitle)
             }
         }
     }
