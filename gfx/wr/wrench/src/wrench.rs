@@ -116,16 +116,13 @@ impl WrenchThing for CapturedDocument {
     fn next_frame(&mut self) {}
     fn prev_frame(&mut self) {}
     fn do_frame(&mut self, wrench: &mut Wrench) -> u32 {
-        match self.root_pipeline_id.take() {
-            Some(root_pipeline_id) => {
-                // skip the first frame - to not overwrite the loaded one
-                let mut txn = Transaction::new();
-                txn.set_root_pipeline(root_pipeline_id);
-                wrench.api.send_transaction(self.document_id, txn);
-            }
-            None => {
-                wrench.refresh();
-            }
+        if let Some(root_pipeline_id) = self.root_pipeline_id.take() {
+            // skip the first frame - to not overwrite the loaded one
+            let mut txn = Transaction::new();
+            txn.set_root_pipeline(root_pipeline_id);
+            wrench.api.send_transaction(self.document_id, txn);
+        } else {
+            wrench.refresh();
         }
         0
     }
@@ -363,22 +360,19 @@ impl Wrench {
         for metric in metrics {
             positions.push(cursor);
 
-            match metric {
-                Some(metric) => {
-                    let glyph_rect = LayoutRect::from_origin_and_size(
-                        LayoutPoint::new(cursor.x + metric.left as f32, cursor.y - metric.top as f32),
-                        LayoutSize::new(metric.width as f32, metric.height as f32)
-                    );
-                    bounding_rect = bounding_rect.union(&glyph_rect);
-                    cursor += direction * metric.advance;
-                }
-                None => {
-                    // Extract the advances from the metrics. The get_glyph_dimensions API
-                    // has a limitation that it can't currently get dimensions for non-renderable
-                    // glyphs (e.g. spaces), so just use a rough estimate in that case.
-                    let space_advance = size / 3.0;
-                    cursor += direction * space_advance;
-                }
+            if let Some(GlyphDimensions { left, top, width, height, advance }) = metric {
+                let glyph_rect = LayoutRect::from_origin_and_size(
+                    LayoutPoint::new(cursor.x + left as f32, cursor.y - top as f32),
+                    LayoutSize::new(width as f32, height as f32)
+                );
+                bounding_rect = bounding_rect.union(&glyph_rect);
+                cursor += direction * advance;
+            } else {
+                // Extract the advances from the metrics. The get_glyph_dimensions API
+                // has a limitation that it can't currently get dimensions for non-renderable
+                // glyphs (e.g. spaces), so just use a rough estimate in that case.
+                let space_advance = size / 3.0;
+                cursor += direction * space_advance;
             }
         }
 
