@@ -276,16 +276,9 @@ static bool ImageIsAnimated(imgIRequest* aRequest) {
     return false;
   }
 
-  nsCOMPtr<imgIContainer> image;
-  if (NS_SUCCEEDED(aRequest->GetImage(getter_AddRefs(image)))) {
-    bool isAnimated = false;
-    nsresult rv = image->GetAnimated(&isAnimated);
-    if (NS_SUCCEEDED(rv) && isAnimated) {
-      return true;
-    }
-  }
-
-  return false;
+  uint32_t status;
+  return NS_SUCCEEDED(aRequest->GetImageStatus(&status)) &&
+         (status & imgIRequest::STATUS_IS_ANIMATED);
 }
 
 void nsImageLoadingContent::OnUnlockedDraw() {
