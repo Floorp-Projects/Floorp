@@ -817,6 +817,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CanvasRenderingContext2D)
   // Make sure we remove ourselves from the list of demotable contexts (raw
   // pointers), since we're logically destructed at this point.
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCanvasElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOffscreenCanvas)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
   for (uint32_t i = 0; i < tmp->mStyleStack.Length(); i++) {
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].patternStyles[Style::STROKE]);
@@ -845,6 +846,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CanvasRenderingContext2D)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCanvasElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOffscreenCanvas)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
   for (uint32_t i = 0; i < tmp->mStyleStack.Length(); i++) {
     ImplCycleCollectionTraverse(
@@ -960,7 +962,7 @@ void CanvasRenderingContext2D::ContextState::SetGradientStyle(
  **/
 
 // Initialize our static variables.
-uintptr_t CanvasRenderingContext2D::sNumLivingContexts = 0;
+Atomic<uintptr_t> CanvasRenderingContext2D::sNumLivingContexts(0);
 DrawTarget* CanvasRenderingContext2D::sErrorTarget = nullptr;
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(
@@ -983,9 +985,6 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(
       mInvalidateCount(0),
       mWriteOnly(false) {
   sNumLivingContexts++;
-
-  mShutdownObserver = new CanvasShutdownObserver(this);
-  nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D() {
@@ -998,6 +997,8 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D() {
     NS_IF_RELEASE(sErrorTarget);
   }
 }
+
+void CanvasRenderingContext2D::Initialize() { AddShutdownObserver(); }
 
 JSObject* CanvasRenderingContext2D::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -1070,6 +1071,14 @@ void CanvasRenderingContext2D::OnShutdown() {
   if (provider) {
     provider->OnShutdown();
   }
+}
+
+void CanvasRenderingContext2D::AddShutdownObserver() {
+  MOZ_ASSERT(!mShutdownObserver);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mShutdownObserver = new CanvasShutdownObserver(this);
+  nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 }
 
 void CanvasRenderingContext2D::RemoveShutdownObserver() {
@@ -1353,6 +1362,7 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   mBufferProvider = std::move(newProvider);
 
   RegisterAllocation();
+  AddZoneWaitingForGC();
 
   RestoreClipsAndTransformToTarget();
 
@@ -1410,7 +1420,9 @@ void CanvasRenderingContext2D::RegisterAllocation() {
     registered = true;
     RegisterStrongMemoryReporter(new Canvas2dPixelsReporter());
   }
+}
 
+void CanvasRenderingContext2D::AddZoneWaitingForGC() {
   JSObject* wrapper = GetWrapperPreserveColor();
   if (wrapper) {
     CycleCollectedJSRuntime::Get()->AddZoneWaitingForGC(
@@ -1527,6 +1539,22 @@ CanvasRenderingContext2D::SetDimensions(int32_t aWidth, int32_t aHeight) {
   return NS_OK;
 }
 
+void CanvasRenderingContext2D::AddAssociatedMemory() {
+  JSObject* wrapper = GetWrapperMaybeDead();
+  if (wrapper) {
+    JS::AddAssociatedMemory(wrapper, BindingJSObjectMallocBytes(this),
+                            JS::MemoryUse::DOMBinding);
+  }
+}
+
+void CanvasRenderingContext2D::RemoveAssociatedMemory() {
+  JSObject* wrapper = GetWrapperMaybeDead();
+  if (wrapper) {
+    JS::RemoveAssociatedMemory(wrapper, BindingJSObjectMallocBytes(this),
+                               JS::MemoryUse::DOMBinding);
+  }
+}
+
 void CanvasRenderingContext2D::ClearTarget(int32_t aWidth, int32_t aHeight) {
   Reset();
 
@@ -1539,19 +1567,10 @@ void CanvasRenderingContext2D::ClearTarget(int32_t aWidth, int32_t aHeight) {
     // Update the memory size associated with the wrapper object when we change
     // the dimensions. Note that we need to keep updating dying wrappers before
     // they are finalized so that the memory accounting balances out.
-    JSObject* wrapper = GetWrapperMaybeDead();
-    if (wrapper) {
-      JS::RemoveAssociatedMemory(wrapper, BindingJSObjectMallocBytes(this),
-                                 JS::MemoryUse::DOMBinding);
-    }
-
+    RemoveAssociatedMemory();
     mWidth = aWidth;
     mHeight = aHeight;
-
-    if (wrapper) {
-      JS::AddAssociatedMemory(wrapper, BindingJSObjectMallocBytes(this),
-                              JS::MemoryUse::DOMBinding);
-    }
+    AddAssociatedMemory();
   }
 
   if (!mCanvasElement || !mCanvasElement->IsInComposedDoc()) {
@@ -5814,14 +5833,14 @@ void CanvasPath::EnsurePathBuilder() const {
 }
 
 size_t BindingJSObjectMallocBytes(CanvasRenderingContext2D* aContext) {
-  int32_t width = aContext->GetWidth();
-  int32_t height = aContext->GetHeight();
+  IntSize size = aContext->GetSize();
 
   // TODO: Bug 1552137: No memory will be allocated if either dimension is
   // greater than gfxPrefs::gfx_canvas_max_size(). We should check this here
   // too.
 
-  CheckedInt<uint32_t> bytes = CheckedInt<uint32_t>(width) * height * 4;
+  CheckedInt<uint32_t> bytes =
+      CheckedInt<uint32_t>(size.width) * size.height * 4;
   if (!bytes.isValid()) {
     return 0;
   }
