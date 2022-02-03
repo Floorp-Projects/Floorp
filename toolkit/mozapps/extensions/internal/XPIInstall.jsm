@@ -1213,9 +1213,6 @@ function getHashStringForCrypto(aCrypto) {
   return hash.join("").toLowerCase();
 }
 
-// A hash algorithm if the caller of AddonInstall did not specify one.
-const DEFAULT_HASH_ALGO = "sha256";
-
 /**
  * Base class for objects that manage the installation of an addon.
  * This class isn't instantiated directly, see the derived classes below.
@@ -1266,7 +1263,6 @@ class AddonInstall {
       };
     }
     this.hash = this.originalHash;
-    this.fileHash = null;
     this.existingAddon = options.existingAddon || null;
     this.promptHandler = options.promptHandler || (() => Promise.resolve());
     this.releaseNotesURI = options.releaseNotesURI || null;
@@ -1491,18 +1487,6 @@ class AddonInstall {
         e
       );
     }
-  }
-
-  _setFileHash(calculatedHash) {
-    this.fileHash = {
-      algorithm: this.hash ? this.hash.algorithm : DEFAULT_HASH_ALGO,
-      data: calculatedHash,
-    };
-
-    if (this.hash && calculatedHash != this.hash.data) {
-      return false;
-    }
-    return true;
   }
 
   /**
@@ -1879,7 +1863,6 @@ class AddonInstall {
       }
       this.state = AddonManager.STATE_INSTALL_FAILED;
       this.error = AddonManager.ERROR_FILE_ACCESS;
-      this._cleanup();
       AddonManagerPrivate.callAddonListeners(
         "onOperationCancelled",
         this.addon.wrapper
@@ -1897,34 +1880,17 @@ class AddonInstall {
    * @param {boolean} restartRequired
    *        If true, the final installation will be deferred until the
    *        next app startup.
-   * @param {nsIFile} stagedAddon
-   *        The file where the add-on should be staged.
+   * @param {AddonInternal} stagedAddon
+   *        The AddonInternal object for the staged install.
    * @param {boolean} isSameLocation
    *        True if this installation is an upgrade for an existing
    *        add-on in the same location.
-   * @throws if the file cannot be staged.
    */
   async stageInstall(restartRequired, stagedAddon, isSameLocation) {
     logger.debug(`Addon ${this.addon.id} will be installed as a packed xpi`);
     stagedAddon.leafName = `${this.addon.id}.xpi`;
 
-    try {
-      await IOUtils.copy(this.file.path, stagedAddon.path);
-
-      let crypto = CryptoHash(this.fileHash.algorithm);
-      let fis = new FileInputStream(stagedAddon, -1, -1, false);
-      crypto.updateFromStream(fis, stagedAddon.fileSize);
-      let calculatedHash = getHashStringForCrypto(crypto);
-      if (calculatedHash != this.fileHash.data) {
-        logger.warn(
-          `Staged file hash (${calculatedHash}) did not match initial hash (${this.fileHash.data})`
-        );
-        throw new Error("Refusing to stage add-on because it has been damaged");
-      }
-    } catch (e) {
-      await IOUtils.remove(stagedAddon.path, { ignoreAbsent: true });
-      throw e;
-    }
+    await IOUtils.copy(this.file.path, stagedAddon.path);
 
     if (restartRequired) {
       // Point the add-on to its extracted files as the xpi may get deleted
@@ -1968,23 +1934,12 @@ class AddonInstall {
 
     let stagingDir = this.location.installer.getStagingDir();
 
-    try {
-      await this.location.installer.requestStagingDir();
-      await this.unstageInstall(stagingDir);
+    await this.location.installer.requestStagingDir();
+    await this.unstageInstall(stagingDir);
 
-      let stagedAddon = getFile(`${this.addon.id}.xpi`, stagingDir);
+    let stagedAddon = getFile(`${this.addon.id}.xpi`, stagingDir);
 
-      await this.stageInstall(true, stagedAddon, true);
-    } catch (e) {
-      logger.warn(`Failed to postpone install of ${this.addon.id}`, e);
-      this.state = AddonManager.STATE_INSTALL_FAILED;
-      this.error = AddonManager.ERROR_FILE_ACCESS;
-      this._cleanup();
-      this.removeTemporaryFile();
-      this.location.installer.releaseStagingDir();
-      this._callInstallListeners("onInstallFailed");
-      return;
-    }
+    await this.stageInstall(true, stagedAddon, true);
 
     this._callInstallListeners("onInstallPostponed");
 
@@ -2060,8 +2015,8 @@ var LocalAddonInstall = class extends AddonInstall {
     this.progress = this.file.fileSize;
     this.maxProgress = this.file.fileSize;
 
-    let crypto;
     if (this.hash) {
+      let crypto;
       try {
         crypto = CryptoHash(this.hash.algorithm);
       } catch (e) {
@@ -2077,20 +2032,23 @@ var LocalAddonInstall = class extends AddonInstall {
         this._cleanup();
         return;
       }
-    } else {
-      crypto = CryptoHash(DEFAULT_HASH_ALGO);
-    }
 
-    let fis = new FileInputStream(this.file, -1, -1, false);
-    crypto.updateFromStream(fis, this.file.fileSize);
-    if (!this._setFileHash(getHashStringForCrypto(crypto))) {
-      logger.warn(
-        `File hash (${this.fileHash.data}) did not match provided hash (${this.hash.data})`
-      );
-      this.state = AddonManager.STATE_DOWNLOAD_FAILED;
-      this.error = AddonManager.ERROR_INCORRECT_HASH;
-      this._cleanup();
-      return;
+      let fis = new FileInputStream(this.file, -1, -1, false);
+      crypto.updateFromStream(fis, this.file.fileSize);
+      let calculatedHash = getHashStringForCrypto(crypto);
+      if (calculatedHash != this.hash.data) {
+        logger.warn(
+          "File hash (" +
+            calculatedHash +
+            ") did not match provided hash (" +
+            this.hash.data +
+            ")"
+        );
+        this.state = AddonManager.STATE_DOWNLOAD_FAILED;
+        this.error = AddonManager.ERROR_INCORRECT_HASH;
+        this._cleanup();
+        return;
+      }
     }
 
     try {
@@ -2223,7 +2181,6 @@ var DownloadAddonInstall = class extends AddonInstall {
         this.progress = 0;
         this.maxProgress = -1;
         this.hash = this.originalHash;
-        this.fileHash = null;
         this.startDownload();
         break;
       default:
@@ -2424,7 +2381,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     } else {
       // We always need something to consume data from the inputstream passed
       // to onDataAvailable so just create a dummy cryptohasher to do that.
-      this.crypto = CryptoHash(DEFAULT_HASH_ALGO);
+      this.crypto = CryptoHash("sha1");
     }
 
     this.progress = 0;
@@ -2451,9 +2408,6 @@ var DownloadAddonInstall = class extends AddonInstall {
     this.channel = null;
     this.badCerthandler = null;
     Services.obs.removeObserver(this, "network:offline-about-to-go-offline");
-
-    let crypto = this.crypto;
-    this.crypto = null;
 
     // If the download was cancelled then update the state and send events
     if (aStatus == Cr.NS_BINDING_ABORTED) {
@@ -2495,10 +2449,17 @@ var DownloadAddonInstall = class extends AddonInstall {
           }
         }
 
-        if (!this._setFileHash(getHashStringForCrypto(crypto))) {
+        // convert the binary hash data to a hex string.
+        let calculatedHash = getHashStringForCrypto(this.crypto);
+        this.crypto = null;
+        if (this.hash && calculatedHash != this.hash.data) {
           this.downloadFailed(
             AddonManager.ERROR_INCORRECT_HASH,
-            `Downloaded file hash (${this.fileHash.data}) did not match provided hash (${this.hash.data})`
+            "Downloaded file hash (" +
+              calculatedHash +
+              ") did not match provided hash (" +
+              this.hash.data +
+              ")"
           );
           return;
         }
