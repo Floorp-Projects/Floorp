@@ -37,6 +37,7 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::thread;
 use std::time;
+use url::{Host, Url};
 use webdriver::capabilities::BrowserCapabilities;
 use webdriver::command::WebDriverCommand::{
     AcceptAlert, AddCookie, CloseWindow, DeleteCookie, DeleteCookies, DeleteSession, DismissAlert,
@@ -84,6 +85,8 @@ pub(crate) struct MarionetteSettings {
     pub(crate) host: String,
     pub(crate) port: Option<u16>,
     pub(crate) websocket_port: u16,
+    pub(crate) allow_hosts: Vec<Host>,
+    pub(crate) allow_origins: Vec<Url>,
 
     /// Brings up the Browser Toolbox when starting Firefox,
     /// letting you debug internals.
@@ -184,11 +187,15 @@ impl MarionetteHandler {
                 options,
                 marionette_port,
                 websocket_port,
+                self.settings.allow_hosts.to_owned(),
+                self.settings.allow_origins.to_owned(),
             )?)
         } else if !self.settings.connect_existing {
             Browser::Local(LocalBrowser::new(
                 options,
                 marionette_port,
+                self.settings.allow_hosts.to_owned(),
+                self.settings.allow_origins.to_owned(),
                 self.settings.jsdebugger,
             )?)
         } else {
