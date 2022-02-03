@@ -8,7 +8,6 @@ const PRIVACY_PREF_URL = "about:preferences#privacy";
 add_task(async function setup_storage() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      [AUTOFILL_ADDRESSES_AVAILABLE_PREF, "on"],
       [ENABLED_AUTOFILL_ADDRESSES_PREF, true],
       [ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, true],
     ],
