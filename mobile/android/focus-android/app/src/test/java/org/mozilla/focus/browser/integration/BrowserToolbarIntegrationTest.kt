@@ -84,7 +84,8 @@ class BrowserToolbarIntegrationTest {
                 onUrlLongClicked = { false },
                 eraseActionListener = {},
                 tabCounterListener = {},
-                inTesting = true
+                inTesting = true,
+                onTrackingProtectionShown = {},
             )
         )
     }

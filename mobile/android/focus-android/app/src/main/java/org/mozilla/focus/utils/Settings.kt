@@ -176,7 +176,7 @@ class Settings(
                 .commit()
         }
 
-    var isCfrForForShieldToolbarIconVisible: Boolean
+    var shouldShowCfrForShieldToolbarIcon: Boolean
         get() = preferences.getBoolean(getPreferenceKey(R.string.pref_cfr_visibility_for_shield_toolbar_icon), true)
         set(value) {
             preferences.edit()

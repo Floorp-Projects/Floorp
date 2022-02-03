@@ -13,16 +13,16 @@ class FeatureSettingsHelper {
     private val settings = context.settings
 
     // saving default values of feature flags
-    private var isShieldIconCFREnabled: Boolean = settings.isCfrForForShieldToolbarIconVisible
+    private var shouldShowCfrForShieldToolbarIcon: Boolean = settings.shouldShowCfrForShieldToolbarIcon
 
     fun setShieldIconCFREnabled(enabled: Boolean) {
-        settings.isCfrForForShieldToolbarIconVisible = enabled
+        settings.shouldShowCfrForShieldToolbarIcon = enabled
     }
 
     // Important:
     // Use this after each test if you have modified these feature settings
     // to make sure the app goes back to the default state
     fun resetAllFeatureFlags() {
-        settings.isCfrForForShieldToolbarIconVisible = isShieldIconCFREnabled
+        settings.shouldShowCfrForShieldToolbarIcon = shouldShowCfrForShieldToolbarIcon
     }
 }

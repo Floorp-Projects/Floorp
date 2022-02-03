@@ -54,7 +54,7 @@ class LocalSessionStorageTest {
         } catch (e: IOException) {
             throw AssertionError("Could not start web server", e)
         }
-        TestHelper.appContext.settings.isCfrForForShieldToolbarIconVisible = false
+        TestHelper.appContext.settings.shouldShowCfrForShieldToolbarIcon = false
     }
 
     @After

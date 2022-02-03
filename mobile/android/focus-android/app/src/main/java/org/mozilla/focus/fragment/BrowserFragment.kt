@@ -322,11 +322,10 @@ class BrowserFragment :
         }
 
         setSitePermissions(view)
-        showCfrForShieldToolbarIcon()
     }
 
     private fun showCfrForShieldToolbarIcon() {
-        val cfrForShieldToolbarIcon = CfrUtils.shouldShowCFRForShieldToolbarIcon(
+        val cfrForShieldToolbarIcon = CfrUtils.showCFRForShieldToolbarIconIfNeeded(
             rootView = binding.browserToolbar.rootView, context = requireContext(),
             isContentSecure = tab.content.securityInfo.secure
         )
@@ -418,7 +417,8 @@ class BrowserFragment :
                 sessionUseCases = requireComponents.sessionUseCases,
                 onUrlLongClicked = ::onUrlLongClicked,
                 eraseActionListener = { erase(shouldEraseAllTabs = true) },
-                tabCounterListener = ::tabCounterListener
+                tabCounterListener = ::tabCounterListener,
+                onTrackingProtectionShown = ::showCfrForShieldToolbarIcon
             ),
             owner = this,
             view = binding.browserToolbar
@@ -448,6 +448,8 @@ class BrowserFragment :
         _toolbarShieldIconCfrBinding = null
         // PopupWindow should be dismissed because it causes Static Field Leaked
         if (toolbarShieldIconCfrPopupWindow != null && toolbarShieldIconCfrPopupWindow?.isShowing == true) {
+            // DismissListener from CfrUtils should not be called when user exits the screen
+            toolbarShieldIconCfrPopupWindow?.setOnDismissListener(null)
             toolbarShieldIconCfrPopupWindow?.dismiss()
         }
     }

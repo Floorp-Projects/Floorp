@@ -47,6 +47,7 @@ class BrowserToolbarIntegration(
     private val onUrlLongClicked: () -> Boolean,
     private val eraseActionListener: () -> Unit,
     private val tabCounterListener: () -> Unit,
+    private val onTrackingProtectionShown: () -> Unit,
     private val customTabId: String? = null,
     inTesting: Boolean = false
 ) : LifecycleAwareFeature {
@@ -216,6 +217,7 @@ class BrowserToolbarIntegration(
                     val url = it.content.url
                     if (secure && Indicators.SECURITY in toolbar.display.indicators) {
                         addTrackingProtectionIndicator()
+                        onTrackingProtectionShown()
                     } else if (!secure && Indicators.SECURITY !in toolbar.display.indicators &&
                         !url.trim().startsWith("about:")
                     ) {
