@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PWebGL;
+include protocol PWebGPU;
 
 using mozilla::webgl::FrontBufferSnapshotIpc from "mozilla/dom/WebGLIpdl.h";
 
@@ -21,10 +22,14 @@ namespace gfx {
 [RefCounted] sync protocol PCanvasManager
 {
   manages PWebGL;
+  manages PWebGPU;
 
 parent:
   // Actor that represents one WebGL context.
   async PWebGL();
+
+  // Actor that represents one WebGPU context.
+  async PWebGPU();
 
   // Set the local manager ID for the canvas manager.
   async Initialize(uint32_t aManagerId);

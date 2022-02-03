@@ -2997,48 +2997,6 @@ RefPtr<LocalDeviceSetPromise> MediaManager::EnumerateDevicesImpl(
           });
 }
 
-RefPtr<LocalDeviceSetPromise> MediaManager::EnumerateDevices(
-    nsPIDOMWindowInner* aWindow) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (sHasShutdown) {
-    return LocalDeviceSetPromise::CreateAndReject(
-        MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError,
-                                  "In shutdown"),
-        __func__);
-  }
-  Document* doc = aWindow->GetExtantDoc();
-  MOZ_ASSERT(doc);
-
-  // Only expose devices which are allowed to use:
-  // https://w3c.github.io/mediacapture-main/#dom-mediadevices-enumeratedevices
-  MediaSourceEnum videoType =
-      FeaturePolicyUtils::IsFeatureAllowed(doc, u"camera"_ns)
-          ? MediaSourceEnum::Camera
-          : MediaSourceEnum::Other;
-  MediaSourceEnum audioType =
-      FeaturePolicyUtils::IsFeatureAllowed(doc, u"microphone"_ns)
-          ? MediaSourceEnum::Microphone
-          : MediaSourceEnum::Other;
-  EnumerationFlags flags;
-  if (Preferences::GetBool("media.setsinkid.enabled") &&
-      FeaturePolicyUtils::IsFeatureAllowed(doc, u"speaker-selection"_ns)) {
-    flags += EnumerationFlag::EnumerateAudioOutputs;
-  }
-
-  if (audioType == MediaSourceEnum::Other &&
-      videoType == MediaSourceEnum::Other && flags.isEmpty()) {
-    return LocalDeviceSetPromise::CreateAndResolve(
-        new LocalMediaDeviceSetRefCnt(), __func__);
-  }
-
-  bool resistFingerprinting = nsContentUtils::ShouldResistFingerprinting(doc);
-  if (resistFingerprinting) {
-    flags += EnumerationFlag::ForceFakes;
-  }
-
-  return EnumerateDevicesImpl(aWindow, videoType, audioType, flags);
-}
-
 RefPtr<LocalDevicePromise> MediaManager::SelectAudioOutput(
     nsPIDOMWindowInner* aWindow, const dom::AudioOutputOptions& aOptions,
     CallerType aCallerType) {
@@ -3914,14 +3872,19 @@ DeviceListener::InitializeAsync() {
               track = mDeviceState->mTrackSource->mTrack,
               deviceMuted = mDeviceState->mDeviceMuted](
                  MozPromiseHolder<DeviceListenerPromise>& aHolder) {
+               auto kind = device->Kind();
                device->SetTrack(track, principal);
                nsresult rv = deviceMuted ? NS_OK : device->Start();
-               if (device->Kind() == MediaDeviceKind::Audioinput) {
-                 if (rv == NS_ERROR_NOT_AVAILABLE) {
+               if (kind == MediaDeviceKind::Audioinput ||
+                   kind == MediaDeviceKind::Videoinput) {
+                 if ((rv == NS_ERROR_NOT_AVAILABLE &&
+                      kind == MediaDeviceKind::Audioinput) ||
+                     (NS_FAILED(rv) && kind == MediaDeviceKind::Videoinput)) {
                    PR_Sleep(200);
                    rv = device->Start();
                  }
-                 if (rv == NS_ERROR_NOT_AVAILABLE) {
+                 if (rv == NS_ERROR_NOT_AVAILABLE &&
+                     kind == MediaDeviceKind::Audioinput) {
                    nsCString log;
                    log.AssignLiteral("Concurrent mic process limit.");
                    aHolder.Reject(MakeRefPtr<MediaMgrError>(
@@ -3935,8 +3898,7 @@ DeviceListener::InitializeAsync() {
                  nsCString log;
                  log.AppendPrintf(
                      "Starting %s failed",
-                     nsCString(
-                         dom::MediaDeviceKindValues::GetString(device->Kind()))
+                     nsCString(dom::MediaDeviceKindValues::GetString(kind))
                          .get());
                  aHolder.Reject(
                      MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError,
@@ -3945,9 +3907,7 @@ DeviceListener::InitializeAsync() {
                  return;
                }
                LOG("started %s device %p",
-                   nsCString(
-                       dom::MediaDeviceKindValues::GetString(device->Kind()))
-                       .get(),
+                   nsCString(dom::MediaDeviceKindValues::GetString(kind)).get(),
                    device.get());
                aHolder.Resolve(true, __func__);
              })

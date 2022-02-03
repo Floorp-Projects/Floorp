@@ -91,17 +91,6 @@ fission-xorigin:
                 - "--setpref=fission.autostart=true"
                 - "--enable-xorigin-tests"
 
-fission-webrender-sw:
-    description: "{description} with software webrender enabled"
-    contact: aosmond
-    suffix: "fis-swr"
-    merge:
-        webrender: true
-        mozharness:
-            extra-options:
-                - "--setpref=gfx.webrender.software=true"
-                - "--setpref=fission.autostart=true"
-
 socketprocess:
     description: "{description} with socket process enabled"
     contact: kershaw

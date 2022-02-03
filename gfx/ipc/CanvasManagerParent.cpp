@@ -9,6 +9,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/webgpu/WebGPUParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "nsIThread.h"
 
@@ -85,6 +86,11 @@ void CanvasManagerParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 already_AddRefed<dom::PWebGLParent> CanvasManagerParent::AllocPWebGLParent() {
   return MakeAndAddRef<dom::WebGLParent>();
+}
+
+already_AddRefed<webgpu::PWebGPUParent>
+CanvasManagerParent::AllocPWebGPUParent() {
+  return MakeAndAddRef<webgpu::WebGPUParent>();
 }
 
 mozilla::ipc::IPCResult CanvasManagerParent::RecvInitialize(

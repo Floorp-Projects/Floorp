@@ -25,6 +25,7 @@
 #include "nsPresContext.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Mutex.h"
 #include "nsPrintfCString.h"
 #include "nsContentUtils.h"
 

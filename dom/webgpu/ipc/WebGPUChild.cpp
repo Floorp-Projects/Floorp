@@ -164,7 +164,7 @@ static ffi::WGPUClient* initialize() {
   return infra.client;
 }
 
-WebGPUChild::WebGPUChild() : mClient(initialize()), mIPCOpen(false) {}
+WebGPUChild::WebGPUChild() : mClient(initialize()) {}
 
 WebGPUChild::~WebGPUChild() {
   if (mClient) {

@@ -2040,4 +2040,40 @@ button {
   width: 121px;
 }
 
+.stp_button {
+  cursor: pointer;
+  display: inline-block;
+  margin: 8px 0px;
+}
+.stp_button.stp_button_text {
+  color: #0060DF;
+  font-size: 0.85em;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.27em;
+}
+.stp_button.stp_button_primary {
+  align-items: center;
+  background: #0060DF;
+  border-radius: 4px;
+  color: #FBFBFE;
+  font-size: 0.77em;
+  font-style: normal;
+  font-weight: 600;
+  justify-content: center;
+  line-height: 1.2em;
+  padding: 6px 12px;
+}
+.stp_button.stp_button_secondary {
+  align-items: center;
+  background: #F0F0F4;
+  border-radius: 4px;
+  color: #15141A;
+  font-size: 0.85em;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.27em;
+  padding: 7px 14px;
+}
+
 /*# sourceMappingURL=main.compiled.css.map */

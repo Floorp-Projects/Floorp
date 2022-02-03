@@ -14,6 +14,7 @@
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsCRTGlue.h"
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Printf.h"
 
@@ -435,8 +436,9 @@ static nsresult CloneArray(uint16_t aInType, const nsIID* aInIID,
 #define CASE__NUMERIC_CONVERSION_INT32_MIN_MAX(Ctype_, min_, max_) \
   case nsIDataType::VTYPE_INT32: {                                 \
     int32_t value = tempData.u.mInt32Value;                        \
-    if (value < min_ || value > max_)                              \
+    if (value < (min_) || value > (max_)) {                        \
       return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                    \
+    }                                                              \
     *aResult = (Ctype_)value;                                      \
     return rv;                                                     \
   }
@@ -446,12 +448,12 @@ static nsresult CloneArray(uint16_t aInType, const nsIID* aInIID,
     *aResult = (Ctype_)tempData.u.mUint32Value;           \
     return rv;
 
-#define CASE__NUMERIC_CONVERSION_UINT32_MAX(Ctype_, max_)       \
-  case nsIDataType::VTYPE_UINT32: {                             \
-    uint32_t value = tempData.u.mUint32Value;                   \
-    if (value > max_) return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA; \
-    *aResult = (Ctype_)value;                                   \
-    return rv;                                                  \
+#define CASE__NUMERIC_CONVERSION_UINT32_MAX(Ctype_, max_)         \
+  case nsIDataType::VTYPE_UINT32: {                               \
+    uint32_t value = tempData.u.mUint32Value;                     \
+    if (value > (max_)) return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA; \
+    *aResult = (Ctype_)value;                                     \
+    return rv;                                                    \
   }
 
 #define CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(Ctype_) \
@@ -459,20 +461,12 @@ static nsresult CloneArray(uint16_t aInType, const nsIID* aInIID,
     *aResult = (Ctype_)tempData.u.mDoubleValue;           \
     return rv;
 
-#define CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX(Ctype_, min_, max_) \
-  case nsIDataType::VTYPE_DOUBLE: {                                 \
-    double value = tempData.u.mDoubleValue;                         \
-    if (value < min_ || value > max_)                               \
-      return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                     \
-    *aResult = (Ctype_)value;                                       \
-    return rv;                                                      \
-  }
-
 #define CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(Ctype_, min_, max_)       \
   case nsIDataType::VTYPE_DOUBLE: {                                           \
     double value = tempData.u.mDoubleValue;                                   \
-    if (value < min_ || value > max_)                                         \
+    if (mozilla::IsNaN(value) || value < (min_) || value > (max_)) {          \
       return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                               \
+    }                                                                         \
     *aResult = (Ctype_)value;                                                 \
     return (0.0 == fmod(value, 1.0)) ? rv                                     \
                                      : NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA; \
@@ -518,7 +512,7 @@ CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(uint32_t)
 CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(uint32_t, 0, 4294967295U)
 NUMERIC_CONVERSION_METHOD_END
 
-// XXX toFloat convertions need to be fixed!
+// XXX toFloat conversions need to be fixed!
 NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_FLOAT, float, Float)
 CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(float)
 CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(float)
@@ -531,19 +525,12 @@ CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(double)
 CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(double)
 NUMERIC_CONVERSION_METHOD_END
 
-// XXX toChar convertions need to be fixed!
-NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_CHAR, char, Char)
-CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(char)
-CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(char)
-CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(char)
-NUMERIC_CONVERSION_METHOD_END
+// XXX toChar conversions need to be fixed!
+NUMERIC_CONVERSION_METHOD_NORMAL(VTYPE_CHAR, char, Char, CHAR_MIN, CHAR_MAX)
 
-// XXX toWChar convertions need to be fixed!
-NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_WCHAR, char16_t, WChar)
-CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(char16_t)
-CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(char16_t)
-CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(char16_t)
-NUMERIC_CONVERSION_METHOD_END
+// XXX toWChar conversions need to be fixed!
+NUMERIC_CONVERSION_METHOD_NORMAL(VTYPE_WCHAR, char16_t, WChar, 0,
+                                 std::numeric_limits<char16_t>::max())
 
 #undef NUMERIC_CONVERSION_METHOD_BEGIN
 #undef CASE__NUMERIC_CONVERSION_INT32_JUST_CAST
@@ -570,7 +557,12 @@ nsresult nsDiscriminatedUnion::ConvertToBool(bool* aResult) const {
   if (NS_FAILED(rv)) {
     return rv;
   }
-  *aResult = 0.0 != val;
+  // NaN is falsy in JS, so we might as well make it false here.
+  if (mozilla::IsNaN(val)) {
+    *aResult = false;
+  } else {
+    *aResult = 0.0 != val;
+  }
   return rv;
 }
 
@@ -592,10 +584,15 @@ nsresult nsDiscriminatedUnion::ConvertToInt64(int64_t* aResult) const {
     case nsIDataType::VTYPE_UINT32:
       *aResult = tempData.u.mUint32Value;
       return rv;
-    case nsIDataType::VTYPE_DOUBLE:
+    case nsIDataType::VTYPE_DOUBLE: {
+      double value = tempData.u.mDoubleValue;
+      if (mozilla::IsNaN(value)) {
+        return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+      }
       // XXX should check for data loss here!
-      *aResult = tempData.u.mDoubleValue;
+      *aResult = value;
       return rv;
+    }
     default:
       NS_ERROR("bad type returned from ToManageableNumber");
       return NS_ERROR_CANNOT_CONVERT_DATA;

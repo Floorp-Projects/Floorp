@@ -20,7 +20,7 @@ interface mixin ReadableStreamGenericReader {
 };
 
 [Exposed=(Window,Worker,Worklet),
-Pref="dom.streams.expose.ReadableStreamDefaultReader"]
+Pref="dom.streams.readable_stream_default_reader.enabled"]
 interface ReadableStreamDefaultReader {
   [Throws]
   constructor(ReadableStream stream);

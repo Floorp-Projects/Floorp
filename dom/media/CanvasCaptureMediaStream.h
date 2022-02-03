@@ -67,6 +67,12 @@ class OutputStreamDriver : public FrameCaptureListener {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OutputStreamDriver);
 
   /*
+   * Called from js' requestFrame() when it wants the next painted frame to be
+   * explicitly captured.
+   */
+  virtual void RequestFrameCapture() = 0;
+
+  /*
    * Sub classes can SetImage() to update the image being appended to the
    * output stream. It will be appended on the next NotifyPull from MTG.
    */
@@ -77,12 +83,6 @@ class OutputStreamDriver : public FrameCaptureListener {
    * requested for it.
    */
   void EndTrack();
-
-  /*
-   * Makes sure any internal resources this driver is holding that may create
-   * reference cycles are released.
-   */
-  virtual void Forget() {}
 
   const RefPtr<SourceMediaTrack> mSourceStream;
   const PrincipalHandle mPrincipalHandle;

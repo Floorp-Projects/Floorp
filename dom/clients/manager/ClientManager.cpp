@@ -15,7 +15,6 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ClearOnShutdown.h"  // PastShutdownPhase
 #include "mozilla/StaticPrefs_dom.h"
-#include "nsContentUtils.h"
 #include "prthread.h"
 
 namespace mozilla::dom {
@@ -106,7 +105,7 @@ UniquePtr<ClientSource> ClientManager::CreateSourceInternal(
   NS_ASSERT_OWNINGTHREAD(ClientManager);
 
   nsID id;
-  nsresult rv = nsContentUtils::GenerateUUIDInPlace(id);
+  nsresult rv = nsID::GenerateUUIDInPlace(id);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // If we can't even get a UUID, at least make sure not to use a garbage
@@ -339,7 +338,7 @@ Maybe<ClientInfo> ClientManager::CreateInfo(ClientType aType,
   }
 
   nsID id;
-  rv = nsContentUtils::GenerateUUIDInPlace(id);
+  rv = nsID::GenerateUUIDInPlace(id);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return Nothing();
