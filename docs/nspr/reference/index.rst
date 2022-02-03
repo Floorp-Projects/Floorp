@@ -1,10 +1,11 @@
 NSPR API Reference
 ==================
 
-.. _Introduction_to_NSPR:
+.. toctree::
+    :maxdepth: 2
 
-:ref:`Introduction to NSPR`
---------------------------------------------------------------------------------
+Introduction to NSPR
+--------------------
 
 -  :ref:`NSPR_Naming_Conventions`
 -  :ref:`NSPR_Threads`
@@ -22,8 +23,8 @@ NSPR API Reference
 
 -  :ref:`NSPR_Sample_Code`
 
-:ref:`NSPR_Types`
------------------
+NSPR Types
+----------
 
 -  :ref:`Calling_Convention_Types`
 -  :ref:`Algebraic_Types`
@@ -44,10 +45,8 @@ NSPR API Reference
    -  :ref:`Boolean_Types`
    -  :ref:`Status_Type_for_Return_Values`
 
-.. _Threads:
-
-:ref:`Threads`
---------------
+Threads
+-------
 
 -  :ref:`Threading_Types_and_Constants`
 -  :ref:`Threading_Functions`
@@ -59,10 +58,8 @@ NSPR API Reference
    -  :ref:`Setting_Global_Thread_Concurrency`
    -  :ref:`Getting_a_Thread.27s_Scope`
 
-.. _Process_Initialization:
-
-:ref:`Process_Initialization`
------------------------------
+Process Initialization
+----------------------
 
 -  :ref:`Identity_and_Versioning`
 
@@ -71,41 +68,31 @@ NSPR API Reference
 -  :ref:`Initialization_and_Cleanup`
 -  :ref:`Module_Initialization`
 
-.. _Locks:
-
-:ref:`Locks`
-------------
+Locks
+-----
 
 -  :ref:`Lock_Type`
 -  :ref:`Lock_Functions`
 
-.. _Condition_Variables:
-
-:ref:`Condition_Variables`
---------------------------
+Condition_Variables
+-------------------
 
 -  :ref:`Condition_Variable_Type`
 -  :ref:`Condition_Variable_Functions`
 
-.. _Monitors:
-
-:ref:`Monitors`
----------------
+Monitors
+--------
 
 -  :ref:`Monitor_Type`
 -  :ref:`Monitor_Functions`
 
-.. _Cached_Monitors:
-
-:ref:`Cached_Monitors`
-----------------------
+Cached Monitors
+---------------
 
 -  :ref:`Cached_Monitors_Functions`
 
-.. _I.2FO_Types:
-
-:ref:`I_O_Types`
-----------------
+I/O Types
+---------
 
 -  :ref:`Directory_Type`
 -  :ref:`File_Descriptor_Types`
@@ -115,10 +102,8 @@ NSPR API Reference
 -  :ref:`Type_Used_with_Memory-Mapped_I.2FO`
 -  :ref:`Offset_Interpretation_for_Seek_Functions`
 
-.. _I.2FO_Functions:
-
-:ref:`I_O_Functions`
---------------------
+I/O Functions
+-------------
 
 -  :ref:`Functions_that_Operate_on_Pathnames`
 -  :ref:`Functions_that_Act_on_File_Descriptors`
@@ -131,71 +116,55 @@ NSPR API Reference
 -  :ref:`Pollable_Events`
 -  :ref:`Manipulating_Layers`
 
-.. _Network_Addresses:
-
-:ref:`Network_Addresses`
-------------------------
+Network Addresses
+-----------------
 
 -  :ref:`Network_Address_Types_and_Constants`
 -  :ref:`Network_Address_Functions`
 
-.. _Atomic_Operations:
-
-:ref:`Atomic_Operations`
-------------------------
+Atomic Operations
+-----------------
 
 -  :ref:`PR_AtomicIncrement`
 -  :ref:`PR_AtomicDecrement`
 -  :ref:`PR_AtomicSet`
 
-.. _Interval_Timing:
-
-:ref:`Interval_Timing`
-----------------------
+Interval Timing
+---------------
 
 -  :ref:`Interval_Time_Type_and_Constants`
 -  :ref:`Interval_Functions`
 
-.. _Date_and_Time:
-
-:ref:`Date_and_Time`
---------------------
+Date and Time
+-------------
 
 -  :ref:`Types_and_Constants`
 -  :ref:`Time_Parameter_Callback_Functions`
 -  :ref:`Functions`
 
-.. _Memory_Management_Operations:
-
-:ref:`Memory_Management_Operations`
------------------------------------
+Memory_Management Operations
+----------------------------
 
 -  :ref:`Memory_Allocation_Functions`
 -  :ref:`Memory_Allocation_Macros`
 
-.. _String_Operations:
-
-:ref:`String_Operations`
-------------------------
+String Operations
+-----------------
 
 -  :ref:`PL_strlen`
 -  :ref:`PL_strcpy`
 -  :ref:`PL_strdup`
 -  :ref:`PL_strfree`
 
-.. _Floating_Point_Number_to_String_Conversion:
-
-:ref:`Floating_Point_Number_to_String_Conversion`
--------------------------------------------------
+Floating Point Number to String Conversion
+------------------------------------------
 
 -  :ref:`PR_strtod`
 -  :ref:`PR_dtoa`
 -  :ref:`PR_cnvtf`
 
-.. _Linked_Lists:
-
-:ref:`Linked_Lists`
--------------------
+Linked Lists
+------------
 
 -  :ref:`Linked_List_Types`
 
@@ -214,10 +183,8 @@ NSPR API Reference
    -  :ref:`PR_INSERT_BEFORE`
    -  :ref:`PR_INSERT_AFTER`
 
-.. _Dynamic_Library_Linking:
-
-:ref:`Dynamic_Library_Linking`
-------------------------------
+Dynamic Library Linking
+-----------------------
 
 -  :ref:`Library_Linking_Types`
 
@@ -241,10 +208,8 @@ NSPR API Reference
    -  :ref:`Dynamic_Library_Search_Path`
    -  :ref:`Exporting_Symbols_from_the_Main_Executable_Program`
 
-.. _Process_Management_and_Interprocess_Communication:
-
-:ref:`Process Management and Interprocess Communication`
---------------------------------------------------------
+Process Management and Interprocess Communication
+-------------------------------------------------
 
 -  :ref:`Process_Management_Types_and_Constants`
 
@@ -256,10 +221,8 @@ NSPR API Reference
    -  :ref:`Setting_the_Attributes_of_a_New_Process`
    -  :ref:`Creating_and_Managing_Processes`
 
-.. _Logging:
-
-:ref:`Logging`
------------------------------------------
+Logging
+-------
 
 -  :ref:`Conditional_Compilation_and_Execution`
 -  :ref:`Log_Types_and_Variables`
@@ -284,56 +247,42 @@ NSPR API Reference
 
 -  :ref:`Use_Example`
 
-.. _Named_Shared_Memory:
-
-:ref:`Named_Shared_Memory`
---------------------------
+Named Shared Memory
+-------------------
 
 -  :ref:`Shared_Memory_Protocol`
 -  :ref:`Named_Shared_Memory_Functions`
 
-.. _Anonymous_Shared_Memory:
-
-:ref:`Anonymous_Shared_Memory`
-------------------------------
+Anonymous Shared_Memory
+-----------------------
 
 -  :ref:`Anonymous_Memory_Protocol`
 -  :ref:`Anonymous_Shared_Memory_Functions`
 
-.. _IPC_Semaphores:
-
-:ref:`IPC_Semaphores`
----------------------
+IPC Semaphores
+--------------
 
 -  :ref:`IPC_Semaphore_Functions`
 
-.. _Thread_Pools:
-
-:ref:`Thread_Pools`
--------------------
+Thread Pools
+------------
 
 -  :ref:`Thread_Pool_Types`
 -  :ref:`Thread_Pool_Functions`
 
-.. _Random_Number_Generator:
-
-:ref:`Random_Number_Generator`
-------------------------------
+Random Number Generator
+-----------------------
 
 -  :ref:`Random_Number_Generator_Function`
 
-.. _Hash_Tables:
-
-:ref:`Hash_Tables`
-------------------
+Hash Tables
+-----------
 
 -  :ref:`Hash_Table_Types_and_Constants`
 -  :ref:`Hash_Table_Functions`
 
-.. _NSPR_Error_Handling:
-
-:ref:`NSPR_Error_Handling`
---------------------------
+NSPR Error Handling
+-------------------
 
 -  :ref:`Error_Type`
 -  :ref:`Error_Functions`
