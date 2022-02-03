@@ -1,6 +1,34 @@
 {
   "data": [
     {
+      "os": "Android",
+      "schema": 1643797519778,
+      "vendor": "Vivante Corporation",
+      "details": {
+        "bug": "1719327",
+        "name": "Vivante startup crashes"
+      },
+      "devices": [
+        "Vivante GC7000UL"
+      ],
+      "enabled": true,
+      "feature": "WEBRENDER",
+      "hardware": "",
+      "driverVendor": "",
+      "versionRange": {
+        "maxVersion": "97",
+        "minVersion": ""
+      },
+      "driverVersion": "",
+      "featureStatus": "BLOCKED_DEVICE",
+      "windowProtocol": "",
+      "driverVersionMax": "",
+      "desktopEnvironment": "",
+      "driverVersionComparator": "",
+      "id": "bbd241d5-e3b2-44eb-bb4d-69ae07f12a0e",
+      "last_modified": 1643818378440
+    },
+    {
       "os": "All",
       "schema": 1623194747864,
       "vendor": "0x8086",
