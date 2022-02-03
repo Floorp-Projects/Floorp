@@ -72,12 +72,10 @@ impl<'a> RawtestHarness<'a> {
             ReftestImageComparison::NotEqual { max_difference, count_different, .. } => {
                 let t = "rawtest";
                 println!(
-                    "{} | {} | {}: {}, {}: {}",
-                    "REFTEST TEST-UNEXPECTED-FAIL",
+                    "REFTEST TEST-UNEXPECTED-FAIL | {} | \
+                     image comparison, max difference: {}, number of differing pixels: {}",
                     t,
-                    "image comparison, max difference",
                     max_difference,
-                    "number of differing pixels",
                     count_different
                 );
                 println!("REFTEST   IMAGE 1: {}", image1.create_data_uri());
@@ -247,7 +245,7 @@ impl<'a> RawtestHarness<'a> {
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
         builder.begin();
 
-        let info = self.make_common_properties(rect(448.899994, 74.0, 151.000031, 56.).to_box2d());
+        let info = self.make_common_properties(rect(448.9, 74.0, 151.000_03, 56.).to_box2d());
 
         // setup some malicious image size parameters
         builder.push_repeating_image(
@@ -351,7 +349,7 @@ impl<'a> RawtestHarness<'a> {
         let w = window_rect.width() as usize;
         let h = window_rect.height() as usize;
         let p1 = (40 + (h - 100) * w) * 4;
-        assert_eq!(pixels[p1 + 0], 50);
+        assert_eq!(pixels[p1    ], 50);
         assert_eq!(pixels[p1 + 1], 50);
         assert_eq!(pixels[p1 + 2], 150);
         assert_eq!(pixels[p1 + 3], 255);
@@ -431,19 +429,19 @@ impl<'a> RawtestHarness<'a> {
         let w = window_rect.width() as usize;
         let h = window_rect.height() as usize;
         let p1 = (65 + (h - 15) * w) * 4;
-        assert_eq!(pixels[p1 + 0], 255);
+        assert_eq!(pixels[p1    ], 255);
         assert_eq!(pixels[p1 + 1], 255);
         assert_eq!(pixels[p1 + 2], 255);
         assert_eq!(pixels[p1 + 3], 255);
 
         let p2 = (25 + (h - 15) * w) * 4;
-        assert_eq!(pixels[p2 + 0], 221);
+        assert_eq!(pixels[p2    ], 221);
         assert_eq!(pixels[p2 + 1], 221);
         assert_eq!(pixels[p2 + 2], 221);
         assert_eq!(pixels[p2 + 3], 255);
 
         let p3 = (15 + (h - 15) * w) * 4;
-        assert_eq!(pixels[p3 + 0], 50);
+        assert_eq!(pixels[p3    ], 50);
         assert_eq!(pixels[p3 + 1], 50);
         assert_eq!(pixels[p3 + 2], 150);
         assert_eq!(pixels[p3 + 3], 255);
