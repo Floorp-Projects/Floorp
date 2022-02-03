@@ -328,7 +328,7 @@ base, or where it is difficult to reach a consensus at the global scope,
 may make sense to be kept in the local style.
 
 The details of synchronizing with the global style are subject to discussion
-with the owner and peers of the global coding style (see 
+with the owner and peers of the global coding style (see
 `Bug 1587810 <https://bugzilla.mozilla.org/show_bug.cgi?id=1587810>`).
 
 FAQ
@@ -354,4 +354,3 @@ FAQ
   Personal preferences regarding the degree may differ, but in doubt such
   inconsistencies should be considered acceptable. They should not block a bug
   from being closed.
-

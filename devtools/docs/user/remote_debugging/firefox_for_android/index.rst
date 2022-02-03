@@ -193,4 +193,3 @@ The Toolbox, and the tools it hosts, work in just the same way as they do when a
 
 .. image:: remote-debugging-debugger.png
   :class: center
-

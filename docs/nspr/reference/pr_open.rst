@@ -68,7 +68,7 @@ The function has the following parameters:
 |                    |       | and NULL is returned.                 |
 +--------------------+-------+---------------------------------------+
 
- 
+
 
 ``mode``
    When ``PR_CREATE_FILE`` flag is set and the file is created, these

@@ -38,4 +38,3 @@ to build the tree.
 Piecing it all together, we have frontend files that are parsed into data
 structures. These data structures are fed into a build backend. The output
 from build backends is used by builders to build the tree.
-

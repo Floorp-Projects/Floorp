@@ -51,5 +51,3 @@ PR_POLL_EXCEPT. When PR_Poll() returns, one calls PR_ConnectContinue()
 on the socket to determine whether the nonblocking connect has completed
 or is still in progress. Repeat the PR_Poll(), PR_ConnectContinue()
 sequence until the nonblocking connect has completed.
-
- 

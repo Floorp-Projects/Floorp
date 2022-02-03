@@ -794,4 +794,3 @@ Add a sidebar to an existing tool:
   sidebar.addTab("tab1", "chrome://browser/content/.../tab1.xhtml", true);
   sidebar.addTab("tab2", "chrome://browser/content/.../tab2.xhtml", false);
   sidebar.show();
-

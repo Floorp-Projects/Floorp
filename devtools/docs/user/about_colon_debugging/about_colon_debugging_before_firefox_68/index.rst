@@ -224,4 +224,3 @@ Service workers can be unavailable for several reasons:
 - If you are using a Private Browsing window.
 - If your History preference is set to "Never Remember History" or "Always use private browsing mode".
 - If the ``dom.serviceWorkers.enable`` preference is set to false in ``about:config``.
-

@@ -206,4 +206,3 @@ To select a network, click the list box that's initially labeled "No throttling"
 
 .. image:: rdm_throttling.png
   :class: center
-
