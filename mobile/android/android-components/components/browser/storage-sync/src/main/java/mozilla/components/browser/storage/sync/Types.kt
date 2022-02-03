@@ -107,7 +107,8 @@ internal fun mozilla.appservices.places.uniffi.HistoryVisitInfo.into(): VisitInf
         title = this.title,
         visitTime = this.timestamp,
         visitType = this.visitType.into(),
-        previewImageUrl = this.previewImageUrl
+        previewImageUrl = this.previewImageUrl,
+        isRemote = this.isRemote,
     )
 }
 
