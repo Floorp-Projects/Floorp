@@ -5,11 +5,11 @@
 use api::{FontInstanceFlags, FontKey, FontRenderMode, FontVariation};
 use api::{ColorU, GlyphDimensions, NativeFontHandle};
 use dwrote;
-use crate::gamma_lut::{ColorLut, GammaLut};
+use crate::gamma_lut::ColorLut;
 use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
-use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
-use crate::glyph_rasterizer::apply_multistrike_bold;
 use crate::internal_types::{FastHashMap, FastHashSet, ResourceCacheError};
+use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
+use crate::gamma_lut::GammaLut;
 use std::borrow::Borrow;
 use std::collections::hash_map::Entry;
 use std::hash::{Hash, Hasher};
@@ -377,7 +377,7 @@ impl FontContext {
         font: &FontInstance,
         key: &GlyphKey,
     ) -> Option<GlyphDimensions> {
-        let (size, x_scale, y_scale, bitmaps, transform) = Self::get_glyph_parameters(font, key);
+        let (size, _, bitmaps, transform) = Self::get_glyph_parameters(font, key);
         let (_, _, bounds) = self.create_glyph_analysis(font, key, size, transform, bitmaps).ok()?;
 
         let width = (bounds.right - bounds.left) as i32;
@@ -388,14 +388,6 @@ impl FontContext {
         if width == 0 || height == 0 {
             return None;
         }
-
-        let (strike_scale, pixel_step) = if bitmaps {
-            (y_scale, 1.0)
-        } else {
-            (x_scale, y_scale / x_scale)
-        };
-        let extra_strikes = font.get_extra_strikes(strike_scale);
-        let extra_width = extra_strikes as f64 * pixel_step;
 
         let face = self.get_font_face(font);
         face.get_design_glyph_metrics(&[key.index() as u16], false)
@@ -409,9 +401,9 @@ impl FontContext {
                 GlyphDimensions {
                     left: bounds.left,
                     top: -bounds.top,
-                    width: width + extra_width.ceil() as i32,
+                    width,
                     height,
-                    advance: advance + extra_width as f32,
+                    advance,
                 }
             })
     }
@@ -426,9 +418,14 @@ impl FontContext {
         render_mode: FontRenderMode,
         bitmaps: bool,
         subpixel_bgr: bool,
-        padding: usize,
-    ) -> (Vec<u8>, bool) {
-        let (buffer_width, buffer_height) = (width + padding * 2, height + padding * 2);
+        texture_padding: bool,
+    ) -> Vec<u8> {
+        let (buffer_width, buffer_height, padding) = if texture_padding {
+            (width + 2, height + 2, 1)
+        } else {
+            (width, height, 0)
+        };
+
         let buffer_length = buffer_width * buffer_height * 4;
         let mut bgra_pixels: Vec<u8> = vec![0; buffer_length];
 
@@ -448,7 +445,6 @@ impl FontContext {
                         bgra_pixels[offset + 3] = alpha;
                     }
                 }
-                (bgra_pixels, false)
             }
             (_, FontRenderMode::Subpixel, false) => {
                 assert!(width * height * 3 == pixels.len());
@@ -468,7 +464,6 @@ impl FontContext {
                         bgra_pixels[offset + 3] = 0xff;
                     }
                 }
-                (bgra_pixels, true)
             }
             _ => {
                 assert!(width * height * 3 == pixels.len());
@@ -486,9 +481,9 @@ impl FontContext {
                         bgra_pixels[offset + 3] = alpha;
                     }
                 }
-                (bgra_pixels, false)
             }
-        }
+        };
+        bgra_pixels
     }
 
     pub fn prepare_font(font: &mut FontInstance) {
@@ -508,9 +503,8 @@ impl FontContext {
         }
     }
 
-    fn get_glyph_parameters(font: &FontInstance, key: &GlyphKey)
-                            -> (f32, f64, f64, bool, Option<dwrote::DWRITE_MATRIX>) {
-        let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
+    fn get_glyph_parameters(font: &FontInstance, key: &GlyphKey) -> (f32, f64, bool, Option<dwrote::DWRITE_MATRIX>) {
+        let (_, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
         let scaled_size = font.size.to_f64_px() * y_scale;
         let bitmaps = is_bitmap_font(font);
         let (mut shape, (mut x_offset, mut y_offset)) = if bitmaps {
@@ -548,14 +542,14 @@ impl FontContext {
         } else {
             None
         };
-        (scaled_size as f32, x_scale, y_scale, bitmaps, transform)
+        (scaled_size as f32, y_scale, bitmaps, transform)
     }
 
     pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {
-        let (size, x_scale, y_scale, bitmaps, transform) = Self::get_glyph_parameters(font, key);
+        let (size, y_scale, bitmaps, transform) = Self::get_glyph_parameters(font, key);
         let (analysis, texture_type, bounds) = self.create_glyph_analysis(font, key, size, transform, bitmaps)
                                                    .or(Err(GlyphRasterError::LoadFailed))?;
-        let mut width = (bounds.right - bounds.left) as i32;
+        let width = (bounds.right - bounds.left) as i32;
         let height = (bounds.bottom - bounds.top) as i32;
         // Alpha texture bounds can sometimes return an empty rect
         // Such as for spaces
@@ -564,37 +558,10 @@ impl FontContext {
         }
 
         let pixels = analysis.create_alpha_texture(texture_type, bounds).or(Err(GlyphRasterError::LoadFailed))?;
-        let padding = if font.use_texture_padding() { 1 } else { 0 };
-        let (mut bgra_pixels, is_subpixel) = self.convert_to_bgra(
-            &pixels,
-            width as usize,
-            height as usize,
-            texture_type,
-            font.render_mode,
-            bitmaps,
-            font.flags.contains(FontInstanceFlags::SUBPIXEL_BGR),
-            padding as usize,
-        );
-
-        // Apply multistrike bold, if necessary, and replace the current pixels with it.
-        let (strike_scale, pixel_step) = if bitmaps {
-            (y_scale, 1.0)
-        } else {
-            (x_scale, y_scale / x_scale)
-        };
-        let extra_strikes = font.get_extra_strikes(strike_scale);
-        if extra_strikes > 0 {
-            let (bold_pixels, bold_width) = apply_multistrike_bold(
-                &bgra_pixels,
-                (width + padding * 2) as usize,
-                height as usize,
-                is_subpixel,
-                extra_strikes,
-                pixel_step,
-            );
-            width = bold_width as i32 - padding * 2;
-            bgra_pixels = bold_pixels;
-        }
+        let mut bgra_pixels = self.convert_to_bgra(&pixels, width as usize, height as usize,
+                                                   texture_type, font.render_mode, bitmaps,
+                                                   font.flags.contains(FontInstanceFlags::SUBPIXEL_BGR),
+                                                   font.use_texture_padding());
 
         let FontInstancePlatformOptions { gamma, contrast, cleartype_level, .. } =
             font.platform_options.unwrap_or_default();
@@ -606,10 +573,11 @@ impl FontContext {
                     gamma as f32 / 100.0,
                     gamma as f32 / 100.0,
                 ));
-        if is_subpixel {
-            gamma_lut.preblend_scaled(&mut bgra_pixels, font.color, cleartype_level);
-        } else {
+        if bitmaps || texture_type == dwrote::DWRITE_TEXTURE_ALIASED_1x1 ||
+           font.render_mode != FontRenderMode::Subpixel {
             gamma_lut.preblend(&mut bgra_pixels, font.color);
+        } else {
+            gamma_lut.preblend_scaled(&mut bgra_pixels, font.color, cleartype_level);
         }
 
         let format = if bitmaps {
@@ -620,6 +588,7 @@ impl FontContext {
             font.get_glyph_format()
         };
 
+        let padding = if font.use_texture_padding() { 1 } else { 0 };
         Ok(RasterizedGlyph {
             left: (bounds.left - padding) as f32,
             top: (-bounds.top + padding) as f32,
