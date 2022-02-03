@@ -188,7 +188,7 @@ class ThreeDotMenuMainRobot {
             mDevice.wait(
                 Until
                     .findObject(
-                        By.textContains("$packageName:id/browser_menu_customize_home")
+                        By.textContains("$packageName:id/browser_menu_customize_home_1")
                     ),
                 waitingTime
             )
@@ -276,7 +276,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun openWhatsNew(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            mDevice.waitNotNull(Until.findObject(By.text("What’s New")), waitingTime)
+            mDevice.waitNotNull(Until.findObject(By.text("What’s new")), waitingTime)
             whatsNewButton().click()
 
             BrowserRobot().interact()
@@ -379,7 +379,7 @@ private fun customizeHomeButton() =
     onView(
         allOf(
             withId(R.id.text),
-            withText(R.string.browser_menu_customize_home)
+            withText(R.string.browser_menu_customize_home_1)
         )
     )
 
@@ -455,7 +455,7 @@ private fun assertFindInPageButton() = findInPageButton()
 
 private fun whatsNewButton() = onView(
     allOf(
-        withText("What’s New"),
+        withText("What’s new"),
         withEffectiveVisibility(Visibility.VISIBLE)
     )
 )

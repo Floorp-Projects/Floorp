@@ -166,7 +166,7 @@ class HomeMenu(
         }
 
         val customizeHomeItem = BrowserMenuImageText(
-            context.getString(R.string.browser_menu_customize_home),
+            context.getString(R.string.browser_menu_customize_home_1),
             R.drawable.ic_customize,
             primaryTextColor
         ) {

@@ -179,7 +179,7 @@
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Help</string>
     <!-- Browser menu button that sends a to a the what's new article -->
-    <string name="browser_menu_whats_new">What’s New</string>
+    <string name="browser_menu_whats_new">What’s new</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Settings</string>
     <!-- Browser menu button that opens a user's library -->
@@ -228,7 +228,7 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Edit</string>
     <!-- Browser menu button that opens the Customize menu -->
-    <string name="browser_menu_customize_home">Customize home</string>
+    <string name="browser_menu_customize_home" moz:removedIn="98" tools:ignore="UnusedResources">Customize home</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Customize homepage</string>
     <!-- Browser Toolbar -->
