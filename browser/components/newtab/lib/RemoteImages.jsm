@@ -66,6 +66,34 @@ class _RemoteImages {
   }
 
   /**
+   * Patch a reference to a remote image in a message with a blob URL.
+   *
+   * @param message     The remote image reference to be patched.
+   * @param replaceWith The property name that will be used to store the blob
+   *                    URL on |message|.
+   *
+   * @return A promise that resolves with an unloading function for the patched
+   *         URL, or rejects with an error.
+   *
+   *         If the message isn't patched (because there isn't a remote image)
+   *         then the promise will resolve to null.
+   */
+  async patchMessage(message, replaceWith = "imageURL") {
+    if (!!message && !!message.imageId) {
+      const { imageId } = message;
+      const blobURL = await this.load(imageId);
+
+      delete message.imageId;
+
+      message[replaceWith] = blobURL;
+
+      return () => this.unload(blobURL);
+    }
+
+    return null;
+  }
+
+  /**
    * Load a remote image.
    *
    * If the image has not been previously downloaded then the image will be
