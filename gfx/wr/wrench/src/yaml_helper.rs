@@ -276,20 +276,13 @@ impl YamlHelper for Yaml {
     }
 
     fn as_rect(&self) -> Option<LayoutRect> {
-        if self.is_badvalue() {
-            return None;
-        }
-
-        if let Some(nums) = self.as_vec_f32() {
-            if nums.len() == 4 {
-                return Some(LayoutRect::from_origin_and_size(
-                    LayoutPoint::new(nums[0], nums[1]),
-                    LayoutSize::new(nums[2], nums[3]),
-                ));
-            }
-        }
-
-        None
+        self.as_vec_f32().and_then(|v| match v.as_slice() {
+            &[x, y, width, height] => Some(LayoutRect::from_origin_and_size(
+                LayoutPoint::new(x, y),
+                LayoutSize::new(width, height),
+            )),
+            _ => None,
+        })
     }
 
     fn as_size(&self) -> Option<LayoutSize> {
@@ -426,29 +419,26 @@ impl YamlHelper for Yaml {
         }
     }
 
+    /// Inputs for r, g, b channels are floats or ints in the range [0, 255].
+    /// If included, the alpha channel is in the range [0, 1].
+    /// This matches CSS-style, but requires conversion for `ColorF`.
     fn as_colorf(&self) -> Option<ColorF> {
-        if let Some(mut nums) = self.as_vec_f32() {
-            assert!(
-                nums.len() == 3 || nums.len() == 4,
-                "color expected a color name, or 3-4 floats; got '{:?}'",
-                self
-            );
+        if let Some(nums) = self.as_vec_f32() {
+            assert!(nums.iter().take(3).all(|x| (0.0 ..= 255.0).contains(x)),
+                "r, g, b values should be in the 0-255 range, got {:?}", nums);
 
-            if nums.len() == 3 {
-                nums.push(1.0);
-            }
-            assert!(nums[3] >= 0.0 && nums[3] <= 1.0,
+            let color: ColorF = match *nums.as_slice() {
+                [r, g, b] => ColorF { r, g, b, a: 1.0 },
+                [r, g, b, a] => ColorF { r, g, b, a },
+                _ => panic!("color expected a color name, or 3-4 floats; got '{:?}'", self),
+            }.scale_rgb(1.0 / 255.0);
+
+            assert!((0.0 ..= 1.0).contains(&color.a),
                     "alpha value should be in the 0-1 range, got {:?}",
-                    nums[3]);
-            return Some(ColorF::new(
-                nums[0] / 255.0,
-                nums[1] / 255.0,
-                nums[2] / 255.0,
-                nums[3],
-            ));
-        }
+                    color.a);
 
-        if let Some(s) = self.as_str() {
+            Some(color)
+        } else if let Some(s) = self.as_str() {
             string_to_color(s)
         } else {
             None
