@@ -17,6 +17,8 @@ Documentation
    in the NSPR API.
 :ref:`NSPR build instructions`
    How to checkout and build from source.
+:ref:`NSPR listing`
+   All NSPR pages
 
 .. _Getting_NSPR:
 
