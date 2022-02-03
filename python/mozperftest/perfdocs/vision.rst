@@ -62,5 +62,3 @@ and if that does not suffice, create a new runner.
 
 For JS benchmarks, once the **jsshell** runner is added into perftest, it will be
 straightforward.
-
-
