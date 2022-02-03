@@ -1912,11 +1912,10 @@ impl YamlFrameReader {
     fn push_reference_frame(
         &mut self,
         dl: &mut DisplayListBuilder,
-        wrench: &mut Wrench,
+        default_bounds: impl Fn() -> LayoutRect,
         yaml: &Yaml,
     ) -> SpatialId {
-        let default_bounds = LayoutRect::from_size(wrench.window_size_f32());
-        let bounds = yaml["bounds"].as_rect().unwrap_or(default_bounds);
+        let bounds = yaml["bounds"].as_rect().unwrap_or_else(default_bounds);
         let default_transform_origin = LayoutPoint::new(
             bounds.min.x + bounds.width() * 0.5,
             bounds.min.y + bounds.height() * 0.5,
@@ -1930,15 +1929,15 @@ impl YamlFrameReader {
             .as_point()
             .unwrap_or(default_transform_origin);
 
-        let perspective_origin = yaml["perspective-origin"]
-            .as_point()
-            .unwrap_or(default_transform_origin);
-
         assert!(
             yaml["transform"].is_badvalue() ||
             yaml["perspective"].is_badvalue(),
             "Should have one of either transform or perspective"
         );
+
+        let perspective_origin = yaml["perspective-origin"]
+            .as_point()
+            .unwrap_or(default_transform_origin);
 
         let reference_frame_kind = if !yaml["perspective"].is_badvalue() {
             ReferenceFrameKind::Perspective { scrolling_relative_to: None }
@@ -1984,7 +1983,8 @@ impl YamlFrameReader {
         wrench: &mut Wrench,
         yaml: &Yaml,
     ) {
-        let real_id = self.push_reference_frame(dl, wrench, yaml);
+        let default_bounds = || LayoutRect::from_size(wrench.window_size_f32());
+        let real_id = self.push_reference_frame(dl, default_bounds, yaml);
         self.spatial_id_stack.push(real_id);
 
         if let Some(yaml_items) = yaml["items"].as_vec() {
@@ -2003,19 +2003,19 @@ impl YamlFrameReader {
         IsRoot(is_root): IsRoot,
         info: &mut CommonItemProperties,
     ) {
-        let default_bounds = LayoutRect::from_size(wrench.window_size_f32());
-        let mut bounds = yaml["bounds"].as_rect().unwrap_or(default_bounds);
+        let default_bounds = || LayoutRect::from_size(wrench.window_size_f32());
+        let mut bounds = yaml["bounds"].as_rect().unwrap_or_else(default_bounds);
 
-        let reference_frame_id = if !yaml["transform"].is_badvalue() ||
-            !yaml["perspective"].is_badvalue() {
-            let reference_frame_id = self.push_reference_frame(dl, wrench, yaml);
-            self.spatial_id_stack.push(reference_frame_id);
-            bounds.max -= bounds.min.to_vector();
-            bounds.min = LayoutPoint::zero();
-            Some(reference_frame_id)
-        } else {
-            None
-        };
+        let pushed_reference_frame =
+            if !yaml["transform"].is_badvalue() || !yaml["perspective"].is_badvalue() {
+                let reference_frame_id = self.push_reference_frame(dl, default_bounds, yaml);
+                self.spatial_id_stack.push(reference_frame_id);
+                bounds.max -= bounds.min.to_vector();
+                bounds.min = LayoutPoint::zero();
+                true
+            } else {
+                false
+            };
 
         let clip_node_id = self.to_clip_id(&yaml["clip-node"], dl.pipeline_id);
 
@@ -2072,7 +2072,7 @@ impl YamlFrameReader {
 
         dl.pop_stacking_context();
 
-        if reference_frame_id.is_some() {
+        if pushed_reference_frame {
             self.spatial_id_stack.pop().unwrap();
             dl.pop_reference_frame();
         }
