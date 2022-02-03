@@ -243,5 +243,3 @@ Something Else?
 
 If you make another change not described here that turns out to be simple or
 common, please include an update to this file in your patch.
-
-

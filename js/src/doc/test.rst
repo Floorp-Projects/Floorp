@@ -47,7 +47,7 @@ The Test262 tests can also be run in the browser, using:
 
 To run a specific test, you can use the ``--filter=PATTERN`` option, where PATTERN is a RegExp pattern that is tested against ``file:///{PATH_TO_OBJ_DIR}/dist/test-stage/jsreftest/tests/jsreftest.html?test={RELATIVE_PATH_TO_TEST_FROM_js/src/tests}``.
 
-For historical reasons, ``jstests`` also includes a SpiderMonkey specific suite of additional language feature tests in ``js/src/tests/non262``. 
+For historical reasons, ``jstests`` also includes a SpiderMonkey specific suite of additional language feature tests in ``js/src/tests/non262``.
 
 Running jit-tests locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~

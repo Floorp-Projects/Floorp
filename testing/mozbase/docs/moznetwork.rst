@@ -6,4 +6,3 @@
   .. automethod:: moznetwork.get_ip
 
   .. autoclass:: moznetwork.NetworkError
-

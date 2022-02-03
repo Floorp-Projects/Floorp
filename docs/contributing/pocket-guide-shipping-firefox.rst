@@ -152,7 +152,7 @@ Merge Day                                 Nightly W1 Monday          Day 1 of th
 `PI Request <pi request>` deadline        Nightly W1 Friday          Manual QA request deadline for high risk features
 Feature technical documentation due       Nightly W2 Friday          Deadline for features requiring manual QA
 Beta release notes draft                  Nightly W4 Wednesday
-Nightly features Go/No-Go decisions       Nightly W4 Wednesday      
+Nightly features Go/No-Go decisions       Nightly W4 Wednesday
 Feature Complete Milestone                Nightly W4 Wednesday       Last day to land risky patches and/or enable new features
 Nightly soft code freeze start            Nightly W4 Thursday        Stabilization period in preparation to merge to Beta
 String freeze                             Nightly W4 Thursday        Modification or deletion of strings exposed to the end-users is not allowed
@@ -430,5 +430,3 @@ number of different "trains" on a regular schedule.
 **Uplift** - the action of taking parts from a newer version of a
 software system (mozilla-central or mozilla-beta) and porting them to an
 older version of the same software (mozilla-beta or mozilla-release)
-
-

@@ -6,4 +6,3 @@ If you hover over a `transform <https://developer.mozilla.org/en-US/docs/Web/CSS
 
 .. image:: transform.png
   :class: center
-

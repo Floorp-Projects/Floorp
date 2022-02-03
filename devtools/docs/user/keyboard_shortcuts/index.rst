@@ -892,4 +892,3 @@ Keyboard shortcuts for the :doc:`Eyedropper <../eyedropper/index>`.
     - :kbd:`Shift` + :kbd:`arrow keys`
     - :kbd:`Shift` + :kbd:`arrow keys`
     - :kbd:`Shift` + :kbd:`arrow keys`
-

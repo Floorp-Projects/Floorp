@@ -223,4 +223,3 @@ Advanced settings
   Enable a panel within the debugger to debug workers.
 
   Note: This option got removed from the UI in Firefox 56, because this version ships with a :doc:`new Debugger UI <../debugger/index>`, but it can still be enabled for the old UI by setting the preference ``devtools.debugger.workers`` to ``true``.
-

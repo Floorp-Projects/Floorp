@@ -56,7 +56,7 @@ Created Content Structure
 The created content is laid out in the directory in the same structure as
 the files in ``l10n-central``. The localizable files end up like this:
 
-.. code-block:: 
+.. code-block::
 
    browser/
      browser/

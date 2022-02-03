@@ -21,7 +21,7 @@ Syntax
 
    typedef struct PRFileInfo PRFileInfo;
 
- 
+
 
 
 Fields

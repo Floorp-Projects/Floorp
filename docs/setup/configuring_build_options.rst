@@ -290,7 +290,7 @@ Localization
 ^^^^^^^^^^^^
 
 ``mk_add_options MOZ_CO_LOCALES=ISOcode``
-   TBD. 
+   TBD.
 ``ac_add_options --enable-ui-locale=ISOcode``
    TBD.
 ``ac_add_options --with-l10n-base=/path/to/base/dir``
