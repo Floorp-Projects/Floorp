@@ -57,7 +57,7 @@ class AudioClock {
 
   // Update the number of samples that has been written in the audio backend.
   // Called on the audio thread only.
-  void UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun);
+  void UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun, bool aAudioThreadChanged);
 
   /**
    * @param aFrames The playback position in frames of the audio engine.
@@ -219,7 +219,8 @@ class AudioStream final {
    public:
     // Attempt to acquire aFrames frames of audio, and returns the number of
     // frames successfuly acquired.
-    virtual uint32_t PopFrames(AudioDataValue* aAudio, uint32_t aFrames) = 0;
+    virtual uint32_t PopFrames(AudioDataValue* aAudio, uint32_t aFrames,
+                               bool aAudioThreadChanged) = 0;
     // Return true if no more data will be added to the source.
     virtual bool Ended() const = 0;
 
@@ -364,6 +365,8 @@ class AudioStream final {
   // Both written on the MDSM thread, read on the audio thread.
   std::atomic<float> mPlaybackRate;
   std::atomic<bool> mPreservesPitch;
+  // Audio thread only
+  bool mAudioThreadChanged = false;
 };
 
 }  // namespace mozilla

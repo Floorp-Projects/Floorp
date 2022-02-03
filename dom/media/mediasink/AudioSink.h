@@ -80,7 +80,8 @@ class AudioSink : private AudioStream::DataSource {
   // Interface of AudioStream::DataSource.
   // Called on the callback thread of cubeb. Returns the number of frames that
   // were available.
-  uint32_t PopFrames(AudioDataValue* aBuffer, uint32_t aFrames) override;
+  uint32_t PopFrames(AudioDataValue* aBuffer, uint32_t aFrames,
+                     bool aAudioThreadChanged) override;
   bool Ended() const override;
 
   void CheckIsAudible(const Span<AudioDataValue>& aInterleaved,
