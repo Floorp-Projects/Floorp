@@ -4,6 +4,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const {
   FrontClassWithSpec,
   types,
@@ -344,7 +345,13 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     // Ultimately, we shouldn't get to this point (fix should happen in connectToFrame or
     // on the server, e.g. for Bug 1752342), but at least this will serve as a safe guard
     // so we don't freeze/crash the inspector.
-    if (target == this.targetFront) {
+    if (
+      target == this.targetFront &&
+      Services.prefs.getBoolPref(
+        "devtools.testing.bypass-walker-children-iframe-guard",
+        false
+      ) !== true
+    ) {
       console.warn("connectToFrame returned an unexpected target");
       return {
         nodes: [],
