@@ -141,7 +141,6 @@ AudioStream::AudioStream(DataSource& aSource)
       mTimeStretcher(nullptr),
       mState(INITIALIZED),
       mDataSource(aSource),
-      mPrefillQuirk(false),
       mAudioThreadId(ProfilerThreadId{}),
       mSandboxed(CubebUtils::SandboxEnabled()) {}
 
@@ -300,10 +299,6 @@ nsresult AudioStream::Init(uint32_t aNumChannels,
     CubebUtils::ReportCubebStreamInitFailure(true);
     return NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR;
   }
-
-  // cubeb's winmm backend prefills buffers on init rather than stream start.
-  // See https://github.com/kinetiknz/cubeb/issues/150
-  mPrefillQuirk = !strcmp(cubeb_get_backend_id(cubebContext), "winmm");
 
   return OpenCubeb(cubebContext, params, startTime,
                    CubebUtils::GetFirstStream());
@@ -629,21 +624,6 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
       Span<AudioDataValue>(reinterpret_cast<AudioDataValue*>(aBuffer),
                            mOutChannels * aFrames),
       mOutChannels, aFrames);
-
-  if (mPrefillQuirk) {
-    // Don't consume audio data until Start() is called.
-    // Expected only with cubeb winmm backend.
-    if (mState == INITIALIZED) {
-      NS_WARNING("data callback fires before cubeb_stream_start() is called");
-      mAudioClock.UpdateFrameHistory(0, aFrames);
-      return writer.WriteZeros(aFrames);
-    }
-  } else {
-    MOZ_ASSERT(mState != INITIALIZED);
-  }
-
-  // NOTE: wasapi (others?) can call us back *after* stop()/Shutdown() (mState
-  // == SHUTDOWN) Bug 996162
 
   if (mAudioClock.GetInputRate() == mAudioClock.GetOutputRate()) {
     GetUnprocessed(writer);

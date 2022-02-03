@@ -346,8 +346,6 @@ class AudioStream final {
 
   DataSource& mDataSource;
 
-  bool mPrefillQuirk;
-
   // The device info of the current sink. If null
   // the default device is used. It is set
   // during the Init() in decoder thread.
