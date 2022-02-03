@@ -407,6 +407,13 @@ impl FirefoxOptions {
                 )
             })?;
 
+            if options.get("androidPackage").is_some() && options.get("binary").is_some() {
+                return Err(WebDriverError::new(
+                    ErrorStatus::InvalidArgument,
+                    "androidPackage and binary are mutual exclusive",
+                ));
+            }
+
             rv.android = FirefoxOptions::load_android(settings.android_storage, options)?;
             rv.args = FirefoxOptions::load_args(options)?;
             rv.env = FirefoxOptions::load_env(options)?;
@@ -967,6 +974,16 @@ mod tests {
         let marionette_settings = Default::default();
         FirefoxOptions::from_capabilities(None, &marionette_settings, &mut caps)
             .expect_err("Firefox options need to be of type object");
+    }
+
+    #[test]
+    fn fx_options_android_package_and_binary() {
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert("androidPackage".into(), json!("foo"));
+        firefox_opts.insert("binary".into(), json!("bar"));
+
+        make_options(firefox_opts, None)
+            .expect_err("androidPackage and binary are mutual exclusive");
     }
 
     #[test]
