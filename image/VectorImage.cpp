@@ -976,7 +976,7 @@ VectorImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
     return ImgDrawResult::NOT_READY;
   }
 
-  if (mAnimationConsumers == 0) {
+  if (mAnimationConsumers == 0 && mHaveAnimations) {
     SendOnUnlockedDraw(aFlags);
   }
 

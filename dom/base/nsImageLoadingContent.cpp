@@ -269,15 +269,13 @@ void nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest,
 }
 
 void nsImageLoadingContent::OnUnlockedDraw() {
-  // It's OK for non-animated images to wait until the next frame visibility
-  // update to become locked. (And that's preferable, since in the case of
-  // scrolling it keeps memory usage minimal.) For animated images, though, we
-  // want to mark them visible right away so we can call
-  // IncrementAnimationConsumers() on them and they'll start animating.
-  if (!(mCurrentRequestFlags & REQUEST_IS_ANIMATED) &&
-      !(mPendingRequestFlags & REQUEST_IS_ANIMATED)) {
-    return;
-  }
+  // This notification is only sent for animated images. It's OK for
+  // non-animated images to wait until the next frame visibility update to
+  // become locked. (And that's preferable, since in the case of scrolling it
+  // keeps memory usage minimal.)
+  //
+  // For animated images, though, we want to mark them visible right away so we
+  // can call IncrementAnimationConsumers() on them and they'll start animating.
 
   nsIFrame* frame = GetOurPrimaryFrame();
   if (!frame) {
@@ -305,10 +303,8 @@ void nsImageLoadingContent::OnUnlockedDraw() {
 void nsImageLoadingContent::OnImageIsAnimated(imgIRequest* aRequest) {
   bool* requestFlag = nullptr;
   if (aRequest == mCurrentRequest) {
-    mCurrentRequestFlags |= REQUEST_IS_ANIMATED;
     requestFlag = &mCurrentRequestRegistered;
   } else if (aRequest == mPendingRequest) {
-    mPendingRequestFlags |= REQUEST_IS_ANIMATED;
     requestFlag = &mPendingRequestRegistered;
   } else {
     MOZ_ASSERT_UNREACHABLE("Which image is this?");
