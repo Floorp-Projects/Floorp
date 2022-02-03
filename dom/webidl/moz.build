@@ -241,9 +241,6 @@ with Files("OfflineAudio*"):
 with Files("OffscreenCanvas.webidl"):
     BUG_COMPONENT = ("Core", "Canvas: 2D")
 
-with Files("OffscreenCanvasRenderingContext2D.webidl"):
-    BUG_COMPONENT = ("Core", "Canvas: 2D")
-
 with Files("OscillatorNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
@@ -755,7 +752,6 @@ WEBIDL_FILES = [
     "OfflineAudioContext.webidl",
     "OfflineResourceList.webidl",
     "OffscreenCanvas.webidl",
-    "OffscreenCanvasRenderingContext2D.webidl",
     "OscillatorNode.webidl",
     "PaintRequest.webidl",
     "PaintRequestList.webidl",

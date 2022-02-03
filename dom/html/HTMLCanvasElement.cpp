@@ -848,8 +848,7 @@ already_AddRefed<CanvasCaptureMediaStream> HTMLCanvasElement::CaptureStream(
   // If no permission, arrange for the frame capture listener to return
   // all-white, opaque image data.
   bool usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(
-      OwnerDoc(), nsContentUtils::GetCurrentJSContext(),
-      Some(&aSubjectPrincipal));
+      OwnerDoc(), nsContentUtils::GetCurrentJSContext(), aSubjectPrincipal);
 
   rv = RegisterFrameCaptureListener(stream->FrameCaptureListener(),
                                     usePlaceholder);
@@ -869,7 +868,7 @@ nsresult HTMLCanvasElement::ExtractData(JSContext* aCx,
   // Check site-specific permission and display prompt if appropriate.
   // If no permission, return all-white, opaque image data.
   bool usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(
-      OwnerDoc(), aCx, Some(&aSubjectPrincipal));
+      OwnerDoc(), aCx, aSubjectPrincipal);
   return ImageEncoder::ExtractData(aType, aOptions, GetSize(), usePlaceholder,
                                    mCurrentContext, mCanvasRenderer, aStream);
 }
@@ -953,7 +952,7 @@ void HTMLCanvasElement::ToBlob(JSContext* aCx, BlobCallback& aCallback,
   // Check site-specific permission and display prompt if appropriate.
   // If no permission, return all-white, opaque image data.
   bool usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(
-      OwnerDoc(), aCx, Some(&aSubjectPrincipal));
+      OwnerDoc(), aCx, aSubjectPrincipal);
   CanvasRenderingContextHelper::ToBlob(aCx, global, aCallback, aType, aParams,
                                        usePlaceholder, aRv);
 }
