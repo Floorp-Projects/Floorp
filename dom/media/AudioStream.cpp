@@ -235,32 +235,25 @@ int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs) {
   return aFunction(mCubebStream.get(), std::forward<Args>(aArgs)...);
 }
 
-nsresult AudioStream::Init(uint32_t aNumChannels,
-                           AudioConfig::ChannelLayout::ChannelMap aChannelMap,
-                           uint32_t aRate, AudioDeviceInfo* aSinkInfo) {
+nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo) {
   auto startTime = TimeStamp::Now();
   TRACE("AudioStream::Init");
 
-  LOG("%s channels: %d, rate: %d", __FUNCTION__, aNumChannels, aRate);
-  mChannels = aNumChannels;
-  mOutChannels = aNumChannels;
-
+  LOG("%s channels: %d, rate: %d", __FUNCTION__, mOutChannels,
+      mAudioClock.GetInputRate());
   mSinkInfo = aSinkInfo;
-
   // Hasn't started playing audio yet.
   mPlaybackComplete = false;
 
   cubeb_stream_params params;
-  params.rate = aRate;
+  params.rate = mAudioClock.GetInputRate();
   params.channels = mOutChannels;
-  params.layout = static_cast<uint32_t>(aChannelMap);
+  params.layout = static_cast<uint32_t>(mChannelMap);
   params.format = ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
   params.prefs = CubebUtils::GetDefaultStreamPrefs(CUBEB_DEVICE_TYPE_OUTPUT);
 
   // This is noop if MOZ_DUMP_AUDIO is not set.
-  mDumpFile.Open("AudioStream", mOutChannels, aRate);
-
-  mAudioClock.Init(aRate);
+  mDumpFile.Open("AudioStream", mOutChannels, mAudioClock.GetInputRate());
 
   cubeb* cubebContext = CubebUtils::GetCubebContext();
   if (!cubebContext) {
@@ -706,16 +699,11 @@ void AudioStream::StateCallback(cubeb_state aState) {
 
 bool AudioStream::IsPlaybackCompleted() const { return mPlaybackComplete; }
 
-AudioClock::AudioClock()
-    : mOutRate(0),
-      mInRate(0),
+AudioClock::AudioClock(uint32_t aInRate)
+    : mOutRate(aInRate),
+      mInRate(aInRate),
       mPreservesPitch(true),
       mFrameHistory(new FrameHistory()) {}
-
-void AudioClock::Init(uint32_t aRate) {
-  mOutRate = aRate;
-  mInRate = aRate;
-}
 
 void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun) {
   // Flush the local items, if any, and then attempt to enqueue the current
