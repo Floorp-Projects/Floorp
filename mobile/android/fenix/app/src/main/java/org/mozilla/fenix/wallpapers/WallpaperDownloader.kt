@@ -44,14 +44,13 @@ class WallpaperDownloader(
                 method = Request.Method.GET
             )
             Result.runCatching {
-                client.fetch(request)
-            }.onSuccess {
-                if (!it.isSuccess) {
-                    logger.error("Download response failure code: ${it.status}")
+                val response = client.fetch(request)
+                if (!response.isSuccess) {
+                    logger.error("Download response failure code: ${response.status}")
                     return@withContext
                 }
                 File(localFile.path.substringBeforeLast("/")).mkdirs()
-                it.body.useStream { input ->
+                response.body.useStream { input ->
                     input.copyTo(localFile.outputStream())
                 }
             }.onFailure {
