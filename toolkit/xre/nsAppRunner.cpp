@@ -83,7 +83,6 @@
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIToolkitProfile.h"
-#include "nsIUUIDGenerator.h"
 #include "nsToolkitProfileService.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
@@ -134,9 +133,6 @@
 
 #if defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
-#  if (defined(XP_WIN) || defined(XP_MACOSX))
-#    include "nsIUUIDGenerator.h"
-#  endif
 #endif
 
 #ifdef ACCESSIBILITY
@@ -3146,10 +3142,7 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
   NS_ENSURE_SUCCESS_VOID(rv);
 
   nsID uuid;
-  nsCOMPtr<nsIUUIDGenerator> uuidGen =
-      do_GetService("@mozilla.org/uuid-generator;1");
-  NS_ENSURE_TRUE_VOID(uuidGen);
-  rv = uuidGen->GenerateUUIDInPlace(&uuid);
+  rv = nsID::GenerateUUIDInPlace(uuid);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   nsCString arch("null");
