@@ -48,5 +48,3 @@ call ``PR_IntervalNow()`` in a sequence that looks like this:
         if (PR_FAILURE == rv) break;  /* likely an interrupt */
     }
     PR_Unlock(data->mutex);
-
- 

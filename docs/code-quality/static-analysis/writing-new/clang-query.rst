@@ -37,20 +37,20 @@ More examples are available `in the documentation <https://clang.llvm.org/docs/L
 
 ::
 
-  B func1() { 
-    return 42; 
+  B func1() {
+    return 42;
   }
-  
-  /* 
+
+  /*
     AST Dump in 'Asis' mode for C++17/C++20 dialect:
-  
+
     FunctionDecl
     `-CompoundStmt
       `-ReturnStmt
         `-ImplicitCastExpr
           `-CXXConstructExpr
             `-IntegerLiteral 'int' 42
-    
+
     AST Dump in 'IgnoreUnlessSpelledInSource' mode for all dialects:
 
     FunctionDecl
@@ -69,47 +69,47 @@ Consider the output of ``match functionDecl().bind("x")``:
 
 ::
 
-  clang-query> match functionDecl().bind("x") 
-  
-  Match #1: 
-   
-  testfile.cpp:1:1: note: "root" binds here 
-  int addTwo(int num) 
-  ^~~~~~~~~~~~~~~~~~~ 
-  testfile.cpp:1:1: note: "x" binds here 
-  int addTwo(int num) 
-  ^~~~~~~~~~~~~~~~~~~ 
-   
-  Match #2: 
-   
-  testfile.cpp:6:1: note: "root" binds here 
-  int main(int, char**) 
-  ^~~~~~~~~~~~~~~~~~~~~ 
-  testfile.cpp:6:1: note: "x" binds here 
-  int main(int, char**) 
-  ^~~~~~~~~~~~~~~~~~~~~ 
-  2 matches. 
+  clang-query> match functionDecl().bind("x")
+
+  Match #1:
+
+  testfile.cpp:1:1: note: "root" binds here
+  int addTwo(int num)
+  ^~~~~~~~~~~~~~~~~~~
+  testfile.cpp:1:1: note: "x" binds here
+  int addTwo(int num)
+  ^~~~~~~~~~~~~~~~~~~
+
+  Match #2:
+
+  testfile.cpp:6:1: note: "root" binds here
+  int main(int, char**)
+  ^~~~~~~~~~~~~~~~~~~~~
+  testfile.cpp:6:1: note: "x" binds here
+  int main(int, char**)
+  ^~~~~~~~~~~~~~~~~~~~~
+  2 matches.
 
 
 clang-query automatically binds ``root`` to the match, but we also bound the name ``x`` to that match. The ``root`` is redundant.  If you ``set bind-root false`` then the output is less noisy:
 
 ::
 
-  clang-query> set bind-root false 
-  clang-query> m functionDecl().bind("x") 
-  
-  Match #1: 
-  
+  clang-query> set bind-root false
+  clang-query> m functionDecl().bind("x")
+
+  Match #1:
+
   testfile.cpp:1:1: note: "x" binds here
-  int addtwo(int num) 
-  ^~~~~~~~~~~~~~~~~~~ 
-  
-  Match #2: 
-  
-  testfile.cpp:6:1: note: "x" binds here 
-  int main(int, char**) 
-  ^~~~~~~~~~~~~~~~~~~~~ 
-  2 matches. 
+  int addtwo(int num)
+  ^~~~~~~~~~~~~~~~~~~
+
+  Match #2:
+
+  testfile.cpp:6:1: note: "x" binds here
+  int main(int, char**)
+  ^~~~~~~~~~~~~~~~~~~~~
+  2 matches.
 
 
 set print-matcher
@@ -126,7 +126,7 @@ These commands will control the type of output you get from clang-query. The opt
   Shows you the C++ form of the node you are matching. This is typically not useful.
 
 ``diag``
-  Shows you the individual node you are matching. 
+  Shows you the individual node you are matching.
 
 ``dump`` (alias: ``detailed-ast``)
   Shows you the node you are matching and the entire subtree for the node
@@ -165,4 +165,3 @@ This section tracks some patches; they are currently not used, but we may want t
  - `mapAnyOf() <https://reviews.llvm.org/D94127>`_ (`Example of usage <https://reviews.llvm.org/D94131>`_)
  - `Make cxxOperatorCallExpr matchers API-compatible with n-ary operators <https://reviews.llvm.org/D94128>`_
  - `CXXRewrittenBinaryOperator <https://reviews.llvm.org/D94130>`_
-

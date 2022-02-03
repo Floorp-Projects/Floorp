@@ -398,7 +398,7 @@ some cases block the fuzzer all together. Some examples are:
   corrupt logs/debugger output or provide a broken/invalid crash report.
 
 - Broken builds - This is fairly straightforward, without up-to-date builds
-  fuzzers are unable to run or verify fixes. 
+  fuzzers are unable to run or verify fixes.
 
 - Missing instrumentation - In some cases tools such as ASan are used as
   defect oracles and are required by the fuzzing tools to allow for proper
@@ -410,7 +410,7 @@ some cases block the fuzzer all together. Some examples are:
 Since these types of crashes harm the overall fuzzing progress, it is important
 for them to be addressed in a timely manner. Even if the bug itself might seem
 trivial and low priority for the product, it can still have devastating effects
-on fuzzing and hence prevent finding other critical issues. 
+on fuzzing and hence prevent finding other critical issues.
 
 Issues in Bugzilla are marked as fuzz blockers by adding “[fuzzblocker]”
 to the “Whiteboard” field. A list of open issues marked as fuzz blockers

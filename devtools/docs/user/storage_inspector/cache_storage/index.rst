@@ -10,4 +10,3 @@ Under the *Cache Storage* type within the :doc:`Storage Inspector <../index>` yo
 
 .. image:: cache_storage_detail.png
   :class: border
-

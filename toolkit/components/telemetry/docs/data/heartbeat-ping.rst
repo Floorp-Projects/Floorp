@@ -60,4 +60,3 @@ Notes:
 * The self-support page cannot include additional data in this payload. Only the the 4 flowId/surveyId/surveyVersion/testing fields are under the self-support page's control.
 
 See also: :doc:`common ping fields <common-ping>`
-

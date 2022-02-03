@@ -13,4 +13,3 @@ After you click the icon to disable breakpoints, the appearance of the breakpoin
 
 .. image:: disable_breakpoints.png
   :class: border
-

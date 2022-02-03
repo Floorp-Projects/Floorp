@@ -196,4 +196,3 @@ API References
 
    picture-in-picture-api
    player-api
-

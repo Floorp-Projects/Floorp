@@ -106,4 +106,3 @@ This is a very useful timesaver when stepping through your code. Previously you�
 .. note::
 
   There is also a new option in the context menu for the actual code in the source pane — *Hide inline preview*/*Show inline preview* — which allows you to turn the inline variables on/off.
-

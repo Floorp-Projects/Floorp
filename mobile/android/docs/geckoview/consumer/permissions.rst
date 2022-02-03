@@ -29,19 +29,19 @@ To get notified about permission requests, you need to implement the
 
    private class ExamplePermissionDelegate implements GeckoSession.PermissionDelegate {
        @Override
-       public void onAndroidPermissionsRequest(final GeckoSession session, 
+       public void onAndroidPermissionsRequest(final GeckoSession session,
                                                final String[] permissions,
                                                final Callback callback) { }
 
        @Override
-       public void onContentPermissionRequest(final GeckoSession session, 
+       public void onContentPermissionRequest(final GeckoSession session,
                                               final String uri,
                                               final int type, final Callback callback) { }
 
        @Override
-       public void onMediaPermissionRequest(final GeckoSession session, 
+       public void onMediaPermissionRequest(final GeckoSession session,
                                             final String uri,
-                                            final MediaSource[] video, 
+                                            final MediaSource[] video,
                                             final MediaSource[] audio,
                                             final MediaCallback callback) { }
    }
@@ -119,7 +119,7 @@ or
        }
 
        @Override
-       public void onAndroidPermissionsRequest(final GeckoSession session, 
+       public void onAndroidPermissionsRequest(final GeckoSession session,
                                                final String[] permissions,
                                                final Callback callback) {
            mCallback = callback;
@@ -221,9 +221,9 @@ requests are not displayed in this case.*
 
    private class ExamplePermissionDelegate implements GeckoSession.PermissionDelegate {
        @Override
-       public void onMediaPermissionRequest(final GeckoSession session, 
+       public void onMediaPermissionRequest(final GeckoSession session,
                                             final String uri,
-                                            final MediaSource[] video, 
+                                            final MediaSource[] video,
                                             final MediaSource[] audio,
                                             final MediaCallback callback) {
            // Reject permission if Android permission has been previously denied.
@@ -248,7 +248,7 @@ requests are not displayed in this case.*
            }
 
            // Get the media device name from the `MediaDevice`
-           String[] videoNames = normalizeMediaName(video); 
+           String[] videoNames = normalizeMediaName(video);
            String[] audioNames = normalizeMediaName(audio);
 
            final AlertDialog.Builder builder = new AlertDialog.Builder(activity);

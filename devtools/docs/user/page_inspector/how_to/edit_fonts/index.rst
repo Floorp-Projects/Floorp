@@ -255,4 +255,3 @@ Finally, here are a few tips for making effective use of the Fonts tab:
     :class: border
 
 - You'll also notice in the above screenshot that the font in the ``font-family`` font stack that is actually applied to the inspected element is underlined. This makes it easy to see exactly what is being applied where, when font stacks are specified.
-
