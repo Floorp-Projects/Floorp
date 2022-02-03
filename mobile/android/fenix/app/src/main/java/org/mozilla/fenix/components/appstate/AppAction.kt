@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components.appstate
 
+import mozilla.components.lib.crash.Crash.NativeCodeCrash
 import mozilla.components.lib.state.Action
 import org.mozilla.fenix.components.AppStore
 
@@ -12,4 +13,7 @@ import org.mozilla.fenix.components.AppStore
  */
 sealed class AppAction : Action {
     data class UpdateInactiveExpanded(val expanded: Boolean) : AppAction()
+    data class AddNonFatalCrash(val crash: NativeCodeCrash) : AppAction()
+    data class RemoveNonFatalCrash(val crash: NativeCodeCrash) : AppAction()
+    object RemoveAllNonFatalCrashes : AppAction()
 }

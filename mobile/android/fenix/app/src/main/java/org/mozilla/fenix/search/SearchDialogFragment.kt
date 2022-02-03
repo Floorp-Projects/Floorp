@@ -226,6 +226,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             binding.searchWrapper.background = ColorDrawable(Color.TRANSPARENT)
             dialog?.window?.decorView?.setOnTouchListener { _, event ->
                 requireActivity().dispatchTouchEvent(event)
+                // toolbarView.view.displayMode()
                 false
             }
         }

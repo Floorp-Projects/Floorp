@@ -481,7 +481,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         )
 
         val intentProcessors =
-            listOf(CrashReporterIntentProcessor()) + externalSourceIntentProcessors
+            listOf(
+                CrashReporterIntentProcessor(components.appStore)
+            ) + externalSourceIntentProcessors
         val intentHandled =
             intentProcessors.any { it.process(intent, navHost.navController, this.intent) }
         browsingModeManager.mode = getModeFromIntentOrLastKnown(intent)

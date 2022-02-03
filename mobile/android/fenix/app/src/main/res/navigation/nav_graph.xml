@@ -56,9 +56,6 @@
         android:id="@+id/action_global_shareFragment"
         app:destination="@id/shareFragment" />
     <action
-        android:id="@+id/action_global_crash_reporter"
-        app:destination="@id/crashReporterFragment" />
-    <action
         android:id="@+id/action_global_turn_on_sync"
         app:destination="@id/turnOnSyncFragment" />
     <action
@@ -742,14 +739,6 @@
         android:id="@+id/secretInfoSettingsFragment"
         android:name="org.mozilla.fenix.settings.SecretDebugSettingsFragment"
         android:label="@string/preferences_debug_info" />
-    <fragment
-        android:id="@+id/crashReporterFragment"
-        android:name="org.mozilla.fenix.crashes.CrashReporterFragment"
-        tools:layout="@layout/fragment_crash_reporter">
-        <argument
-            android:name="crashIntent"
-            app:argType="android.content.Intent" />
-    </fragment>
     <fragment
         android:id="@+id/aboutLibrariesFragment"
         android:name="org.mozilla.fenix.settings.about.AboutLibrariesFragment"

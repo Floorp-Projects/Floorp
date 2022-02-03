@@ -60,6 +60,12 @@
                 android:elevation="24dp"
                 android:visibility="gone" />
 
+            <org.mozilla.fenix.crashes.CrashReporterFragment
+                android:id="@+id/crash_reporter_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
+
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
         <mozilla.components.feature.prompts.creditcard.CreditCardSelectBar

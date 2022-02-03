@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components.appstate
 
+import mozilla.components.lib.crash.Crash.NativeCodeCrash
 import mozilla.components.lib.state.State
 
 /**
@@ -11,7 +12,9 @@ import mozilla.components.lib.state.State
  *
  * @property inactiveTabsExpanded A flag to know if the Inactive Tabs section of the Tabs Tray
  * should be expanded when the tray is opened.
+ * @property nonFatalCrashes List of non-fatal crashes that allow the app to continue being used.
  */
 data class AppState(
-    val inactiveTabsExpanded: Boolean = false
+    val inactiveTabsExpanded: Boolean = false,
+    val nonFatalCrashes: List<NativeCodeCrash> = emptyList()
 ) : State
