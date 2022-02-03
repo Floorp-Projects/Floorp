@@ -4106,11 +4106,6 @@ pref("browser.search.suggest.enabled.private", false);
 pref("browser.search.separatePrivateDefault", false);
 pref("browser.search.separatePrivateDefault.ui.enabled", false);
 
-#ifdef MOZ_OFFICIAL_BRANDING
-  // {moz:official} expands to "official"
-  pref("browser.search.official", true);
-#endif
-
 // GMPInstallManager prefs
 
 // User-settable override to media.gmp-manager.url for testing purposes.
