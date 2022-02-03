@@ -17,15 +17,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
-import org.mozilla.fenix.crashes.CrashReporterFragment.Companion.TAP_INCREASE_DP
+import org.mozilla.fenix.crashes.CrashContentView.Companion.TAP_INCREASE_DP
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
-class CrashReporterFragmentTest {
+class CrashContentViewTest {
     @Test
     fun `WHEN show is called THEN remember the controller, inflate and display the View`() {
-        val view = spyk(CrashReporterFragment(testContext))
+        val view = spyk(CrashContentView(testContext))
         val controller: CrashReporterController = mockk()
 
         view.show(controller)
@@ -39,7 +39,7 @@ class CrashReporterFragmentTest {
 
     @Test
     fun `WHEN hide is called THEN remove the View from layout`() {
-        val view = spyk(CrashReporterFragment(testContext))
+        val view = spyk(CrashContentView(testContext))
 
         view.hide()
 
@@ -49,7 +49,7 @@ class CrashReporterFragmentTest {
     @Test
     fun `GIVEN the View is not shown WHEN needing to be shown THEN inflate the layout and bind all widgets`() {
         val controller: CrashReporterController = mockk(relaxed = true)
-        val view = CrashReporterFragment(testContext)
+        val view = CrashContentView(testContext)
         view.controller = controller
         assertFalse(view.isBindingInitialized)
 
@@ -78,7 +78,7 @@ class CrashReporterFragmentTest {
 
     @Test
     fun `GIVEN the View is not shown WHEN needing to be shown THEN delegate the process to helper methods`() {
-        val view = spyk(CrashReporterFragment(testContext))
+        val view = spyk(CrashContentView(testContext))
 
         view.inflateViewIfNecessary()
 
@@ -90,7 +90,7 @@ class CrashReporterFragmentTest {
 
     @Test
     fun `GIVEN the View is to already shown WHEN needing to be shown again THEN return early and avoid duplicating the widgets setup`() {
-        val view = spyk(CrashReporterFragment(testContext))
+        val view = spyk(CrashContentView(testContext))
         view.inflate() // mock that the View is already inflated
 
         view.inflateViewIfNecessary() // try inflating it again

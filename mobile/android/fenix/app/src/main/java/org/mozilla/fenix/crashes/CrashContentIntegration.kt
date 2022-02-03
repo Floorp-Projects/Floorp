@@ -31,7 +31,7 @@ import org.mozilla.fenix.utils.Settings
  * @param toolbar [BrowserToolbar] that will be expanded when showing the in-app crash reporter.
  * @param isToolbarPlacedAtTop [Boolean] based allowing the in-app crash reporter to be shown as
  * immediately below or above the toolbar.
- * @param crashReporterView [CrashReporterFragment] which will be shown if the current tab is marked as crashed.
+ * @param crashReporterView [CrashContentView] which will be shown if the current tab is marked as crashed.
  * @param components [Components] allowing interactions with other app features.
  * @param settings [Settings] allowing to check whether crash reporting is enabled or not.
  * @param navController [NavController] used to navigate to other parts of the app.
@@ -43,7 +43,7 @@ class CrashContentIntegration(
     private val appStore: AppStore,
     private val toolbar: BrowserToolbar,
     private val isToolbarPlacedAtTop: Boolean,
-    private val crashReporterView: CrashReporterFragment,
+    private val crashReporterView: CrashContentView,
     private val components: Components,
     private val settings: Settings,
     private val navController: NavController,

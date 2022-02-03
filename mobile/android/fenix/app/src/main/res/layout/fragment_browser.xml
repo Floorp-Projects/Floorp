@@ -60,7 +60,7 @@
                 android:elevation="24dp"
                 android:visibility="gone" />
 
-            <org.mozilla.fenix.crashes.CrashReporterFragment
+            <org.mozilla.fenix.crashes.CrashContentView
                 android:id="@+id/crash_reporter_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"

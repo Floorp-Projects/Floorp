@@ -48,7 +48,7 @@ class CrashContentIntegrationTest {
     @Test
     fun `GIVEN a tab WHEN its content crashes THEN expand the toolbar and show the in-content crash reporter`() {
         val crashReporterLayoutParams: MarginLayoutParams = mockk(relaxed = true)
-        val crashReporterView: CrashReporterFragment = mockk(relaxed = true) {
+        val crashReporterView: CrashContentView = mockk(relaxed = true) {
             every { layoutParams } returns crashReporterLayoutParams
         }
         val toolbar: BrowserToolbar = mockk(relaxed = true) {
@@ -86,7 +86,7 @@ class CrashContentIntegrationTest {
 
     @Test
     fun `GIVEN a tab is marked as crashed WHEN the crashed state changes THEN hide the in-content crash reporter`() {
-        val crashReporterView: CrashReporterFragment = mockk(relaxed = true)
+        val crashReporterView: CrashContentView = mockk(relaxed = true)
         val integration = CrashContentIntegration(
             browserStore = browserStore,
             appStore = mockk(),

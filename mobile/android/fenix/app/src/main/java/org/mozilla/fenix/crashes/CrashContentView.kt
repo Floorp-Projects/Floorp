@@ -14,9 +14,11 @@ import org.mozilla.fenix.databinding.FragmentCrashReporterBinding
 import org.mozilla.fenix.ext.increaseTapArea
 
 /**
- * Fragment shown when a tab crashes.
+ * View shown when a tab crashes. Intended to entirely overlay an EngineView.
+ * This will allow users to close or restore the current tab while optionally
+ * send all reports for non-fatal crashes or dismiss them.
  */
-class CrashReporterFragment @JvmOverloads constructor(
+class CrashContentView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
