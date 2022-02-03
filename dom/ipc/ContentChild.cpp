@@ -2839,12 +2839,6 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyProcessPriorityChanged(
                       ProcessPriorityToString(mProcessPriority)),
                   ProfilerString8View::WrapNullTerminatedString(
                       ProcessPriorityToString(aPriority)));
-
-  // Record FOG data before the priority change.
-  // Ignore the change if it's the first time we set the process priority.
-  if (mProcessPriority != hal::PROCESS_PRIORITY_UNKNOWN) {
-    glean::RecordPowerMetrics();
-  }
   mProcessPriority = aPriority;
 
   os->NotifyObservers(static_cast<nsIPropertyBag2*>(props),
