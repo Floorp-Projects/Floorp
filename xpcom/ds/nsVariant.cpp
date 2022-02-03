@@ -435,8 +435,9 @@ static nsresult CloneArray(uint16_t aInType, const nsIID* aInIID,
 #define CASE__NUMERIC_CONVERSION_INT32_MIN_MAX(Ctype_, min_, max_) \
   case nsIDataType::VTYPE_INT32: {                                 \
     int32_t value = tempData.u.mInt32Value;                        \
-    if (value < min_ || value > max_)                              \
+    if (value < (min_) || value > (max_)) {                        \
       return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                    \
+    }                                                              \
     *aResult = (Ctype_)value;                                      \
     return rv;                                                     \
   }
@@ -446,12 +447,12 @@ static nsresult CloneArray(uint16_t aInType, const nsIID* aInIID,
     *aResult = (Ctype_)tempData.u.mUint32Value;           \
     return rv;
 
-#define CASE__NUMERIC_CONVERSION_UINT32_MAX(Ctype_, max_)       \
-  case nsIDataType::VTYPE_UINT32: {                             \
-    uint32_t value = tempData.u.mUint32Value;                   \
-    if (value > max_) return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA; \
-    *aResult = (Ctype_)value;                                   \
-    return rv;                                                  \
+#define CASE__NUMERIC_CONVERSION_UINT32_MAX(Ctype_, max_)         \
+  case nsIDataType::VTYPE_UINT32: {                               \
+    uint32_t value = tempData.u.mUint32Value;                     \
+    if (value > (max_)) return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA; \
+    *aResult = (Ctype_)value;                                     \
+    return rv;                                                    \
   }
 
 #define CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(Ctype_) \
@@ -462,8 +463,9 @@ static nsresult CloneArray(uint16_t aInType, const nsIID* aInIID,
 #define CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(Ctype_, min_, max_)       \
   case nsIDataType::VTYPE_DOUBLE: {                                           \
     double value = tempData.u.mDoubleValue;                                   \
-    if (value < min_ || value > max_)                                         \
+    if (value < (min_) || value > (max_)) {                                   \
       return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                               \
+    }                                                                         \
     *aResult = (Ctype_)value;                                                 \
     return (0.0 == fmod(value, 1.0)) ? rv                                     \
                                      : NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA; \
