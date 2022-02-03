@@ -368,19 +368,15 @@ macosx64-aarch64-clang-13:
             - artifact: compiler-rt.tar.zst
               dest: x86_64
 
-win64-clang-13:
+win64-clang-13-raw:
     description: "Clang-cl 13 toolchain build"
-    attributes:
-        local-toolchain: true
     treeherder:
-        symbol: TW64(clang-13)
+        symbol: TW64(clang-13-raw)
     worker-type: b-win2012
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
         max-run-time: 9000
-    run-on-projects:
-        - trunk
     run:
         script: build-clang.sh
         arguments:
@@ -392,7 +388,6 @@ win64-clang-13:
             - 'build/build-clang/clang-13.json'
             - 'build/build-clang/skip-stage-1-win64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias: win64-clang
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
@@ -403,6 +398,34 @@ win64-clang-13:
         toolchain:
             - win64-clang-13-stage1
             - wasm32-wasi-compiler-rt-13
+
+win64-clang-13:
+    description: "Clang-cl 13 toolchain build"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TW64(clang-13)
+    worker-type: b-linux
+    worker:
+        max-run-time: 600
+    run-on-projects:
+        - trunk
+    run:
+        script: repack-clang-linux-win-cross.sh
+        toolchain-alias: win64-clang
+        toolchain-artifact: public/build/clang.tar.zst
+    dependencies:
+        win32-compiler-rt-13: toolchain-win32-compiler-rt-13
+        win64-compiler-rt-13: toolchain-win64-compiler-rt-13
+    fetches:
+        toolchain:
+            - win64-clang-13-raw
+        win32-compiler-rt-13:
+            - artifact: compiler-rt.tar.zst
+              dest: x86
+        win64-compiler-rt-13:
+            - artifact: compiler-rt.tar.zst
+              dest: x86_64
 
 win64-clang-13-stage1:
     description: "Clang-cl 13 toolchain build stage 1"
