@@ -78,27 +78,30 @@ class AudioClock {
   int64_t GetPosition(int64_t frames);
 
   // Set the playback rate.
-  // Called on the audio thread.
+  // Called on the audio thread only.
   void SetPlaybackRate(double aPlaybackRate);
   // Get the current playback rate.
-  // Called on the audio thread.
+  // Called on the audio thread only.
   double GetPlaybackRate() const;
   // Set if we are preserving the pitch.
-  // Called on the audio thread.
+  // Called on the audio thread only.
   void SetPreservesPitch(bool aPreservesPitch);
   // Get the current pitch preservation state.
-  // Called on the audio thread.
+  // Called on the audio thread only.
   bool GetPreservesPitch() const;
 
+  // Called on either thread.
   uint32_t GetInputRate() const { return mInRate; }
   uint32_t GetOutputRate() const { return mOutRate; }
 
  private:
-  // Output rate in Hz (characteristic of the playback rate)
+  // Output rate in Hz (characteristic of the playback rate). Written on the
+  // audio thread, read on either thread.
   Atomic<uint32_t> mOutRate;
-  // Input rate in Hz (characteristic of the media being played)
   bool mPreservesPitch;
   // The history of frames sent to the audio engine in each DataCallback.
+  // Only accessed from non-audio threads on macOS, accessed on both threads and
+  // protected by the AudioStream monitor on other platforms.
   const UniquePtr<FrameHistory> mFrameHistory;
 #  ifdef XP_MACOSX
   // Enqueued on the audio thread, dequeued from the other thread. The maximum
@@ -307,26 +310,29 @@ class AudioStream final {
   long DataCallback(void* aBuffer, long aFrames);
   void StateCallback(cubeb_state aState);
 
-  nsresult EnsureTimeStretcherInitializedUnlocked();
+  // Audio thread only
+  nsresult EnsureTimeStretcherInitialized();
+  void GetUnprocessed(AudioBufferWriter& aWriter);
+  void GetTimeStretched(AudioBufferWriter& aWriter);
+  void UpdatePlaybackRateIfNeeded();
 
   // Return true if audio frames are valid (correct sampling rate and valid
   // channel count) otherwise false.
   bool IsValidAudioFormat(Chunk* aChunk);
 
-  void GetUnprocessed(AudioBufferWriter& aWriter);
-  void GetTimeStretched(AudioBufferWriter& aWriter);
-
   template <typename Function, typename... Args>
   int InvokeCubeb(Function aFunction, Args&&... aArgs);
   bool CheckThreadIdChanged();
+  void AssertIsOnAudioThread() const;
 
-  // The monitor is held to protect all access to member variables.
+  soundtouch::SoundTouch* mTimeStretcher;
+
+  // The monitor is held to protect all access to member variables below.
   Monitor mMonitor;
 
   uint32_t mChannels;
   uint32_t mOutChannels;
   AudioClock mAudioClock;
-  soundtouch::SoundTouch* mTimeStretcher;
 
   WavDumper mDumpFile;
 
@@ -355,7 +361,10 @@ class AudioStream final {
   const bool mSandboxed = false;
 
   MozPromiseHolder<MediaSink::EndedPromise> mEndedPromise;
-  Atomic<bool> mPlaybackComplete;
+  std::atomic<bool> mPlaybackComplete;
+  // Both written on the MDSM thread, read on the audio thread.
+  std::atomic<float> mPlaybackRate;
+  std::atomic<bool> mPreservesPitch;
 };
 
 }  // namespace mozilla
