@@ -47,7 +47,7 @@ BaseMediaMgrError::BaseMediaMgrError(Name aName, const nsACString& aMessage,
 
 NS_IMPL_ISUPPORTS0(MediaMgrError)
 
-void MediaMgrError::Reject(dom::Promise* aPromise) {
+void MediaMgrError::Reject(dom::Promise* aPromise) const {
   switch (mName) {
     case Name::AbortError:
       aPromise->MaybeRejectWithAbortError(mMessage);

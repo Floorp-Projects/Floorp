@@ -7,7 +7,7 @@
  * https://streams.spec.whatwg.org/#rs-default-controller-class-definition
  */
 
-[Exposed=(Window,Worker,Worklet), Pref="dom.streams.expose.ReadableStreamDefaultController"]
+[Exposed=(Window,Worker,Worklet), Pref="dom.streams.readable_stream_default_controller.enabled"]
 interface ReadableStreamDefaultController {
   readonly attribute unrestricted double? desiredSize;
 

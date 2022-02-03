@@ -29,11 +29,6 @@ namespace dom {
 class BrowserChild;
 }  // namespace dom
 
-namespace webgpu {
-class PWebGPUChild;
-class WebGPUChild;
-}  // namespace webgpu
-
 namespace widget {
 class CompositorWidget;
 }  // namespace widget
@@ -111,8 +106,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   void EndCanvasTransaction();
 
-  RefPtr<webgpu::WebGPUChild> GetWebGPUChild();
-
   // Beware that these methods don't override their super-class equivalent
   // (which are not virtual), they just overload them. All of these Send*
   // methods just add a sanity check (that it is not too late send a message)
@@ -181,9 +174,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
       const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize&,
       const WindowKind&);
   bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor);
-
-  webgpu::PWebGPUChild* AllocPWebGPUChild();
-  bool DeallocPWebGPUChild(webgpu::PWebGPUChild* aActor);
 
   wr::MaybeExternalImageId GetNextExternalImageId() override;
 
@@ -258,8 +248,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   nsTArray<RefPtr<TextureClient>> mTextureClientsForAsyncPaint;
 
   RefPtr<CanvasChild> mCanvasChild;
-
-  RefPtr<webgpu::WebGPUChild> mWebGPUChild;
 };
 
 }  // namespace layers

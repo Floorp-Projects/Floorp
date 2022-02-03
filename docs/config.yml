@@ -34,6 +34,7 @@ categories:
         - tools/profiler
         - performance
         - xpcom
+        - nspr
         - security/nss
     build_doc:
         - mach

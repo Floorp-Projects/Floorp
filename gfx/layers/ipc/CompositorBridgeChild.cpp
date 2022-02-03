@@ -26,7 +26,6 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/ipc/Endpoint.h"
-#include "mozilla/webgpu/WebGPUChild.h"
 #include "mozilla/mozalloc.h"  // for operator new, etc
 #include "mozilla/Telemetry.h"
 #include "gfxConfig.h"
@@ -175,12 +174,6 @@ void CompositorBridgeChild::Destroy() {
   ManagedPAPZChild(apzChildren);
   for (PAPZChild* child : apzChildren) {
     Unused << child->SendDestroy();
-  }
-
-  AutoTArray<PWebGPUChild*, 16> webGPUChildren;
-  ManagedPWebGPUChild(webGPUChildren);
-  for (PWebGPUChild* child : webGPUChildren) {
-    Unused << child->SendShutdown();
   }
 
   const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
@@ -580,16 +573,6 @@ void CompositorBridgeChild::EndCanvasTransaction() {
   }
 }
 
-RefPtr<webgpu::WebGPUChild> CompositorBridgeChild::GetWebGPUChild() {
-  MOZ_ASSERT(gfx::gfxConfig::IsEnabled(gfx::Feature::WEBGPU));
-  if (!mWebGPUChild) {
-    webgpu::PWebGPUChild* bridge = SendPWebGPUConstructor();
-    mWebGPUChild = static_cast<webgpu::WebGPUChild*>(bridge);
-  }
-
-  return mWebGPUChild;
-}
-
 bool CompositorBridgeChild::AllocUnsafeShmem(
     size_t aSize, ipc::SharedMemory::SharedMemoryType aType,
     ipc::Shmem* aShmem) {
@@ -668,18 +651,6 @@ PWebRenderBridgeChild* CompositorBridgeChild::AllocPWebRenderBridgeChild(
 bool CompositorBridgeChild::DeallocPWebRenderBridgeChild(
     PWebRenderBridgeChild* aActor) {
   WebRenderBridgeChild* child = static_cast<WebRenderBridgeChild*>(aActor);
-  child->ReleaseIPDLReference();
-  return true;
-}
-
-webgpu::PWebGPUChild* CompositorBridgeChild::AllocPWebGPUChild() {
-  webgpu::WebGPUChild* child = new webgpu::WebGPUChild();
-  child->AddIPDLReference();
-  return child;
-}
-
-bool CompositorBridgeChild::DeallocPWebGPUChild(webgpu::PWebGPUChild* aActor) {
-  webgpu::WebGPUChild* child = static_cast<webgpu::WebGPUChild*>(aActor);
   child->ReleaseIPDLReference();
   return true;
 }

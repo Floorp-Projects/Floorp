@@ -7,6 +7,8 @@
 #define mozilla_SandboxSettings_h
 #include <cinttypes>
 
+#include "nsIXULRuntime.h"
+
 #ifdef __OpenBSD__
 #  include "nsXULAppAPI.h"
 #endif
@@ -23,21 +25,12 @@ int GetEffectiveSocketProcessSandboxLevel();
 // Checks whether the effective content sandbox level is > 0.
 bool IsContentSandboxEnabled();
 
-// If you update this enum, don't forget to raise the limit in
-// TelemetryEnvironmentTesting.jsm and record the new value in
-// environment.rst
-enum class ContentWin32kLockdownState : int32_t {
-  LockdownEnabled = 1,
-  MissingWebRender,
-  OperatingSystemNotSupported,
-  PrefNotSet,
-  MissingRemoteWebGL,
-};
-
 const char* ContentWin32kLockdownStateToString(
-    ContentWin32kLockdownState aValue);
+    nsIXULRuntime::ContentWin32kLockdownState aValue);
 
-ContentWin32kLockdownState GetContentWin32kLockdownState();
+bool GetContentWin32kLockdownEnabled();
+
+nsIXULRuntime::ContentWin32kLockdownState GetContentWin32kLockdownState();
 
 #if defined(XP_MACOSX)
 int ClampFlashSandboxLevel(const int aLevel);

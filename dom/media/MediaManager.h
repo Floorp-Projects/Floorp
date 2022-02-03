@@ -278,18 +278,6 @@ class MediaManager final : public nsIMediaManagerService,
       const dom::MediaStreamConstraints& aConstraints,
       dom::CallerType aCallerType);
 
-  RefPtr<LocalDeviceSetPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow);
-
-  enum class EnumerationFlag {
-    AllowPermissionRequest,
-    EnumerateAudioOutputs,
-    ForceFakes,
-  };
-  using EnumerationFlags = EnumSet<EnumerationFlag>;
-  RefPtr<LocalDeviceSetPromise> EnumerateDevicesImpl(
-      nsPIDOMWindowInner* aWindow, dom::MediaSourceEnum aVideoInputType,
-      dom::MediaSourceEnum aAudioInputType, EnumerationFlags aFlags);
-
   RefPtr<LocalDevicePromise> SelectAudioOutput(
       nsPIDOMWindowInner* aWindow, const dom::AudioOutputOptions& aOptions,
       dom::CallerType aCallerType);
@@ -330,6 +318,16 @@ class MediaManager final : public nsIMediaManagerService,
                                        const MediaDeviceSet& aAudios);
 
  private:
+  enum class EnumerationFlag {
+    AllowPermissionRequest,
+    EnumerateAudioOutputs,
+    ForceFakes,
+  };
+  using EnumerationFlags = EnumSet<EnumerationFlag>;
+  RefPtr<LocalDeviceSetPromise> EnumerateDevicesImpl(
+      nsPIDOMWindowInner* aWindow, dom::MediaSourceEnum aVideoInputType,
+      dom::MediaSourceEnum aAudioInputType, EnumerationFlags aFlags);
+
   RefPtr<DeviceSetPromise> EnumerateRawDevices(
       dom::MediaSourceEnum aVideoInputType,
       dom::MediaSourceEnum aAudioInputType, EnumerationFlags aFlags);
