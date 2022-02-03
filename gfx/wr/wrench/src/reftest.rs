@@ -484,13 +484,11 @@ impl ReftestManifest {
             }
 
             // Don't try to add tests for include lines.
-            let op = match op {
-                Some(op) => op,
-                None => {
-                    assert!(paths.is_empty(), "paths = {:?}", paths);
-                    continue;
-                }
-            };
+            if op.is_none() {
+                assert!(paths.is_empty(), "paths = {:?}", paths);
+                continue;
+            }
+            let op = op.unwrap();
 
             // The reference is the last path provided. If multiple paths are
             // passed for the test, they render sequentially before being
@@ -735,15 +733,8 @@ impl<'a> ReftestHarness<'a> {
                 DebugCommand::ClearCaches(ClearCache::all())
             );
 
-        let quality_settings = match t.force_subpixel_aa_where_possible {
-            Some(force_subpixel_aa_where_possible) => {
-                QualitySettings {
-                    force_subpixel_aa_where_possible,
-                }
-            }
-            None => {
-                QualitySettings::default()
-            }
+        let quality_settings = QualitySettings {
+            force_subpixel_aa_where_possible: t.force_subpixel_aa_where_possible.unwrap_or_default(),
         };
 
         self.wrench.set_quality_settings(quality_settings);
@@ -822,24 +813,21 @@ impl<'a> ReftestHarness<'a> {
             }
         }
 
-        let reference = match reference_image {
-            Some(image) => {
-                let save_all_png = false; // flip to true to update all the tests!
-                if save_all_png {
-                    let img = images.last().unwrap();
-                    save_flipped(&t.reference, img.data.clone(), img.size);
-                }
-                image
+        let reference = if let Some(image) = reference_image {
+            let save_all_png = false; // flip to true to update all the tests!
+            if save_all_png {
+                let img = images.last().unwrap();
+                save_flipped(&t.reference, img.data.clone(), img.size);
             }
-            None => {
-                let output = self.render_yaml(
-                    &t.reference,
-                    test_size,
-                    t.font_render_mode,
-                    t.allow_mipmaps,
-                );
-                output.image
-            }
+            image
+        } else {
+            let output = self.render_yaml(
+                &t.reference,
+                test_size,
+                t.font_render_mode,
+                t.allow_mipmaps,
+            );
+            output.image
         };
 
         if t.disable_dual_source_blending {

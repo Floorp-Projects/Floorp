@@ -715,14 +715,10 @@ impl YamlFrameReader {
             // This indicates we want to simulate an external texture,
             // ensure it gets created as such
             let external_target = match item["external-target"].as_str() {
-                Some(s) => match s {
-                    "2d" => ImageBufferKind::Texture2D,
-                    "rect" => ImageBufferKind::TextureRect,
-                    _ => panic!("Unsupported external texture target."),
-                }
-                None => {
-                    ImageBufferKind::Texture2D
-                }
+                Some("2d") => ImageBufferKind::Texture2D,
+                Some("rect") => ImageBufferKind::TextureRect,
+                Some(t) => panic!("Unsupported external texture target: {}", t),
+                None => ImageBufferKind::Texture2D,
             };
 
             let external_image_data =
@@ -811,14 +807,11 @@ impl YamlFrameReader {
         let tiling = item["tile-size"].as_i64();
 
         let (image_key, image_dims) = match item["image"].as_str() {
+            Some("invalid") => (ImageKey::DUMMY, LayoutSize::new(100.0, 100.0)),
             Some(filename) => {
-                if filename == "invalid" {
-                    (ImageKey::DUMMY, LayoutSize::new(100.0, 100.0))
-                } else {
-                    let mut file = self.aux_dir.clone();
-                    file.push(filename);
-                    self.add_or_get_image(&file, tiling, item, wrench)
-                }
+                let mut file = self.aux_dir.clone();
+                file.push(filename);
+                self.add_or_get_image(&file, tiling, item, wrench)
             }
             None => {
                 warn!("No image provided for the image-mask!");
@@ -1117,10 +1110,10 @@ impl YamlFrameReader {
                         .unwrap_or(bounds.height() as i64);
                     let fill = item["fill"].as_bool().unwrap_or(false);
 
-                    let slice = item["slice"].as_vec_u32();
-                    let slice = match slice {
-                        Some(slice) => broadcast(&slice, 4),
-                        None => vec![widths.top as u32, widths.left as u32, widths.bottom as u32, widths.right as u32],
+                    let slice = if let Some(slice) = item["slice"].as_vec_u32() {
+                        broadcast(&slice, 4)
+                    } else {
+                        vec![widths.top as u32, widths.left as u32, widths.bottom as u32, widths.right as u32]
                     };
 
                     let outset = item["outset"]

@@ -328,89 +328,90 @@ fn make_window(
         None
     };
 
-    let wrapper = match *events_loop {
-        Some(ref events_loop) => {
-            let context_builder = glutin::ContextBuilder::new()
-                .with_gl(gl_request)
-                .with_vsync(vsync);
-            let window_builder = winit::WindowBuilder::new()
-                .with_title("WRench")
-                .with_multitouch()
-                .with_dimensions(LogicalSize::new(size.width as f64, size.height as f64));
+    let wrapper = if let Some(events_loop) = events_loop {
+        let context_builder = glutin::ContextBuilder::new()
+            .with_gl(gl_request)
+            .with_vsync(vsync);
+        let window_builder = winit::WindowBuilder::new()
+            .with_title("WRench")
+            .with_multitouch()
+            .with_dimensions(LogicalSize::new(size.width as f64, size.height as f64));
 
-            if angle {
-                angle::Context::with_window(
-                    window_builder, context_builder, events_loop
-                ).map(|(_window, _context)| {
-                    unsafe {
-                        _context
-                            .make_current()
-                            .expect("unable to make context current!");
-                    }
-
-                    let gl = match _context.get_api() {
-                        glutin::Api::OpenGl => unsafe {
-                            gl::GlFns::load_with(|symbol| _context.get_proc_address(symbol) as *const _)
-                        },
-                        glutin::Api::OpenGlEs => unsafe {
-                            gl::GlesFns::load_with(|symbol| _context.get_proc_address(symbol) as *const _)
-                        },
-                        glutin::Api::WebGl => unimplemented!(),
-                    };
-
-                    WindowWrapper::Angle(_window, _context, gl, sw_ctx)
-                }).unwrap()
-            } else {
-                let windowed_context = context_builder
-                    .build_windowed(window_builder, events_loop)
-                    .unwrap();
-
-                let windowed_context = unsafe {
-                    windowed_context
+        if angle {
+            angle::Context::with_window(
+                window_builder, context_builder, events_loop
+            ).map(|(_window, _context)| {
+                unsafe {
+                    _context
                         .make_current()
-                        .expect("unable to make context current!")
-                };
+                        .expect("unable to make context current!");
+                }
 
-                let gl = match windowed_context.get_api() {
+                let gl = match _context.get_api() {
                     glutin::Api::OpenGl => unsafe {
-                        gl::GlFns::load_with(
-                            |symbol| windowed_context.get_proc_address(symbol) as *const _
-                        )
+                        gl::GlFns::load_with(|symbol| _context.get_proc_address(symbol) as *const _)
                     },
                     glutin::Api::OpenGlEs => unsafe {
-                        gl::GlesFns::load_with(
-                            |symbol| windowed_context.get_proc_address(symbol) as *const _
-                        )
+                        gl::GlesFns::load_with(|symbol| _context.get_proc_address(symbol) as *const _)
                     },
                     glutin::Api::WebGl => unimplemented!(),
                 };
 
-                WindowWrapper::WindowedContext(windowed_context, gl, sw_ctx)
-            }
-        }
-        None => {
-            let gl = match sw_ctx {
-                #[cfg(feature = "software")]
-                Some(ref sw_ctx) => Rc::new(*sw_ctx),
-                None => {
-                    match gl::GlType::default() {
-                        gl::GlType::Gl => unsafe {
-                            gl::GlFns::load_with(|symbol| {
-                                HeadlessContext::get_proc_address(symbol) as *const _
-                            })
-                        },
-                        gl::GlType::Gles => unsafe {
-                            gl::GlesFns::load_with(|symbol| {
-                                HeadlessContext::get_proc_address(symbol) as *const _
-                            })
-                        },
-                    }
-                }
-                #[cfg(not(feature = "software"))]
-                _ => panic!(),
+                WindowWrapper::Angle(_window, _context, gl, sw_ctx)
+            }).unwrap()
+        } else {
+            let windowed_context = context_builder
+                .build_windowed(window_builder, events_loop)
+                .unwrap();
+
+            let windowed_context = unsafe {
+                windowed_context
+                    .make_current()
+                    .expect("unable to make context current!")
             };
-            WindowWrapper::Headless(HeadlessContext::new(size.width, size.height), gl, sw_ctx)
+
+            let gl = match windowed_context.get_api() {
+                glutin::Api::OpenGl => unsafe {
+                    gl::GlFns::load_with(
+                        |symbol| windowed_context.get_proc_address(symbol) as *const _
+                    )
+                },
+                glutin::Api::OpenGlEs => unsafe {
+                    gl::GlesFns::load_with(
+                        |symbol| windowed_context.get_proc_address(symbol) as *const _
+                    )
+                },
+                glutin::Api::WebGl => unimplemented!(),
+            };
+
+            WindowWrapper::WindowedContext(windowed_context, gl, sw_ctx)
         }
+    } else {
+        #[cfg_attr(not(feature = "software"), allow(unused_variables))]
+        let gl = if let Some(sw_ctx) = sw_ctx {
+            #[cfg(feature = "software")]
+            {
+                Rc::new(sw_ctx)
+            }
+            #[cfg(not(feature = "software"))]
+            {
+                unreachable!("make_software_context() should have failed if 'software' feature is not enabled")
+            }
+        } else {
+            match gl::GlType::default() {
+                gl::GlType::Gl => unsafe {
+                    gl::GlFns::load_with(|symbol| {
+                        HeadlessContext::get_proc_address(symbol) as *const _
+                    })
+                },
+                gl::GlType::Gles => unsafe {
+                    gl::GlesFns::load_with(|symbol| {
+                        HeadlessContext::get_proc_address(symbol) as *const _
+                    })
+                },
+            }
+        };
+        WindowWrapper::Headless(HeadlessContext::new(size.width, size.height), gl, sw_ctx)
     };
 
     let gl = wrapper.gl();
@@ -578,24 +579,21 @@ fn main() {
         .unwrap_or(DeviceIntSize::new(1920, 1080));
     let chase_primitive = match args.value_of("chase") {
         Some(s) => {
-            match s.find(',') {
-                Some(_) => {
-                    let items = s
-                        .split(',')
-                        .map(|s| s.parse::<f32>().unwrap())
-                        .collect::<Vec<_>>();
-                    let rect = LayoutRect::from_origin_and_size(
-                        LayoutPoint::new(items[0], items[1]),
-                        LayoutSize::new(items[2], items[3]),
-                    );
-                    webrender::ChasePrimitive::LocalRect(rect)
-                }
-                None => {
-                    let id = s.parse::<usize>().unwrap();
-                    webrender::ChasePrimitive::Id(webrender::PrimitiveDebugId(id))
-                }
+            if s.contains(',') {
+                let items = s
+                    .split(',')
+                    .map(|s| s.parse::<f32>().unwrap())
+                    .collect::<Vec<_>>();
+                let rect = LayoutRect::from_origin_and_size(
+                    LayoutPoint::new(items[0], items[1]),
+                    LayoutSize::new(items[2], items[3]),
+                );
+                webrender::ChasePrimitive::LocalRect(rect)
+            } else {
+                let id = s.parse::<usize>().unwrap();
+                webrender::ChasePrimitive::Id(webrender::PrimitiveDebugId(id))
             }
-        },
+        }
         None => webrender::ChasePrimitive::Nothing,
     };
 
@@ -973,47 +971,44 @@ fn render<'a>(
         winit::ControlFlow::Continue
     };
 
-    match *events_loop {
-        None => {
-            while body(wrench, vec![winit::Event::Awakened]) == winit::ControlFlow::Continue {}
-            let fb_rect = FramebufferIntSize::new(size.width, size.height).into();
-            let pixels = wrench.renderer.read_pixels_rgba8(fb_rect);
-            save_flipped("screenshot.png", pixels, size);
-        }
-        Some(ref mut events_loop) => {
-            // We want to ensure that we:
-            //
-            // (a) Block the thread when no events are present (for CPU/battery purposes)
-            // (b) Don't lag the input events by having the event queue back up.
-            loop {
-                let mut pending_events = Vec::new();
+    if let Some(events_loop) = events_loop.as_mut() {
+        // We want to ensure that we:
+        //
+        // (a) Block the thread when no events are present (for CPU/battery purposes)
+        // (b) Don't lag the input events by having the event queue back up.
+        loop {
+            let mut pending_events = Vec::new();
 
-                // Block the thread until at least one event arrives
-                // On Android, we are generally profiling when running
-                // wrench, and don't want to block on UI events.
-                if !no_block && cfg!(not(target_os = "android")) {
-                    events_loop.run_forever(|event| {
-                        pending_events.push(event);
-                        winit::ControlFlow::Break
-                    });
-                }
-
-                // Collect any other pending events that are also available
-                events_loop.poll_events(|event| {
+            // Block the thread until at least one event arrives
+            // On Android, we are generally profiling when running
+            // wrench, and don't want to block on UI events.
+            if !no_block && cfg!(not(target_os = "android")) {
+                events_loop.run_forever(|event| {
                     pending_events.push(event);
+                    winit::ControlFlow::Break
                 });
+            }
 
-                // Ensure there is at least one event present so that the
-                // frame gets rendered.
-                if pending_events.is_empty() {
-                    pending_events.push(winit::Event::Awakened);
-                }
+            // Collect any other pending events that are also available
+            events_loop.poll_events(|event| {
+                pending_events.push(event);
+            });
 
-                // Process all of those pending events in the next vsync period
-                if body(wrench, pending_events) == winit::ControlFlow::Break {
-                    break;
-                }
+            // Ensure there is at least one event present so that the
+            // frame gets rendered.
+            if pending_events.is_empty() {
+                pending_events.push(winit::Event::Awakened);
+            }
+
+            // Process all of those pending events in the next vsync period
+            if body(wrench, pending_events) == winit::ControlFlow::Break {
+                break;
             }
         }
+    } else {
+        while body(wrench, vec![winit::Event::Awakened]) == winit::ControlFlow::Continue {}
+        let fb_rect = FramebufferIntSize::new(size.width, size.height).into();
+        let pixels = wrench.renderer.read_pixels_rgba8(fb_rect);
+        save_flipped("screenshot.png", pixels, size);
     }
 }
