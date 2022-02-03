@@ -1545,9 +1545,8 @@ impl YamlFrameReader {
         &mut self,
         dl: &mut DisplayListBuilder,
         wrench: &mut Wrench,
-        yaml: &Yaml,
+        yaml_items: &[Yaml],
     ) {
-        let yaml_items = yaml.as_vec().expect("yaml is Vec");
         // A very large number (but safely far away from finite limits of f32)
         let big_number = 1.0e30;
         // A rect that should in practical terms serve as a no-op for clipping
@@ -1733,12 +1732,12 @@ impl YamlFrameReader {
             }
         }
 
-        if !yaml["items"].is_badvalue() {
+        if let Some(yaml_items) = yaml["items"].as_vec() {
             self.spatial_id_stack.push(spatial_id);
             if let Some(clip_id) = clip_id {
                 self.clip_id_stack.push(clip_id);
             }
-            self.add_display_list_items_from_yaml(dl, wrench, &yaml["items"]);
+            self.add_display_list_items_from_yaml(dl, wrench, yaml_items);
             if clip_id.is_some() {
                 self.clip_id_stack.pop().unwrap();
             }
@@ -1774,9 +1773,9 @@ impl YamlFrameReader {
             self.add_spatial_id_mapping(numeric_id, real_id);
         }
 
-        if !yaml["items"].is_badvalue() {
+        if let Some(yaml_items) = yaml["items"].as_vec() {
             self.spatial_id_stack.push(real_id);
-            self.add_display_list_items_from_yaml(dl, wrench, &yaml["items"]);
+            self.add_display_list_items_from_yaml(dl, wrench, yaml_items);
             self.spatial_id_stack.pop().unwrap();
         }
     }
@@ -1905,9 +1904,9 @@ impl YamlFrameReader {
             self.add_spatial_id_mapping(numeric_id as u64, space_and_clip.spatial_id);
         }
 
-        if !yaml["items"].is_badvalue() {
+        if let Some(yaml_items) = yaml["items"].as_vec() {
             self.clip_id_stack.push(space_and_clip.clip_id);
-            self.add_display_list_items_from_yaml(dl, wrench, &yaml["items"]);
+            self.add_display_list_items_from_yaml(dl, wrench, yaml_items);
             self.clip_id_stack.pop().unwrap();
         }
     }
@@ -1990,8 +1989,8 @@ impl YamlFrameReader {
         let real_id = self.push_reference_frame(dl, wrench, yaml);
         self.spatial_id_stack.push(real_id);
 
-        if !yaml["items"].is_badvalue() {
-            self.add_display_list_items_from_yaml(dl, wrench, &yaml["items"]);
+        if let Some(yaml_items) = yaml["items"].as_vec() {
+            self.add_display_list_items_from_yaml(dl, wrench, yaml_items);
         }
 
         self.spatial_id_stack.pop().unwrap();
@@ -2069,8 +2068,8 @@ impl YamlFrameReader {
             flags,
         );
 
-        if !yaml["items"].is_badvalue() {
-            self.add_display_list_items_from_yaml(dl, wrench, &yaml["items"]);
+        if let Some(yaml_items) = yaml["items"].as_vec() {
+            self.add_display_list_items_from_yaml(dl, wrench, yaml_items);
         }
 
         dl.pop_stacking_context();
