@@ -43,4 +43,3 @@ the test.
 
    If you plan to run tests often in the CI for android, you should contact the android
    infra team to make sure there's availability in our pool of devices.
-
