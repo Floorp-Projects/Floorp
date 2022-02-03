@@ -386,13 +386,13 @@ win64-clang-13:
         arguments:
             - 'build/build-clang/win64.json'
             - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/skip-stage-1-win64.json'
         resources:
             - 'build/build-clang/win64.json'
             - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/skip-stage-1-win64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias:
-            - win64-clang
-            - win64-clang-toolchain
+        toolchain-alias: win64-clang
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
@@ -401,12 +401,13 @@ win64-clang-13:
             - cmake
             - ninja
         toolchain:
+            - win64-clang-13-stage1
             - wasm32-wasi-compiler-rt-13
 
-win64-clang-13-2stage:
-    description: "Clang-cl 13 toolchain 2-stage quick build"
+win64-clang-13-stage1:
+    description: "Clang-cl 13 toolchain build stage 1"
     treeherder:
-        symbol: TW64(clang-13-2stage)
+        symbol: TW64(clang-13-stage1)
     worker-type: b-win2012
     worker:
         env:
@@ -416,13 +417,13 @@ win64-clang-13-2stage:
         arguments:
             - 'build/build-clang/win64.json'
             - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/2stages.json'
+            - 'build/build-clang/1stage.json'
         resources:
             - 'build/build-clang/win64.json'
             - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/2stages.json'
+            - 'build/build-clang/1stage.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias: win64-clang-2stage
+        toolchain-alias: win64-clang-toolchain
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
