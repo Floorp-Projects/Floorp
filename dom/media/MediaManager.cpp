@@ -3872,14 +3872,19 @@ DeviceListener::InitializeAsync() {
               track = mDeviceState->mTrackSource->mTrack,
               deviceMuted = mDeviceState->mDeviceMuted](
                  MozPromiseHolder<DeviceListenerPromise>& aHolder) {
+               auto kind = device->Kind();
                device->SetTrack(track, principal);
                nsresult rv = deviceMuted ? NS_OK : device->Start();
-               if (device->Kind() == MediaDeviceKind::Audioinput) {
-                 if (rv == NS_ERROR_NOT_AVAILABLE) {
+               if (kind == MediaDeviceKind::Audioinput ||
+                   kind == MediaDeviceKind::Videoinput) {
+                 if ((rv == NS_ERROR_NOT_AVAILABLE &&
+                      kind == MediaDeviceKind::Audioinput) ||
+                     (NS_FAILED(rv) && kind == MediaDeviceKind::Videoinput)) {
                    PR_Sleep(200);
                    rv = device->Start();
                  }
-                 if (rv == NS_ERROR_NOT_AVAILABLE) {
+                 if (rv == NS_ERROR_NOT_AVAILABLE &&
+                     kind == MediaDeviceKind::Audioinput) {
                    nsCString log;
                    log.AssignLiteral("Concurrent mic process limit.");
                    aHolder.Reject(MakeRefPtr<MediaMgrError>(
@@ -3893,8 +3898,7 @@ DeviceListener::InitializeAsync() {
                  nsCString log;
                  log.AppendPrintf(
                      "Starting %s failed",
-                     nsCString(
-                         dom::MediaDeviceKindValues::GetString(device->Kind()))
+                     nsCString(dom::MediaDeviceKindValues::GetString(kind))
                          .get());
                  aHolder.Reject(
                      MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError,
@@ -3903,9 +3907,7 @@ DeviceListener::InitializeAsync() {
                  return;
                }
                LOG("started %s device %p",
-                   nsCString(
-                       dom::MediaDeviceKindValues::GetString(device->Kind()))
-                       .get(),
+                   nsCString(dom::MediaDeviceKindValues::GetString(kind)).get(),
                    device.get());
                aHolder.Resolve(true, __func__);
              })
