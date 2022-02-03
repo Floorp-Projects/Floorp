@@ -239,7 +239,6 @@ class nsImageRenderer {
                                gfxContext& aRenderingContext);
 
   bool IsRasterImage();
-  bool IsAnimatedImage();
 
   /// Retrieves the image associated with this nsImageRenderer, if there is one.
   already_AddRefed<imgIContainer> GetImage();
