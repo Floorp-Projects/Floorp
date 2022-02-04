@@ -24,7 +24,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
 <body>Autocomplete popup - invoke getter usage test</body>`;
 
 const MDN_URL =
-  "https://developer.mozilla.org/docs/Tools/Web_Console/Invoke_getters_from_autocomplete";
+  "https://firefox-source-docs.mozilla.org/devtools-user/web_console/invoke_getters_from_autocomplete/";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
