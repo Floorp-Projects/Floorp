@@ -54,6 +54,14 @@ class WallpaperDownloader(
                     input.copyTo(localFile.outputStream())
                 }
             }.onFailure {
+                Result.runCatching {
+                    if (localFile.exists()) {
+                        localFile.delete()
+                    }
+                }.onFailure { e ->
+                    logger.error("Failed to delete stale wallpaper bitmaps while downloading", e)
+                }
+
                 logger.error(it.message ?: "Download failed: no throwable message included.", it)
                 crashReporter.submitCaughtException(it)
             }
