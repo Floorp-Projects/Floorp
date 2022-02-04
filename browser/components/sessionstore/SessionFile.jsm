@@ -28,6 +28,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { AsyncShutdown } = ChromeUtils.import(
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   RunState: "resource:///modules/sessionstore/RunState.jsm",
@@ -485,7 +488,7 @@ var SessionFileInternal = {
 
     // Ensure that we can write sessionstore.js cleanly before the profile
     // becomes unaccessible.
-    IOUtils.profileBeforeChange.addBlocker(
+    AsyncShutdown.profileBeforeChange.addBlocker(
       "SessionFile: Finish writing Session Restore data",
       promise,
       {
@@ -503,7 +506,7 @@ var SessionFileInternal = {
     // doesn't forward the rejection.
     return promise.then(() => {
       // Remove the blocker, no matter if writing failed or not.
-      IOUtils.profileBeforeChange.removeBlocker(promise);
+      AsyncShutdown.profileBeforeChange.removeBlocker(promise);
 
       if (isFinalWrite) {
         Services.obs.notifyObservers(
