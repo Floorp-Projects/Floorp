@@ -250,7 +250,7 @@ load xhr_empty_datauri.html
 load xhr_html_nullresponse.html
 asserts(0-1) load 1517025.html # see bug 1666910 for assert
 load xhr-with-pagehide-1.html
-pref(layout.css.resizeobserver.enabled,true) load 1555786.html
+load 1555786.html
 load 1577191.html
 load eventSource_invalid_scheme_worker_shutdown.html
 load 1291535.html
