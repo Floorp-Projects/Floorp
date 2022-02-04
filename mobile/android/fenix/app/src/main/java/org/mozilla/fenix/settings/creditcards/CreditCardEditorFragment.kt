@@ -16,10 +16,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.SecureFragment
 import org.mozilla.fenix.databinding.FragmentCreditCardEditorBinding
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.placeCursorAtEnd
 import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.creditcards.controller.DefaultCreditCardEditorController
@@ -70,6 +72,12 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
             }
             creditCardEditorView = CreditCardEditorView(binding, interactor)
             creditCardEditorView.bind(creditCardEditorState)
+
+            binding.cardNumberInput.apply {
+                requestFocus()
+                placeCursorAtEnd()
+                showKeyboard()
+            }
         }
     }
 
