@@ -3,7 +3,7 @@
 The WebConsole (webconsole) shows you all the console API calls made by scripts and alerts
 you when javascript errors are thrown by a script.
 It can also display network logs, and you can evaluate expressions using the console
-input, a.k.a. JsTerm. You can read more about it on [MDN](https://developer.mozilla.org/en-US/docs/Tools/Web_Console)
+input, a.k.a. JsTerm. You can read [more](https://firefox-source-docs.mozilla.org/devtools-user/web_console/) about it
 to learn all the features and how to use the tool.
 
 ## Run WebConsole
