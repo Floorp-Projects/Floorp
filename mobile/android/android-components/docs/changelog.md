@@ -39,6 +39,9 @@ permalink: /changelog/
   * Extend `DefaultTopSitesStorage` to accept a `TopSitesProvider` for fetching top sites. [#11483](https://github.com/mozilla-mobile/android-components/issues/11483)
   * ⚠️ **This is a breaking change**: Added a new parameter `fetchProvidedTopSites` to `TopSitesConfig` to specify whether or not to fetch top sites from the `TopSitesProvider`. [#11605](https://github.com/mozilla-mobile/android-components/issues/11605)
 
+* **concept-storage**
+  * ⚠️ **This is a breaking change**: Adds a new `isRemote` property in `VisitInfo` which distinguishes visits made on the device and those that come from Sync.
+
 * **service-contile**
   * Adds a `ContileTopSitesProvider` that implements `TopSitesProvider` for returning top sites from the Contile services API. [#11483](https://github.com/mozilla-mobile/android-components/issues/11483)
 
