@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **support-utils**
+  * 🌟️️ **Add a `PendingUtils.defaultFlags` property to ease setting PendingIntent mutability as required for Android 31+.
+
 * **feature-prompts**:
   * More prompts are dismissable.
   * **Breaking change:** Success / dismiss callbacks are now consistently
