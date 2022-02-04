@@ -118,7 +118,7 @@
     "ca": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "ddg", "wikipedia-ca", "diec2"
+          "google-b-m", "ddg", "wikipedia-ca"
         ]
       }
     },
@@ -132,7 +132,7 @@
     "cs": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "ddg", "heureka-cz", "mapy-cz", "seznam-cz", "wikipedia-cz"
+          "google-b-m", "bing", "ddg", "mapy-cz", "seznam-cz", "wikipedia-cz"
         ]
       }
     },
@@ -247,7 +247,7 @@
     "es-CL": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "ddg", "drae", "mercadolibre-cl", "wikipedia-es"
+          "google-b-m", "bing", "ddg", "mercadolibre-cl", "wikipedia-es"
         ]
       }
     },
@@ -331,14 +331,14 @@
     "fy-NL": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "ddg", "wikipedia-fy-NL", "bolcom-fy-NL"
+          "google-b-m", "ddg", "wikipedia-fy-NL"
         ]
       }
     },
     "ga-IE": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "amazon-co-uk", "ddg", "tearma", "wikipedia-ga-IE"
+          "google-b-m", "amazon-co-uk", "ddg", "wikipedia-ga-IE"
         ]
       }
     },
@@ -408,7 +408,7 @@
     "hy-AM": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "amazondotcom", "ddg", "list-am", "wikipedia-hy-AM"
+          "google-b-m", "bing", "amazondotcom", "ddg", "wikipedia-hy-AM"
         ]
       }
     },
@@ -497,7 +497,7 @@
     "ko": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "ddg", "danawa-kr", "daum-kr", "naver-kr"
+          "google-b-m", "ddg", "danawa-kr", "daum-kr"
         ]
       }
     },
@@ -532,7 +532,7 @@
     "lv": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "ddg", "salidzinilv", "sslv", "wikipedia-lv"
+          "google-b-m", "ddg", "salidzinilv", "wikipedia-lv"
         ]
       }
     },
@@ -602,14 +602,14 @@
     "nl-NL": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "bolcom-nl", "ddg", "wikipedia-nl", "amazon-nl", "ebay-nl"
+          "google-b-m", "bing", "ddg", "wikipedia-nl", "amazon-nl", "ebay-nl"
         ]
       }
     },
     "nl": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "bolcom-nl", "ddg", "wikipedia-nl"
+          "google-b-m", "bing", "ddg", "wikipedia-nl"
         ]
       }
     },
@@ -698,7 +698,7 @@
     "sk": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "ddg", "azet-sk", "slovnik-sk", "wikipedia-sk"
+          "google-b-m", "ddg", "slovnik-sk", "wikipedia-sk"
         ]
       }
     },
@@ -794,7 +794,7 @@
     "uk": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "ddg", "wikipedia-uk", "hotline-ua"
+          "google-b-m", "ddg", "wikipedia-uk"
         ]
       }
     },
