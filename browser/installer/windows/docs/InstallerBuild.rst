@@ -53,4 +53,3 @@ Most of this procedure is done in `makensis.mk <https://searchfox.org/mozilla-ce
 
 
 If this is an official build running on Mozilla automation infrastructure, then after this the installers will be signed, like other build products. Release engineering owns that process, it's not within the scope of this documentation.
-

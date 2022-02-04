@@ -13,6 +13,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PerTestCoverageUtils: "resource://testing-common/PerTestCoverageUtils.jsm",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -292,13 +294,26 @@ TalosPowersService.prototype = {
       // about:home startup cache on shutdown, which causes that test
       // to break periodically.
       AboutNewTab.onBrowserReady();
-      let feed = AboutNewTab.activityStream.store.feeds.get(
-        "feeds.system.topsites"
-      );
+      // There aren't currently any easily observable notifications or
+      // events to let us know when the feed is ready, so we'll just poll
+      // for now.
+      let pollForFeed = async function() {
+        let foundFeed = AboutNewTab.activityStream.store.feeds.get(
+          "feeds.system.topsites"
+        );
+        if (!foundFeed) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return pollForFeed();
+        }
+        return foundFeed;
+      };
+      let feed = await pollForFeed();
       await feed._contile.refresh();
       await feed.refresh({ broadcast: true });
       await AboutHomeStartupCache.cacheNow();
     }
+
+    await SessionStore.promiseAllWindowsRestored;
 
     // Check to see if the top-most browser window still needs to fire its
     // idle tasks notification. If so, we'll wait for it before shutting

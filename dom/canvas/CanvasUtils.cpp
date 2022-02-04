@@ -51,24 +51,26 @@ using namespace mozilla::gfx;
 namespace mozilla::CanvasUtils {
 
 bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
-                              nsIPrincipal& aPrincipal) {
+                              Maybe<nsIPrincipal*> aPrincipal) {
   // Do the rest of the checks only if privacy.resistFingerprinting is on.
   if (!nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return true;
   }
 
   // Don't proceed if we don't have a document or JavaScript context.
-  if (!aDocument || !aCx) {
+  if (!aDocument || !aCx || !aPrincipal) {
     return false;
   }
 
+  nsIPrincipal& subjectPrincipal = *aPrincipal.ref();
+
   // The system principal can always extract canvas data.
-  if (aPrincipal.IsSystemPrincipal()) {
+  if (subjectPrincipal.IsSystemPrincipal()) {
     return true;
   }
 
   // Allow extension principals.
-  auto principal = BasePrincipal::Cast(&aPrincipal);
+  auto* principal = BasePrincipal::Cast(&subjectPrincipal);
   if (principal->AddonPolicy() || principal->ContentScriptAddonPolicy()) {
     return true;
   }

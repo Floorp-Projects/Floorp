@@ -45,4 +45,3 @@ Note: in Windows, the ``start-debugger-server`` call will only have one dash:
 .. note::
 
   By default, and for security reasons, the ``devtools.debugger.force-local`` option is set. If you want to debug a Firefox instance from an external machine, you can change this option, but only do this on a trusted network or set a strong firewall rule to lock down which machines can access it.
-

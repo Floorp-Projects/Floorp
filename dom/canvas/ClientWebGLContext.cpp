@@ -3851,33 +3851,6 @@ static GLenum JSTypeMatchUnpackTypeError(GLenum unpackType,
   return 0;
 }
 
-static std::string ToString(const js::Scalar::Type type) {
-  switch (type) {
-#define _(X)                \
-  case js::Scalar::Type::X: \
-    return #X;
-    _(Int8)
-    _(Uint8)
-    _(Uint8Clamped)
-    _(Int16)
-    _(Uint16)
-    _(Int32)
-    _(Uint32)
-    _(Float32)
-    _(Float64)
-    _(Int64)
-    _(BigInt64)
-    _(BigUint64)
-    _(Simd128)
-#undef _
-    case js::Scalar::Type::MaxTypedArrayViewType:
-      // -_-
-      MOZ_CRASH("MaxTypedArrayViewType");
-  }
-  MOZ_ASSERT(false);
-  return std::string("#") + std::to_string(UnderlyingValue(type));
-}
-
 /////////////////////////////////////////////////
 
 static inline uvec2 CastUvec2(const ivec2& val) {
@@ -4055,7 +4028,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
         case LOCAL_GL_INVALID_OPERATION:
           EnqueueError(LOCAL_GL_INVALID_OPERATION,
                        "ArrayBufferView type %s not compatible with `type` %s.",
-                       ToString(jsType).c_str(), EnumString(pi.type).c_str());
+                       name(jsType), EnumString(pi.type).c_str());
           return {};
         default:
           break;

@@ -38,7 +38,7 @@ list of acceptable features is given below:
    :widths: 25 25 25 25
    :header-rows: 3
 
-   * - 
+   * -
      - GCC
      - Clang
      -
@@ -606,11 +606,11 @@ Miscellaneous
      - xpcom/ds/TimeStamp.h
      - ``std::chrono::time_point``
      -
-   * - 
+   * -
      - mozilla/TypeTraits.h
      - ``<type_traits>``
      -
-   * - 
+   * -
      - mozilla/PodOperations.h
      -
      - C++ versions of ``memset``, ``memcpy``, etc.
@@ -622,7 +622,7 @@ Miscellaneous
      - mozilla/Compression.h
      -
      -
-   * - 
+   * -
      - mozilla/Endian.h
      -
      -
@@ -630,11 +630,11 @@ Miscellaneous
      - mozilla/FloatingPoint.h
      -
      -
-   * - 
+   * -
      - mozilla/HashFunctions.h
      - ``std::hash``
      -
-   * - 
+   * -
      - mozilla/Move.h
      - ``std::move``, ``std::swap``, ``std::forward``
      -

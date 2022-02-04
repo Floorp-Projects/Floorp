@@ -97,4 +97,3 @@ module to make their lives easier.
 This can be used for tests like
 “If five bookmarks are read from the database,
 does the bookmark count Histogram have a value of 5 in it?”.
-

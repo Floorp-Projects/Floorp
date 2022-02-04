@@ -128,4 +128,3 @@ To display this view, click the gear icon on the right-hand end of the performan
 
 .. image:: performance_menu_invert_call_tree.png
     :class: center
-

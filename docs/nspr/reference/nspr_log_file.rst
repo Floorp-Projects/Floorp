@@ -12,7 +12,7 @@ Syntax
 
    filespec
 
-*filespec* is a filename. The exact syntax is platform specific. 
+*filespec* is a filename. The exact syntax is platform specific.
 
 
 Description

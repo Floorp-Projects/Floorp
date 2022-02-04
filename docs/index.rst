@@ -45,7 +45,7 @@ Firefox Source Tree Documentation
    {l10n_doc}
 
 .. toctree::
-   :caption: Firefox and Python 
+   :caption: Firefox and Python
    :maxdepth: 1
 
    {python_doc}

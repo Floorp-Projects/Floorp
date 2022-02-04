@@ -29,13 +29,13 @@ The files may define any of the following special variables:
     # Optional: A function to be called at shutdown if any component listed in
     # this manifest has been instantiated.
     UnloadFunc = 'nsUnloadFooModule'
-    
+
     # Optional: A processing priority, to determine how early or late the
     # manifest is processed. Defaults to 50. In practice, this mainly affects
     # the order in which unload functions are called at shutdown, with higher
     # priority numbers being called later.
     Priority = 10
-    
+
     # Optional: A list of header files to include before calling init or
     # unload functions, or any legacy constructor functions.
     #
@@ -47,7 +47,7 @@ The files may define any of the following special variables:
         '/foo/nsFooModule.h',
         'nsFoo.h',
     ]
-    
+
     # A list of component classes provided by this module.
     Classes = [
         {
@@ -76,7 +76,7 @@ Class definitions may have the following properties:
   ``components::Foo::Create()``, respectively.
 
 ``cid``
-  A UUID string containing this component's CID, in the form 
+  A UUID string containing this component's CID, in the form
   ``'{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}'``.
 
 ``contract_ids`` (optional)
@@ -113,7 +113,7 @@ Class definitions may have the following properties:
   headers listed in the ``headers`` property, must take no arguments, and must
   return ``already_AddRefed<iface>`` where ``iface`` is the interface provided
   in the ``type`` property.
-  
+
   This property is incompatible with ``legacy_constructor``.
 
 ``jsm`` (optional)
@@ -124,13 +124,13 @@ Class definitions may have the following properties:
 
 ``legacy_constructor`` (optional)
   This property is deprecated, and should not be used in new code.
-  
+
   The fully-qualified name of a constructor function to call in order to
   create instances of this class. This function must be declared in one of the
   headers listed in the ``headers`` property, and must have the signature
   ``nsresult(nsISupports* aOuter, const nsID& aIID, void** aResult)``, and
   behave equivalently to ``nsIFactory::CreateInstance``.
-  
+
   This property is incompatible with ``constructor``.
 
 ``singleton`` (optional, default=``False``)
@@ -143,10 +143,10 @@ Class definitions may have the following properties:
   tests, and its ``mozilla::components::<name>::Service()`` getter will
   therefore look it up by contract ID for every call. This component must,
   therefore, provide at least one contract ID in its ``contract_ids`` array.
-  
+
   If false, the ``Service()`` getter will always retrieve the service based on
   its static data, and it cannot be overridden.
-  
+
   Note: Enabling this option is expensive, and should not be done when it can
   be avoided, or when the getter is used by any hot code.
 
@@ -155,10 +155,10 @@ Class definitions may have the following properties:
   another translation unit, using ``NS_IMPL_COMPONENT_FACTORY(type)``. The
   constructor must return an ``already_AddRefed<nsISupports>``, and will be
   used to construct instances of this type.
-  
+
   This option should only be used in cases where the headers which define the
   component's concrete type cannot be easily included without local includes.
-  
+
   Note: External constructors may not specify an ``init_method``, since the
   generated code will not have the necessary type information required to call
   it. This option is also incompatible with ``constructor`` and
@@ -306,4 +306,3 @@ value:
             'MainProcessSingleton': ('service,@mozilla.org/main-process-singleton;1', ProcessSelector.MAIN_PROCESS_ONLY),
         }
     }
-

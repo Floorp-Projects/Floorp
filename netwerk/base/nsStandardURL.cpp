@@ -68,6 +68,7 @@ constexpr bool TestForInvalidHostCharacters(char c) {
   // Testing for these:
   // CONTROL_CHARACTERS " #/:?@[\\]*<>|\"";
   return (c > 0 && c < 32) ||  // The control characters are [1, 31]
+         c == 0x7F ||          // // DEL (delete)
          c == ' ' || c == '#' || c == '/' || c == ':' || c == '?' || c == '@' ||
          c == '[' || c == '\\' || c == ']' || c == '*' || c == '<' ||
          c == '^' ||

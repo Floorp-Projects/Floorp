@@ -79,9 +79,3 @@ smart pointer with ``nullptr`` if either of these steps fail.
 In contrast ``do_GetWeakReference`` does the opposite, using
 ``QueryInterface`` to cast the type to ``nsISupportsWeakReference*``, and
 acquire a ``nsIWeakReference*`` to the passed-in object.
-
-
-
-
-
-

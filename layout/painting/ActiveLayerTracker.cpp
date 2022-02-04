@@ -374,7 +374,7 @@ bool ActiveLayerTracker::IsStyleAnimated(
       aPropertySet.Intersects(nsCSSPropertyIDSet::OpacityProperties()) &&
       (!aBuilder ||
        aBuilder->IsInWillChangeBudget(aFrame, aFrame->GetSize()))) {
-    return true;
+    return !StaticPrefs::gfx_will_change_ignore_opacity();
   }
 
   LayerActivity* layerActivity = GetLayerActivity(aFrame);

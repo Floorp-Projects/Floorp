@@ -10,7 +10,7 @@ L10N Glossary
 
     Localizability
         Enabling a piece of software to be localized. This is mostly
-        externalizing English strings, and writing build support to 
+        externalizing English strings, and writing build support to
         pick up localized search engines etc.
 
     L10n

@@ -427,7 +427,7 @@ This object contains data about the state of Firefox's sandbox.
 Specific keys are:
 
 - ``effectiveContentProcessLevel``: The meanings of the values are OS dependent. Details of the meanings can be found in the `Firefox prefs file <https://hg.mozilla.org/mozilla-central/file/tip/browser/app/profile/firefox.js>`_. The value here is the effective value, not the raw value, some platforms enforce a minimum sandbox level. If there is an error calculating this, it will be ``null``.
-- ``contentWin32kLockdownState``: The status of Win32k Lockdown for Content process. 
+- ``contentWin32kLockdownState``: The status of Win32k Lockdown for Content process.
 
   - LockdownEnabled = 1 - After Firefox 98, this value will no longer appear in Telemetry.
   - MissingWebRender = 2

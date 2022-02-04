@@ -144,7 +144,7 @@ Dealing with test failures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If a build or a test job fails, you can click on the red or orange or
-purple symbol for the job on Treeherder to display more information. 
+purple symbol for the job on Treeherder to display more information.
 The information will appear in the footer, including a summary of any
 error messages, a "+" icon to re-trigger the job (schedule it to run
 again), and links to the log files and to possibly-related bugs.

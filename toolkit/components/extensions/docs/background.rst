@@ -131,4 +131,3 @@ a WebExtension API:
   possible -- extensions ared started relatively early in the browser
   startup process so any unnecessary work done during extension startup
   contributes directly to sluggish browser startup.
-

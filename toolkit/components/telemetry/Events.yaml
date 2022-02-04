@@ -2338,7 +2338,7 @@ networking.captive_portal:
     release_channel_collection: opt-out
     products: ["firefox"]
     record_in_processes: ["main"]
-    expiry_version: "99"
+    expiry_version: "105"
 
   login_button_pressed:
     objects: ["login_button"]
@@ -2352,7 +2352,7 @@ networking.captive_portal:
     release_channel_collection: opt-out
     products: ["firefox"]
     record_in_processes: ["main"]
-    expiry_version: "99"
+    expiry_version: "105"
 
   login_successful:
     objects: ["detector"]
@@ -2366,7 +2366,7 @@ networking.captive_portal:
     release_channel_collection: opt-out
     products: ["firefox"]
     record_in_processes: ["main"]
-    expiry_version: "99"
+    expiry_version: "105"
 
 security:
   fissionPrincipals:

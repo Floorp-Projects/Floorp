@@ -18,7 +18,7 @@
           <stack class="tab-icon-stack">
             <hbox class="tab-throbber" layer="true"/>
             <hbox class="tab-icon-pending"/>
-            <image class="tab-icon-image" validate="never" role="presentation"/>
+            <html:img class="tab-icon-image" role="presentation" decoding="sync" />
             <image class="tab-sharing-icon-overlay" role="presentation"/>
             <image class="tab-icon-overlay" role="presentation"/>
           </stack>

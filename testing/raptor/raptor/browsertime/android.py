@@ -79,11 +79,6 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                     "--browser",
                     "firefox",
                     "--android",
-                    # Work around a `selenium-webdriver` issue where Browsertime
-                    # fails to find a Firefox binary even though we're going to
-                    # actually do things on an Android device.
-                    "--firefox.binaryPath",
-                    self.browsertime_node,
                     "--firefox.android.package",
                     self.config["binary"],
                     "--firefox.android.activity",

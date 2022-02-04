@@ -277,9 +277,12 @@
 }
 
 .tab-icon-image {
-  list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
   -moz-context-properties: fill;
   fill: currentColor;
+}
+
+.tab-icon-image:not([src]) {
+  content: url("chrome://global/skin/icons/defaultFavicon.svg");
 }
 
 .tab-icon-image[sharing]:not([selected]),

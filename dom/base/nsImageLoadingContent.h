@@ -424,16 +424,6 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
       const Maybe<OnNonvisible>& aNonvisibleAction = Nothing());
 
   /**
-   * Retrieve a pointer to the 'registered with the refresh driver' flag for
-   * which a particular image request corresponds.
-   *
-   * @returns A pointer to the boolean flag for a given image request, or
-   *          |nullptr| if the request is not either |mPendingRequest| or
-   *          |mCurrentRequest|.
-   */
-  bool* GetRegisteredFlagForRequest(imgIRequest* aRequest);
-
-  /**
    * Reset animation of the current request if
    * |mNewRequestsWillNeedAnimationReset| was true when the request was
    * prepared.
@@ -472,17 +462,17 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   /* MEMBERS */
   RefPtr<imgRequestProxy> mCurrentRequest;
   RefPtr<imgRequestProxy> mPendingRequest;
-  uint32_t mCurrentRequestFlags;
-  uint32_t mPendingRequestFlags;
+  uint8_t mCurrentRequestFlags = 0;
+  uint8_t mPendingRequestFlags = 0;
 
   enum {
     // Set if the request needs ResetAnimation called on it.
-    REQUEST_NEEDS_ANIMATION_RESET = 0x00000001U,
+    REQUEST_NEEDS_ANIMATION_RESET = 1 << 0,
     // Set if the request is currently tracked with the document.
-    REQUEST_IS_TRACKED = 0x00000004U,
+    REQUEST_IS_TRACKED = 1 << 1,
     // Set if this is an imageset request, such as from <img srcset> or
     // <picture>
-    REQUEST_IS_IMAGESET = 0x00000008U
+    REQUEST_IS_IMAGESET = 1 << 2,
   };
 
   // If the image was blocked or if there was an error loading, it's nice to
