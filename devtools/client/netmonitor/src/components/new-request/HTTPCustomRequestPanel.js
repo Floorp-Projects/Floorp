@@ -41,6 +41,31 @@ const CUSTOM_QUERY = L10N.getStr("netmonitor.custom.urlParameters");
 const CUSTOM_SEND = L10N.getStr("netmonitor.custom.send");
 const CUSTOM_CLEAR = L10N.getStr("netmonitor.custom.clear");
 
+const FIREFOX_DEFAULT_HEADERS = [
+  "Accept-Charset",
+  "Accept-Encoding",
+  "Access-Control-Request-Headers",
+  "Access-Control-Request-Method",
+  "Connection",
+  "Content-Length",
+  "Cookie",
+  "Cookie2",
+  "Date",
+  "DNT",
+  "Expect",
+  "Feature-Policy",
+  "Host",
+  "Keep-Alive",
+  "Origin",
+  "Proxy-",
+  "Sec-",
+  "Referer",
+  "TE",
+  "Trailer",
+  "Transfer-Encoding",
+  "Upgrade",
+  "Via",
+];
 /*
  * HTTP Custom request panel component
  * A network request panel which enables creating and sending new requests
@@ -80,13 +105,26 @@ class HTTPCustomRequestPanel extends Component {
         request?.url
       ),
       headers: request
-        ? request.requestHeaders.headers.map(({ name, value }) => {
-            return {
-              name,
-              value,
-              checked: true,
-            };
-          })
+        ? request.requestHeaders.headers
+            .map(({ name, value }) => {
+              return {
+                name,
+                value,
+                checked: true,
+                disabled: !!FIREFOX_DEFAULT_HEADERS.find(i =>
+                  name.startsWith(i)
+                ),
+              };
+            })
+            .sort((a, b) => {
+              if (a.disabled && !b.disabled) {
+                return -1;
+              }
+              if (!a.disabled && b.disabled) {
+                return 1;
+              }
+              return 0;
+            })
         : [],
       requestPostData: request
         ? request.requestPostData?.postData.text || ""
@@ -151,7 +189,10 @@ class HTTPCustomRequestPanel extends Component {
 
   addInputMapItem(stateName, name, value) {
     this.setState({
-      [stateName]: [...this.state[stateName], { name, value, checked: true }],
+      [stateName]: [
+        ...this.state[stateName],
+        { name, value, checked: true, disabled: false },
+      ],
     });
   }
 
