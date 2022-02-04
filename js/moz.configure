@@ -903,12 +903,10 @@ option(
 )
 
 
-@depends("--enable-wasm-moz-intgemm")
-def wasm_moz_intgemm(value):
-    if not value:
-        return
-
-    return True
+@depends("--enable-wasm-moz-intgemm", target)
+def wasm_moz_intgemm(value, target):
+    if value and target.cpu in ("x86", "x86_64"):
+        return True
 
 
 set_config("ENABLE_WASM_MOZ_INTGEMM", wasm_moz_intgemm)

@@ -19,6 +19,7 @@
 #ifndef wasm_builtins_h
 #define wasm_builtins_h
 
+#include "intgemm/IntegerGemmIntrinsic.h"
 #include "jit/IonTypes.h"
 #include "wasm/WasmIntrinsicGenerated.h"
 
