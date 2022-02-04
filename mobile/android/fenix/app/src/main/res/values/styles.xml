@@ -531,7 +531,7 @@
     <style name="ShareHeaderTextStyle">
         <item name="android:singleLine">true</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">@color/photonDarkGrey10</item>
+        <item name="android:textColor">?secondaryText</item>
         <item name="android:textSize">@dimen/share_header_text_size</item>
         <item name="android:textStyle">bold</item>
         <item name="fontFamily">@font/metropolis_semibold</item>

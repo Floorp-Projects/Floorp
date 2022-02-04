@@ -21,7 +21,7 @@
         android:background="@android:color/transparent"
         android:contentDescription="@string/content_description_close_button"
         android:padding="12dp"
-        app:iconTint="@color/neutral_text"
+        app:tint="@color/fx_mobile_icon_color_oncolor"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_close" />
@@ -36,7 +36,7 @@
         android:paddingHorizontal="1dp"
         android:text="@string/share_header_2"
         android:textAppearance="@style/HeaderTextStyle"
-        android:textColor="@color/neutral_text"
+        android:textColor="@color/fx_mobile_text_color_oncolor_primary"
         android:textSize="20sp"
         app:layout_constraintStart_toEndOf="@id/closeButton"
         app:layout_constraintTop_toTopOf="parent" />
