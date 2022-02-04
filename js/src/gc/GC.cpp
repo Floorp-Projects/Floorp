@@ -1641,7 +1641,8 @@ void GCRuntime::maybeGC() {
   }
 
   if (scheduledZones) {
-    startGC(JS::GCOptions::Normal, JS::GCReason::EAGER_ALLOC_TRIGGER);
+    SliceBudget budget = defaultBudget(JS::GCReason::EAGER_ALLOC_TRIGGER, 0);
+    startGC(JS::GCOptions::Normal, JS::GCReason::EAGER_ALLOC_TRIGGER, budget);
   }
 }
 
@@ -3491,7 +3492,7 @@ bool GCRuntime::maybeIncreaseSliceBudgetForLongCollections(
                         MinBudgetEnd.time, MinBudgetEnd.budget);
 
   if (budget.timeBudget() < minBudget) {
-    budget = SliceBudget(TimeBudget(minBudget));
+    budget = SliceBudget(TimeBudget(minBudget), nullptr); // Uninterruptible.
     wasIncreased = true;
   }
 
@@ -3526,7 +3527,7 @@ bool GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
         double(minBytesRemaining) / double(tunables.urgentThresholdBytes());
     double minBudget = double(defaultSliceBudgetMS()) / fractionRemaining;
     if (budget.timeBudget() < minBudget) {
-      budget = SliceBudget(TimeBudget(minBudget));
+      budget = SliceBudget(TimeBudget(minBudget), nullptr); // Uninterruptible.
       wasIncreased = true;
     }
   }
@@ -3935,18 +3936,18 @@ void GCRuntime::gc(JS::GCOptions options, JS::GCReason reason) {
 }
 
 void GCRuntime::startGC(JS::GCOptions options, JS::GCReason reason,
-                        int64_t millis) {
+                        const js::SliceBudget& budget) {
   MOZ_ASSERT(!isIncrementalGCInProgress());
   if (!JS::IsIncrementalGCEnabled(rt->mainContextFromOwnThread())) {
     gc(options, reason);
     return;
   }
-  collect(false, defaultBudget(reason, millis), Some(options), reason);
+  collect(false, budget, Some(options), reason);
 }
 
-void GCRuntime::gcSlice(JS::GCReason reason, int64_t millis) {
+void GCRuntime::gcSlice(JS::GCReason reason, const js::SliceBudget& budget) {
   MOZ_ASSERT(isIncrementalGCInProgress());
-  collect(false, defaultBudget(reason, millis), Nothing(), reason);
+  collect(false, budget, Nothing(), reason);
 }
 
 void GCRuntime::finishGC(JS::GCReason reason) {
@@ -3984,7 +3985,7 @@ static bool ZonesSelected(GCRuntime* gc) {
   return false;
 }
 
-void GCRuntime::startDebugGC(JS::GCOptions options, SliceBudget& budget) {
+void GCRuntime::startDebugGC(JS::GCOptions options, const SliceBudget& budget) {
   MOZ_ASSERT(!isIncrementalGCInProgress());
   if (!ZonesSelected(this)) {
     JS::PrepareForFullGC(rt->mainContextFromOwnThread());
@@ -3992,7 +3993,7 @@ void GCRuntime::startDebugGC(JS::GCOptions options, SliceBudget& budget) {
   collect(false, budget, Some(options), JS::GCReason::DEBUG_GC);
 }
 
-void GCRuntime::debugGCSlice(SliceBudget& budget) {
+void GCRuntime::debugGCSlice(const SliceBudget& budget) {
   MOZ_ASSERT(isIncrementalGCInProgress());
   if (!ZonesSelected(this)) {
     JS::PrepareForIncrementalGC(rt->mainContextFromOwnThread());
@@ -4116,10 +4117,11 @@ bool GCRuntime::gcIfRequested() {
   }
 
   if (majorGCRequested()) {
+    SliceBudget budget = defaultBudget(majorGCTriggerReason, 0);
     if (!isIncrementalGCInProgress()) {
-      startGC(JS::GCOptions::Normal, majorGCTriggerReason);
+      startGC(JS::GCOptions::Normal, majorGCTriggerReason, budget);
     } else {
-      gcSlice(majorGCTriggerReason);
+      gcSlice(majorGCTriggerReason, budget);
     }
     return true;
   }
