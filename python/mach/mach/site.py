@@ -17,7 +17,7 @@ import shutil
 import subprocess
 import sys
 from collections import OrderedDict
-from distutils import dist
+import sysconfig
 from pathlib import Path
 import tempfile
 from contextlib import contextmanager
@@ -743,15 +743,24 @@ class PythonVirtualenv:
 
     @functools.lru_cache(maxsize=None)
     def site_packages_dir(self):
+        # macOS uses a different default sysconfig scheme based on whether it's using the
+        # system Python or running in a virtualenv.
+        # Manually define the scheme (following the implementation in
+        # "sysconfig._get_default_scheme()") so that we're always following the
+        # code path for a virtualenv directory structure.
+        if os.name == "posix":
+            scheme = "posix_prefix"
+        else:
+            scheme = os.name
+
+        sysconfig_paths = sysconfig.get_paths(scheme)
+        data_path = Path(sysconfig_paths["data"])
+        purelib_path = Path(sysconfig_paths["purelib"])
+        relative_purelib_path = purelib_path.relative_to(data_path)
+
         normalized_venv_root = os.path.normpath(self.prefix)
-
-        distribution = dist.Distribution({"script_args": "--no-user-cfg"})
-        installer = distribution.get_command_obj("install")
-        installer.prefix = normalized_venv_root
-        installer.finalize_options()
-
         # Path to virtualenv's "site-packages" directory
-        path = installer.install_purelib
+        path = os.path.join(normalized_venv_root, relative_purelib_path)
         local_folder = os.path.join(normalized_venv_root, "local")
         # Hack around https://github.com/pypa/virtualenv/issues/2208
         if path.startswith(local_folder):
@@ -789,11 +798,11 @@ class PythonVirtualenv:
             return self.pip_install(["--constraint", constraints_path] + pip_args)
 
     def pip_install(self, pip_install_args, **kwargs):
-        # distutils will use the architecture of the running Python instance when building
-        # packages. However, it's possible for the Xcode Python to be a universal binary
-        # (x86_64 and arm64) without the associated macOS SDK supporting arm64, thereby
-        # causing a build failure. To avoid this, we explicitly influence the build to
-        # only target a single architecture - our current architecture.
+        # setuptools will use the architecture of the running Python instance when
+        # building packages. However, it's possible for the Xcode Python to be a universal
+        # binary (x86_64 and arm64) without the associated macOS SDK supporting arm64,
+        # thereby causing a build failure. To avoid this, we explicitly influence the
+        # build to only target a single architecture - our current architecture.
         kwargs.setdefault("env", os.environ.copy()).setdefault(
             "ARCHFLAGS", "-arch {}".format(platform.machine())
         )
@@ -1080,8 +1089,8 @@ def _deprioritize_venv_packages(virtualenv):
         # Additionally, when removing the existing "site-packages" folder's entry, we have
         # to do it in a case-insensitive way because, on Windows:
         # * Python adds it as <venv>/lib/site-packages
-        # * While distutils tells us it's <venv>/Lib/site-packages
-        # * (note: on-disk, it's capitalized, so distutils is slightly more accurate).
+        # * While sysconfig tells us it's <venv>/Lib/site-packages
+        # * (note: on-disk, it's capitalized, so sysconfig is slightly more accurate).
         for line in (
             "import sys; sys.path = [p for p in sys.path if "
             f"p.lower() != {repr(site_packages_dir)}.lower()]",
