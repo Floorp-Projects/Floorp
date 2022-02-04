@@ -94,16 +94,37 @@ interface nsIHttpActivityObserver : nsISupports
                                  in uint64_t aExtraSizeData,
                                  in ACString aExtraStringData);
 
-    const unsigned long ACTIVITY_TYPE_SOCKET_TRANSPORT     = 0x0001;
-    const unsigned long ACTIVITY_TYPE_HTTP_TRANSACTION     = 0x0002;
+    /**
+     * This function is for testing only. We use this function to observe the
+     * activities of HTTP connections. To receive this notification,
+     * observeConnection should be set to true.
+     */
+    [must_use]
+    void observeConnectionActivity(in ACString     aHost,
+                                   in int32_t      aPort,
+                                   in boolean      aSSL,
+                                   in boolean      aHasECH,
+                                   in boolean      aIsHttp3,
+                                   in uint32_t     aActivityType,
+                                   in uint32_t     aActivitySubtype,
+                                   in PRTime       aTimestamp,
+                                   in ACString     aExtraStringData);
 
-    const unsigned long ACTIVITY_SUBTYPE_REQUEST_HEADER         = 0x5001;
-    const unsigned long ACTIVITY_SUBTYPE_REQUEST_BODY_SENT      = 0x5002;
-    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_START         = 0x5003;
-    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_HEADER        = 0x5004;
-    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_COMPLETE      = 0x5005;
-    const unsigned long ACTIVITY_SUBTYPE_TRANSACTION_CLOSE      = 0x5006;
-    const unsigned long ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER  = 0x5007;
+    const unsigned long ACTIVITY_TYPE_SOCKET_TRANSPORT                      = 0x0001;
+    const unsigned long ACTIVITY_TYPE_HTTP_TRANSACTION                      = 0x0002;
+    const unsigned long ACTIVITY_TYPE_HTTP_CONNECTION                       = 0x0003;
+
+    const unsigned long ACTIVITY_SUBTYPE_REQUEST_HEADER                     = 0x5001;
+    const unsigned long ACTIVITY_SUBTYPE_REQUEST_BODY_SENT                  = 0x5002;
+    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_START                     = 0x5003;
+    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_HEADER                    = 0x5004;
+    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_COMPLETE                  = 0x5005;
+    const unsigned long ACTIVITY_SUBTYPE_TRANSACTION_CLOSE                  = 0x5006;
+    const unsigned long ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER              = 0x5007;
+    const unsigned long ACTIVITY_SUBTYPE_DNSANDSOCKET_CREATED               = 0x5008;
+    const unsigned long ACTIVITY_SUBTYPE_SPECULATIVE_DNSANDSOCKET_CREATED   = 0x5009;
+    const unsigned long ACTIVITY_SUBTYPE_ECH_SET                            = 0x500A;
+    const unsigned long ACTIVITY_SUBTYPE_CONNECTION_CREATED                 = 0x500B;
 
     /**
      *  When aActivityType is ACTIVITY_TYPE_SOCKET_TRANSPORT
@@ -133,6 +154,8 @@ interface nsIHttpActivityObserver : nsISupports
             nsIHttpActivityObserver::ACTIVITY_TYPE_SOCKET_TRANSPORT
 #define NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION    \
             nsIHttpActivityObserver::ACTIVITY_TYPE_HTTP_TRANSACTION
+#define NS_ACTIVITY_TYPE_HTTP_CONNECTION          \
+            nsIHttpActivityObserver::ACTIVITY_TYPE_HTTP_CONNECTION
 
 #define NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_HEADER    \
             nsIHttpActivityObserver::ACTIVITY_SUBTYPE_REQUEST_HEADER
@@ -148,7 +171,14 @@ interface nsIHttpActivityObserver : nsISupports
             nsIHttpActivityObserver::ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
 #define NS_HTTP_ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER \
             nsIHttpActivityObserver::ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER
-
+#define NS_HTTP_ACTIVITY_SUBTYPE_DNSANDSOCKET_CREATED \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_DNSANDSOCKET_CREATED
+#define NS_HTTP_ACTIVITY_SUBTYPE_SPECULATIVE_DNSANDSOCKET_CREATED \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_SPECULATIVE_DNSANDSOCKET_CREATED
+#define NS_HTTP_ACTIVITY_SUBTYPE_ECH_SET \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_ECH_SET
+#define NS_HTTP_ACTIVITY_SUBTYPE_CONNECTION_CREATED \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_CONNECTION_CREATED
 %}
 
 /**
@@ -168,4 +198,10 @@ interface nsIHttpActivityDistributor : nsIHttpActivityObserver
      * the observers.
      */
     [must_use] attribute boolean observeProxyResponse;
+
+    /**
+     * When true, the ACTIVITY_TYPE_HTTP_CONNECTION will be sent to
+     * the observers.
+     */
+    [must_use] attribute boolean observeConnection;
 };
