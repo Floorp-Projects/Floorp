@@ -32,7 +32,7 @@ class InputMap extends Component {
           value: PropTypes.string,
         })
       ).isRequired,
-      onUpdate: PropTypes.func.isRequired,
+      onUpdate: PropTypes.func,
       onAdd: PropTypes.func,
       onDelete: PropTypes.func,
       onChange: PropTypes.func,
@@ -139,47 +139,49 @@ class InputMap extends Component {
             value: item.value,
             rows: 1,
           }),
-          button({
-            className: "http-custom-delete-button",
-            title: REMOVE_ITEM,
-            "aria-label": REMOVE_ITEM,
-            onClick: () => onDelete(index),
-          })
+          onDelete &&
+            button({
+              className: "http-custom-delete-button",
+              title: REMOVE_ITEM,
+              "aria-label": REMOVE_ITEM,
+              onClick: () => onDelete(index),
+            })
         );
       }),
-      div(
-        {
-          className: "map-add-new-inputs",
-        },
-        input({
-          className: "tabpanel-summary-input-checkbox",
-          id: "http-custom-input-checkbox",
-          onChange: () => {},
-          checked: true,
-          type: "checkbox",
-        }),
-        textarea({
-          className: "tabpanel-summary-input-name",
-          type: "text",
-          ref: "addInputName",
-          checked: true,
-          value: name,
-          rows: 1,
-          placeholder: CUSTOM_NEW_REQUEST_INPUT_NAME,
-          onChange: e => this.setState({ name: e.target.value }),
-          onKeyDown,
-        }),
-        textarea({
-          className: "tabpanel-summary-input-value",
-          type: "text",
-          ref: "addInputValue",
-          value: value,
-          onChange: e => this.setState({ value: e.target.value }),
-          rows: 1,
-          placeholder: CUSTOM_NEW_REQUEST_INPUT_VALUE,
-          onKeyDown,
-        })
-      )
+      onAdd &&
+        div(
+          {
+            className: "map-add-new-inputs",
+          },
+          input({
+            className: "tabpanel-summary-input-checkbox",
+            id: "http-custom-input-checkbox",
+            onChange: () => {},
+            checked: true,
+            type: "checkbox",
+          }),
+          textarea({
+            className: "tabpanel-summary-input-name",
+            type: "text",
+            ref: "addInputName",
+            checked: true,
+            value: name,
+            rows: 1,
+            placeholder: CUSTOM_NEW_REQUEST_INPUT_NAME,
+            onChange: e => this.setState({ name: e.target.value }),
+            onKeyDown,
+          }),
+          textarea({
+            className: "tabpanel-summary-input-value",
+            type: "text",
+            ref: "addInputValue",
+            value: value,
+            onChange: e => this.setState({ value: e.target.value }),
+            rows: 1,
+            placeholder: CUSTOM_NEW_REQUEST_INPUT_VALUE,
+            onKeyDown,
+          })
+        )
     );
   }
 }
