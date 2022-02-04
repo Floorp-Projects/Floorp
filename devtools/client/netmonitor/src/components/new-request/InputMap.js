@@ -28,8 +28,9 @@ class InputMap extends Component {
     return {
       list: PropTypes.arrayOf(
         PropTypes.shape({
-          name: PropTypes.string,
-          value: PropTypes.string,
+          name: PropTypes.string.isRequired,
+          value: PropTypes.string.isRequired,
+          disabled: PropTypes.bool,
         })
       ).isRequired,
       onUpdate: PropTypes.func,
@@ -114,6 +115,7 @@ class InputMap extends Component {
             type: "checkbox",
             onChange: () => {},
             checked: item.checked,
+            disabled: !!item.disabled,
             wrap: "off",
           }),
           textarea({
@@ -121,6 +123,7 @@ class InputMap extends Component {
             id: "http-custom-input-name",
             name: `name-${index}`,
             value: item.name,
+            disabled: !!item.disabled,
             onChange: event => {
               onUpdate(event);
               this.props.resizeable && updateTextareaRows(event.target);
@@ -132,6 +135,7 @@ class InputMap extends Component {
             id: "http-custom-input-value",
             name: `value-${index}`,
             placeholder: "value",
+            disabled: !!item.disabled,
             onChange: event => {
               onUpdate(event);
               this.props.resizeable && updateTextareaRows(event.target);
@@ -139,7 +143,8 @@ class InputMap extends Component {
             value: item.value,
             rows: 1,
           }),
-          onDelete &&
+          !item.disabled &&
+            onDelete &&
             button({
               className: "http-custom-delete-button",
               title: REMOVE_ITEM,
