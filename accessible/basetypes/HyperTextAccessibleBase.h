@@ -106,13 +106,21 @@ class HyperTextAccessibleBase {
   TextLeafPoint ToTextLeafPoint(int32_t aOffset, bool aDescendToEnd = false);
 
   /**
-   * Return text at the given offset corresponding to
+   * Return text before/at/after the given offset corresponding to
    * the boundary type.
    */
+  virtual void TextBeforeOffset(int32_t aOffset,
+                                AccessibleTextBoundary aBoundaryType,
+                                int32_t* aStartOffset, int32_t* aEndOffset,
+                                nsAString& aText);
   virtual void TextAtOffset(int32_t aOffset,
                             AccessibleTextBoundary aBoundaryType,
                             int32_t* aStartOffset, int32_t* aEndOffset,
                             nsAString& aText);
+  virtual void TextAfterOffset(int32_t aOffset,
+                               AccessibleTextBoundary aBoundaryType,
+                               int32_t* aStartOffset, int32_t* aEndOffset,
+                               nsAString& aText);
 
   /**
    * Return true if the given offset/range is valid.
