@@ -1683,7 +1683,7 @@ class PreciseGCRunnable : public Runnable {
 
   NS_IMETHOD Run() override {
     nsJSContext::GarbageCollectNow(
-        GCReason::COMPONENT_UTILS,
+        GCReason::COMPONENT_UTILS, nsJSContext::NonIncrementalGC,
         mShrinking ? nsJSContext::ShrinkingGC : nsJSContext::NonShrinkingGC);
 
     mCallback->Callback();

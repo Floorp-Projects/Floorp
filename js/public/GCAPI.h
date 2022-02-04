@@ -713,7 +713,7 @@ extern JS_PUBLIC_API void NonIncrementalGC(JSContext* cx, JS::GCOptions options,
 extern JS_PUBLIC_API void StartIncrementalGC(JSContext* cx,
                                              JS::GCOptions options,
                                              GCReason reason,
-                                             const js::SliceBudget& budget);
+                                             int64_t millis = 0);
 
 /**
  * Perform a slice of an ongoing incremental collection. When this function
@@ -724,7 +724,7 @@ extern JS_PUBLIC_API void StartIncrementalGC(JSContext* cx,
  *       shorter than the requested interval.
  */
 extern JS_PUBLIC_API void IncrementalGCSlice(JSContext* cx, GCReason reason,
-                                             const js::SliceBudget& budget);
+                                             int64_t millis = 0);
 
 /**
  * Return whether an incremental GC has work to do on the foreground thread and
