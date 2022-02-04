@@ -125,4 +125,3 @@ The command has the following optional parameters:
 
 .. note::
   Thanks to Eric Meyer for his enthusiasm for our screenshot feature, and help! Small portions of this section have been borrowed from his `Firefox’s :screenshot command <https://meyerweb.com/eric/thoughts/2018/08/24/firefoxs-screenshot-command-2018/>`_ article.
-

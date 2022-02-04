@@ -12,4 +12,3 @@ You can connect the developer tools to Gecko-based runtimes like Firefox Desktop
 - :doc:`Firefox Desktop <debugging_firefox_desktop/index>`
 - Firefox for Android :doc:`over USB <../about_colon_debugging/index>`
 - :doc:`Thunderbird <thunderbird/index>`
-

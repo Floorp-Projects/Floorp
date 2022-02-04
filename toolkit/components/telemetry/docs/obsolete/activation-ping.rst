@@ -67,4 +67,3 @@ On Android, the uploader has a high probability of delivering the complete data
 for a given client but not a 100% probability. This was a conscious decision to
 keep the code simple. Even if we drop a ping, it will be resent on future startups
 until we have confirmation that it has been uploaded.
-

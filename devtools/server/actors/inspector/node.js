@@ -21,16 +21,17 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   [
+    "getShadowRootMode",
     "isAfterPseudoElement",
     "isAnonymous",
     "isBeforePseudoElement",
     "isDirectShadowHostChild",
+    "isFrameBlockedByCSP",
+    "isFrameWithChildTarget",
     "isMarkerPseudoElement",
     "isNativeAnonymous",
     "isShadowHost",
     "isShadowRoot",
-    "getShadowRootMode",
-    "isFrameWithChildTarget",
   ],
   "devtools/shared/layout/utils",
   true
@@ -239,6 +240,10 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
     if (this.isDocumentElement()) {
       form.isDocumentElement = true;
+    }
+
+    if (isFrameBlockedByCSP(this.rawNode)) {
+      form.numChildren = 0;
     }
 
     // Flag the node if a different walker is needed to retrieve its children (i.e. if

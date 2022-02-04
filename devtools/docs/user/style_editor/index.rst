@@ -144,4 +144,3 @@ Keyboard shortcuts
 ******************
 
  - :ref:`Source editor shortcuts <keyboard-shortcuts-style-editor>`
-

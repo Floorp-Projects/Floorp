@@ -234,6 +234,9 @@ add_task(async function test_install_valid() {
 add_task(
   {
     pref_set: [["xpinstall.signatures.dev-root", true]],
+    // `xpinstall.signatures.dev-root` is not taken into account on release
+    // builds because `MOZ_REQUIRE_SIGNING` is set to `true`.
+    skip_if: () => AppConstants.MOZ_REQUIRE_SIGNING,
   },
   async function test_install_valid_file_with_different_root_cert() {
     const TEST_CASES = [

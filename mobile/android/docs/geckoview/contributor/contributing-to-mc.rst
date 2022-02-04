@@ -53,7 +53,7 @@ are three levels of commit access that give increasing levels of access
 to the repositories.
 
 Level 1: Try/User access. You will need this level of access commit to
-the try server. 
+the try server.
 
 Level 2: General access. This will give you full commit
 access to any mercurial or SVN repository not requiring level 3 access.

@@ -71,6 +71,8 @@ RefPtr<GenericPromise> FlushAndUseFOGData();
 void TestTriggerMetrics(uint32_t processType,
                         const RefPtr<dom::Promise>& promise);
 
+void RecordPowerMetrics();
+
 }  // namespace glean
 }  // namespace mozilla
 

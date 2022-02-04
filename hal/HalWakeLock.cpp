@@ -6,6 +6,7 @@
 
 #include "Hal.h"
 #include "base/process_util.h"
+#include "mozilla/FOGIPC.h"
 #include "mozilla/HalWakeLock.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
@@ -199,6 +200,14 @@ void ModifyWakeLock(const nsAString& aTopic, hal::WakeLockControl aLockAdjust,
 
   WakeLockState oldState =
       ComputeWakeLockState(totalCount.numLocks, totalCount.numHidden);
+
+  if (ComputeWakeLockState(totalCount.numLocks + aLockAdjust,
+                           totalCount.numHidden + aHiddenAdjust) != oldState &&
+      (aTopic.Equals(u"video-playing"_ns) ||
+       aTopic.Equals(u"audio-playing"_ns))) {
+    glean::RecordPowerMetrics();
+  }
+
   bool processWasLocked = processCount.numLocks > 0;
 
   processCount.numLocks += aLockAdjust;
@@ -231,6 +240,13 @@ void GetWakeLockInfo(const nsAString& aTopic,
   if (sIsShuttingDown) {
     NS_WARNING(
         "You don't want to get wake lock information during xpcom-shutdown!");
+    *aWakeLockInfo = WakeLockInformation();
+    return;
+  }
+
+  if (!sLockTable) {
+    // This can happen during some gtests.
+    NS_WARNING("Attempting to get wake lock information before initialization");
     *aWakeLockInfo = WakeLockInformation();
     return;
   }

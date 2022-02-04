@@ -78,11 +78,14 @@ class AudioSink : private AudioStream::DataSource {
   nsresult InitializeAudioStream(const PlaybackParams& aParams);
 
   // Interface of AudioStream::DataSource.
-  // Called on the callback thread of cubeb.
-  UniquePtr<AudioStream::Chunk> PopFrames(uint32_t aFrames) override;
+  // Called on the callback thread of cubeb. Returns the number of frames that
+  // were available.
+  uint32_t PopFrames(AudioDataValue* aBuffer, uint32_t aFrames,
+                     bool aAudioThreadChanged) override;
   bool Ended() const override;
 
-  void CheckIsAudible(const AudioData* aData);
+  void CheckIsAudible(const Span<AudioDataValue>& aInterleaved,
+                      size_t aChannel);
 
   // The audio stream resource. Used on the task queue of MDSM only.
   RefPtr<AudioStream> mAudioStream;
@@ -106,23 +109,9 @@ class AudioSink : private AudioStream::DataSource {
   // Used on the task queue of MDSM only.
   bool mPlaying;
 
-  /*
-   * Members to implement AudioStream::DataSource.
-   * Used on the callback thread of cubeb.
-   */
-  // The AudioData at which AudioStream::DataSource is reading.
-  RefPtr<AudioData> mCurrentData;
-
-  // Monitor protecting access to mCursor, mWritten and mCurrentData.
-  // mCursor is created/destroyed on the cubeb thread, while we must also
-  // ensure that mWritten and mCursor::Available() get modified simultaneously.
-  // (written on cubeb thread, and read on MDSM task queue).
-  mutable Monitor mMonitor;
-  // Keep track of the read position of mCurrentData.
-  UniquePtr<AudioBufferCursor> mCursor;
-
-  // PCM frames written to the stream so far.
-  int64_t mWritten;
+  // PCM frames written to the stream so far. Written on the callback thread,
+  // read on the MDSM thread.
+  Atomic<int64_t> mWritten;
 
   // True if there is any error in processing audio data like overflow.
   Atomic<bool> mErrored;
@@ -130,7 +119,7 @@ class AudioSink : private AudioStream::DataSource {
   const RefPtr<AbstractThread> mOwnerThread;
 
   // Audio Processing objects and methods
-  void OnAudioPopped(const RefPtr<AudioData>& aSample);
+  void OnAudioPopped();
   void OnAudioPushed(const RefPtr<AudioData>& aSample);
   void NotifyAudioNeeded();
   // Drain the converter and add the output to the processed audio queue.
@@ -138,13 +127,12 @@ class AudioSink : private AudioStream::DataSource {
   uint32_t DrainConverter(uint32_t aMaxFrames = UINT32_MAX);
   already_AddRefed<AudioData> CreateAudioFromBuffer(
       AlignedAudioBuffer&& aBuffer, AudioData* aReference);
-  // Add data to the processsed queue, update mProcessedQueueLength and
-  // return the number of frames added.
+  // Add data to the processsed queue return the number of frames added.
   uint32_t PushProcessedAudio(AudioData* aData);
+  uint32_t AudioQueuedInRingBufferUs() const;
+  uint32_t SampleToFrame(uint32_t aSamples) const;
   UniquePtr<AudioConverter> mConverter;
-  MediaQueue<AudioData> mProcessedQueue;
-  // Length in microseconds of the ProcessedQueue
-  Atomic<uint64_t> mProcessedQueueLength;
+  UniquePtr<SPSCQueue<AudioDataValue>> mProcessedSPSCQueue;
   MediaEventListener mAudioQueueListener;
   MediaEventListener mAudioQueueFinishListener;
   MediaEventListener mProcessedQueueListener;
@@ -160,7 +148,10 @@ class AudioSink : private AudioStream::DataSource {
   AudibilityMonitor mAudibilityMonitor;
   bool mIsAudioDataAudible;
   MediaEventProducer<bool> mAudibleEvent;
+  // Only signed on the real-time audio thread.
+  MediaEventProducer<void> mAudioPopped;
 
+  Atomic<bool> mProcessedQueueFinished;
   MediaQueue<AudioData>& mAudioQueue;
 };
 

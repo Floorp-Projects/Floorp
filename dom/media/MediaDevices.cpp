@@ -17,6 +17,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/MediaManager.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "MediaTrackConstraints.h"
 #include "nsContentUtils.h"
 #include "nsINamed.h"
@@ -166,13 +167,15 @@ void MediaDevices::MaybeResumeDeviceExposure() {
   if (!window || !window->IsFullyActive()) {
     return;
   }
-  // Device list changes are not exposed to unfocused contexts because the
-  // timing information would allow fingerprinting for content to identify
-  // concurrent browsing, even when pages are in different containers.
-  BrowsingContext* bc = window->GetBrowsingContext();
-  if (!bc->IsActive() ||                  // not foreground tab
-      !bc->GetIsActiveBrowserWindow()) {  // browser window does not have focus
-    return;
+  if (!StaticPrefs::media_devices_unfocused_enabled()) {
+    // Device list changes are not exposed to unfocused contexts because the
+    // timing information would allow fingerprinting for content to identify
+    // concurrent browsing, even when pages are in different containers.
+    BrowsingContext* bc = window->GetBrowsingContext();
+    if (!bc->IsActive() ||  // background tab or browser window fully obscured
+        !bc->GetIsActiveBrowserWindow()) {  // browser window without focus
+      return;
+    }
   }
   MediaManager::Get()->GetPhysicalDevices()->Then(
       GetCurrentSerialEventTarget(), __func__,

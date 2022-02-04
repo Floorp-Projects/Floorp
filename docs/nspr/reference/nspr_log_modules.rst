@@ -34,12 +34,12 @@ Specify a ``moduleName`` that is associated with the ``name`` argument
 in a call to
 `:ref:`PR_NewLogModule` <http://www-archive.mozilla.org/projects/nspr/reference/html/prlog.html#25372>`__
 and a non-zero ``level`` value to enable logging for the named
-``moduleName``. 
+``moduleName``.
 
 Special log module names are provided for controlling NSPR's log service
 at execution time. These controls should be set in the
 :ref:`NSPR_LOG_MODULES` environment variable at execution time to affect
-NSPR's log service for your application. 
+NSPR's log service for your application.
 
 -  **all** The name ``all`` enables all log modules. To enable all log
    module calls to

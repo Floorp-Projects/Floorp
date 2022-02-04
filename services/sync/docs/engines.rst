@@ -125,7 +125,7 @@ WebExt-Storage
 
 webext-storage is implemented in Rust and lives in
 `application services <https://github.com/mozilla/application-services/tree/main/components/webext-storage>`_
-and is vendored into the `addons code <https://searchfox.org/mozilla-central/source/toolkit/components/extensions/storage/webext_storage_bridge>`_ - 
+and is vendored into the `addons code <https://searchfox.org/mozilla-central/source/toolkit/components/extensions/storage/webext_storage_bridge>`_ -
 note that this includes the storage *and* Sync code. The Sync engine itself
 is a shim in the sync directory.
 

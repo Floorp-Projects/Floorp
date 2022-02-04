@@ -7414,6 +7414,58 @@ contextual.services.quicksuggest:
       - main
 
 power:
+  cpu_time_per_process_type_ms:
+    bug_numbers:
+      - 1747138
+    description: >
+      CPU time used by each process type in ms.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    keyed: true
+    keys: &per_process_type_keys
+      - parent.active
+      - parent.active.playing-audio
+      - parent.active.playing-video
+      - parent.inactive
+      - parent.inactive.playing-audio
+      - parent.inactive.playing-video
+      - prealloc
+      - privilegedabout
+      - rdd
+      - socket
+      - web.background
+      - web.background-perceivable
+      - web.foreground
+      - extension
+      - gpu
+      - gmplugin
+      - utility
+
+  gpu_time_per_process_type_ms:
+    bug_numbers:
+      - 1747138
+    description: >
+      GPU time used by each process type in ms.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'gpu'
+    keyed: true
+    keys: *per_process_type_keys
+
   total_cpu_time_ms:
     bug_numbers:
       - 1736040

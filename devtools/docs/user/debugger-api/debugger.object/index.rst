@@ -311,4 +311,3 @@ Watermark:
  sha256:7ae16a834e0883a95b4e0d227193293f6b6e4e4dd812c2570372a39c4c04897b
 Changeset:
   `5572465c08a9+ <https://hg.mozilla.org/mozilla-central/rev/5572465c08a9>`_
-

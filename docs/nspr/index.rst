@@ -17,6 +17,8 @@ Documentation
    in the NSPR API.
 :ref:`NSPR build instructions`
    How to checkout and build from source.
+:ref:`NSPR listing`
+   All NSPR pages
 
 .. _Getting_NSPR:
 
@@ -49,7 +51,7 @@ your platform:
 Community
 ---------
 
--  View Mozilla forums...
+View Mozilla forums:
 
 -  `Mailing list <https://lists.mozilla.org/listinfo/dev-tech-nspr>`__
 -  `Newsgroup <http://groups.google.com/group/mozilla.dev.tech.nspr>`__
@@ -61,4 +63,4 @@ Community
 Related Topics
 --------------
 
--  :ref:`Necko`, :ref:`NSS`
+-  :ref:`Networking`, :ref:`Network Security Services (NSS)`

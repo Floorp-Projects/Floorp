@@ -308,6 +308,8 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
         host: marionette_host.into(),
         port: marionette_port,
         websocket_port,
+        allow_hosts: allow_hosts.clone(),
+        allow_origins: allow_origins.clone(),
         jsdebugger: args.is_present("jsdebugger"),
         android_storage,
     };

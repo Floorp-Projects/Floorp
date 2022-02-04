@@ -40,7 +40,7 @@ HTML pane
 
 The Inspector is split into two or three sections, depending on your settings. You can toggle the 3-pane view of the Inspector. The following image shows the 2-pane layout:
 
-.. image: inspector_2pane.png
+.. image:: inspector_2pane.png
   :alt: These are the tasty new HTML and CSS panes in Firefox 57.
   :class: border
 
@@ -82,7 +82,7 @@ Layout view
 
 The Layout view displays the box model of the page. If the page includes any sections using either the Flexbox display model or CSS Grids, this view shows the Flexbox or Grid settings used on the page.
 
-.. image: inspector_layout.png
+.. image:: inspector_layout.png
   :class: border
 
 To learn more about the Layout view, see :doc:`Examine and edit the box model <../how_to/examine_and_edit_the_box_model/index>`. Note that before Firefox 50, the box model view did not appear in the "Layout view" tab, but had its own tab.
@@ -117,7 +117,7 @@ Compatibility view
 
 Starting with Firefox Developer Edition version 77, the Compatibility view shows CSS compatibility issues, if any, for properties applied to the selected element, and for the current page as a whole. It shows icons for the browsers that *do* support the properties, and notes properties that are experimental or deprecated.
 
-.. image: compat_view.png
+.. image:: compat_view.png
   :alt: Screenshot of the Compatibility view
   :class: center
 
@@ -154,7 +154,7 @@ Animations view
 
 The Animations view gives you details of any animations applied to the selected element, and a controller to pause them:
 
-.. image: animation_detail.png
+.. image:: animation_detail.png
   :alt: This is the Animations pane in the Firefox 57 Inspector.
   :class: border
 
