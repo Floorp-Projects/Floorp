@@ -69,6 +69,7 @@ fn generate_bindings() {
     let mut builder = Builder::default()
         .enable_cxx_namespaces()
         .with_codegen_config(CodegenConfig::TYPES | CodegenConfig::VARS | CodegenConfig::FUNCTIONS)
+        .disable_untagged_union()
         .size_t_is_usize(true);
 
     for dir in SEARCH_PATHS.iter() {
