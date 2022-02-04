@@ -510,10 +510,21 @@ struct HttpActivity
   bool endToEndSSL;
 };
 
+struct HttpConnectionActivity
+{
+  nsCString connInfoKey;
+  nsCString host;
+  int32_t port;
+  bool ssl;
+  bool hasECH;
+  bool isHttp3;
+};
+
 union HttpActivityArgs
 {
   uint64_t;
   HttpActivity;
+  HttpConnectionActivity;
 };
 
 struct TransactionObserverResult
