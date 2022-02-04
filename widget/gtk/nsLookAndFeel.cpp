@@ -18,6 +18,7 @@
 #include <pango/pango-fontmap.h>
 #include <fontconfig/fontconfig.h>
 
+#include "GRefPtr.h"
 #include "nsGtkUtils.h"
 #include "gfxPlatformGtk.h"
 #include "mozilla/FontPropertyTypes.h"
