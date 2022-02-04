@@ -14,13 +14,24 @@ from voluptuous import All, Any, Optional, Range, Required
 
 from .release_promotion import read_version_file
 
+
+def get_defaults(repo_root):
+    return {
+        "pull_request_number": None,
+        "release_type": "",
+        "shipping_phase": None,
+        "next_version": "",
+        "version": "",
+    }
+
+
 extend_parameters_schema({
     Required("pull_request_number"): Any(All(int, Range(min=1)), None),
     Required("release_type"): text_type,
     Optional("shipping_phase"): Any('build', 'ship', None),
     Required("version"): text_type,
     Required("next_version"): Any(None, text_type),
-})
+}, defaults_fn=get_defaults)
 
 
 def get_decision_parameters(graph_config, parameters):
