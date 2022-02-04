@@ -557,11 +557,14 @@ void RemoteAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
   aText = (wchar_t*)result;
 }
 
-void RemoteAccessible::GetTextBeforeOffset(int32_t aOffset,
-                                           AccessibleTextBoundary aBoundaryType,
-                                           nsString& aText,
-                                           int32_t* aStartOffset,
-                                           int32_t* aEndOffset) {
+void RemoteAccessible::TextBeforeOffset(int32_t aOffset,
+                                        AccessibleTextBoundary aBoundaryType,
+                                        int32_t* aStartOffset,
+                                        int32_t* aEndOffset, nsAString& aText) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::TextBeforeOffset(
+        aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
+  }
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return;
@@ -581,11 +584,14 @@ void RemoteAccessible::GetTextBeforeOffset(int32_t aOffset,
   aText = (wchar_t*)result;
 }
 
-void RemoteAccessible::GetTextAfterOffset(int32_t aOffset,
-                                          AccessibleTextBoundary aBoundaryType,
-                                          nsString& aText,
-                                          int32_t* aStartOffset,
-                                          int32_t* aEndOffset) {
+void RemoteAccessible::TextAfterOffset(int32_t aOffset,
+                                       AccessibleTextBoundary aBoundaryType,
+                                       int32_t* aStartOffset,
+                                       int32_t* aEndOffset, nsAString& aText) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::TextAfterOffset(
+        aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
+  }
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return;

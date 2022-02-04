@@ -79,15 +79,8 @@ xpcAccessibleHyperText::GetTextBeforeOffset(
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    IntlLocal()->TextBeforeOffset(aOffset, aBoundaryType, aStartOffset,
-                                  aEndOffset, aText);
-  } else {
-    nsString text;
-    mIntl->AsRemote()->GetTextBeforeOffset(aOffset, aBoundaryType, text,
-                                           aStartOffset, aEndOffset);
-    aText = text;
-  }
+  Intl()->TextBeforeOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset,
+                           aText);
   return NS_OK;
 }
 
@@ -118,17 +111,8 @@ xpcAccessibleHyperText::GetTextAfterOffset(int32_t aOffset,
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
 
-  if (!mIntl) return NS_ERROR_FAILURE;
-
-  if (mIntl->IsLocal()) {
-    IntlLocal()->TextAfterOffset(aOffset, aBoundaryType, aStartOffset,
-                                 aEndOffset, aText);
-  } else {
-    nsString text;
-    mIntl->AsRemote()->GetTextAfterOffset(aOffset, aBoundaryType, text,
-                                          aStartOffset, aEndOffset);
-    aText = text;
-  }
+  Intl()->TextAfterOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset,
+                          aText);
   return NS_OK;
 }
 
