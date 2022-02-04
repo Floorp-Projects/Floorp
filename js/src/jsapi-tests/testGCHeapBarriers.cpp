@@ -500,7 +500,8 @@ bool CallDuringIncrementalGC(uint32_t mode, F&& f) {
 
   JS_SetGCZeal(cx, mode, 0);
   JS::PrepareZoneForGC(cx, js::GetContextZone(cx));
-  JS::StartIncrementalGC(cx, JS::GCOptions(), JS::GCReason::DEBUG_GC, BudgetMS);
+  js::SliceBudget budget{TimeBudget(BudgetMS)};
+  JS::StartIncrementalGC(cx, JS::GCOptions(), JS::GCReason::DEBUG_GC, budget);
   CHECK(JS::IsIncrementalGCInProgress(cx));
 
   CHECK(f());
