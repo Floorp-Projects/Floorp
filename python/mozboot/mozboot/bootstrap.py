@@ -199,7 +199,7 @@ class Bootstrapper(object):
         elif sys.platform.startswith("darwin"):
             # TODO Support Darwin platforms that aren't OS X.
             osx_version = platform.mac_ver()[0]
-            if platform.machine() == "arm64":
+            if platform.machine() == "arm64" or _macos_is_running_under_rosetta():
                 cls = OSXBootstrapperLight
             else:
                 cls = OSXBootstrapper
@@ -296,15 +296,7 @@ class Bootstrapper(object):
         ):
             # If running on arm64 mac, check whether we're running under
             # Rosetta and advise against it.
-            proc = subprocess.run(
-                ["sysctl", "-n", "sysctl.proc_translated"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
-            )
-            if (
-                proc.returncode == 0
-                and proc.stdout.decode("ascii", "replace").strip() == "1"
-            ):
+            if _macos_is_running_under_rosetta():
                 print(
                     "Python is being emulated under Rosetta. Please use a native "
                     "Python instead. If you still really want to go ahead, set "
@@ -668,3 +660,14 @@ def _warn_if_risky_revision(path: Path):
     repo = get_repository_object(path)
     if (time.time() - repo.get_commit_time()) >= NUM_SECONDS_IN_MONTH:
         print(OLD_REVISION_WARNING)
+
+
+def _macos_is_running_under_rosetta():
+    proc = subprocess.run(
+        ["sysctl", "-n", "sysctl.proc_translated"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    return (
+        proc.returncode == 0 and proc.stdout.decode("ascii", "replace").strip() == "1"
+    )
