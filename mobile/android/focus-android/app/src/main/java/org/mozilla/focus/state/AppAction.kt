@@ -82,7 +82,12 @@ sealed class AppAction : Action {
     data class AutoplayChange(val value: Boolean) : AppAction()
 
     /**
-     * State of secret settings state has changed.
+     * State of secret settings has changed.
      */
     data class SecretSettingsStateChange(val enabled: Boolean) : AppAction()
+
+    /**
+     * State of erase tabs CFR has changed
+     */
+    data class ShowEraseTabsCfrChange(val value: Boolean) : AppAction()
 }

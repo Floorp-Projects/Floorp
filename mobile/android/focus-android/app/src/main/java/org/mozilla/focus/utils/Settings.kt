@@ -19,6 +19,8 @@ import org.mozilla.focus.searchsuggestions.SearchSuggestionsPreferences
 import org.mozilla.focus.settings.permissions.AutoplayOption
 import org.mozilla.focus.settings.permissions.getValueByPrefKey
 
+const val ERASE_CFR_LIMIT = 3
+
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
  * This class is designed to have a lot of (simple) functions
@@ -369,6 +371,21 @@ class Settings(
         getPreferenceKey(R.string.pref_key_default_theme),
         false
     )
+
+    // Store how many tabs were opened until now, but the max value which can be stored is 4
+    // since this values is used to decide if we should display the erase cfr
+    var numberOfTabsOpened: Int
+        get() = preferences.getInt(
+            context.getString(R.string.number_of_opened_tabs),
+            0
+        )
+        set(value) {
+            if (value <= ERASE_CFR_LIMIT + 1) {
+                preferences.edit()
+                    .putInt(context.getString(R.string.number_of_opened_tabs), value)
+                    .apply()
+            }
+        }
 
     var shouldUseNimbusPreview: Boolean
         get() = preferences.getBoolean(getPreferenceKey(R.string.pref_key_use_nimbus_preview), true)

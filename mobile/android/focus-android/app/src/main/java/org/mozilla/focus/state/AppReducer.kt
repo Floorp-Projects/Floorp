@@ -34,6 +34,7 @@ object AppReducer : Reducer<AppState, AppAction> {
                 state,
                 action
             )
+            is AppAction.ShowEraseTabsCfrChange -> showEraseTabsCfrChanged(state, action)
         }
     }
 }
@@ -162,6 +163,13 @@ private fun autoplayRulesChanged(state: AppState, action: AppAction.AutoplayChan
  */
 private fun secretSettingsStateChanged(state: AppState, action: AppAction.SecretSettingsStateChange): AppState {
     return state.copy(secretSettingsEnabled = action.enabled)
+}
+
+/**
+ * The state of erase tabs CFR changed
+ */
+private fun showEraseTabsCfrChanged(state: AppState, action: AppAction.ShowEraseTabsCfrChange): AppState {
+    return state.copy(showEraseTabsCfr = action.value)
 }
 
 @Suppress("ComplexMethod")

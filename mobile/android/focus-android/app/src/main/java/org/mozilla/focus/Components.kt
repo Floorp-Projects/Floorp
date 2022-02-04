@@ -50,6 +50,7 @@ import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.browser.BlockedTrackersMiddleware
+import org.mozilla.focus.cfr.CfrMiddleware
 import org.mozilla.focus.components.EngineProvider
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.AppContentInterceptor
@@ -70,6 +71,7 @@ import org.mozilla.focus.tabs.MergeTabsMiddleware
 import org.mozilla.focus.telemetry.GleanMetricsService
 import org.mozilla.focus.telemetry.TelemetryMiddleware
 import org.mozilla.focus.topsites.DefaultTopSitesStorage
+import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.IntentUtils
 import org.mozilla.focus.utils.Settings
 import java.util.Locale
@@ -130,6 +132,11 @@ class Components(
     }
 
     val store by lazy {
+        val cfrMiddleware = if (Features.SHOW_ERASE_CFR) {
+            listOf(CfrMiddleware(context.components))
+        } else {
+            listOf()
+        }
         BrowserStore(
             middleware = listOf(
                 PrivateNotificationMiddleware(context),
@@ -146,8 +153,8 @@ class Components(
                 AdsTelemetryMiddleware(adsTelemetry),
                 BlockedTrackersMiddleware(context),
                 MergeTabsMiddleware(context),
-                RecordingDevicesMiddleware(context)
-            ) + EngineMiddleware.create(engine)
+                RecordingDevicesMiddleware(context),
+            ) + EngineMiddleware.create(engine) + cfrMiddleware
         ).apply {
             MediaSessionFeature(context, MediaSessionService::class.java, this).start()
         }

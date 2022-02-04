@@ -5,10 +5,12 @@
 package org.mozilla.focus.browser.integration
 
 import android.graphics.Color
+import android.widget.LinearLayout
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.children
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
@@ -30,13 +32,17 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
+import org.mozilla.focus.compose.CFRPopup
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.menu.browser.CustomTabMenu
+import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.HardwareUtils
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 class BrowserToolbarIntegration(
     private val store: BrowserStore,
     private val toolbar: BrowserToolbar,
@@ -59,6 +65,8 @@ class BrowserToolbarIntegration(
 
     @VisibleForTesting
     internal var securityIndicatorScope: CoroutineScope? = null
+    @VisibleForTesting
+    internal var eraseTabsCfrScope: CoroutineScope? = null
     private var tabsCounterScope: CoroutineScope? = null
     private var customTabsFeature: CustomTabsToolbarFeature? = null
     private var navigationButtonsIntegration: NavigationButtonsIntegration? = null
@@ -204,7 +212,37 @@ class BrowserToolbarIntegration(
         observerSecurityIndicatorChanges()
         if (store.state.findCustomTabOrSelectedTab(customTabId)?.isCustomTab() == false) {
             setBrowserActionButtons()
+            if (Features.SHOW_ERASE_CFR) {
+                observeEraseCfr()
+            }
         }
+    }
+
+    @VisibleForTesting
+    internal fun observeEraseCfr() {
+        eraseTabsCfrScope = fragment.components?.appStore?.flowScoped { flow ->
+            flow.mapNotNull { state -> state.showEraseTabsCfr }
+                .collect { showEraseCfr ->
+                    if (showEraseCfr) {
+                        val eraseActionView =
+                            toolbar.findViewById<LinearLayout>(R.id.mozac_browser_toolbar_navigation_actions)
+                                .children
+                                .last()
+                        CFRPopup(
+                            container = fragment.requireView(),
+                            text = fragment.getString(R.string.cfr_for_toolbar_delete_icon),
+                            anchor = eraseActionView,
+                            onDismiss = ::onDismissEraseTabsCfr
+                        ).apply {
+                            show()
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun onDismissEraseTabsCfr() {
+        fragment.components?.appStore?.dispatch(AppAction.ShowEraseTabsCfrChange(false))
     }
 
     @VisibleForTesting
@@ -236,6 +274,7 @@ class BrowserToolbarIntegration(
         stopObserverSecurityIndicatorChanges()
         toolbar.removeBrowserAction(tabsAction)
         tabsCounterScope?.cancel()
+        eraseTabsCfrScope?.cancel()
     }
 
     @VisibleForTesting

@@ -86,4 +86,7 @@
     <string name="pref_key_light_theme" translatable="false">pref_key_light_theme</string>
     <string name="pref_key_dark_theme" translatable="false">pref_key_dark_theme</string>
     <string name="pref_key_default_theme" translatable="false">pref_key_default_theme</string>
+
+    <!-- Opened tabs counter used to trigger erase tabs CFR -->
+    <string name="number_of_opened_tabs" translatable="false">number_of_opened_tabs</string>
 </resources>
