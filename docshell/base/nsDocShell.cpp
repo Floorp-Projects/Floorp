@@ -8879,7 +8879,20 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
            "%s",
            this, mLoadingEntry->mInfo.GetURI()->GetSpecOrDefault().get()));
       bool hadActiveEntry = !!mActiveEntry;
+
+      nsCOMPtr<nsILayoutHistoryState> currentLayoutHistoryState;
+      if (mActiveEntry) {
+        currentLayoutHistoryState = mActiveEntry->GetLayoutHistoryState();
+      }
       mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
+      if (currentLayoutHistoryState) {
+        // Restore the existing nsILayoutHistoryState object, since it is
+        // possibly being used by the layout. When doing a new load, the
+        // shared state is copied from the existing active entry, so this
+        // special case is needed only with the history loads.
+        mActiveEntry->SetLayoutHistoryState(currentLayoutHistoryState);
+      }
+
       // We're passing in mCurrentURI, which could be null. SessionHistoryCommit
       // does require a non-null uri if this is for a refresh load of the same
       // URI, but in that case mCurrentURI won't be null here.
