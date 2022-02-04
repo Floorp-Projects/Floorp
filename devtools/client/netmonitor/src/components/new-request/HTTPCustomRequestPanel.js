@@ -132,10 +132,12 @@ class HTTPCustomRequestPanel extends Component {
     };
 
     this.handleInputChange = this.handleInputChange.bind(this);
+    this.onUpdateQueryParams = this.onUpdateQueryParams.bind(this);
     this.handleChangeURL = this.handleChangeURL.bind(this);
     this.updateInputMapItem = this.updateInputMapItem.bind(this);
     this.addInputMapItem = this.addInputMapItem.bind(this);
     this.deleteInputMapItem = this.deleteInputMapItem.bind(this);
+    this.checkInputMapItem = this.checkInputMapItem.bind(this);
     this.handleClear = this.handleClear.bind(this);
   }
 
@@ -199,6 +201,42 @@ class HTTPCustomRequestPanel extends Component {
   deleteInputMapItem(stateName, index) {
     this.setState({
       [stateName]: this.state[stateName].filter((_, i) => i !== index),
+    });
+  }
+
+  checkInputMapItem(stateName, index, checked, cb) {
+    this.setState(
+      {
+        [stateName]: this.state[stateName].map((item, i) => {
+          if (index === i) {
+            return {
+              ...item,
+              checked: checked,
+            };
+          }
+          return item;
+        }),
+      },
+      cb
+    );
+  }
+
+  onUpdateQueryParams() {
+    const { urlQueryParams, url } = this.state;
+    let queryString = "";
+    for (const { name, value, checked } of urlQueryParams) {
+      if (checked) {
+        queryString += `${name}=${value}&`;
+      }
+    }
+
+    let finalURL = url.split("?")[0];
+
+    if (queryString.length > 0) {
+      finalURL += `?${queryString.substring(0, queryString.length - 1)}`;
+    }
+    this.setState({
+      url: finalURL,
     });
   }
 
@@ -294,6 +332,14 @@ class HTTPCustomRequestPanel extends Component {
           ),
           InputMap({
             list: urlQueryParams,
+            onChecked: (index, checked) => {
+              this.checkInputMapItem(
+                "urlQueryParams",
+                index,
+                checked,
+                this.onUpdateQueryParams
+              );
+            },
           })
         ),
         div(
@@ -318,6 +364,9 @@ class HTTPCustomRequestPanel extends Component {
             onAdd: (name, value) =>
               this.addInputMapItem("headers", name, value),
             onDelete: index => this.deleteInputMapItem("headers", index),
+            onChecked: (index, checked) => {
+              this.checkInputMapItem("headers", index, checked);
+            },
           })
         ),
         div(
@@ -360,7 +409,13 @@ class HTTPCustomRequestPanel extends Component {
                 className: "devtools-button",
                 id: "http-custom-request-send-button",
                 disabled: !this.state.url,
-                onClick: () => sendCustomRequest(this.state),
+                onClick: () =>
+                  sendCustomRequest({
+                    ...this.state,
+                    headers: this.state.headers.filter(
+                      ({ checked }) => checked
+                    ),
+                  }),
               },
               CUSTOM_SEND
             )
