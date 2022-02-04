@@ -957,7 +957,7 @@ void nsHttpChannel::SpeculativeConnect() {
       mCaps & (NS_HTTP_DISALLOW_SPDY | NS_HTTP_TRR_MODE_MASK |
                NS_HTTP_DISABLE_IPV4 | NS_HTTP_DISABLE_IPV6 |
                NS_HTTP_DISALLOW_HTTP3),
-      gHttpHandler->UseHTTPSRRForSpeculativeConnection());
+      gHttpHandler->EchConfigEnabled());
 }
 
 void nsHttpChannel::DoNotifyListenerCleanup() {
@@ -6307,9 +6307,8 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
       mDNSBlockingThenable = mDNSBlockingPromise.Ensure(__func__);
     }
 
-    if ((gHttpHandler->UseHTTPSRRAsAltSvcEnabled() ||
-         gHttpHandler->UseHTTPSRRForSpeculativeConnection()) &&
-        !mHTTPSSVCRecord && !(mCaps & NS_HTTP_DISALLOW_HTTPS_RR)) {
+    if (gHttpHandler->UseHTTPSRRAsAltSvcEnabled() && !mHTTPSSVCRecord &&
+        !(mCaps & NS_HTTP_DISALLOW_HTTPS_RR)) {
       MOZ_ASSERT(!mHTTPSSVCRecord);
 
       OriginAttributes originAttributes;
