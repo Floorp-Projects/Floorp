@@ -1984,6 +1984,7 @@ name = "gkrust"
 version = "0.1.0"
 dependencies = [
  "gkrust-shared",
+ "lmdb-rkv-sys",
  "mozglue-static",
  "mozilla-central-workspace-hack",
  "stylo_tests",
@@ -1999,6 +2000,7 @@ dependencies = [
  "gecko-fuzz-targets",
  "gkrust-shared",
  "l10nregistry-ffi-gtest",
+ "lmdb-rkv-sys",
  "moz_task-gtest",
  "mozglue-static",
  "mp4parse-gtest",
