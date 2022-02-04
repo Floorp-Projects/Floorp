@@ -2212,10 +2212,11 @@ nsresult nsNavHistory::QueryToSelectClause(
     clause.Condition("AUTOCOMPLETE_MATCH(")
         .Param(":search_string")
         .Str(", h.url, page_title, tags, ")
-        .Str(nsPrintfCString("1, 1, 1, 1, %d, %d)",
+        .Str(nsPrintfCString("1, 1, 1, 1, %d, %d",
                              mozIPlacesAutoComplete::MATCH_ANYWHERE_UNMODIFIED,
                              searchBehavior)
-                 .get());
+                 .get())
+        .Str(", NULL)");
     // Serching by terms implicitly exclude queries.
     excludeQueries = true;
   }
