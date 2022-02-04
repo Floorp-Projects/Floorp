@@ -250,7 +250,7 @@ ia2Accessible::get_groupPosition(long* aGroupLevel, long* aSimilarItemsInGroup,
   *aPositionInGroup = 0;
 
   Accessible* acc = Acc();
-  if (acc) {
+  if (!acc) {
     return CO_E_OBJNOTCONNECTED;
   }
 

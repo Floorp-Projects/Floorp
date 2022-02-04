@@ -487,6 +487,7 @@ class FxAccountsDevice {
     try {
       await currentState.updateUserAccountData({
         device: null,
+        encryptedSendTabKeys: null,
       });
     } catch (error) {
       await this._logErrorAndResetDeviceRegistrationVersion(
@@ -522,6 +523,7 @@ class FxAccountsDevice {
             id: deviceId,
             registrationVersion: null,
           },
+          encryptedSendTabKeys: null,
         });
         return deviceId;
       }
@@ -553,6 +555,7 @@ class FxAccountsDevice {
     try {
       await currentState.updateUserAccountData({
         device: null,
+        encryptedSendTabKeys: null,
       });
     } catch (secondError) {
       log.error(

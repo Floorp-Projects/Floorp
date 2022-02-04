@@ -49,11 +49,31 @@ ef gh</pre>
         [0, 5, "ab cd\n", 0, 6],
         [6, 11, "ef gh", 6, 11],
       ]);
+      testTextBeforeOffset(acc, BOUNDARY_LINE_START, [
+        [0, 5, "", 0, 0],
+        [6, 11, "ab cd\n", 0, 6],
+      ]);
+      testTextAfterOffset(acc, BOUNDARY_LINE_START, [
+        [0, 5, "ef gh", 6, 11],
+        [6, 11, "", 11, 11],
+      ]);
       testTextAtOffset(acc, BOUNDARY_WORD_START, [
         [0, 2, "ab ", 0, 3],
         [3, 5, "cd\n", 3, 6],
         [6, 8, "ef ", 6, 9],
         [9, 11, "gh", 9, 11],
+      ]);
+      testTextBeforeOffset(acc, BOUNDARY_WORD_START, [
+        [0, 2, "", 0, 0],
+        [3, 5, "ab ", 0, 3],
+        [6, 8, "cd\n", 3, 6],
+        [9, 11, "ef ", 6, 9],
+      ]);
+      testTextAfterOffset(acc, BOUNDARY_WORD_START, [
+        [0, 2, "cd\n", 3, 6],
+        [3, 5, "ef ", 6, 9],
+        [6, 8, "gh", 9, 11],
+        [9, 11, "", 11, 11],
       ]);
     }
     const linksStartEnd = findAccessibleChildByID(docAcc, "linksStartEnd");

@@ -200,13 +200,18 @@ void RemoteAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
   aText = std::move(text);
 }
 
-void RemoteAccessible::GetTextAfterOffset(int32_t aOffset,
-                                          AccessibleTextBoundary aBoundaryType,
-                                          nsString& aText,
-                                          int32_t* aStartOffset,
-                                          int32_t* aEndOffset) {
-  Unused << mDoc->SendGetTextAfterOffset(mID, aOffset, aBoundaryType, &aText,
+void RemoteAccessible::TextAfterOffset(int32_t aOffset,
+                                       AccessibleTextBoundary aBoundaryType,
+                                       int32_t* aStartOffset,
+                                       int32_t* aEndOffset, nsAString& aText) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::TextAfterOffset(
+        aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
+  }
+  nsString text;
+  Unused << mDoc->SendGetTextAfterOffset(mID, aOffset, aBoundaryType, &text,
                                          aStartOffset, aEndOffset);
+  aText = std::move(text);
 }
 
 void RemoteAccessible::TextAtOffset(int32_t aOffset,
@@ -223,13 +228,18 @@ void RemoteAccessible::TextAtOffset(int32_t aOffset,
   aText = std::move(text);
 }
 
-void RemoteAccessible::GetTextBeforeOffset(int32_t aOffset,
-                                           AccessibleTextBoundary aBoundaryType,
-                                           nsString& aText,
-                                           int32_t* aStartOffset,
-                                           int32_t* aEndOffset) {
-  Unused << mDoc->SendGetTextBeforeOffset(mID, aOffset, aBoundaryType, &aText,
+void RemoteAccessible::TextBeforeOffset(int32_t aOffset,
+                                        AccessibleTextBoundary aBoundaryType,
+                                        int32_t* aStartOffset,
+                                        int32_t* aEndOffset, nsAString& aText) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::TextBeforeOffset(
+        aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
+  }
+  nsString text;
+  Unused << mDoc->SendGetTextBeforeOffset(mID, aOffset, aBoundaryType, &text,
                                           aStartOffset, aEndOffset);
+  aText = std::move(text);
 }
 
 char16_t RemoteAccessible::CharAt(int32_t aOffset) {
