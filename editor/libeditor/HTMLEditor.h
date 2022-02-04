@@ -1366,9 +1366,12 @@ class HTMLEditor final : public EditorBase,
       nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       EditSubAction aEditSubAction,
       CollectNonEditableNodes aCollectNonEditableNodes) {
-    if (NS_WARN_IF(!aPointInOneHardLine.IsSet())) {
+    if (MOZ_UNLIKELY(
+            NS_WARN_IF(!aPointInOneHardLine.IsSet()) ||
+            NS_WARN_IF(aPointInOneHardLine.IsInNativeAnonymousSubtree()))) {
       return NS_ERROR_INVALID_ARG;
     }
+
     RefPtr<nsRange> oneLineRange = CreateRangeExtendedToHardLineStartAndEnd(
         aPointInOneHardLine, aPointInOneHardLine, aEditSubAction);
     if (!oneLineRange) {
