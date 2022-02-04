@@ -970,10 +970,21 @@ nsresult HttpProxyResponseToErrorCode(uint32_t aStatusCode) {
   return rv;
 }
 
-SupportedAlpnType IsAlpnSupported(const nsACString& aAlpn) {
+SupportedAlpnRank H3VersionToRank(const nsACString& aVersion) {
+  for (uint32_t i = 0; i < kHttp3VersionCount; i++) {
+    if (aVersion.Equals(kHttp3Versions[i])) {
+      return static_cast<SupportedAlpnRank>(
+          static_cast<uint32_t>(SupportedAlpnRank::HTTP_3_DRAFT_29) + i);
+    }
+  }
+
+  return SupportedAlpnRank::NOT_SUPPORTED;
+}
+
+SupportedAlpnRank IsAlpnSupported(const nsACString& aAlpn) {
   if (StaticPrefs::network_http_http3_enable() &&
       gHttpHandler->IsHttp3VersionSupported(aAlpn)) {
-    return SupportedAlpnType::HTTP_3;
+    return H3VersionToRank(aAlpn);
   }
 
   if (gHttpHandler->IsSpdyEnabled()) {
@@ -981,15 +992,15 @@ SupportedAlpnType IsAlpnSupported(const nsACString& aAlpn) {
     SpdyInformation* spdyInfo = gHttpHandler->SpdyInfo();
     if (NS_SUCCEEDED(spdyInfo->GetNPNIndex(aAlpn, &spdyIndex)) &&
         spdyInfo->ProtocolEnabled(spdyIndex)) {
-      return SupportedAlpnType::HTTP_2;
+      return SupportedAlpnRank::HTTP_2;
     }
   }
 
   if (aAlpn.LowerCaseEqualsASCII("http/1.1")) {
-    return SupportedAlpnType::HTTP_1_1;
+    return SupportedAlpnRank::HTTP_1_1;
   }
 
-  return SupportedAlpnType::NOT_SUPPORTED;
+  return SupportedAlpnRank::NOT_SUPPORTED;
 }
 
 bool SecurityErrorToBeHandledByTransaction(nsresult aReason) {
