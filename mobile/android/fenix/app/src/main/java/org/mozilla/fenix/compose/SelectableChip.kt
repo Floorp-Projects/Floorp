@@ -7,7 +7,6 @@ package org.mozilla.fenix.compose
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -25,7 +24,6 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -41,27 +39,27 @@ fun SelectableChip(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val backgroundColor = when (isSystemInDarkTheme()) {
-        true -> if (isSelected) PhotonColors.Violet50 else PhotonColors.DarkGrey50
-        false -> if (isSelected) PhotonColors.Ink20 else PhotonColors.LightGrey40
-    }
-
     Box(
         modifier = Modifier
             .selectable(isSelected) { onClick() }
             .clip(MaterialTheme.shapes.small)
-            .background(backgroundColor)
-            .padding(16.dp, 10.dp)
+            .background(
+                color = if (isSelected) {
+                    FirefoxTheme.colors.actionPrimary
+                } else {
+                    FirefoxTheme.colors.actionTertiary
+                }
+            )
+            .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
-        val contentColor = when {
-            isSystemInDarkTheme() || isSelected -> PhotonColors.LightGrey10
-            else -> PhotonColors.DarkGrey90
-        }
-
         Text(
             text = text.capitalize(Locale.current),
             style = TextStyle(fontSize = 14.sp),
-            color = contentColor
+            color = if (isSelected) {
+                FirefoxTheme.colors.textActionPrimary
+            } else {
+                FirefoxTheme.colors.textActionTertiary
+            }
         )
     }
 }
@@ -71,10 +69,12 @@ fun SelectableChip(
 private fun SelectableChipDarkThemePreview() {
     FirefoxTheme {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(FirefoxTheme.colors.layer1),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            SelectableChip("Chirp", false) { }
+            SelectableChip(text = "Chirp", isSelected = false) { }
             SelectableChip(text = "Chirp", isSelected = true) { }
         }
     }
@@ -87,10 +87,10 @@ private fun SelectableChipLightThemePreview() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(FirefoxTheme.colors.layer2),
+                .background(FirefoxTheme.colors.layer1),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            SelectableChip("Chirp", false) { }
+            SelectableChip(text = "Chirp", isSelected = false) { }
             SelectableChip(text = "Chirp", isSelected = true) { }
         }
     }
