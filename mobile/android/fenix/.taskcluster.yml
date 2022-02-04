@@ -8,7 +8,7 @@ tasks:
     - $let:
           taskgraph:
               branch: taskgraph
-              revision: d85f4e4213706ec7737c7257f681977fdf20eb60
+              revision: b6890b6736403f053b731cbd4aabe43819a14acf
           trustDomain: mobile
       in:
           $let:
