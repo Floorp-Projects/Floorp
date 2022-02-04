@@ -2,14 +2,6 @@
 
 // This file contains all the code that is common to all integer gemm intrinsics' test scripts.
 
-// Test if running on x86/x86-64 hardware and without any simulator
-export function nativeX86Shared() {
-  let conf = getBuildConfiguration();
-  if ((conf.x64 || conf.x86) && !conf.simulator)
-      return true;
-  return false;
-}
-
 // The test setup as string that is common to all integer gemm tests
 export const COMMON_TEST_SETUP_AS_STRING = `
 const libdir=${JSON.stringify(libdir)}; load(libdir + "wasm.js");
