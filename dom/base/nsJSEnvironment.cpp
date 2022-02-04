@@ -1026,15 +1026,13 @@ void nsJSContext::SetLowMemoryState(bool aState) {
   JS::SetLowMemoryState(cx, aState);
 }
 
-// static
-void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
-                                    IsIncremental aIncremental,
-                                    IsShrinking aShrinking,
-                                    int64_t aSliceMillis) {
+static void GarbageCollectImpl(JS::GCReason aReason,
+                               nsJSContext::IsShrinking aShrinking,
+                               bool aIncremental, int64_t aSliceMillis) {
   AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(
       "nsJSContext::GarbageCollectNow", GCCC, JS::ExplainGCReason(aReason));
 
-  MOZ_ASSERT_IF(aSliceMillis, aIncremental == IncrementalGC);
+  MOZ_ASSERT_IF(aSliceMillis, aIncremental);
 
   // We use danger::GetJSContext() since AutoJSAPI will assert if the current
   // thread's context is null (such as during shutdown).
@@ -1044,18 +1042,18 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
     return;
   }
 
-  if (sScheduler.InIncrementalGC() && aIncremental == IncrementalGC) {
+  if (sScheduler.InIncrementalGC() && aIncremental) {
     // We're in the middle of incremental GC. Do another slice.
     JS::PrepareForIncrementalGC(cx);
     JS::IncrementalGCSlice(cx, aReason, aSliceMillis);
     return;
   }
 
-  JS::GCOptions options =
-      aShrinking == ShrinkingGC ? JS::GCOptions::Shrink : JS::GCOptions::Normal;
+  JS::GCOptions options = aShrinking == nsJSContext::ShrinkingGC
+                              ? JS::GCOptions::Shrink
+                              : JS::GCOptions::Normal;
 
-  if (aIncremental == NonIncrementalGC ||
-      aReason == JS::GCReason::FULL_GC_TIMER) {
+  if (!aIncremental || aReason == JS::GCReason::FULL_GC_TIMER) {
     sScheduler.SetNeedsFullGC();
   }
 
@@ -1063,7 +1061,7 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
     JS::PrepareForFullGC(cx);
   }
 
-  if (aIncremental == IncrementalGC) {
+  if (aIncremental) {
     // Incremental GC slices will be triggered by the GC Runner. If one doesn't
     // already exist, create it in the GC_SLICE_END callback for the first
     // slice being executed here.
@@ -1071,6 +1069,20 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
   } else {
     JS::NonIncrementalGC(cx, options, aReason);
   }
+}
+
+// static
+void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
+                                    IsShrinking aShrinking) {
+  GarbageCollectImpl(aReason, aShrinking, /* aIncremental = */ false, 0);
+}
+
+// static
+void nsJSContext::RunIncrementalGCSlice(JS::GCReason aReason,
+                                        IsShrinking aShrinking,
+                                        TimeDuration aBudget) {
+  GarbageCollectImpl(aReason, aShrinking, /* aIncremental = */ true,
+                     static_cast<int64_t>(aBudget.ToMilliseconds()));
 }
 
 static void FinishAnyIncrementalGC() {
@@ -1644,12 +1656,10 @@ void nsJSContext::DoLowMemoryGC() {
     return;
   }
   nsJSContext::GarbageCollectNow(JS::GCReason::MEM_PRESSURE,
-                                 nsJSContext::NonIncrementalGC,
                                  nsJSContext::ShrinkingGC);
   nsJSContext::CycleCollectNow(CCReason::MEM_PRESSURE);
   if (sScheduler.NeedsGCAfterCC()) {
     nsJSContext::GarbageCollectNow(JS::GCReason::MEM_PRESSURE,
-                                   nsJSContext::NonIncrementalGC,
                                    nsJSContext::ShrinkingGC);
   }
 }

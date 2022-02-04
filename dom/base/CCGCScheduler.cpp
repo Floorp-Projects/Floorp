@@ -303,8 +303,7 @@ bool CCGCScheduler::GCRunnerFiredDoGC(TimeStamp aDeadline,
   TimeStamp startTimeStamp = TimeStamp::Now();
   TimeDuration budget = ComputeInterSliceGCBudget(aDeadline, startTimeStamp);
   TimeDuration duration = mGCUnnotifiedTotalTime;
-  nsJSContext::GarbageCollectNow(aStep.mReason, nsJSContext::IncrementalGC,
-                                 is_shrinking, budget.ToMilliseconds());
+  nsJSContext::RunIncrementalGCSlice(aStep.mReason, is_shrinking, budget);
 
   mGCUnnotifiedTotalTime = TimeDuration();
   TimeStamp now = TimeStamp::Now();
