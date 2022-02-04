@@ -17,6 +17,7 @@ import mozilla.components.lib.crash.R
 import mozilla.components.lib.crash.prompt.CrashPrompt
 import mozilla.components.lib.crash.service.SendCrashReportService
 import mozilla.components.support.base.ids.SharedIdsHelper
+import mozilla.components.support.utils.PendingIntentUtils
 import mozilla.components.support.utils.asForegroundServicePendingIntent
 
 private const val NOTIFICATION_SDK_LEVEL = 29 // On Android Q+ we show a notification instead of a prompt
@@ -104,9 +105,5 @@ internal class CrashNotification(
         }
     }
 
-    private fun getNotificationFlag() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        PendingIntent.FLAG_IMMUTABLE
-    } else {
-        0
-    }
+    private fun getNotificationFlag() = PendingIntentUtils.defaultFlags
 }

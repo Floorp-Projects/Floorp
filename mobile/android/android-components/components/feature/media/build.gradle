@@ -38,6 +38,7 @@ dependencies {
     implementation project(':ui-icons')
     implementation project(':support-ktx')
     implementation project(':support-base')
+    implementation project(':support-utils')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

@@ -34,6 +34,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
+import mozilla.components.support.utils.PendingIntentUtils
 import java.util.concurrent.TimeUnit
 
 /**
@@ -250,7 +251,10 @@ internal class SupportedAddonsWorker(
 
     private fun createContentIntent(): PendingIntent {
         return PendingIntent.getActivity(
-            context, 0, onNotificationClickIntent, PendingIntent.FLAG_UPDATE_CURRENT
+            context,
+            0,
+            onNotificationClickIntent,
+            PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
     @Suppress("MaxLineLength")

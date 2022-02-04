@@ -19,6 +19,7 @@ import androidx.core.content.getSystemService
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.feature.pwa.R
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.utils.PendingIntentUtils
 
 /**
  * Callback for [WebAppSiteControlsFeature] that lets the displayed notification be customized.
@@ -76,7 +77,7 @@ interface SiteControlsBuilder {
         protected fun createPendingIntent(context: Context, action: String, requestCode: Int): PendingIntent {
             val intent = Intent(action)
             intent.setPackage(context.packageName)
-            return PendingIntent.getBroadcast(context, requestCode, intent, 0)
+            return PendingIntent.getBroadcast(context, requestCode, intent, PendingIntentUtils.defaultFlags)
         }
 
         companion object {

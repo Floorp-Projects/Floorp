@@ -31,6 +31,7 @@ import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import mozilla.components.support.utils.PendingIntentUtils
 import java.util.Locale
 
 /**
@@ -149,7 +150,7 @@ abstract class AbstractPrivateNotificationService : Service() {
             .setContentIntent(
                 Intent(ACTION_ERASE).let {
                     it.setClass(this, this::class.java)
-                    PendingIntent.getService(this, 0, it, FLAG_ONE_SHOT)
+                    PendingIntent.getService(this, 0, it, PendingIntentUtils.defaultFlags or FLAG_ONE_SHOT)
                 }
             )
             .apply { buildNotification() }

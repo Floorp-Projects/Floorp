@@ -27,6 +27,7 @@ import mozilla.components.concept.storage.Login
 import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.feature.autofill.handler.EXTRA_LOGIN_ID
 import mozilla.components.feature.autofill.structure.ParsedStructure
+import mozilla.components.support.utils.PendingIntentUtils
 
 @RequiresApi(Build.VERSION_CODES.O)
 internal data class LoginDatasetBuilder(
@@ -48,7 +49,7 @@ internal data class LoginDatasetBuilder(
             context,
             0,
             Intent(),
-            PendingIntent.FLAG_CANCEL_CURRENT
+            PendingIntentUtils.defaultFlags or PendingIntent.FLAG_CANCEL_CURRENT
         )
 
         val usernameText = login.usernamePresentationOrFallback(context)
@@ -86,7 +87,7 @@ internal data class LoginDatasetBuilder(
                 context,
                 configuration.activityRequestCode + requestOffset,
                 confirmIntent,
-                PendingIntent.FLAG_CANCEL_CURRENT
+                PendingIntentUtils.defaultFlags or PendingIntent.FLAG_CANCEL_CURRENT
             ).intentSender
 
             dataset.setAuthentication(intentSender)

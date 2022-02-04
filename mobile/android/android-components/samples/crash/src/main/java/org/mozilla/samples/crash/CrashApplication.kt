@@ -25,6 +25,7 @@ import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
+import mozilla.components.support.utils.PendingIntentUtils
 import java.util.Calendar
 import java.util.TimeZone
 import java.util.UUID
@@ -128,7 +129,12 @@ private fun createNonFatalPendingIntent(context: Context): PendingIntent {
     // The PendingIntent can launch whatever you want - an activity, a service... Here we pick a broadcast. Our main
     // activity will listener for the broadcast and show an in-app snackbar to ask the user whether we should send
     // this crash report.
-    return PendingIntent.getBroadcast(context, 0, Intent(CrashApplication.NON_FATAL_CRASH_BROADCAST), 0)
+    return PendingIntent.getBroadcast(
+        context,
+        0,
+        Intent(CrashApplication.NON_FATAL_CRASH_BROADCAST),
+        PendingIntentUtils.defaultFlags
+    )
 }
 
 val Context.crashReporter: CrashReporter

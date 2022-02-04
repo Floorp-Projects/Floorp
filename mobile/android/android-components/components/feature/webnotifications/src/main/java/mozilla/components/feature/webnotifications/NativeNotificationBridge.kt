@@ -19,6 +19,7 @@ import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.icons.IconRequest.Size
 import mozilla.components.concept.engine.webnotifications.WebNotification
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
+import mozilla.components.support.utils.PendingIntentUtils
 
 internal class NativeNotificationBridge(
     private val icons: BrowserIcons,
@@ -52,7 +53,7 @@ internal class NativeNotificationBridge(
                     putExtra(EXTRA_ON_CLICK, tag)
                 }
 
-                PendingIntent.getActivity(context, requestId, intent, 0).apply {
+                PendingIntent.getActivity(context, requestId, intent, PendingIntentUtils.defaultFlags).apply {
                     builder.setContentIntent(this)
                 }
             }

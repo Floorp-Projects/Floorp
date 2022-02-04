@@ -21,6 +21,7 @@ import mozilla.components.feature.media.notification.MediaNotificationChannel
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.base.ids.SharedIdsHelper
+import mozilla.components.support.utils.PendingIntentUtils
 
 private const val NOTIFICATION_TAG = "mozac.feature.media.recordingDevices"
 private const val NOTIFICATION_ID = 1
@@ -93,7 +94,9 @@ class RecordingDevicesMiddleware(
 
         val pendingIntent = PendingIntent.getActivity(
             context,
-            SharedIdsHelper.getIdForTag(context, PENDING_INTENT_TAG), intent, PendingIntent.FLAG_UPDATE_CURRENT
+            SharedIdsHelper.getIdForTag(context, PENDING_INTENT_TAG),
+            intent,
+            PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         val notification = NotificationCompat.Builder(context, channelId)

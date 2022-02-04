@@ -22,6 +22,7 @@ import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.state.MigrationAction
 import mozilla.components.support.migration.state.MigrationStore
+import mozilla.components.support.utils.PendingIntentUtils
 
 private const val NOTIFICATION_CHANNEL_ID = "mozac.support.migration.generic"
 
@@ -125,8 +126,10 @@ abstract class AbstractMigrationService : Service() {
             .setContentText(getString(contentRes))
             .setContentIntent(
                 PendingIntent.getActivity(
-                    this, 0,
-                    Intent(this, migrationDecisionActivity).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), 0
+                    this,
+                    0,
+                    Intent(this, migrationDecisionActivity).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP),
+                    PendingIntentUtils.defaultFlags
                 )
             )
             .setPriority(NotificationCompat.PRIORITY_LOW)

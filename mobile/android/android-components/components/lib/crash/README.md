@@ -183,7 +183,8 @@ val pendingIntent = PendingIntent.getActivity(
     Intent(this, MyActivity::class.java).apply {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     },
-    0)
+    PendingIntentUtils.defaultFlags
+)
 
 CrashReporter(
     shouldPrompt = CrashReporter.Prompt.ALWAYS,

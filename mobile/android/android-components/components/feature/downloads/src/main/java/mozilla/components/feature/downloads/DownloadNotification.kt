@@ -31,6 +31,7 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService.Compani
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_RESUME
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_TRY_AGAIN
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobState
+import mozilla.components.support.utils.PendingIntentUtils
 import kotlin.random.Random
 
 @Suppress("LargeClass")
@@ -289,7 +290,12 @@ internal object DownloadNotification {
 
         // We generate a random requestCode in order to generate a distinct PendingIntent:
         // https://developer.android.com/reference/android/app/PendingIntent.html
-        return PendingIntent.getBroadcast(context.applicationContext, Random.nextInt(), intent, 0)
+        return PendingIntent.getBroadcast(
+            context.applicationContext,
+            Random.nextInt(),
+            intent,
+            PendingIntentUtils.defaultFlags
+        )
     }
 }
 

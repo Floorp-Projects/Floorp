@@ -6,7 +6,6 @@ package mozilla.components.feature.media.notification
 
 import android.app.Notification
 import android.app.PendingIntent
-import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.graphics.Bitmap
@@ -24,6 +23,7 @@ import mozilla.components.feature.media.ext.getTitleOrUrl
 import mozilla.components.feature.media.ext.nonPrivateUrl
 import mozilla.components.feature.media.service.AbstractMediaSessionService
 import mozilla.components.support.base.ids.SharedIdsHelper
+import mozilla.components.support.utils.PendingIntentUtils
 import java.util.Locale
 
 /**
@@ -155,14 +155,6 @@ private data class NotificationData(
     val contentIntent: PendingIntent? = null
 )
 
-private fun getNotificationFlag() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-    FLAG_IMMUTABLE
-} else {
-    0
-}
+private fun getNotificationFlag() = PendingIntentUtils.defaultFlags
 
-private fun getUpdateNotificationFlag() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-    FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT
-} else {
-    FLAG_UPDATE_CURRENT
-}
+private fun getUpdateNotificationFlag() = PendingIntentUtils.defaultFlags or FLAG_UPDATE_CURRENT

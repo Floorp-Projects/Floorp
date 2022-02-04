@@ -41,6 +41,7 @@ import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PW
 import mozilla.components.feature.pwa.ext.hasLargeIcons
 import mozilla.components.feature.pwa.ext.installableManifest
 import mozilla.components.support.images.decoder.AndroidImageDecoder
+import mozilla.components.support.utils.PendingIntentUtils
 
 private val pwaIconMemoryCache = IconMemoryCache()
 
@@ -90,7 +91,12 @@ class WebAppShortcutManager(
                     addCategory(CATEGORY_HOME)
                     flags = FLAG_ACTIVITY_NEW_TASK
                 }
-                val pendingIntent = PendingIntent.getActivity(context, 0, intent, FLAG_UPDATE_CURRENT)
+                val pendingIntent = PendingIntent.getActivity(
+                    context,
+                    0,
+                    intent,
+                    PendingIntentUtils.defaultFlags or FLAG_UPDATE_CURRENT
+                )
                 val intentSender = pendingIntent.intentSender
 
                 ShortcutManagerCompat.requestPinShortcut(context, shortcut, intentSender)

@@ -43,6 +43,7 @@ import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
+import mozilla.components.support.utils.PendingIntentUtils
 import mozilla.components.support.webextensions.WebExtensionSupport
 import java.lang.Exception
 import java.util.Date
@@ -333,7 +334,7 @@ class DefaultAddonUpdater(
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             } ?: throw IllegalStateException("Package has no launcher intent")
         return PendingIntent.getActivity(
-            applicationContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT
+            applicationContext, 0, intent, PendingIntentUtils.defaultFlags or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
 
@@ -348,7 +349,12 @@ class DefaultAddonUpdater(
     @VisibleForTesting
     internal fun createAllowAction(ext: WebExtension, requestCode: Int): NotificationCompat.Action {
         val allowIntent = createNotificationIntent(ext.id, NOTIFICATION_ACTION_ALLOW)
-        val allowPendingIntent = PendingIntent.getService(applicationContext, requestCode, allowIntent, 0)
+        val allowPendingIntent = PendingIntent.getService(
+            applicationContext,
+            requestCode,
+            allowIntent,
+            PendingIntentUtils.defaultFlags
+        )
 
         val allowText =
             applicationContext.getString(R.string.mozac_feature_addons_updater_notification_allow_button)
@@ -363,7 +369,12 @@ class DefaultAddonUpdater(
     @VisibleForTesting
     internal fun createDenyAction(ext: WebExtension, requestCode: Int): NotificationCompat.Action {
         val denyIntent = createNotificationIntent(ext.id, NOTIFICATION_ACTION_DENY)
-        val denyPendingIntent = PendingIntent.getService(applicationContext, requestCode, denyIntent, 0)
+        val denyPendingIntent = PendingIntent.getService(
+            applicationContext,
+            requestCode,
+            denyIntent,
+            PendingIntentUtils.defaultFlags
+        )
 
         val denyText =
             applicationContext.getString(R.string.mozac_feature_addons_updater_notification_deny_button)
