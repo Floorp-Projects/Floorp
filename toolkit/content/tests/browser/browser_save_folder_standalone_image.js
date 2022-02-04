@@ -82,6 +82,6 @@ add_task(async function() {
     EventUtils.synthesizeKey("s", { accelKey: true });
 
     let dirPath = await showFilePickerPromise;
-    todo_is(dirPath, dir.path, "Verify proposed download folder.");
+    is(dirPath, dir.path, "Verify proposed download folder.");
   });
 });
