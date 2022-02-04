@@ -5,6 +5,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/history_search"
+        android:icon="@drawable/mozac_ic_search"
+        android:title="@string/history_search"
+        app:iconTint="?primaryText"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/history_delete_all"
         android:icon="@drawable/ic_delete"
         android:title="@string/history_delete_all"

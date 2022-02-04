@@ -66,6 +66,15 @@ class HistoryInteractorTest {
     }
 
     @Test
+    fun onSearch() {
+        interactor.onSearch()
+
+        verifyAll {
+            controller.handleSearch()
+        }
+    }
+
+    @Test
     fun onDeleteAll() {
         interactor.onDeleteAll()
 

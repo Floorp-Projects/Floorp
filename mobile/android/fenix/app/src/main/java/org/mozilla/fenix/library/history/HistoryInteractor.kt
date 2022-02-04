@@ -23,6 +23,11 @@ interface HistoryInteractor : SelectionInteractor<History> {
     fun onModeSwitched()
 
     /**
+     * Called when search is tapped
+     */
+    fun onSearch()
+
+    /**
      * Called when delete all is tapped
      */
     fun onDeleteAll()
@@ -70,6 +75,10 @@ class DefaultHistoryInteractor(
 
     override fun onModeSwitched() {
         historyController.handleModeSwitched()
+    }
+
+    override fun onSearch() {
+        historyController.handleSearch()
     }
 
     override fun onDeleteAll() {

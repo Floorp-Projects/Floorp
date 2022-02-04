@@ -30,6 +30,7 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavHostActivity
 import org.mozilla.fenix.R
@@ -181,6 +182,10 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         } else {
             inflater.inflate(R.menu.history_menu, menu)
         }
+
+        if (!FeatureFlags.historyImprovementFeatures) {
+            menu.findItem(R.id.history_search)?.isVisible = false
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
@@ -236,6 +241,10 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             }
 
             showTabTray()
+            true
+        }
+        R.id.history_search -> {
+            historyInteractor.onSearch()
             true
         }
         R.id.history_delete_all -> {

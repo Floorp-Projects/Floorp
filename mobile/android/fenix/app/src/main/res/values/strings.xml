@@ -838,6 +838,8 @@
     <string name="tab_tray_header_title_1">Other tabs</string>
 
     <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search">Enter search term</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Delete history</string>
     <!-- Text for the dialog to confirm clearing all history -->

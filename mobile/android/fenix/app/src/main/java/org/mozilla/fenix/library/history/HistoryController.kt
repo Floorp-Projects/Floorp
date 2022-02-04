@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.navigateSafe
 
 @Suppress("TooManyFunctions")
 interface HistoryController {
@@ -19,6 +20,7 @@ interface HistoryController {
     fun handleDeselect(item: History)
     fun handleBackPressed(): Boolean
     fun handleModeSwitched()
+    fun handleSearch()
     fun handleDeleteAll()
     fun handleDeleteSome(items: Set<History>)
     fun handleRequestSync()
@@ -78,6 +80,12 @@ class DefaultHistoryController(
 
     override fun handleModeSwitched() {
         invalidateOptionsMenu.invoke()
+    }
+
+    override fun handleSearch() {
+        val directions =
+            HistoryFragmentDirections.actionGlobalHistorySearchDialog()
+        navController.navigateSafe(R.id.historyFragment, directions)
     }
 
     override fun handleDeleteAll() {

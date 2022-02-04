@@ -17,7 +17,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -112,6 +114,19 @@ class HistoryControllerTest {
 
         controller.handleModeSwitched()
         assertTrue(invalidateOptionsMenuInvoked)
+    }
+
+    @Test
+    fun onSearch() {
+        val controller = createController()
+
+        controller.handleSearch()
+        verify {
+            navController.navigateSafe(
+                R.id.historyFragment,
+                HistoryFragmentDirections.actionGlobalHistorySearchDialog()
+            )
+        }
     }
 
     @Test
