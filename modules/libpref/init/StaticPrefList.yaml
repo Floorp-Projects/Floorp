@@ -9218,6 +9218,15 @@
   value: true
   mirror: always
 
+# This pref turns off window-focus checks on the navigator.mediaDevices methods,
+# for partner testing frameworks.
+# Prefer "focusmanager.testmode", which is already set by default for
+# web-platform tests.
+- name: media.devices.unfocused.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # This pref turns off [SecureContext] on the navigator.mediaDevices object, for
 # more compatible legacy behavior.
 - name: media.devices.insecure.enabled
