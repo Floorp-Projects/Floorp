@@ -312,7 +312,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
     TickleWifi(callbacks);
     RefPtr<nsHttpConnectionInfo> clone = ci->Clone();
     return mConnMgr->SpeculativeConnect(clone, callbacks, caps, nullptr,
-                                        aFetchHTTPSRR);
+                                        aFetchHTTPSRR | EchConfigEnabled());
   }
 
   [[nodiscard]] nsresult SpeculativeConnect(nsHttpConnectionInfo* ci,
@@ -494,8 +494,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // In the case an HTTPS RRSet contains some RRs with echConfig and some
   // without, we always fallback to the origin one.
   bool FallbackToOriginIfConfigsAreECHAndAllFailed() const;
-
-  bool UseHTTPSRRForSpeculativeConnection() const;
 
   // So we can ensure that this is done during process preallocation to
   // avoid first-use overhead

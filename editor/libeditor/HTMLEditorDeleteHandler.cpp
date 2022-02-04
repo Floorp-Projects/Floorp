@@ -4610,10 +4610,13 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 template <typename PT, typename CT>
 Result<bool, nsresult> HTMLEditor::CanMoveOrDeleteSomethingInHardLine(
     const EditorDOMPointBase<PT, CT>& aPointInHardLine) const {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!aPointInHardLine.IsSet()) ||
+                   NS_WARN_IF(aPointInHardLine.IsInNativeAnonymousSubtree()))) {
+    return Err(NS_ERROR_INVALID_ARG);
+  }
+
   RefPtr<nsRange> oneLineRange = CreateRangeExtendedToHardLineStartAndEnd(
-      aPointInHardLine.ToRawRangeBoundary(),
-      aPointInHardLine.ToRawRangeBoundary(),
-      EditSubAction::eMergeBlockContents);
+      aPointInHardLine, aPointInHardLine, EditSubAction::eMergeBlockContents);
   if (!oneLineRange || oneLineRange->Collapsed() ||
       !oneLineRange->IsPositioned() ||
       !oneLineRange->GetStartContainer()->IsContent() ||

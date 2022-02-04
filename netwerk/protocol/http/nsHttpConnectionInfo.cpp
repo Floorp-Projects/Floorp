@@ -334,10 +334,10 @@ nsHttpConnectionInfo::CloneAndAdoptHTTPSSVCRecord(
   // Try to get the port and Alpn. If this record has SvcParamKeyPort defined,
   // the new port will be used as mRoutedPort.
   Maybe<uint16_t> port = aRecord->GetPort();
-  Maybe<Tuple<nsCString, SupportedAlpnType>> alpn = aRecord->GetAlpn();
+  Maybe<Tuple<nsCString, SupportedAlpnRank>> alpn = aRecord->GetAlpn();
 
   // Let the new conn info learn h3 will be used.
-  bool isHttp3 = alpn ? Get<1>(*alpn) == SupportedAlpnType::HTTP_3 : false;
+  bool isHttp3 = alpn ? mozilla::net::IsHttp3(Get<1>(*alpn)) : false;
 
   LOG(("HTTPSSVC: use new routed host (%s) and new npnToken (%s)", name.get(),
        alpn ? Get<0>(*alpn).get() : "None"));

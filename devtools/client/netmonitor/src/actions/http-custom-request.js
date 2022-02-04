@@ -78,7 +78,7 @@ function sendHTTPCustomRequest(connector, request) {
     };
 
     if (request.headers) {
-      data.headers = request.headers.headers;
+      data.headers = request.headers;
     }
 
     if (request.requestPostData) {

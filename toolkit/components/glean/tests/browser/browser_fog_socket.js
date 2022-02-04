@@ -3,9 +3,6 @@
 
 "use strict";
 
-// Glean's here on `window`, but eslint doesn't know that. bug 1715542.
-/* global Glean:false */
-
 add_task(async () => {
   if (
     !(await ChromeUtils.requestProcInfo()).children.some(

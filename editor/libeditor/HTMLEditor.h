@@ -1262,10 +1262,10 @@ class HTMLEditor final : public EditorBase,
    * NOTE: The result may be point of editing host.  I.e., the container may
    *       be outside of editing host.
    */
-  template <typename PT, typename RT>
+  template <typename EditorDOMPointType>
   EditorDOMPoint GetCurrentHardLineStartPoint(
-      const RangeBoundaryBase<PT, RT>& aPoint,
-      EditSubAction aEditSubAction) const;
+      const EditorDOMPointType& aPoint, EditSubAction aEditSubAction,
+      const Element& aEditingHost) const;
 
   /**
    * GetCurrentHardLineEndPoint() returns end point of hard line including
@@ -1275,21 +1275,22 @@ class HTMLEditor final : public EditorBase,
    * immediately before a block boundary.  If the line ends with a block
    * boundary, returns the block.
    */
-  template <typename PT, typename RT>
-  EditorDOMPoint GetCurrentHardLineEndPoint(
-      const RangeBoundaryBase<PT, RT>& aPoint) const;
+  template <typename EditorDOMPointType>
+  EditorDOMPoint GetCurrentHardLineEndPoint(const EditorDOMPointType& aPoint,
+                                            const Element& aEditingHost) const;
 
   /**
    * CreateRangeIncludingAdjuscentWhiteSpaces() creates an nsRange instance
    * which may be expanded from the given range to include adjuscent
    * white-spaces.  If this fails handling something, returns nullptr.
    */
+  template <typename EditorDOMRangeType>
   already_AddRefed<nsRange> CreateRangeIncludingAdjuscentWhiteSpaces(
-      const dom::AbstractRange& aAbstractRange);
-  template <typename SPT, typename SRT, typename EPT, typename ERT>
+      const EditorDOMRangeType& aRange);
+  template <typename EditorDOMPointType1, typename EditorDOMPointType2>
   already_AddRefed<nsRange> CreateRangeIncludingAdjuscentWhiteSpaces(
-      const RangeBoundaryBase<SPT, SRT>& aStartRef,
-      const RangeBoundaryBase<EPT, ERT>& aEndRef);
+      const EditorDOMPointType1& aStartPoint,
+      const EditorDOMPointType2& aEndPoint);
 
   /**
    * GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces() collects
@@ -1308,14 +1309,13 @@ class HTMLEditor final : public EditorBase,
    * which may be expanded to start/end of hard line at both edges of the given
    * range.  If this fails handling something, returns nullptr.
    */
+  template <typename EditorDOMRangeType>
   already_AddRefed<nsRange> CreateRangeExtendedToHardLineStartAndEnd(
-      const dom::AbstractRange& aAbstractRange,
-      EditSubAction aEditSubAction) const;
-  template <typename SPT, typename SRT, typename EPT, typename ERT>
+      const EditorDOMRangeType& aRange, EditSubAction aEditSubAction) const;
+  template <typename EditorDOMPointType1, typename EditorDOMPointType2>
   already_AddRefed<nsRange> CreateRangeExtendedToHardLineStartAndEnd(
-      const RangeBoundaryBase<SPT, SRT>& aStartRef,
-      const RangeBoundaryBase<EPT, ERT>& aEndRef,
-      EditSubAction aEditSubAction) const;
+      const EditorDOMPointType1& aStartPoint,
+      const EditorDOMPointType2& aEndPoint, EditSubAction aEditSubAction) const;
 
   /**
    * GetSelectionRangesExtendedToHardLineStartAndEnd() collects selection ranges
@@ -1366,12 +1366,14 @@ class HTMLEditor final : public EditorBase,
       nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       EditSubAction aEditSubAction,
       CollectNonEditableNodes aCollectNonEditableNodes) {
-    if (NS_WARN_IF(!aPointInOneHardLine.IsSet())) {
+    if (MOZ_UNLIKELY(
+            NS_WARN_IF(!aPointInOneHardLine.IsSet()) ||
+            NS_WARN_IF(aPointInOneHardLine.IsInNativeAnonymousSubtree()))) {
       return NS_ERROR_INVALID_ARG;
     }
+
     RefPtr<nsRange> oneLineRange = CreateRangeExtendedToHardLineStartAndEnd(
-        aPointInOneHardLine.ToRawRangeBoundary(),
-        aPointInOneHardLine.ToRawRangeBoundary(), aEditSubAction);
+        aPointInOneHardLine, aPointInOneHardLine, aEditSubAction);
     if (!oneLineRange) {
       // XXX It seems odd to create collapsed range for one line range...
       ErrorResult error;
@@ -1417,12 +1419,12 @@ class HTMLEditor final : public EditorBase,
    * CreateRangeIncludingAdjuscentWhiteSpaces() and
    * CreateRangeExtendedToLineStartAndEnd().  If the given range is collapsed
    * in a block and the block has only one `<br>` element, this makes
-   * aStartRef and aEndRef select the `<br>` element.
+   * aStartPoint and aEndRef select the `<br>` element.
    */
-  template <typename SPT, typename SRT, typename EPT, typename ERT>
+  template <typename EditorDOMPointType1, typename EditorDOMPointType2>
   void SelectBRElementIfCollapsedInEmptyBlock(
-      RangeBoundaryBase<SPT, SRT>& aStartRef,
-      RangeBoundaryBase<EPT, ERT>& aEndRef) const;
+      EditorDOMPointType1& aStartPoint, EditorDOMPointType2& aEndPoint,
+      const Element& aEditingHost) const;
 
   /**
    * GetChildNodesOf() returns all child nodes of aParent with an array.

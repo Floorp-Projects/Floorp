@@ -1,5 +1,9 @@
 Changes made to pristine libwebp source by mozilla.org developers.
 
+2022/02/03  -- Enabled automatic updates via Updatebot (meta bug #1618282). For
+               further updates to the library please review the mercurial
+               history for /media/libwebp/moz.yaml (bug #1753050).
+
 2022/01/25  -- Synced with libwebp-1.2.2 (bug 1752025).
 
 2021/09/08  -- Synced with libwebp-1.2.1 (bug 1729748).

@@ -31,9 +31,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(this, "assert", "devtools/shared/DevToolsUtils", true);
 
 const openDevToolsDocsLink = () => {
-  openDocLink(
-    "https://developer.mozilla.org/docs/Tools?utm_source=devtools&utm_medium=tabbar-menu"
-  );
+  openDocLink("https://firefox-source-docs.mozilla.org/devtools-user/");
 };
 
 const openCommunityLink = () => {

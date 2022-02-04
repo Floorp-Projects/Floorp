@@ -183,6 +183,8 @@ child:
   async UpdateDeviceModelId(nsCString aModelId);
 
   async OnHttpActivityDistributorActivated(bool aIsActivated);
+  async OnHttpActivityDistributorObserveProxyResponse(bool aIsEnabled);
+  async OnHttpActivityDistributorObserveConnection(bool aIsEnabled);
   async PInputChannelThrottleQueue(uint32_t meanBytesPerSecond,
                                    uint32_t maxBytesPerSecond);
   async PAltSvcTransaction(HttpConnectionInfoCloneArgs aConnInfo,

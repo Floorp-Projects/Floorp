@@ -26,9 +26,6 @@ const { SessionStore } = ChromeUtils.import(
   "resource:///modules/sessionstore/SessionStore.jsm"
 );
 
-// Glean's here on `window`, but eslint doesn't know that. bug 1715542.
-/* global Glean:false */
-
 // Reset internal URI counter in case URIs were opened by other tests.
 Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC);
 
