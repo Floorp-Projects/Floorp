@@ -242,9 +242,9 @@
   outline: 2px solid var(--blue-50);
 }
 
-:root.theme-dark #http-custom-input-and-map-form .map-add-new-inputs .tabpanel-summary-input-value {
-  width: calc(70% - 5px);
-  margin-inline-end: 4px;
+:root.theme-dark #http-custom-input-and-map-form .map-add-new-inputs .tabpanel-summary-input-value,
+:root.theme-dark #http-custom-query #http-custom-input-and-map-form .tabpanel-summary-input-value:focus {
+  margin-inline-end: 3px;
 }
 
 :root.theme-dark .network-monitor #http-custom-request-clear-button {
@@ -312,9 +312,9 @@
   outline: 2px solid var(--blue-50);
 }
 
-:root.theme-light #http-custom-input-and-map-form .map-add-new-inputs .tabpanel-summary-input-value {
-  width: calc(70% - 5px);
-  margin-inline-end: 4px;
+:root.theme-light #http-custom-input-and-map-form .map-add-new-inputs .tabpanel-summary-input-value:focus,
+:root.theme-light #http-custom-query #http-custom-input-and-map-form .tabpanel-summary-input-value:focus {
+  margin-inline-end: 3px;
 }
 
 :root.theme-light .network-monitor .tabpanel-summary-container .http-custom-request-label {

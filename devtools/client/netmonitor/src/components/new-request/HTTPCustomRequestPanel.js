@@ -37,7 +37,7 @@ const CUSTOM_POSTDATA = L10N.getStr("netmonitor.custom.postBody");
 const CUSTOM_POSTDATA_PLACEHOLDER = L10N.getStr(
   "netmonitor.custom.postBody.placeholder"
 );
-const CUSTOM_QUERY = L10N.getStr("netmonitor.custom.query");
+const CUSTOM_QUERY = L10N.getStr("netmonitor.custom.urlParameters");
 const CUSTOM_SEND = L10N.getStr("netmonitor.custom.send");
 const CUSTOM_CLEAR = L10N.getStr("netmonitor.custom.clear");
 
@@ -55,6 +55,17 @@ class HTTPCustomRequestPanel extends Component {
     };
   }
 
+  static createQueryParamsListFromURL(url) {
+    const queryArray = (url ? parseQueryString(getUrlQuery(url)) : []) || [];
+    return queryArray.map(({ name, value }) => {
+      return {
+        checked: true,
+        name,
+        value,
+      };
+    });
+  }
+
   constructor(props) {
     super(props);
 
@@ -65,6 +76,9 @@ class HTTPCustomRequestPanel extends Component {
     this.state = {
       method: request ? request.method : "",
       url: request ? request.url : "",
+      urlQueryParams: HTTPCustomRequestPanel.createQueryParamsListFromURL(
+        request?.url
+      ),
       headers: request
         ? request.requestHeaders.headers.map(({ name, value }) => {
             return {
@@ -80,6 +94,7 @@ class HTTPCustomRequestPanel extends Component {
     };
 
     this.handleInputChange = this.handleInputChange.bind(this);
+    this.handleChangeURL = this.handleChangeURL.bind(this);
     this.updateInputMapItem = this.updateInputMapItem.bind(this);
     this.addInputMapItem = this.addInputMapItem.bind(this);
     this.deleteInputMapItem = this.deleteInputMapItem.bind(this);
@@ -101,10 +116,19 @@ class HTTPCustomRequestPanel extends Component {
     }
   }
 
+  handleChangeURL(event) {
+    const { value } = event.target;
+
+    this.setState({
+      url: value,
+      urlQueryParams: HTTPCustomRequestPanel.createQueryParamsListFromURL(
+        value
+      ),
+    });
+  }
+
   handleInputChange(event) {
-    const target = event.target;
-    const value = target.value;
-    const name = target.name;
+    const { name, value } = event.target;
 
     this.setState({
       [name]: value,
@@ -142,6 +166,7 @@ class HTTPCustomRequestPanel extends Component {
       {
         method: "",
         url: "",
+        urlQueryParams: [],
         headers: [],
         requestPostData: "",
       },
@@ -151,12 +176,13 @@ class HTTPCustomRequestPanel extends Component {
 
   render() {
     const { sendCustomRequest } = this.props;
-    const { method, requestPostData, url, headers } = this.state;
-
-    const queryArray = url ? parseQueryString(getUrlQuery(url)) : [];
-    const queryParams = queryArray
-      ? queryArray.map(({ name, value }) => name + "=" + value).join("\n")
-      : "";
+    const {
+      method,
+      urlQueryParams,
+      requestPostData,
+      url,
+      headers,
+    } = this.state;
 
     const methods = [
       "GET",
@@ -205,7 +231,7 @@ class HTTPCustomRequestPanel extends Component {
             placeholder: CUSTOM_NEW_REQUEST_URL_LABEL,
             ref: this.URLTextareaRef,
             onChange: event => {
-              this.handleInputChange(event);
+              this.handleChangeURL(event);
               updateTextareaRows(event.target);
             },
             onBlur: this.handleTextareaChange,
@@ -213,31 +239,22 @@ class HTTPCustomRequestPanel extends Component {
             rows: 1,
           })
         ),
-        // Hide query field when there is no params
-        queryParams
-          ? div(
-              {
-                className: "tabpanel-summary-container http-custom-section",
-                id: "http-custom-query",
-              },
-              label(
-                {
-                  className: "http-custom-request-label",
-                  htmlFor: "http-custom-query-value",
-                },
-                CUSTOM_QUERY
-              ),
-              textarea({
-                className: "tabpanel-summary-input",
-                id: "http-custom-query-value",
-                name: "queryParams",
-                onChange: () => {},
-                rows: 4,
-                value: queryParams,
-                wrap: "off",
-              })
-            )
-          : null,
+        div(
+          {
+            className: "tabpanel-summary-container http-custom-section",
+            id: "http-custom-query",
+          },
+          label(
+            {
+              className: "http-custom-request-label",
+              htmlFor: "http-custom-query-value",
+            },
+            CUSTOM_QUERY
+          ),
+          InputMap({
+            list: urlQueryParams,
+          })
+        ),
         div(
           {
             id: "http-custom-headers",
