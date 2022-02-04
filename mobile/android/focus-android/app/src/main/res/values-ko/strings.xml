@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -795,7 +795,9 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_https_only_title">HTTPS 전용 모드</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preference_https_only_summary2">보안 강화를 위해 HTTPS 를 사용하여 사이트에 자동 연결을 시도합니다. HTTPS 연결은 방문하시는 웹사이트에 대해 안전하고 암호화된 연결을 제공합니다.</string>
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">보안 강화를 위해 HTTPS 를 사용하여 사이트에 자동 연결을 시도합니다. HTTPS 연결은 방문하시는 웹사이트에 대해 안전하고 암호화된 연결을 제공합니다.</string>
+
+    <string name="preference_https_only_summary3">보안 강화를 위해 HTTPS 암호화 프로토콜을 사용하여 사이트에 자동으로 연결을 시도합니다.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">예외</string>
