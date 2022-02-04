@@ -5210,6 +5210,9 @@ bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
       case MIRType::Int64:
         t = ValType::I64;
         break;
+      case MIRType::Float32:
+        t = ValType::F32;
+        break;
       case MIRType::RefOrNull:
         t = RefType::extern_();
         break;

@@ -155,19 +155,27 @@ uint8_t* GetPHCAllocation(size_t aSize) {
 #endif
 
 #ifndef XP_WIN
-static void* overflow_stack(void* aUnused) {
-  // We use a dummy variable and a bit of magic to pretend we care about what's
-  // on the stack so the compiler doesn't optimize the loop and allocations away
-  void* rv = nullptr;
+static int64_t recurse(int64_t aRandom) {
+  char buff[256] = {};
+  int64_t result = aRandom;
 
-  for (size_t i = 0; i < 1024 * 1024 * 1024; i++) {
-    void* ptr = alloca(sizeof(void*));
-    if (ptr != nullptr) {
-      rv = ptr;
-    }
+  strncpy(buff, "This is gibberish", sizeof(buff));
+
+  for (auto& c : buff) {
+    result += c;
   }
 
-  return rv;
+  if (result == 0) {
+    return result;
+  }
+
+  return recurse(result);
+}
+
+static void* overflow_stack(void* aInput) {
+  int64_t result = recurse(*((int64_t*)(aInput)));
+
+  return (void*)result;
 }
 #endif  // XP_WIN
 
@@ -286,7 +294,8 @@ extern "C" NS_EXPORT void Crash(int16_t how) {
 #ifndef XP_WIN
     case CRASH_STACK_OVERFLOW: {
       pthread_t thread_id;
-      int rv = pthread_create(&thread_id, nullptr, overflow_stack, nullptr);
+      int64_t data = 1337;
+      int rv = pthread_create(&thread_id, nullptr, overflow_stack, &data);
       if (!rv) {
         pthread_join(thread_id, nullptr);
       }

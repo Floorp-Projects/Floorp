@@ -154,7 +154,7 @@ const Float SIGMA_MAX = 100;
 const size_t MAX_STYLE_STACK_SIZE = 1024;
 
 /* Memory reporter stuff */
-static int64_t gCanvasAzureMemoryUsed = 0;
+static Atomic<int64_t> gCanvasAzureMemoryUsed(0);
 
 // Adds Save() / Restore() calls to the scope.
 class MOZ_RAII AutoSaveRestore {

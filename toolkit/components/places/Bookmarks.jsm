@@ -2343,7 +2343,7 @@ async function queryBookmarks(info) {
 
   if (info.query) {
     queryString +=
-      " AND AUTOCOMPLETE_MATCH(:query, h.url, b.title, NULL, NULL, 1, 1, NULL, :matchBehavior, :searchBehavior) ";
+      " AND AUTOCOMPLETE_MATCH(:query, h.url, b.title, NULL, NULL, 1, 1, NULL, :matchBehavior, :searchBehavior, NULL) ";
     queryParams.query = info.query;
     queryParams.matchBehavior = MATCH_ANYWHERE_UNMODIFIED;
     queryParams.searchBehavior = BEHAVIOR_BOOKMARK;

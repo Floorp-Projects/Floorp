@@ -7691,11 +7691,6 @@
   value: true
   mirror: always
 
-- name: layout.css.resizeobserver.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Are inter-character ruby annotations enabled?
 - name: layout.css.ruby.intercharacter.enabled
   type: bool
@@ -10642,12 +10637,6 @@
 - name: network.dns.httpssvc.http3_fast_fallback_timeout
   type: RelaxedAtomicUint32
   value: 50
-  mirror: always
-
-# Whether to use https rr for speculative connections.
-- name: network.dns.use_https_rr_for_speculative_connection
-  type: RelaxedAtomicBool
-  value: false
   mirror: always
 
 # Whether to force a transaction to wait https rr.

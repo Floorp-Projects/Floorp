@@ -4123,6 +4123,9 @@ BrowserGlue.prototype = {
       } catch (ex) {}
     }
 
+    // Bug 1745248: Due to multiple backouts, do not use UI Version 123
+    // as this version is most likely set for the Nightly channel
+
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },

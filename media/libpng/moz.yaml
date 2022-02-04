@@ -30,7 +30,8 @@ vendoring:
   tracking: tag
 
   exclude:
-    - "*"
+    - "**"
+    - ".*"
 
   include:
     - arm

@@ -1410,8 +1410,9 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
   // h1 pipelining has been removed
 
   // Don't dispatch if this transaction is waiting for HTTPS RR.
-  // Note that this is only used in test currently.
-  if (caps & NS_HTTP_FORCE_WAIT_HTTP_RR) {
+  // This usually happens when the pref "network.dns.force_waiting_https_rr" is
+  // true or when echConfig is enabled.
+  if (trans->WaitingForHTTPSRR()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -3314,6 +3315,14 @@ void nsHttpConnectionMgr::DoSpeculativeConnection(
   ConnectionEntry* ent = GetOrCreateConnectionEntry(
       aTrans->ConnectionInfo(), false, aTrans->Caps() & NS_HTTP_DISALLOW_SPDY,
       aTrans->Caps() & NS_HTTP_DISALLOW_HTTP3);
+  if (!aFetchHTTPSRR &&
+      gHttpHandler->EchConfigEnabled(aTrans->ConnectionInfo()->IsHttp3())) {
+    // This happens when this is called from
+    // SpeculativeTransaction::OnHTTPSRRAvailable. We have to update this
+    // entry's echConfig so that the newly created connection can use the latest
+    // echConfig.
+    ent->MaybeUpdateEchConfig(aTrans->ConnectionInfo());
+  }
   DoSpeculativeConnectionInternal(ent, aTrans, aFetchHTTPSRR);
 }
 
@@ -3322,6 +3331,12 @@ void nsHttpConnectionMgr::DoSpeculativeConnectionInternal(
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(aTrans);
   MOZ_ASSERT(aEnt);
+  if (aFetchHTTPSRR) {
+    Unused << aTrans->FetchHTTPSRR();
+    // nsHttpConnectionMgr::DoSpeculativeConnection will be called again when
+    // HTTPS RR is available.
+    return;
+  }
 
   uint32_t parallelSpeculativeConnectLimit =
       aTrans->ParallelSpeculativeConnectLimit()
@@ -3339,9 +3354,6 @@ void nsHttpConnectionMgr::DoSpeculativeConnectionInternal(
        !aEnt->IdleConnectionsLength()) &&
       !(keepAlive && aEnt->RestrictConnections()) &&
       !AtActiveConnectionLimit(aEnt, aTrans->Caps())) {
-    if (aFetchHTTPSRR) {
-      Unused << aTrans->FetchHTTPSRR();
-    }
     DebugOnly<nsresult> rv = aEnt->CreateDnsAndConnectSocket(
         aTrans, aTrans->Caps(), true, isFromPredictor, false, allow1918,
         nullptr);

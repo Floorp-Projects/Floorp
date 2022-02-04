@@ -32,7 +32,7 @@ namespace places {
  * In SQL, you'd use it in the WHERE clause like so:
  * WHERE AUTOCOMPLETE_MATCH(aSearchString, aURL, aTitle, aTags, aVisitCount,
  *                          aTyped, aBookmark, aOpenPageCount, aMatchBehavior,
- *                          aSearchBehavior)
+ *                          aSearchBehavior, aFallbackTitle)
  *
  * @param aSearchString
  *        The string to compare against.
@@ -55,6 +55,9 @@ namespace places {
  *        The match behavior to use for this search.
  * @param aSearchBehavior
  *        A bitfield dictating the search behavior.
+ * @param aFallbackTitle
+ *        The title may come from a bookmark or a snapshot, in that case the
+ *        caller can provide the original history title to match on both.
  */
 class MatchAutoCompleteFunction final : public mozIStorageFunction {
  public:
@@ -94,7 +97,8 @@ class MatchAutoCompleteFunction final : public mozIStorageFunction {
   static const uint32_t kArgIndexOpenPageCount = 7;
   static const uint32_t kArgIndexMatchBehavior = 8;
   static const uint32_t kArgIndexSearchBehavior = 9;
-  static const uint32_t kArgIndexLength = 10;
+  static const uint32_t kArgIndexFallbackTitle = 10;
+  static const uint32_t kArgIndexLength = 11;
 
   /**
    * Typedefs

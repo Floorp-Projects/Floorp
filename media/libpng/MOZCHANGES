@@ -11,7 +11,7 @@ are Copyright (c) 2006-2007 Andrew Smith, Copyright (c) 2008-2017 Max Stepin,
 and are delimited by "#ifdef PNG_APNG_SUPPORTED / #endif" directives
 surrounding them in the modified libpng source files.
 
-2021/09/12  -- Enabled automatic updates via Updatebot (meta bug #1618282). For
+2022/02/01  -- Enabled automatic updates via Updatebot (meta bug #1618282). For
                further updates to the library please review the mercurial
                history for /media/libpng/moz.yaml (bug #1687541).
 
