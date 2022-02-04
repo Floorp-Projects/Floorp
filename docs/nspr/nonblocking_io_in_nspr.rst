@@ -40,7 +40,7 @@ In NSPR, a new socket returned by <tt>PR_NewTCPSocket()</tt> or
 make the new socket nonblocking by using <tt>PR_SetSockOpt()</tt> as in
 the example below (error checking is omitted for clarity):
 
-| 
+|
 | <tt>PRFileDesc \*sock;</tt>
 | **<tt>PRIntn optval = 1;</tt>**
 

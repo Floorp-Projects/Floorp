@@ -147,4 +147,3 @@ Other advices
    extract substrings in known positions in the string. For instance,
    {{JSxRef("String.slice", "aString.slice(-1)")}} returns the last
    letter in ``aString``, or the empty string if ``aString`` is empty.
-

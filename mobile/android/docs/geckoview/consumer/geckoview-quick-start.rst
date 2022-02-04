@@ -7,7 +7,7 @@ How to use GeckoView in your Android app.
 
 *Building a browser? Check out* `Android Components <https://mozilla-mobile.github.io/android-components/>`_, *our collection of ready-to-use support libraries!*
 
-The following article is a brief guide to embedding GeckoView in an app. For a more in depth tutorial on getting started with GeckoView please read the article we have published on `raywenderlich.com <https://www.raywenderlich.com/1381698-android-tutorial-for-geckoview-getting-started>`_. 
+The following article is a brief guide to embedding GeckoView in an app. For a more in depth tutorial on getting started with GeckoView please read the article we have published on `raywenderlich.com <https://www.raywenderlich.com/1381698-android-tutorial-for-geckoview-getting-started>`_.
 
 .. contents:: :local:
 
@@ -20,7 +20,7 @@ You need to add or edit four stanzas inside your module's ``build.gradle`` file.
 
 *Like Firefox, GeckoView has three release channels: Stable, Beta, and Nightly. Browse the* `Maven Repository <https://maven.mozilla.org/?prefix=maven2/org/mozilla/geckoview/>`_ *to see currently available builds.*
 
-.. code-block:: groovy 
+.. code-block:: groovy
 
     ext {
         geckoviewChannel = <channel>
@@ -30,7 +30,7 @@ You need to add or edit four stanzas inside your module's ``build.gradle`` file.
 
 **2. Add Mozilla's Maven repository**
 
-.. code-block:: groovy 
+.. code-block:: groovy
 
     repositories {
         maven {
@@ -43,7 +43,7 @@ You need to add or edit four stanzas inside your module's ``build.gradle`` file.
 
 As GeckoView uses some Java 11 APIs, it requires these compatibility flags:
 
-.. code-block:: groovy 
+.. code-block:: groovy
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
@@ -52,11 +52,11 @@ As GeckoView uses some Java 11 APIs, it requires these compatibility flags:
 
 **4. Add GeckoView Implementations**
 
-.. code-block:: groovy 
+.. code-block:: groovy
 
     dependencies {
         // ...
-      implementation "org.mozilla.geckoview:geckoview-${geckoviewChannel}:${geckoviewVersion}"   
+      implementation "org.mozilla.geckoview:geckoview-${geckoviewChannel}:${geckoviewVersion}"
     }
 
 Add GeckoView to a Layout
@@ -64,7 +64,7 @@ Add GeckoView to a Layout
 
 Inside a layout ``.xml`` file, add the following:
 
-.. code-block:: xml 
+.. code-block:: xml
 
     <org.mozilla.geckoview.GeckoView
         xmlns:android="http://schemas.android.com/apk/res/android"
@@ -77,7 +77,7 @@ Initialize GeckoView in an Activity
 
 **1. Import the GeckoView classes inside an Activity:**
 
-.. code-block:: java 
+.. code-block:: java
 
     import org.mozilla.geckoview.GeckoRuntime;
     import org.mozilla.geckoview.GeckoSession;
@@ -85,7 +85,7 @@ Initialize GeckoView in an Activity
 
 **2. In that activity's** ``onCreate`` **function, add the following:**
 
-.. code-block:: java 
+.. code-block:: java
 
     GeckoView view = findViewById(R.id.geckoview);
     GeckoSession session = new GeckoSession();

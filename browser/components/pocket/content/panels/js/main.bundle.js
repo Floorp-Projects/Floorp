@@ -1054,11 +1054,12 @@ function Button(props) {
   return /*#__PURE__*/react.createElement("a", {
     href: props.url,
     className: `stp_button${props?.style && ` stp_button_${props.style}`}`
-  }, props.label);
+  }, props.children);
 }
 
 /* harmony default export */ const Button_Button = (Button);
 ;// CONCATENATED MODULE: ./content/panels/js/style-guide/overlay.js
+
 
 
 
@@ -1073,16 +1074,17 @@ StyleGuideOverlay.prototype = {
     react_dom.render( /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "JSX Components:"), /*#__PURE__*/react.createElement("h4", {
       className: "stp_styleguide_h4"
     }, "Button"), /*#__PURE__*/react.createElement(Button_Button, {
-      label: "Text Button",
       style: "text",
       url: "https://example.org"
-    }), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement(Button_Button, {
-      label: "Primary Button",
+    }, "Text Button"), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement(Button_Button, {
       style: "primary"
-    }), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement(Button_Button, {
-      label: "Secondary Button",
+    }, "Primary Button"), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement(Button_Button, {
       style: "secondary"
-    }), /*#__PURE__*/react.createElement("h4", {
+    }, "Secondary Button"), /*#__PURE__*/react.createElement("h4", {
+      className: "stp_styleguide_h4"
+    }, "Header"), /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement(Button_Button, {
+      style: "primary"
+    }, "View My List")), /*#__PURE__*/react.createElement("h4", {
       className: "stp_styleguide_h4"
     }, "PopularTopics"), /*#__PURE__*/react.createElement(PopularTopics_PopularTopics, {
       pockethost: `getpocket.com`,

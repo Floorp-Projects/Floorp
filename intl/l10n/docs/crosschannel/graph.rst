@@ -198,4 +198,4 @@ additional merge commits. The algorithm for finding good candidates for this
 corresponds to the algorithm we used when ensuring a single head on the update.
 
 With a known state of the changeset to convert, we'll describe the context
-with which the content is generated in the next section. 
+with which the content is generated in the next section.

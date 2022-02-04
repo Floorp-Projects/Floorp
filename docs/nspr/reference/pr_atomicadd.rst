@@ -35,5 +35,3 @@ Description
 -----------
 
 Atomically add a 32 bit value.
-
- 

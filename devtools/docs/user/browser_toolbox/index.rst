@@ -72,4 +72,3 @@ You can use the same technique to debug `popups created by add-ons <https://exte
 
 .. note::
   This change is not persistent across browser restarts. When you close the browser toolbox, the setting will be cleared.
-

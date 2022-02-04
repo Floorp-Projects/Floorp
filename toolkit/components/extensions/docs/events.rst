@@ -387,4 +387,3 @@ the ``unregister`` method.
        }
      }
    }
-

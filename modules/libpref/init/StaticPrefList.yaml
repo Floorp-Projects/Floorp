@@ -1525,7 +1525,7 @@
 
 # Add support for canvas path objects
 - name: canvas.path.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
 
@@ -5572,6 +5572,11 @@
   value: false
   mirror: always
 
+- name: gfx.will-change.ignore-opacity
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # We expose two prefs: gfx.webrender.all and gfx.webrender.enabled.
 # The first enables WR+additional features, and the second just enables WR.
 # For developer convenience, building with --enable-webrender=true or just
@@ -9211,6 +9216,15 @@
 - name: media.navigator.enabled
   type: bool
   value: true
+  mirror: always
+
+# This pref turns off window-focus checks on the navigator.mediaDevices methods,
+# for partner testing frameworks.
+# Prefer "focusmanager.testmode", which is already set by default for
+# web-platform tests.
+- name: media.devices.unfocused.enabled
+  type: bool
+  value: false
   mirror: always
 
 # This pref turns off [SecureContext] on the navigator.mediaDevices object, for

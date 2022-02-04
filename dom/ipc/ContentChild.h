@@ -834,6 +834,8 @@ class ContentChild final : public PContentChild,
       BrowsingContext* aStartingAt,
       const DispatchBeforeUnloadToSubtreeResolver& aResolver);
 
+  hal::ProcessPriority GetProcessPriority() const { return mProcessPriority; }
+
  private:
   mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
 

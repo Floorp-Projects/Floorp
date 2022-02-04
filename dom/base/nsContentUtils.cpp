@@ -81,6 +81,7 @@
 #include "mozilla/EventQueue.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/FlushType.h"
+#include "mozilla/FOGIPC.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/HangAnnotations.h"
 #include "mozilla/IMEStateManager.h"
@@ -10117,8 +10118,14 @@ nsContentUtils::UserInteractionObserver::Observe(nsISupports* aSubject,
                                                  const char* aTopic,
                                                  const char16_t* aData) {
   if (!strcmp(aTopic, kUserInteractionInactive)) {
+    if (sUserActive && XRE_IsParentProcess()) {
+      glean::RecordPowerMetrics();
+    }
     sUserActive = false;
   } else if (!strcmp(aTopic, kUserInteractionActive)) {
+    if (!sUserActive && XRE_IsParentProcess()) {
+      glean::RecordPowerMetrics();
+    }
     sUserActive = true;
   } else {
     NS_WARNING("Unexpected observer notification");

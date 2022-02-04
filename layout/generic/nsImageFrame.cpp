@@ -2005,7 +2005,8 @@ void nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
       OldImageHasDifferentRatio(*frame, *mImage, mPrevImage);
 
   uint32_t flags = imgIContainer::FLAG_NONE;
-  if (aBuilder->ShouldSyncDecodeImages() || oldImageIsDifferent) {
+  if (aBuilder->ShouldSyncDecodeImages() || oldImageIsDifferent ||
+      frame->mForceSyncDecoding) {
     flags |= imgIContainer::FLAG_SYNC_DECODE;
   }
   if (aBuilder->UseHighQualityScaling()) {
@@ -2089,7 +2090,8 @@ bool nsDisplayImage::CreateWebRenderCommands(
       OldImageHasDifferentRatio(*frame, *mImage, mPrevImage);
 
   uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
-  if (aDisplayListBuilder->ShouldSyncDecodeImages() || oldImageIsDifferent) {
+  if (aDisplayListBuilder->ShouldSyncDecodeImages() || oldImageIsDifferent ||
+      frame->mForceSyncDecoding) {
     flags |= imgIContainer::FLAG_SYNC_DECODE;
   }
   if (aDisplayListBuilder->UseHighQualityScaling()) {
@@ -2202,18 +2204,13 @@ ImgDrawResult nsImageFrame::PaintImage(gfxContext& aRenderingContext,
       constraintRect, mIntrinsicSize, mIntrinsicRatio, StylePosition(),
       &anchorPoint);
 
-  uint32_t flags = aFlags;
-  if (mForceSyncDecoding) {
-    flags |= imgIContainer::FLAG_SYNC_DECODE;
-  }
-
   Maybe<SVGImageContext> svgContext;
   SVGImageContext::MaybeStoreContextPaint(svgContext, this, aImage);
 
   ImgDrawResult result = nsLayoutUtils::DrawSingleImage(
       aRenderingContext, PresContext(), aImage,
       nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
-      svgContext, flags, &anchorPoint);
+      svgContext, aFlags, &anchorPoint);
 
   if (nsImageMap* map = GetImageMap()) {
     gfxPoint devPixelOffset = nsLayoutUtils::PointToGfxPoint(

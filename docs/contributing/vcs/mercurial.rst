@@ -29,7 +29,7 @@ Using Mercurial bundles
 
 If you are worried that your Internet connection is not fast or robust
 enough to download such a large amount of data all in one go without
-being interrupted and cannot clone using the command given above, then you are recommended to try :ref:`Mercurial bundles <Mercurial bundles>`. If interrupted, they can be resumed (continued without downloading 
+being interrupted and cannot clone using the command given above, then you are recommended to try :ref:`Mercurial bundles <Mercurial bundles>`. If interrupted, they can be resumed (continued without downloading
 from the beginning) if the app you're using to download supports it. For
 example, in Firefox you would right click on the download and select
 `Resume` once your connection to the Internet was reestablished.

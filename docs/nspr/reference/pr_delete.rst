@@ -36,5 +36,3 @@ Description
 :ref:`PR_Delete` deletes a file with the specified pathname ``name``. If
 the function fails, the error code can then be retrieved via
 :ref:`PR_GetError`.
-
- 

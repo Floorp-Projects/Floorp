@@ -9,6 +9,7 @@
 #include "ImageEncoder.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
+#include "mozilla/dom/OffscreenCanvasRenderingContext2D.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
@@ -137,6 +138,11 @@ CanvasRenderingContextHelper::CreateContextHelper(
       ret = new CanvasRenderingContext2D(aCompositorBackend);
       break;
 
+    case CanvasContextType::OffscreenCanvas2D:
+      Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
+      ret = new OffscreenCanvasRenderingContext2D(aCompositorBackend);
+      break;
+
     case CanvasContextType::WebGL1:
       Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
 
@@ -166,6 +172,7 @@ CanvasRenderingContextHelper::CreateContextHelper(
   }
   MOZ_ASSERT(ret);
 
+  ret->Initialize();
   return ret.forget();
 }
 

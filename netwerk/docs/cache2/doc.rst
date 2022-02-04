@@ -51,7 +51,7 @@ nsICacheStorageService
       version in a group) in hands, this storage will provide read and
       write access to entries in that application cache; when the app
       cache is not specified, this storage will operate over all
-      existing app caches. **This kind of storage is deprecated and will be removed** in `bug 1694662 <https://bugzilla.mozilla.org/show_bug.cgi?id=1694662>`_ 
+      existing app caches. **This kind of storage is deprecated and will be removed** in `bug 1694662 <https://bugzilla.mozilla.org/show_bug.cgi?id=1694662>`_
 
 -  The service also provides methods to clear the whole disk and memory
    cache content or purge any intermediate memory structures:
@@ -128,7 +128,7 @@ nsICacheEntryOpenCallback
 -  These callbacks are ensured to be invoked when ``asyncOpenURI``
    returns ``NS_OK``.
 
--  
+-
 
    .. note::
 
@@ -540,7 +540,7 @@ cache entries' meta data in memory for immediate zero-thread-loop
 opening. The default size of this meta data memory pool is only 250kB
 and is controlled by a new ``browser.cache.disk.metadata_memory_limit``
 preference. When the limit is exceeded, we purge (throw away) first
-**expired** and then **least used** entries to free up memory again. 
+**expired** and then **least used** entries to free up memory again.
 
 Only ``CacheEntry`` objects that are already loaded and filled with data
 and having the 'consumer reference == 0' (`bug

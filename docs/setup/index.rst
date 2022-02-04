@@ -4,7 +4,7 @@ Getting Set Up To Work On The Firefox Codebase
 This page will help you get set up to build Firefox on your own machine.
 
 .. toctree::
-   :caption: Thank you for contributing to Firefox 
+   :caption: Thank you for contributing to Firefox
 
    /contributing/contributing_to_mozilla
 

@@ -96,4 +96,3 @@ Watermark:
 
 Changeset:
   `7ae377917236 <https://hg.mozilla.org/mozilla-central/rev/7ae377917236>`_
-

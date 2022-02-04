@@ -24,4 +24,3 @@ When you use the split console with the debugger, the console's scope is the cur
 
 .. image:: split-console-show-debug.png
   :class: center
-

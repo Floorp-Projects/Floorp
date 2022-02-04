@@ -10,7 +10,7 @@ function Button(props) {
       href={props.url}
       className={`stp_button${props?.style && ` stp_button_${props.style}`}`}
     >
-      {props.label}
+      {props.children}
     </a>
   );
 }

@@ -134,24 +134,26 @@ class FrameHistory {
   double mBasePosition;
 };
 
-AudioStream::AudioStream(DataSource& aSource)
-    : mMonitor("AudioStream"),
-      mChannels(0),
-      mOutChannels(0),
-      mTimeStretcher(nullptr),
+AudioStream::AudioStream(DataSource& aSource, uint32_t aInRate,
+                         uint32_t aOutputChannels,
+                         AudioConfig::ChannelLayout::ChannelMap aChannelMap)
+    : mTimeStretcher(nullptr),
+      mMonitor("AudioStream"),
+      mOutChannels(aOutputChannels),
+      mChannelMap(aChannelMap),
+      mAudioClock(aInRate),
       mState(INITIALIZED),
       mDataSource(aSource),
-      mPrefillQuirk(false),
       mAudioThreadId(ProfilerThreadId{}),
-      mSandboxed(CubebUtils::SandboxEnabled()) {}
+      mSandboxed(CubebUtils::SandboxEnabled()),
+      mPlaybackComplete(false),
+      mPlaybackRate(1.0f),
+      mPreservesPitch(true) {}
 
 AudioStream::~AudioStream() {
   LOG("deleted, state %d", mState);
   MOZ_ASSERT(mState == SHUTDOWN && !mCubebStream,
              "Should've called Shutdown() before deleting an AudioStream");
-  if (mTimeStretcher) {
-    soundtouch::destroySoundTouchObj(mTimeStretcher);
-  }
 }
 
 size_t AudioStream::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
@@ -164,8 +166,8 @@ size_t AudioStream::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return amount;
 }
 
-nsresult AudioStream::EnsureTimeStretcherInitializedUnlocked() {
-  mMonitor.AssertCurrentThreadOwns();
+nsresult AudioStream::EnsureTimeStretcherInitialized() {
+  AssertIsOnAudioThread();
   if (!mTimeStretcher) {
     mTimeStretcher = soundtouch::createSoundTouchObj();
     mTimeStretcher->setSampleRate(mAudioClock.GetInputRate());
@@ -194,59 +196,25 @@ nsresult AudioStream::EnsureTimeStretcherInitializedUnlocked() {
 
 nsresult AudioStream::SetPlaybackRate(double aPlaybackRate) {
   TRACE("AudioStream::SetPlaybackRate");
-  // MUST lock since the rate transposer is used from the cubeb callback,
-  // and rate changes can cause the buffer to be reallocated
-  MonitorAutoLock mon(mMonitor);
-
   NS_ASSERTION(
       aPlaybackRate > 0.0,
       "Can't handle negative or null playbackrate in the AudioStream.");
-  // Avoid instantiating the resampler if we are not changing the playback rate.
-  // GetPreservesPitch/SetPreservesPitch don't need locking before calling
-  if (aPlaybackRate == mAudioClock.GetPlaybackRate()) {
+  if (aPlaybackRate == mPlaybackRate) {
     return NS_OK;
   }
 
-  if (EnsureTimeStretcherInitializedUnlocked() != NS_OK) {
-    return NS_ERROR_FAILURE;
-  }
+  mPlaybackRate = static_cast<float>(aPlaybackRate);
 
-  mAudioClock.SetPlaybackRate(aPlaybackRate);
-
-  if (mAudioClock.GetPreservesPitch()) {
-    mTimeStretcher->setTempo(aPlaybackRate);
-    mTimeStretcher->setRate(1.0f);
-  } else {
-    mTimeStretcher->setTempo(1.0f);
-    mTimeStretcher->setRate(aPlaybackRate);
-  }
   return NS_OK;
 }
 
 nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch) {
-  TRACE("AudiOStream::SetPreservesPitch");
-  // MUST lock since the rate transposer is used from the cubeb callback,
-  // and rate changes can cause the buffer to be reallocated
-  MonitorAutoLock mon(mMonitor);
-
-  // Avoid instantiating the timestretcher instance if not needed.
-  if (aPreservesPitch == mAudioClock.GetPreservesPitch()) {
+  TRACE("AudioStream::SetPreservesPitch");
+  if (aPreservesPitch == mPreservesPitch) {
     return NS_OK;
   }
 
-  if (EnsureTimeStretcherInitializedUnlocked() != NS_OK) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aPreservesPitch) {
-    mTimeStretcher->setTempo(mAudioClock.GetPlaybackRate());
-    mTimeStretcher->setRate(1.0f);
-  } else {
-    mTimeStretcher->setTempo(1.0f);
-    mTimeStretcher->setRate(mAudioClock.GetPlaybackRate());
-  }
-
-  mAudioClock.SetPreservesPitch(aPreservesPitch);
+  mPreservesPitch = aPreservesPitch;
 
   return NS_OK;
 }
@@ -267,32 +235,23 @@ int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs) {
   return aFunction(mCubebStream.get(), std::forward<Args>(aArgs)...);
 }
 
-nsresult AudioStream::Init(uint32_t aNumChannels,
-                           AudioConfig::ChannelLayout::ChannelMap aChannelMap,
-                           uint32_t aRate, AudioDeviceInfo* aSinkInfo) {
+nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo) {
   auto startTime = TimeStamp::Now();
   TRACE("AudioStream::Init");
 
-  LOG("%s channels: %d, rate: %d", __FUNCTION__, aNumChannels, aRate);
-  mChannels = aNumChannels;
-  mOutChannels = aNumChannels;
-
+  LOG("%s channels: %d, rate: %d", __FUNCTION__, mOutChannels,
+      mAudioClock.GetInputRate());
   mSinkInfo = aSinkInfo;
 
-  // Hasn't started playing audio yet.
-  mPlaybackComplete = false;
-
   cubeb_stream_params params;
-  params.rate = aRate;
+  params.rate = mAudioClock.GetInputRate();
   params.channels = mOutChannels;
-  params.layout = static_cast<uint32_t>(aChannelMap);
+  params.layout = static_cast<uint32_t>(mChannelMap);
   params.format = ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
   params.prefs = CubebUtils::GetDefaultStreamPrefs(CUBEB_DEVICE_TYPE_OUTPUT);
 
   // This is noop if MOZ_DUMP_AUDIO is not set.
-  mDumpFile.Open("AudioStream", mOutChannels, aRate);
-
-  mAudioClock.Init(aRate);
+  mDumpFile.Open("AudioStream", mOutChannels, mAudioClock.GetInputRate());
 
   cubeb* cubebContext = CubebUtils::GetCubebContext();
   if (!cubebContext) {
@@ -300,10 +259,6 @@ nsresult AudioStream::Init(uint32_t aNumChannels,
     CubebUtils::ReportCubebStreamInitFailure(true);
     return NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR;
   }
-
-  // cubeb's winmm backend prefills buffers on init rather than stream start.
-  // See https://github.com/kinetiknz/cubeb/issues/150
-  mPrefillQuirk = !strcmp(cubeb_get_backend_id(cubebContext), "winmm");
 
   return OpenCubeb(cubebContext, params, startTime,
                    CubebUtils::GetFirstStream());
@@ -458,34 +413,56 @@ void AudioStream::Shutdown() {
     mCubebStream.reset();
   }
 
+  // After `cubeb_stream_stop` has been called, there is no audio thread
+  // anymore. We can delete the time stretcher.
+  if (mTimeStretcher) {
+    soundtouch::destroySoundTouchObj(mTimeStretcher);
+    mTimeStretcher = nullptr;
+  }
+
   mState = SHUTDOWN;
   mEndedPromise.ResolveIfExists(true, __func__);
 }
 
 int64_t AudioStream::GetPosition() {
   TRACE("AudioStream::GetPosition");
+#ifndef XP_MACOSX
   MonitorAutoLock mon(mMonitor);
+#endif
   int64_t frames = GetPositionInFramesUnlocked();
   return frames >= 0 ? mAudioClock.GetPosition(frames) : -1;
 }
 
 int64_t AudioStream::GetPositionInFrames() {
   TRACE("AudioStream::GetPositionInFrames");
+#ifndef XP_MACOSX
   MonitorAutoLock mon(mMonitor);
+#endif
   int64_t frames = GetPositionInFramesUnlocked();
+
   return frames >= 0 ? mAudioClock.GetPositionInFrames(frames) : -1;
 }
 
 int64_t AudioStream::GetPositionInFramesUnlocked() {
   TRACE("AudioStream::GetPositionInFramesUnlocked");
+#ifndef XP_MACOSX
   mMonitor.AssertCurrentThreadOwns();
+#endif
 
   if (mState == ERRORED) {
     return -1;
   }
 
   uint64_t position = 0;
-  if (InvokeCubeb(cubeb_stream_get_position, &position) != CUBEB_OK) {
+  int rv;
+
+#ifndef XP_MACOSX
+  rv = InvokeCubeb(cubeb_stream_get_position, &position);
+#else
+  rv = cubeb_stream_get_position(mCubebStream.get(), &position);
+#endif
+
+  if (rv != CUBEB_OK) {
     return -1;
   }
   return static_cast<int64_t>(std::min<uint64_t>(position, INT64_MAX));
@@ -503,8 +480,7 @@ bool AudioStream::IsValidAudioFormat(Chunk* aChunk) {
 
 void AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
   TRACE("AudioStream::GetUnprocessed");
-  mMonitor.AssertCurrentThreadOwns();
-
+  AssertIsOnAudioThread();
   // Flush the timestretcher pipeline, if we were playing using a playback rate
   // other than 1.0.
   if (mTimeStretcher && mTimeStretcher->numSamples()) {
@@ -520,29 +496,27 @@ void AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
     // next time we switch a playback rate other than 1.0.
     NS_WARNING_ASSERTION(mTimeStretcher->numUnprocessedSamples() == 0,
                          "no samples");
+  } else if (mTimeStretcher) {
+    // Don't need it anymore: playbackRate is 1.0, and the time stretcher has
+    // been flushed.
+    soundtouch::destroySoundTouchObj(mTimeStretcher);
+    mTimeStretcher = nullptr;
   }
 
   while (aWriter.Available() > 0) {
-    UniquePtr<Chunk> c = mDataSource.PopFrames(aWriter.Available());
-    if (c->Frames() == 0) {
+    uint32_t count = mDataSource.PopFrames(aWriter.Ptr(), aWriter.Available(),
+                                           mAudioThreadChanged);
+    if (count == 0) {
       break;
     }
-    MOZ_ASSERT(c->Frames() <= aWriter.Available());
-    if (IsValidAudioFormat(c.get())) {
-      aWriter.Write(c->Data(), c->Frames());
-    } else {
-      // Write silence if invalid format.
-      aWriter.WriteZeros(c->Frames());
-    }
+    aWriter.Advance(count);
   }
 }
 
 void AudioStream::GetTimeStretched(AudioBufferWriter& aWriter) {
   TRACE("AudioStream::GetTimeStretched");
-  mMonitor.AssertCurrentThreadOwns();
-
-  // We need to call the non-locking version, because we already have the lock.
-  if (EnsureTimeStretcherInitializedUnlocked() != NS_OK) {
+  AssertIsOnAudioThread();
+  if (EnsureTimeStretcherInitialized() != NS_OK) {
     return;
   }
 
@@ -550,32 +524,23 @@ void AudioStream::GetTimeStretched(AudioBufferWriter& aWriter) {
       ceil(aWriter.Available() * mAudioClock.GetPlaybackRate());
 
   while (mTimeStretcher->numSamples() < aWriter.Available()) {
-    UniquePtr<Chunk> c = mDataSource.PopFrames(toPopFrames);
-    if (c->Frames() == 0) {
+    // pop into a temp buffer, and put into the stretcher.
+    AutoTArray<AudioDataValue, 1000> buf;
+    auto size = CheckedUint32(mOutChannels) * toPopFrames;
+    if (!size.isValid()) {
+      // The overflow should not happen in normal case.
+      LOGW("Invalid member data: %d channels, %d frames", mOutChannels,
+           toPopFrames);
+      return;
+    }
+    buf.SetLength(size.value());
+    // ensure no variable channel count or something like that
+    uint32_t count =
+        mDataSource.PopFrames(buf.Elements(), toPopFrames, mAudioThreadChanged);
+    if (count == 0) {
       break;
     }
-    MOZ_ASSERT(c->Frames() <= toPopFrames);
-    if (IsValidAudioFormat(c.get())) {
-      mTimeStretcher->putSamples(c->Data(), c->Frames());
-    } else {
-      // Write silence if invalid format.
-      AutoTArray<AudioDataValue, 1000> buf;
-      auto size = CheckedUint32(mOutChannels) * c->Frames();
-      if (!size.isValid()) {
-        // The overflow should not happen in normal case.
-        LOGW("Invalid member data: %d channels, %d frames", mOutChannels,
-             c->Frames());
-        return;
-      }
-      buf.SetLength(size.value());
-      size = size * sizeof(AudioDataValue);
-      if (!size.isValid()) {
-        LOGW("The required memory size is too large.");
-        return;
-      }
-      memset(buf.Elements(), 0, size.value());
-      mTimeStretcher->putSamples(buf.Elements(), c->Frames());
-    }
+    mTimeStretcher->putSamples(buf.Elements(), count);
   }
 
   auto* timeStretcher = mTimeStretcher;
@@ -590,45 +555,60 @@ bool AudioStream::CheckThreadIdChanged() {
   ProfilerThreadId id = profiler_current_thread_id();
   if (id != mAudioThreadId) {
     mAudioThreadId = id;
+    mAudioThreadChanged = true;
     return true;
   }
+  mAudioThreadChanged = false;
   return false;
 }
 
+void AudioStream::AssertIsOnAudioThread() const {
+  // This can be called right after CheckThreadIdChanged, because the audio
+  // thread can change when not sandboxed.
+  MOZ_ASSERT(mAudioThreadId.load() == profiler_current_thread_id());
+}
+
+void AudioStream::UpdatePlaybackRateIfNeeded() {
+  AssertIsOnAudioThread();
+  if (mAudioClock.GetPreservesPitch() == mPreservesPitch &&
+      mAudioClock.GetPlaybackRate() == mPlaybackRate) {
+    return;
+  }
+
+  EnsureTimeStretcherInitialized();
+
+  mAudioClock.SetPlaybackRate(mPlaybackRate);
+  mAudioClock.SetPreservesPitch(mPreservesPitch);
+
+  if (mPreservesPitch) {
+    mTimeStretcher->setTempo(mPlaybackRate);
+    mTimeStretcher->setRate(1.0f);
+  } else {
+    mTimeStretcher->setTempo(1.0f);
+    mTimeStretcher->setRate(mPlaybackRate);
+  }
+}
+
 long AudioStream::DataCallback(void* aBuffer, long aFrames) {
-  if (!mSandboxed && CheckThreadIdChanged()) {
+  if (CheckThreadIdChanged() && !mSandboxed) {
     CubebUtils::GetAudioThreadRegistry()->Register(mAudioThreadId);
   }
   WebCore::DenormalDisabler disabler;
 
   TRACE_AUDIO_CALLBACK_BUDGET(aFrames, mAudioClock.GetInputRate());
   TRACE("AudioStream::DataCallback");
-  MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != SHUTDOWN, "No data callback after shutdown");
 
   if (SoftRealTimeLimitReached()) {
     DemoteThreadFromRealTime();
   }
 
+  UpdatePlaybackRateIfNeeded();
+
   auto writer = AudioBufferWriter(
       Span<AudioDataValue>(reinterpret_cast<AudioDataValue*>(aBuffer),
                            mOutChannels * aFrames),
       mOutChannels, aFrames);
-
-  if (mPrefillQuirk) {
-    // Don't consume audio data until Start() is called.
-    // Expected only with cubeb winmm backend.
-    if (mState == INITIALIZED) {
-      NS_WARNING("data callback fires before cubeb_stream_start() is called");
-      mAudioClock.UpdateFrameHistory(0, aFrames);
-      return writer.WriteZeros(aFrames);
-    }
-  } else {
-    MOZ_ASSERT(mState != INITIALIZED);
-  }
-
-  // NOTE: wasapi (others?) can call us back *after* stop()/Shutdown() (mState
-  // == SHUTDOWN) Bug 996162
 
   if (mAudioClock.GetInputRate() == mAudioClock.GetOutputRate()) {
     GetUnprocessed(writer);
@@ -639,8 +619,11 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
   // Always send audible frames first, and silent frames later.
   // Otherwise it will break the assumption of FrameHistory.
   if (!mDataSource.Ended()) {
+#ifndef XP_MACOSX
+    MonitorAutoLock mon(mMonitor);
+#endif
     mAudioClock.UpdateFrameHistory(aFrames - writer.Available(),
-                                   writer.Available());
+                                   writer.Available(), mAudioThreadChanged);
     if (writer.Available() > 0) {
       TRACE_COMMENT("AudioStream::DataCallback", "Underrun: %d frames missing",
                     writer.Available());
@@ -648,9 +631,17 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
       writer.WriteZeros(writer.Available());
     }
   } else {
-    // No more new data in the data source. Don't send silent frames so the
-    // cubeb stream can start draining.
-    mAudioClock.UpdateFrameHistory(aFrames - writer.Available(), 0);
+    // No more new data in the data source, and the drain has completed. We
+    // don't need the time stretcher anymore at this point.
+    if (mTimeStretcher && writer.Available()) {
+      soundtouch::destroySoundTouchObj(mTimeStretcher);
+      mTimeStretcher = nullptr;
+    }
+#ifndef XP_MACOSX
+    MonitorAutoLock mon(mMonitor);
+#endif
+    mAudioClock.UpdateFrameHistory(aFrames - writer.Available(), 0,
+                                   mAudioThreadChanged);
   }
 
   mDumpFile.Write(static_cast<const AudioDataValue*>(aBuffer),
@@ -681,27 +672,54 @@ void AudioStream::StateCallback(cubeb_state aState) {
 
 bool AudioStream::IsPlaybackCompleted() const { return mPlaybackComplete; }
 
-AudioClock::AudioClock()
-    : mOutRate(0),
-      mInRate(0),
+AudioClock::AudioClock(uint32_t aInRate)
+    : mOutRate(aInRate),
+      mInRate(aInRate),
       mPreservesPitch(true),
       mFrameHistory(new FrameHistory()) {}
 
-void AudioClock::Init(uint32_t aRate) {
-  mOutRate = aRate;
-  mInRate = aRate;
-}
-
-void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun) {
+void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun,
+                                    bool aAudioThreadChanged) {
+#ifdef XP_MACOSX
+  if (aAudioThreadChanged) {
+    mCallbackInfoQueue.ResetThreadIds();
+  }
+  // Flush the local items, if any, and then attempt to enqueue the current
+  // item. This is only a fallback mechanism, under non-critical load this is
+  // just going to enqueue an item in the queue.
+  while (!mAudioThreadCallbackInfo.IsEmpty()) {
+    CallbackInfo& info = mAudioThreadCallbackInfo[0];
+    // If still full, keep it audio-thread side for now.
+    if (mCallbackInfoQueue.Enqueue(info) != 1) {
+      break;
+    }
+    mAudioThreadCallbackInfo.RemoveElementAt(0);
+  }
+  CallbackInfo info(aServiced, aUnderrun, mOutRate);
+  if (mCallbackInfoQueue.Enqueue(info) != 1) {
+    NS_WARNING(
+        "mCallbackInfoQueue full, storing the values in the audio thread.");
+    mAudioThreadCallbackInfo.AppendElement(info);
+  }
+#else
   mFrameHistory->Append(aServiced, aUnderrun, mOutRate);
+#endif
 }
 
-int64_t AudioClock::GetPositionInFrames(int64_t aFrames) const {
+int64_t AudioClock::GetPositionInFrames(int64_t aFrames) {
   CheckedInt64 v = UsecsToFrames(GetPosition(aFrames), mInRate);
   return v.isValid() ? v.value() : -1;
 }
 
-int64_t AudioClock::GetPosition(int64_t frames) const {
+int64_t AudioClock::GetPosition(int64_t frames) {
+#ifdef XP_MACOSX
+  // Dequeue all history info, and apply them before returning the position
+  // based on frame history.
+  CallbackInfo info;
+  while (mCallbackInfoQueue.Dequeue(&info, 1)) {
+    mFrameHistory->Append(info.mServiced, info.mUnderrun, info.mOutputRate);
+  }
+#endif
   return mFrameHistory->GetPosition(frames);
 }
 

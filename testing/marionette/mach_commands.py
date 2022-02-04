@@ -50,6 +50,9 @@ def run_marionette(tests, binary=None, topsrcdir=None, **kwargs):
 
     parser.verify_usage(args)
 
+    # Causes Firefox to crash when using non-local connections.
+    os.environ["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
+
     if not args.logger:
         args.logger = commandline.setup_logging(
             "Marionette Unit Tests", args, {"mach": sys.stdout}

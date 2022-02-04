@@ -10,7 +10,7 @@ added in alphabetic order and nearby the other WebExtensions API bindings alread
 WebExtensions APIs):
 
 .. code-block::
- 
+
     # WebExtension API
     ...
     'ExtensionRuntime': {
