@@ -7,13 +7,14 @@ package org.mozilla.fenix.library.historymetadata.controller
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import mozilla.components.browser.state.action.HistoryMetadataAction
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.tabs.TabsUseCases
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentAction
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentDirections
@@ -75,7 +76,8 @@ interface HistoryMetadataGroupController {
  * The default implementation of [HistoryMetadataGroupController].
  */
 class DefaultHistoryMetadataGroupController(
-    private val activity: HomeActivity,
+    private val historyStorage: PlacesHistoryStorage,
+    private val browserStore: BrowserStore,
     private val store: HistoryMetadataGroupFragmentStore,
     private val selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase,
     private val metrics: MetricController,
@@ -117,10 +119,18 @@ class DefaultHistoryMetadataGroupController(
 
     override fun handleDelete(items: Set<History.Metadata>) {
         scope.launch {
+            val isDeletingLastItem = store.state.items.size == items.size
             items.forEach {
                 store.dispatch(HistoryMetadataGroupFragmentAction.Delete(it))
-                activity.components.core.historyStorage.deleteHistoryMetadata(it.historyMetadataKey)
+                historyStorage.deleteVisitsFor(it.url)
                 metrics.track(Event.HistorySearchTermGroupRemoveTab)
+            }
+            // The method is called for both single and multiple items.
+            // In case all items have been deleted, we have to disband the search group.
+            if (isDeletingLastItem) {
+                browserStore.dispatch(
+                    HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = searchTerm)
+                )
             }
         }
     }
@@ -128,7 +138,12 @@ class DefaultHistoryMetadataGroupController(
     override fun handleDeleteAll() {
         scope.launch {
             store.dispatch(HistoryMetadataGroupFragmentAction.DeleteAll)
-            activity.components.core.historyStorage.deleteHistoryMetadata(searchTerm)
+            store.state.items.forEach {
+                historyStorage.deleteVisitsFor(it.url)
+            }
+            browserStore.dispatch(
+                HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = searchTerm)
+            )
             metrics.track(Event.HistorySearchTermGroupRemoveAll)
         }
     }

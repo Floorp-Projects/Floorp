@@ -11,6 +11,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.HistoryMetadataKey
@@ -46,6 +47,7 @@ class HistoryMetadataGroupControllerTest {
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val store: HistoryMetadataGroupFragmentStore = mockk(relaxed = true)
+    private val browserStore: BrowserStore = mockk(relaxed = true)
     private val selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
@@ -74,10 +76,13 @@ class HistoryMetadataGroupControllerTest {
 
     private lateinit var controller: DefaultHistoryMetadataGroupController
 
+    private fun getMetadataItemsList() = listOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem)
+
     @Before
     fun setUp() {
         controller = DefaultHistoryMetadataGroupController(
-            activity = activity,
+            historyStorage = historyStorage,
+            browserStore = browserStore,
             store = store,
             selectOrAddUseCase = selectOrAddUseCase,
             metrics = metrics,
@@ -87,6 +92,7 @@ class HistoryMetadataGroupControllerTest {
         )
 
         every { activity.components.core.historyStorage } returns historyStorage
+        every { store.state.items } returns getMetadataItemsList()
     }
 
     @After
@@ -99,7 +105,10 @@ class HistoryMetadataGroupControllerTest {
         controller.handleOpen(mozillaHistoryMetadataItem)
 
         verify {
-            selectOrAddUseCase.invoke(mozillaHistoryMetadataItem.url, mozillaHistoryMetadataItem.historyMetadataKey)
+            selectOrAddUseCase.invoke(
+                mozillaHistoryMetadataItem.url,
+                mozillaHistoryMetadataItem.historyMetadataKey
+            )
             navController.navigate(R.id.browserFragment)
             metrics.track(Event.HistorySearchTermGroupOpenTab)
         }
@@ -158,13 +167,13 @@ class HistoryMetadataGroupControllerTest {
 
     @Test
     fun handleDelete() = testDispatcher.runBlockingTest {
-        controller.handleDelete(setOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem))
+        controller.handleDelete(getMetadataItemsList().toSet())
 
         coVerify {
-            store.dispatch(HistoryMetadataGroupFragmentAction.Delete(mozillaHistoryMetadataItem))
-            store.dispatch(HistoryMetadataGroupFragmentAction.Delete(firefoxHistoryMetadataItem))
-            historyStorage.deleteHistoryMetadata(mozillaHistoryMetadataItem.historyMetadataKey)
-            historyStorage.deleteHistoryMetadata(firefoxHistoryMetadataItem.historyMetadataKey)
+            getMetadataItemsList().forEach {
+                store.dispatch(HistoryMetadataGroupFragmentAction.Delete(it))
+                historyStorage.deleteVisitsFor(it.url)
+            }
             metrics.track(Event.HistorySearchTermGroupRemoveTab)
         }
     }
@@ -175,7 +184,9 @@ class HistoryMetadataGroupControllerTest {
 
         coVerify {
             store.dispatch(HistoryMetadataGroupFragmentAction.DeleteAll)
-            historyStorage.deleteHistoryMetadata(searchTerm)
+            getMetadataItemsList().forEach {
+                historyStorage.deleteVisitsFor(it.url)
+            }
             metrics.track(Event.HistorySearchTermGroupRemoveAll)
         }
     }

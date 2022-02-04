@@ -16,7 +16,6 @@ import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.HistoryItemTimeGroup
 import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.utils.Settings.Companion.SEARCH_GROUP_MINIMUM_SITES
-import kotlin.math.abs
 
 private const val BUFFER_TIME = 15000 /* 15 seconds in ms */
 
@@ -155,35 +154,15 @@ class DefaultPagedHistoryProvider(
      * Removes [group] and any corresponding history visits.
      */
     suspend fun deleteMetadataSearchGroup(group: History.Group) {
+        // The intention is to delete items from history for good.
+        // Corresponding metadata items would also be removed,
+        // because of ON DELETE CASCADE relation in DB schema.
         for (historyMetadata in group.items) {
-            getMatchingHistory(historyMetadata)?.let {
-                historyStorage.deleteVisit(
-                    url = it.url,
-                    timestamp = it.visitTime
-                )
-            }
+            historyStorage.deleteVisitsFor(historyMetadata.url)
         }
-
-        historyStorage.deleteHistoryMetadata(
-            searchTerm = group.title
-        )
 
         // Force a re-fetch of the groups next time we go through #getHistory.
         historyGroups = null
-    }
-
-    /**
-     * Returns the [History.Regular] corresponding to the given [History.Metadata] item.
-     */
-    private suspend fun getMatchingHistory(historyMetadata: History.Metadata): VisitInfo? {
-        val history = historyStorage.getDetailedVisits(
-            start = historyMetadata.visitedAt - BUFFER_TIME,
-            end = historyMetadata.visitedAt + BUFFER_TIME,
-            excludeTypes = excludedVisitTypes
-        )
-        return history
-            .filter { it.url == historyMetadata.url }
-            .minByOrNull { abs(historyMetadata.visitedAt - it.visitTime) }
     }
 
     @Suppress("MagicNumber")

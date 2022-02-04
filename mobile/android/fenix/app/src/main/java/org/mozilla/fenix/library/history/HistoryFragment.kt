@@ -367,7 +367,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
                         analytics.metrics.track(Event.HistoryItemRemoved)
 
                         when (item) {
-                            is History.Regular -> core.historyStorage.deleteVisit(item.url, item.visitedAt)
+                            is History.Regular -> core.historyStorage.deleteVisitsFor(item.url)
                             is History.Group -> {
                                 // NB: If we have non-search groups, this logic needs to be updated.
                                 historyProvider.deleteMetadataSearchGroup(item)
