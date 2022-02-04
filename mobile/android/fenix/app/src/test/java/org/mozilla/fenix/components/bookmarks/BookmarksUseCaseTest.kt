@@ -66,7 +66,8 @@ class BookmarksUseCaseTest {
             title = "firefox",
             visitTime = 2,
             visitType = VisitType.LINK,
-            previewImageUrl = "http://firefox.com/image1"
+            previewImageUrl = "http://firefox.com/image1",
+            isRemote = false
         )
         val bookmarkNode = BookmarkNode(
             BookmarkNodeType.ITEM,

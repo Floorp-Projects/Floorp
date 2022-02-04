@@ -38,21 +38,24 @@ class PagedHistoryProviderTest {
             title = "mozilla",
             visitTime = 5,
             visitType = VisitType.LINK,
-            previewImageUrl = null
+            previewImageUrl = null,
+            isRemote = false
         )
         val visitInfo2 = VisitInfo(
             url = "http://www.firefox.com",
             title = "firefox",
             visitTime = 2,
             visitType = VisitType.LINK,
-            previewImageUrl = null
+            previewImageUrl = null,
+            isRemote = false
         )
         val visitInfo3 = VisitInfo(
             url = "http://www.wikipedia.com",
             title = "wikipedia",
             visitTime = 1,
             visitType = VisitType.LINK,
-            previewImageUrl = null
+            previewImageUrl = null,
+            isRemote = false
         )
         val historyMetadataKey1 = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
         val historyEntry1 = HistoryMetadata(
@@ -156,7 +159,8 @@ class PagedHistoryProviderTest {
             title = "mozilla",
             visitTime = 25000,
             visitType = VisitType.LINK,
-            previewImageUrl = null
+            previewImageUrl = null,
+            isRemote = false
         )
 
         val historyMetadataKey1 = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
@@ -228,7 +232,8 @@ class PagedHistoryProviderTest {
             title = "mozilla",
             visitTime = 10000,
             visitType = VisitType.LINK,
-            previewImageUrl = null
+            previewImageUrl = null,
+            isRemote = false
         )
 
         val historyMetadataKey1 = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
@@ -299,28 +304,32 @@ class PagedHistoryProviderTest {
             title = "mozilla",
             visitTime = 5,
             visitType = VisitType.LINK,
-            previewImageUrl = null
+            previewImageUrl = null,
+            isRemote = false
         )
         val visitInfo2 = VisitInfo(
             url = "http://www.firefox.com",
             title = "firefox",
             visitTime = 2,
             visitType = VisitType.LINK,
-            previewImageUrl = null
+            previewImageUrl = null,
+            isRemote = false
         )
         val visitInfo3 = VisitInfo(
             url = "http://www.google.com/link?url=http://www.firefox.com",
             title = "",
             visitTime = 1,
             visitType = VisitType.REDIRECT_TEMPORARY,
-            previewImageUrl = null
+            previewImageUrl = null,
+            isRemote = false
         )
         val visitInfo4 = VisitInfo(
             url = "http://mozilla.com",
             title = "",
             visitTime = 1,
             visitType = VisitType.REDIRECT_PERMANENT,
-            previewImageUrl = null
+            previewImageUrl = null,
+            isRemote = false
         )
 
         val historyMetadataKey1 = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
