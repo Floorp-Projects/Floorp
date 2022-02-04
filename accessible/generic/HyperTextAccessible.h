@@ -146,20 +146,18 @@ class HyperTextAccessible : public AccessibleWrap,
    */
   bool IsLineEndCharAt(int32_t aOffset) { return IsCharAt(aOffset, '\n'); }
 
-  /**
-   * Return text before/at/after the given offset corresponding to
-   * the boundary type.
-   */
-  void TextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
-                        int32_t* aStartOffset, int32_t* aEndOffset,
-                        nsAString& aText);
+  virtual void TextBeforeOffset(int32_t aOffset,
+                                AccessibleTextBoundary aBoundaryType,
+                                int32_t* aStartOffset, int32_t* aEndOffset,
+                                nsAString& aText) override;
   virtual void TextAtOffset(int32_t aOffset,
                             AccessibleTextBoundary aBoundaryType,
                             int32_t* aStartOffset, int32_t* aEndOffset,
                             nsAString& aText) override;
-  void TextAfterOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
-                       int32_t* aStartOffset, int32_t* aEndOffset,
-                       nsAString& aText);
+  virtual void TextAfterOffset(int32_t aOffset,
+                               AccessibleTextBoundary aBoundaryType,
+                               int32_t* aStartOffset, int32_t* aEndOffset,
+                               nsAString& aText) override;
 
   virtual already_AddRefed<AccAttributes> TextAttributes(
       bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
