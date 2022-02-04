@@ -28,8 +28,6 @@ class nsRetrievalContextWayland final : public nsRetrievalContext {
  private:
   ClipboardData WaitForClipboardData(ClipboardDataType, int32_t aWhichClipboard,
                                      const char* aMimeType = nullptr);
-
-  mozilla::Mutex mMutex;
 };
 
 #endif /* __nsClipboardWayland_h_ */

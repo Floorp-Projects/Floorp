@@ -17,10 +17,8 @@
 #include <string.h>
 
 using namespace mozilla;
-using namespace mozilla::widget;
 
-nsRetrievalContextWayland::nsRetrievalContextWayland()
-    : mMutex("nsRetrievalContextWayland") {}
+nsRetrievalContextWayland::nsRetrievalContextWayland() = default;
 
 ClipboardTargets nsRetrievalContextWayland::GetTargets(
     int32_t aWhichClipboard) {
@@ -54,13 +52,6 @@ ClipboardData nsRetrievalContextWayland::WaitForClipboardData(
     const char* aMimeType) {
   LOGCLIP("nsRetrievalContextWayland::WaitForClipboardData, MIME %s\n",
           aMimeType);
-
-  if (!mMutex.TryLock()) {
-    LOGCLIP("  nsRetrievalContextWayland is already used!\n");
-    return {};
-  }
-
-  auto releaseLock = MakeScopeExit([&] { mMutex.Unlock(); });
 
   AsyncGtkClipboardRequest request(aDataType, aWhichClipboard, aMimeType);
   int iteration = 1;
