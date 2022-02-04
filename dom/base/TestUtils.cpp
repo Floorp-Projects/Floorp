@@ -31,6 +31,7 @@ already_AddRefed<Promise> TestUtils::Gc(const GlobalObject& aGlobal,
       NS_NewCancelableRunnableFunction("TestUtils::Gc", [promise] {
         if (NS_IsMainThread()) {
           nsJSContext::GarbageCollectNow(JS::GCReason::DOM_TESTUTILS,
+                                         nsJSContext::NonIncrementalGC,
                                          nsJSContext::NonShrinkingGC);
           nsJSContext::CycleCollectNow(CCReason::API);
         } else {
