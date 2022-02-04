@@ -37,6 +37,7 @@ class InputMap extends Component {
       onAdd: PropTypes.func,
       onDelete: PropTypes.func,
       onChange: PropTypes.func,
+      onChecked: PropTypes.func,
       resizeable: PropTypes.bool,
     };
   }
@@ -80,7 +81,7 @@ class InputMap extends Component {
   }
 
   render() {
-    const { list, onUpdate, onAdd, onDelete } = this.props;
+    const { list, onUpdate, onAdd, onDelete, onChecked } = this.props;
     const { name, value } = this.state;
 
     const onKeyDown = e => {
@@ -113,7 +114,9 @@ class InputMap extends Component {
             id: "http-custom-input-checkbox",
             name: `checked-${index}`,
             type: "checkbox",
-            onChange: () => {},
+            onChange: event => {
+              onChecked(index, event.target.checked);
+            },
             checked: item.checked,
             disabled: !!item.disabled,
             wrap: "off",
