@@ -8,15 +8,8 @@
 #ifndef __nsClipboardWayland_h_
 #define __nsClipboardWayland_h_
 
-#include <gtk/gtk.h>
-#include <gdk/gdkwayland.h>
-#include <nsTArray.h>
-
 #include "mozilla/Mutex.h"
-#include "mozilla/Maybe.h"
-#include "nsIThread.h"
 #include "nsClipboard.h"
-#include "nsWaylandDisplay.h"
 
 class nsRetrievalContextWayland final : public nsRetrievalContext {
  public:
@@ -32,18 +25,10 @@ class nsRetrievalContextWayland final : public nsRetrievalContext {
   // GetClipboardData()/GetClipboardText() and ReleaseClipboardData() calls.
   ClipboardTargets GetTargets(int32_t aWhichClipboard) override;
 
-  void TransferClipboardData(ClipboardDataType aDataType,
-                             int aClipboardRequestNumber, const void* aData);
-
-  bool HasSelectionSupport(void) override { return true; }
-
  private:
   ClipboardData WaitForClipboardData(ClipboardDataType, int32_t aWhichClipboard,
                                      const char* aMimeType = nullptr);
-  ClipboardData WaitForClipboardContent();
 
-  int mClipboardRequestNumber = 0;
-  mozilla::Maybe<ClipboardData> mClipboardData;
   mozilla::Mutex mMutex;
 };
 
