@@ -2552,7 +2552,7 @@ struct ABIFunctionArgs {
   explicit ABIFunctionArgs(ABIFunctionType sig)
       : abiType(ABIFunctionType(sig >> ArgType_Shift)) {
     len = 0;
-    uint32_t i = uint32_t(abiType);
+    uint64_t i = uint64_t(abiType);
     while (i) {
       i = i >> ArgType_Shift;
       len++;
@@ -2563,7 +2563,7 @@ struct ABIFunctionArgs {
 
   MIRType operator[](size_t i) const {
     MOZ_ASSERT(i < len);
-    uint32_t abi = uint32_t(abiType);
+    uint64_t abi = uint64_t(abiType);
     while (i--) {
       abi = abi >> ArgType_Shift;
     }
