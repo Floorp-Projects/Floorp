@@ -5,7 +5,7 @@
 "use strict";
 
 const MDN_BASE_URL =
-  "https://firefox-source-docs.mozilla.org/devtools-user/storage_inspector/";
+  "https://developer.mozilla.org/docs/Tools/Storage_Inspector/";
 
 /**
  * Get the MDN URL for the specified storage type.
@@ -17,16 +17,16 @@ const MDN_BASE_URL =
 function getStorageTypeURL(type) {
   switch (type) {
     case "cookies":
-      return `${MDN_BASE_URL}cookies`;
+      return `${MDN_BASE_URL}Cookies`;
     case "localStorage":
     case "sessionStorage":
-      return `${MDN_BASE_URL}local_storage_session_storage`;
+      return `${MDN_BASE_URL}Local_storage_Session_storage`;
     case "indexedDB":
-      return `${MDN_BASE_URL}indexeddb`;
+      return `${MDN_BASE_URL}IndexedDB`;
     case "Cache":
-      return `${MDN_BASE_URL}cache_storage`;
+      return `${MDN_BASE_URL}Cache_Storage`;
     case "extensionStorage":
-      return `${MDN_BASE_URL}extension_storage`;
+      return `${MDN_BASE_URL}Extension_storage`;
     default:
       return null;
   }

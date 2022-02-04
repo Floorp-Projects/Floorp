@@ -1150,7 +1150,8 @@ class StorageUI {
       }
       this.table.setPlaceholder(
         storageTypeHintL10nId,
-        getStorageTypeURL(this.table.datatype)
+        getStorageTypeURL(this.table.datatype) +
+          "?utm_source=devtools&utm_medium=storage-inspector"
       );
 
       // If selected item has no host then reset table headers

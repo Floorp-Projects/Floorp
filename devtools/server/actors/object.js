@@ -660,10 +660,10 @@ const proto = {
   },
 
   /**
-   * Converts a Debugger API completion value record into an equivalent
+   * Converts a Debugger API completion value record into an eqivalent
    * object grip for use by the API.
    *
-   * See https://firefox-source-docs.mozilla.org/devtools-user/debugger-api/
+   * See https://developer.mozilla.org/en-US/docs/Tools/Debugger-API/Conventions#completion-values
    * for more specifics on the expected behavior.
    */
   _buildCompletion(value) {

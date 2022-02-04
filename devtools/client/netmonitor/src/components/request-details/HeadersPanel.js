@@ -110,7 +110,7 @@ const HEADERS_ETP = L10N.getStr(
  * Lists basic information about the request
  *
  * In http/2 all response headers are in small case.
- * See: https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/request_details/index.html#response-headers
+ * See: https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_details#Headers
  * RFC: https://tools.ietf.org/html/rfc7540#section-8.1.2
  */
 class HeadersPanel extends Component {
