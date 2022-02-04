@@ -161,6 +161,7 @@ MOCHITEST_MANIFESTS += [
     "mochitest/gamepad/mochitest.ini",
     "mochitest/general/mochitest.ini",
     "mochitest/geolocation/mochitest.ini",
+    "mochitest/integer-gemm/mochitest.ini",
     "mochitest/keyhandling/mochitest.ini",
     "mochitest/localstorage/mochitest.ini",
     "mochitest/orientation/mochitest.ini",
