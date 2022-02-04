@@ -270,7 +270,7 @@ void ReadableByteStreamControllerClose(
     JSContext* aCx, ReadableByteStreamController* aController,
     ErrorResult& aRv) {
   // Step 1.
-  ReadableStream* stream = aController->Stream();
+  RefPtr<ReadableStream> stream = aController->Stream();
 
   // Step 2.
   if (aController->CloseRequested() ||
@@ -644,7 +644,7 @@ void ReadableByteStreamControllerEnqueue(
   aRv.MightThrowJSException();
 
   // Step 1.
-  ReadableStream* stream = aController->Stream();
+  RefPtr<ReadableStream> stream = aController->Stream();
 
   // Step 2.
   if (aController->CloseRequested() ||
@@ -867,7 +867,8 @@ void ReadableByteStreamControllerHandleQueueDrain(
     ReadableByteStreamControllerClearAlgorithms(aController);
 
     // Step 2.2
-    ReadableStreamClose(aCx, aController->Stream(), aRv);
+    RefPtr<ReadableStream> stream = aController->Stream();
+    ReadableStreamClose(aCx, stream, aRv);
     return;
   }
 

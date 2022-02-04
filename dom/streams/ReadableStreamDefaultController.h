@@ -60,7 +60,7 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
 
   Nullable<double> GetDesiredSize();
 
-  void Close(JSContext* aCx, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Close(JSContext* aCx, ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT void Enqueue(JSContext* aCx, JS::Handle<JS::Value> aChunk,
                                   ErrorResult& aRv);
@@ -158,7 +158,7 @@ MOZ_CAN_RUN_SCRIPT extern void ReadableStreamDefaultControllerEnqueue(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
 
-extern void ReadableStreamDefaultControllerClose(
+MOZ_CAN_RUN_SCRIPT extern void ReadableStreamDefaultControllerClose(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     ErrorResult& aRv);
 
