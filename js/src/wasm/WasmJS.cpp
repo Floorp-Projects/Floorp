@@ -5321,8 +5321,15 @@ static bool WebAssembly_mozIntGemm(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   RootedWasmModuleObject module(cx);
-  if (!wasm::CompileIntrinsicModule(cx, mozilla::Span<IntrinsicOp>(),
-                                    Shareable::True, &module)) {
+  wasm::IntrinsicOp ops[] = {
+      wasm::IntrinsicOp::I8PrepareB,
+      wasm::IntrinsicOp::I8PrepareBFromTransposed,
+      wasm::IntrinsicOp::I8PrepareBFromQuantizedTransposed,
+      wasm::IntrinsicOp::I8PrepareA,
+      wasm::IntrinsicOp::I8PrepareBias,
+      wasm::IntrinsicOp::I8MultiplyAndAddBias,
+      wasm::IntrinsicOp::I8SelectColumnsOfB};
+  if (!wasm::CompileIntrinsicModule(cx, ops, Shareable::False, &module)) {
     ReportOutOfMemory(cx);
     return false;
   }

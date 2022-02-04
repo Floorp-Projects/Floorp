@@ -980,6 +980,89 @@ Tester.prototype = {
     });
   },
 
+  async handleTask(task, currentTest, PromiseTestUtils, isSetup = false) {
+    let currentScope = currentTest.scope;
+    let desc = isSetup ? "setup" : "test";
+    currentScope.SimpleTest.info(`Entering ${desc} ${task.name}`);
+    let startTimestamp = performance.now();
+    try {
+      let result = await task();
+      if (isGenerator(result)) {
+        currentScope.SimpleTest.ok(false, "Task returned a generator");
+      }
+    } catch (ex) {
+      if (currentTest.timedOut) {
+        currentTest.addResult(
+          new testResult({
+            name: `Uncaught exception received from previously timed out ${desc}`,
+            pass: false,
+            ex,
+            stack: typeof ex == "object" && "stack" in ex ? ex.stack : null,
+            allowFailure: currentTest.allowFailure,
+          })
+        );
+        // We timed out, so we've already cleaned up for this test, just get outta here.
+        return;
+      }
+      currentTest.addResult(
+        new testResult({
+          name: `Uncaught exception in ${desc}`,
+          pass: currentScope.SimpleTest.isExpectingUncaughtException(),
+          ex,
+          stack: typeof ex == "object" && "stack" in ex ? ex.stack : null,
+          allowFailure: currentTest.allowFailure,
+        })
+      );
+    }
+    PromiseTestUtils.assertNoUncaughtRejections();
+    ChromeUtils.addProfilerMarker(
+      isSetup ? "setup-task" : "task",
+      { category: "Test", startTime: startTimestamp },
+      task.name.replace(/^bound /, "") || undefined
+    );
+    currentScope.SimpleTest.info(`Leaving ${desc} ${task.name}`);
+  },
+
+  async _runTaskBasedTest(currentTest) {
+    let currentScope = currentTest.scope;
+
+    // First run all the setups:
+    let setupFn;
+    while ((setupFn = currentScope.__setups.shift())) {
+      await this.handleTask(
+        setupFn,
+        currentTest,
+        this.PromiseTestUtils,
+        true /* is setup task */
+      );
+    }
+
+    // Allow for a task to be skipped; we need only use the structured logger
+    // for this, whilst deactivating log buffering to ensure that messages
+    // are always printed to stdout.
+    let skipTask = task => {
+      let logger = this.structuredLogger;
+      logger.deactivateBuffering();
+      logger.testStatus(this.currentTest.path, task.name, "SKIP");
+      logger.warning("Skipping test " + task.name);
+      logger.activateBuffering();
+    };
+
+    let task;
+    while ((task = currentScope.__tasks.shift())) {
+      if (
+        task.__skipMe ||
+        (currentScope.__runOnlyThisTask &&
+          task != currentScope.__runOnlyThisTask)
+      ) {
+        skipTask(task);
+        continue;
+      }
+      await this.handleTask(task, currentTest, this.PromiseTestUtils);
+    }
+    currentScope.finish();
+  },
+
   execTest: function Tester_execTest() {
     this.structuredLogger.testStart(this.currentTest.path);
 
@@ -1101,73 +1184,9 @@ Tester.prototype = {
             "Cannot run both a add_task test and a normal test at the same time."
           );
         }
-        let PromiseTestUtils = this.PromiseTestUtils;
-
-        // Allow for a task to be skipped; we need only use the structured logger
-        // for this, whilst deactivating log buffering to ensure that messages
-        // are always printed to stdout.
-        let skipTask = task => {
-          let logger = this.structuredLogger;
-          logger.deactivateBuffering();
-          logger.testStatus(this.currentTest.path, task.name, "SKIP");
-          logger.warning("Skipping test " + task.name);
-          logger.activateBuffering();
-        };
-
-        (async function() {
-          let task;
-          while ((task = this.__tasks.shift())) {
-            if (
-              task.__skipMe ||
-              (this.__runOnlyThisTask && task != this.__runOnlyThisTask)
-            ) {
-              skipTask(task);
-              continue;
-            }
-            this.SimpleTest.info("Entering test " + task.name);
-            let startTimestamp = performance.now();
-            try {
-              let result = await task();
-              if (isGenerator(result)) {
-                this.SimpleTest.ok(false, "Task returned a generator");
-              }
-            } catch (ex) {
-              if (currentTest.timedOut) {
-                currentTest.addResult(
-                  new testResult({
-                    name:
-                      "Uncaught exception received from previously timed out test",
-                    pass: false,
-                    ex,
-                    stack:
-                      typeof ex == "object" && "stack" in ex ? ex.stack : null,
-                    allowFailure: currentTest.allowFailure,
-                  })
-                );
-                // We timed out, so we've already cleaned up for this test, just get outta here.
-                return;
-              }
-              currentTest.addResult(
-                new testResult({
-                  name: "Uncaught exception",
-                  pass: this.SimpleTest.isExpectingUncaughtException(),
-                  ex,
-                  stack:
-                    typeof ex == "object" && "stack" in ex ? ex.stack : null,
-                  allowFailure: currentTest.allowFailure,
-                })
-              );
-            }
-            PromiseTestUtils.assertNoUncaughtRejections();
-            ChromeUtils.addProfilerMarker(
-              "task",
-              { category: "Test", startTime: startTimestamp },
-              task.name.replace(/^bound /, "") || undefined
-            );
-            this.SimpleTest.info("Leaving test " + task.name);
-          }
-          this.finish();
-        }.call(currentScope));
+        // Spin off the async work without waiting for it to complete.
+        // It'll call finish() when it's done.
+        this._runTaskBasedTest(this.currentTest);
       } else if (typeof scope.test == "function") {
         scope.test();
       } else {
@@ -1617,6 +1636,7 @@ function decorateTaskFn(fn) {
 testScope.prototype = {
   __done: true,
   __tasks: null,
+  __setups: [],
   __runOnlyThisTask: null,
   __waitTimer: null,
   __cleanupFunctions: [],
@@ -1671,6 +1691,15 @@ testScope.prototype = {
     }
     let bound = decorateTaskFn.call(this, aFunction);
     this.__tasks.push(bound);
+    return bound;
+  },
+
+  add_setup(aFunction) {
+    if (!this.__setups.length) {
+      this.waitForExplicitFinish();
+    }
+    let bound = aFunction.bind(this);
+    this.__setups.push(bound);
     return bound;
   },
 

@@ -439,6 +439,29 @@ SocketProcessChild::RecvOnHttpActivityDistributorActivated(
   }
   return IPC_OK();
 }
+
+mozilla::ipc::IPCResult
+SocketProcessChild::RecvOnHttpActivityDistributorObserveProxyResponse(
+    const bool& aIsEnabled) {
+  nsCOMPtr<nsIHttpActivityDistributor> distributor =
+      do_GetService("@mozilla.org/network/http-activity-distributor;1");
+  if (distributor) {
+    Unused << distributor->SetObserveProxyResponse(aIsEnabled);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+SocketProcessChild::RecvOnHttpActivityDistributorObserveConnection(
+    const bool& aIsEnabled) {
+  nsCOMPtr<nsIHttpActivityDistributor> distributor =
+      do_GetService("@mozilla.org/network/http-activity-distributor;1");
+  if (distributor) {
+    Unused << distributor->SetObserveConnection(aIsEnabled);
+  }
+  return IPC_OK();
+}
+
 already_AddRefed<PInputChannelThrottleQueueChild>
 SocketProcessChild::AllocPInputChannelThrottleQueueChild(
     const uint32_t& aMeanBytesPerSecond, const uint32_t& aMaxBytesPerSecond) {
