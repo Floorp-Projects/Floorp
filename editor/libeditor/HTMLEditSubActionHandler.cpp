@@ -387,38 +387,43 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
     // Note that this won't prevent explicit selection setting from working.
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-    switch (GetTopLevelEditSubAction()) {
-      case EditSubAction::eInsertText:
-      case EditSubAction::eInsertTextComingFromIME:
-      case EditSubAction::eInsertLineBreak:
-      case EditSubAction::eInsertParagraphSeparator:
-      case EditSubAction::eDeleteText: {
-        // XXX We should investigate whether this is really needed because it
-        //     seems that the following code does not handle the white-spaces.
-        RefPtr<nsRange> extendedChangedRange =
-            CreateRangeIncludingAdjuscentWhiteSpaces(EditorRawDOMRange(
-                *TopLevelEditSubActionDataRef().mChangedRange));
-        if (extendedChangedRange) {
-          MOZ_ASSERT(extendedChangedRange->IsPositioned());
-          // Use extended range temporarily.
-          TopLevelEditSubActionDataRef().mChangedRange =
-              std::move(extendedChangedRange);
+    {
+      EditorRawDOMRange changedRange(
+          *TopLevelEditSubActionDataRef().mChangedRange);
+      if (changedRange.IsPositioned() &&
+          changedRange.EnsureNotInNativeAnonymousSubtree()) {
+        switch (GetTopLevelEditSubAction()) {
+          case EditSubAction::eInsertText:
+          case EditSubAction::eInsertTextComingFromIME:
+          case EditSubAction::eInsertLineBreak:
+          case EditSubAction::eInsertParagraphSeparator:
+          case EditSubAction::eDeleteText: {
+            // XXX We should investigate whether this is really needed because
+            //     it seems that the following code does not handle the
+            //     white-spaces.
+            RefPtr<nsRange> extendedChangedRange =
+                CreateRangeIncludingAdjuscentWhiteSpaces(changedRange);
+            if (extendedChangedRange) {
+              MOZ_ASSERT(extendedChangedRange->IsPositioned());
+              // Use extended range temporarily.
+              TopLevelEditSubActionDataRef().mChangedRange =
+                  std::move(extendedChangedRange);
+            }
+            break;
+          }
+          default: {
+            RefPtr<nsRange> extendedChangedRange =
+                CreateRangeExtendedToHardLineStartAndEnd(
+                    changedRange, GetTopLevelEditSubAction());
+            if (extendedChangedRange) {
+              MOZ_ASSERT(extendedChangedRange->IsPositioned());
+              // Use extended range temporarily.
+              TopLevelEditSubActionDataRef().mChangedRange =
+                  std::move(extendedChangedRange);
+            }
+            break;
+          }
         }
-        break;
-      }
-      default: {
-        RefPtr<nsRange> extendedChangedRange =
-            CreateRangeExtendedToHardLineStartAndEnd(
-                EditorRawDOMRange(
-                    *TopLevelEditSubActionDataRef().mChangedRange),
-                GetTopLevelEditSubAction());
-        if (extendedChangedRange) {
-          MOZ_ASSERT(extendedChangedRange->IsPositioned());
-          // Use extended range temporarily.
-          TopLevelEditSubActionDataRef().mChangedRange =
-              std::move(extendedChangedRange);
-        }
-        break;
       }
     }
 
@@ -6144,9 +6149,14 @@ void HTMLEditor::GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces(
     MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
     const nsRange* selectionRange = SelectionRef().GetRangeAt(i);
     MOZ_ASSERT(selectionRange);
-
-    RefPtr<nsRange> extendedRange = CreateRangeIncludingAdjuscentWhiteSpaces(
-        EditorRawDOMRange(*selectionRange));
+    EditorRawDOMRange rawRange(*selectionRange);
+    if (!rawRange.IsPositioned() ||
+        !rawRange.EnsureNotInNativeAnonymousSubtree()) {
+      continue;  // ignore ranges which are in orphan fragment which were
+                 // disconnected from native anonymous subtrees
+    }
+    RefPtr<nsRange> extendedRange =
+        CreateRangeIncludingAdjuscentWhiteSpaces(rawRange);
     if (!extendedRange) {
       extendedRange = selectionRange->CloneRange();
     }
@@ -6169,13 +6179,17 @@ void HTMLEditor::GetSelectionRangesExtendedToHardLineStartAndEnd(
     // blocks that we will affect.  This call alters opRange.
     nsRange* selectionRange = SelectionRef().GetRangeAt(i);
     MOZ_ASSERT(selectionRange);
-
-    RefPtr<nsRange> extendedRange = CreateRangeExtendedToHardLineStartAndEnd(
-        EditorRawDOMRange(*selectionRange), aEditSubAction);
+    EditorRawDOMRange rawRange(*selectionRange);
+    if (!rawRange.IsPositioned() ||
+        !rawRange.EnsureNotInNativeAnonymousSubtree()) {
+      continue;  // ignore ranges which are in orphan fragment which were
+                 // disconnected from native anonymous subtrees
+    }
+    RefPtr<nsRange> extendedRange =
+        CreateRangeExtendedToHardLineStartAndEnd(rawRange, aEditSubAction);
     if (!extendedRange) {
       extendedRange = selectionRange->CloneRange();
     }
-
     aOutArrayOfRanges.AppendElement(extendedRange);
   }
 }
@@ -6227,9 +6241,7 @@ void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
 template <typename EditorDOMRangeType>
 already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
     const EditorDOMRangeType& aRange) {
-  if (!aRange.IsPositioned()) {
-    return nullptr;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(aRange.IsPositioned());
   return CreateRangeIncludingAdjuscentWhiteSpaces(aRange.StartRef(),
                                                   aRange.EndRef());
 }
@@ -6238,6 +6250,9 @@ template <typename EditorDOMPointType1, typename EditorDOMPointType2>
 already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
     const EditorDOMPointType1& aStartPoint,
     const EditorDOMPointType2& aEndPoint) {
+  MOZ_DIAGNOSTIC_ASSERT(!aStartPoint.IsInNativeAnonymousSubtree());
+  MOZ_DIAGNOSTIC_ASSERT(!aEndPoint.IsInNativeAnonymousSubtree());
+
   if (!aStartPoint.IsInContentNode() || !aEndPoint.IsInContentNode()) {
     NS_WARNING_ASSERTION(aStartPoint.IsSet(), "aStartPoint was not set");
     NS_WARNING_ASSERTION(aEndPoint.IsSet(), "aEndPoint was not set");
@@ -6314,6 +6329,9 @@ template <typename EditorDOMPointType1, typename EditorDOMPointType2>
 already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
     const EditorDOMPointType1& aStartPoint,
     const EditorDOMPointType2& aEndPoint, EditSubAction aEditSubAction) const {
+  MOZ_DIAGNOSTIC_ASSERT(!aStartPoint.IsInNativeAnonymousSubtree());
+  MOZ_DIAGNOSTIC_ASSERT(!aEndPoint.IsInNativeAnonymousSubtree());
+
   if (NS_WARN_IF(!aStartPoint.IsSet()) || NS_WARN_IF(!aEndPoint.IsSet())) {
     return nullptr;
   }
@@ -6345,8 +6363,8 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
     return nullptr;
   }
   endPoint = GetCurrentHardLineEndPoint(endPoint, *editingHost);
-  EditorRawDOMPoint lastRawPoint(endPoint);
-  lastRawPoint.RewindOffset();
+  EditorRawDOMPoint lastRawPoint(
+      endPoint.IsStartOfContainer() ? endPoint : endPoint.PreviousPoint());
   // XXX GetCurrentHardLineEndPoint() may return point of editing host.
   //     Perhaps, we should change it and stop checking it here since this
   //     check may be expensive.
