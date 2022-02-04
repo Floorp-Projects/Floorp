@@ -84,8 +84,6 @@ class nsRetrievalContext {
   // array has to be released by g_free().
   virtual ClipboardTargets GetTargets(int32_t aWhichClipboard) = 0;
 
-  virtual bool HasSelectionSupport(void) = 0;
-
  protected:
   virtual ~nsRetrievalContext() = default;
 };
