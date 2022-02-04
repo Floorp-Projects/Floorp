@@ -250,9 +250,9 @@ reftest-snapshot:
     description: "Reftest snapshot"
     treeherder-symbol: R(Rs)
     virtualization: virtual
+    run-without-variant: false
     variants:
         - fission
-        - webrender-sw
     run-on-projects:
         by-variant:
             fission:
@@ -260,13 +260,7 @@ reftest-snapshot:
                     linux1804-64-qr/debug: ['trunk']
                     default: []
             default: []
-    tier:
-        by-variant:
-            fission:
-                by-test-platform:
-                    .*ccov.*: 2
-                    default: 1
-            default: default
+    tier: default
     chunks: 8
     mozharness:
         chunked: true
