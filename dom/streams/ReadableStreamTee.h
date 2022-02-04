@@ -61,7 +61,8 @@ struct ReadableStreamDefaultTeeReadRequest final : public ReadRequest {
   virtual void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
                           ErrorResult& aRv) override;
 
-  virtual void CloseSteps(JSContext* aCx, ErrorResult& aRv) override;
+  MOZ_CAN_RUN_SCRIPT virtual void CloseSteps(JSContext* aCx,
+                                             ErrorResult& aRv) override;
 
   virtual void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> aError,
                           ErrorResult& aRv) override;
