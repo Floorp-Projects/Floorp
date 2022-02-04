@@ -1,15 +1,7 @@
-// |jit-test| test-also=--wasm-compiler=optimizing; --wasm-moz-intgemm;
-
 // This file contains all the tests for int8_multiply_and_add_bias intrinsic. It depends
 // on the CommonTestSetup.js script which contains the common functionality
 // that is required for testing all the intrinsics.
 const COMMON_TEST_SETUP_SCRIPT = "./CommonTestSetup.js"
-
-// If tests are not running on x86/x86-64 hardware then quit
-import(COMMON_TEST_SETUP_SCRIPT).then((importedModule) => {
-  if (!importedModule.nativeX86Shared())
-    quit(0);
-});
 
 // All tests for this intrinsic as a string
 const ALL_TESTS_AS_STRING =`
