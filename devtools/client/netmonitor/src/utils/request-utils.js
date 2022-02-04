@@ -693,6 +693,30 @@ function parseJSON(payloadUnclean) {
   };
 }
 
+/**
+ * This helper function is used for auto-growing the size of
+ * a textarea based on text height
+ *
+ * @param {object} element
+ *        The textarea DOM element to update
+ * @param {number} maxRows
+ *        The maximum number of rows the textarea can have, default is 5
+ *  @param {number} lineHeight
+ *        The height in pixels of one row of text in the textarea, default is 14
+ */
+function updateTextareaRows(element, maxRows = 5, lineHeight = 14) {
+  const minRows = 1;
+  // We reset the number of the rows in the textarea to make sure
+  // the scrollheight is exactly the height of the text
+  element.rows = minRows;
+
+  const currentRows = Math.ceil(
+    // 8 is the sum of the bottom and top padding of the element
+    (element.scrollHeight - 8) / lineHeight
+  );
+  element.rows = currentRows <= maxRows ? currentRows : maxRows;
+}
+
 module.exports = {
   decodeUnicodeBase64,
   getFormDataSections,
@@ -723,4 +747,5 @@ module.exports = {
   propertiesEqual,
   ipToLong,
   parseJSON,
+  updateTextareaRows,
 };
