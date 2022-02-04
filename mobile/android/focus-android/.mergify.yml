@@ -52,3 +52,9 @@ pull_request_rules:
         method: rebase
         name: default
         rebase_fallback: none
+  - name: Relbot - delete head branch after merge
+    conditions:
+      - author=github-actions[bot]
+      - merged
+    actions:
+      delete_head_branch:
