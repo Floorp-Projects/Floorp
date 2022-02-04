@@ -640,7 +640,8 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
 #ifndef XP_MACOSX
     MonitorAutoLock mon(mMonitor);
 #endif
-    mAudioClock.UpdateFrameHistory(aFrames - writer.Available(), 0, mAudioThreadChanged);
+    mAudioClock.UpdateFrameHistory(aFrames - writer.Available(), 0,
+                                   mAudioThreadChanged);
   }
 
   mDumpFile.Write(static_cast<const AudioDataValue*>(aBuffer),
@@ -677,7 +678,8 @@ AudioClock::AudioClock(uint32_t aInRate)
       mPreservesPitch(true),
       mFrameHistory(new FrameHistory()) {}
 
-void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun, bool aAudioThreadChanged) {
+void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun,
+                                    bool aAudioThreadChanged) {
 #ifdef XP_MACOSX
   if (aAudioThreadChanged) {
     mCallbackInfoQueue.ResetThreadIds();

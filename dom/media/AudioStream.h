@@ -57,7 +57,8 @@ class AudioClock {
 
   // Update the number of samples that has been written in the audio backend.
   // Called on the audio thread only.
-  void UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun, bool aAudioThreadChanged);
+  void UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun,
+                          bool aAudioThreadChanged);
 
   /**
    * @param aFrames The playback position in frames of the audio engine.
