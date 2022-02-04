@@ -5,6 +5,7 @@
 import os
 import sys
 from argparse import REMAINDER, SUPPRESS, ArgumentParser
+from pathlib import Path
 
 from mozlint.errors import NoValidLinter
 from mozlint.formatters import all_formatters
@@ -360,12 +361,7 @@ def run(
                 return 1
             paths = lint.linters[0]["local_exclude"]
 
-        if (
-            not linters
-            and not paths
-            and os.getcwd() == lint.root
-            and not (outgoing or workdir)
-        ):
+        if not paths and Path.cwd() == Path(lint.root) and not (outgoing or workdir):
             print(
                 "warning: linting the entire repo takes a long time, using --outgoing and "
                 "--workdir instead. If you want to lint the entire repo, run `./mach lint .`"
