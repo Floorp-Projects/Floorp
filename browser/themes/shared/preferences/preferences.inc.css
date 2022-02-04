@@ -1208,11 +1208,6 @@ richlistitem .text-link:hover {
   line-height: 1.4em;
 }
 
-#moreFromMozillaCategory {
-  display: flex;
-  flex-direction: column;
-}
-
 #moreFromMozillaCategory .mozilla-product-item {
   margin-top: 30px;
 }
