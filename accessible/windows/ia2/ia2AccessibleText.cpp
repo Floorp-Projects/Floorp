@@ -219,9 +219,9 @@ ia2AccessibleText::get_textBeforeOffset(long aOffset,
   *aStartOffset = *aEndOffset = 0;
   *aText = nullptr;
 
-  auto [textAcc, hr] = LocalTextAcc();
+  HyperTextAccessibleBase* textAcc = TextAcc();
   if (!textAcc) {
-    return hr;
+    return CO_E_OBJNOTCONNECTED;
   }
 
   if (!textAcc->IsValidOffset(aOffset)) return E_INVALIDARG;
@@ -261,9 +261,9 @@ ia2AccessibleText::get_textAfterOffset(long aOffset,
   *aEndOffset = 0;
   *aText = nullptr;
 
-  auto [textAcc, hr] = LocalTextAcc();
+  HyperTextAccessibleBase* textAcc = TextAcc();
   if (!textAcc) {
-    return hr;
+    return CO_E_OBJNOTCONNECTED;
   }
 
   if (!textAcc->IsValidOffset(aOffset)) return E_INVALIDARG;
