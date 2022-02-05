@@ -3492,7 +3492,7 @@ bool GCRuntime::maybeIncreaseSliceBudgetForLongCollections(
                         MinBudgetEnd.time, MinBudgetEnd.budget);
 
   if (budget.timeBudget() < minBudget) {
-    budget = SliceBudget(TimeBudget(minBudget), nullptr); // Uninterruptible.
+    budget = SliceBudget(TimeBudget(minBudget), nullptr);  // Uninterruptible.
     wasIncreased = true;
   }
 
@@ -3527,7 +3527,7 @@ bool GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
         double(minBytesRemaining) / double(tunables.urgentThresholdBytes());
     double minBudget = double(defaultSliceBudgetMS()) / fractionRemaining;
     if (budget.timeBudget() < minBudget) {
-      budget = SliceBudget(TimeBudget(minBudget), nullptr); // Uninterruptible.
+      budget = SliceBudget(TimeBudget(minBudget), nullptr);  // Uninterruptible.
       wasIncreased = true;
     }
   }
