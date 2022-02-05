@@ -6,6 +6,8 @@
 #ifndef AndroidBridge_h__
 #define AndroidBridge_h__
 
+#include <unistd.h>  // for gettid
+
 #include "nsCOMPtr.h"
 
 #include "mozilla/jni/Refs.h"
