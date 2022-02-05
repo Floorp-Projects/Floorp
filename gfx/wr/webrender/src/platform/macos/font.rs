@@ -507,7 +507,10 @@ impl FontContext {
                 } else {
                     (x_scale, y_scale / x_scale)
                 };
-                let extra_strikes = font.get_extra_strikes(strike_scale);
+                let extra_strikes = font.get_extra_strikes(
+                    FontInstanceFlags::SYNTHETIC_BOLD | FontInstanceFlags::MULTISTRIKE_BOLD,
+                    strike_scale,
+                );
                 let metrics = get_glyph_metrics(
                     &ct_font,
                     transform.as_ref(),
@@ -673,8 +676,10 @@ impl FontContext {
         } else {
             (x_scale, y_scale / x_scale)
         };
-
-        let extra_strikes = font.get_extra_strikes(strike_scale);
+        let extra_strikes = font.get_extra_strikes(
+            FontInstanceFlags::SYNTHETIC_BOLD | FontInstanceFlags::MULTISTRIKE_BOLD,
+            strike_scale,
+        );
         let metrics = get_glyph_metrics(
             &ct_font,
             transform.as_ref(),
