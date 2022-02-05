@@ -334,12 +334,13 @@ class GCRuntime {
   // The return value indicates whether a major GC was performed.
   bool gcIfRequested();
   void gc(JS::GCOptions options, JS::GCReason reason);
-  void startGC(JS::GCOptions options, JS::GCReason reason, int64_t millis = 0);
-  void gcSlice(JS::GCReason reason, int64_t millis = 0);
+  void startGC(JS::GCOptions options, JS::GCReason reason,
+               const SliceBudget& budget);
+  void gcSlice(JS::GCReason reason, const SliceBudget& budget);
   void finishGC(JS::GCReason reason);
   void abortGC();
-  void startDebugGC(JS::GCOptions options, SliceBudget& budget);
-  void debugGCSlice(SliceBudget& budget);
+  void startDebugGC(JS::GCOptions options, const SliceBudget& budget);
+  void debugGCSlice(const SliceBudget& budget);
 
   void runDebugGC();
   void notifyRootsRemoved();
