@@ -404,13 +404,28 @@ nsPrinterCUPS::PrinterInfoLock nsPrinterCUPS::TryEnsurePrinterInfo(
       if (MOZ_LIKELY(hostnameBytes)) {
         const nsDependentCString hostname{hostnameBytes};
 
-        // Match the condional at
+        // Attempt to match the condional at
         // https://github.com/apple/cups/blob/c9da6f63b263faef5d50592fe8cf8056e0a58aa2/cups/dest-options.c#L718
+        //
+        // To find the result of the comparison CUPS performs of
+        // `strcmp(http->hostname, cg->server)`, we use httpGetHostname to try
+        // to get the value of `http->hostname`, but this isn't quite the same.
+        // For local addresses, httpGetHostName will normalize the result to be
+        // localhost", rather than the actual value of `http->hostname`.
+        //
+        // https://github.com/apple/cups/blob/2201569857f225c9874bfae19713ffb2f4bdfdeb/cups/http-addr.c#L794-L818
+        //
+        // Because of this, if both serverName and hostname equal "localhost",
+        // then the actual hostname might be a different local address that CUPS
+        // normalized in httpGetHostName, and `http->hostname` won't be equal to
+        // `cg->server` in CUPS.
+        const bool namesMightNotMatch =
+            hostname != serverName || hostname == "localhost";
         const bool portsDiffer =
             mShim.httpAddrPort(mShim.httpGetAddress(aConnection)) !=
             mShim.ippPort();
         const bool cupsDestDeviceFlag =
-            (hostname != serverName && serverName[0] != '/') || portsDiffer;
+            (namesMightNotMatch && serverName[0] != '/') || portsDiffer;
 
         // Match the conditional at
         // https://github.com/apple/cups/blob/23c45db76a8520fd6c3b1d9164dbe312f1ab1481/cups/dest.c#L1144
