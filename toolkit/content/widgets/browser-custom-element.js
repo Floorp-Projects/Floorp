@@ -1291,7 +1291,12 @@
       let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"].getService(
         Ci.nsIScreenManager
       );
-      let screen = screenManager.screenForRect(screenX, screenY, 1, 1);
+      let screen = screenManager.screenForRect(
+        screenX * window.devicePixelRatio,
+        screenY * window.devicePixelRatio,
+        1,
+        1
+      );
 
       // we need these attributes so themers don't need to create per-platform packages
       if (screen.colorDepth > 8) {
