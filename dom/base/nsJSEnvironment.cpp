@@ -1028,11 +1028,11 @@ void nsJSContext::SetLowMemoryState(bool aState) {
 
 static void GarbageCollectImpl(JS::GCReason aReason,
                                nsJSContext::IsShrinking aShrinking,
-                               bool aIncremental, int64_t aSliceMillis) {
+                               const js::SliceBudget& aBudget) {
   AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(
       "nsJSContext::GarbageCollectNow", GCCC, JS::ExplainGCReason(aReason));
 
-  MOZ_ASSERT_IF(aSliceMillis, aIncremental);
+  bool wantIncremental = !aBudget.isUnlimited();
 
   // We use danger::GetJSContext() since AutoJSAPI will assert if the current
   // thread's context is null (such as during shutdown).
@@ -1042,10 +1042,10 @@ static void GarbageCollectImpl(JS::GCReason aReason,
     return;
   }
 
-  if (sScheduler.InIncrementalGC() && aIncremental) {
+  if (sScheduler.InIncrementalGC() && wantIncremental) {
     // We're in the middle of incremental GC. Do another slice.
     JS::PrepareForIncrementalGC(cx);
-    JS::IncrementalGCSlice(cx, aReason, aSliceMillis);
+    JS::IncrementalGCSlice(cx, aReason, aBudget);
     return;
   }
 
@@ -1053,7 +1053,7 @@ static void GarbageCollectImpl(JS::GCReason aReason,
                               ? JS::GCOptions::Shrink
                               : JS::GCOptions::Normal;
 
-  if (!aIncremental || aReason == JS::GCReason::FULL_GC_TIMER) {
+  if (!wantIncremental || aReason == JS::GCReason::FULL_GC_TIMER) {
     sScheduler.SetNeedsFullGC();
   }
 
@@ -1061,11 +1061,11 @@ static void GarbageCollectImpl(JS::GCReason aReason,
     JS::PrepareForFullGC(cx);
   }
 
-  if (aIncremental) {
+  if (wantIncremental) {
     // Incremental GC slices will be triggered by the GC Runner. If one doesn't
     // already exist, create it in the GC_SLICE_END callback for the first
     // slice being executed here.
-    JS::StartIncrementalGC(cx, options, aReason, aSliceMillis);
+    JS::StartIncrementalGC(cx, options, aReason, aBudget);
   } else {
     JS::NonIncrementalGC(cx, options, aReason);
   }
@@ -1074,15 +1074,16 @@ static void GarbageCollectImpl(JS::GCReason aReason,
 // static
 void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
                                     IsShrinking aShrinking) {
-  GarbageCollectImpl(aReason, aShrinking, /* aIncremental = */ false, 0);
+  GarbageCollectImpl(aReason, aShrinking, js::SliceBudget::unlimited());
 }
 
 // static
 void nsJSContext::RunIncrementalGCSlice(JS::GCReason aReason,
                                         IsShrinking aShrinking,
                                         TimeDuration aBudget) {
-  GarbageCollectImpl(aReason, aShrinking, /* aIncremental = */ true,
-                     static_cast<int64_t>(aBudget.ToMilliseconds()));
+  js::SliceBudget budget = sScheduler.CreateGCSliceBudget(
+      aReason, static_cast<int64_t>(aBudget.ToMilliseconds()));
+  GarbageCollectImpl(aReason, aShrinking, budget);
 }
 
 static void FinishAnyIncrementalGC() {
