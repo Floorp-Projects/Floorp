@@ -359,6 +359,7 @@ bitflags! {
     #[derive(Deserialize, MallocSizeOf, Serialize, PeekPoke)]
     pub struct FontInstanceFlags: u32 {
         // Common flags
+        // Use native synthetic bold, if supported.
         const SYNTHETIC_BOLD    = 1 << 1;
         const EMBEDDED_BITMAPS  = 1 << 2;
         const SUBPIXEL_BGR      = 1 << 3;
@@ -367,6 +368,8 @@ bitflags! {
         const FLIP_Y            = 1 << 6;
         const SUBPIXEL_POSITION = 1 << 7;
         const VERTICAL          = 1 << 8;
+        // Explicitly use multi-strike bold emulation.
+        const MULTISTRIKE_BOLD  = 1 << 9;
 
         // Internal flags
         const TRANSFORM_GLYPHS  = 1 << 12;
