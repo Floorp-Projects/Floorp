@@ -159,7 +159,6 @@ file-whitespace:
         - testing/web-platform/tests/html
         - testing/web-platform/tests/tools/webdriver/webdriver/transport.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/browsers/edgechromium.py
-        - testing/web-platform/tests/tools/wptrunner/wptrunner/executors/executoredgechromium.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/manifestupdate.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/metadata.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/tests/test_update.py
