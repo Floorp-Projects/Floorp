@@ -16,7 +16,7 @@ except ImportError:
     from urllib.request import urlopen
 
 from pathlib import Path
-from distutils.version import StrictVersion
+from packaging.version import Version
 
 from mozboot.base import BaseBootstrapper
 from mozfile import which
@@ -200,9 +200,9 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
     def __init__(self, version, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)
 
-        self.os_version = StrictVersion(version)
+        self.os_version = Version(version)
 
-        if self.os_version < StrictVersion("10.6"):
+        if self.os_version < Version("10.6"):
             raise Exception("OS X 10.6 or above is required.")
 
         self.minor_version = version.split(".")[1]

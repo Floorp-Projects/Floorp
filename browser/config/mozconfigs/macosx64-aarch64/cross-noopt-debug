@@ -1,0 +1,12 @@
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+
+# Developers often build with these options for a better debugging experience.
+. "$topsrcdir/browser/config/mozconfigs/macosx64/debug"
+
+ac_add_options --target=aarch64-apple-darwin
+export MACOS_SDK_DIR=$MOZ_FETCHES_DIR/MacOSX11.0.sdk
+
+# We add this last to guard against inadvertent changes in the debug config.
+# It may conflict with settings from mozconfig.override, but that seems
+# unlikely.
+ac_add_options --disable-optimize

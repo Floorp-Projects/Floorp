@@ -1984,6 +1984,7 @@ name = "gkrust"
 version = "0.1.0"
 dependencies = [
  "gkrust-shared",
+ "lmdb-rkv-sys",
  "mozglue-static",
  "mozilla-central-workspace-hack",
  "stylo_tests",
@@ -1999,6 +2000,7 @@ dependencies = [
  "gecko-fuzz-targets",
  "gkrust-shared",
  "l10nregistry-ffi-gtest",
+ "lmdb-rkv-sys",
  "moz_task-gtest",
  "mozglue-static",
  "mp4parse-gtest",
@@ -2898,9 +2900,9 @@ dependencies = [
 
 [[package]]
 name = "lmdb-rkv-sys"
-version = "0.11.0"
+version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b27470ac25167b3afdfb6af8fcd3bc1be67de50ffbdaf4073378cfded6ae24a5"
+checksum = "61b9ce6b3be08acefa3003c57b7565377432a89ec24476bbe72e11d101f852fe"
 dependencies = [
  "cc",
  "libc",

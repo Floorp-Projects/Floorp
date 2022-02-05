@@ -7,18 +7,11 @@
 
 #include "mozilla/ArrayUtils.h"
 
-#include "nsArrayUtils.h"
-#include "nsClipboard.h"
+#include "AsyncGtkClipboardRequest.h"
 #include "nsClipboardX11.h"
-#include "nsSupportsPrimitives.h"
-#include "nsString.h"
-#include "nsReadableUtils.h"
-#include "nsPrimitiveHelpers.h"
-#include "nsImageToPixbuf.h"
-#include "nsStringStream.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
-#include "WidgetUtilsGtk.h"
+#include "mozilla/WidgetUtilsGtk.h"
 
 #include <gtk/gtk.h>
 
@@ -34,13 +27,7 @@
 
 using namespace mozilla;
 
-bool nsRetrievalContextX11::HasSelectionSupport(void) {
-  // yeah, unix supports the selection clipboard on X11.
-  return true;
-}
-
-nsRetrievalContextX11::nsRetrievalContextX11()
-    : mTargetMIMEType(gdk_atom_intern("TARGETS", FALSE)) {}
+nsRetrievalContextX11::nsRetrievalContextX11() = default;
 
 static void DispatchSelectionNotifyEvent(GtkWidget* widget, XEvent* xevent) {
   GdkEvent event = {};
@@ -95,14 +82,18 @@ static Bool checkEventProc(Display* display, XEvent* event, XPointer arg) {
   return X11False;
 }
 
-ClipboardData nsRetrievalContextX11::WaitForX11Content() {
-  if (mState == State::Completed) {  // the request completed synchronously
-    return mClipboardData.extract();
+ClipboardData nsRetrievalContextX11::WaitForClipboardData(
+    ClipboardDataType aDataType, int32_t aWhichClipboard,
+    const char* aMimeType) {
+  AsyncGtkClipboardRequest request(aDataType, aWhichClipboard, aMimeType);
+  if (request.HasCompleted()) {
+    // the request completed synchronously
+    return request.TakeResult();
   }
 
   GdkDisplay* gdkDisplay = gdk_display_get_default();
   // gdk_display_get_default() returns null on headless
-  if (mozilla::widget::GdkIsX11Display(gdkDisplay)) {
+  if (widget::GdkIsX11Display(gdkDisplay)) {
     Display* xDisplay = GDK_DISPLAY_XDISPLAY(gdkDisplay);
     checkEventContext context;
     context.cbWidget = nullptr;
@@ -130,8 +121,8 @@ ClipboardData nsRetrievalContextX11::WaitForX11Content() {
         else
           DispatchPropertyNotifyEvent(context.cbWidget, &xevent);
 
-        if (mState == State::Completed) {
-          return mClipboardData.extract();
+        if (request.HasCompleted()) {
+          return request.TakeResult();
         }
       }
 
@@ -142,145 +133,9 @@ ClipboardData nsRetrievalContextX11::WaitForX11Content() {
     } while ((poll_result == 1 && (pfd.revents & (POLLHUP | POLLERR)) == 0) ||
              (poll_result == -1 && errno == EINTR));
   }
-#ifdef DEBUG_CLIPBOARD
-  printf("exceeded clipboard timeout\n");
-#endif
-  mState = State::TimedOut;
+
+  LOGCLIP("exceeded clipboard timeout");
   return {};
-}
-
-// Call this when data has been retrieved.
-void nsRetrievalContextX11::Complete(ClipboardDataType aDataType,
-                                     const void* aData,
-                                     int aDataRequestNumber) {
-  LOGCLIP("nsRetrievalContextX11::Complete\n");
-
-  if (mClipboardRequestNumber != aDataRequestNumber) {
-    NS_WARNING(
-        "nsRetrievalContextX11::Complete() got obsoleted clipboard data.");
-    return;
-  }
-
-  if (mState != State::Initial) {
-    // Already timed out
-    MOZ_ASSERT(mState == State::TimedOut);
-    return;
-  }
-
-  mState = State::Completed;
-
-  MOZ_ASSERT(!mClipboardData, "We're leaking clipboard data!");
-  mClipboardData = Some(ClipboardData());
-
-  switch (aDataType) {
-    case ClipboardDataType::Text: {
-      LOGCLIP("  got text data %p\n", aData);
-      if (auto* data = static_cast<const char*>(aData)) {
-        mClipboardData->SetText(Span(data, strlen(data)));
-      }
-    } break;
-    case ClipboardDataType::Targets: {
-      auto* selection = static_cast<const GtkSelectionData*>(aData);
-
-      gint n_targets = 0;
-      GdkAtom* targets = nullptr;
-
-      if (!gtk_selection_data_get_targets(selection, &targets, &n_targets) ||
-          !n_targets) {
-        return;
-      }
-
-      LOGCLIP("  got %d targets\n", n_targets);
-
-      mClipboardData->SetTargets(
-          ClipboardTargets{GUniquePtr<GdkAtom>(targets), uint32_t(n_targets)});
-    } break;
-    case ClipboardDataType::Data: {
-      auto* selection = static_cast<const GtkSelectionData*>(aData);
-      gint len = gtk_selection_data_get_length(selection);
-      if (len > 0) {
-        mClipboardData->SetData(
-            Span(gtk_selection_data_get_data(selection), len));
-      }
-#ifdef MOZ_LOGGING
-      if (LOGCLIP_ENABLED()) {
-        GdkAtom target = gtk_selection_data_get_target(selection);
-        LOGCLIP("  got data %p len %zu MIME %s\n",
-                mClipboardData->AsSpan().data(),
-                mClipboardData->AsSpan().Length(),
-                GUniquePtr<gchar>(gdk_atom_name(target)).get());
-      }
-#endif
-    } break;
-  }
-}
-
-static void clipboard_contents_received(GtkClipboard* clipboard,
-                                        GtkSelectionData* selection_data,
-                                        gpointer data) {
-  int whichClipboard = GetGeckoClipboardType(clipboard);
-  LOGCLIP("clipboard_contents_received (%s) callback\n",
-          whichClipboard == nsClipboard::kSelectionClipboard ? "primary"
-                                                             : "clipboard");
-
-  ClipboardRequestHandler* handler =
-      static_cast<ClipboardRequestHandler*>(data);
-  handler->Complete(selection_data);
-  delete handler;
-}
-
-static void clipboard_text_received(GtkClipboard* clipboard, const gchar* text,
-                                    gpointer data) {
-  int whichClipboard = GetGeckoClipboardType(clipboard);
-  LOGCLIP("clipboard_text_received (%s) callback\n",
-          whichClipboard == nsClipboard::kSelectionClipboard ? "primary"
-                                                             : "clipboard");
-
-  auto* handler = static_cast<ClipboardRequestHandler*>(data);
-  handler->Complete(text);
-  delete handler;
-}
-
-ClipboardData nsRetrievalContextX11::WaitForClipboardData(
-    ClipboardDataType aDataType, int32_t aWhichClipboard,
-    const char* aMimeType) {
-  LOGCLIP("nsRetrievalContextX11::WaitForClipboardData, MIME %s\n", aMimeType);
-
-  GtkClipboard* clipboard =
-      gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
-
-  mState = State::Initial;
-
-  NS_ASSERTION(!mClipboardData, "Leaking clipboard content!");
-  mClipboardData.reset();
-  // Call ClipboardRequestHandler() with unique clipboard request number.
-  // The request number pairs gtk_clipboard_request_contents() data request
-  // with clipboard_contents_received() callback where the data
-  // is provided by Gtk.
-  mClipboardRequestNumber++;
-
-  ClipboardRequestHandler* handler =
-      new ClipboardRequestHandler(this, aDataType, mClipboardRequestNumber);
-
-  switch (aDataType) {
-    case ClipboardDataType::Data:
-      LOGCLIP("  getting DATA MIME %s\n", aMimeType);
-      gtk_clipboard_request_contents(clipboard,
-                                     gdk_atom_intern(aMimeType, FALSE),
-                                     clipboard_contents_received, handler);
-      break;
-    case ClipboardDataType::Text:
-      LOGCLIP("  getting TEXT\n");
-      gtk_clipboard_request_text(clipboard, clipboard_text_received, handler);
-      break;
-    case ClipboardDataType::Targets:
-      LOGCLIP("  getting TARGETS\n");
-      gtk_clipboard_request_contents(clipboard, mTargetMIMEType,
-                                     clipboard_contents_received, handler);
-      break;
-  }
-
-  return WaitForX11Content();
 }
 
 ClipboardTargets nsRetrievalContextX11::GetTargets(int32_t aWhichClipboard) {

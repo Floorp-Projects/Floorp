@@ -188,8 +188,9 @@ void ReadableStreamDefaultTeeReadRequest::CloseSteps(JSContext* aCx,
 
   // Step 2.
   if (!mTeeState->Canceled1()) {
-    ReadableStreamDefaultControllerClose(
-        aCx, mTeeState->Branch1()->DefaultController(), aRv);
+    RefPtr<ReadableStreamDefaultController> controller(
+        mTeeState->Branch1()->DefaultController());
+    ReadableStreamDefaultControllerClose(aCx, controller, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -197,8 +198,9 @@ void ReadableStreamDefaultTeeReadRequest::CloseSteps(JSContext* aCx,
 
   // Step 3.
   if (!mTeeState->Canceled2()) {
-    ReadableStreamDefaultControllerClose(
-        aCx, mTeeState->Branch2()->DefaultController(), aRv);
+    RefPtr<ReadableStreamDefaultController> controller(
+        mTeeState->Branch2()->DefaultController());
+    ReadableStreamDefaultControllerClose(aCx, controller, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -490,8 +492,8 @@ struct PullWithDefaultReaderReadRequest final : public ReadRequest {
     CycleCollectedJSContext::Get()->DispatchToMicroTask(task.forget());
   }
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void CloseSteps(JSContext* aCx,
-                                              ErrorResult& aRv) override {
+  MOZ_CAN_RUN_SCRIPT void CloseSteps(JSContext* aCx,
+                                     ErrorResult& aRv) override {
     // Step numbering below is relative to Step 15.2. 'close steps' of
     // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee
 
@@ -803,16 +805,18 @@ class PullWithBYOBReader_ReadIntoRequest final : public ReadIntoRequest {
 
     // Step 4.
     if (!byobCanceled) {
-      ReadableByteStreamControllerClose(aCx, byobBranch->Controller()->AsByte(),
-                                        aRv);
+      RefPtr<ReadableByteStreamController> controller =
+          byobBranch->Controller()->AsByte();
+      ReadableByteStreamControllerClose(aCx, controller, aRv);
       if (aRv.Failed()) {
         return;
       }
     }
     // Step 5.
     if (!otherCanceled) {
-      ReadableByteStreamControllerClose(
-          aCx, otherBranch->Controller()->AsByte(), aRv);
+      RefPtr<ReadableByteStreamController> controller =
+          otherBranch->Controller()->AsByte();
+      ReadableByteStreamControllerClose(aCx, controller, aRv);
       if (aRv.Failed()) {
         return;
       }
