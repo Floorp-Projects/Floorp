@@ -1432,8 +1432,12 @@ int SliceBudget::describe(char* buffer, size_t maxlen) const {
   } else if (isWorkBudget()) {
     return snprintf(buffer, maxlen, "work(%" PRId64 ")", workBudget());
   } else {
-    return snprintf(buffer, maxlen, "%" PRId64 "ms%s", timeBudget(),
-                    interruptRequested ? ", interruptible" : "");
+    const char* interruptStr = "";
+    if (interruptRequested) {
+      interruptStr = interrupted ? "INTERRUPTED " : "interruptible ";
+    }
+    return snprintf(buffer, maxlen, "%s%" PRId64 "ms", interruptStr,
+                    timeBudget());
   }
 }
 
