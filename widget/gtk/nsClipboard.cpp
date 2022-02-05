@@ -642,7 +642,7 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
 
 NS_IMETHODIMP
 nsClipboard::SupportsSelectionClipboard(bool* _retval) {
-  *_retval = mContext ? mContext->HasSelectionSupport() : false;
+  *_retval = true;
   return NS_OK;
 }
 

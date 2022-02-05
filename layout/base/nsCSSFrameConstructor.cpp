@@ -6398,7 +6398,10 @@ void nsCSSFrameConstructor::IssueSingleInsertNofications(
     InsertionKind aInsertionKind) {
   for (nsIContent* child = aStartChild; child != aEndChild;
        child = child->GetNextSibling()) {
-    MOZ_ASSERT(!child->GetPrimaryFrame());
+    // XXX the GetContent() != child check is needed due to bug 135040.
+    // Remove it once that's fixed.
+    MOZ_ASSERT(!child->GetPrimaryFrame() ||
+               child->GetPrimaryFrame()->GetContent() != child);
 
     // Call ContentRangeInserted with this node.
     ContentRangeInserted(child, child->GetNextSibling(), aInsertionKind);

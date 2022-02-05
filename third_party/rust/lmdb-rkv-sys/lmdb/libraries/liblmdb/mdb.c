@@ -196,13 +196,10 @@ typedef SSIZE_T	ssize_t;
 # error "Two's complement, reasonably sized integer types, please"
 #endif
 
-#ifdef __GNUC__
-/** Put infrequently used env functions in separate section */
-# ifdef __APPLE__
-#  define	ESECT	__attribute__ ((section("__TEXT,text_env")))
-# else
-#  define	ESECT	__attribute__ ((section("text_env")))
-# endif
+#if __clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 2) || __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+/** Mark infrequently used env functions as cold. This puts them in a separate
+ *  section, and optimizes them for size */
+#define ESECT __attribute__ ((cold))
 #else
 #define ESECT
 #endif

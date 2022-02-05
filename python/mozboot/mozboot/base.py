@@ -12,7 +12,7 @@ import sys
 
 from pathlib import Path
 
-from distutils.version import LooseVersion
+from packaging.version import Version
 from mozboot import rust
 from mozboot.util import (
     get_mach_virtualenv_binary,
@@ -143,10 +143,10 @@ ac_add_options --enable-application=js
 # Upgrade Mercurial older than this.
 # This should match the OLDEST_NON_LEGACY_VERSION in
 # version-control-tools/hgext/configwizard/__init__.py.
-MODERN_MERCURIAL_VERSION = LooseVersion("4.9")
+MODERN_MERCURIAL_VERSION = Version("4.9")
 
 # Upgrade rust older than this.
-MODERN_RUST_VERSION = LooseVersion(MINIMUM_RUST_VERSION)
+MODERN_RUST_VERSION = Version(MINIMUM_RUST_VERSION)
 
 
 class BaseBootstrapper(object):
@@ -619,7 +619,7 @@ class BaseBootstrapper(object):
         """Execute the given path, returning the version.
 
         Invokes the path argument with the --version switch
-        and returns a LooseVersion representing the output
+        and returns a Version representing the output
         if successful. If not, returns None.
 
         An optional name argument gives the expected program
@@ -653,7 +653,7 @@ class BaseBootstrapper(object):
             print("ERROR! Unable to identify %s version." % name)
             return None
 
-        return LooseVersion(match.group(1))
+        return Version(match.group(1))
 
     def _parse_version(self, path: Path, name=None, env=None):
         return self._parse_version_impl(path, name, env, "--version")
@@ -817,7 +817,7 @@ class BaseBootstrapper(object):
 
         if "mobile_android" in self.application:
             # Let's add the most common targets.
-            if rust_version < LooseVersion("1.33"):
+            if rust_version < Version("1.33"):
                 arm_target = "armv7-linux-androideabi"
             else:
                 arm_target = "thumbv7neon-linux-androideabi"

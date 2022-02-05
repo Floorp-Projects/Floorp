@@ -855,6 +855,10 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   if (aFlags & eNoHorizontalOverflow) {
     x = 0.0;
     width = textRun->GetAdvanceWidth(range, &provider);
+    if (width < 0.0) {
+      x = width;
+      width = -width;
+    }
   } else {
     x = metrics.mBoundingBox.x;
     width = metrics.mBoundingBox.width;

@@ -160,13 +160,13 @@ extern double ReadableStreamGetNumReadRequests(ReadableStream* aStream);
 extern void ReadableStreamError(JSContext* aCx, ReadableStream* aStream,
                                 JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
-extern void ReadableStreamClose(JSContext* aCx, ReadableStream* aStream,
-                                ErrorResult& aRv);
+MOZ_CAN_RUN_SCRIPT extern void ReadableStreamClose(JSContext* aCx,
+                                                   ReadableStream* aStream,
+                                                   ErrorResult& aRv);
 
-extern void ReadableStreamFulfillReadRequest(JSContext* aCx,
-                                             ReadableStream* aStream,
-                                             JS::Handle<JS::Value> aChunk,
-                                             bool done, ErrorResult& aRv);
+MOZ_CAN_RUN_SCRIPT extern void ReadableStreamFulfillReadRequest(
+    JSContext* aCx, ReadableStream* aStream, JS::Handle<JS::Value> aChunk,
+    bool done, ErrorResult& aRv);
 
 extern void ReadableStreamAddReadRequest(ReadableStream* aStream,
                                          ReadRequest* aReadRequest);

@@ -40,6 +40,7 @@
 #include "mozilla/dom/MemoryReportTypes.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 
 #ifdef XP_WIN
@@ -54,6 +55,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::ipc;
 using namespace dom;
 
 #if defined(MOZ_MEMORY)
@@ -1804,6 +1806,14 @@ nsresult nsMemoryReporterManager::StartGettingReports() {
   if (!mIsRegistrationBlocked && net::gIOService) {
     if (RefPtr<MemoryReportingProcess> proc =
             net::gIOService->GetSocketProcessMemoryReporter()) {
+      s->mChildrenPending.AppendElement(proc.forget());
+    }
+  }
+
+  if (RefPtr<UtilityProcessManager> utility =
+          UtilityProcessManager::GetIfExists()) {
+    if (RefPtr<MemoryReportingProcess> proc =
+            utility->GetProcessMemoryReporter()) {
       s->mChildrenPending.AppendElement(proc.forget());
     }
   }

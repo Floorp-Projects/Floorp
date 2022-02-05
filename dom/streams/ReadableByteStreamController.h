@@ -62,7 +62,7 @@ class ReadableByteStreamController final : public ReadableStreamController,
 
   Nullable<double> GetDesiredSize() const;
 
-  void Close(JSContext* aCx, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Close(JSContext* aCx, ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT void Enqueue(JSContext* aCx, const ArrayBufferView& aChunk,
                                   ErrorResult& aRv);
@@ -364,7 +364,7 @@ ReadableByteStreamControllerGetBYOBRequest(
     JSContext* aCx, ReadableByteStreamController* aController,
     ErrorResult& aRv);
 
-extern void ReadableByteStreamControllerClose(
+MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerClose(
     JSContext* aCx, ReadableByteStreamController* aController,
     ErrorResult& aRv);
 

@@ -76,6 +76,11 @@ const WINDOW_HIDEABLE_FEATURES = [
   "scrollbars",
 ];
 
+const WINDOW_OPEN_FEATURES_MAP = {
+  locationbar: "location",
+  statusbar: "status",
+};
+
 // Messages that will be received via the Frame Message Manager.
 const MESSAGES = [
   // The content script sends us data that has been invalidated and needs to
@@ -5147,11 +5152,12 @@ var SessionStoreInternal = {
     if (!hidden.length) {
       features.push("all");
     } else {
-      features.push(
-        ...WINDOW_HIDEABLE_FEATURES.filter(aFeature => {
-          return !hidden.includes(aFeature);
-        })
-      );
+      features.push("resizable");
+      WINDOW_HIDEABLE_FEATURES.forEach(aFeature => {
+        if (!hidden.includes(aFeature)) {
+          features.push(WINDOW_OPEN_FEATURES_MAP[aFeature] || aFeature);
+        }
+      });
     }
     WINDOW_ATTRIBUTES.forEach(aFeature => {
       // Use !isNaN as an easy way to ignore sizemode and check for numbers

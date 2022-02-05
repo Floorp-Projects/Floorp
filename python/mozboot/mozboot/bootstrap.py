@@ -14,7 +14,7 @@ import subprocess
 import time
 from typing import Optional
 from pathlib import Path
-from distutils.version import LooseVersion
+from packaging.version import Version
 from mach.util import (
     get_state_dir,
     UserError,
@@ -128,7 +128,7 @@ Proceed at your own peril.
 
 
 # Version 2.24 changes the "core.commitGraph" setting to be "True" by default.
-MINIMUM_RECOMMENDED_GIT_VERSION = LooseVersion("2.24")
+MINIMUM_RECOMMENDED_GIT_VERSION = Version("2.24")
 OLD_GIT_WARNING = """
 You are running an older version of git ("{old_version}").
 We recommend upgrading to at least version "{minimum_recommended_version}" to improve
@@ -616,7 +616,7 @@ def configure_git(
     )
     if not match:
         raise Exception("Could not find git version")
-    git_version = LooseVersion(match.group(1))
+    git_version = Version(match.group(1))
 
     if git_version < MINIMUM_RECOMMENDED_GIT_VERSION:
         print(
@@ -626,7 +626,7 @@ def configure_git(
             )
         )
 
-    if git_version >= LooseVersion("2.17"):
+    if git_version >= Version("2.17"):
         # "core.untrackedCache" has a bug before 2.17
         subprocess.check_call(
             [git_str, "config", "core.untrackedCache", "true"], cwd=str(top_src_dir)
