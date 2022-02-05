@@ -10,6 +10,9 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Ur tettyafa tansa</string>
 
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Smiren</string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Abrutukul arussin</string>
 

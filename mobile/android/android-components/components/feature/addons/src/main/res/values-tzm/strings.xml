@@ -32,6 +32,8 @@
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">ssureg</string>
+    <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
+    <string name="mozac_feature_addons_updater_notification_title">%1$s ɣer-s aleqqem amaynu</string>
     <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_one">Rnu %1$s ɣer %2$s</string>
     <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
@@ -40,6 +42,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Rnu-ten ɣer %1$s</string>
     <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
     <string name="mozac_feature_addons_failed_to_translate">Ur tettwaf tsuɣilt, i tdigant %1$s ula i tutlayt tamezwert %2$s</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">Isin uggar</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">Azgal</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
