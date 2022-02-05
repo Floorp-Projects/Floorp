@@ -60,6 +60,7 @@ test-verify:
     max-run-time: 10800
     allow-software-gl-layers: false
     variants: ["fission"]
+    run-without-variant: false
     run-on-projects:
         by-variant:
             fission:
@@ -70,15 +71,7 @@ test-verify:
                     (?!.*(-ccov|-asan|-shippable))(?!.*-qr).*: []
                     # do not run on mozilla-central, beta or release: usually just confirms earlier results
                     default: ['integration']
-            default:
-                by-test-platform:
-                    # do not run on ccov or asan or shippable
-                    .*(-ccov|-asan|-shippable).*: []
-                    # linux / windows -qr skipped because they were previously skipped via test-platforms.yml
-                    .*(linux|windows)(?!.*(-ccov|-asan|-shippable)).*-qr.*: []
-                    # do not run on mozilla-central, beta or release: usually just confirms earlier results
-                    linux.*: ['integration']
-                    default: []
+            default: []
     built-projects-only: true
     target:
         by-test-platform:
@@ -146,10 +139,11 @@ test-verify-gpu:
     virtualization: virtual-with-gpu
     max-run-time: 10800
     allow-software-gl-layers: false
+    variants: ["fission"]
+    run-without-variant: false
     run-on-projects:
         by-variant:
-            fission: ['trunk']
-            default:
+            fission:
                 by-test-platform:
                     # do not run on ccov or asan
                     .*-ccov.*/.*: []
@@ -158,6 +152,7 @@ test-verify-gpu:
                     # do not run on mozilla-central, beta or release: usually just confirms earlier results
                     linux.*: ['integration']
                     default: []
+            default: []
     built-projects-only: true
     optimization:
         test-verify: ["test-verify-gpu"]
@@ -191,13 +186,15 @@ test-coverage:
     instance-size: default
     max-run-time: 10800
     allow-software-gl-layers: false
+    variants: ["fission"]
+    run-without-variant: false
     run-on-projects:
         by-variant:
-            fission: ['trunk']
-            default:
+            fission:
                 by-test-platform:
                     .*-ccov.*/.*: built-projects
                     default: []
+            default: []
     tier: 2
     mozharness:
         script:
@@ -257,14 +254,16 @@ test-coverage-gpu:
     instance-size: default
     max-run-time: 10800
     allow-software-gl-layers: false
+    variants: ["fission"]
+    run-without-variant: false
     run-on-projects:
         by-variant:
-            fission: ['trunk']
-            default:
+            fission:
                 by-test-platform:
                     # only run on mozilla-central and try.
                     .*-ccov.*/.*: ['mozilla-central']
                     default: []
+            default: []
     tier:
         by-test-platform:
             windows10-64-asan.*: 3

@@ -166,8 +166,10 @@ class BodyStream final : public nsIInputStreamCallback,
   void ErrorPropagation(JSContext* aCx, const MutexAutoLock& aProofOfLock,
                         ReadableStream* aStream, nsresult aRv);
 
-  void CloseAndReleaseObjects(JSContext* aCx, const MutexAutoLock& aProofOfLock,
-                              ReadableStream* aStream);
+  // TODO: convert this to MOZ_CAN_RUN_SCRIPT (bug 1750605)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void CloseAndReleaseObjects(
+      JSContext* aCx, const MutexAutoLock& aProofOfLock,
+      ReadableStream* aStream);
 #else
   void requestData(JSContext* aCx, JS::HandleObject aStream,
                    size_t aDesiredSize) override;

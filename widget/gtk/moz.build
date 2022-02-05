@@ -39,6 +39,7 @@ EXPORTS.mozilla.widget += [
 ]
 
 UNIFIED_SOURCES += [
+    "AsyncGtkClipboardRequest.cpp",
     "GfxInfo.cpp",
     "gtk3drawing.cpp",
     "GtkCompositorWidget.cpp",

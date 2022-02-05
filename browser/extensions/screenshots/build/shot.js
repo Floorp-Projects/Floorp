@@ -374,8 +374,13 @@ this.shot = (function() {
     get filename() {
       let filenameTitle = this.title;
       const date = new Date(this.createdDate);
-      // eslint-disable-next-line no-control-regex
-      filenameTitle = filenameTitle.replace(/[:\\<>/!@&?"*.|\x00-\x1F]/g, " ");
+      /* eslint-disable no-control-regex */
+      filenameTitle = filenameTitle
+        .replace(/[\\/]/g, "_")
+        .replace(/[\u200e\u200f\u202a-\u202e]/g, "")
+        .replace(/[\x00-\x1f\x7f-\x9f:*?|"<>;,+=\[\]]+/g, " ")
+        .replace(/^[\s\u180e.]+|[\s\u180e.]+$/g, "");
+      /* eslint-enable no-control-regex */
       filenameTitle = filenameTitle.replace(/\s{1,4000}/g, " ");
       const currentDateTime = new Date(
         date.getTime() - date.getTimezoneOffset() * 60 * 1000
@@ -383,16 +388,26 @@ this.shot = (function() {
       const filenameDate = currentDateTime.substring(0, 10);
       const filenameTime = currentDateTime.substring(11, 19).replace(/:/g, "-");
       let clipFilename = `Screenshot ${filenameDate} at ${filenameTime} ${filenameTitle}`;
-      const clipFilenameBytesSize = clipFilename.length * 2; // JS STrings are UTF-16
-      if (clipFilenameBytesSize > 251) {
-        // 255 bytes (Usual filesystems max) - 4 for the ".png" file extension string
-        const excedingchars = (clipFilenameBytesSize - 246) / 2; // 251 - 5 for ellipsis "[...]"
-        clipFilename = clipFilename.substring(
-          0,
-          clipFilename.length - excedingchars
-        );
-        clipFilename = clipFilename + "[...]";
+
+      // Crop the filename size at less than 246 bytes, so as to leave
+      // room for the extension and an ellipsis [...]. Note that JS
+      // strings are UTF16 but the filename will be converted to UTF8
+      // when saving which could take up more space, and we want a
+      // maximum of 255 bytes (not characters). Here, we iterate
+      // and crop at shorter and shorter points until we fit into
+      // 255 bytes.
+      let suffix = "";
+      for (let cropSize = 246; cropSize >= 0; cropSize -= 32) {
+        if (new Blob([clipFilename]).size > 246) {
+          clipFilename = clipFilename.substring(0, cropSize);
+          suffix = "[...]";
+        } else {
+          break;
+        }
       }
+
+      clipFilename += suffix;
+
       const clip = this.getClip(this.clipNames()[0]);
       let extension = ".png";
       if (clip && clip.image && clip.image.type) {
