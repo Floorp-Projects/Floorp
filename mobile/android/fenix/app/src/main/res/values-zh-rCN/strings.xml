@@ -244,7 +244,7 @@
     <string name="browser_menu_edit">编辑</string>
 
     <!-- Browser menu button that opens the Customize menu -->
-    <string name="browser_menu_customize_home">定制主页</string>
+    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">定制主页</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">定制主页</string>
     <!-- Browser Toolbar -->
@@ -495,9 +495,13 @@
     <string name="wallpaper_updated_snackbar_action">查看</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">点按徽标（Logo）即可更换壁纸</string>
+    <string name="wallpaper_tap_to_change_switch_label">点按徽标即可更换壁纸</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_description">不必离开主页即可更换壁纸。</string>
+
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">Firefox 徽标 - 也是更换壁纸的按钮</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -2006,6 +2010,13 @@
 	<string name="top_sites_rename_dialog_ok">确定</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">取消</string>
+
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">设置</string>
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">我们的赞助商﹠您的隐私</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">赞助项目</string>
 
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->

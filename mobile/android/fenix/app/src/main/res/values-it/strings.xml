@@ -239,7 +239,7 @@
     <string name="browser_menu_edit">Modifica</string>
 
     <!-- Browser menu button that opens the Customize menu -->
-    <string name="browser_menu_customize_home">Personalizza pagina iniziale</string>
+    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Personalizza pagina iniziale</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Personalizza pagina iniziale</string>
     <!-- Browser Toolbar -->
@@ -493,6 +493,10 @@
 
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_description">Passa da un’immagine all’altra senza abbandonare la pagina principale.</string>
+
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">Logo di Firefox. Pulsante per cambiare lo sfondo</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->

@@ -239,7 +239,7 @@
     <string name="browser_menu_edit">Uredi</string>
 
     <!-- Browser menu button that opens the Customize menu -->
-    <string name="browser_menu_customize_home">Prilagodi začetno stran</string>
+    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Prilagodi začetno stran</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Prilagodi domačo stran</string>
     <!-- Browser Toolbar -->
@@ -473,6 +473,10 @@
     <string name="wallpaper_updated_snackbar_action">Prikaži</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label">Tapnite na logotip za spremembo ozadja</string>
+
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">Logtip Firefoxa – spremeni ozadje, gumb</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1970,6 +1974,11 @@
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">Nastavitve</string>
 
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">Naši pokrovitelji in vaša zasebnost</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">Sponzorirano</string>
+
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">Nedejavni zavihki</string>
@@ -2023,6 +2032,9 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Zapri</string>
 
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">Zgodbe, ki spodbujajo k razmisleku</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_categories_header">Zgodbe po temi</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->

@@ -246,7 +246,7 @@
     <string name="browser_menu_edit">편집</string>
 
     <!-- Browser menu button that opens the Customize menu -->
-    <string name="browser_menu_customize_home">홈 사용자 지정</string>
+    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">홈 사용자 지정</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">홈페이지 개인화</string>
     <!-- Browser Toolbar -->
@@ -495,6 +495,10 @@
     <string name="wallpaper_tap_to_change_switch_label">배경 화면을 변경하려면 로고를 누르세요</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_description">홈페이지를 떠나지 않고 이미지를 순환하고 업데이트합니다.</string>
+
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">Firefox 로고 - 배경화면 변경, 버튼</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->

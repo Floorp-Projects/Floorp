@@ -235,7 +235,7 @@
     <string name="browser_menu_edit">حرّر</string>
 
     <!-- Browser menu button that opens the Customize menu -->
-    <string name="browser_menu_customize_home">خصّص البداية</string>
+    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">خصّص البداية</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">خصّص صفحة البداية</string>
     <!-- Browser Toolbar -->
@@ -465,6 +465,26 @@
     <string moz:removedIn="96" name="customize_toggle_recent_searches" tools:ignore="UnusedResources">عمليات البحث الأخيرة</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
+
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">الخلفيات</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">الاختصارات المموّلة</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">عنصر الخلفية: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">نجح تحديث الخلفية!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">اعرضها</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label">انقر الشعار لتغيير خلفية الشاشة</string>
+    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_description">تنقّل بين الصور وحدّثها دون مغادرة صفحة البداية.</string>
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">شعار Firefox - غيّر خلفية الشاشة، زر</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1200,7 +1220,7 @@
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">تراجَع</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">أُزيلت الصفحة</string>
+    <string name="snackbar_top_site_removed">أُزيلت الصفحة</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">تراجَع</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -1850,6 +1870,8 @@
     <string name="bookmark_deletion_confirmation">أمتأكد من حذف هذه العلامة؟</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">أضِف للمواقع الشائعة</string>
+    <!-- Browser menu button that removes a top site from the home fragment -->
+    <string name="browser_menu_remove_from_top_sites">أزِل من المواقع المهمة</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">تثبّت منها: %1$s</string>
@@ -1922,8 +1944,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">حسنًا، فهمت</string>
 
-    <!-- Label for the preference to show the most visited top sites on the homepage -->
-    <string name="top_sites_toggle_top_recent_sites_3">المواقع الأكثر زيارة</string>
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">المواقع الأكثر زيارة</string>
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">الاختصارات</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">الاسم</string>
 	<!-- Hint for renaming title of a top site -->
@@ -1932,6 +1956,13 @@
 	<string name="top_sites_rename_dialog_ok">حسنا</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">ألغِ</string>
+
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">الإعدادات</string>
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">رُعاتنا الرسميّون وخصوصيّتك</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">مموّل</string>
 
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
