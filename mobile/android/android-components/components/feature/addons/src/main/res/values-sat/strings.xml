@@ -77,7 +77,7 @@
     <!-- A link where users can find more information about add-ons permissions. -->
     <string name="mozac_feature_addons_learn_more">ᱪᱷᱟᱹᱲ ᱵᱟᱵᱚᱛ ᱡᱟᱹᱥᱛᱤ ᱵᱟᱰᱟᱭ ᱢᱮ</string>
     <!-- The rating of the add-on. -->
-    <string name="mozac_feature_addons_rating">ᱫᱚᱨ ᱴᱷᱟᱣᱠᱟ</string>
+    <string name="mozac_feature_addons_rating">ᱫᱚᱨ ᱴᱷᱟᱹᱣᱠᱟᱹ</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">ᱥᱟᱡᱟᱣ ᱠᱚ</string>
     <!-- Indicates the add-on is enabled. -->
