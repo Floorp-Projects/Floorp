@@ -281,7 +281,8 @@
   fill: currentColor;
 }
 
-.tab-icon-image:not([src]) {
+.tab-icon-image:not([src]),
+.tab-icon-image:-moz-broken {
   content: url("chrome://global/skin/icons/defaultFavicon.svg");
 }
 

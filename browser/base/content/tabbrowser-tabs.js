@@ -855,7 +855,12 @@
       // but we want to look at the screen the tab is being dropped onto.
       var screen = Cc["@mozilla.org/gfx/screenmanager;1"]
         .getService(Ci.nsIScreenManager)
-        .screenForRect(eX, eY, 1, 1);
+        .screenForRect(
+          eX * window.devicePixelRatio,
+          eY * window.devicePixelRatio,
+          1,
+          1
+        );
       var fullX = {},
         fullY = {},
         fullWidth = {},

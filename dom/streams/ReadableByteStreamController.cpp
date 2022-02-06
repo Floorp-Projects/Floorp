@@ -27,6 +27,7 @@
 #include "mozilla/dom/ReadableStreamBYOBRequest.h"
 #include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
+#include "mozilla/dom/ReadableStreamDefaultReader.h"
 #include "mozilla/dom/ReadableStreamGenericReader.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -352,6 +353,78 @@ void ReadableByteStreamControllerEnqueueChunkToQueue(
   aController->AddToQueueTotalSize(double(aByteLength));
 }
 
+// https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerenqueueclonedchunktoqueue
+void ReadableByteStreamControllerEnqueueClonedChunkToQueue(
+    JSContext* aCx, ReadableByteStreamController* aController,
+    JS::Handle<JSObject*> aBuffer, size_t aByteOffset, size_t aByteLength,
+    ErrorResult& aRv) {
+  // Step 1. Let cloneResult be CloneArrayBuffer(buffer, byteOffset, byteLength,
+  // %ArrayBuffer%).
+  aRv.MightThrowJSException();
+  JS::Rooted<JSObject*> cloneResult(
+      aCx, JS::ArrayBufferClone(aCx, aBuffer, aByteOffset, aByteLength));
+
+  // Step 2. If cloneResult is an abrupt completion,
+  if (!cloneResult) {
+    JS::Rooted<JS::Value> exception(aCx);
+    if (!JS_GetPendingException(aCx, &exception)) {
+      // Uncatchable exception; we should mark aRv and return.
+      aRv.StealExceptionFromJSContext(aCx);
+      return;
+    }
+    JS_ClearPendingException(aCx);
+
+    // Step 2.1. Perform ! ReadableByteStreamControllerError(controller,
+    // cloneResult.[[Value]]).
+    ReadableByteStreamControllerError(aController, exception, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+
+    // Step 2.2. Return cloneResult.
+    aRv.ThrowJSException(aCx, exception);
+    return;
+  }
+
+  // Step 3. Perform !
+  // ReadableByteStreamControllerEnqueueChunkToQueue(controller,
+  // cloneResult.[[Value]], 0, byteLength).
+  ReadableByteStreamControllerEnqueueChunkToQueue(aController, cloneResult, 0,
+                                                  aByteLength);
+}
+
+already_AddRefed<PullIntoDescriptor>
+ReadableByteStreamControllerShiftPendingPullInto(
+    ReadableByteStreamController* aController);
+
+// https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerenqueuedetachedpullintotoqueue
+void ReadableByteStreamControllerEnqueueDetachedPullIntoToQueue(
+    JSContext* aCx, ReadableByteStreamController* aController,
+    PullIntoDescriptor* aPullIntoDescriptor, ErrorResult& aRv) {
+  // Step 1. Assert: pullIntoDescriptor’s reader type is "none".
+  MOZ_ASSERT(aPullIntoDescriptor->GetReaderType() == ReaderType::None);
+
+  // Step 2. If pullIntoDescriptor’s bytes filled > 0,
+  // perform ? ReadableByteStreamControllerEnqueueClonedChunkToQueue(controller,
+  // pullIntoDescriptor’s buffer, pullIntoDescriptor’s byte offset,
+  // pullIntoDescriptor’s bytes filled).
+  if (aPullIntoDescriptor->BytesFilled() > 0) {
+    JS::Rooted<JSObject*> buffer(aCx, aPullIntoDescriptor->Buffer());
+    ReadableByteStreamControllerEnqueueClonedChunkToQueue(
+        aCx, aController, buffer, aPullIntoDescriptor->ByteOffset(),
+        aPullIntoDescriptor->BytesFilled(), aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+  }
+
+  // Step 3. Perform !
+  // ReadableByteStreamControllerShiftPendingPullInto(controller).
+  RefPtr<PullIntoDescriptor> discarded =
+      ReadableByteStreamControllerShiftPendingPullInto(aController);
+  (void)discarded;
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-get-num-read-into-requests
 static size_t ReadableStreamGetNumReadIntoRequests(ReadableStream* aStream) {
   // Step 1.
@@ -501,10 +574,6 @@ void ReadableByteStreamControllerCallPullIfNeeded(
   pullPromise->AppendNativeHandler(promiseHandler);
 }
 
-already_AddRefed<PullIntoDescriptor>
-ReadableByteStreamControllerShiftPendingPullInto(
-    ReadableByteStreamController* aController);
-
 bool ReadableByteStreamControllerFillPullIntoDescriptorFromQueue(
     JSContext* aCx, ReadableByteStreamController* aController,
     PullIntoDescriptor* aPullIntoDescriptor, ErrorResult& aRv);
@@ -551,19 +620,22 @@ void ReadableByteStreamControllerCommitPullIntoDescriptor(
   // Step 1. Assert: stream.[[state]] is not "errored".
   MOZ_ASSERT(aStream->State() != ReadableStream::ReaderState::Errored);
 
-  // Step 2. Let done be false.
+  // Step 2. Assert: pullIntoDescriptor.reader type is not "none".
+  MOZ_ASSERT(pullIntoDescriptor->GetReaderType() != ReaderType::None);
+
+  // Step 3. Let done be false.
   bool done = false;
 
-  // Step 3. If stream.[[state]] is "closed",
+  // Step 4. If stream.[[state]] is "closed",
   if (aStream->State() == ReadableStream::ReaderState::Closed) {
-    // Step 3.1. Assert: pullIntoDescriptor’s bytes filled is 0.
+    // Step 4.1. Assert: pullIntoDescriptor’s bytes filled is 0.
     MOZ_ASSERT(pullIntoDescriptor->BytesFilled() == 0);
 
-    // Step 3.2. Set done to true.
+    // Step 4.2. Set done to true.
     done = true;
   }
 
-  // Step 4. Let filledView be !
+  // Step 5. Let filledView be !
   // ReadableByteStreamControllerConvertPullIntoDescriptor(pullIntoDescriptor).
   JS::RootedObject filledView(
       aCx, ReadableByteStreamControllerConvertPullIntoDescriptor(
@@ -573,18 +645,18 @@ void ReadableByteStreamControllerCommitPullIntoDescriptor(
   }
   JS::RootedValue filledViewValue(aCx, JS::ObjectValue(*filledView));
 
-  // Step 5. If pullIntoDescriptor’s reader type is "default",
+  // Step 6. If pullIntoDescriptor’s reader type is "default",
   if (pullIntoDescriptor->GetReaderType() == ReaderType::Default) {
-    // Step 5.1. Perform !ReadableStreamFulfillReadRequest(stream, filledView,
+    // Step 6.1. Perform !ReadableStreamFulfillReadRequest(stream, filledView,
     // done).
     ReadableStreamFulfillReadRequest(aCx, aStream, filledViewValue, done, aRv);
     return;
   }
 
-  // Step 6.1. Assert: pullIntoDescriptor’s reader type is "byob".
+  // Step 7.1. Assert: pullIntoDescriptor’s reader type is "byob".
   MOZ_ASSERT(pullIntoDescriptor->GetReaderType() == ReaderType::BYOB);
 
-  // Step 6.2 Perform !ReadableStreamFulfillReadIntoRequest(stream, filledView,
+  // Step 7.2 Perform !ReadableStreamFulfillReadIntoRequest(stream, filledView,
   // done).
   ReadableStreamFulfillReadIntoRequest(aCx, aStream, filledViewValue, done,
                                        aRv);
@@ -637,6 +709,81 @@ void ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(
   }
 }
 
+MOZ_CAN_RUN_SCRIPT
+void ReadableByteStreamControllerHandleQueueDrain(
+    JSContext* aCx, ReadableByteStreamController* aController,
+    ErrorResult& aRv);
+
+// https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerfillreadrequestfromqueue
+MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerFillReadRequestFromQueue(
+    JSContext* aCx, ReadableByteStreamController* aController,
+    ReadRequest* aReadRequest, ErrorResult& aRv) {
+  // Step 1. Assert: controller.[[queueTotalSize]] > 0.
+  MOZ_ASSERT(aController->QueueTotalSize() > 0);
+
+  // Step 2. Let entry be controller.[[queue]][0].
+  // Step 3. Remove entry from controller.[[queue]].
+  RefPtr<ReadableByteStreamQueueEntry> entry = aController->Queue().popFirst();
+
+  // Step 4. Set controller.[[queueTotalSize]] to controller.[[queueTotalSize]]
+  // − entry’s byte length.
+  aController->SetQueueTotalSize(aController->QueueTotalSize() -
+                                 double(entry->ByteLength()));
+
+  // Step 5. Perform ! ReadableByteStreamControllerHandleQueueDrain(controller).
+  ReadableByteStreamControllerHandleQueueDrain(aCx, aController, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // Step 6. Let view be ! Construct(%Uint8Array%, « entry’s buffer, entry’s
+  // byte offset, entry’s byte length »).
+  aRv.MightThrowJSException();
+  JS::Rooted<JSObject*> buffer(aCx, entry->Buffer());
+  JS::Rooted<JSObject*> view(
+      aCx, JS_NewUint8ArrayWithBuffer(aCx, buffer, entry->ByteOffset(),
+                                      int64_t(entry->ByteLength())));
+  if (!view) {
+    aRv.StealExceptionFromJSContext(aCx);
+    return;
+  }
+
+  // Step 7. Perform readRequest’s chunk steps, given view.
+  JS::Rooted<JS::Value> viewValue(aCx, JS::ObjectValue(*view));
+  aReadRequest->ChunkSteps(aCx, viewValue, aRv);
+}
+
+MOZ_CAN_RUN_SCRIPT void
+ReadableByteStreamControllerProcessReadRequestsUsingQueue(
+    JSContext* aCx, ReadableByteStreamController* aController,
+    ErrorResult& aRv) {
+  // Step 1. Let reader be controller.[[stream]].[[reader]].
+  // Step 2. Assert: reader implements ReadableStreamDefaultReader.
+  RefPtr<ReadableStreamDefaultReader> reader =
+      aController->Stream()->GetDefaultReader();
+
+  // Step 3. While reader.[[readRequests]] is not empty,
+  while (!reader->ReadRequests().isEmpty()) {
+    // Step 3.1. If controller.[[queueTotalSize]] is 0, return.
+    if (aController->QueueTotalSize() == 0) {
+      return;
+    }
+
+    // Step 3.2. Let readRequest be reader.[[readRequests]][0].
+    // Step 3.3. Remove readRequest from reader.[[readRequests]].
+    RefPtr<ReadRequest> readRequest = reader->ReadRequests().popFirst();
+
+    // Step 3.4. Perform !
+    // ReadableByteStreamControllerFillReadRequestFromQueue(controller,
+    // readRequest).
+    ReadableByteStreamControllerFillReadRequestFromQueue(aCx, aController,
+                                                         readRequest, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+  }
+}
+
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-enqueue
 void ReadableByteStreamControllerEnqueue(
     JSContext* aCx, ReadableByteStreamController* aController,
@@ -684,7 +831,7 @@ void ReadableByteStreamControllerEnqueue(
   // Step 8.
   if (!aController->PendingPullIntos().isEmpty()) {
     // Step 8.1
-    PullIntoDescriptor* firstPendingPullInto =
+    RefPtr<PullIntoDescriptor> firstPendingPullInto =
         aController->PendingPullIntos().getFirst();
 
     // Step 8.2
@@ -694,46 +841,74 @@ void ReadableByteStreamControllerEnqueue(
       return;
     }
 
-    // Step 8.3
+    // Step 8.3. Perform !
+    // ReadableByteStreamControllerInvalidateBYOBRequest(controller).
+    ReadableByteStreamControllerInvalidateBYOBRequest(aController);
+
+    // Step 8.4. Set firstPendingPullInto’s buffer to !
+    // TransferArrayBuffer(firstPendingPullInto’s buffer).
     pendingBuffer = TransferArrayBuffer(aCx, pendingBuffer);
     if (!pendingBuffer) {
       aRv.StealExceptionFromJSContext(aCx);
       return;
     }
     firstPendingPullInto->SetBuffer(pendingBuffer);
+
+    // Step 8.5. If firstPendingPullInto’s reader type is "none", perform ?
+    // ReadableByteStreamControllerEnqueueDetachedPullIntoToQueue(controller,
+    // firstPendingPullInto).
+    if (firstPendingPullInto->GetReaderType() == ReaderType::None) {
+      ReadableByteStreamControllerEnqueueDetachedPullIntoToQueue(
+          aCx, aController, firstPendingPullInto, aRv);
+      if (aRv.Failed()) {
+        return;
+      }
+    }
   }
 
-  // Step 9.
-  ReadableByteStreamControllerInvalidateBYOBRequest(aController);
-
-  // Step 10.
+  // Step 9. If ! ReadableStreamHasDefaultReader(stream) is true,
   if (ReadableStreamHasDefaultReader(stream)) {
-    // Step 10.1
+    // Step 9.1. Perform !
+    // ReadableByteStreamControllerProcessReadRequestsUsingQueue(controller).
+    ReadableByteStreamControllerProcessReadRequestsUsingQueue(aCx, aController,
+                                                              aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+
+    // Step 9.2. If ! ReadableStreamGetNumReadRequests(stream) is 0,
     if (ReadableStreamGetNumReadRequests(stream) == 0) {
-      // Step 10.1.1
+      // Step 9.2.1 Assert: controller.[[pendingPullIntos]] is empty.
       MOZ_ASSERT(aController->PendingPullIntos().isEmpty());
 
-      // Step 10.1.2.
+      // Step 9.2.2. Perform !
+      // ReadableByteStreamControllerEnqueueChunkToQueue(controller,
+      // transferredBuffer, byteOffset, byteLength).
       ReadableByteStreamControllerEnqueueChunkToQueue(
           aController, transferredBuffer, byteOffset, byteLength);
+
+      // Step 9.3. Otherwise,
     } else {
-      // Step 10.2.1
+      // Step 9.3.1 Assert: controller.[[queue]] is empty.
       MOZ_ASSERT(aController->Queue().isEmpty());
 
-      // Step 10.2.2
+      // Step 9.3.2. If controller.[[pendingPullIntos]] is not empty,
       if (!aController->PendingPullIntos().isEmpty()) {
-        // Step 10.2.2.1:
+        // Step 9.3.2.1. Assert: controller.[[pendingPullIntos]][0]'s reader
+        // type is "default".
         MOZ_ASSERT(
             aController->PendingPullIntos().getFirst()->GetReaderType() ==
             ReaderType::Default);
 
-        // Step 10.2.2.2:
+        // Step 9.3.2.2. Perform !
+        // ReadableByteStreamControllerShiftPendingPullInto(controller).
         RefPtr<PullIntoDescriptor> pullIntoDescriptor =
             ReadableByteStreamControllerShiftPendingPullInto(aController);
         (void)pullIntoDescriptor;
       }
 
-      // Step 10.2.3
+      // Step 9.3.3. Let transferredView be ! Construct(%Uint8Array%, «
+      // transferredBuffer, byteOffset, byteLength »).
       JS::Rooted<JSObject*> transferredView(
           aCx, JS_NewUint8ArrayWithBuffer(aCx, transferredBuffer, byteOffset,
                                           int64_t(byteLength)));
@@ -742,37 +917,47 @@ void ReadableByteStreamControllerEnqueue(
         return;
       }
 
-      // Step 10.2.4
-      JS::RootedValue transferredViewValue(aCx,
-                                           JS::ObjectValue(*transferredView));
+      // Step 9.3.4. Perform ! ReadableStreamFulfillReadRequest(stream,
+      // transferredView, false).
+      JS::Rooted<JS::Value> transferredViewValue(
+          aCx, JS::ObjectValue(*transferredView));
       ReadableStreamFulfillReadRequest(aCx, stream, transferredViewValue, false,
                                        aRv);
       if (aRv.Failed()) {
         return;
       }
     }
-    // Step 11
+
+    // Step 10. Otherwise, if ! ReadableStreamHasBYOBReader(stream) is true,
   } else if (ReadableStreamHasBYOBReader(stream)) {
-    // Step 11.1
+    // Step 10.1. Perform !
+    // ReadableByteStreamControllerEnqueueChunkToQueue(controller,
+    // transferredBuffer, byteOffset, byteLength).
     ReadableByteStreamControllerEnqueueChunkToQueue(
         aController, transferredBuffer, byteOffset, byteLength);
 
-    // Step 11.2
+    // Step 10.2 Perform !
+    // ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(controller).
     ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(
         aCx, aController, aRv);
     if (aRv.Failed()) {
       return;
     }
+
+    // Step 11. Otherwise,
   } else {
-    // Step 12.1
+    // Step 11.1. Assert: ! IsReadableStreamLocked(stream) is false.
     MOZ_ASSERT(!IsReadableStreamLocked(stream));
 
-    // Step 12.2
+    // Step 11.2. Perform !
+    // ReadableByteStreamControllerEnqueueChunkToQueue(controller,
+    // transferredBuffer, byteOffset, byteLength).
     ReadableByteStreamControllerEnqueueChunkToQueue(
         aController, transferredBuffer, byteOffset, byteLength);
   }
 
-  // Step 13.
+  // Step 12. Perform !
+  // ReadableByteStreamControllerCallPullIfNeeded(controller).
   ReadableByteStreamControllerCallPullIfNeeded(aCx, aController, aRv);
 }
 
@@ -853,7 +1038,6 @@ already_AddRefed<Promise> ReadableByteStreamController::CancelSteps(
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-handle-queue-drain
-MOZ_CAN_RUN_SCRIPT
 void ReadableByteStreamControllerHandleQueueDrain(
     JSContext* aCx, ReadableByteStreamController* aController,
     ErrorResult& aRv) {
@@ -888,40 +1072,15 @@ void ReadableByteStreamController::PullSteps(JSContext* aCx,
 
   // Step 3.
   if (QueueTotalSize() > 0) {
-    // Step 3.1
+    // Step 3.1. Assert: ! ReadableStreamGetNumReadRequests ( stream ) is 0.
     MOZ_ASSERT(ReadableStreamGetNumReadRequests(stream) == 0);
 
-    // Step 3.2 + 3.3
-    RefPtr<ReadableByteStreamQueueEntry> entry = Queue().popFirst();
+    // Step 3.2. Perform !
+    // ReadableByteStreamControllerFillReadRequestFromQueue(this, readRequest).
+    ReadableByteStreamControllerFillReadRequestFromQueue(aCx, this,
+                                                         aReadRequest, aRv);
 
-    // Step 3.4
-    SetQueueTotalSize(QueueTotalSize() - double(entry->ByteLength()));
-
-    // Step 3.5
-    ReadableByteStreamControllerHandleQueueDrain(aCx, this, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
-
-    // Step 3.6
-    aRv.MightThrowJSException();
-    JS::Rooted<JSObject*> buffer(aCx, entry->Buffer());
-    JS::Rooted<JSObject*> view(
-        aCx, JS_NewUint8ArrayWithBuffer(aCx, buffer, entry->ByteOffset(),
-                                        int64_t(entry->ByteLength())));
-    if (!view) {
-      aRv.StealExceptionFromJSContext(aCx);
-      return;
-    }
-
-    // Step 3.7
-    JS::RootedValue viewValue(aCx, JS::ObjectValue(*view));
-    aReadRequest->ChunkSteps(aCx, viewValue, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
-
-    // Step 3.8
+    // Step 3.3. Return.
     return;
   }
 
@@ -968,6 +1127,24 @@ void ReadableByteStreamController::PullSteps(JSContext* aCx,
 
   // Step 7.
   ReadableByteStreamControllerCallPullIfNeeded(aCx, this, aRv);
+}
+
+// https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontroller-releasesteps
+void ReadableByteStreamController::ReleaseSteps() {
+  // Step 1. If this.[[pendingPullIntos]] is not empty,
+  if (!PendingPullIntos().isEmpty()) {
+    // Step 1.1. Let firstPendingPullInto be this.[[pendingPullIntos]][0].
+    RefPtr<PullIntoDescriptor> firstPendingPullInto =
+        PendingPullIntos().popFirst();
+
+    // Step 1.2. Set firstPendingPullInto’s reader type to "none".
+    firstPendingPullInto->SetReaderType(ReaderType::None);
+
+    // Step 1.3. Set this.[[pendingPullIntos]] to the list «
+    // firstPendingPullInto ».
+    PendingPullIntos().clear();
+    PendingPullIntos().insertBack(firstPendingPullInto);
+  }
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-shift-pending-pull-into
@@ -1047,21 +1224,32 @@ MOZ_CAN_RUN_SCRIPT
 static void ReadableByteStreamControllerRespondInClosedState(
     JSContext* aCx, ReadableByteStreamController* aController,
     RefPtr<PullIntoDescriptor>& aFirstDescriptor, ErrorResult& aRv) {
-  // Step 1.
+  // Step 1. Assert: firstDescriptor ’s bytes filled is 0.
   MOZ_ASSERT(aFirstDescriptor->BytesFilled() == 0);
 
-  // Step 2.
+  // Step 2. If firstDescriptor’s reader type is "none",
+  // perform ! ReadableByteStreamControllerShiftPendingPullInto(controller).
+  if (aFirstDescriptor->GetReaderType() == ReaderType::None) {
+    RefPtr<PullIntoDescriptor> discarded =
+        ReadableByteStreamControllerShiftPendingPullInto(aController);
+    (void)discarded;
+  }
+
+  // Step 3. Let stream be controller.[[stream]].
   RefPtr<ReadableStream> stream = aController->Stream();
 
-  // Step 3.
+  // Step 4. If ! ReadableStreamHasBYOBReader(stream) is true,
   if (ReadableStreamHasBYOBReader(stream)) {
-    // Step 3.1
+    // Step 4.1. While ! ReadableStreamGetNumReadIntoRequests(stream) > 0,
     while (ReadableStreamGetNumReadIntoRequests(stream) > 0) {
-      // Step 3.1.1
+      // Step 4.1.1. Let pullIntoDescriptor be !
+      // ReadableByteStreamControllerShiftPendingPullInto(controller).
       RefPtr<PullIntoDescriptor> pullIntoDescriptor =
           ReadableByteStreamControllerShiftPendingPullInto(aController);
 
-      // Step 3.1.2.
+      // Step 4.1.2. Perform !
+      // ReadableByteStreamControllerCommitPullIntoDescriptor(stream,
+      // pullIntoDescriptor).
       ReadableByteStreamControllerCommitPullIntoDescriptor(
           aCx, stream, pullIntoDescriptor, aRv);
     }
@@ -1102,54 +1290,68 @@ static void ReadableByteStreamControllerRespondInReadableState(
   ReadableByteStreamControllerFillHeadPullIntoDescriptor(
       aController, aBytesWritten, aPullIntoDescriptor);
 
-  // Step 3. If pullIntoDescriptor’s bytes filled < pullIntoDescriptor’s element
+  // Step 3. If pullIntoDescriptor’s reader type is "none",
+  if (aPullIntoDescriptor->GetReaderType() == ReaderType::None) {
+    // Step 3.1. Perform ?
+    // ReadableByteStreamControllerEnqueueDetachedPullIntoToQueue(controller,
+    // pullIntoDescriptor).
+    ReadableByteStreamControllerEnqueueDetachedPullIntoToQueue(
+        aCx, aController, aPullIntoDescriptor, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+
+    // Step 3.2. Perform !
+    // ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(controller).
+    ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(
+        aCx, aController, aRv);
+
+    // Step 3.3. Return.
+    return;
+  }
+
+  // Step 4. If pullIntoDescriptor’s bytes filled < pullIntoDescriptor’s element
   // size, return.
   if (aPullIntoDescriptor->BytesFilled() < aPullIntoDescriptor->ElementSize()) {
     return;
   }
 
-  // Step 4. Perform
+  // Step 5. Perform
   // !ReadableByteStreamControllerShiftPendingPullInto(controller).
   RefPtr<PullIntoDescriptor> pullIntoDescriptor =
       ReadableByteStreamControllerShiftPendingPullInto(aController);
   (void)pullIntoDescriptor;
 
-  // Step 5. Let remainderSize be pullIntoDescriptor’s bytes filled mod
+  // Step 6. Let remainderSize be pullIntoDescriptor’s bytes filled mod
   // pullIntoDescriptor’s element size.
   size_t remainderSize =
       aPullIntoDescriptor->BytesFilled() % aPullIntoDescriptor->ElementSize();
 
-  // Step 6. If remainderSize > 0,
+  // Step 7. If remainderSize > 0,
   if (remainderSize > 0) {
-    // Step 6.1. Let end be pullIntoDescriptor’s byte offset +
+    // Step 7.1. Let end be pullIntoDescriptor’s byte offset +
     // pullIntoDescriptor’s bytes filled.
     size_t end =
         aPullIntoDescriptor->ByteOffset() + aPullIntoDescriptor->BytesFilled();
 
-    // Step 6.2. Let remainder be ? CloneArrayBuffer(pullIntoDescriptor’s
-    // buffer, end − remainderSize, remainderSize, %ArrayBuffer%).
+    // Step 7.2. Perform ?
+    // ReadableByteStreamControllerEnqueueClonedChunkToQueue(controller,
+    // pullIntoDescriptor’s buffer, end − remainderSize, remainderSize).
     JS::Rooted<JSObject*> pullIntoBuffer(aCx, aPullIntoDescriptor->Buffer());
-    JS::Rooted<JSObject*> remainder(
-        aCx, JS::ArrayBufferClone(aCx, pullIntoBuffer, end - remainderSize,
-                                  remainderSize));
-    if (!remainder) {
-      aRv.StealExceptionFromJSContext(aCx);
+    ReadableByteStreamControllerEnqueueClonedChunkToQueue(
+        aCx, aController, pullIntoBuffer, end - remainderSize, remainderSize,
+        aRv);
+    if (aRv.Failed()) {
       return;
     }
-
-    // Step 6.3 Perform
-    // !ReadableByteStreamControllerEnqueueChunkToQueue(controller, remainder,
-    // 0, remainder.[[ByteLength]]).
-    ReadableByteStreamControllerEnqueueChunkToQueue(
-        aController, remainder, 0, JS::GetArrayBufferByteLength(remainder));
   }
 
-  // Step 7. Set pullIntoDescriptor’s bytes filled to pullIntoDescriptor’s bytes
+  // Step 8. Set pullIntoDescriptor’s bytes filled to pullIntoDescriptor’s bytes
   // filled − remainderSize.
   aPullIntoDescriptor->SetBytesFilled(aPullIntoDescriptor->BytesFilled() -
                                       remainderSize);
 
-  // Step 8. Perform
+  // Step 9. Perform
   // !ReadableByteStreamControllerCommitPullIntoDescriptor(controller.[[stream]],
   // pullIntoDescriptor).
   RefPtr<ReadableStream> stream(aController->Stream());
@@ -1159,7 +1361,7 @@ static void ReadableByteStreamControllerRespondInReadableState(
     return;
   }
 
-  // Step 9. Perform
+  // Step 10. Perform
   // !ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(controller).
   ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(
       aCx, aController, aRv);
