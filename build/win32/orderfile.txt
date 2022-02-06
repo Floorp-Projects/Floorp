@@ -6180,7 +6180,6 @@ XPCOMService_GetSocketTransportService
 ?BroadcastStringBundle@ContentParent@dom@mozilla@@SAXABVStringBundleDescriptor@23@@Z
 ?Get@SharedStringMap@ipc@dom@mozilla@@QAE_NABV?$nsTString@D@@AAV?$nsTSubstring@_S@@@Z
 ?ReinitForContent@ImageBridgeChild@layers@mozilla@@SA_N$$QAV?$Endpoint@VPImageBridgeChild@layers@mozilla@@@ipc@3@I@Z
-?RecvAudioSessionData@widget@mozilla@@YA?AW4nsresult@@ABUnsID@@ABV?$nsTString@_S@@1@Z
 ?Release@WakeLock@dom@mozilla@@UAGKXZ
 ?GetInstance@PowerManagerService@power@dom@mozilla@@SA?AU?$already_AddRefed@VPowerManagerService@power@dom@mozilla@@@@XZ
 ?RegisterWakeLockObserver@hal@mozilla@@YAXPAV?$Observer@VWakeLockInformation@hal@mozilla@@@2@@Z
