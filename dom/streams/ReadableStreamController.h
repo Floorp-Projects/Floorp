@@ -39,6 +39,9 @@ class ReadableStreamController : public nsISupports {
   virtual void PullSteps(JSContext* aCx, ReadRequest* aReadRequest,
                          ErrorResult& aRv) = 0;
 
+  // No JS implementable UnderlyingSource callback exists for this.
+  virtual void ReleaseSteps() = 0;
+
  protected:
   nsCOMPtr<nsIGlobalObject> mGlobal;
   virtual ~ReadableStreamController() = default;

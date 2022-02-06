@@ -77,6 +77,14 @@ MOZ_CAN_RUN_SCRIPT void ReadableStreamBYOBReaderRead(
     JSContext* aCx, ReadableStreamBYOBReader* aReader, JS::HandleObject aView,
     ReadIntoRequest* aReadIntoRequest, ErrorResult& aRv);
 
+void ReadableStreamBYOBReaderErrorReadIntoRequests(
+    JSContext* aCx, ReadableStreamBYOBReader* aReader,
+    JS::Handle<JS::Value> aError, ErrorResult& aRv);
+
+void ReadableStreamBYOBReaderRelease(JSContext* aCx,
+                                     ReadableStreamBYOBReader* aReader,
+                                     ErrorResult& aRv);
+
 }  // namespace dom
 }  // namespace mozilla
 

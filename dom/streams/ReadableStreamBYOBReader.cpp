@@ -271,18 +271,65 @@ already_AddRefed<Promise> ReadableStreamBYOBReader::Read(
   return promise.forget();
 }
 
+// https://streams.spec.whatwg.org/#abstract-opdef-readablestreambyobreadererrorreadintorequests
+void ReadableStreamBYOBReaderErrorReadIntoRequests(
+    JSContext* aCx, ReadableStreamBYOBReader* aReader,
+    JS::Handle<JS::Value> aError, ErrorResult& aRv) {
+  // Step 1. Let readIntoRequests be reader.[[readIntoRequests]].
+  LinkedList<RefPtr<ReadIntoRequest>> readIntoRequests =
+      std::move(aReader->ReadIntoRequests());
+
+  // Step 2. Set reader.[[readIntoRequests]] to a new empty list.
+  // Note: The std::move already cleared this anyway.
+  aReader->ReadIntoRequests().clear();
+
+  // Step 3. For each readIntoRequest of readIntoRequests,
+  while (RefPtr<ReadIntoRequest> readIntoRequest =
+             readIntoRequests.popFirst()) {
+    // Step 3.1. Perform readIntoRequest’s error steps, given e.
+    readIntoRequest->ErrorSteps(aCx, aError, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+  }
+}
+
+// https://streams.spec.whatwg.org/#abstract-opdef-readablestreambyobreaderrelease
+void ReadableStreamBYOBReaderRelease(JSContext* aCx,
+                                     ReadableStreamBYOBReader* aReader,
+                                     ErrorResult& aRv) {
+  // Step 1. Perform ! ReadableStreamReaderGenericRelease(reader).
+  ReadableStreamReaderGenericRelease(aReader, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // Step 2. Let e be a new TypeError exception.
+  ErrorResult rv;
+  rv.ThrowTypeError("Releasing lock");
+  JS::Rooted<JS::Value> error(aCx);
+  MOZ_ALWAYS_TRUE(ToJSValue(aCx, std::move(rv), &error));
+
+  // Step 3. Perform ! ReadableStreamBYOBReaderErrorReadIntoRequests(reader, e).
+  ReadableStreamBYOBReaderErrorReadIntoRequests(aCx, aReader, error, aRv);
+}
+
 // https://streams.spec.whatwg.org/#byob-reader-release-lock
 void ReadableStreamBYOBReader::ReleaseLock(ErrorResult& aRv) {
-  if (!GetStream()) {
+  // Step 1. If this.[[stream]] is undefined, return.
+  if (!mStream) {
     return;
   }
 
-  if (!ReadIntoRequests().isEmpty()) {
-    aRv.ThrowTypeError("ReadIntoRequests not empty");
-    return;
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(mGlobal)) {
+    return aRv.ThrowUnknownError("Internal error");
   }
+  JSContext* cx = jsapi.cx();
 
-  ReadableStreamReaderGenericRelease(this, aRv);
+  // Step 2. Perform ! ReadableStreamBYOBReaderRelease(this).
+  RefPtr<ReadableStreamBYOBReader> thisRefPtr = this;
+  ReadableStreamBYOBReaderRelease(cx, thisRefPtr, aRv);
 }
 
 // https://streams.spec.whatwg.org/#acquire-readable-stream-byob-reader
