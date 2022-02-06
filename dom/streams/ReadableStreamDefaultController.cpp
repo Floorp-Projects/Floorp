@@ -715,5 +715,10 @@ void ReadableStreamDefaultController::PullSteps(JSContext* aCx,
   }
 }
 
+// https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaultcontroller-releasesteps
+void ReadableStreamDefaultController::ReleaseSteps() {
+  // Step 1. Return.
+}
+
 }  // namespace dom
 }  // namespace mozilla

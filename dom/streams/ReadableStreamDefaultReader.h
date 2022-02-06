@@ -95,6 +95,14 @@ extern void SetUpReadableStreamDefaultReader(
     JSContext* aCx, ReadableStreamDefaultReader* aReader,
     ReadableStream* aStream, ErrorResult& aRv);
 
+void ReadableStreamDefaultReaderErrorReadRequests(
+    JSContext* aCx, ReadableStreamDefaultReader* aReader,
+    JS::Handle<JS::Value> aError, ErrorResult& aRv);
+
+void ReadableStreamDefaultReaderRelease(JSContext* aCx,
+                                        ReadableStreamDefaultReader* aReader,
+                                        ErrorResult& aRv);
+
 }  // namespace dom
 }  // namespace mozilla
 

@@ -2271,6 +2271,7 @@ struct GlobalProperties {
   bool caches : 1;
   bool crypto : 1;
   bool fetch : 1;
+  bool storage : 1;
   bool structuredClone : 1;
   bool indexedDB : 1;
   bool isSecureContext : 1;
