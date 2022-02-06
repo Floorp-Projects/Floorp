@@ -578,9 +578,7 @@ void PullWithDefaultReader(JSContext* aCx, TeeState* aTeeState,
     MOZ_ASSERT(reader->AsBYOB()->ReadIntoRequests().length() == 0);
 
     // Step 15.1.2. Perform ! ReadableStreamBYOBReaderRelease(reader).
-    // TODO: Fix this when we have
-    // ReadableStreamBYOBReaderErrorReadIntoRequests.
-    ReadableStreamReaderGenericRelease(reader, aRv);
+    ReadableStreamBYOBReaderRelease(aCx, reader->AsBYOB(), aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -886,8 +884,8 @@ void PullWithBYOBReader(JSContext* aCx, TeeState* aTeeState,
     // Step 16.1.1
     MOZ_ASSERT(aTeeState->GetDefaultReader()->ReadRequests().isEmpty());
 
-    // Step 16.1.2. Perform !ReadableStreamReaderGenericRelease(reader).
-    ReadableStreamReaderGenericRelease(aTeeState->GetReader(), aRv);
+    // Step 16.1.2. Perform ! ReadableStreamDefaultReaderRelease(reader).
+    ReadableStreamDefaultReaderRelease(aCx, aTeeState->GetDefaultReader(), aRv);
     if (aRv.Failed()) {
       return;
     }
