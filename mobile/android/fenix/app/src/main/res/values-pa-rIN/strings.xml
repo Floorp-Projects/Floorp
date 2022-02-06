@@ -242,7 +242,7 @@
     <string name="browser_menu_edit">ਸੋਧੋ</string>
 
     <!-- Browser menu button that opens the Customize menu -->
-    <string name="browser_menu_customize_home">ਘਰ ਨੂੰ ਕਸਟਮਾਈਜ਼ ਕਰੋ</string>
+    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">ਘਰ ਨੂੰ ਕਸਟਮਾਈਜ਼ ਕਰੋ</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">ਮੁੱਖ-ਸਫ਼ੇ ਨੂੰ ਕਸਟਮਾਈਜ਼ ਕਰੋ</string>
     <!-- Browser Toolbar -->
@@ -491,6 +491,10 @@
     <string name="wallpaper_tap_to_change_switch_label">ਵਾਲਪੇਪਰ ਬਦਲਣ ਲਈ ਲੋਗੋ ਨੂੰ ਛੂਹੋ</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_description">ਬਿਨਾਂ ਮੁੱਖ ਸਫ਼ਾ ਬਦਲੇ ਚਿੱਤਰ ਬਦਲੋ ਅਤੇ ਅੱਪਡੇਟ ਕਰੋ।</string>
+
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">Firefox ਲੋਗੋ - ਵਾਲਪੇਪਰ ,ਬਟਨ ਬਦਲੋ</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->

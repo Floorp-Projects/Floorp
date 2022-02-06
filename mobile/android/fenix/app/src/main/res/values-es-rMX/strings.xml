@@ -237,9 +237,9 @@
     <string name="browser_menu_edit">Editar</string>
 
     <!-- Browser menu button that opens the Customize menu -->
-    <string name="browser_menu_customize_home">Personalizar inicio</string>
+    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Personalizar inicio</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
-    <string name="browser_menu_customize_home_1">Personalizar página de inicio</string>
+    <string name="browser_menu_customize_home_1">Personalizar inicio</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Pantalla de inicio</string>
