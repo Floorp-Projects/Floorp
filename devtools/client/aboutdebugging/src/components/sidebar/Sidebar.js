@@ -158,7 +158,7 @@ class Sidebar extends PureComponent {
   renderFooter() {
     const HELP_ICON_SRC = "chrome://global/skin/icons/help.svg";
     const SUPPORT_URL =
-      "https://developer.mozilla.org/docs/Tools/about:debugging";
+      "https://firefox-source-docs.mozilla.org/devtools-user/about_colon_debugging/";
 
     return dom.footer(
       {

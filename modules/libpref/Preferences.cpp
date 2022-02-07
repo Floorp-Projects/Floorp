@@ -49,6 +49,7 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsContentUtils.h"
 #include "nsCRT.h"
 #include "nsTHashMap.h"
 #include "nsDirectoryServiceDefs.h"
@@ -1586,6 +1587,14 @@ static nsresult pref_SetPref(const nsCString& aPrefName, PrefType aType,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
+    printf(
+        "pref_SetPref: Attempt to write pref %s after XPCOMShutdownThreads "
+        "started.\n",
+        aPrefName.get());
+    if (nsContentUtils::IsInitialized()) {
+      xpc_DumpJSStack(true, true, false);
+    }
+    MOZ_ASSERT(false, "Late preference writes should be avoided.");
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 

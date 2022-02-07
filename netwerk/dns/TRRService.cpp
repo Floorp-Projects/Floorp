@@ -448,6 +448,10 @@ uint32_t TRRService::GetRequestTimeout() {
     return StaticPrefs::network_trr_request_timeout_mode_trronly_ms();
   }
 
+  if (StaticPrefs::network_trr_strict_native_fallback()) {
+    return StaticPrefs::network_trr_strict_fallback_request_timeout_ms();
+  }
+
   return StaticPrefs::network_trr_request_timeout_ms();
 }
 
