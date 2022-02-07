@@ -201,7 +201,7 @@ def push_to_try(
         config_path = write_task_config(try_task_config)
         changed_files.append(config_path)
 
-    if files_to_change:
+    if push and files_to_change:
         for path, content in files_to_change.items():
             path = os.path.join(vcs.path, path)
             with open(path, "wb") as fh:
