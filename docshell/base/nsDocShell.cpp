@@ -11084,7 +11084,7 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
 void nsDocShell::CollectWireframe() {
   if (mozilla::SessionHistoryInParent() &&
       StaticPrefs::browser_history_collectWireframes() &&
-      mBrowsingContext->IsTop() && mActiveEntry) {
+      mBrowsingContext->IsTopContent() && mActiveEntry) {
     RefPtr<Document> doc = mContentViewer->GetDocument();
     Nullable<Wireframe> wireframe;
     doc->GetWireframeWithoutFlushing(false, wireframe);
