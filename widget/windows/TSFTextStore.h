@@ -545,7 +545,15 @@ class TSFTextStore final : public ITextStoreACP,
 
   class Selection {
    public:
-    const TS_SELECTION_ACP& ACPRef() const { return mACP; }
+    static TS_SELECTION_ACP EmptyACP() {
+      return TS_SELECTION_ACP{
+          .acpStart = 0,
+          .acpEnd = 0,
+          .style = {.ase = TS_AE_NONE, .fInterimChar = FALSE}};
+    }
+
+    bool HasRange() const { return mACP.isSome(); }
+    const TS_SELECTION_ACP& ACPRef() const { return mACP.ref(); }
 
     explicit Selection(const TS_SELECTION_ACP& aSelection) {
       SetSelection(aSelection);
@@ -565,14 +573,14 @@ class TSFTextStore final : public ITextStoreACP,
     }
 
     void SetSelection(const TS_SELECTION_ACP& aSelection) {
-      mACP = aSelection;
+      mACP = Some(aSelection);
       // Selection end must be active in our editor.
-      if (mACP.style.ase != TS_AE_START) {
-        mACP.style.ase = TS_AE_END;
+      if (mACP->style.ase != TS_AE_START) {
+        mACP->style.ase = TS_AE_END;
       }
       // We're not support interim char selection for now.
       // XXX Probably, this is necessary for supporting South Asian languages.
-      mACP.style.fInterimChar = FALSE;
+      mACP->style.fInterimChar = FALSE;
     }
 
     bool SetSelection(const SelectionChangeDataBase& aSelectionChangeData) {
@@ -584,73 +592,94 @@ class TSFTextStore final : public ITextStoreACP,
 
     bool SetSelection(uint32_t aStart, uint32_t aLength, bool aReversed,
                       const WritingMode& aWritingMode) {
-      bool changed = mACP.acpStart != static_cast<LONG>(aStart) ||
-                     mACP.acpEnd != static_cast<LONG>(aStart + aLength);
-      mACP.acpStart = static_cast<LONG>(aStart);
-      mACP.acpEnd = static_cast<LONG>(aStart + aLength);
-      mACP.style.ase = aReversed ? TS_AE_START : TS_AE_END;
-      mACP.style.fInterimChar = FALSE;
+      const bool changed = mACP.isNothing() ||
+                           mACP->acpStart != static_cast<LONG>(aStart) ||
+                           mACP->acpEnd != static_cast<LONG>(aStart + aLength);
+      mACP = Some(
+          TS_SELECTION_ACP{.acpStart = static_cast<LONG>(aStart),
+                           .acpEnd = static_cast<LONG>(aStart + aLength),
+                           .style = {.ase = aReversed ? TS_AE_START : TS_AE_END,
+                                     .fInterimChar = FALSE}});
       mWritingMode = aWritingMode;
 
       return changed;
     }
 
-    bool Collapsed() const { return mACP.acpStart == mACP.acpEnd; }
+    bool Collapsed() const {
+      return mACP.isNothing() || mACP->acpStart == mACP->acpEnd;
+    }
 
     void Collapse(uint32_t aOffset) {
       // XXX This does not update the selection's mWritingMode.
       // If it is ever used to "collapse" to an entirely new location,
       // we may need to fix that.
-      mACP.acpStart = mACP.acpEnd = static_cast<LONG>(aOffset);
-      mACP.style.ase = TS_AE_END;
-      mACP.style.fInterimChar = FALSE;
+      mACP = Some(
+          TS_SELECTION_ACP{.acpStart = static_cast<LONG>(aOffset),
+                           .acpEnd = static_cast<LONG>(aOffset),
+                           .style = {.ase = TS_AE_END, .fInterimChar = FALSE}});
     }
 
     LONG MinOffset() const {
-      LONG min = std::min(mACP.acpStart, mACP.acpEnd);
+      MOZ_ASSERT(mACP.isSome());
+      LONG min = std::min(mACP->acpStart, mACP->acpEnd);
       MOZ_ASSERT(min >= 0);
       return min;
     }
 
     LONG MaxOffset() const {
-      LONG max = std::max(mACP.acpStart, mACP.acpEnd);
+      MOZ_ASSERT(mACP.isSome());
+      LONG max = std::max(mACP->acpStart, mACP->acpEnd);
       MOZ_ASSERT(max >= 0);
       return max;
     }
 
     LONG StartOffset() const {
-      MOZ_ASSERT(mACP.acpStart >= 0);
-      return mACP.acpStart;
+      MOZ_ASSERT(mACP.isSome());
+      MOZ_ASSERT(mACP->acpStart >= 0);
+      return mACP->acpStart;
     }
 
     LONG EndOffset() const {
-      MOZ_ASSERT(mACP.acpEnd >= 0);
-      return mACP.acpEnd;
+      MOZ_ASSERT(mACP.isSome());
+      MOZ_ASSERT(mACP->acpEnd >= 0);
+      return mACP->acpEnd;
     }
 
     LONG Length() const {
-      MOZ_ASSERT(mACP.acpEnd >= mACP.acpStart);
-      return std::abs(mACP.acpEnd - mACP.acpStart);
+      MOZ_ASSERT(mACP->acpEnd >= mACP->acpStart);
+      return mACP.isSome() ? std::abs(mACP->acpEnd - mACP->acpStart) : 0;
     }
 
-    bool IsReversed() const { return mACP.style.ase == TS_AE_START; }
+    bool IsReversed() const {
+      return mACP.isSome() && mACP->style.ase == TS_AE_START;
+    }
 
-    TsActiveSelEnd ActiveSelEnd() const { return mACP.style.ase; }
+    TsActiveSelEnd ActiveSelEnd() const {
+      return mACP.isSome() ? mACP->style.ase : TS_AE_NONE;
+    }
 
-    bool IsInterimChar() const { return mACP.style.fInterimChar != FALSE; }
+    bool IsInterimChar() const {
+      return mACP.isSome() && mACP->style.fInterimChar != FALSE;
+    }
 
     WritingMode GetWritingMode() const { return mWritingMode; }
 
     bool EqualsExceptDirection(const TS_SELECTION_ACP& aACP) const {
-      if (mACP.style.ase == aACP.style.ase) {
-        return mACP.acpStart == aACP.acpStart && mACP.acpEnd == aACP.acpEnd;
+      if (mACP.isNothing()) {
+        return false;
       }
-      return mACP.acpStart == aACP.acpEnd && mACP.acpEnd == aACP.acpStart;
+      if (mACP->style.ase == aACP.style.ase) {
+        return mACP->acpStart == aACP.acpStart && mACP->acpEnd == aACP.acpEnd;
+      }
+      return mACP->acpStart == aACP.acpEnd && mACP->acpEnd == aACP.acpStart;
     }
 
     bool EqualsExceptDirection(
         const SelectionChangeDataBase& aChangedSelection) const {
       MOZ_ASSERT(aChangedSelection.IsValid());
+      if (mACP.isNothing()) {
+        return false;
+      }
       return aChangedSelection.Length() == static_cast<uint32_t>(Length()) &&
              aChangedSelection.mOffset == static_cast<uint32_t>(StartOffset());
     }
@@ -666,7 +695,7 @@ class TSFTextStore final : public ITextStoreACP,
     }
 
    private:
-    TS_SELECTION_ACP mACP;
+    Maybe<TS_SELECTION_ACP> mACP;  // If Nothing, there is no selection
     WritingMode mWritingMode;
   };
   // Don't access mSelection directly.  Instead, Use SelectionForTSFRef().
