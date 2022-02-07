@@ -208,7 +208,11 @@ const OPACITY_EPSILON: f32 = 0.001;
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum Filter {
     Identity,
-    Blur(f32, f32),
+    Blur {
+        width: f32,
+        height: f32,
+        should_inflate: bool,
+    },
     Brightness(f32),
     Contrast(f32),
     Grayscale(f32),
@@ -229,7 +233,7 @@ impl Filter {
     pub fn is_visible(&self) -> bool {
         match *self {
             Filter::Identity |
-            Filter::Blur(..) |
+            Filter::Blur { .. } |
             Filter::Brightness(..) |
             Filter::Contrast(..) |
             Filter::Grayscale(..) |
@@ -254,7 +258,7 @@ impl Filter {
     pub fn is_noop(&self) -> bool {
         match *self {
             Filter::Identity => false, // this is intentional
-            Filter::Blur(width, height) => width == 0.0 && height == 0.0,
+            Filter::Blur { width, height, .. } => width == 0.0 && height == 0.0,
             Filter::Brightness(amount) => amount == 1.0,
             Filter::Contrast(amount) => amount == 1.0,
             Filter::Grayscale(amount) => amount == 0.0,
@@ -306,7 +310,7 @@ impl Filter {
             Filter::LinearToSrgb => 9,
             Filter::Flood(..) => 10,
             Filter::ComponentTransfer => 11,
-            Filter::Blur(..) => 12,
+            Filter::Blur { .. } => 12,
             Filter::DropShadows(..) => 13,
             Filter::Opacity(..) => 14,
         }
@@ -317,7 +321,7 @@ impl From<FilterOp> for Filter {
     fn from(op: FilterOp) -> Self {
         match op {
             FilterOp::Identity => Filter::Identity,
-            FilterOp::Blur(w, h) => Filter::Blur(w, h),
+            FilterOp::Blur(width, height) => Filter::Blur { width, height, should_inflate: true },
             FilterOp::Brightness(b) => Filter::Brightness(b),
             FilterOp::Contrast(c) => Filter::Contrast(c),
             FilterOp::Grayscale(g) => Filter::Grayscale(g),
