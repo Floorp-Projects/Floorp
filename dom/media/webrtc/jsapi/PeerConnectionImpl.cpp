@@ -453,12 +453,8 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   res = PeerConnectionCtx::InitializeGlobal(mThread);
   NS_ENSURE_SUCCESS(res, res);
 
-  nsTArray<dom::RTCIceServer> iceServers;
-  if (aConfiguration.mIceServers.WasPassed()) {
-    iceServers = aConfiguration.mIceServers.Value();
-  }
-
-  res = mTransportHandler->CreateIceCtx("PC:" + GetName(), iceServers,
+  res = mTransportHandler->CreateIceCtx("PC:" + GetName(),
+                                        aConfiguration.mIceServers,
                                         aConfiguration.mIceTransportPolicy);
   if (NS_FAILED(res)) {
     CSFLogError(LOGTAG, "%s: Failed to init mtransport", __FUNCTION__);
@@ -3149,26 +3145,24 @@ void PeerConnectionImpl::StoreConfigurationForAboutWebrtc(
   // configured, at least until setConfiguration is implemented
   // see https://bugzilla.mozilla.org/show_bug.cgi?id=1253706
   // @TODO bug 1739451 call this from setConfiguration
-  if (aConfig.mIceServers.WasPassed()) {
-    for (const auto& server : aConfig.mIceServers.Value()) {
-      RTCIceServerInternal internal;
-      internal.mCredentialProvided = server.mCredential.WasPassed();
-      internal.mUserNameProvided = server.mUsername.WasPassed();
-      if (server.mUrl.WasPassed()) {
-        if (!internal.mUrls.AppendElement(server.mUrl.Value(), fallible)) {
+  for (const auto& server : aConfig.mIceServers) {
+    RTCIceServerInternal internal;
+    internal.mCredentialProvided = server.mCredential.WasPassed();
+    internal.mUserNameProvided = server.mUsername.WasPassed();
+    if (server.mUrl.WasPassed()) {
+      if (!internal.mUrls.AppendElement(server.mUrl.Value(), fallible)) {
+        mozalloc_handle_oom(0);
+      }
+    }
+    if (server.mUrls.WasPassed()) {
+      for (const auto& url : server.mUrls.Value().GetAsStringSequence()) {
+        if (!internal.mUrls.AppendElement(url, fallible)) {
           mozalloc_handle_oom(0);
         }
       }
-      if (server.mUrls.WasPassed()) {
-        for (const auto& url : server.mUrls.Value().GetAsStringSequence()) {
-          if (!internal.mUrls.AppendElement(url, fallible)) {
-            mozalloc_handle_oom(0);
-          }
-        }
-      }
-      if (!mJsConfiguration.mIceServers.AppendElement(internal, fallible)) {
-        mozalloc_handle_oom(0);
-      }
+    }
+    if (!mJsConfiguration.mIceServers.AppendElement(internal, fallible)) {
+      mozalloc_handle_oom(0);
     }
   }
   if (aConfig.mSdpSemantics.WasPassed()) {
@@ -3178,9 +3172,7 @@ void PeerConnectionImpl::StoreConfigurationForAboutWebrtc(
   mJsConfiguration.mIceTransportPolicy.Construct(aConfig.mIceTransportPolicy);
   mJsConfiguration.mBundlePolicy.Construct(aConfig.mBundlePolicy);
   mJsConfiguration.mPeerIdentityProvided = !aConfig.mPeerIdentity.IsEmpty();
-  mJsConfiguration.mCertificatesProvided =
-      aConfig.mCertificates.WasPassed() &&
-      !aConfig.mCertificates.Value().Length();
+  mJsConfiguration.mCertificatesProvided = !aConfig.mCertificates.Length();
 }
 
 dom::Sequence<dom::RTCSdpParsingErrorInternal>
