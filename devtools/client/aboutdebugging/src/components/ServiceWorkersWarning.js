@@ -21,7 +21,7 @@ const {
   MESSAGE_LEVEL,
 } = require("devtools/client/aboutdebugging/src/constants");
 const DOC_URL =
-  "https://developer.mozilla.org/docs/Tools/about:debugging#Service_workers_not_compatible";
+  "https://firefox-source-docs.mozilla.org/devtools-user/about_colon_debugging/index.html#service-workers-not-compatible";
 
 class ServiceWorkersWarning extends PureComponent {
   render() {
