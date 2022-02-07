@@ -6,17 +6,18 @@
 #ifndef IMMHandler_h_
 #define IMMHandler_h_
 
-#include "nscore.h"
-#include <windows.h>
-#include "nsCOMPtr.h"
-#include "nsString.h"
-#include "nsTArray.h"
-#include "nsIWidget.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcher.h"
-#include "nsRect.h"
-#include "WritingModes.h"
+#include "mozilla/WritingModes.h"
+
 #include "npapi.h"
+#include "nsCOMPtr.h"
+#include "nsIWidget.h"
+#include "nsRect.h"
+#include "nsString.h"
+#include "nsTArray.h"
+
+#include <windows.h>
 
 class nsWindow;
 class nsWindowBase;
@@ -376,20 +377,22 @@ class IMMHandler final {
   int32_t mCursorPosition;
   uint32_t mCompositionStart;
 
-  struct Selection {
-    nsString mString;
-    uint32_t mOffset;
-    mozilla::WritingMode mWritingMode;
-    bool mIsValid;
-
+  class Selection final {
+   public:
     Selection() : mOffset(UINT32_MAX), mIsValid(false) {}
+    Selection(const Selection& aOther) = delete;
+    void operator=(const Selection& aOther) = delete;
 
     void Clear() {
       mOffset = UINT32_MAX;
       mIsValid = false;
     }
+    uint32_t StartOffset() const { return mOffset; }
+    uint32_t EndOffset() const { return mOffset + Length(); }
+    const nsString& DataRef() const { return mString; }
     uint32_t Length() const { return mString.Length(); }
     bool Collapsed() const { return !Length(); }
+    const WritingMode& WritingModeRef() const { return mWritingMode; }
 
     bool IsValid() const;
     bool Update(const IMENotification& aIMENotification);
@@ -397,8 +400,10 @@ class IMMHandler final {
     bool EnsureValidSelection(nsWindow* aWindow);
 
    private:
-    Selection(const Selection& aOther) = delete;
-    void operator=(const Selection& aOther) = delete;
+    nsString mString;
+    uint32_t mOffset;
+    WritingMode mWritingMode;
+    bool mIsValid;
   };
   // mSelection stores the latest selection data only when sHasFocus is true.
   // Don't access mSelection directly.  You should use GetSelection() for
