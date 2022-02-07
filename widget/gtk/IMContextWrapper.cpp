@@ -2372,8 +2372,7 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
     // shouldn't reset IME because the trigger of causing this commit may be an
     // input for next composition and we shouldn't cancel it.
     if (mSelection.IsValid()) {
-      mSelection.CollapseTo(mSelection.mOffset + aCommitString->Length(),
-                            mSelection.mWritingMode);
+      mSelection.CollapseTo(mSelection.mOffset + aCommitString->Length());
       MOZ_LOG(gIMELog, LogLevel::Info,
               ("0x%p   DispatchCompositionCommitEvent(), "
                "mSelection={ mOffset=%u, mString=\"%s\", mWritingMode=%s }",
@@ -2423,11 +2422,10 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
     }
 
     // Emulate selection until receiving actual selection range.
-    mSelection.CollapseTo(
-        mCompositionStart + (aCommitString
-                                 ? aCommitString->Length()
-                                 : mDispatchedCompositionString.Length()),
-        mSelection.mWritingMode);
+    mSelection.CollapseTo(mCompositionStart +
+                          (aCommitString
+                               ? aCommitString->Length()
+                               : mDispatchedCompositionString.Length()));
   }
 
   mCompositionState = eCompositionState_NotComposing;
