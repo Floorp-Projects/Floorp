@@ -73,6 +73,10 @@ class ContentCache {
     // Whole rect of selected text. This is empty if the selection is collapsed.
     LayoutDeviceIntRect mRect;
 
+    Selection() : mAnchor(UINT32_MAX), mFocus(UINT32_MAX), mHasRange(false) {
+      ClearRects();
+    };
+
     explicit Selection(
         const IMENotification::SelectionChangeDataBase& aSelectionChangeData)
         : mAnchor(UINT32_MAX),
@@ -172,12 +176,6 @@ class ContentCache {
       aStream << " }";
       return aStream;
     }
-
-   private:
-    Selection() = default;
-
-    friend struct IPC::ParamTraits<ContentCache::Selection>;
-    friend struct IPC::ParamTraits<Maybe<ContentCache::Selection>>;
   };
   Maybe<Selection> mSelection;
 
