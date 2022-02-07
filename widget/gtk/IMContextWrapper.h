@@ -386,48 +386,40 @@ class IMContextWrapper final : public TextEventDispatcherListener {
 
   class Selection final {
    public:
-    Selection() : mOffset(UINT32_MAX) {}
+    Selection()
+        : mOffsetAndData(UINT32_MAX, EmptyString(),
+                         OffsetAndDataFor::SelectedString) {}
     explicit Selection(
         const IMENotification::SelectionChangeDataBase& aSelectionChangeData)
-        : mString(aSelectionChangeData.String()),
-          mOffset(aSelectionChangeData.mOffset),
+        : mOffsetAndData(aSelectionChangeData.ToUint32OffsetAndData()),
           mWritingMode(aSelectionChangeData.GetWritingMode()) {}
     explicit Selection(const WidgetQueryContentEvent& aSelectedTextEvent)
-        : mString(aSelectedTextEvent.mReply->DataRef()),
-          mOffset(aSelectedTextEvent.mReply->StartOffset()),
+        : mOffsetAndData(aSelectedTextEvent.mReply->StartOffset(),
+                         aSelectedTextEvent.mReply->DataRef(),
+                         OffsetAndDataFor::SelectedString),
           mWritingMode(aSelectedTextEvent.mReply->WritingModeRef()) {
       MOZ_ASSERT(aSelectedTextEvent.mMessage == eQuerySelectedText);
       MOZ_ASSERT(aSelectedTextEvent.mReply->mOffsetAndData.isSome());
     }
     Selection(uint32_t aOffset, const WritingMode& aWritingMode)
-        : mOffset(aOffset), mWritingMode(aWritingMode) {}
+        : mOffsetAndData(aOffset, EmptyString(),
+                         OffsetAndDataFor::SelectedString),
+          mWritingMode(aWritingMode) {}
 
+    const OffsetAndData<uint32_t>& OffsetAndDataRef() const {
+      return mOffsetAndData;
+    }
+
+    void Collapse(uint32_t aOffset) { mOffsetAndData.Collapse(aOffset); }
     void Clear() {
-      mString.Truncate();
-      mOffset = UINT32_MAX;
+      mOffsetAndData.SetOffsetAndData(UINT32_MAX, EmptyString());
       mWritingMode = WritingMode();
     }
-    void CollapseTo(uint32_t aOffset) {
-      mOffset = aOffset;
-      mString.Truncate();
-    }
 
-    bool IsValid() const { return mOffset != UINT32_MAX; }
-    bool Collapsed() const { return mString.IsEmpty(); }
-    uint32_t StartOffset() const { return mOffset; }
-    uint32_t Length() const { return mString.Length(); }
-    uint32_t EndOffset() const {
-      if (NS_WARN_IF(!IsValid())) {
-        return UINT32_MAX;
-      }
-      CheckedInt<uint32_t> endOffset =
-          CheckedInt<uint32_t>(mOffset) + mString.Length();
-      if (NS_WARN_IF(!endOffset.isValid())) {
-        return UINT32_MAX;
-      }
-      return endOffset.value();
+    bool IsValid() const {
+      return mOffsetAndData.IsValid() &&
+             mOffsetAndData.StartOffset() != UINT32_MAX;
     }
-    const nsString& DataRef() const { return mString; }
     const WritingMode& WritingModeRef() const { return mWritingMode; }
 
     friend std::ostream& operator<<(std::ostream& aStream,
@@ -435,20 +427,13 @@ class IMContextWrapper final : public TextEventDispatcherListener {
       if (aSelection.IsValid()) {
         return aStream << "{ IsValid()=false }";
       }
-      aStream << "{ mOffset=" << aSelection.mOffset << ", mData="
-              << PrintStringDetail(
-                     aSelection.mString,
-                     PrintStringDetail::kMaxLengthForSelectedString)
-                     .get()
-              << ", Length()=" << aSelection.Length()
-              << ", EndOffset()=" << aSelection.EndOffset()
+      aStream << "{ mOffsetAndData=" << aSelection.mOffsetAndData
               << ", mWritingMode=" << aSelection.mWritingMode << " }";
       return aStream;
     }
 
    private:
-    nsString mString;
-    uint32_t mOffset;
+    OffsetAndData<uint32_t> mOffsetAndData;
     WritingMode mWritingMode;
   };
   // If mSelection is Nothing, it means that EnsureToCacheSelection failed to
