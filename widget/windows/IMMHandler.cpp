@@ -17,6 +17,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/ToString.h"
 #include "mozilla/WindowsVersion.h"
 
 #ifndef IME_PROP_ACCEPT_WIDE_VKEY
@@ -108,22 +109,6 @@ class GetIMEUIPropertyName : public nsAutoCString {
     }
   }
   virtual ~GetIMEUIPropertyName() {}
-};
-
-class GetWritingModeName : public nsAutoCString {
- public:
-  explicit GetWritingModeName(const WritingMode& aWritingMode) {
-    if (!aWritingMode.IsVertical()) {
-      AssignLiteral("Horizontal");
-      return;
-    }
-    if (aWritingMode.IsVerticalLR()) {
-      AssignLiteral("Vertical (LR)");
-      return;
-    }
-    AssignLiteral("Vertical (RL)");
-  }
-  virtual ~GetWritingModeName() {}
 };
 
 class GetReconvertStringLog : public nsAutoCString {
@@ -2041,7 +2026,7 @@ bool IMMHandler::SetIMERelatedWindowsPos(nsWindow* aWindow,
              "writingMode=%s",
              candForm.ptCurrentPos.x, candForm.ptCurrentPos.y,
              candForm.rcArea.left, candForm.rcArea.top, candForm.rcArea.right,
-             candForm.rcArea.bottom, GetWritingModeName(writingMode).get()));
+             candForm.rcArea.bottom, ToString(writingMode).c_str()));
     ::ImmSetCandidateWindow(aContext.get(), &candForm);
   } else {
     MOZ_LOG(gIMELog, LogLevel::Info,
@@ -2359,7 +2344,7 @@ bool IMMHandler::Selection::Update(const IMENotification& aIMENotification) {
           ("IMMHandler::Selection::Update, aIMENotification={ "
            "mSelectionChangeData={ "
            "mOffset=%u, mLength=%u, GetWritingMode()=%s } }",
-           mOffset, mString.Length(), GetWritingModeName(mWritingMode).get()));
+           mOffset, mString.Length(), ToString(mWritingMode).c_str()));
 
   if (!IsValid()) {
     MOZ_LOG(gIMELog, LogLevel::Error,
