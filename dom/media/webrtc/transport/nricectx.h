@@ -226,8 +226,9 @@ class NrIceCtx {
     Maybe<NatSimulatorConfig> mNatSimulatorConfig;
   };
 
-  static RefPtr<NrIceCtx> Create(const std::string& aName,
-                                 const Config& aConfig);
+  static RefPtr<NrIceCtx> Create(const std::string& aName);
+
+  nsresult SetIceConfig(const Config& aConfig);
 
   RefPtr<NrIceMediaStream> CreateStream(const std::string& id,
                                         const std::string& name,
@@ -365,7 +366,7 @@ class NrIceCtx {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceCtx)
 
  private:
-  NrIceCtx(const std::string& name, const Config& aConfig);
+  explicit NrIceCtx(const std::string& name);
 
   virtual ~NrIceCtx();
 
