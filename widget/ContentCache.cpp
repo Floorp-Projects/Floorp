@@ -688,7 +688,6 @@ bool ContentCacheInParent::HandleQueryContentEvent(
           Substring(mText, mSelection->StartOffset(), mSelection->Length()),
           OffsetAndDataFor::SelectedString);
       aEvent.mReply->mReversed = mSelection->Reversed();
-      aEvent.mReply->mHasSelection = true;
       aEvent.mReply->mWritingMode = mSelection->mWritingMode;
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
               ("0x%p HandleQueryContentEvent(), "

@@ -423,8 +423,6 @@ nsresult ContentEventHandler::Init(WidgetQueryContentEvent* aEvent) {
 
   aEvent->mReply->mContentsRoot = mRootContent.get();
 
-  aEvent->mReply->mHasSelection = !mSelection->IsCollapsed();
-
   nsRect r;
   nsIFrame* frame = nsCaret::GetGeometry(mSelection, &r);
   if (!frame) {
@@ -1321,7 +1319,7 @@ nsresult ContentEventHandler::OnQuerySelectedText(
   if (!mFirstSelectedRawRange.IsPositioned()) {
     MOZ_ASSERT(aEvent->mInput.mSelectionType != SelectionType::eNormal);
     MOZ_ASSERT(aEvent->mReply->mOffsetAndData.isNothing());
-    MOZ_ASSERT(!aEvent->mReply->mHasSelection);
+    MOZ_ASSERT_IF(mSelection, !mSelection->RangeCount());
     // This is special case that `mReply` is emplaced, but mOffsetAndData is
     // not emplaced but treated as succeeded because of no selection ranges
     // is a usual case.
@@ -2546,7 +2544,7 @@ nsresult ContentEventHandler::OnQuerySelectionAsTransferable(
 
   MOZ_ASSERT(aEvent->mReply.isSome());
 
-  if (!aEvent->mReply->mHasSelection) {
+  if (mSelection->IsCollapsed()) {
     MOZ_ASSERT(!aEvent->mReply->mTransferable);
     return NS_OK;
   }
