@@ -335,6 +335,8 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       Preferences::GetBool("media.peerconnection.ice.force_ice_tcp", false);
   memset(mMaxReceiving, 0, sizeof(mMaxReceiving));
   memset(mMaxSending, 0, sizeof(mMaxSending));
+  mJsConfiguration.mCertificatesProvided = false;
+  mJsConfiguration.mPeerIdentityProvided = false;
 }
 
 PeerConnectionImpl::~PeerConnectionImpl() {
@@ -379,7 +381,6 @@ PeerConnectionImpl::~PeerConnectionImpl() {
 
 nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
                                         nsGlobalWindowInner* aWindow,
-                                        const RTCConfiguration& aConfiguration,
                                         nsISupports* aThread) {
   nsresult res;
 
@@ -390,9 +391,6 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     MOZ_ASSERT(mThread);
   }
   CheckThread();
-
-  // Store the configuration for about:webrtc
-  StoreConfigurationForAboutWebrtc(aConfiguration);
 
   mPCObserver = &aObserver;
 
@@ -455,13 +453,6 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
   mTransportHandler->CreateIceCtx("PC:" + GetName());
 
-  res = mTransportHandler->SetIceConfig(aConfiguration.mIceServers,
-                                        aConfiguration.mIceTransportPolicy);
-  if (NS_FAILED(res)) {
-    CSFLogError(LOGTAG, "%s: Failed to init mtransport", __FUNCTION__);
-    return NS_ERROR_FAILURE;
-  }
-
   mJsepSession =
       MakeUnique<JsepSessionImpl>(mName, MakeUnique<PCUuidGenerator>());
   mJsepSession->SetRtxIsAllowed(mRtxIsAllowed);
@@ -470,29 +461,6 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   if (NS_FAILED(res)) {
     CSFLogError(LOGTAG, "%s: Couldn't init JSEP Session, res=%u", __FUNCTION__,
                 static_cast<unsigned>(res));
-    return res;
-  }
-
-  JsepBundlePolicy bundlePolicy;
-  switch (aConfiguration.mBundlePolicy) {
-    case dom::RTCBundlePolicy::Balanced:
-      bundlePolicy = kBundleBalanced;
-      break;
-    case dom::RTCBundlePolicy::Max_compat:
-      bundlePolicy = kBundleMaxCompat;
-      break;
-    case dom::RTCBundlePolicy::Max_bundle:
-      bundlePolicy = kBundleMaxBundle;
-      break;
-    default:
-      MOZ_CRASH();
-  }
-
-  res = mJsepSession->SetBundlePolicy(bundlePolicy);
-  if (NS_FAILED(res)) {
-    CSFLogError(LOGTAG, "%s: Couldn't set bundle policy, res=%u, error=%s",
-                __FUNCTION__, static_cast<unsigned>(res),
-                mJsepSession->GetLastError().c_str());
     return res;
   }
 
@@ -513,21 +481,15 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
 void PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
                                     nsGlobalWindowInner& aWindow,
-                                    const RTCConfiguration& aConfiguration,
                                     nsISupports* aThread, ErrorResult& rv) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aThread);
   mThread = do_QueryInterface(aThread);
 
-  nsresult res = Initialize(aObserver, &aWindow, aConfiguration, aThread);
+  nsresult res = Initialize(aObserver, &aWindow, aThread);
   if (NS_FAILED(res)) {
     rv.Throw(res);
     return;
-  }
-
-  if (!aConfiguration.mPeerIdentity.IsEmpty()) {
-    mPeerIdentity = new PeerIdentity(aConfiguration.mPeerIdentity);
-    mPrivacyRequested = Some(true);
   }
 }
 
@@ -1998,9 +1960,45 @@ PeerConnectionImpl::Close() {
   return NS_OK;
 }
 
-nsresult PeerConnectionImpl::SetConfiguration(const RTCConfiguration& aConfig) {
-  return mTransportHandler->SetIceConfig(aConfig.mIceServers,
-                                         aConfig.mIceTransportPolicy);
+nsresult PeerConnectionImpl::SetConfiguration(
+    const RTCConfiguration& aConfiguration) {
+  nsresult rv = mTransportHandler->SetIceConfig(
+      aConfiguration.mIceServers, aConfiguration.mIceTransportPolicy);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  JsepBundlePolicy bundlePolicy;
+  switch (aConfiguration.mBundlePolicy) {
+    case dom::RTCBundlePolicy::Balanced:
+      bundlePolicy = kBundleBalanced;
+      break;
+    case dom::RTCBundlePolicy::Max_compat:
+      bundlePolicy = kBundleMaxCompat;
+      break;
+    case dom::RTCBundlePolicy::Max_bundle:
+      bundlePolicy = kBundleMaxBundle;
+      break;
+    default:
+      MOZ_CRASH();
+  }
+
+  rv = mJsepSession->SetBundlePolicy(bundlePolicy);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    CSFLogError(LOGTAG, "%s: Couldn't set bundle policy, res=%u, error=%s",
+                __FUNCTION__, static_cast<unsigned>(rv),
+                mJsepSession->GetLastError().c_str());
+    return rv;
+  }
+
+  if (!aConfiguration.mPeerIdentity.IsEmpty()) {
+    mPeerIdentity = new PeerIdentity(aConfiguration.mPeerIdentity);
+    mPrivacyRequested = Some(true);
+  }
+
+  // Store the configuration for about:webrtc
+  StoreConfigurationForAboutWebrtc(aConfiguration);
+  return NS_OK;
 }
 
 bool PeerConnectionImpl::PluginCrash(uint32_t aPluginID,
@@ -3151,6 +3149,7 @@ void PeerConnectionImpl::StoreConfigurationForAboutWebrtc(
   // configured, at least until setConfiguration is implemented
   // see https://bugzilla.mozilla.org/show_bug.cgi?id=1253706
   // @TODO bug 1739451 call this from setConfiguration
+  mJsConfiguration.mIceServers.Clear();
   for (const auto& server : aConfig.mIceServers) {
     RTCIceServerInternal internal;
     internal.mCredentialProvided = server.mCredential.WasPassed();
@@ -3171,11 +3170,14 @@ void PeerConnectionImpl::StoreConfigurationForAboutWebrtc(
       mozalloc_handle_oom(0);
     }
   }
+  mJsConfiguration.mSdpSemantics.Reset();
   if (aConfig.mSdpSemantics.WasPassed()) {
     mJsConfiguration.mSdpSemantics.Construct(aConfig.mSdpSemantics.Value());
   }
 
+  mJsConfiguration.mIceTransportPolicy.Reset();
   mJsConfiguration.mIceTransportPolicy.Construct(aConfig.mIceTransportPolicy);
+  mJsConfiguration.mBundlePolicy.Reset();
   mJsConfiguration.mBundlePolicy.Construct(aConfig.mBundlePolicy);
   mJsConfiguration.mPeerIdentityProvided = !aConfig.mPeerIdentity.IsEmpty();
   mJsConfiguration.mCertificatesProvided = !aConfig.mCertificates.Length();
