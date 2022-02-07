@@ -23,8 +23,8 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
 </head>
 <body>Autocomplete popup - invoke getter usage test</body>`;
 
-const MDN_URL =
-  "https://developer.mozilla.org/docs/Tools/Web_Console/Invoke_getters_from_autocomplete";
+const DOC_URL =
+  "https://firefox-source-docs.mozilla.org/devtools-user/web_console/invoke_getters_from_autocomplete/";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -47,13 +47,8 @@ add_task(async function() {
   info(
     `Check that clicking on the "Learn more" link navigates to the expected page`
   );
-  const expectedUri = MDN_URL + GA_PARAMS;
   const { link } = await simulateLinkClick(learnMoreEl);
-  is(
-    link,
-    expectedUri,
-    `Click on "Learn More" link navigates user to ${expectedUri}`
-  );
+  is(link, DOC_URL, `Click on "Learn More" link navigates user to ${DOC_URL}`);
 
   info("Close the popup");
   EventUtils.synthesizeKey("KEY_Escape");

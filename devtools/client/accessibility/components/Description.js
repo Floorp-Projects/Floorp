@@ -37,9 +37,7 @@ function Description() {
       div(
         { role: "presentation", tabIndex: "-1" },
         LearnMoreLink({
-          href:
-            A11Y_LEARN_MORE_LINK +
-            "?utm_source=devtools&utm_medium=a11y-panel-description",
+          href: A11Y_LEARN_MORE_LINK,
           learnMoreStringKey: "accessibility.learnMore",
           l10n: L10N,
           messageStringKey: "accessibility.description.general.p1",

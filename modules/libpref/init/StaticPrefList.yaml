@@ -10218,6 +10218,18 @@
   value: false
   mirror: always
 
+# If true, we'll fallback to native if the retry also times out.
+- name: network.trr.strict_native_fallback_allow_timeouts
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Single TRR request timeout (ms) when strict native fallback is enabled.
+- name: network.trr.strict_fallback_request_timeout_ms
+  type: RelaxedAtomicUint32
+  value: 6000
+  mirror: always
+
 # If false, the temporary blocklisting feature is disabled.
 # This is useful for tests to prevent bleeding extra reqs
 # between tasks, since we may attempt to look up the
