@@ -23,13 +23,13 @@ describe("CommandBarButton", () => {
 
 describe("debugBtn", () => {
   it("renders", () => {
-    const wrapper = shallow(<debugBtn />);
+    const wrapper = shallow(debugBtn());
     expect(wrapper).toMatchSnapshot();
   });
 
   it("handles onClick", () => {
     const onClickSpy = jest.fn();
-    const wrapper = shallow(<debugBtn onClick={onClickSpy} />);
+    const wrapper = shallow(debugBtn(onClickSpy));
     wrapper.simulate("click");
     expect(onClickSpy).toHaveBeenCalled();
   });
