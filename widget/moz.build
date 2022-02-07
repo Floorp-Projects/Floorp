@@ -25,6 +25,9 @@ with Files("reftests/*fallback*"):
 with Files("*CompositorWidget*"):
     BUG_COMPONENT = ("Core", "Graphics")
 
+with Files("*ContentCache*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
 with Files("*ContentData*"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 

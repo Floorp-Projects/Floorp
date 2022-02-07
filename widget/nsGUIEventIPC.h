@@ -939,6 +939,7 @@ struct ParamTraits<mozilla::ContentCache::Selection> {
     WriteParam(aMsg, aParam.mAnchor);
     WriteParam(aMsg, aParam.mFocus);
     WriteParam(aMsg, aParam.mWritingMode);
+    WriteParam(aMsg, aParam.mHasRange);
     WriteParam(aMsg, aParam.mAnchorCharRects[0]);
     WriteParam(aMsg, aParam.mAnchorCharRects[1]);
     WriteParam(aMsg, aParam.mFocusCharRects[0]);
@@ -951,6 +952,7 @@ struct ParamTraits<mozilla::ContentCache::Selection> {
     return ReadParam(aMsg, aIter, &aResult->mAnchor) &&
            ReadParam(aMsg, aIter, &aResult->mFocus) &&
            ReadParam(aMsg, aIter, &aResult->mWritingMode) &&
+           ReadParam(aMsg, aIter, &aResult->mHasRange) &&
            ReadParam(aMsg, aIter, &aResult->mAnchorCharRects[0]) &&
            ReadParam(aMsg, aIter, &aResult->mAnchorCharRects[1]) &&
            ReadParam(aMsg, aIter, &aResult->mFocusCharRects[0]) &&

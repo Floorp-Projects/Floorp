@@ -137,15 +137,7 @@ bool ContentCacheInChild::CacheSelection(nsIWidget* aWidget,
     return false;
   }
   MOZ_ASSERT(querySelectedTextEvent.mReply->mOffsetAndData.isSome());
-  if (querySelectedTextEvent.mReply->mReversed) {
-    mSelection.emplace(querySelectedTextEvent.mReply->EndOffset(),
-                       querySelectedTextEvent.mReply->StartOffset(),
-                       querySelectedTextEvent.mReply->WritingModeRef());
-  } else {
-    mSelection.emplace(querySelectedTextEvent.mReply->StartOffset(),
-                       querySelectedTextEvent.mReply->EndOffset(),
-                       querySelectedTextEvent.mReply->WritingModeRef());
-  }
+  mSelection.emplace(querySelectedTextEvent);
 
   return CacheCaret(aWidget, aNotification) &&
          CacheTextRects(aWidget, aNotification);
@@ -474,21 +466,16 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
   return true;
 }
 
-void ContentCacheInChild::SetSelection(nsIWidget* aWidget,
-                                       uint32_t aStartOffset, uint32_t aLength,
-                                       bool aReversed,
-                                       const WritingMode& aWritingMode) {
+void ContentCacheInChild::SetSelection(
+    nsIWidget* aWidget,
+    const IMENotification::SelectionChangeDataBase& aSelectionChangeData) {
   MOZ_LOG(
       sContentCacheLog, LogLevel::Info,
-      ("0x%p SetSelection(aStartOffset=%u, "
-       "aLength=%u, aReversed=%s, aWritingMode=%s), mText=%s",
-       this, aStartOffset, aLength, GetBoolName(aReversed),
-       ToString(aWritingMode).c_str(),
+      ("0x%p SetSelection(aSelectionChangeData=%s), mText=%s", this,
+       ToString(aSelectionChangeData).c_str(),
        PrintStringDetail(mText, PrintStringDetail::kMaxLengthForEditor).get()));
 
-  mSelection = Some(Selection(
-      !aReversed ? aStartOffset : aStartOffset + aLength,
-      !aReversed ? aStartOffset + aLength : aStartOffset, aWritingMode));
+  mSelection = Some(Selection(aSelectionChangeData));
 
   if (mLastCommit.isSome()) {
     // Forget last commit string range if selection is not collapsed
@@ -1657,6 +1644,24 @@ void ContentCacheInParent::AppendEventMessageLog(nsACString& aLog) const {
 }
 
 #endif  // #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
+
+/*****************************************************************************
+ * mozilla::ContentCache::Selection
+ *****************************************************************************/
+
+ContentCache::Selection::Selection(
+    const WidgetQueryContentEvent& aQuerySelectedTextEvent)
+    : mAnchor(UINT32_MAX),
+      mFocus(UINT32_MAX),
+      mWritingMode(aQuerySelectedTextEvent.mReply->WritingModeRef()),
+      mHasRange(aQuerySelectedTextEvent.mReply->mOffsetAndData.isSome()) {
+  MOZ_ASSERT(aQuerySelectedTextEvent.mMessage == eQuerySelectedText);
+  MOZ_ASSERT(aQuerySelectedTextEvent.Succeeded());
+  if (mHasRange) {
+    mAnchor = aQuerySelectedTextEvent.mReply->AnchorOffset();
+    mFocus = aQuerySelectedTextEvent.mReply->FocusOffset();
+  }
+}
 
 /*****************************************************************************
  * mozilla::ContentCache::TextRectArray

@@ -767,6 +767,14 @@ struct IMENotification final {
     void SetWritingMode(const WritingMode& aWritingMode);
     WritingMode GetWritingMode() const;
 
+    uint32_t StartOffset() const {
+      MOZ_ASSERT(mHasRange);
+      return mOffset;
+    }
+    uint32_t EndOffset() const {
+      MOZ_ASSERT(mHasRange);
+      return mOffset + Length();
+    }
     uint32_t AnchorOffset() const {
       MOZ_ASSERT(mHasRange);
       return mOffset + (mReversed ? Length() : 0);
