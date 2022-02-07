@@ -249,6 +249,11 @@ async function test_strict_native_fallback() {
     10
   );
 
+  Services.prefs.setBoolPref(
+    "network.trr.strict_native_fallback_allow_timeouts",
+    false
+  );
+
   let { inStatus } = await new TRRDNSListener(
     "timeout.example.com",
     undefined,
@@ -257,6 +262,22 @@ async function test_strict_native_fallback() {
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
+  );
+  dns.clearCache(true);
+  await new TRRDNSListener("timeout.example.com", undefined, false);
+
+  dns.clearCache(true);
+  Services.prefs.setBoolPref(
+    "network.trr.strict_native_fallback_allow_timeouts",
+    true
+  );
+  await new TRRDNSListener("timeout.example.com", {
+    expectedAnswer: "127.0.0.1",
+  });
+
+  Services.prefs.setBoolPref(
+    "network.trr.strict_native_fallback_allow_timeouts",
+    false
   );
 
   info("Now a connection error");
