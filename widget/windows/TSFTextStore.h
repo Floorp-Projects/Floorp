@@ -19,6 +19,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEventDispatcher.h"
+#include "mozilla/TextEvents.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/widget/IMEData.h"
@@ -567,8 +568,12 @@ class TSFTextStore final : public ITextStoreACP,
       SetSelection(aSelectionChangeData);
     }
 
-    explicit Selection(uint32_t aStart, uint32_t aLength, bool aReversed,
-                       const WritingMode& aWritingMode) {
+    explicit Selection(const WidgetQueryContentEvent& aQuerySelectionEvent) {
+      SetSelection(aQuerySelectionEvent);
+    }
+
+    Selection(uint32_t aStart, uint32_t aLength, bool aReversed,
+              const WritingMode& aWritingMode) {
       SetSelection(aStart, aLength, aReversed, aWritingMode);
     }
 
@@ -600,6 +605,25 @@ class TSFTextStore final : public ITextStoreACP,
                           aSelectionChangeData.Length(),
                           aSelectionChangeData.mReversed,
                           aSelectionChangeData.GetWritingMode());
+    }
+
+    bool SetSelection(const WidgetQueryContentEvent& aQuerySelectionEvent) {
+      MOZ_ASSERT(aQuerySelectionEvent.mMessage == eQuerySelectedText);
+      MOZ_ASSERT(aQuerySelectionEvent.Succeeded());
+      if (aQuerySelectionEvent.DidNotFindSelection()) {
+        if (mACP.isNothing()) {
+          return false;
+        }
+        mACP.reset();
+        // Let's keep the WritingMode because users don't want to change the UI
+        // of TIP temporarily since no selection case is created only by web
+        // apps, but they or TIP would restore selection at last point later.
+        return true;
+      }
+      return SetSelection(aQuerySelectionEvent.mReply->StartOffset(),
+                          aQuerySelectionEvent.mReply->DataLength(),
+                          aQuerySelectionEvent.mReply->mReversed,
+                          aQuerySelectionEvent.mReply->WritingModeRef());
     }
 
     bool SetSelection(uint32_t aStart, uint32_t aLength, bool aReversed,

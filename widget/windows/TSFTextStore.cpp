@@ -2930,15 +2930,10 @@ Maybe<TSFTextStore::Selection>& TSFTextStore::SelectionForTSF() {
                                                    mWidget);
     mWidget->InitEvent(querySelectedTextEvent);
     DispatchEvent(querySelectedTextEvent);
-    if (NS_WARN_IF(querySelectedTextEvent.DidNotFindSelection())) {
+    if (NS_WARN_IF(querySelectedTextEvent.Failed())) {
       return mSelectionForTSF;
     }
-    MOZ_ASSERT(querySelectedTextEvent.mReply->mOffsetAndData.isSome());
-    mSelectionForTSF =
-        Some(Selection(querySelectedTextEvent.mReply->StartOffset(),
-                       querySelectedTextEvent.mReply->DataLength(),
-                       querySelectedTextEvent.mReply->mReversed,
-                       querySelectedTextEvent.mReply->WritingModeRef()));
+    mSelectionForTSF = Some(Selection(querySelectedTextEvent));
   }
 
   MOZ_LOG(gIMELog, LogLevel::Debug,
