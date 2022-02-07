@@ -169,11 +169,11 @@ add_task(async () => {
   if (beforeProcInfo.children.some(p => p.type == "preallocated")) {
     Assert.greaterOrEqual(
       cpuTimeByType.prealloc,
-      Math.floor(
-        beforeProcInfo.children.reduce(
-          (time, p) => time + (p.type == "preallocated" ? p.cpuTime : 0),
-          0
-        ) / kNS_PER_MS
+      beforeProcInfo.children.reduce(
+        (time, p) =>
+          time +
+          (p.type == "preallocated" ? Math.floor(p.cpuTime / kNS_PER_MS) : 0),
+        0
       ),
       "reported cpu time for preallocated content processes should be at least the sum of what the first requestProcInfo returned."
     );
