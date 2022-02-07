@@ -12801,7 +12801,7 @@
 - name: widget.disable-swipe-tracker
   type: bool
 #ifdef XP_WIN
-  value: true
+  value: @IS_NOT_NIGHTLY_BUILD@
 #else
   value: false
 #endif
