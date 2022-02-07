@@ -3,25 +3,38 @@
 
 "use strict";
 
-function testFeatures(win, barprops) {
-  for (let [name, visible] of Object.entries(barprops)) {
+const BARPROP_NAMES = [
+  "locationbar",
+  "menubar",
+  "personalbar",
+  "scrollbars",
+  "statusbar",
+  "toolbar",
+];
+
+function testFeatures(win, test) {
+  for (let name of BARPROP_NAMES) {
     is(
       win[name].visible,
-      visible,
-      name + " should be " + (visible ? "visible" : "hidden")
+      !!test.barprops?.[name],
+      name + " should be " + (test.barprops?.[name] ? "visible" : "hidden")
     );
   }
-  is(win.toolbar.visible, false, "toolbar should be hidden");
   let toolbar = win.document.getElementById("TabsToolbar");
-  is(toolbar.collapsed, true, "tabbar should be collapsed");
+  is(
+    toolbar.collapsed,
+    !win.toolbar.visible,
+    win.toolbar.visible
+      ? "tabbar should not be collapsed"
+      : "tabbar should be collapsed"
+  );
   let chromeFlags = win.docShell.treeOwner
     .QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIAppWindow).chromeFlags;
-  is(
-    chromeFlags & Ci.nsIWebBrowserChrome.CHROME_WINDOW_RESIZE,
-    Ci.nsIWebBrowserChrome.CHROME_WINDOW_RESIZE,
-    "window should be resizable"
-  );
+  is(chromeFlags & test.chromeFlags, test.chromeFlags, "flags should be set");
+  if (test.unsetFlags) {
+    is(chromeFlags & test.unsetFlags, 0, "flags should be unset");
+  }
 }
 
 add_task(async function testRestoredWindowFeatures() {
@@ -30,30 +43,80 @@ add_task(async function testRestoredWindowFeatures() {
     {
       url: "http://example.com/browser/" + DUMMY_PAGE,
       features: "menubar=0,resizable",
-      barprops: { menubar: false },
+      barprops: { scrollbars: true },
+      chromeFlags: Ci.nsIWebBrowserChrome.CHROME_WINDOW_RESIZE,
+      unsetFlags: Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG,
     },
     {
       url: "data:,", // title should be empty
+      checkContentTitleEmpty: true,
       features: "location,resizable",
-      barprops: { locationbar: true },
+      barprops: { locationbar: true, scrollbars: true },
+      chromeFlags: Ci.nsIWebBrowserChrome.CHROME_WINDOW_RESIZE,
+      unsetFlags: Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG,
+    },
+    {
+      url: "http://example.com/browser/" + DUMMY_PAGE,
+      features: "dialog,resizable",
+      barprops: { scrollbars: true },
+      chromeFlags:
+        Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG |
+        Ci.nsIWebBrowserChrome.CHROME_WINDOW_RESIZE,
+    },
+    {
+      chrome: true,
+      url: "http://example.com/browser/" + DUMMY_PAGE,
+      features: "chrome,all,dialog=no",
+      barprops: {
+        locationbar: true,
+        menubar: true,
+        personalbar: true,
+        scrollbars: true,
+        statusbar: true,
+        toolbar: true,
+      },
+      chromeFlags: Ci.nsIWebBrowserChrome.CHROME_ALL,
+      unsetFlags: Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG,
     },
   ];
   const TEST_URL_CHROME = "chrome://mochitests/content/browser/" + DUMMY_PAGE;
 
-  for (let test of TESTS) {
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URL_CHROME);
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URL_CHROME);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
+  for (let test of TESTS) {
     let newWindowPromise = BrowserTestUtils.waitForNewWindow({
       url: test.url,
     });
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [test], t => {
-      content.eval(`window.open("${t.url}", "_blank", "${t.features}")`);
-    });
-    let win = await newWindowPromise;
-    let title = win.document.title;
+    let win;
+    if (test.chrome) {
+      win = window.openDialog(
+        AppConstants.BROWSER_CHROME_URL,
+        "_blank",
+        test.features,
+        test.url
+      );
+    } else {
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [test], t => {
+        content.window.open(t.url, "_blank", t.features);
+      });
+    }
+    win = await newWindowPromise;
 
-    testFeatures(win, test.barprops);
+    let title = win.document.title;
+    if (test.checkContentTitleEmpty) {
+      let contentTitle = await SpecialPowers.spawn(
+        win.gBrowser.selectedBrowser,
+        [],
+        () => content.document.title
+      );
+      is(contentTitle, "", "title should be empty");
+    }
+
+    testFeatures(win, test);
+    let chromeFlags = win.docShell.treeOwner
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIAppWindow).chromeFlags;
 
     await BrowserTestUtils.closeWindow(win);
 
@@ -64,7 +127,18 @@ add_task(async function testRestoredWindowFeatures() {
     win = await newWindowPromise;
 
     is(title, win.document.title, "title should be preserved");
-    testFeatures(win, test.barprops);
+    testFeatures(win, test);
+    is(
+      win.docShell.treeOwner
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIAppWindow).chromeFlags,
+      // Use |>>> 0| to force unsigned.
+      (chromeFlags |
+        Ci.nsIWebBrowserChrome.CHROME_OPENAS_CHROME |
+        Ci.nsIWebBrowserChrome.CHROME_SUPPRESS_ANIMATION) >>>
+        0,
+      "unexpected chromeFlags"
+    );
 
     await BrowserTestUtils.closeWindow(win);
   }
