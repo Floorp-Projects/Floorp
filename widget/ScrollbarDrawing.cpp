@@ -71,7 +71,7 @@ bool ScrollbarDrawing::IsParentScrollbarHoveredOrActive(nsIFrame* aFrame) {
 
 /*static*/
 bool ScrollbarDrawing::IsScrollbarWidthThin(const ComputedStyle& aStyle) {
-  auto scrollbarWidth = aStyle.StyleUIReset()->mScrollbarWidth;
+  auto scrollbarWidth = aStyle.StyleUIReset()->ScrollbarWidth();
   return scrollbarWidth == StyleScrollbarWidth::Thin;
 }
 
@@ -97,7 +97,7 @@ auto ScrollbarDrawing::GetScrollbarSizes(nsPresContext* aPresContext,
 auto ScrollbarDrawing::GetScrollbarSizes(nsPresContext* aPresContext,
                                          nsIFrame* aFrame) -> ScrollbarSizes {
   auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-  auto width = style->StyleUIReset()->mScrollbarWidth;
+  auto width = style->StyleUIReset()->ScrollbarWidth();
   auto overlay =
       aPresContext->UseOverlayScrollbars() ? Overlay::Yes : Overlay::No;
   return GetScrollbarSizes(aPresContext, width, overlay);
@@ -203,7 +203,7 @@ ScrollbarParams ScrollbarDrawing::ComputeScrollbarParams(
       nsLookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0;
   params.isRolledOver = IsParentScrollbarRolledOver(aFrame);
   params.isSmall =
-      aStyle.StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin;
+      aStyle.StyleUIReset()->ScrollbarWidth() == StyleScrollbarWidth::Thin;
   params.isRtl = nsNativeTheme::IsFrameRTL(aFrame);
   params.isHorizontal = aIsHorizontal;
   params.isOnDarkBackground = !StaticPrefs::widget_disable_dark_scrollbar() &&
