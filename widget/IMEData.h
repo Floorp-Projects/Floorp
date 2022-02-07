@@ -155,6 +155,10 @@ class OffsetAndData {
     return aOffset >= mOffset && aOffset <= EndOffset();
   }
 
+  void Collapse(IntType aOffset) {
+    mOffset = aOffset;
+    mData.Truncate();
+  }
   void MoveTo(IntType aNewOffset) { mOffset = aNewOffset; }
   void SetOffsetAndData(IntType aStartOffset, const nsAString& aData) {
     mOffset = aStartOffset;
