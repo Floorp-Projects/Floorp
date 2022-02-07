@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import
 
+import json
 import os
 import pathlib
 import re
@@ -353,6 +354,37 @@ class MozperftestGatherer(FrameworkGatherer):
 
 
 class TalosGatherer(FrameworkGatherer):
+    def _get_ci_tasks(self):
+        with open(
+            os.path.join(self.workspace_dir, "testing", "talos", "talos.json")
+        ) as f:
+            config_suites = json.load(f)["suites"]
+
+        for task_name in self._taskgraph.keys():
+            task = self._taskgraph[task_name]
+
+            if type(task) == dict:
+                is_talos = task["task"]["extra"].get("suite", [])
+                command = task["task"]["payload"].get("command", [])
+                run_on_projects = task["attributes"]["run_on_projects"]
+            else:
+                is_talos = task.task["extra"].get("suite", [])
+                command = task.task["payload"].get("command", [])
+                run_on_projects = task.attributes["run_on_projects"]
+
+            suite_match = re.search(r"[\s']--suite[\s=](.+?)[\s']", str(command))
+            task_match = self.get_task_match(task_name)
+            if "talos" == is_talos and task_match:
+                suite = suite_match.group(1)
+                platform = task_match.group(1)
+                test_name = task_match.group(2)
+                item = {"test_name": test_name, "run_on_projects": run_on_projects}
+
+                for test in config_suites[suite]["tests"]:
+                    self._task_list.setdefault(test, {}).setdefault(
+                        platform, []
+                    ).append(item)
+
     def get_test_list(self):
         from talos import test as talos_test
 
@@ -366,6 +398,8 @@ class TalosGatherer(FrameworkGatherer):
 
             klass = getattr(mod, test)
             self._descriptions.setdefault(test, klass.__dict__)
+
+        self._get_ci_tasks()
 
         return self._test_list
 
@@ -402,6 +436,30 @@ class TalosGatherer(FrameworkGatherer):
                     continue
 
                 result += f"   * {key}: {self._descriptions[title][key]}\n"
+
+        if self._task_list.get(title, []):
+            result += "   * **Test Task**:\n\n"
+            for platform in sorted(self._task_list[title]):
+                self._task_list[title][platform].sort(key=lambda x: x["test_name"])
+
+                table = TableBuilder(
+                    title=platform,
+                    widths=[30] + [15 for x in BRANCHES],
+                    header_rows=1,
+                    headers=[["Test Name"] + BRANCHES],
+                    indent=3,
+                )
+
+                for task in self._task_list[title][platform]:
+                    values = [task["test_name"]]
+                    values += [
+                        "\u2705"
+                        if match_run_on_projects(x, task["run_on_projects"])
+                        else "\u274C"
+                        for x in BRANCHES
+                    ]
+                    table.add_row(values)
+                result += f"{table.finish_table()}\n"
 
         return [result]
 
