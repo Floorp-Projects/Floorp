@@ -1286,13 +1286,10 @@ bool IMEContentObserver::UpdateSelectionCache(bool aRequireFlush /* = true */) {
   MOZ_ASSERT(querySelectedTextEvent.mReply->mOffsetAndData.isSome());
 
   mFocusedWidget = querySelectedTextEvent.mReply->mFocusedWidget;
-  mSelectionData.mOffset = querySelectedTextEvent.mReply->StartOffset();
-  *mSelectionData.mString = querySelectedTextEvent.mReply->DataRef();
-  mSelectionData.SetWritingMode(
-      querySelectedTextEvent.mReply->WritingModeRef());
-  mSelectionData.mReversed = querySelectedTextEvent.mReply->mReversed;
+  mSelectionData.Assign(querySelectedTextEvent);
 
-  // WARNING: Don't modify the reason of selection change here.
+  // WARNING: Don't set the reason of selection change here because it should be
+  //          set the reason at sending the notification.
 
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
           ("0x%p IMEContentObserver::UpdateSelectionCache(), "
@@ -1788,10 +1785,8 @@ void IMEContentObserver::IMENotificationSender::SendSelectionChange() {
   // selection change.
   SelectionChangeData& newSelChangeData = observer->mSelectionData;
   if (lastSelChangeData.IsValid() &&
-      lastSelChangeData.mOffset == newSelChangeData.mOffset &&
-      lastSelChangeData.String() == newSelChangeData.String() &&
-      lastSelChangeData.GetWritingMode() == newSelChangeData.GetWritingMode() &&
-      lastSelChangeData.mReversed == newSelChangeData.mReversed) {
+      lastSelChangeData.EqualsRangeAndDirectionAndWritingMode(
+          newSelChangeData)) {
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
             ("0x%p IMEContentObserver::IMENotificationSender::"
              "SendSelectionChange(), not notifying IME of "
