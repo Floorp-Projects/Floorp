@@ -651,11 +651,25 @@ void gfxDWriteFontEntry::GetVariationInstances(
 
 gfxFont* gfxDWriteFontEntry::CreateFontInstance(
     const gfxFontStyle* aFontStyle) {
-  bool needsBold = aFontStyle->NeedsSyntheticBold(this);
+  // We use the DirectWrite bold simulation for installed fonts, but NOT for
+  // webfonts; those will use multi-strike synthetic bold instead.
+  bool useBoldSim = false;
+  if (aFontStyle->NeedsSyntheticBold(this)) {
+    switch (StaticPrefs::gfx_font_rendering_directwrite_bold_simulation()) {
+      case 0:  // never use the DWrite simulation
+        break;
+      case 1:  // use DWrite simulation for installed fonts but not webfonts
+        useBoldSim = !mIsDataUserFont;
+        break;
+      default:  // always use DWrite bold simulation
+        useBoldSim = true;
+        break;
+    }
+  }
   DWRITE_FONT_SIMULATIONS sims =
-      needsBold ? DWRITE_FONT_SIMULATIONS_BOLD : DWRITE_FONT_SIMULATIONS_NONE;
+      useBoldSim ? DWRITE_FONT_SIMULATIONS_BOLD : DWRITE_FONT_SIMULATIONS_NONE;
   ThreadSafeWeakPtr<UnscaledFontDWrite>& unscaledFontPtr =
-      needsBold ? mUnscaledFontBold : mUnscaledFont;
+      useBoldSim ? mUnscaledFontBold : mUnscaledFont;
   RefPtr<UnscaledFontDWrite> unscaledFont(unscaledFontPtr);
   if (!unscaledFont) {
     RefPtr<IDWriteFontFace> fontFace;
