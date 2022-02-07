@@ -27,7 +27,7 @@ PrintStringDetail::PrintStringDetail(const nsAString& aString,
       aString.Length() <= aMaxLength ? 0 : aMaxLength / 2;
   for (uint32_t i = 0; i < aString.Length(); i++) {
     if (i > 0) {
-      Append(" ");
+      AppendLiteral(" ");
     }
     char32_t ch = aString.CharAt(i);
     if (NS_IS_HIGH_SURROGATE(ch) && i + 1 < aString.Length() &&
@@ -36,7 +36,7 @@ PrintStringDetail::PrintStringDetail(const nsAString& aString,
     }
     Append(PrintCharData(ch));
     if (i + 1 == kFirstHalf) {
-      Append(" ...");
+      AppendLiteral(" ...");
       i = aString.Length() - kSecondHalf - 1;
       if (NS_IS_LOW_SURROGATE(aString.CharAt(i)) &&
           NS_IS_HIGH_SURROGATE(aString.CharAt(i - 1))) {
@@ -50,7 +50,9 @@ PrintStringDetail::PrintStringDetail(const nsAString& aString,
       i++;
     }
   }
-  Append("\"");
+  AppendLiteral("\" (Length()=");
+  AppendInt(static_cast<uint32_t>(aString.Length()));
+  AppendLiteral(")");
 }
 
 // static
