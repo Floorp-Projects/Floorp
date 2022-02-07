@@ -335,14 +335,11 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       Preferences::GetBool("media.peerconnection.ice.force_ice_tcp", false);
   memset(mMaxReceiving, 0, sizeof(mMaxReceiving));
   memset(mMaxSending, 0, sizeof(mMaxSending));
-  mJsConfiguration.mCertificatesProvided = false;
-  mJsConfiguration.mPeerIdentityProvided = false;
 }
 
 PeerConnectionImpl::~PeerConnectionImpl() {
   if (mTimeCard) {
     STAMP_TIMECARD(mTimeCard, "Destructor Invoked");
-    STAMP_TIMECARD(mTimeCard, mHandle.c_str());
     print_timecard(mTimeCard);
     destroy_timecard(mTimeCard);
     mTimeCard = nullptr;
@@ -382,6 +379,7 @@ PeerConnectionImpl::~PeerConnectionImpl() {
 
 nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
                                         nsGlobalWindowInner* aWindow,
+                                        const RTCConfiguration& aConfiguration,
                                         nsISupports* aThread) {
   nsresult res;
 
@@ -392,6 +390,9 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     MOZ_ASSERT(mThread);
   }
   CheckThread();
+
+  // Store the configuration for about:webrtc
+  StoreConfigurationForAboutWebrtc(aConfiguration);
 
   mPCObserver = &aObserver;
 
@@ -452,7 +453,17 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   res = PeerConnectionCtx::InitializeGlobal(mThread);
   NS_ENSURE_SUCCESS(res, res);
 
-  mTransportHandler->CreateIceCtx("PC:" + GetName());
+  nsTArray<dom::RTCIceServer> iceServers;
+  if (aConfiguration.mIceServers.WasPassed()) {
+    iceServers = aConfiguration.mIceServers.Value();
+  }
+
+  res = mTransportHandler->CreateIceCtx("PC:" + GetName(), iceServers,
+                                        aConfiguration.mIceTransportPolicy);
+  if (NS_FAILED(res)) {
+    CSFLogError(LOGTAG, "%s: Failed to init mtransport", __FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
 
   mJsepSession =
       MakeUnique<JsepSessionImpl>(mName, MakeUnique<PCUuidGenerator>());
@@ -462,6 +473,29 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   if (NS_FAILED(res)) {
     CSFLogError(LOGTAG, "%s: Couldn't init JSEP Session, res=%u", __FUNCTION__,
                 static_cast<unsigned>(res));
+    return res;
+  }
+
+  JsepBundlePolicy bundlePolicy;
+  switch (aConfiguration.mBundlePolicy) {
+    case dom::RTCBundlePolicy::Balanced:
+      bundlePolicy = kBundleBalanced;
+      break;
+    case dom::RTCBundlePolicy::Max_compat:
+      bundlePolicy = kBundleMaxCompat;
+      break;
+    case dom::RTCBundlePolicy::Max_bundle:
+      bundlePolicy = kBundleMaxBundle;
+      break;
+    default:
+      MOZ_CRASH();
+  }
+
+  res = mJsepSession->SetBundlePolicy(bundlePolicy);
+  if (NS_FAILED(res)) {
+    CSFLogError(LOGTAG, "%s: Couldn't set bundle policy, res=%u, error=%s",
+                __FUNCTION__, static_cast<unsigned>(res),
+                mJsepSession->GetLastError().c_str());
     return res;
   }
 
@@ -482,15 +516,21 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
 void PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
                                     nsGlobalWindowInner& aWindow,
+                                    const RTCConfiguration& aConfiguration,
                                     nsISupports* aThread, ErrorResult& rv) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aThread);
   mThread = do_QueryInterface(aThread);
 
-  nsresult res = Initialize(aObserver, &aWindow, aThread);
+  nsresult res = Initialize(aObserver, &aWindow, aConfiguration, aThread);
   if (NS_FAILED(res)) {
     rv.Throw(res);
     return;
+  }
+
+  if (!aConfiguration.mPeerIdentity.IsEmpty()) {
+    mPeerIdentity = new PeerIdentity(aConfiguration.mPeerIdentity);
+    mPrivacyRequested = Some(true);
   }
 }
 
@@ -1961,47 +2001,6 @@ PeerConnectionImpl::Close() {
   return NS_OK;
 }
 
-nsresult PeerConnectionImpl::SetConfiguration(
-    const RTCConfiguration& aConfiguration) {
-  nsresult rv = mTransportHandler->SetIceConfig(
-      aConfiguration.mIceServers, aConfiguration.mIceTransportPolicy);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  JsepBundlePolicy bundlePolicy;
-  switch (aConfiguration.mBundlePolicy) {
-    case dom::RTCBundlePolicy::Balanced:
-      bundlePolicy = kBundleBalanced;
-      break;
-    case dom::RTCBundlePolicy::Max_compat:
-      bundlePolicy = kBundleMaxCompat;
-      break;
-    case dom::RTCBundlePolicy::Max_bundle:
-      bundlePolicy = kBundleMaxBundle;
-      break;
-    default:
-      MOZ_CRASH();
-  }
-
-  rv = mJsepSession->SetBundlePolicy(bundlePolicy);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    CSFLogError(LOGTAG, "%s: Couldn't set bundle policy, res=%u, error=%s",
-                __FUNCTION__, static_cast<unsigned>(rv),
-                mJsepSession->GetLastError().c_str());
-    return rv;
-  }
-
-  if (!aConfiguration.mPeerIdentity.IsEmpty()) {
-    mPeerIdentity = new PeerIdentity(aConfiguration.mPeerIdentity);
-    mPrivacyRequested = Some(true);
-  }
-
-  // Store the configuration for about:webrtc
-  StoreConfigurationForAboutWebrtc(aConfiguration);
-  return NS_OK;
-}
-
 bool PeerConnectionImpl::PluginCrash(uint32_t aPluginID,
                                      const nsAString& aPluginName) {
   // fire an event to the DOM window if this is "ours"
@@ -2397,12 +2396,10 @@ const std::string& PeerConnectionImpl::GetName() {
 void PeerConnectionImpl::CandidateReady(const std::string& candidate,
                                         const std::string& transportId,
                                         const std::string& ufrag) {
-  STAMP_TIMECARD(mTimeCard, "Ice Candidate gathered");
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
   if (mForceIceTcp && std::string::npos != candidate.find(" UDP ")) {
     CSFLogWarn(LOGTAG, "Blocking local UDP candidate: %s", candidate.c_str());
-    STAMP_TIMECARD(mTimeCard, "UDP Ice Candidate blocked");
     return;
   }
 
@@ -2416,7 +2413,6 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
   if (NS_FAILED(res)) {
     std::string errorString = mJsepSession->GetLastError();
 
-    STAMP_TIMECARD(mTimeCard, "Local Ice Candidate invalid");
     CSFLogError(LOGTAG,
                 "Failed to incorporate local candidate into SDP:"
                 " res = %u, candidate = %s, transport-id = %s,"
@@ -2427,13 +2423,12 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
   }
 
   if (skipped) {
-    STAMP_TIMECARD(mTimeCard, "Local Ice Candidate skipped");
-    CSFLogInfo(LOGTAG,
-               "Skipped adding local candidate %s (transport-id %s) "
-               "to SDP, this typically happens because the m-section "
-               "is bundled, which means it doesn't make sense for it "
-               "to have its own transport-related attributes.",
-               candidate.c_str(), transportId.c_str());
+    CSFLogDebug(LOGTAG,
+                "Skipped adding local candidate %s (transport-id %s) "
+                "to SDP, this typically happens because the m-section "
+                "is bundled, which means it doesn't make sense for it "
+                "to have its own transport-related attributes.",
+                candidate.c_str(), transportId.c_str());
     return;
   }
 
@@ -2441,15 +2436,14 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
       mJsepSession->GetLocalDescription(kJsepDescriptionPending);
   mCurrentLocalDescription =
       mJsepSession->GetLocalDescription(kJsepDescriptionCurrent);
-  CSFLogInfo(LOGTAG, "Passing local candidate to content: %s",
-             candidate.c_str());
+  CSFLogDebug(LOGTAG, "Passing local candidate to content: %s",
+              candidate.c_str());
   SendLocalIceCandidateToContent(level, mid, candidate, ufrag);
 }
 
 void PeerConnectionImpl::SendLocalIceCandidateToContent(
     uint16_t level, const std::string& mid, const std::string& candidate,
     const std::string& ufrag) {
-  STAMP_TIMECARD(mTimeCard, "Send Ice Candidate to content");
   JSErrorResult rv;
   mPCObserver->OnIceCandidate(level, ObString(mid.c_str()),
                               ObString(candidate.c_str()),
@@ -3155,38 +3149,38 @@ void PeerConnectionImpl::StoreConfigurationForAboutWebrtc(
   // configured, at least until setConfiguration is implemented
   // see https://bugzilla.mozilla.org/show_bug.cgi?id=1253706
   // @TODO bug 1739451 call this from setConfiguration
-  mJsConfiguration.mIceServers.Clear();
-  for (const auto& server : aConfig.mIceServers) {
-    RTCIceServerInternal internal;
-    internal.mCredentialProvided = server.mCredential.WasPassed();
-    internal.mUserNameProvided = server.mUsername.WasPassed();
-    if (server.mUrl.WasPassed()) {
-      if (!internal.mUrls.AppendElement(server.mUrl.Value(), fallible)) {
-        mozalloc_handle_oom(0);
-      }
-    }
-    if (server.mUrls.WasPassed()) {
-      for (const auto& url : server.mUrls.Value().GetAsStringSequence()) {
-        if (!internal.mUrls.AppendElement(url, fallible)) {
+  if (aConfig.mIceServers.WasPassed()) {
+    for (const auto& server : aConfig.mIceServers.Value()) {
+      RTCIceServerInternal internal;
+      internal.mCredentialProvided = server.mCredential.WasPassed();
+      internal.mUserNameProvided = server.mUsername.WasPassed();
+      if (server.mUrl.WasPassed()) {
+        if (!internal.mUrls.AppendElement(server.mUrl.Value(), fallible)) {
           mozalloc_handle_oom(0);
         }
       }
-    }
-    if (!mJsConfiguration.mIceServers.AppendElement(internal, fallible)) {
-      mozalloc_handle_oom(0);
+      if (server.mUrls.WasPassed()) {
+        for (const auto& url : server.mUrls.Value().GetAsStringSequence()) {
+          if (!internal.mUrls.AppendElement(url, fallible)) {
+            mozalloc_handle_oom(0);
+          }
+        }
+      }
+      if (!mJsConfiguration.mIceServers.AppendElement(internal, fallible)) {
+        mozalloc_handle_oom(0);
+      }
     }
   }
-  mJsConfiguration.mSdpSemantics.Reset();
   if (aConfig.mSdpSemantics.WasPassed()) {
     mJsConfiguration.mSdpSemantics.Construct(aConfig.mSdpSemantics.Value());
   }
 
-  mJsConfiguration.mIceTransportPolicy.Reset();
   mJsConfiguration.mIceTransportPolicy.Construct(aConfig.mIceTransportPolicy);
-  mJsConfiguration.mBundlePolicy.Reset();
   mJsConfiguration.mBundlePolicy.Construct(aConfig.mBundlePolicy);
   mJsConfiguration.mPeerIdentityProvided = !aConfig.mPeerIdentity.IsEmpty();
-  mJsConfiguration.mCertificatesProvided = !aConfig.mCertificates.Length();
+  mJsConfiguration.mCertificatesProvided =
+      aConfig.mCertificates.WasPassed() &&
+      !aConfig.mCertificates.Value().Length();
 }
 
 dom::Sequence<dom::RTCSdpParsingErrorInternal>

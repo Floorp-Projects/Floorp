@@ -22,9 +22,8 @@ class MediaTransportHandlerIPC : public MediaTransportHandler {
   void EnterPrivateMode() override;
   void ExitPrivateMode() override;
 
-  void CreateIceCtx(const std::string& aName) override;
-
-  nsresult SetIceConfig(const nsTArray<dom::RTCIceServer>& aIceServers,
+  nsresult CreateIceCtx(const std::string& aName,
+                        const nsTArray<dom::RTCIceServer>& aIceServers,
                         dom::RTCIceTransportPolicy aIcePolicy) override;
 
   // We will probably be able to move the proxy lookup stuff into

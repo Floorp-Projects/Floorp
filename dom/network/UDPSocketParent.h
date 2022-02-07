@@ -75,7 +75,6 @@ class UDPSocketParent : public mozilla::net::PUDPSocketParent,
   nsCOMPtr<nsIUDPSocket> mSocket;
   nsCOMPtr<nsISocketFilter> mFilter;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  UDPAddressInfo mAddress;
 };
 
 }  // namespace dom
