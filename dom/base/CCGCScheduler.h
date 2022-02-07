@@ -153,9 +153,8 @@ class CCGCScheduler {
   void KillCCRunner();
   void KillAllTimersAndRunners();
 
-  js::SliceBudget CreateGCSliceBudget(JS::GCReason aReason, int64_t aMillis) {
-    return js::SliceBudget(mozilla::TimeDuration::FromMilliseconds(aMillis),
-                           &mInterruptRequested);
+  js::SliceBudget CreateGCSliceBudget(mozilla::TimeDuration aDuration) {
+    return js::SliceBudget(aDuration, &mInterruptRequested);
   }
 
   /*
@@ -330,8 +329,8 @@ class CCGCScheduler {
                                        TimeStamp aNow,
                                        bool* aPreferShorterSlices) const;
 
-  TimeDuration ComputeInterSliceGCBudget(TimeStamp aDeadline,
-                                         TimeStamp aNow) const;
+  js::SliceBudget ComputeInterSliceGCBudget(TimeStamp aDeadline,
+                                            TimeStamp aNow);
 
   bool ShouldForgetSkippable(uint32_t aSuspectedCCObjects) const {
     // Only do a forget skippable if there are more than a few new objects
