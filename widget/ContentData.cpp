@@ -15,13 +15,15 @@ namespace mozilla {
 
 ContentSelection::ContentSelection(
     const WidgetQueryContentEvent& aSelectedTextEvent)
-    : mOffsetAndData(
-          Some(OffsetAndData<uint32_t>(aSelectedTextEvent.mReply->StartOffset(),
-                                       aSelectedTextEvent.mReply->DataRef(),
-                                       OffsetAndDataFor::SelectedString))),
-      mWritingMode(aSelectedTextEvent.mReply->WritingModeRef()) {
+    : mWritingMode(aSelectedTextEvent.mReply->WritingModeRef()) {
   MOZ_ASSERT(aSelectedTextEvent.mMessage == eQuerySelectedText);
-  MOZ_ASSERT(aSelectedTextEvent.mReply->mOffsetAndData.isSome());
+  MOZ_ASSERT(aSelectedTextEvent.Succeeded());
+  if (aSelectedTextEvent.mReply->mOffsetAndData.isSome()) {
+    mOffsetAndData =
+        Some(OffsetAndData<uint32_t>(aSelectedTextEvent.mReply->StartOffset(),
+                                     aSelectedTextEvent.mReply->DataRef(),
+                                     OffsetAndDataFor::SelectedString));
+  }
 }
 
 }  // namespace mozilla

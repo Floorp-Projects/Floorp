@@ -40,6 +40,9 @@ with Files("*Gfx*"):
 with Files("*IMEData*"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
+with Files("*TextEventDispatcher*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
 toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
 
 if toolkit in ("android", "cocoa", "gtk", "uikit", "windows"):

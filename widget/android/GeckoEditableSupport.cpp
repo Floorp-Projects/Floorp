@@ -1341,10 +1341,14 @@ nsresult GeckoEditableSupport::NotifyIME(
       ALOGIME("IME: NOTIFY_IME_OF_SELECTION_CHANGE: SelectionChangeData=%s",
               ToString(aNotification.mSelectionChangeData).c_str());
 
-      mCachedSelection.mStartOffset =
-          aNotification.mSelectionChangeData.StartOffset();
-      mCachedSelection.mEndOffset =
-          aNotification.mSelectionChangeData.EndOffset();
+      if (aNotification.mSelectionChangeData.HasRange()) {
+        mCachedSelection.mStartOffset =
+            aNotification.mSelectionChangeData.StartOffset();
+        mCachedSelection.mEndOffset =
+            aNotification.mSelectionChangeData.EndOffset();
+      } else {
+        mCachedSelection.Reset();
+      }
 
       PostFlushIMEChanges();
       mIMESelectionChanged = true;

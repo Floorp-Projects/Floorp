@@ -589,9 +589,8 @@ class TSFTextStore final : public ITextStoreACP,
     }
 
     bool SetSelection(const SelectionChangeDataBase& aSelectionChangeData) {
-      // XXX Treat invalid SelectionChangeData means as there is no selection
-      //     rather than an unexpected case.
-      if (!aSelectionChangeData.IsValid()) {
+      MOZ_ASSERT(aSelectionChangeData.IsInitialized());
+      if (!aSelectionChangeData.HasRange()) {
         if (mACP.isNothing()) {
           return false;
         }
@@ -712,9 +711,9 @@ class TSFTextStore final : public ITextStoreACP,
 
     bool EqualsExceptDirection(
         const SelectionChangeDataBase& aChangedSelection) const {
-      MOZ_ASSERT(aChangedSelection.IsValid());
+      MOZ_ASSERT(aChangedSelection.IsInitialized());
       if (mACP.isNothing()) {
-        return false;
+        return aChangedSelection.HasRange();
       }
       return aChangedSelection.Length() == static_cast<uint32_t>(Length()) &&
              aChangedSelection.mOffset == static_cast<uint32_t>(StartOffset());

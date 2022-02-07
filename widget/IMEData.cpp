@@ -7,6 +7,7 @@
 
 #include <sstream>
 
+#include "ContentData.h"
 #include "gfxFontUtils.h"
 #include "TextEvents.h"
 
@@ -379,6 +380,24 @@ void IMENotification::SelectionChangeDataBase::SetWritingMode(
 
 WritingMode IMENotification::SelectionChangeDataBase::GetWritingMode() const {
   return WritingMode(mWritingModeBits);
+}
+
+bool IMENotification::SelectionChangeDataBase::EqualsRange(
+    const ContentSelection& aContentSelection) const {
+  if (aContentSelection.HasRange() != HasRange()) {
+    return false;
+  }
+  if (!HasRange()) {
+    return true;
+  }
+  return mOffset == aContentSelection.OffsetAndDataRef().StartOffset() &&
+         *mString == aContentSelection.OffsetAndDataRef().DataRef();
+}
+
+bool IMENotification::SelectionChangeDataBase::EqualsRangeAndWritingMode(
+    const ContentSelection& aContentSelection) const {
+  return EqualsRange(aContentSelection) &&
+         mWritingModeBits == aContentSelection.WritingModeRef().GetBits();
 }
 
 }  // namespace widget
