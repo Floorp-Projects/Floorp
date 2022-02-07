@@ -146,7 +146,7 @@ const EVENTS = {
 
 const TEST_EVENTS = {
   // When a network or timeline event is received.
-  // See https://developer.mozilla.org/docs/Tools/Web_Console/remoting for
+  // See https://firefox-source-docs.mozilla.org/devtools-user/web_console/remoting/ for
   // more information about what each packet is supposed to deliver.
   NETWORK_EVENT: "NetMonitor:NetworkEvent",
   NETWORK_EVENT_UPDATED: "NetMonitor:NetworkEventUpdated",

@@ -115,7 +115,7 @@ const STRICT_TRANSPORT_SECURITY_LEARN_MORE =
 const MIME_TYPE_MISMATCH_LEARN_MORE =
   "https://developer.mozilla.org/docs/Web/HTTP/Headers/X-Content-Type-Options";
 const SOURCE_MAP_LEARN_MORE =
-  "https://developer.mozilla.org/en-US/docs/Tools/Debugger/Source_map_errors";
+  "https://firefox-source-docs.mozilla.org/devtools-user/debugger/source_map_errors/";
 const TLS_LEARN_MORE =
   "https://blog.mozilla.org/security/2018/10/15/removing-old-versions-of-tls/";
 const X_FRAME_OPTIONS_LEARN_MORE =

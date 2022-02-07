@@ -102,7 +102,7 @@ Emitted after a full GC cycle has completed (which is after any number of
 incremental slices).
 
 * DOMString causeName - The reason for a GC event to occur. A full list of
-  GC reasons can be found [on MDN](https://developer.mozilla.org/en-US/docs/Tools/Debugger-API/Debugger.Memory#Debugger.Memory_Handler_Functions).
+  GC reasons can be found in [docs](https://firefox-source-docs.mozilla.org/devtools-user/debugger-api/debugger.memory/).
 * DOMString nonincremenetalReason - If the GC could not do an incremental
   GC (smaller, quick GC events), and we have to walk the entire heap and
   GC everything marked, then the reason listed here is why.
