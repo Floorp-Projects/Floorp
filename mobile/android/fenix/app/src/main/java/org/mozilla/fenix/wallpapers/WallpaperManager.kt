@@ -10,15 +10,15 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.drawable.BitmapDrawable
+import android.graphics.Matrix
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.widget.ImageView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
 import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.utils.Settings
@@ -53,10 +53,10 @@ class WallpaperManager(
     /**
      * Apply the [newWallpaper] into the [wallpaperContainer] and update the [currentWallpaper].
      */
-    fun updateWallpaper(wallpaperContainer: View, newWallpaper: Wallpaper) {
+    fun updateWallpaper(wallpaperContainer: ImageView, newWallpaper: Wallpaper) {
         val context = wallpaperContainer.context
         if (newWallpaper == defaultWallpaper) {
-            wallpaperContainer.setBackgroundColor(context.getColorFromAttr(DEFAULT_RESOURCE))
+            wallpaperContainer.visibility = View.GONE
             logger.info("Wallpaper update to default background")
         } else {
             val bitmap = loadSavedWallpaper(context, newWallpaper)
@@ -64,10 +64,12 @@ class WallpaperManager(
                 val message = "Could not load wallpaper bitmap. Resetting to default."
                 logger.error(message)
                 crashReporter.submitCaughtException(NullPointerException(message))
-                wallpaperContainer.setBackgroundColor(context.getColorFromAttr(DEFAULT_RESOURCE))
                 currentWallpaper = defaultWallpaper
+                wallpaperContainer.visibility = View.GONE
+                return
             } else {
-                wallpaperContainer.background = BitmapDrawable(context.resources, bitmap)
+                wallpaperContainer.visibility = View.VISIBLE
+                scaleBitmapToBottom(bitmap, wallpaperContainer)
             }
         }
         currentWallpaper = newWallpaper
@@ -143,6 +145,41 @@ class WallpaperManager(
         }
     }.getOrNull()
 
+    private fun scaleBitmapToBottom(bitmap: Bitmap, view: ImageView) {
+        view.setImageBitmap(bitmap)
+        view.scaleType = ImageView.ScaleType.MATRIX
+        val matrix = Matrix()
+        view.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
+            override fun onLayoutChange(
+                v: View?,
+                left: Int,
+                top: Int,
+                right: Int,
+                bottom: Int,
+                oldLeft: Int,
+                oldTop: Int,
+                oldRight: Int,
+                oldBottom: Int
+            ) {
+                val viewWidth: Float = view.width.toFloat()
+                val viewHeight: Float = view.height.toFloat()
+                val bitmapWidth = bitmap.width
+                val bitmapHeight = bitmap.height
+                val widthScale = viewWidth / bitmapWidth
+                val heightScale = viewHeight / bitmapHeight
+                val scale = widthScale.coerceAtLeast(heightScale)
+                matrix.postScale(scale, scale)
+                // The image is translated to its bottom such that any pertinent information is
+                // guaranteed to be shown.
+                // Majority of this math borrowed from // https://medium.com/@tokudu/how-to-whitelist-strictmode-violations-on-android-based-on-stacktrace-eb0018e909aa
+                // except that there is no need to translate horizontally in our case.
+                matrix.postTranslate(0f, (viewHeight - bitmapHeight * scale))
+                view.imageMatrix = matrix
+                view.removeOnLayoutChangeListener(this)
+            }
+        })
+    }
+
     /**
      * Get the expected local path on disk for a wallpaper. This will differ depending
      * on orientation and app theme.
@@ -196,7 +233,6 @@ class WallpaperManager(
     }
 
     companion object {
-        const val DEFAULT_RESOURCE = R.attr.homeBackground
         val defaultWallpaper = Wallpaper.Default
         private val localWallpapers: List<Wallpaper.Local> = listOf(
             Wallpaper.Local.Firefox("amethyst", R.drawable.amethyst),
