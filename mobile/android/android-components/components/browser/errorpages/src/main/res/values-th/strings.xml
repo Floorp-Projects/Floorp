@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">เกิดปัญหาในการโหลดหน้า</string>
-
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">ลองอีกครั้ง</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">ย้อนกลับ</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">ไม่สามารถทำคำขอให้เสร็จสมบูรณ์</string>
@@ -233,4 +227,7 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">ปัญหาไซต์หลอกลวง</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>หน้าเว็บนี้ที่ %1$s ถูกรายงานว่าเป็นไซต์หลอกลวงและถูกปิดกั้นตามค่ากำหนดความปลอดภัยของคุณ</p>]]></string>
+
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">ดำเนินการต่อไปยังไซต์ HTTP</string>
 </resources>
