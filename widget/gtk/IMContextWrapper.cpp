@@ -21,7 +21,7 @@
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/ToString.h"
-#include "WritingModes.h"
+#include "mozilla/WritingModes.h"
 
 // For collecting other people's log, tell `MOZ_LOG=IMEHandler:4,sync`
 // rather than `MOZ_LOG=IMEHandler:5,sync` since using `5` may create too
@@ -110,22 +110,6 @@ class GetEventStateName : public nsAutoCString {
     }
     Append(aModifierName);
   }
-};
-
-class GetWritingModeName : public nsAutoCString {
- public:
-  explicit GetWritingModeName(const WritingMode& aWritingMode) {
-    if (!aWritingMode.IsVertical()) {
-      AssignLiteral("Horizontal");
-      return;
-    }
-    if (aWritingMode.IsVerticalLR()) {
-      AssignLiteral("Vertical (LTR)");
-      return;
-    }
-    AssignLiteral("Vertical (RTL)");
-  }
-  virtual ~GetWritingModeName() = default;
 };
 
 class GetTextRangeStyleText final : public nsAutoCString {
@@ -2816,14 +2800,13 @@ bool IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
 }
 
 void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
-  MOZ_LOG(
-      gIMELog, LogLevel::Info,
-      ("0x%p SetCursorPosition(aContext=0x%p), "
-       "mCompositionTargetRange={ mOffset=%u, mLength=%u }"
-       "mSelection={ mOffset=%u, Length()=%u, mWritingMode=%s }",
-       this, aContext, mCompositionTargetRange.mOffset,
-       mCompositionTargetRange.mLength, mSelection.mOffset, mSelection.Length(),
-       GetWritingModeName(mSelection.mWritingMode).get()));
+  MOZ_LOG(gIMELog, LogLevel::Info,
+          ("0x%p SetCursorPosition(aContext=0x%p), "
+           "mCompositionTargetRange={ mOffset=%u, mLength=%u }"
+           "mSelection={ mOffset=%u, Length()=%u, mWritingMode=%s }",
+           this, aContext, mCompositionTargetRange.mOffset,
+           mCompositionTargetRange.mLength, mSelection.mOffset,
+           mSelection.Length(), ToString(mSelection.mWritingMode).c_str()));
 
   bool useCaret = false;
   if (!mCompositionTargetRange.IsValid()) {
@@ -3219,7 +3202,7 @@ bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
           ("0x%p EnsureToCacheSelection(), Succeeded, mSelection="
            "{ mOffset=%u, Length()=%u, mWritingMode=%s }",
            this, mSelection.mOffset, mSelection.Length(),
-           GetWritingModeName(mSelection.mWritingMode).get()));
+           ToString(mSelection.mWritingMode).c_str()));
   return true;
 }
 

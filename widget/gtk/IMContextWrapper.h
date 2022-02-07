@@ -18,7 +18,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcherListener.h"
-#include "WritingModes.h"
+#include "mozilla/WritingModes.h"
 
 class nsWindow;
 
