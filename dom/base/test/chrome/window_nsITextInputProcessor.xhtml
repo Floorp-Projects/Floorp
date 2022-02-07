@@ -4155,24 +4155,28 @@ async function runCallbackTests(aForTests)
     if (aNotification.type != "notify-selection-change") {
       return;
     }
-    is(aNotification.offset, aExpected.offset,
-       aDescription + " should cause selection change notification whose offset is " + aExpected.offset);
-    is(aNotification.text, aExpected.text,
-       aDescription + " should cause selection change notification whose text is '" + aExpected.text + "'");
-    is(aNotification.collapsed, aExpected.text.length == 0,
-       aDescription + " should cause selection change notification whose collapsed is " + (aExpected.text.length == 0));
-    is(aNotification.length, aExpected.text.length,
-       aDescription + " should cause selection change notification whose length is " + aExpected.text.length);
-    is(aNotification.reversed, aExpected.reversed || false,
-       aDescription + " should cause selection change notification whose reversed is " + (aExpected.reversed || false));
+    is(aNotification.hasRange, aExpected.hasRange !== false,
+      `${aDescription} should cause selection change notification whose hasRange is ${aExpected.hasRange}`);
+    if (aNotification.hasRange) {
+      is(aNotification.offset, aExpected.offset,
+        `${aDescription} should cause selection change notification whose offset is ${aExpected.offset}`);
+      is(aNotification.text, aExpected.text,
+        `${aDescription} should cause selection change notification whose text is "${aExpected.text}"`);
+      is(aNotification.length, aExpected.text.length,
+        `${aDescription} should cause selection change notification whose length is ${aExpected.text.length}`);
+      is(aNotification.reversed, aExpected.reversed || false,
+        `${aDescription} should cause selection change notification whose reversed is ${aExpected.reversed || false}`);
+    }
+    is(aNotification.collapsed, aExpected.hasRange === false || aExpected.text.length == 0,
+      `${aDescription} should cause selection change notification whose collapsed is ${aExpected.hasRange === false || aExpected.text.length == 0}`);
     is(aNotification.writingMode, aExpected.writingMode || "horizontal-tb",
-       aDescription + " should cause selection change notification whose writingMode is '" + (aExpected.writingMode || "horizontal-tb"));
+      `${aDescription} should cause selection change notification whose writingMode is ${aExpected.writingMode || "horizontal-tb"}`);
     is(aNotification.causedByComposition, aExpected.causedByComposition || false,
-       aDescription + " should cause selection change notification whose causedByComposition is " + (aExpected.causedByComposition || false));
+      `${aDescription} should cause selection change notification whose causedByComposition is ${aExpected.causedByComposition || false}`);
     is(aNotification.causedBySelectionEvent, aExpected.causedBySelectionEvent || false,
-       aDescription + " should cause selection change notification whose causedBySelectionEvent is " + (aExpected.causedBySelectionEvent || false));
+      `${aDescription} should cause selection change notification whose causedBySelectionEvent is ${aExpected.causedBySelectionEvent || false}`);
     is(aNotification.occurredDuringComposition, aExpected.occurredDuringComposition || false,
-       aDescription + " should cause cause selection change notification whose occurredDuringComposition is " + (aExpected.occurredDuringComposition || false));
+      `${aDescription} should cause cause selection change notification whose occurredDuringComposition is ${aExpected.occurredDuringComposition || false}`);
   }
 
   function checkTextChangeNotification(aNotification, aDescription, aExpected)
@@ -4310,6 +4314,18 @@ async function runCallbackTests(aForTests)
   is(notifications.length, 1,
      description + "ArrowRight key press with Shift should cause a notification");
   checkSelectionChangeNotification(notifications[0], description + "ArrowRight key press with Shift", { offset: 1, text: "b" });
+  dumpUnexpectedNotifications(1);
+
+  notifications = [];
+  input.editor.selection.removeAllRanges();
+  await waitUntilNotificationsReceived();
+  is(notifications.length, 1,
+    `${description}Removing all selection ranges should cause a selection change notification`);
+  checkSelectionChangeNotification(
+    notifications[0],
+    `${description}Removing all selection ranges in editor`,
+    { hasRange: false }
+  );
   dumpUnexpectedNotifications(1);
 
   notifications = [];
