@@ -247,7 +247,7 @@
     <!-- Browser menu button that opens the Customize menu -->
     <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Персонализация</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
-    <string name="browser_menu_customize_home_1">Настроить домашнюю страницу</string>
+    <string name="browser_menu_customize_home_1">Изменить вид</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Домашний экран</string>
@@ -491,7 +491,7 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Просмотр</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Для смены обоев коснитесь логотипа</string>
+    <string name="wallpaper_tap_to_change_switch_label">Смена обоев касанием по логотипу</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_description">Просматривайте и меняйте обои прямо с домашней страницы.</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
@@ -715,7 +715,7 @@
     <!-- Option for search term tab groups -->
     <string name="tab_view_search_term_tab_groups">Поисковые группы</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Группируйте связанные сайты</string>
+    <string name="tab_view_search_term_tab_groups_summary">Группировать связанные сайты</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Закрывать вкладки</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->

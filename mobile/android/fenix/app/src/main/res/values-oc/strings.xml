@@ -236,7 +236,7 @@
     <string name="browser_menu_edit">Modificar</string>
 
     <!-- Browser menu button that opens the Customize menu -->
-    <string name="browser_menu_customize_home">Personalizar l’acuèlh</string>
+    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Personalizar l’acuèlh</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Personalizar la pagina d’acuèlh</string>
     <!-- Browser Toolbar -->
@@ -486,6 +486,10 @@
     <string name="wallpaper_tap_to_change_switch_label">Tocatz lo logotipe per cambiar lo fons</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_description">Alternatz e actualizatz l’imatge sens quitar la pagina d’acuèlh.</string>
+
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">Logotipe Firefox - cambiar lo fons d’ecran, boton</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1989,6 +1993,13 @@
 	<string name="top_sites_rename_dialog_ok">D’acòrdi</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Anullar</string>
+
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">Paramètres</string>
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">Nòstres esponsòrs e vòstra vida privada</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">Esponsorizat</string>
 
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
