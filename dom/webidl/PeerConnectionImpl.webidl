@@ -79,6 +79,9 @@ interface PeerConnectionImpl  {
   [Throws]
   void close();
 
+  [Throws]
+  void setConfiguration(optional RTCConfiguration config = {});
+
   /* Notify DOM window if this plugin crash is ours. */
   boolean pluginCrash(unsigned long long pluginId, DOMString name);
 
