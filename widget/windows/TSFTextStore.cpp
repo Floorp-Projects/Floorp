@@ -4106,7 +4106,7 @@ TSFTextStore::RetrieveRequestedAttrs(ULONG ulCount, TS_ATTRVAL* paAttrVals,
           paAttrVals[count].varValue.vt = VT_BOOL;
           paAttrVals[count].varValue.boolVal =
               selectionForTSF.isSome() &&
-                      selectionForTSF->GetWritingMode().IsVertical()
+                      selectionForTSF->WritingModeRef().IsVertical()
                   ? VARIANT_TRUE
                   : VARIANT_FALSE;
           break;
@@ -4116,7 +4116,7 @@ TSFTextStore::RetrieveRequestedAttrs(ULONG ulCount, TS_ATTRVAL* paAttrVals,
           paAttrVals[count].varValue.vt = VT_I4;
           paAttrVals[count].varValue.lVal =
               selectionForTSF.isSome() &&
-                      selectionForTSF->GetWritingMode().IsVertical()
+                      selectionForTSF->WritingModeRef().IsVertical()
                   ? 2700
                   : 0;
           break;
@@ -7204,7 +7204,7 @@ void TSFTextStore::Content::StartComposition(
     // XXX Do we need to set a new writing-mode here when setting a new
     // selection? Currently, we just preserve the existing value.
     WritingMode writingMode =
-        mSelection.isNothing() ? WritingMode() : mSelection->GetWritingMode();
+        mSelection.isNothing() ? WritingMode() : mSelection->WritingModeRef();
     mSelection = Some(TSFTextStore::Selection(mComposition->StartOffset(),
                                               mComposition->Length(), false,
                                               writingMode));
