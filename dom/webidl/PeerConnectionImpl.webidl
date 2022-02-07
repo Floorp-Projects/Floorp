@@ -24,7 +24,6 @@ interface PeerConnectionImpl  {
   /* Must be called first. Observer events dispatched on the thread provided */
   [Throws]
   void initialize(PeerConnectionObserver observer, Window window,
-                  RTCConfiguration iceServers,
                   nsISupports thread);
 
   /* JSEP calls */
