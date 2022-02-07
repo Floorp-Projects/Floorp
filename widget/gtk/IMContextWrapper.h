@@ -19,6 +19,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "mozilla/WritingModes.h"
+#include "mozilla/widget/IMEData.h"
 
 class nsWindow;
 
@@ -415,6 +416,22 @@ class IMContextWrapper final : public TextEventDispatcherListener {
     }
     const nsString& DataRef() const { return mString; }
     const WritingMode& WritingModeRef() const { return mWritingMode; }
+
+    friend std::ostream& operator<<(std::ostream& aStream,
+                                    const Selection& aSelection) {
+      if (aSelection.IsValid()) {
+        return aStream << "{ IsValid()=false }";
+      }
+      aStream << "{ mOffset=" << aSelection.mOffset << ", mData="
+              << PrintStringDetail(
+                     aSelection.mString,
+                     PrintStringDetail::kMaxLengthForSelectedString)
+                     .get()
+              << ", Length()=" << aSelection.Length()
+              << ", EndOffset()=" << aSelection.EndOffset()
+              << ", mWritingMode=" << aSelection.mWritingMode << " }";
+      return aStream;
+    }
 
    private:
     nsString mString;

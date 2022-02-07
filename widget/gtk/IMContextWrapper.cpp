@@ -2359,11 +2359,8 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
     if (mSelection.IsValid()) {
       mSelection.CollapseTo(mSelection.StartOffset() + aCommitString->Length());
       MOZ_LOG(gIMELog, LogLevel::Info,
-              ("0x%p   DispatchCompositionCommitEvent(), "
-               "mSelection={ mOffset=%u, mString=\"%s\", mWritingMode=%s }",
-               this, mSelection.StartOffset(),
-               NS_ConvertUTF16toUTF8(mSelection.DataRef()).get(),
-               ToString(mSelection.WritingModeRef()).c_str()));
+              ("0x%p   DispatchCompositionCommitEvent(), mSelection=%s", this,
+               ToString(mSelection).c_str()));
     }
     MOZ_ASSERT(!dispatcher);
   } else {
@@ -2803,11 +2800,9 @@ bool IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
 void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p SetCursorPosition(aContext=0x%p), "
-           "mCompositionTargetRange={ mOffset=%u, mLength=%u }"
-           "mSelection={ mOffset=%u, Length()=%u, mWritingMode=%s }",
+           "mCompositionTargetRange={ mOffset=%u, mLength=%u }, mSelection=%s",
            this, aContext, mCompositionTargetRange.mOffset,
-           mCompositionTargetRange.mLength, mSelection.StartOffset(),
-           mSelection.Length(), ToString(mSelection.WritingModeRef()).c_str()));
+           mCompositionTargetRange.mLength, ToString(mSelection).c_str()));
 
   bool useCaret = false;
   if (!mCompositionTargetRange.IsValid()) {
@@ -3200,10 +3195,8 @@ bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
   }
 
   MOZ_LOG(gIMELog, LogLevel::Debug,
-          ("0x%p EnsureToCacheSelection(), Succeeded, mSelection="
-           "{ mOffset=%u, Length()=%u, mWritingMode=%s }",
-           this, mSelection.StartOffset(), mSelection.Length(),
-           ToString(mSelection.WritingModeRef()).c_str()));
+          ("0x%p EnsureToCacheSelection(), Succeeded, mSelection=%s", this,
+           ToString(mSelection).c_str()));
   return true;
 }
 
