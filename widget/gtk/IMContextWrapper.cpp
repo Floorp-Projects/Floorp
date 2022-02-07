@@ -1100,12 +1100,12 @@ void IMContextWrapper::OnFocusChangeInGecko(bool aFocus) {
 
   // We shouldn't carry over the removed string to another editor.
   mSelectedStringRemovedByComposition.Truncate();
-  mSelection.reset();
+  mContentSelection.reset();
 
   // When the focus changes, we need to inform IM about the new cursor
   // position. Chinese input methods generally rely on this because they
   // usually don't start composition until a character is picked.
-  if (aFocus && EnsureToCacheSelection()) {
+  if (aFocus && EnsureToCacheContentSelection()) {
     SetCursorPosition(GetActiveContext());
   }
 }
@@ -1216,8 +1216,8 @@ void IMContextWrapper::OnUpdateComposition() {
   if (!IsComposing()) {
     // Composition has been committed.  So we need update selection for
     // caret later
-    mSelection.reset();
-    EnsureToCacheSelection();
+    mContentSelection.reset();
+    EnsureToCacheContentSelection();
     mSetCursorPositionOnKeyEvent = true;
   }
 
@@ -1445,12 +1445,13 @@ void IMContextWrapper::Blur() {
 void IMContextWrapper::OnSelectionChange(
     nsWindow* aCaller, const IMENotification& aIMENotification) {
   const bool isSelectionRangeChanged =
-      mSelection.isNothing() ||
-      mSelection->OffsetAndDataRef().StartOffset() !=
+      mContentSelection.isNothing() ||
+      mContentSelection->OffsetAndDataRef().StartOffset() !=
           aIMENotification.mSelectionChangeData.mOffset ||
-      mSelection->OffsetAndDataRef().DataRef() !=
+      mContentSelection->OffsetAndDataRef().DataRef() !=
           *aIMENotification.mSelectionChangeData.mString;
-  mSelection = Some(Selection(aIMENotification.mSelectionChangeData));
+  mContentSelection =
+      Some(ContentSelection(aIMENotification.mSelectionChangeData));
   const bool retrievedSurroundingSignalReceived =
       mRetrieveSurroundingSignalReceived;
   mRetrieveSurroundingSignalReceived = false;
@@ -1492,14 +1493,14 @@ void IMContextWrapper::OnSelectionChange(
   // event handler.  So, we're dispatching eCompositionStart,
   // we should ignore selection change notification.
   if (mCompositionState == eCompositionState_CompositionStartDispatched) {
-    if (NS_WARN_IF(mSelection.isNothing())) {
+    if (NS_WARN_IF(mContentSelection.isNothing())) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   OnSelectionChange(), FAILED, "
                "new offset is too large, cannot keep composing",
                this));
-    } else if (mSelection->HasRange()) {
+    } else if (mContentSelection->HasRange()) {
       // Modify the selection start offset with new offset.
-      mCompositionStart = mSelection->OffsetAndDataRef().StartOffset();
+      mCompositionStart = mContentSelection->OffsetAndDataRef().StartOffset();
       // XXX We should modify mSelectedStringRemovedByComposition?
       // But how?
       MOZ_LOG(gIMELog, LogLevel::Debug,
@@ -2128,7 +2129,7 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
     return false;
   }
 
-  if (NS_WARN_IF(!EnsureToCacheSelection())) {
+  if (NS_WARN_IF(!EnsureToCacheContentSelection())) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionStart(), FAILED, "
              "cannot query the selection offset",
@@ -2136,7 +2137,7 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
     return false;
   }
 
-  if (NS_WARN_IF(!mSelection->HasRange())) {
+  if (NS_WARN_IF(!mContentSelection->HasRange())) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionStart(), FAILED, "
              "due to no selection",
@@ -2154,7 +2155,7 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
   //     even though we strongly hope it doesn't happen.
   //     Every composition event should have the start offset for the result
   //     because it may high cost if we query the offset every time.
-  mCompositionStart = mSelection->OffsetAndDataRef().StartOffset();
+  mCompositionStart = mContentSelection->OffsetAndDataRef().StartOffset();
   mDispatchedCompositionString.Truncate();
 
   // If this composition is started by a key press, we need to dispatch
@@ -2262,13 +2263,13 @@ bool IMContextWrapper::DispatchCompositionChangeEvent(
   // Store the selected string which will be removed by following
   // compositionchange event.
   if (mCompositionState == eCompositionState_CompositionStartDispatched) {
-    if (NS_WARN_IF(
-            !EnsureToCacheSelection(&mSelectedStringRemovedByComposition))) {
+    if (NS_WARN_IF(!EnsureToCacheContentSelection(
+            &mSelectedStringRemovedByComposition))) {
       // XXX How should we behave in this case??
-    } else if (mSelection->HasRange()) {
+    } else if (mContentSelection->HasRange()) {
       // XXX We should assume, for now, any web applications don't change
       //     selection at handling this compositionchange event.
-      mCompositionStart = mSelection->OffsetAndDataRef().StartOffset();
+      mCompositionStart = mContentSelection->OffsetAndDataRef().StartOffset();
     } else {
       // If there is no selection range, we should keep previously storing
       // mCompositionStart.
@@ -2356,7 +2357,7 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
                this));
       return true;
     }
-    if (MOZ_UNLIKELY(!EnsureToCacheSelection())) {
+    if (MOZ_UNLIKELY(!EnsureToCacheContentSelection())) {
       MOZ_LOG(gIMELog, LogLevel::Warning,
               ("0x%p   DispatchCompositionCommitEvent(), Warning, "
                "Failed to cache selection before dispatching "
@@ -2375,14 +2376,15 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
     // apps, i.e., selection range is same as what selection expects, we
     // shouldn't reset IME because the trigger of causing this commit may be an
     // input for next composition and we shouldn't cancel it.
-    if (mSelection.isSome()) {
-      mSelection->Collapse((mSelection->HasRange()
-                                ? mSelection->OffsetAndDataRef().StartOffset()
-                                : mCompositionStart) +
-                           aCommitString->Length());
+    if (mContentSelection.isSome()) {
+      mContentSelection->Collapse(
+          (mContentSelection->HasRange()
+               ? mContentSelection->OffsetAndDataRef().StartOffset()
+               : mCompositionStart) +
+          aCommitString->Length());
       MOZ_LOG(gIMELog, LogLevel::Info,
-              ("0x%p   DispatchCompositionCommitEvent(), mSelection=%s", this,
-               ToString(mSelection).c_str()));
+              ("0x%p   DispatchCompositionCommitEvent(), mContentSelection=%s",
+               this, ToString(mContentSelection).c_str()));
     }
     MOZ_ASSERT(!dispatcher);
   } else {
@@ -2430,12 +2432,12 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
         mCompositionStart + (aCommitString
                                  ? aCommitString->Length()
                                  : mDispatchedCompositionString.Length());
-    if (mSelection.isSome()) {
-      mSelection->Collapse(offsetToPutCaret);
+    if (mContentSelection.isSome()) {
+      mContentSelection->Collapse(offsetToPutCaret);
     } else {
       // TODO: We should guarantee that there should be at least fake selection
       //       for IME at here.  Then, we can keep the last writing mode.
-      mSelection.emplace(offsetToPutCaret, WritingMode());
+      mContentSelection.emplace(offsetToPutCaret, WritingMode());
     }
   }
 
@@ -2827,22 +2829,24 @@ bool IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
 }
 
 void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
-  MOZ_LOG(gIMELog, LogLevel::Info,
-          ("0x%p SetCursorPosition(aContext=0x%p), "
-           "mCompositionTargetRange={ mOffset=%u, mLength=%u }, mSelection=%s",
-           this, aContext, mCompositionTargetRange.mOffset,
-           mCompositionTargetRange.mLength, ToString(mSelection).c_str()));
+  MOZ_LOG(
+      gIMELog, LogLevel::Info,
+      ("0x%p SetCursorPosition(aContext=0x%p), "
+       "mCompositionTargetRange={ mOffset=%u, mLength=%u }, "
+       "mContentSelection=%s",
+       this, aContext, mCompositionTargetRange.mOffset,
+       mCompositionTargetRange.mLength, ToString(mContentSelection).c_str()));
 
   bool useCaret = false;
   if (!mCompositionTargetRange.IsValid()) {
-    if (mSelection.isNothing()) {
+    if (mContentSelection.isNothing()) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   SetCursorPosition(), FAILED, "
-               "mCompositionTargetRange and mSelection are invalid",
+               "mCompositionTargetRange and mContentSelection are invalid",
                this));
       return;
     }
-    if (!mSelection->HasRange()) {
+    if (!mContentSelection->HasRange()) {
       MOZ_LOG(gIMELog, LogLevel::Warning,
               ("0x%p   SetCursorPosition(), FAILED, "
                "mCompositionTargetRange is invalid and there is no selection",
@@ -2870,9 +2874,9 @@ void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
       true, useCaret ? eQueryCaretRect : eQueryTextRect, mLastFocusedWindow);
   if (useCaret) {
     queryCaretOrTextRectEvent.InitForQueryCaretRect(
-        mSelection->OffsetAndDataRef().StartOffset());
+        mContentSelection->OffsetAndDataRef().StartOffset());
   } else {
-    if (mSelection->WritingModeRef().IsVertical()) {
+    if (mContentSelection->WritingModeRef().IsVertical()) {
       // For preventing the candidate window to overlap the target
       // clause, we should set fake (typically, very tall) caret rect.
       uint32_t length =
@@ -2935,7 +2939,7 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
   // current selection.
   if (!EditorHasCompositionString()) {
     // Query cursor position & selection
-    if (NS_WARN_IF(!EnsureToCacheSelection())) {
+    if (NS_WARN_IF(!EnsureToCacheContentSelection())) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   GetCurrentParagraph(), FAILED, due to no "
                "valid selection information",
@@ -2943,9 +2947,9 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
       return NS_ERROR_FAILURE;
     }
 
-    if (mSelection.isSome() && mSelection->HasRange()) {
-      selOffset = mSelection->OffsetAndDataRef().StartOffset();
-      selLength = mSelection->OffsetAndDataRef().Length();
+    if (mContentSelection.isSome() && mContentSelection->HasRange()) {
+      selOffset = mContentSelection->OffsetAndDataRef().StartOffset();
+      selLength = mContentSelection->OffsetAndDataRef().Length();
     } else {
       // If there is no range, let's get all text instead...
       selOffset = 0u;
@@ -3055,20 +3059,20 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
       return NS_ERROR_FAILURE;
     }
   } else {
-    if (NS_WARN_IF(!EnsureToCacheSelection())) {
+    if (NS_WARN_IF(!EnsureToCacheContentSelection())) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   DeleteText(), FAILED, due to no valid selection "
                "information",
                this));
       return NS_ERROR_FAILURE;
     }
-    if (!mSelection->HasRange()) {
+    if (!mContentSelection->HasRange()) {
       MOZ_LOG(gIMELog, LogLevel::Debug,
               ("0x%p   DeleteText(), does nothing, due to no selection range",
                this));
       return NS_OK;
     }
-    selOffset = mSelection->OffsetAndDataRef().StartOffset();
+    selOffset = mContentSelection->OffsetAndDataRef().StartOffset();
   }
 
   // Get all text contents of the focused editor
@@ -3197,21 +3201,22 @@ void IMContextWrapper::InitEvent(WidgetGUIEvent& aEvent) {
   aEvent.mTime = PR_Now() / 1000;
 }
 
-bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
+bool IMContextWrapper::EnsureToCacheContentSelection(
+    nsAString* aSelectedString) {
   if (aSelectedString) {
     aSelectedString->Truncate();
   }
 
-  if (mSelection.isSome()) {
-    if (mSelection->HasRange() && aSelectedString) {
-      aSelectedString->Assign(mSelection->OffsetAndDataRef().DataRef());
+  if (mContentSelection.isSome()) {
+    if (mContentSelection->HasRange() && aSelectedString) {
+      aSelectedString->Assign(mContentSelection->OffsetAndDataRef().DataRef());
     }
     return true;
   }
 
   if (NS_WARN_IF(!mLastFocusedWindow)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
-            ("0x%p EnsureToCacheSelection(), FAILED, due to "
+            ("0x%p EnsureToCacheContentSelection(), FAILED, due to "
              "no focused window",
              this));
     return false;
@@ -3224,22 +3229,24 @@ bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
   mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
   if (NS_WARN_IF(querySelectedTextEvent.Failed())) {
     MOZ_LOG(gIMELog, LogLevel::Error,
-            ("0x%p EnsureToCacheSelection(), FAILED, due to "
+            ("0x%p EnsureToCacheContentSelection(), FAILED, due to "
              "failure of query selection event",
              this));
     return false;
   }
 
-  mSelection = Some(Selection(querySelectedTextEvent));
-  if (mSelection->HasRange()) {
-    if (!mSelection->OffsetAndDataRef().IsDataEmpty() && aSelectedString) {
+  mContentSelection = Some(ContentSelection(querySelectedTextEvent));
+  if (mContentSelection->HasRange()) {
+    if (!mContentSelection->OffsetAndDataRef().IsDataEmpty() &&
+        aSelectedString) {
       aSelectedString->Assign(querySelectedTextEvent.mReply->DataRef());
     }
   }
 
-  MOZ_LOG(gIMELog, LogLevel::Debug,
-          ("0x%p EnsureToCacheSelection(), Succeeded, mSelection=%s", this,
-           ToString(mSelection).c_str()));
+  MOZ_LOG(
+      gIMELog, LogLevel::Debug,
+      ("0x%p EnsureToCacheContentSelection(), Succeeded, mContentSelection=%s",
+       this, ToString(mContentSelection).c_str()));
   return true;
 }
 
