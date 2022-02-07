@@ -1,2 +1,3 @@
 == viewport-scrollbar-color-change.html viewport-scrollbar-color-change-ref.html
 == scrollbar-thin-overflow-change.html scrollbar-thin-overflow-change-ref.html
+test-pref(layout.css.scrollbar-width-thin.disabled,true) == scrollbar-width-thin.html scrollbar-width-auto.html

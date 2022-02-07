@@ -35,7 +35,7 @@ LayoutDeviceIntSize ScrollbarDrawingCocoa::GetMinimumWidgetSize(
       case StyleAppearance::ScrollbartrackVertical:
       case StyleAppearance::ScrollbartrackHorizontal: {
         ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-        auto scrollbarWidth = style->StyleUIReset()->mScrollbarWidth;
+        auto scrollbarWidth = style->StyleUIReset()->ScrollbarWidth();
         auto size = GetScrollbarSize(
             scrollbarWidth,
             LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars));
