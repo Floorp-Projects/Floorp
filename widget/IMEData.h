@@ -793,11 +793,25 @@ struct IMENotification final {
       AssignReason(aOther.mCausedByComposition, aOther.mCausedBySelectionEvent,
                    aOther.mOccurredDuringComposition);
     }
+    void Assign(const WidgetQueryContentEvent& aQuerySelectedTextEvent);
     void AssignReason(bool aCausedByComposition, bool aCausedBySelectionEvent,
                       bool aOccurredDuringComposition) {
       mCausedByComposition = aCausedByComposition;
       mCausedBySelectionEvent = aCausedBySelectionEvent;
       mOccurredDuringComposition = aOccurredDuringComposition;
+    }
+
+    bool EqualsRange(const SelectionChangeDataBase& aOther) const {
+      MOZ_ASSERT(IsValid());
+      return mOffset == aOther.mOffset && mString->Equals(*aOther.mString);
+    }
+    bool EqualsRangeAndDirection(const SelectionChangeDataBase& aOther) const {
+      return EqualsRange(aOther) && mReversed == aOther.mReversed;
+    }
+    bool EqualsRangeAndDirectionAndWritingMode(
+        const SelectionChangeDataBase& aOther) const {
+      return EqualsRangeAndDirection(aOther) &&
+             mWritingModeBits == aOther.mWritingModeBits;
     }
 
     OffsetAndData<uint32_t> ToUint32OffsetAndData() const {

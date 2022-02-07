@@ -4,9 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IMEData.h"
+
 #include <sstream>
 
 #include "gfxFontUtils.h"
+#include "TextEvents.h"
 
 #include "mozilla/WritingModes.h"
 
@@ -342,6 +344,17 @@ std::ostream& operator<<(std::ostream& aStream,
 /******************************************************************************
  * IMENotification::SelectionChangeDataBase
  ******************************************************************************/
+
+void IMENotification::SelectionChangeDataBase::Assign(
+    const WidgetQueryContentEvent& aQuerySelectedTextEvent) {
+  MOZ_ASSERT(aQuerySelectedTextEvent.mMessage == eQuerySelectedText);
+  MOZ_ASSERT(aQuerySelectedTextEvent.Succeeded());
+
+  mOffset = aQuerySelectedTextEvent.mReply->StartOffset();
+  *mString = aQuerySelectedTextEvent.mReply->DataRef();
+  SetWritingMode(aQuerySelectedTextEvent.mReply->WritingModeRef());
+  mReversed = aQuerySelectedTextEvent.mReply->mReversed;
+}
 
 void IMENotification::SelectionChangeDataBase::SetWritingMode(
     const WritingMode& aWritingMode) {
