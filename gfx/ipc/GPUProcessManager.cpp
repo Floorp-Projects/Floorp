@@ -145,13 +145,13 @@ void GPUProcessManager::OnXPCOMShutdown() {
 }
 
 void GPUProcessManager::OnPreferenceChange(const char16_t* aData) {
-  // A pref changed. If it is useful to do so, inform child processes.
-  if (!dom::ContentParent::ShouldSyncPreference(aData)) {
-    return;
-  }
-
   // We know prefs are ASCII here.
   NS_LossyConvertUTF16toASCII strData(aData);
+
+  // A pref changed. If it is useful to do so, inform child processes.
+  if (!dom::ContentParent::ShouldSyncPreference(strData.Data())) {
+    return;
+  }
 
   mozilla::dom::Pref pref(strData, /* isLocked */ false, Nothing(), Nothing());
   Preferences::GetPreference(&pref);

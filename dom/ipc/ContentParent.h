@@ -1449,7 +1449,7 @@ class ContentParent final
 
   void UpdateNetworkLinkType();
 
-  static bool ShouldSyncPreference(const char16_t* aData);
+  static bool ShouldSyncPreference(const char* aPref);
 
   already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
                                         const nsACString& aName,
