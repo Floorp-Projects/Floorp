@@ -310,7 +310,7 @@ class TestNrSocket : public NrSocketBase {
   };
 
   bool is_port_mapping_stale(const PortMapping& port_mapping) const;
-  bool allow_ingress(const nr_transport_addr& from,
+  bool allow_ingress(const nr_transport_addr& to, const nr_transport_addr& from,
                      PortMapping** port_mapping_used) const;
   void destroy_stale_port_mappings();
 
