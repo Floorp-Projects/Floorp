@@ -124,9 +124,15 @@ class OffsetAndData {
       OffsetAndDataFor aFor = OffsetAndDataFor::CompositionString)
       : mData(aData), mOffset(aStartOffset), mFor(aFor) {}
 
+  bool IsValid() const {
+    CheckedInt<IntType> offset(mOffset);
+    offset += mData.Length();
+    return offset.isValid();
+  }
   IntType StartOffset() const { return mOffset; }
   IntType Length() const {
-    CheckedInt<IntType> endOffset(mOffset + mData.Length());
+    CheckedInt<IntType> endOffset(CheckedInt<IntType>(mOffset) +
+                                  mData.Length());
     return endOffset.isValid() ? mData.Length() : MaxOffset() - mOffset;
   }
   IntType EndOffset() const { return mOffset + Length(); }
@@ -742,13 +748,15 @@ struct IMENotification final {
     nsString* mString;
 
     // Writing mode at the selection.
-    uint8_t mWritingMode;
+    uint8_t mWritingModeBits;
 
     bool mReversed;
     bool mCausedByComposition;
     bool mCausedBySelectionEvent;
     bool mOccurredDuringComposition;
 
+    // FYI: Cannot we make these methods inline because of an include hell of
+    //      RawServoAnimationValueMap
     void SetWritingMode(const WritingMode& aWritingMode);
     WritingMode GetWritingMode() const;
 
@@ -763,7 +771,7 @@ struct IMENotification final {
     void ClearSelectionData() {
       mOffset = UINT32_MAX;
       mString->Truncate();
-      mWritingMode = 0;
+      mWritingModeBits = 0;
       mReversed = false;
     }
     void Clear() {
@@ -776,7 +784,7 @@ struct IMENotification final {
     void Assign(const SelectionChangeDataBase& aOther) {
       mOffset = aOther.mOffset;
       *mString = aOther.String();
-      mWritingMode = aOther.mWritingMode;
+      mWritingModeBits = aOther.mWritingModeBits;
       mReversed = aOther.mReversed;
       AssignReason(aOther.mCausedByComposition, aOther.mCausedBySelectionEvent,
                    aOther.mOccurredDuringComposition);
@@ -786,6 +794,11 @@ struct IMENotification final {
       mCausedByComposition = aCausedByComposition;
       mCausedBySelectionEvent = aCausedBySelectionEvent;
       mOccurredDuringComposition = aOccurredDuringComposition;
+    }
+
+    OffsetAndData<uint32_t> ToUint32OffsetAndData() const {
+      return OffsetAndData<uint32_t>(mOffset, *mString,
+                                     OffsetAndDataFor::SelectedString);
     }
   };
 
