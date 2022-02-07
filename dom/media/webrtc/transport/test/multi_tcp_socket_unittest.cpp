@@ -44,7 +44,7 @@ class MultiTcpSocketTest : public MtransportTest {
     MtransportTest::SetUp();
 
     NrIceCtx::InitializeGlobals(NrIceCtx::GlobalConfig());
-    ice_ctx_ = NrIceCtx::Create("stun", NrIceCtx::Config());
+    ice_ctx_ = NrIceCtx::Create("stun");
 
     test_utils_->sts_target()->Dispatch(
         WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET),
