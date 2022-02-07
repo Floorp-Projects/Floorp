@@ -607,7 +607,6 @@ nsresult IMEContentObserver::HandleQueryContentEvent(
                                            mSelectionData.String(),
                                            OffsetAndDataFor::SelectedString);
     aEvent->mReply->mContentsRoot = mRootContent;
-    aEvent->mReply->mHasSelection = !mSelectionData.IsCollapsed();
     aEvent->mReply->mWritingMode = mSelectionData.GetWritingMode();
     aEvent->mReply->mReversed = mSelectionData.mReversed;
     MOZ_LOG(sIMECOLog, LogLevel::Debug,

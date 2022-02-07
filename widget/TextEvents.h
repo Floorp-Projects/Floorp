@@ -1173,8 +1173,6 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
     CopyableTArray<mozilla::LayoutDeviceIntRect> mRectArray;
     // true if selection is reversed (end < start)
     bool mReversed;
-    // true if the selection exists
-    bool mHasSelection;
     // true if DOM element under mouse belongs to widget
     bool mWidgetIsHit;
 
@@ -1184,7 +1182,6 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
           mContentsRoot(nullptr),
           mFocusedWidget(nullptr),
           mReversed(false),
-          mHasSelection(false),
           mWidgetIsHit(false) {}
 
     // Don't allow to copy/move because of `mEventMessage`.
@@ -1272,8 +1269,7 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
                   << ToString(aReply.mTentativeCaretOffset).c_str() << ", ";
         }
       }
-      aStream << "mHasSelection=" << (aReply.mHasSelection ? "true" : "false");
-      if (aReply.mHasSelection) {
+      if (aReply.mOffsetAndData.isSome() && aReply.mOffsetAndData->Length()) {
         if (aReply.mEventMessage == eQuerySelectedText) {
           aStream << ", mReversed=" << (aReply.mReversed ? "true" : "false");
         }
