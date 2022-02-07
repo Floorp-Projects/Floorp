@@ -195,6 +195,11 @@ NarrateControls.prototype = {
       let initial = !this._voicesInitialized;
       this._voicesInitialized = true;
 
+      // if language is null, re-assign it to "unknown-language"
+      if (language == null) {
+        language = "unknown-language";
+      }
+
       if (initial) {
         histogram.add(language, 0);
       }
