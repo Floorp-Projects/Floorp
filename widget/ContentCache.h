@@ -110,11 +110,21 @@ class ContentCache {
       return !mRect.IsEmpty();
     }
 
-    bool Collapsed() const { return mFocus == mAnchor; }
-    bool Reversed() const { return mFocus < mAnchor; }
-    uint32_t StartOffset() const { return Reversed() ? mFocus : mAnchor; }
-    uint32_t EndOffset() const { return Reversed() ? mAnchor : mFocus; }
+    bool IsCollapsed() const { return !mHasRange || mFocus == mAnchor; }
+    bool Reversed() const {
+      MOZ_ASSERT(mHasRange);
+      return mFocus < mAnchor;
+    }
+    uint32_t StartOffset() const {
+      MOZ_ASSERT(mHasRange);
+      return Reversed() ? mFocus : mAnchor;
+    }
+    uint32_t EndOffset() const {
+      MOZ_ASSERT(mHasRange);
+      return Reversed() ? mAnchor : mFocus;
+    }
     uint32_t Length() const {
+      MOZ_ASSERT(mHasRange);
       return Reversed() ? mAnchor - mFocus : mFocus - mAnchor;
     }
     LayoutDeviceIntRect StartCharRect() const {
@@ -130,12 +140,12 @@ class ContentCache {
                                     const Selection& aSelection) {
       aStream << "{ ";
       if (!aSelection.mHasRange) {
-        aStream << "HasRange()=false }";
-        return aStream;
+        aStream << "HasRange()=false";
+      } else {
+        aStream << "mAnchor=" << aSelection.mAnchor
+                << ", mFocus=" << aSelection.mFocus << ", mWritingMode="
+                << ToString(aSelection.mWritingMode).c_str();
       }
-      aStream << "mAnchor=" << aSelection.mAnchor
-              << ", mFocus=" << aSelection.mFocus
-              << ", mWritingMode=" << ToString(aSelection.mWritingMode).c_str();
       if (aSelection.HasRects()) {
         if (aSelection.mAnchor > 0) {
           aStream << ", mAnchorCharRects[ePrevCharRect]="
@@ -151,11 +161,15 @@ class ContentCache {
                 << aSelection.mFocusCharRects[ContentCache::eNextCharRect]
                 << ", mRect=" << aSelection.mRect;
       }
-      aStream << ", Reversed()=" << (aSelection.Reversed() ? "true" : "false")
-              << ", StartOffset()=" << aSelection.StartOffset()
-              << ", EndOffset()=" << aSelection.EndOffset()
-              << ", Collapsed()=" << (aSelection.Collapsed() ? "true" : "false")
-              << ", Length()=" << aSelection.Length() << " }";
+      if (aSelection.mHasRange) {
+        aStream << ", Reversed()=" << (aSelection.Reversed() ? "true" : "false")
+                << ", StartOffset()=" << aSelection.StartOffset()
+                << ", EndOffset()=" << aSelection.EndOffset()
+                << ", IsCollapsed()="
+                << (aSelection.IsCollapsed() ? "true" : "false")
+                << ", Length()=" << aSelection.Length();
+      }
+      aStream << " }";
       return aStream;
     }
 
@@ -166,11 +180,6 @@ class ContentCache {
     friend struct IPC::ParamTraits<Maybe<ContentCache::Selection>>;
   };
   Maybe<Selection> mSelection;
-
-  bool IsSelectionValid() const {
-    return mSelection.isSome() && mSelection->mHasRange && mText.isSome() &&
-           mSelection->EndOffset() <= mText->Length();
-  }
 
   // Stores first char rect because Yosemite's Japanese IME sometimes tries
   // to query it.  If there is no text, this is caret rect.
