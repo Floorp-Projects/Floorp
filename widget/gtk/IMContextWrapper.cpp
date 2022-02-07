@@ -1445,8 +1445,9 @@ void IMContextWrapper::Blur() {
 void IMContextWrapper::OnSelectionChange(
     nsWindow* aCaller, const IMENotification& aIMENotification) {
   const bool isSelectionRangeChanged =
-      mSelection.mOffset != aIMENotification.mSelectionChangeData.mOffset ||
-      mSelection.mString != *aIMENotification.mSelectionChangeData.mString;
+      mSelection.StartOffset() !=
+          aIMENotification.mSelectionChangeData.mOffset ||
+      mSelection.DataRef() != *aIMENotification.mSelectionChangeData.mString;
   mSelection.Assign(aIMENotification);
   const bool retrievedSurroundingSignalReceived =
       mRetrieveSurroundingSignalReceived;
@@ -1496,7 +1497,7 @@ void IMContextWrapper::OnSelectionChange(
                this));
     } else {
       // Modify the selection start offset with new offset.
-      mCompositionStart = mSelection.mOffset;
+      mCompositionStart = mSelection.StartOffset();
       // XXX We should modify mSelectedStringRemovedByComposition?
       // But how?
       MOZ_LOG(gIMELog, LogLevel::Debug,
@@ -2137,7 +2138,7 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
   //     even though we strongly hope it doesn't happen.
   //     Every composition event should have the start offset for the result
   //     because it may high cost if we query the offset every time.
-  mCompositionStart = mSelection.mOffset;
+  mCompositionStart = mSelection.StartOffset();
   mDispatchedCompositionString.Truncate();
 
   // If this composition is started by a key press, we need to dispatch
@@ -2251,7 +2252,7 @@ bool IMContextWrapper::DispatchCompositionChangeEvent(
     } else {
       // XXX We should assume, for now, any web applications don't change
       //     selection at handling this compositionchange event.
-      mCompositionStart = mSelection.mOffset;
+      mCompositionStart = mSelection.StartOffset();
     }
   }
 
@@ -2356,13 +2357,13 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
     // shouldn't reset IME because the trigger of causing this commit may be an
     // input for next composition and we shouldn't cancel it.
     if (mSelection.IsValid()) {
-      mSelection.CollapseTo(mSelection.mOffset + aCommitString->Length());
+      mSelection.CollapseTo(mSelection.StartOffset() + aCommitString->Length());
       MOZ_LOG(gIMELog, LogLevel::Info,
               ("0x%p   DispatchCompositionCommitEvent(), "
                "mSelection={ mOffset=%u, mString=\"%s\", mWritingMode=%s }",
-               this, mSelection.mOffset,
-               NS_ConvertUTF16toUTF8(mSelection.mString).get(),
-               ToString(mSelection.mWritingMode).c_str()));
+               this, mSelection.StartOffset(),
+               NS_ConvertUTF16toUTF8(mSelection.DataRef()).get(),
+               ToString(mSelection.WritingModeRef()).c_str()));
     }
     MOZ_ASSERT(!dispatcher);
   } else {
@@ -2805,8 +2806,8 @@ void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
            "mCompositionTargetRange={ mOffset=%u, mLength=%u }"
            "mSelection={ mOffset=%u, Length()=%u, mWritingMode=%s }",
            this, aContext, mCompositionTargetRange.mOffset,
-           mCompositionTargetRange.mLength, mSelection.mOffset,
-           mSelection.Length(), ToString(mSelection.mWritingMode).c_str()));
+           mCompositionTargetRange.mLength, mSelection.StartOffset(),
+           mSelection.Length(), ToString(mSelection.WritingModeRef()).c_str()));
 
   bool useCaret = false;
   if (!mCompositionTargetRange.IsValid()) {
@@ -2837,9 +2838,9 @@ void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
   WidgetQueryContentEvent queryCaretOrTextRectEvent(
       true, useCaret ? eQueryCaretRect : eQueryTextRect, mLastFocusedWindow);
   if (useCaret) {
-    queryCaretOrTextRectEvent.InitForQueryCaretRect(mSelection.mOffset);
+    queryCaretOrTextRectEvent.InitForQueryCaretRect(mSelection.StartOffset());
   } else {
-    if (mSelection.mWritingMode.IsVertical()) {
+    if (mSelection.WritingModeRef().IsVertical()) {
       // For preventing the candidate window to overlap the target
       // clause, we should set fake (typically, very tall) caret rect.
       uint32_t length =
@@ -2910,7 +2911,7 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
       return NS_ERROR_FAILURE;
     }
 
-    selOffset = mSelection.mOffset;
+    selOffset = mSelection.StartOffset();
     selLength = mSelection.Length();
   }
 
@@ -3023,7 +3024,7 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
                this));
       return NS_ERROR_FAILURE;
     }
-    selOffset = mSelection.mOffset;
+    selOffset = mSelection.StartOffset();
   }
 
   // Get all text contents of the focused editor
@@ -3159,7 +3160,7 @@ bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
 
   if (mSelection.IsValid()) {
     if (aSelectedString) {
-      *aSelectedString = mSelection.mString;
+      aSelectedString->Assign(mSelection.DataRef());
     }
     return true;
   }
@@ -3201,8 +3202,8 @@ bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
   MOZ_LOG(gIMELog, LogLevel::Debug,
           ("0x%p EnsureToCacheSelection(), Succeeded, mSelection="
            "{ mOffset=%u, Length()=%u, mWritingMode=%s }",
-           this, mSelection.mOffset, mSelection.Length(),
-           ToString(mSelection.mWritingMode).c_str()));
+           this, mSelection.StartOffset(), mSelection.Length(),
+           ToString(mSelection.WritingModeRef()).c_str()));
   return true;
 }
 
