@@ -290,6 +290,12 @@ bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
       mFilename.Assign(""_ns);
     }
 
+    // When fuzzing, we can also end up with the message to be null,
+    // so we should handle that case as well.
+    if (mMessage.IsVoid()) {
+      mMessage.Assign(""_ns);
+    }
+
     if (!ToJSString(aCx, mFilename, &filename) ||
         !ToJSString(aCx, mMessage, &message)) {
       return false;
