@@ -299,8 +299,12 @@ std::ostream& operator<<(std::ostream& aStream,
 std::ostream& operator<<(
     std::ostream& aStream,
     const IMENotification::SelectionChangeDataBase& aData) {
-  if (!aData.IsValid()) {
-    aStream << "{ IsValid()=false }";
+  if (!aData.IsInitialized()) {
+    aStream << "{ IsInitialized()=false }";
+    return aStream;
+  }
+  if (!aData.HasRange()) {
+    aStream << "{ HasRange()=false }";
     return aStream;
   }
   aStream << "{ mOffset=" << aData.mOffset;
@@ -350,10 +354,22 @@ void IMENotification::SelectionChangeDataBase::Assign(
   MOZ_ASSERT(aQuerySelectedTextEvent.mMessage == eQuerySelectedText);
   MOZ_ASSERT(aQuerySelectedTextEvent.Succeeded());
 
-  mOffset = aQuerySelectedTextEvent.mReply->StartOffset();
-  *mString = aQuerySelectedTextEvent.mReply->DataRef();
-  SetWritingMode(aQuerySelectedTextEvent.mReply->WritingModeRef());
-  mReversed = aQuerySelectedTextEvent.mReply->mReversed;
+  if (!(mIsInitialized = aQuerySelectedTextEvent.Succeeded())) {
+    ClearSelectionData();
+    return;
+  }
+  if ((mHasRange = aQuerySelectedTextEvent.FoundSelection())) {
+    mOffset = aQuerySelectedTextEvent.mReply->StartOffset();
+    *mString = aQuerySelectedTextEvent.mReply->DataRef();
+    mReversed = aQuerySelectedTextEvent.mReply->mReversed;
+    SetWritingMode(aQuerySelectedTextEvent.mReply->WritingModeRef());
+  } else {
+    mOffset = UINT32_MAX;
+    mString->Truncate();
+    mReversed = false;
+    // Let's keep the writing mode for avoiding temporarily changing the
+    // writing mode at no selection range.
+  }
 }
 
 void IMENotification::SelectionChangeDataBase::SetWritingMode(

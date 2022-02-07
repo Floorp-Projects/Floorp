@@ -69,6 +69,13 @@ interface nsITextInputProcessorNotification : nsISupports
   readonly attribute ACString type;
 
   /**
+   * This attribute has a vaild value when type is "notify-selection-change".
+   * This is true if selection has a range.  Otherwise, i.e., there is no
+   * range such as after calling Selection.removeAllRanges, this is false.
+   */
+  readonly attribute bool hasRange;
+
+  /**
    * Be careful, line breakers in the editor are treated as native line
    * breakers.  I.e., on Windows, a line breaker is "\r\n" (CRLF).  On the
    * others, it is "\n" (LF).  If you want TextInputProcessor to treat line
@@ -77,8 +84,8 @@ interface nsITextInputProcessorNotification : nsISupports
    */
 
   /**
-   * This attribute has a valid value when type is "notify-text-change" or
-   * "notify-selection-change".
+   * This attribute has a valid value when type is "notify-text-change", or
+   * is "notify-selection-change" and hasRange is true.
    * This is offset of the start of modified text range if type is
    * "notify-text-change".  Or offset of start of selection if type is
    * "notify-selection-change".
@@ -86,7 +93,8 @@ interface nsITextInputProcessorNotification : nsISupports
   readonly attribute unsigned long offset;
 
   /**
-   * This attribute has a valid value when type is "notify-selection-change".
+   * This attribute has a valid value when type is "notify-selection-change"
+   * and hasRange is true.
    * This is selected text.  I.e., the length is selected length and
    * it's empty if the selection is collapsed.
    */
@@ -94,18 +102,21 @@ interface nsITextInputProcessorNotification : nsISupports
 
   /**
    * This attribute has a valid value when type is "notify-selection-change".
-   * This is set to true when the selection is collapsed.  Otherwise, false.
+   * This is set to true when the selection is collapsed or no range.
+   * Otherwise, false.
    */
   readonly attribute boolean collapsed;
 
   /**
-   * This attribute has a valid value when type is "notify-selection-change".
+   * This attribute has a valid value when type is "notify-selection-change"
+   * and hasRange is true.
    * This is selected length.  I.e., if this is 0, collapsed is set to true.
    */
   readonly attribute uint32_t length;
 
   /**
-   * This attribute has a valid value when type is "notify-selection-change".
+   * This attribute has a valid value when type is "notify-selection-change"
+   * and hasRange is true.
    * When selection is created from latter point to former point, this is
    * set to true.  Otherwise, false.
    * I.e., if this is true, offset + length is the anchor of selection.
