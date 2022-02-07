@@ -645,7 +645,8 @@ uint64_t Navigator::HardwareConcurrency() {
     return 1;
   }
 
-  return rts->ClampedHardwareConcurrency();
+  return rts->ClampedHardwareConcurrency(
+      nsContentUtils::ShouldResistFingerprinting(mWindow->GetExtantDoc()));
 }
 
 namespace {
