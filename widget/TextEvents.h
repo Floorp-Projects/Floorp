@@ -1043,9 +1043,6 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
       return false;
     }
     switch (mMessage) {
-      case eQuerySelectedText:
-        return mReply->mOffsetAndData.isSome() ||
-               mInput.mSelectionType != SelectionType::eNormal;
       case eQueryTextContent:
       case eQueryTextRect:
       case eQueryCaretRect:
