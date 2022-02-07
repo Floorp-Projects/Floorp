@@ -597,18 +597,20 @@ nsresult IMEContentObserver::HandleQueryContentEvent(
   // value.  Note that don't update selection cache here since if you update
   // selection cache here, IMENotificationSender won't notify IME of selection
   // change because it looks like that the selection isn't actually changed.
-  bool isSelectionCacheAvailable = aEvent->mUseNativeLineBreak &&
-                                   mSelectionData.IsValid() &&
-                                   !mNeedsToNotifyIMEOfSelectionChange;
+  const bool isSelectionCacheAvailable = aEvent->mUseNativeLineBreak &&
+                                         mSelectionData.IsInitialized() &&
+                                         !mNeedsToNotifyIMEOfSelectionChange;
   if (isSelectionCacheAvailable && aEvent->mMessage == eQuerySelectedText &&
       aEvent->mInput.mSelectionType == SelectionType::eNormal) {
     aEvent->EmplaceReply();
-    aEvent->mReply->mOffsetAndData.emplace(mSelectionData.mOffset,
-                                           mSelectionData.String(),
-                                           OffsetAndDataFor::SelectedString);
+    if (mSelectionData.HasRange()) {
+      aEvent->mReply->mOffsetAndData.emplace(mSelectionData.mOffset,
+                                             mSelectionData.String(),
+                                             OffsetAndDataFor::SelectedString);
+      aEvent->mReply->mReversed = mSelectionData.mReversed;
+    }
     aEvent->mReply->mContentsRoot = mRootContent;
     aEvent->mReply->mWritingMode = mSelectionData.GetWritingMode();
-    aEvent->mReply->mReversed = mSelectionData.mReversed;
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
             ("0x%p IMEContentObserver::HandleQueryContentEvent(aEvent={ "
              "mMessage=%s, mReply=%s })",
@@ -639,8 +641,8 @@ nsresult IMEContentObserver::HandleQueryContentEvent(
       if (NS_WARN_IF(!aEvent->mInput.MakeOffsetAbsolute(compositionStart))) {
         return NS_ERROR_FAILURE;
       }
-    } else if (isSelectionCacheAvailable) {
-      uint32_t selectionStart = mSelectionData.mOffset;
+    } else if (isSelectionCacheAvailable && mSelectionData.HasRange()) {
+      const uint32_t selectionStart = mSelectionData.mOffset;
       if (NS_WARN_IF(!aEvent->mInput.MakeOffsetAbsolute(selectionStart))) {
         return NS_ERROR_FAILURE;
       }
@@ -1278,12 +1280,11 @@ bool IMEContentObserver::UpdateSelectionCache(bool aRequireFlush /* = true */) {
   querySelectedTextEvent.mNeedsToFlushLayout = aRequireFlush;
   ContentEventHandler handler(GetPresContext());
   handler.OnQuerySelectedText(&querySelectedTextEvent);
-  if (NS_WARN_IF(querySelectedTextEvent.DidNotFindSelection()) ||
+  if (NS_WARN_IF(querySelectedTextEvent.Failed()) ||
       NS_WARN_IF(querySelectedTextEvent.mReply->mContentsRoot !=
                  mRootContent)) {
     return false;
   }
-  MOZ_ASSERT(querySelectedTextEvent.mReply->mOffsetAndData.isSome());
 
   mFocusedWidget = querySelectedTextEvent.mReply->mFocusedWidget;
   mSelectionData.Assign(querySelectedTextEvent);
@@ -1296,7 +1297,7 @@ bool IMEContentObserver::UpdateSelectionCache(bool aRequireFlush /* = true */) {
            "mSelectionData=%s",
            this, ToString(mSelectionData).c_str()));
 
-  return mSelectionData.IsValid();
+  return true;
 }
 
 void IMEContentObserver::PostPositionChangeNotification() {
@@ -1784,7 +1785,7 @@ void IMEContentObserver::IMENotificationSender::SendSelectionChange() {
   // If the selection isn't changed actually, we shouldn't notify IME of
   // selection change.
   SelectionChangeData& newSelChangeData = observer->mSelectionData;
-  if (lastSelChangeData.IsValid() &&
+  if (lastSelChangeData.IsInitialized() &&
       lastSelChangeData.EqualsRangeAndDirectionAndWritingMode(
           newSelChangeData)) {
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
