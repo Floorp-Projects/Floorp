@@ -1819,10 +1819,6 @@ GfxInfoBase::GetIsHeadless(bool* aIsHeadless) {
 
 NS_IMETHODIMP
 GfxInfoBase::GetContentBackend(nsAString& aContentBackend) {
-  if (!gfxPlatform::Initialized()) {
-    return NS_ERROR_FAILURE;
-  }
-
   BackendType backend = gfxPlatform::GetPlatform()->GetDefaultContentBackend();
   nsString outStr;
 
@@ -1849,10 +1845,6 @@ GfxInfoBase::GetContentBackend(nsAString& aContentBackend) {
 
 NS_IMETHODIMP
 GfxInfoBase::GetAzureCanvasBackend(nsAString& aBackend) {
-  if (!gfxPlatform::Initialized()) {
-    return NS_ERROR_FAILURE;
-  }
-
   CopyASCIItoUTF16(mozilla::MakeStringSpan(
                        gfxPlatform::GetPlatform()->GetAzureCanvasBackend()),
                    aBackend);
@@ -1861,10 +1853,6 @@ GfxInfoBase::GetAzureCanvasBackend(nsAString& aBackend) {
 
 NS_IMETHODIMP
 GfxInfoBase::GetAzureContentBackend(nsAString& aBackend) {
-  if (!gfxPlatform::Initialized()) {
-    return NS_ERROR_FAILURE;
-  }
-
   CopyASCIItoUTF16(mozilla::MakeStringSpan(
                        gfxPlatform::GetPlatform()->GetAzureContentBackend()),
                    aBackend);
