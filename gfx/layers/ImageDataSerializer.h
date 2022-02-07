@@ -60,6 +60,9 @@ gfx::IntSize SizeFromBufferDescriptor(const BufferDescriptor& aDescriptor);
 
 gfx::IntRect RectFromBufferDescriptor(const BufferDescriptor& aDescriptor);
 
+Maybe<gfx::IntSize> YSizeFromBufferDescriptor(
+    const BufferDescriptor& aDescriptor);
+
 Maybe<gfx::IntSize> CbCrSizeFromBufferDescriptor(
     const BufferDescriptor& aDescriptor);
 
