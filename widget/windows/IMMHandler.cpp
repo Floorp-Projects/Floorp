@@ -468,7 +468,7 @@ void IMMHandler::OnFocusChange(bool aFocus, nsWindow* aWindow) {
     }
   }
   if (gIMMHandler) {
-    gIMMHandler->mSelection.Clear();
+    gIMMHandler->mSelection.ClearRange();
   }
   sHasFocus = aFocus;
 }
@@ -495,7 +495,7 @@ void IMMHandler::OnSelectionChange(nsWindow* aWindow,
   // MaybeAdjustCompositionFont() may create gIMMHandler.  So, check it
   // after a call of MaybeAdjustCompositionFont().
   if (gIMMHandler) {
-    gIMMHandler->mSelection.Update(aIMENotification);
+    gIMMHandler->mSelection.Update(aIMENotification.mSelectionChangeData);
   }
 }
 
@@ -934,16 +934,16 @@ void IMMHandler::HandleStartComposition(nsWindow* aWindow,
              "HandleStartComposition is called but mIsComposing is TRUE");
 
   Selection& selection = GetSelection();
-  if (!selection.EnsureValidSelection(aWindow)) {
+  if (!selection.EnsureSelectionRange(aWindow)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("  IMMHandler::HandleStartComposition, FAILED, due to "
-             "Selection::EnsureValidSelection() failure"));
+             "Selection::EnsureSelectionRange() failure"));
     return;
   }
 
   AdjustCompositionFont(aWindow, aContext, selection.WritingModeRef());
 
-  mCompositionStart = selection.StartOffset();
+  mCompositionStart = selection.OffsetAndDataRef().StartOffset();
   mCursorPosition = NO_IME_CARET;
 
   RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcherFor(aWindow);
@@ -1251,14 +1251,14 @@ bool IMMHandler::HandleReconvert(nsWindow* aWindow, LPARAM lParam,
   RECONVERTSTRING* pReconv = reinterpret_cast<RECONVERTSTRING*>(lParam);
 
   Selection& selection = GetSelection();
-  if (!selection.EnsureValidSelection(aWindow)) {
+  if (!selection.EnsureSelectionRange(aWindow)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("IMMHandler::HandleReconvert, FAILED, due to "
-             "Selection::EnsureValidSelection() failure"));
+             "Selection::EnsureSelectionRange() failure"));
     return false;
   }
 
-  uint32_t len = selection.Length();
+  const uint32_t len = selection.OffsetAndDataRef().Length();
   uint32_t needSize = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
 
   if (!pReconv) {
@@ -1294,7 +1294,8 @@ bool IMMHandler::HandleReconvert(nsWindow* aWindow, LPARAM lParam,
   pReconv->dwTargetStrOffset = 0;
 
   ::CopyMemory(reinterpret_cast<LPVOID>(lParam + sizeof(RECONVERTSTRING)),
-               selection.DataRef().get(), len * sizeof(WCHAR));
+               selection.OffsetAndDataRef().DataRef().get(),
+               len * sizeof(WCHAR));
 
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("IMMHandler::HandleReconvert, SUCCEEDED, pReconv=%s, result=%ld",
@@ -1402,14 +1403,15 @@ bool IMMHandler::HandleDocumentFeed(nsWindow* aWindow, LPARAM lParam,
   int32_t targetOffset, targetLength;
   if (!hasCompositionString) {
     Selection& selection = GetSelection();
-    if (!selection.EnsureValidSelection(aWindow)) {
+    if (!selection.EnsureSelectionRange(aWindow)) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("IMMHandler::HandleDocumentFeed, FAILED, due to "
-               "Selection::EnsureValidSelection() failure"));
+               "Selection::EnsureSelectionRange() failure"));
       return false;
     }
-    targetOffset = static_cast<int32_t>(selection.StartOffset());
-    targetLength = static_cast<int32_t>(selection.Length());
+    targetOffset =
+        static_cast<int32_t>(selection.OffsetAndDataRef().StartOffset());
+    targetLength = static_cast<int32_t>(selection.OffsetAndDataRef().Length());
   } else {
     targetOffset = int32_t(mCompositionStart);
     targetLength = int32_t(mCompositionString.Length());
@@ -1801,10 +1803,10 @@ bool IMMHandler::GetCharacterRectOfSelectedTextAt(
   LayoutDeviceIntPoint point(0, 0);
 
   Selection& selection = GetSelection();
-  if (!selection.EnsureValidSelection(aWindow)) {
+  if (!selection.EnsureSelectionRange(aWindow)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("IMMHandler::GetCharacterRectOfSelectedTextAt, FAILED, due to "
-             "Selection::EnsureValidSelection() failure"));
+             "Selection::EnsureSelectionRange() failure"));
     return false;
   }
 
@@ -1812,8 +1814,9 @@ bool IMMHandler::GetCharacterRectOfSelectedTextAt(
   // string, we should return false since such case must be a bug of the caller
   // or the active IME.  If it's an IME's bug, we need to set targetLength to
   // aOffset.
-  uint32_t targetLength =
-      mIsComposing ? mCompositionString.Length() : selection.Length();
+  const uint32_t targetLength = mIsComposing
+                                    ? mCompositionString.Length()
+                                    : selection.OffsetAndDataRef().Length();
   if (NS_WARN_IF(aOffset > targetLength)) {
     MOZ_LOG(
         gIMELog, LogLevel::Error,
@@ -1826,7 +1829,7 @@ bool IMMHandler::GetCharacterRectOfSelectedTextAt(
   // If there is caret, we might be able to use caret rect.
   uint32_t caretOffset = UINT32_MAX;
   // There is a caret only when the normal selection is collapsed.
-  if (selection.Collapsed()) {
+  if (selection.OffsetAndDataRef().IsDataEmpty()) {
     if (mIsComposing) {
       // If it's composing, mCursorPosition is the offset to caret in
       // the composition string.
@@ -2326,37 +2329,35 @@ bool IMMHandler::OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
  * IMMHandler::Selection
  ******************************************************************************/
 
-bool IMMHandler::Selection::IsValid() const {
-  if (!mIsValid || NS_WARN_IF(mOffset == UINT32_MAX)) {
-    return false;
+void IMMHandler::Selection::Update(
+    const IMENotification::SelectionChangeDataBase& aSelectionChangeData) {
+  if (!aSelectionChangeData.IsValid()) {
+    ClearRange();
   }
-  CheckedInt<uint32_t> endOffset = CheckedInt<uint32_t>(mOffset) + Length();
-  return endOffset.isValid();
-}
-
-bool IMMHandler::Selection::Update(const IMENotification& aIMENotification) {
-  mOffset = aIMENotification.mSelectionChangeData.mOffset;
-  mString = aIMENotification.mSelectionChangeData.String();
-  mWritingMode = aIMENotification.mSelectionChangeData.GetWritingMode();
-  mIsValid = true;
+  mOffsetAndData = Some(aSelectionChangeData.ToUint32OffsetAndData());
+  if (mOffsetAndData.isSome()) {
+    // Don't reset WritingMode if there is no selection because users must not
+    // want to update UI of IME temporarily since no selection range cause is
+    // created only by web apps, and they would restore selection later at the
+    // last point.
+    mWritingMode = aSelectionChangeData.GetWritingMode();
+  }
 
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("IMMHandler::Selection::Update, aIMENotification={ "
            "mSelectionChangeData={ "
-           "mOffset=%u, mLength=%u, GetWritingMode()=%s } }",
-           mOffset, mString.Length(), ToString(mWritingMode).c_str()));
+           "mOffsetAndData=%s, mWritingMode=%s } }",
+           ToString(mOffsetAndData).c_str(), ToString(mWritingMode).c_str()));
 
-  if (!IsValid()) {
+  if (!mOffsetAndData->IsValid()) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("  IMMHandler::Selection::Update, FAILED, due to invalid range"));
-    Clear();
-    return false;
+    ClearRange();
   }
-  return true;
 }
 
-bool IMMHandler::Selection::Init(nsWindow* aWindow) {
-  Clear();
+void IMMHandler::Selection::QuerySelection(nsWindow* aWindow) {
+  ClearRange();
 
   WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
                                                  aWindow);
@@ -2367,7 +2368,7 @@ bool IMMHandler::Selection::Init(nsWindow* aWindow) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("  IMMHandler::Selection::Init, FAILED, due to eQuerySelectedText "
              "failure"));
-    return false;
+    return;
   }
   // If the window is destroyed during querying selected text, we shouldn't
   // do anymore.
@@ -2375,33 +2376,29 @@ bool IMMHandler::Selection::Init(nsWindow* aWindow) {
     MOZ_LOG(
         gIMELog, LogLevel::Error,
         ("  IMMHandler::Selection::Init, FAILED, due to the widget destroyed"));
-    return false;
+    return;
   }
 
   MOZ_ASSERT(querySelectedTextEvent.mReply->mOffsetAndData.isSome());
-  mOffset = querySelectedTextEvent.mReply->StartOffset();
-  mString = querySelectedTextEvent.mReply->DataRef();
+  mOffsetAndData = querySelectedTextEvent.mReply->mOffsetAndData;
   mWritingMode = querySelectedTextEvent.mReply->WritingModeRef();
-  mIsValid = true;
 
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("IMMHandler::Selection::Init, querySelectedTextEvent={ mReply=%s }",
            ToString(querySelectedTextEvent.mReply).c_str()));
 
-  if (!IsValid()) {
+  if (mOffsetAndData.isSome() && !mOffsetAndData->IsValid()) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("  IMMHandler::Selection::Init, FAILED, due to invalid range"));
-    Clear();
-    return false;
+    ClearRange();
   }
-  return true;
 }
 
-bool IMMHandler::Selection::EnsureValidSelection(nsWindow* aWindow) {
-  if (IsValid()) {
-    return true;
+bool IMMHandler::Selection::EnsureSelectionRange(nsWindow* aWindow) {
+  if (!HasRange()) {
+    QuerySelection(aWindow);
   }
-  return Init(aWindow);
+  return HasRange();
 }
 
 }  // namespace widget
