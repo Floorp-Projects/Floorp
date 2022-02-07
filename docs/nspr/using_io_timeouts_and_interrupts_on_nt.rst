@@ -120,7 +120,7 @@ the needs of your programs, you can consider using the Win95 version of
 NSPR. The Win95 version runs without trouble on NT, but you would lose
 the better performance provided by NT fibers and asynchronous IO.
 
-| 
+|
 
 .. _Original_Document_Information:
 
