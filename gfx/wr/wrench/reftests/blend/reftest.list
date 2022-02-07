@@ -25,3 +25,5 @@ fuzzy(2,420) == multi-mix-blend-mode.yaml multi-mix-blend-mode-ref.yaml
 == mix-blend-invalid-backdrop.yaml mix-blend-invalid-backdrop-ref.yaml
 platform(linux) == mix-blend-complex-transform.yaml mix-blend-complex-transform.png
 == raster-roots-1.yaml raster-roots-1-ref.yaml
+== child-surface.yaml child-surface-ref.yaml
+== blend-overflow.yaml blend-overflow-ref.yaml
