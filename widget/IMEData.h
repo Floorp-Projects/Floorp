@@ -23,6 +23,9 @@ namespace mozilla {
 class ContentSelection;
 class WritingMode;
 
+template <class T>
+class Maybe;
+
 // Helper class to logging string which may contain various Unicode characters
 // and/or may be too long string for logging.
 class MOZ_STACK_CLASS PrintStringDetail : public nsAutoCString {
@@ -33,6 +36,9 @@ class MOZ_STACK_CLASS PrintStringDetail : public nsAutoCString {
 
   PrintStringDetail() = delete;
   explicit PrintStringDetail(const nsAString& aString,
+                             uint32_t aMaxLength = UINT32_MAX);
+  template <typename StringType>
+  explicit PrintStringDetail(const Maybe<StringType>& aMaybeString,
                              uint32_t aMaxLength = UINT32_MAX);
 
  private:
