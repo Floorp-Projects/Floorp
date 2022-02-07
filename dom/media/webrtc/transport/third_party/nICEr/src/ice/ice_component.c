@@ -226,9 +226,9 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         if(suppress)
           continue;
       }
-      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): host address %s",ctx->label,addrs[i].addr.as_string);
+      r_log(LOG_ICE,LOG_DEBUG,"ICE-STREAM(%s): host address %s",component->stream->label,addrs[i].addr.as_string);
       if((r=nr_socket_factory_create_socket(ctx->socket_factory,&addrs[i].addr,&sock))){
-        r_log(LOG_ICE,LOG_WARNING,"ICE(%s): couldn't create socket for address %s",ctx->label,addrs[i].addr.as_string);
+        r_log(LOG_ICE,LOG_WARNING,"ICE-STREAM(%s): couldn't create socket for address %s",component->stream->label,addrs[i].addr.as_string);
         continue;
       }
 
@@ -240,7 +240,7 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
        * that unwinding it all becomes impractical. */
       STAILQ_INSERT_TAIL(&component->sockets,isock,entry);
 
-      if (!(ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY)) {
+      if (!(component->stream->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY)) {
         /* Create one host candidate */
         if(r=nr_ice_candidate_create(ctx,component,isock,sock,HOST,0,0,
           component->component_id,&cand))
@@ -251,22 +251,22 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         cand=0;
 
         /* And a srvrflx candidate for each STUN server */
-        for(j=0;j<ctx->stun_server_ct;j++){
-          r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Checking STUN server %s %s", ctx->label, ctx->stun_servers[j].addr.fqdn, ctx->stun_servers[j].addr.as_string);
+        for(j=0;j<component->stream->stun_server_ct;j++){
+          r_log(LOG_ICE,LOG_DEBUG,"ICE-STREAM(%s): Checking STUN server %s %s", component->stream->label, component->stream->stun_servers[j].addr.fqdn, component->stream->stun_servers[j].addr.as_string);
           /* Skip non-UDP */
-          if (ctx->stun_servers[j].addr.protocol != IPPROTO_UDP) continue;
+          if (component->stream->stun_servers[j].addr.protocol != IPPROTO_UDP) continue;
 
           if (nr_transport_addr_check_compatibility(
-                  &addrs[i].addr, &ctx->stun_servers[j].addr)) {
-            r_log(LOG_ICE,LOG_INFO,"ICE(%s): Skipping STUN server because of address type mis-match",ctx->label);
+                  &addrs[i].addr, &component->stream->stun_servers[j].addr)) {
+            r_log(LOG_ICE,LOG_INFO,"ICE-STREAM(%s): Skipping STUN server because of address type mis-match",component->stream->label);
             continue;
           }
 
           /* Ensure id is set (nr_ice_ctx_set_stun_servers does not) */
-          ctx->stun_servers[j].id = j;
+          component->stream->stun_servers[j].id = j;
           if(r=nr_ice_candidate_create(ctx,component,
             isock,sock,SERVER_REFLEXIVE,0,
-            &ctx->stun_servers[j],component->component_id,&cand))
+            &component->stream->stun_servers[j],component->component_id,&cand))
             ABORT(r);
           TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
           component->candidate_ct++;
@@ -274,39 +274,39 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         }
       }
       else{
-        r_log(LOG_ICE,LOG_WARNING,"ICE(%s): relay only option results in no host candidate for %s",ctx->label,addrs[i].addr.as_string);
+        r_log(LOG_ICE,LOG_WARNING,"ICE-STREAM(%s): relay only option results in no host candidate for %s",component->stream->label,addrs[i].addr.as_string);
       }
 
 #ifdef USE_TURN
-      if ((ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) &&
-          (ctx->turn_server_ct == 0)) {
-        r_log(LOG_ICE,LOG_ERR,"ICE(%s): relay only option is set without any TURN server configured",ctx->label);
+      if ((component->stream->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) &&
+          (component->stream->turn_server_ct == 0)) {
+        r_log(LOG_ICE,LOG_ERR,"ICE-STREAM(%s): relay only option is set without any TURN server configured",component->stream->label);
       }
       /* And both a srvrflx and relayed candidate for each TURN server (unless
          we're in relay-only mode, in which case just the relayed one) */
-      for(j=0;j<ctx->turn_server_ct;j++){
+      for(j=0;j<component->stream->turn_server_ct;j++){
         nr_socket *turn_sock;
         nr_ice_candidate *srvflx_cand=0;
 
-        r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Checking TURN server %s %s", ctx->label, ctx->turn_servers[j].turn_server.addr.fqdn, ctx->turn_servers[j].turn_server.addr.as_string);
+        r_log(LOG_ICE,LOG_DEBUG,"ICE-STREAM(%s): Checking TURN server %s %s", component->stream->label, component->stream->turn_servers[j].turn_server.addr.fqdn, component->stream->turn_servers[j].turn_server.addr.as_string);
 
         /* Skip non-UDP */
-        if (ctx->turn_servers[j].turn_server.addr.protocol != IPPROTO_UDP)
+        if (component->stream->turn_servers[j].turn_server.addr.protocol != IPPROTO_UDP)
           continue;
 
         if (nr_transport_addr_check_compatibility(
-                &addrs[i].addr, &ctx->turn_servers[j].turn_server.addr)) {
-          r_log(LOG_ICE,LOG_INFO,"ICE(%s): Skipping TURN server because of address type mis-match",ctx->label);
+                &addrs[i].addr, &component->stream->turn_servers[j].turn_server.addr)) {
+          r_log(LOG_ICE,LOG_INFO,"ICE-STREAM(%s): Skipping TURN server because of address type mis-match",component->stream->label);
           continue;
         }
 
-        if (!(ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY)) {
+        if (!(component->stream->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY)) {
           /* Ensure id is set with a unique value */
-          ctx->turn_servers[j].turn_server.id = j + ctx->stun_server_ct;
+          component->stream->turn_servers[j].turn_server.id = j + component->stream->stun_server_ct;
           /* srvrflx */
           if(r=nr_ice_candidate_create(ctx,component,
             isock,sock,SERVER_REFLEXIVE,0,
-            &ctx->turn_servers[j].turn_server,component->component_id,&cand))
+            &component->stream->turn_servers[j].turn_server,component->component_id,&cand))
             ABORT(r);
           cand->state=NR_ICE_CAND_STATE_INITIALIZING; /* Don't start */
           cand->done_cb=nr_ice_gather_finished_cb;
@@ -322,13 +322,13 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           ABORT(r);
         if(r=nr_ice_candidate_create(ctx,component,
           isock,turn_sock,RELAYED,0,
-          &ctx->turn_servers[j].turn_server,component->component_id,&cand))
+          &component->stream->turn_servers[j].turn_server,component->component_id,&cand))
            ABORT(r);
         if (srvflx_cand) {
           cand->u.relayed.srvflx_candidate=srvflx_cand;
           srvflx_cand->u.srvrflx.relay_candidate=cand;
         }
-        cand->u.relayed.server=&ctx->turn_servers[j];
+        cand->u.relayed.server=&component->stream->turn_servers[j];
         TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
         component->candidate_ct++;
 
@@ -389,7 +389,7 @@ static int nr_ice_component_create_tcp_host_candidate(struct nr_ice_ctx_ *ctx,
 
       /* It would be better to stop trying if there is error other than
          port already used, but it'd require significant work to support this. */
-      r=nr_socket_multi_tcp_create(ctx,&addr,tcp_type,so_sock_ct,NR_STUN_MAX_MESSAGE_SIZE,&nrsock);
+      r=nr_socket_multi_tcp_create(ctx,component,&addr,tcp_type,so_sock_ct,NR_STUN_MAX_MESSAGE_SIZE,&nrsock);
 
     } while(r);
 
@@ -453,9 +453,9 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
       if (r != R_NOT_FOUND)
         ABORT(r);
     }
-    if ((ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) ||
-        (ctx->flags & NR_ICE_CTX_FLAGS_ONLY_PROXY)) {
-      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): relay/proxy only option results in ICE TCP being disabled",ctx->label);
+    if ((component->stream->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) ||
+        (component->stream->flags & NR_ICE_CTX_FLAGS_ONLY_PROXY)) {
+      r_log(LOG_ICE,LOG_WARNING,"ICE-STREAM(%s): relay/proxy only option results in ICE TCP being disabled",component->stream->label);
       ice_tcp_disabled = 1;
     }
 
@@ -476,31 +476,31 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         /* passive host candidate */
         if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
           TCP_TYPE_PASSIVE, backlog, 0, lufrag, pwd, &isock_psv))) {
-          r_log(LOG_ICE,LOG_WARNING,"ICE(%s): failed to create passive TCP host candidate: %d",ctx->label,r);
+          r_log(LOG_ICE,LOG_WARNING,"ICE-STREAM(%s): failed to create passive TCP host candidate: %d",component->stream->label,r);
         }
 
         /* active host candidate */
         if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
           TCP_TYPE_ACTIVE, 0, 0, lufrag, pwd, NULL))) {
-          r_log(LOG_ICE,LOG_WARNING,"ICE(%s): failed to create active TCP host candidate: %d",ctx->label,r);
+          r_log(LOG_ICE,LOG_WARNING,"ICE-STREAM(%s): failed to create active TCP host candidate: %d",component->stream->label,r);
         }
 
         /* simultaneous-open host candidate */
         if (so_sock_ct) {
           if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
             TCP_TYPE_SO, 0, so_sock_ct, lufrag, pwd, &isock_so))) {
-            r_log(LOG_ICE,LOG_WARNING,"ICE(%s): failed to create simultanous open TCP host candidate: %d",ctx->label,r);
+            r_log(LOG_ICE,LOG_WARNING,"ICE-STREAM(%s): failed to create simultanous open TCP host candidate: %d",component->stream->label,r);
           }
         }
 
         /* And srvrflx candidates for each STUN server */
-        for(j=0;j<ctx->stun_server_ct;j++){
-          if (ctx->stun_servers[j].addr.protocol != IPPROTO_TCP) continue;
+        for(j=0;j<component->stream->stun_server_ct;j++){
+          if (component->stream->stun_servers[j].addr.protocol != IPPROTO_TCP) continue;
 
           if (isock_psv) {
             if(r=nr_ice_candidate_create(ctx,component,
               isock_psv,isock_psv->sock,SERVER_REFLEXIVE,TCP_TYPE_PASSIVE,
-              &ctx->stun_servers[j],component->component_id,&cand))
+              &component->stream->stun_servers[j],component->component_id,&cand))
               ABORT(r);
             TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
             component->candidate_ct++;
@@ -510,7 +510,7 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           if (isock_so) {
             if(r=nr_ice_candidate_create(ctx,component,
               isock_so,isock_so->sock,SERVER_REFLEXIVE,TCP_TYPE_SO,
-              &ctx->stun_servers[j],component->component_id,&cand))
+              &component->stream->stun_servers[j],component->component_id,&cand))
               ABORT(r);
             TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
             component->candidate_ct++;
@@ -521,17 +521,17 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
 
 #ifdef USE_TURN
       /* Create a new relayed candidate for each addr/TURN server pair */
-      for(j=0;j<ctx->turn_server_ct;j++){
+      for(j=0;j<component->stream->turn_server_ct;j++){
         nr_transport_addr addr;
         nr_socket *local_sock;
         nr_socket *buffered_sock;
         nr_socket *turn_sock;
         nr_ice_socket *turn_isock;
 
-        r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Checking TURN server %s %s", ctx->label, ctx->turn_servers[j].turn_server.addr.fqdn, ctx->turn_servers[j].turn_server.addr.as_string);
+        r_log(LOG_ICE,LOG_DEBUG,"ICE-STREAM(%s): Checking TURN server %s %s", component->stream->label, component->stream->turn_servers[j].turn_server.addr.fqdn, component->stream->turn_servers[j].turn_server.addr.as_string);
 
         /* Skip non-TCP */
-        if (ctx->turn_servers[j].turn_server.addr.protocol != IPPROTO_TCP)
+        if (component->stream->turn_servers[j].turn_server.addr.protocol != IPPROTO_TCP)
           continue;
 
         /* Create relay candidate */
@@ -540,8 +540,8 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         addr.protocol = IPPROTO_TCP;
 
         if (nr_transport_addr_check_compatibility(
-                &addr, &ctx->turn_servers[j].turn_server.addr)) {
-          r_log(LOG_ICE,LOG_INFO,"ICE(%s): Skipping TURN server because of address type mis-match",ctx->label);
+                &addr, &component->stream->turn_servers[j].turn_server.addr)) {
+          r_log(LOG_ICE,LOG_INFO,"ICE-STREAM(%s): Skipping TURN server because of address type mis-match",component->stream->label);
           continue;
         }
 
@@ -550,7 +550,7 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           if (isock_psv) {
             if(r=nr_ice_candidate_create(ctx,component,
               isock_psv,isock_psv->sock,SERVER_REFLEXIVE,TCP_TYPE_PASSIVE,
-              &ctx->turn_servers[j].turn_server,component->component_id,&cand))
+              &component->stream->turn_servers[j].turn_server,component->component_id,&cand))
               ABORT(r);
             TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
             component->candidate_ct++;
@@ -560,7 +560,7 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           if (isock_so) {
             if(r=nr_ice_candidate_create(ctx,component,
               isock_so,isock_so->sock,SERVER_REFLEXIVE,TCP_TYPE_SO,
-              &ctx->turn_servers[j].turn_server,component->component_id,&cand))
+              &component->stream->turn_servers[j].turn_server,component->component_id,&cand))
               ABORT(r);
             TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
             component->candidate_ct++;
@@ -568,22 +568,22 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           }
         }
 
-        if (ctx->turn_servers[j].turn_server.addr.fqdn[0] != 0) {
+        if (component->stream->turn_servers[j].turn_server.addr.fqdn[0] != 0) {
           /* If we're going to use TLS, make sure that's recorded */
-          addr.tls = ctx->turn_servers[j].turn_server.addr.tls;
+          addr.tls = component->stream->turn_servers[j].turn_server.addr.tls;
         }
 
         if ((r=nr_transport_addr_fmt_addr_string(&addr)))
           ABORT(r);
 
         r_log(LOG_ICE, LOG_DEBUG,
-              "ICE(%s): Creating socket for address %s (turn server %s)",
-              ctx->label, addr.as_string,
-              ctx->turn_servers[j].turn_server.addr);
+              "ICE-STREAM(%s): Creating socket for address %s (turn server %s)",
+              component->stream->label, addr.as_string,
+              component->stream->turn_servers[j].turn_server.addr);
 
         /* Create a local socket */
         if((r=nr_socket_factory_create_socket(ctx->socket_factory,&addr,&local_sock))){
-          r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create socket for address %s",ctx->label,addr.as_string);
+          r_log(LOG_ICE,LOG_DEBUG,"ICE-STREAM(%s): couldn't create socket for address %s",component->stream->label,addr.as_string);
           continue;
         }
 
@@ -609,10 +609,10 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         /* Attach ourselves to it */
         if(r=nr_ice_candidate_create(ctx,component,
           turn_isock,turn_sock,RELAYED,TCP_TYPE_NONE,
-          &ctx->turn_servers[j].turn_server,component->component_id,&cand))
+          &component->stream->turn_servers[j].turn_server,component->component_id,&cand))
           ABORT(r);
         cand->u.relayed.srvflx_candidate=NULL;
-        cand->u.relayed.server=&ctx->turn_servers[j];
+        cand->u.relayed.server=&component->stream->turn_servers[j];
         TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
         component->candidate_ct++;
         cand=0;
