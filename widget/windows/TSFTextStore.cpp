@@ -2246,7 +2246,7 @@ void TSFTextStore::DidLockGranted() {
 
   // If the widget has gone, we don't need to notify anything.
   if (mDestroyed || !mWidget || mWidget->Destroyed()) {
-    mPendingSelectionChangeData.Clear();
+    mPendingSelectionChangeData.reset();
     mHasReturnedNoLayoutError = false;
   }
 }
@@ -2269,7 +2269,7 @@ void TSFTextStore::FlushPendingActions() {
     // composition with a document lock.  In such case, TSFTextStore needs to
     // behave as expected by TIP.
     mPendingActions.Clear();
-    mPendingSelectionChangeData.Clear();
+    mPendingSelectionChangeData.reset();
     mHasReturnedNoLayoutError = false;
     return;
   }
@@ -2579,7 +2579,7 @@ void TSFTextStore::MaybeFlushPendingNotifications() {
                this));
       NotifyTSFOfTextChange();
     }
-    if (mPendingSelectionChangeData.IsValid()) {
+    if (mPendingSelectionChangeData.isSome()) {
       MOZ_LOG(gIMELog, LogLevel::Info,
               ("0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
                "calling TSFTextStore::NotifyTSFOfSelectionChange()...",
@@ -2878,11 +2878,11 @@ bool TSFTextStore::CanAccessActualContentDirectly() const {
 
   // If the cached selection isn't changed, cached content and actual content
   // should be same.
-  if (!mPendingSelectionChangeData.IsValid()) {
+  if (mPendingSelectionChangeData.isNothing()) {
     return true;
   }
 
-  return mSelectionForTSF->EqualsExceptDirection(mPendingSelectionChangeData);
+  return mSelectionForTSF->EqualsExceptDirection(*mPendingSelectionChangeData);
 }
 
 bool TSFTextStore::GetCurrentText(nsAString& aTextContent) {
@@ -6044,7 +6044,7 @@ nsresult TSFTextStore::OnSelectionChangeInternal(
   // Note that this is necessary to update mSelectionForTSF.  Therefore, even if
   // neither TSF nor TIP wants selection change notifications, we need to
   // store the selection information.
-  mPendingSelectionChangeData.Assign(selectionChangeData);
+  mPendingSelectionChangeData = Some(selectionChangeData);
 
   // Flush remaining pending notifications here if it's possible.
   MaybeFlushPendingNotifications();
@@ -6065,14 +6065,14 @@ void TSFTextStore::NotifyTSFOfSelectionChange() {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(!IsReadLocked());
   MOZ_ASSERT(mComposition.isNothing());
-  MOZ_ASSERT(mPendingSelectionChangeData.IsValid());
+  MOZ_ASSERT(mPendingSelectionChangeData.isSome());
 
   // If selection range isn't actually changed, we don't need to notify TSF
   // of this selection change.
   if (mSelectionForTSF.isNothing()) {
-    mSelectionForTSF.emplace(mPendingSelectionChangeData);
-  } else if (!mSelectionForTSF->SetSelection(mPendingSelectionChangeData)) {
-    mPendingSelectionChangeData.Clear();
+    mSelectionForTSF.emplace(*mPendingSelectionChangeData);
+  } else if (!mSelectionForTSF->SetSelection(*mPendingSelectionChangeData)) {
+    mPendingSelectionChangeData.reset();
     MOZ_LOG(gIMELog, LogLevel::Debug,
             ("0x%p   TSFTextStore::NotifyTSFOfSelectionChange(), "
              "selection isn't actually changed.",
@@ -6080,7 +6080,7 @@ void TSFTextStore::NotifyTSFOfSelectionChange() {
     return;
   }
 
-  mPendingSelectionChangeData.Clear();
+  mPendingSelectionChangeData.reset();
 
   if (!mSink || !(mSinkMask & TS_AS_SEL_CHANGE)) {
     return;
