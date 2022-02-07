@@ -956,9 +956,9 @@ void IMMHandler::HandleStartComposition(nsWindow* aWindow,
     return;
   }
 
-  AdjustCompositionFont(aWindow, aContext, selection.mWritingMode);
+  AdjustCompositionFont(aWindow, aContext, selection.WritingModeRef());
 
-  mCompositionStart = selection.mOffset;
+  mCompositionStart = selection.StartOffset();
   mCursorPosition = NO_IME_CARET;
 
   RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcherFor(aWindow);
@@ -1309,7 +1309,7 @@ bool IMMHandler::HandleReconvert(nsWindow* aWindow, LPARAM lParam,
   pReconv->dwTargetStrOffset = 0;
 
   ::CopyMemory(reinterpret_cast<LPVOID>(lParam + sizeof(RECONVERTSTRING)),
-               selection.mString.get(), len * sizeof(WCHAR));
+               selection.DataRef().get(), len * sizeof(WCHAR));
 
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("IMMHandler::HandleReconvert, SUCCEEDED, pReconv=%s, result=%ld",
@@ -1423,8 +1423,8 @@ bool IMMHandler::HandleDocumentFeed(nsWindow* aWindow, LPARAM lParam,
                "Selection::EnsureValidSelection() failure"));
       return false;
     }
-    targetOffset = int32_t(selection.mOffset);
-    targetLength = int32_t(selection.Length());
+    targetOffset = static_cast<int32_t>(selection.StartOffset());
+    targetLength = static_cast<int32_t>(selection.Length());
   } else {
     targetOffset = int32_t(mCompositionStart);
     targetLength = int32_t(mCompositionString.Length());
