@@ -115,7 +115,7 @@ static int nr_ice_candidate_format_stun_label(char *label, size_t size, nr_ice_c
 
 int nr_ice_candidate_create(nr_ice_ctx *ctx,nr_ice_component *comp,nr_ice_socket *isock, nr_socket *osock, nr_ice_candidate_type ctype, nr_socket_tcp_type tcp_type, nr_ice_stun_server *stun_server, UCHAR component_id, nr_ice_candidate **candp)
   {
-    assert(!(ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) || ctype == RELAYED);
+    assert(!(comp->stream->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) || ctype == RELAYED);
     nr_ice_candidate *cand=0;
     nr_ice_candidate *tmp=0;
     int r,_status;
@@ -997,7 +997,7 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
     len=strlen(attr); attr+=len; maxlen-=len;
 
     /* raddr, rport */
-    raddr = (cand->stream->ctx->flags &
+    raddr = (cand->stream->flags &
              (NR_ICE_CTX_FLAGS_RELAY_ONLY |
               NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES)) ?
       &cand->addr : &cand->base;
