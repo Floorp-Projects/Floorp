@@ -14588,6 +14588,11 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
     return;
   }
 
+  nsIFrame* rootFrame = shell->GetRootFrame();
+  if (!rootFrame) {
+    return;
+  }
+
   auto& wireframe = aWireframe.SetValue();
   nsStyleUtil::GetSerializedColorValue(shell->GetCanvasBackground(),
                                        wireframe.mCanvasBackground.Construct());
@@ -14598,8 +14603,7 @@ void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
   options.mBits += FrameForPointOption::OnlyVisible;
 
   AutoTArray<nsIFrame*, 32> frames;
-  const RelativeTo relativeTo{shell->GetRootFrame(),
-                              mozilla::ViewportType::Layout};
+  const RelativeTo relativeTo{rootFrame, mozilla::ViewportType::Layout};
   nsLayoutUtils::GetFramesForArea(relativeTo, pc->GetVisibleArea(), frames,
                                   options);
 
