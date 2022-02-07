@@ -201,6 +201,8 @@ _Components and libraries to interact with backend services._
 
 * 🔴 [**Pocket**](components/service/pocket/README.md) - A library for communicating with the Pocket API.
 
+* 🔴 [**Contile**](components/service/contile/README.md) - A library for communicating with the Contile services API.
+
 ## Support
 
 _Supporting components with generic helper code._
