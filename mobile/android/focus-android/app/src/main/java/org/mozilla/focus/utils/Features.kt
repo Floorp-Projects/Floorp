@@ -9,7 +9,7 @@ package org.mozilla.focus.utils
  */
 object Features {
     const val SEARCH_TERMS_OR_URL: Boolean = true
-
+    val SHOULD_SHOW_CFR_FOR_SHIELD_TOOLBAR_ICON = AppConstants.isDevOrNightlyBuild
     /**
      * HTTPS-Only mode.
      * https://support.mozilla.org/en-US/kb/https-only-prefs-focus

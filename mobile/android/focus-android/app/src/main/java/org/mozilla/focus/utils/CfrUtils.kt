@@ -42,9 +42,10 @@ class CfrUtils {
             val shieldToolbarIcon = rootView.findViewById<View>(
                 R.id.mozac_browser_toolbar_tracking_protection_indicator
             )
-            if (shieldToolbarIcon != null &&
-                context.settings.shouldShowCfrForShieldToolbarIcon &&
-                isContentSecure
+            if (shouldShowCFRForShieldToolbarIcon(
+                    shieldToolbarIcon = shieldToolbarIcon, context = context,
+                    isContentSecure = isContentSecure
+                )
             ) {
 
                 val toolbarShieldIconCfrBinding = ToolbarShieldIconCfrBinding.inflate(
@@ -77,5 +78,14 @@ class CfrUtils {
             }
             return null
         }
+
+        private fun shouldShowCFRForShieldToolbarIcon(
+            shieldToolbarIcon: View?,
+            context: Context,
+            isContentSecure: Boolean
+        ): Boolean =
+            Features.SHOULD_SHOW_CFR_FOR_SHIELD_TOOLBAR_ICON && shieldToolbarIcon != null &&
+                context.settings.shouldShowCfrForShieldToolbarIcon &&
+                isContentSecure
     }
 }
