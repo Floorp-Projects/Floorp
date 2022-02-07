@@ -381,11 +381,8 @@ class IMContextWrapper final : public TextEventDispatcherListener {
   // IM which user selected.
   IMContextID mIMContextID;
 
-  struct Selection final {
-    nsString mString;
-    uint32_t mOffset;
-    WritingMode mWritingMode;
-
+  class Selection final {
+   public:
     Selection() : mOffset(UINT32_MAX) {}
 
     void Clear() {
@@ -403,6 +400,7 @@ class IMContextWrapper final : public TextEventDispatcherListener {
 
     bool IsValid() const { return mOffset != UINT32_MAX; }
     bool Collapsed() const { return mString.IsEmpty(); }
+    uint32_t StartOffset() const { return mOffset; }
     uint32_t Length() const { return mString.Length(); }
     uint32_t EndOffset() const {
       if (NS_WARN_IF(!IsValid())) {
@@ -415,7 +413,15 @@ class IMContextWrapper final : public TextEventDispatcherListener {
       }
       return endOffset.value();
     }
-  } mSelection;
+    const nsString& DataRef() const { return mString; }
+    const WritingMode& WritingModeRef() const { return mWritingMode; }
+
+   private:
+    nsString mString;
+    uint32_t mOffset;
+    WritingMode mWritingMode;
+  };
+  Selection mSelection;
   bool EnsureToCacheSelection(nsAString* aSelectedString = nullptr);
 
   // mIsIMFocused is set to TRUE when we call gtk_im_context_focus_in(). And
