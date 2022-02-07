@@ -430,7 +430,7 @@ nsresult TextEventDispatcher::NotifyIME(
       }
       break;
     case NOTIFY_IME_OF_SELECTION_CHANGE:
-      if (mHasFocus) {
+      if (mHasFocus && aIMENotification.mSelectionChangeData.HasRange()) {
         mWritingMode =
             Some(aIMENotification.mSelectionChangeData.GetWritingMode());
       }
