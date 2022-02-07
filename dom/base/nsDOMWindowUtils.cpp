@@ -2190,19 +2190,6 @@ nsDOMWindowUtils::GetViewId(Element* aElement, nsViewID* aResult) {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetScreenPixelsPerCSSPixel(float* aScreenPixels) {
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-  nsCOMPtr<nsPIDOMWindowInner> innerWindow = window->GetCurrentInnerWindow();
-  NS_ENSURE_STATE(innerWindow);
-  // XXX Why does this API exist? Callers should just use devicePixelRatio!
-  *aScreenPixels =
-      nsGlobalWindowInner::Cast(innerWindow)
-          ->GetDevicePixelRatio(CallerType::System, IgnoreErrors());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetScreenPixelsPerCSSPixelNoOverride(float* aScreenPixels) {
   nsPresContext* presContext = GetPresContext();
   if (!presContext) {
