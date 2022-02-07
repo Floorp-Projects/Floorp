@@ -385,6 +385,11 @@ class PeerConnectionImpl final
   MOZ_CAN_RUN_SCRIPT_BOUNDARY bool PluginCrash(uint32_t aPluginID,
                                                const nsAString& aPluginName);
 
+  NS_IMETHODIMP_TO_ERRORRESULT(SetConfiguration, ErrorResult& rv,
+                               const RTCConfiguration& aConfig) {
+    rv = SetConfiguration(aConfig);
+  }
+
   void RecordEndOfCallTelemetry();
 
   nsresult InitializeDataChannel();
