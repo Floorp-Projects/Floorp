@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020  Ebrahim Byagowi
+ * Copyright © 2022  Behdad Esfahbod
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -20,46 +20,32 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+#include "hb.hh"
+#include "hb-serialize.hh"
+#include "hb-ot-layout-common.hh"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-int alloc_state = 0;
-
-__attribute__((no_sanitize("integer")))
-static int fastrand ()
+int
+main (int argc, char **argv)
 {
-  if (!alloc_state) return 1;
-  /* Based on https://software.intel.com/content/www/us/en/develop/articles/fast-random-number-generator-on-the-intel-pentiumr-4-processor.html */
-  alloc_state = (214013 * alloc_state + 2531011);
-  return (alloc_state >> 16) & 0x7FFF;
-}
+  char buf[16384];
 
-void* hb_malloc_impl (size_t size)
-{
-  return (fastrand () % 16) ? malloc (size) : NULL;
-}
+  hb_serialize_context_t s (buf, sizeof (buf));
 
-void* hb_calloc_impl (size_t nmemb, size_t size)
-{
-  return (fastrand () % 16) ? calloc (nmemb, size) : NULL;
-}
+  hb_sorted_vector_t<hb_codepoint_t> v{1, 2, 5};
 
-void* hb_realloc_impl (void *ptr, size_t size)
-{
-  return (fastrand () % 16) ? realloc (ptr, size) : NULL;
-}
+  auto c = s.start_serialize<OT::Coverage> ();
 
-void  hb_free_impl (void *ptr)
-{
-  return free (ptr);
-}
+  c->serialize (&s, hb_iter (v));
 
-#ifdef __cplusplus
+  s.end_serialize ();
+
+  hb_bytes_t bytes = s.copy_bytes ();
+  assert (bytes.length == 10);
+  bytes.fini ();
+
+  return 0;
 }
-#endif
