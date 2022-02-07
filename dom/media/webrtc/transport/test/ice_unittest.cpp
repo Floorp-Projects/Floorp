@@ -359,7 +359,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   IceTestPeer(const std::string& name, MtransportTestUtils* utils, bool offerer,
               const NrIceCtx::Config& config)
       : name_(name),
-        ice_ctx_(NrIceCtx::Create(name, config)),
+        ice_ctx_(NrIceCtx::Create(name)),
         offerer_(offerer),
         candidates_(),
         stream_counter_(0),
@@ -386,6 +386,8 @@ class IceTestPeer : public sigslot::has_slots<> {
         this, &IceTestPeer::GatheringStateChange);
     ice_ctx_->SignalConnectionStateChange.connect(
         this, &IceTestPeer::ConnectionStateChange);
+
+    ice_ctx_->SetIceConfig(config);
 
     consent_timestamp_.tv_sec = 0;
     consent_timestamp_.tv_usec = 0;
@@ -1934,7 +1936,7 @@ class WebRtcIcePacketFilterTest : public StunTest {
     NrIceCtx::InitializeGlobals(NrIceCtx::GlobalConfig());
 
     // Set up enough of the ICE ctx to allow the packet filter to work
-    ice_ctx_ = NrIceCtx::Create("test", NrIceCtx::Config());
+    ice_ctx_ = NrIceCtx::Create("test");
 
     nsCOMPtr<nsISocketFilterHandler> udp_handler =
         do_GetService(NS_STUN_UDP_SOCKET_FILTER_HANDLER_CONTRACTID);
