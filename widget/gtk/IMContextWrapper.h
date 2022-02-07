@@ -393,8 +393,7 @@ class IMContextWrapper final : public TextEventDispatcherListener {
       mOffset = UINT32_MAX;
       mWritingMode = WritingMode();
     }
-    void CollapseTo(uint32_t aOffset, const WritingMode& aWritingMode) {
-      mWritingMode = aWritingMode;
+    void CollapseTo(uint32_t aOffset) {
       mOffset = aOffset;
       mString.Truncate();
     }
