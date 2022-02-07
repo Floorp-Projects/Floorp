@@ -120,25 +120,10 @@ void MediaTransportHandlerIPC::ExitPrivateMode() {
       [](const nsCString& aError) {});
 }
 
-void MediaTransportHandlerIPC::CreateIceCtx(const std::string& aName) {
-  CSFLogDebug(LOGTAG, "MediaTransportHandlerIPC::CreateIceCtx start");
-
-  mInitPromise->Then(
-      mCallbackThread, __func__,
-      [=, self = RefPtr<MediaTransportHandlerIPC>(this)](bool /*dummy*/) {
-        if (mChild) {
-          CSFLogDebug(LOGTAG, "%s starting", __func__);
-          if (NS_WARN_IF(!mChild->SendCreateIceCtx(aName))) {
-            CSFLogError(LOGTAG, "%s failed!", __func__);
-          }
-        }
-      },
-      [](const nsCString& aError) {});
-}
-
-nsresult MediaTransportHandlerIPC::SetIceConfig(
-    const nsTArray<dom::RTCIceServer>& aIceServers,
+nsresult MediaTransportHandlerIPC::CreateIceCtx(
+    const std::string& aName, const nsTArray<dom::RTCIceServer>& aIceServers,
     dom::RTCIceTransportPolicy aIcePolicy) {
+  CSFLogDebug(LOGTAG, "MediaTransportHandlerIPC::CreateIceCtx start");
   // Run some validation on this side of the IPC boundary so we can return
   // errors synchronously. We don't actually use the results. It might make
   // sense to move this check to PeerConnection and have this API take the
@@ -156,8 +141,9 @@ nsresult MediaTransportHandlerIPC::SetIceConfig(
       [=, iceServers = aIceServers.Clone(),
        self = RefPtr<MediaTransportHandlerIPC>(this)](bool /*dummy*/) {
         if (mChild) {
-          if (NS_WARN_IF(!mChild->SendSetIceConfig(std::move(iceServers),
-                                                   aIcePolicy))) {
+          CSFLogDebug(LOGTAG, "%s starting", __func__);
+          if (!mChild->SendCreateIceCtx(aName, std::move(iceServers),
+                                        aIcePolicy)) {
             CSFLogError(LOGTAG, "%s failed!", __func__);
           }
         }

@@ -124,18 +124,12 @@ mozilla::ipc::IPCResult MediaTransportParent::RecvExitPrivateMode() {
 }
 
 mozilla::ipc::IPCResult MediaTransportParent::RecvCreateIceCtx(
-    const string& name) {
-  mImpl->mHandler->CreateIceCtx(name);
-  return ipc::IPCResult::Ok();
-}
-
-mozilla::ipc::IPCResult MediaTransportParent::RecvSetIceConfig(
-    nsTArray<RTCIceServer>&& iceServers,
+    const string& name, nsTArray<RTCIceServer>&& iceServers,
     const RTCIceTransportPolicy& icePolicy) {
-  nsresult rv = mImpl->mHandler->SetIceConfig(iceServers, icePolicy);
+  nsresult rv = mImpl->mHandler->CreateIceCtx(name, iceServers, icePolicy);
   if (NS_FAILED(rv)) {
     return ipc::IPCResult::Fail(WrapNotNull(this), __func__,
-                                "MediaTransportHandler::SetIceConfig failed");
+                                "MediaTransportHandler::Init failed");
   }
   return ipc::IPCResult::Ok();
 }
