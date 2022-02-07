@@ -57,10 +57,7 @@ class AccessibilityPrefs extends Component {
   }
 
   onLearnMoreClick() {
-    openDocLink(
-      A11Y_LEARN_MORE_LINK +
-        "?utm_source=devtools&utm_medium=a11y-panel-toolbar"
-    );
+    openDocLink(A11Y_LEARN_MORE_LINK);
   }
 
   render() {
