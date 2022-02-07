@@ -1492,13 +1492,12 @@ void IMContextWrapper::OnSelectionChange(
   // event handler.  So, we're dispatching eCompositionStart,
   // we should ignore selection change notification.
   if (mCompositionState == eCompositionState_CompositionStartDispatched) {
-    if (NS_WARN_IF(mSelection.isNothing()) ||
-        NS_WARN_IF(!mSelection->IsValid())) {
+    if (NS_WARN_IF(mSelection.isNothing())) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   OnSelectionChange(), FAILED, "
                "new offset is too large, cannot keep composing",
                this));
-    } else {
+    } else if (mSelection->HasRange()) {
       // Modify the selection start offset with new offset.
       mCompositionStart = mSelection->OffsetAndDataRef().StartOffset();
       // XXX We should modify mSelectedStringRemovedByComposition?
@@ -1509,6 +1508,12 @@ void IMContextWrapper::OnSelectionChange(
                "resetting IM context",
                this, mCompositionStart));
       // And don't reset the IM context.
+      return;
+    } else {
+      MOZ_LOG(
+          gIMELog, LogLevel::Debug,
+          ("0x%p   OnSelectionChange(), ignored, because of no selection range",
+           this));
       return;
     }
     // Otherwise, reset the IM context due to impossible to keep composing.
@@ -2131,6 +2136,14 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
     return false;
   }
 
+  if (NS_WARN_IF(!mSelection->HasRange())) {
+    MOZ_LOG(gIMELog, LogLevel::Error,
+            ("0x%p   DispatchCompositionStart(), FAILED, "
+             "due to no selection",
+             this));
+    return false;
+  }
+
   mComposingContext = static_cast<GtkIMContext*>(g_object_ref(aContext));
   MOZ_ASSERT(mComposingContext);
 
@@ -2252,10 +2265,13 @@ bool IMContextWrapper::DispatchCompositionChangeEvent(
     if (NS_WARN_IF(
             !EnsureToCacheSelection(&mSelectedStringRemovedByComposition))) {
       // XXX How should we behave in this case??
-    } else {
+    } else if (mSelection->HasRange()) {
       // XXX We should assume, for now, any web applications don't change
       //     selection at handling this compositionchange event.
       mCompositionStart = mSelection->OffsetAndDataRef().StartOffset();
+    } else {
+      // If there is no selection range, we should keep previously storing
+      // mCompositionStart.
     }
   }
 
@@ -2359,8 +2375,10 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
     // apps, i.e., selection range is same as what selection expects, we
     // shouldn't reset IME because the trigger of causing this commit may be an
     // input for next composition and we shouldn't cancel it.
-    if (mSelection.isSome() && mSelection->IsValid()) {
-      mSelection->Collapse(mSelection->OffsetAndDataRef().StartOffset() +
+    if (mSelection.isSome()) {
+      mSelection->Collapse((mSelection->HasRange()
+                                ? mSelection->OffsetAndDataRef().StartOffset()
+                                : mCompositionStart) +
                            aCommitString->Length());
       MOZ_LOG(gIMELog, LogLevel::Info,
               ("0x%p   DispatchCompositionCommitEvent(), mSelection=%s", this,
@@ -2817,10 +2835,17 @@ void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
 
   bool useCaret = false;
   if (!mCompositionTargetRange.IsValid()) {
-    if (mSelection.isNothing() || !mSelection->IsValid()) {
+    if (mSelection.isNothing()) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   SetCursorPosition(), FAILED, "
                "mCompositionTargetRange and mSelection are invalid",
+               this));
+      return;
+    }
+    if (!mSelection->HasRange()) {
+      MOZ_LOG(gIMELog, LogLevel::Warning,
+              ("0x%p   SetCursorPosition(), FAILED, "
+               "mCompositionTargetRange is invalid and there is no selection",
                this));
       return;
     }
@@ -2918,8 +2943,14 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
       return NS_ERROR_FAILURE;
     }
 
-    selOffset = mSelection->OffsetAndDataRef().StartOffset();
-    selLength = mSelection->OffsetAndDataRef().Length();
+    if (mSelection.isSome() && mSelection->HasRange()) {
+      selOffset = mSelection->OffsetAndDataRef().StartOffset();
+      selLength = mSelection->OffsetAndDataRef().Length();
+    } else {
+      // If there is no range, let's get all text instead...
+      selOffset = 0u;
+      selLength = INT32_MAX;  // TODO: Change to UINT32_MAX, but see below
+    }
   }
 
   MOZ_LOG(gIMELog, LogLevel::Debug,
@@ -3030,6 +3061,12 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
                "information",
                this));
       return NS_ERROR_FAILURE;
+    }
+    if (!mSelection->HasRange()) {
+      MOZ_LOG(gIMELog, LogLevel::Debug,
+              ("0x%p   DeleteText(), does nothing, due to no selection range",
+               this));
+      return NS_OK;
     }
     selOffset = mSelection->OffsetAndDataRef().StartOffset();
   }
@@ -3165,8 +3202,8 @@ bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
     aSelectedString->Truncate();
   }
 
-  if (mSelection.isSome() && mSelection->IsValid()) {
-    if (aSelectedString) {
+  if (mSelection.isSome()) {
+    if (mSelection->HasRange() && aSelectedString) {
       aSelectedString->Assign(mSelection->OffsetAndDataRef().DataRef());
     }
     return true;
@@ -3194,17 +3231,10 @@ bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
   }
 
   mSelection = Some(Selection(querySelectedTextEvent));
-  if (!mSelection->IsValid()) {
-    MOZ_LOG(gIMELog, LogLevel::Error,
-            ("0x%p EnsureToCacheSelection(), FAILED, due to "
-             "failure of query selection event (invalid result)",
-             this));
-    mSelection.reset();
-    return false;
-  }
-
-  if (!mSelection->OffsetAndDataRef().IsDataEmpty() && aSelectedString) {
-    aSelectedString->Assign(querySelectedTextEvent.mReply->DataRef());
+  if (mSelection->HasRange()) {
+    if (!mSelection->OffsetAndDataRef().IsDataEmpty() && aSelectedString) {
+      aSelectedString->Assign(querySelectedTextEvent.mReply->DataRef());
+    }
   }
 
   MOZ_LOG(gIMELog, LogLevel::Debug,
