@@ -75,7 +75,7 @@ class WallpaperDownloader(
             listOf("light", "dark").map { theme ->
                 val remoteParent = this::class.simpleName!!.lowercase()
                 val localPath = "wallpapers/$orientation/$theme/$name.png"
-                val remotePath = "${context.resolutionSegment()}/$orientation/$theme/$remoteParent$name.png"
+                val remotePath = "${context.resolutionSegment()}/$orientation/$theme/$remoteParent/$name.png"
                 WallpaperMetadata(remotePath, localPath)
             }
         }
