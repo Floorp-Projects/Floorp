@@ -46,7 +46,7 @@ class ContentCache {
 
  protected:
   // Whole text in the target
-  nsString mText;
+  Maybe<nsString> mText;
 
   // Start offset of the composition string.
   Maybe<uint32_t> mCompositionStart;
@@ -168,8 +168,8 @@ class ContentCache {
   Maybe<Selection> mSelection;
 
   bool IsSelectionValid() const {
-    return mSelection.isSome() && mSelection->mHasRange &&
-           mSelection->EndOffset() <= mText.Length();
+    return mSelection.isSome() && mSelection->mHasRange && mText.isSome() &&
+           mSelection->EndOffset() <= mText->Length();
   }
 
   // Stores first char rect because Yosemite's Japanese IME sometimes tries

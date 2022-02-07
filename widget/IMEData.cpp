@@ -11,12 +11,26 @@
 #include "gfxFontUtils.h"
 #include "TextEvents.h"
 
+#include "mozilla/Maybe.h"
+#include "mozilla/ToString.h"
 #include "mozilla/WritingModes.h"
 
 #include "nsPrintfCString.h"
 #include "nsString.h"
 
 namespace mozilla {
+
+template PrintStringDetail::PrintStringDetail(
+    const Maybe<nsString>& aMaybeString, uint32_t aMaxLength);
+
+template <typename StringType>
+PrintStringDetail::PrintStringDetail(const Maybe<StringType>& aMaybeString,
+                                     uint32_t aMaxLength /* = UINT32_MAX */)
+    : PrintStringDetail(aMaybeString.refOr(EmptyString()), aMaxLength) {
+  if (aMaybeString.isNothing()) {
+    AssignASCII(ToString(aMaybeString).c_str());
+  }
+}
 
 PrintStringDetail::PrintStringDetail(const nsAString& aString,
                                      uint32_t aMaxLength /* = UINT32_MAX */) {
