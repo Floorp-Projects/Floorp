@@ -1446,10 +1446,8 @@ void IMContextWrapper::OnSelectionChange(
     nsWindow* aCaller, const IMENotification& aIMENotification) {
   const bool isSelectionRangeChanged =
       mContentSelection.isNothing() ||
-      mContentSelection->OffsetAndDataRef().StartOffset() !=
-          aIMENotification.mSelectionChangeData.mOffset ||
-      mContentSelection->OffsetAndDataRef().DataRef() !=
-          *aIMENotification.mSelectionChangeData.mString;
+      !aIMENotification.mSelectionChangeData.EqualsRange(
+          mContentSelection.ref());
   mContentSelection =
       Some(ContentSelection(aIMENotification.mSelectionChangeData));
   const bool retrievedSurroundingSignalReceived =

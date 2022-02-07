@@ -20,6 +20,7 @@ class nsIWidget;
 
 namespace mozilla {
 
+class ContentSelection;
 class WritingMode;
 
 // Helper class to logging string which may contain various Unicode characters
@@ -803,7 +804,6 @@ struct IMENotification final {
       mOccurredDuringComposition = false;
     }
     bool IsInitialized() const { return mIsInitialized; }
-    bool IsValid() const { return mIsInitialized && mHasRange; }
     void Assign(const SelectionChangeDataBase& aOther) {
       mIsInitialized = aOther.mIsInitialized;
       mHasRange = aOther.mHasRange;
@@ -848,6 +848,10 @@ struct IMENotification final {
       return EqualsRangeAndDirection(aOther) &&
              mWritingModeBits == aOther.mWritingModeBits;
     }
+
+    bool EqualsRange(const ContentSelection& aContentSelection) const;
+    bool EqualsRangeAndWritingMode(
+        const ContentSelection& aContentSelection) const;
 
     OffsetAndData<uint32_t> ToUint32OffsetAndData() const {
       return OffsetAndData<uint32_t>(mOffset, *mString,
