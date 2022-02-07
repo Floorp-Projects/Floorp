@@ -683,20 +683,22 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         binding.clipboardTitle.isVisible = shouldShowView
         binding.linkIcon.isVisible = shouldShowView
 
-        val contentDescription = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            "${binding.clipboardTitle.text}."
-        } else {
-            val clipboardUrl = context?.components?.clipboardHandler?.extractURL()
+        if (shouldShowView) {
+            val contentDescription = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                "${binding.clipboardTitle.text}."
+            } else {
+                val clipboardUrl = context?.components?.clipboardHandler?.extractURL()
 
-            if (clipboardUrl != null && !((activity as HomeActivity).browsingModeManager.mode.isPrivate)) {
-                requireComponents.core.engine.speculativeConnect(clipboardUrl)
+                if (clipboardUrl != null && !((activity as HomeActivity).browsingModeManager.mode.isPrivate)) {
+                    requireComponents.core.engine.speculativeConnect(clipboardUrl)
+                }
+                binding.clipboardUrl.text = clipboardUrl
+                binding.clipboardUrl.isVisible = shouldShowView
+                "${binding.clipboardTitle.text}, ${binding.clipboardUrl.text}."
             }
-            binding.clipboardUrl.text = clipboardUrl
-            binding.clipboardUrl.isVisible = shouldShowView
-            "${binding.clipboardTitle.text}, ${binding.clipboardUrl.text}."
-        }
 
-        binding.fillLinkFromClipboard.contentDescription = contentDescription
+            binding.fillLinkFromClipboard.contentDescription = contentDescription
+        }
     }
 
     private fun updateToolbarContentDescription(source: SearchEngineSource) {
