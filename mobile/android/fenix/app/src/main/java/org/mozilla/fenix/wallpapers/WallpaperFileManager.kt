@@ -23,9 +23,9 @@ class WallpaperFileManager(
      * files for each of the following orientation and theme combinations:
      * light/portrait - light/landscape - dark/portrait - dark/landscape
      */
-    fun lookupExpiredWallpaper(name: String): Wallpaper.Remote.Expired? {
+    fun lookupExpiredWallpaper(name: String): Wallpaper.Expired? {
         return if (getAllLocalWallpaperPaths(name).all { File(rootDirectory, it).exists() }) {
-            Wallpaper.Remote.Expired(name)
+            Wallpaper.Expired(name)
         } else null
     }
 

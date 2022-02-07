@@ -23,6 +23,13 @@ sealed class Wallpaper {
     }
 
     /**
+     * If a user had previously selected a wallpaper, they are allowed to retain it even if
+     * the wallpaper is otherwise expired. This type exists as a wrapper around that current
+     * wallpaper.
+     */
+    data class Expired(override val name: String) : Wallpaper()
+
+    /**
      * Wallpapers that are included directly in the shipped APK.
      *
      * @property drawableId The drawable bitmap used as the background.
@@ -39,15 +46,9 @@ sealed class Wallpaper {
      */
     sealed class Remote : Wallpaper() {
         abstract val expirationDate: Date?
-        data class Focus(override val name: String, override val expirationDate: Date? = null) : Remote()
-
-        /**
-         * If a user had previously selected a wallpaper, they are allowed to retain it even if
-         * the wallpaper is otherwise expired. This type exists as a wrapper around that current
-         * wallpaper.
-         */
-        data class Expired(override val name: String) : Remote() {
-            override val expirationDate: Date? = null
+        abstract val remoteParentDirName: String
+        data class Focus(override val name: String, override val expirationDate: Date? = null) : Remote() {
+            override val remoteParentDirName: String = "focus"
         }
     }
 

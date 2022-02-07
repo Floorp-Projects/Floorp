@@ -91,7 +91,7 @@ class WallpaperManagerTest {
         val currentExpiredWallpaper = makeFakeRemoteWallpaper(TimeRelation.BEFORE, name = currentWallpaperName)
         every { mockSettings.currentWallpaper } returns currentWallpaperName
         val expiredRemoteWallpaper = makeFakeRemoteWallpaper(TimeRelation.BEFORE, "expired")
-        val expected = Wallpaper.Remote.Expired(currentWallpaperName)
+        val expected = Wallpaper.Expired(currentWallpaperName)
         every { mockFileManager.lookupExpiredWallpaper(currentWallpaperName) } returns expected
 
         val wallpaperManager = WallpaperManager(
@@ -111,7 +111,7 @@ class WallpaperManagerTest {
     fun `GIVEN current wallpaper is expired THEN it is available even if not listed in initial parameter`() {
         val currentWallpaperName = "named"
         every { mockSettings.currentWallpaper } returns currentWallpaperName
-        val expected = Wallpaper.Remote.Expired(currentWallpaperName)
+        val expected = Wallpaper.Expired(currentWallpaperName)
         every { mockFileManager.lookupExpiredWallpaper(currentWallpaperName) } returns expected
 
         val wallpaperManager = WallpaperManager(
