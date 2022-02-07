@@ -219,14 +219,11 @@ class PeerConnectionImpl final
   }
 
   nsresult Initialize(PeerConnectionObserver& aObserver,
-                      nsGlobalWindowInner* aWindow,
-                      const RTCConfiguration& aConfiguration,
-                      nsISupports* aThread);
+                      nsGlobalWindowInner* aWindow, nsISupports* aThread);
 
   // Initialize PeerConnection from an RTCConfiguration object (JS entrypoint)
   void Initialize(PeerConnectionObserver& aObserver,
-                  nsGlobalWindowInner& aWindow,
-                  const RTCConfiguration& aConfiguration, nsISupports* aThread,
+                  nsGlobalWindowInner& aWindow, nsISupports* aThread,
                   ErrorResult& rv);
 
   void SetCertificate(mozilla::dom::RTCCertificate& aCertificate);
@@ -386,8 +383,8 @@ class PeerConnectionImpl final
                                                const nsAString& aPluginName);
 
   NS_IMETHODIMP_TO_ERRORRESULT(SetConfiguration, ErrorResult& rv,
-                               const RTCConfiguration& aConfig) {
-    rv = SetConfiguration(aConfig);
+                               const RTCConfiguration& aConfiguration) {
+    rv = SetConfiguration(aConfiguration);
   }
 
   void RecordEndOfCallTelemetry();
