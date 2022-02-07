@@ -2812,7 +2812,7 @@ bool TSFTextStore::DoNotReturnErrorFromGetSelection() {
   // TODO: We should avoid to run this hack on fixed builds.  When we get
   //       exact build number, we should get back here.
   static bool sTSFMayCrashIfGetSelectionReturnsError =
-      IsWindows10BuildOrLater(14393);
+      IsWin10AnniversaryUpdateOrLater();
   return sTSFMayCrashIfGetSelectionReturnsError;
 }
 
@@ -6045,15 +6045,8 @@ void TSFTextStore::NotifyTSFOfSelectionChange() {
   // If selection range isn't actually changed, we don't need to notify TSF
   // of this selection change.
   if (mSelectionForTSF.isNothing()) {
-    mSelectionForTSF.emplace(mPendingSelectionChangeData.mOffset,
-                             mPendingSelectionChangeData.Length(),
-                             mPendingSelectionChangeData.mReversed,
-                             mPendingSelectionChangeData.GetWritingMode());
-  } else if (!mSelectionForTSF->SetSelection(
-                 mPendingSelectionChangeData.mOffset,
-                 mPendingSelectionChangeData.Length(),
-                 mPendingSelectionChangeData.mReversed,
-                 mPendingSelectionChangeData.GetWritingMode())) {
+    mSelectionForTSF.emplace(mPendingSelectionChangeData);
+  } else if (!mSelectionForTSF->SetSelection(mPendingSelectionChangeData)) {
     mPendingSelectionChangeData.Clear();
     MOZ_LOG(gIMELog, LogLevel::Debug,
             ("0x%p   TSFTextStore::NotifyTSFOfSelectionChange(), "

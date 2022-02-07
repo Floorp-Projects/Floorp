@@ -555,6 +555,10 @@ class TSFTextStore final : public ITextStoreACP,
       Collapse(aOffsetToCollapse);
     }
 
+    explicit Selection(const SelectionChangeDataBase& aSelectionChangeData) {
+      SetSelection(aSelectionChangeData);
+    }
+
     explicit Selection(uint32_t aStart, uint32_t aLength, bool aReversed,
                        const WritingMode& aWritingMode) {
       SetSelection(aStart, aLength, aReversed, aWritingMode);
@@ -569,6 +573,13 @@ class TSFTextStore final : public ITextStoreACP,
       // We're not support interim char selection for now.
       // XXX Probably, this is necessary for supporting South Asian languages.
       mACP.style.fInterimChar = FALSE;
+    }
+
+    bool SetSelection(const SelectionChangeDataBase& aSelectionChangeData) {
+      return SetSelection(aSelectionChangeData.mOffset,
+                          aSelectionChangeData.Length(),
+                          aSelectionChangeData.mReversed,
+                          aSelectionChangeData.GetWritingMode());
     }
 
     bool SetSelection(uint32_t aStart, uint32_t aLength, bool aReversed,
