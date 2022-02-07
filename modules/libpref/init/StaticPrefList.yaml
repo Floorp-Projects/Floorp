@@ -8104,6 +8104,12 @@
   mirror: always
   rust: true
 
+# Whether we want scrollbar-width: thin to behave as scrollbar-width: auto.
+- name: layout.css.scrollbar-width-thin.disabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether the `scrollbar-gutter` CSS property is enabled.
 - name: layout.css.scrollbar-gutter.enabled
   type: RelaxedAtomicBool
