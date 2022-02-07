@@ -5,16 +5,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ContentCache.h"
+#include "ContentCache.h"
 
 #include <utility>
+
+#include "IMEData.h"
+#include "TextEvents.h"
 
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TextComposition.h"
-#include "mozilla/TextEvents.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "nsExceptionHandler.h"
 #include "nsIWidget.h"
@@ -48,7 +50,7 @@ void ContentCacheInChild::Clear() {
 
   mCompositionStart.reset();
   mLastCommit.reset();
-  mText.Truncate();
+  mText.reset();
   mSelection.reset();
   mFirstCharRect.SetEmpty();
   mCaret.reset();
@@ -213,10 +215,10 @@ bool ContentCacheInChild::CacheText(nsIWidget* aWidget,
   if (NS_WARN_IF(queryTextContentEvent.Failed())) {
     MOZ_LOG(sContentCacheLog, LogLevel::Error,
             ("0x%p   CacheText(), FAILED, couldn't retrieve whole text", this));
-    mText.Truncate();
+    mText.reset();
     return false;
   }
-  mText = queryTextContentEvent.mReply->DataRef();
+  mText = Some(nsString(queryTextContentEvent.mReply->DataRef()));
   MOZ_LOG(
       sContentCacheLog, LogLevel::Info,
       ("0x%p   CacheText(), Succeeded, mText=%s", this,
@@ -225,14 +227,14 @@ bool ContentCacheInChild::CacheText(nsIWidget* aWidget,
   // Forget last commit range if string in the range is different from the
   // last commit string.
   if (mLastCommit.isSome() &&
-      nsDependentSubstring(mText, mLastCommit->StartOffset(),
+      nsDependentSubstring(mText.ref(), mLastCommit->StartOffset(),
                            mLastCommit->Length()) != mLastCommit->DataRef()) {
     MOZ_LOG(sContentCacheLog, LogLevel::Debug,
             ("0x%p   CacheText(), resetting the last composition string data "
              "(mLastCommit=%s, current string=\"%s\")",
              this, ToString(mLastCommit).c_str(),
              PrintStringDetail(
-                 nsDependentSubstring(mText, mLastCommit->StartOffset(),
+                 nsDependentSubstring(mText.ref(), mLastCommit->StartOffset(),
                                       mLastCommit->Length()),
                  PrintStringDetail::kMaxLengthForCompositionString)
                  .get()));
@@ -657,7 +659,7 @@ bool ContentCacheInParent::HandleQueryContentEvent(
               ("0x%p HandleQueryContentEvent(aEvent={ "
                "mMessage=eQuerySelectedText }, aWidget=0x%p)",
                this, aWidget));
-      if (NS_WARN_IF(!IsSelectionValid())) {
+      if (MOZ_UNLIKELY(NS_WARN_IF(!IsSelectionValid()))) {
         // If content cache hasn't been initialized properly, make the query
         // failed.
         MOZ_LOG(sContentCacheLog, LogLevel::Error,
@@ -667,19 +669,29 @@ bool ContentCacheInParent::HandleQueryContentEvent(
         return false;
       }
       if (!mSelection->Collapsed() &&
-          NS_WARN_IF(mSelection->EndOffset() > mText.Length())) {
-        MOZ_LOG(sContentCacheLog, LogLevel::Error,
-                ("0x%p   HandleQueryContentEvent(), FAILED because "
-                 "mSelection->EndOffset()=%u is larger than mText.Length()=%zu",
-                 this, mSelection->EndOffset(), mText.Length()));
+          MOZ_UNLIKELY(NS_WARN_IF(mText.isNothing()) ||
+                       NS_WARN_IF(mSelection->EndOffset() > mText->Length()))) {
+        MOZ_LOG(
+            sContentCacheLog, LogLevel::Error,
+            ("0x%p   HandleQueryContentEvent(), FAILED because "
+             "mSelection->EndOffset()=%u is larger than mText->Length()=%zu",
+             this, mSelection->EndOffset(), mText->Length()));
         return false;
       }
       aEvent.EmplaceReply();
       aEvent.mReply->mFocusedWidget = aWidget;
-      aEvent.mReply->mOffsetAndData.emplace(
-          mSelection->StartOffset(),
-          Substring(mText, mSelection->StartOffset(), mSelection->Length()),
-          OffsetAndDataFor::SelectedString);
+      if (MOZ_LIKELY(mText.isSome())) {
+        aEvent.mReply->mOffsetAndData.emplace(
+            mSelection->StartOffset(),
+            Substring(mText.ref(), mSelection->StartOffset(),
+                      mSelection->Length()),
+            OffsetAndDataFor::SelectedString);
+      } else {
+        // TODO: Investigate this case.  I find this during
+        //       test_mousecapture.xhtml on Linux.
+        aEvent.mReply->mOffsetAndData.emplace(0u, EmptyString(),
+                                              OffsetAndDataFor::SelectedString);
+      }
       aEvent.mReply->mReversed = mSelection->Reversed();
       aEvent.mReply->mWritingMode = mSelection->mWritingMode;
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
@@ -691,13 +703,20 @@ bool ContentCacheInParent::HandleQueryContentEvent(
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
               ("0x%p HandleQueryContentEvent(aEvent={ "
                "mMessage=eQueryTextContent, mInput={ mOffset=%" PRId64
-               ", mLength=%u } }, aWidget=0x%p), mText.Length()=%zu",
+               ", mLength=%u } }, aWidget=0x%p), mText->Length()=%zu",
                this, aEvent.mInput.mOffset, aEvent.mInput.mLength, aWidget,
-               mText.Length()));
-      uint32_t inputOffset = aEvent.mInput.mOffset;
-      uint32_t inputEndOffset =
-          std::min<uint32_t>(aEvent.mInput.EndOffset(), mText.Length());
-      if (NS_WARN_IF(inputEndOffset < inputOffset)) {
+               mText.isSome() ? mText->Length() : 0u));
+      if (MOZ_UNLIKELY(NS_WARN_IF(mText.isNothing()))) {
+        MOZ_LOG(sContentCacheLog, LogLevel::Error,
+                ("0x%p   HandleQueryContentEvent(), FAILED because "
+                 "there is no text data",
+                 this));
+        return false;
+      }
+      const uint32_t inputOffset = aEvent.mInput.mOffset;
+      const uint32_t inputEndOffset =
+          std::min<uint32_t>(aEvent.mInput.EndOffset(), mText->Length());
+      if (MOZ_UNLIKELY(NS_WARN_IF(inputEndOffset < inputOffset))) {
         MOZ_LOG(sContentCacheLog, LogLevel::Error,
                 ("0x%p   HandleQueryContentEvent(), FAILED because "
                  "inputOffset=%u is larger than inputEndOffset=%u",
@@ -708,7 +727,7 @@ bool ContentCacheInParent::HandleQueryContentEvent(
       aEvent.mReply->mFocusedWidget = aWidget;
       aEvent.mReply->mOffsetAndData.emplace(
           inputOffset,
-          Substring(mText, inputOffset, inputEndOffset - inputOffset),
+          Substring(mText.ref(), inputOffset, inputEndOffset - inputOffset),
           OffsetAndDataFor::EditorString);
       // TODO: Support font ranges
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
@@ -721,10 +740,10 @@ bool ContentCacheInParent::HandleQueryContentEvent(
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
               ("0x%p HandleQueryContentEvent("
                "aEvent={ mMessage=eQueryTextRect, mInput={ mOffset=%" PRId64
-               ", mLength=%u } }, aWidget=0x%p), mText.Length()=%zu",
+               ", mLength=%u } }, aWidget=0x%p), mText->Length()=%zu",
                this, aEvent.mInput.mOffset, aEvent.mInput.mLength, aWidget,
-               mText.Length()));
-      if (NS_WARN_IF(!IsSelectionValid())) {
+               mText.isSome() ? mText->Length() : 0u));
+      if (MOZ_UNLIKELY(NS_WARN_IF(!IsSelectionValid()))) {
         // If content cache hasn't been initialized properly, make the query
         // failed.
         MOZ_LOG(
@@ -740,9 +759,9 @@ bool ContentCacheInParent::HandleQueryContentEvent(
       // at odd position.
       LayoutDeviceIntRect textRect;
       if (aEvent.mInput.mLength) {
-        if (NS_WARN_IF(
+        if (MOZ_UNLIKELY(NS_WARN_IF(
                 !GetUnionTextRects(aEvent.mInput.mOffset, aEvent.mInput.mLength,
-                                   isRelativeToInsertionPoint, textRect))) {
+                                   isRelativeToInsertionPoint, textRect)))) {
           // XXX We don't have cache for this request.
           MOZ_LOG(sContentCacheLog, LogLevel::Error,
                   ("0x%p   HandleQueryContentEvent(), FAILED to get union rect",
@@ -764,10 +783,11 @@ bool ContentCacheInParent::HandleQueryContentEvent(
       aEvent.mReply->mRect = textRect;
       aEvent.mReply->mOffsetAndData.emplace(
           aEvent.mInput.mOffset,
-          aEvent.mInput.mOffset < int64_t(mText.Length())
+          mText.isSome() &&
+                  aEvent.mInput.mOffset < static_cast<int64_t>(mText->Length())
               ? static_cast<const nsAString&>(
-                    Substring(mText, aEvent.mInput.mOffset,
-                              mText.Length() >= aEvent.mInput.EndOffset()
+                    Substring(mText.ref(), aEvent.mInput.mOffset,
+                              mText->Length() >= aEvent.mInput.EndOffset()
                                   ? aEvent.mInput.mLength
                                   : UINT32_MAX))
               : static_cast<const nsAString&>(EmptyString()),
@@ -785,8 +805,9 @@ bool ContentCacheInParent::HandleQueryContentEvent(
           sContentCacheLog, LogLevel::Info,
           ("0x%p HandleQueryContentEvent(aEvent={ mMessage=eQueryCaretRect, "
            "mInput={ mOffset=%" PRId64
-           " } }, aWidget=0x%p), mText.Length()=%zu",
-           this, aEvent.mInput.mOffset, aWidget, mText.Length()));
+           " } }, aWidget=0x%p), mText->Length()=%zu",
+           this, aEvent.mInput.mOffset, aWidget,
+           mText.isSome() ? mText->Length() : 0u));
       if (NS_WARN_IF(!IsSelectionValid())) {
         // If content cache hasn't been initialized properly, make the query
         // failed.
