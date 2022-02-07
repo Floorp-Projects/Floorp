@@ -714,7 +714,8 @@ void NrIceCtx::AccumulateStats(const NrIceStats& stats) {
 NrIceStats NrIceCtx::Destroy() {
   // designed to be called more than once so if stats are desired, this can be
   // called just prior to the destructor
-  MOZ_MTLOG(ML_DEBUG, "Destroying ICE ctx '" << name_ << "'");
+  MOZ_MTLOG(ML_NOTICE, "NrIceCtx(" << name_ << "): " << __func__);
+
   for (auto& idAndStream : streams_) {
     idAndStream.second->Close();
   }
@@ -766,6 +767,7 @@ NrIceCtx::Controlling NrIceCtx::GetControlling() {
 
 nsresult NrIceCtx::SetStunServers(
     const std::vector<NrIceStunServer>& stun_servers) {
+  MOZ_MTLOG(ML_NOTICE, "NrIceCtx(" << name_ << "): " << __func__);
   // We assume nr_ice_stun_server is memmoveable. That's true right now.
   std::vector<nr_ice_stun_server> servers;
 
@@ -793,6 +795,7 @@ nsresult NrIceCtx::SetStunServers(
 // Could we do a template or something?
 nsresult NrIceCtx::SetTurnServers(
     const std::vector<NrIceTurnServer>& turn_servers) {
+  MOZ_MTLOG(ML_NOTICE, "NrIceCtx(" << name_ << "): " << __func__);
   // We assume nr_ice_turn_server is memmoveable. That's true right now.
   std::vector<nr_ice_turn_server> servers;
 
@@ -849,6 +852,7 @@ void NrIceCtx::SetCtxFlags(bool default_route_only) {
 nsresult NrIceCtx::StartGathering(bool default_route_only,
                                   bool obfuscate_host_addresses) {
   ASSERT_ON_THREAD(sts_target_);
+  MOZ_MTLOG(ML_NOTICE, "NrIceCtx(" << name_ << "): " << __func__);
 
   obfuscate_host_addresses_ = obfuscate_host_addresses;
 
@@ -935,8 +939,10 @@ bool NrIceCtx::HasStreamsToConnect() const {
 
 nsresult NrIceCtx::StartChecks() {
   int r;
+  MOZ_MTLOG(ML_NOTICE, "NrIceCtx(" << name_ << "): " << __func__);
+
   if (!HasStreamsToConnect()) {
-    MOZ_MTLOG(ML_INFO, "In StartChecks, nothing to do on " << name_);
+    MOZ_MTLOG(ML_NOTICE, "In StartChecks, nothing to do on " << name_);
     return NS_OK;
   }
 
@@ -969,20 +975,9 @@ void NrIceCtx::gather_cb(NR_SOCKET s, int h, void* arg) {
   ctx->SetGatheringState(ICE_CTX_GATHER_COMPLETE);
 }
 
-nsresult NrIceCtx::Finalize() {
-  int r = nr_ice_ctx_finalize(ctx_, peer_);
-
-  if (r) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't finalize " << name_ << "'");
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
 void NrIceCtx::UpdateNetworkState(bool online) {
-  MOZ_MTLOG(ML_INFO, "NrIceCtx(" << name_ << "): updating network state to "
-                                 << (online ? "online" : "offline"));
+  MOZ_MTLOG(ML_NOTICE, "NrIceCtx(" << name_ << "): updating network state to "
+                                   << (online ? "online" : "offline"));
   if (connection_state_ == ICE_CTX_CLOSED) {
     return;
   }
