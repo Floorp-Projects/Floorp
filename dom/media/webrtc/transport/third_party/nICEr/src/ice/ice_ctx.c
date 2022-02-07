@@ -880,7 +880,7 @@ int nr_ice_gather(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg)
     while(stream){
       if(!stream->obsolete) {
         if(r=nr_ice_media_stream_initialize(ctx,stream)) {
-          ABORT(r);
+          r_log(LOG_ICE,LOG_ERR,"ICE(%s): Failed to initialize a stream; this might not be an unrecoverable error, if this stream will be marked obsolete soon due to an ICE restart.",ctx->label);
         }
       }
 
