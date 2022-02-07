@@ -18,6 +18,7 @@ import androidx.lifecycle.LifecycleOwner
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
+import mozilla.components.service.contile.ContileTopSitesProvider
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.booleanPreference
 import mozilla.components.support.ktx.android.content.floatPreference
@@ -61,7 +62,6 @@ private const val AUTOPLAY_USER_SETTING = "AUTOPLAY_USER_SETTING"
 class Settings(private val appContext: Context) : PreferencesHolder {
 
     companion object {
-        const val topSitesMaxCount = 16
         const val FENIX_PREFERENCES = "fenix_preferences"
 
         private const val BLOCKED_INT = 0
@@ -83,6 +83,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
          * Filtering is applied depending on the [historyImprovementFeatures] flag value.
          */
         const val SEARCH_GROUP_MINIMUM_SITES: Int = 2
+
+        // The maximum number of top sites to display.
+        const val TOP_SITES_MAX_COUNT = 16
+        /**
+         * Only fetch top sites from the [ContileTopSitesProvider] when the number of default and
+         * pinned sites are below this maximum threshold.
+         */
+        const val TOP_SITES_PROVIDER_MAX_THRESHOLD = 8
 
         private fun Action.toInt() = when (this) {
             Action.BLOCKED -> BLOCKED_INT
@@ -1122,7 +1130,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     val topSitesMaxLimit by intPreference(
         appContext.getPreferenceKey(R.string.pref_key_top_sites_max_limit),
-        default = topSitesMaxCount
+        default = TOP_SITES_MAX_COUNT
     )
 
     var openTabsCount by intPreference(

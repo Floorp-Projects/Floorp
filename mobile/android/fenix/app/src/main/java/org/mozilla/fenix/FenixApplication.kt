@@ -36,6 +36,7 @@ import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.feature.autofill.AutofillUseCases
 import mozilla.components.feature.search.ext.buildSearchUrl
 import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
+import mozilla.components.feature.top.sites.TopSitesProviderConfig
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.glean.Glean
@@ -82,6 +83,7 @@ import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.telemetry.TelemetryLifecycleObserver
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHOLD
 import java.util.concurrent.TimeUnit
 
 /**
@@ -258,11 +260,14 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         // we can prevent with this.
                         components.core.topSitesStorage.getTopSites(
                             totalSites = components.settings.topSitesMaxLimit,
-                            fetchProvidedTopSites = components.settings.showContileFeature,
                             frecencyConfig = if (components.settings.showTopFrecentSites)
                                 FrecencyThresholdOption.SKIP_ONE_TIME_PAGES
                             else
-                                null
+                                null,
+                            providerConfig = TopSitesProviderConfig(
+                                showProviderTopSites = components.settings.showContileFeature,
+                                maxThreshold = TOP_SITES_PROVIDER_MAX_THRESHOLD
+                            )
                         )
 
                         // This service uses `historyStorage`, and so we can only touch it when we know
