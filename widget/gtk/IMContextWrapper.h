@@ -386,46 +386,49 @@ class IMContextWrapper final : public TextEventDispatcherListener {
 
   class Selection final {
    public:
-    Selection()
-        : mOffsetAndData(UINT32_MAX, EmptyString(),
-                         OffsetAndDataFor::SelectedString) {}
+    Selection() = default;
     explicit Selection(
         const IMENotification::SelectionChangeDataBase& aSelectionChangeData)
-        : mOffsetAndData(aSelectionChangeData.ToUint32OffsetAndData()),
+        : mOffsetAndData(Some(aSelectionChangeData.ToUint32OffsetAndData())),
           mWritingMode(aSelectionChangeData.GetWritingMode()) {}
     explicit Selection(const WidgetQueryContentEvent& aSelectedTextEvent)
-        : mOffsetAndData(aSelectedTextEvent.mReply->StartOffset(),
-                         aSelectedTextEvent.mReply->DataRef(),
-                         OffsetAndDataFor::SelectedString),
+        : mOffsetAndData(Some(
+              OffsetAndData<uint32_t>(aSelectedTextEvent.mReply->StartOffset(),
+                                      aSelectedTextEvent.mReply->DataRef(),
+                                      OffsetAndDataFor::SelectedString))),
           mWritingMode(aSelectedTextEvent.mReply->WritingModeRef()) {
       MOZ_ASSERT(aSelectedTextEvent.mMessage == eQuerySelectedText);
       MOZ_ASSERT(aSelectedTextEvent.mReply->mOffsetAndData.isSome());
     }
     Selection(uint32_t aOffset, const WritingMode& aWritingMode)
-        : mOffsetAndData(aOffset, EmptyString(),
-                         OffsetAndDataFor::SelectedString),
+        : mOffsetAndData(Some(OffsetAndData<uint32_t>(
+              aOffset, EmptyString(), OffsetAndDataFor::SelectedString))),
           mWritingMode(aWritingMode) {}
 
     const OffsetAndData<uint32_t>& OffsetAndDataRef() const {
-      return mOffsetAndData;
+      return mOffsetAndData.ref();
     }
 
-    void Collapse(uint32_t aOffset) { mOffsetAndData.Collapse(aOffset); }
+    void Collapse(uint32_t aOffset) {
+      if (mOffsetAndData.isSome()) {
+        mOffsetAndData->Collapse(aOffset);
+      } else {
+        mOffsetAndData.emplace(aOffset, EmptyString(),
+                               OffsetAndDataFor::SelectedString);
+      }
+    }
     void Clear() {
-      mOffsetAndData.SetOffsetAndData(UINT32_MAX, EmptyString());
+      mOffsetAndData.reset();
       mWritingMode = WritingMode();
     }
 
-    bool IsValid() const {
-      return mOffsetAndData.IsValid() &&
-             mOffsetAndData.StartOffset() != UINT32_MAX;
-    }
+    bool HasRange() const { return mOffsetAndData.isSome(); }
     const WritingMode& WritingModeRef() const { return mWritingMode; }
 
     friend std::ostream& operator<<(std::ostream& aStream,
                                     const Selection& aSelection) {
-      if (aSelection.IsValid()) {
-        return aStream << "{ IsValid()=false }";
+      if (aSelection.HasRange()) {
+        return aStream << "{ HasRange()=false }";
       }
       aStream << "{ mOffsetAndData=" << aSelection.mOffsetAndData
               << ", mWritingMode=" << aSelection.mWritingMode << " }";
@@ -433,7 +436,7 @@ class IMContextWrapper final : public TextEventDispatcherListener {
     }
 
    private:
-    OffsetAndData<uint32_t> mOffsetAndData;
+    Maybe<OffsetAndData<uint32_t>> mOffsetAndData;
     WritingMode mWritingMode;
   };
   // If mSelection is Nothing, it means that EnsureToCacheSelection failed to
