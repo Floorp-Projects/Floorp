@@ -3849,60 +3849,6 @@ float nsGlobalWindowOuter::GetMozInnerScreenYOuter(CallerType aCallerType) {
   return nsPresContext::AppUnitsToFloatCSSPixels(r.y);
 }
 
-double nsGlobalWindowOuter::GetDevicePixelRatioOuter(CallerType aCallerType) {
-  if (NS_WARN_IF(!mDoc)) {
-    return 1.0;
-  }
-
-  RefPtr<nsPresContext> presContext = mDoc->GetPresContext();
-  if (NS_WARN_IF(!presContext)) {
-    // We're in an undisplayed subdocument... There's not really an awesome way
-    // to tell what the right DPI is from here, so we try to walk up our parent
-    // document chain to the extent that the docs can observe each other.
-    Document* doc = mDoc;
-    while (doc->StyleOrLayoutObservablyDependsOnParentDocumentLayout()) {
-      doc = doc->GetInProcessParentDocument();
-      presContext = doc->GetPresContext();
-      if (presContext) {
-        break;
-      }
-    }
-
-    if (!presContext) {
-      // Still nothing, oh well.
-      return 1.0;
-    }
-  }
-
-  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
-    // Spoofing the DevicePixelRatio causes blurriness in some situations
-    // on HiDPI displays. pdf.js is a non-system caller; but it can't
-    // expose the fingerprintable information, so we can safely disable
-    // spoofing in this situation. It doesn't address the issue for
-    // web-rendered content (including pdf.js instances on the web.)
-    // In the future we hope to have a better solution to fix all HiDPI
-    // blurriness...
-    nsAutoCString origin;
-    nsresult rv = this->GetPrincipal()->GetOrigin(origin);
-    if (NS_FAILED(rv) || origin != "resource://pdf.js"_ns) {
-      return 1.0;
-    }
-  }
-
-  float overrideDPPX = presContext->GetOverrideDPPX();
-
-  if (overrideDPPX > 0) {
-    return overrideDPPX;
-  }
-
-  return double(AppUnitsPerCSSPixel()) /
-         double(presContext->AppUnitsPerDevPixel());
-}
-
-float nsPIDOMWindowOuter::GetDevicePixelRatio(CallerType aCallerType) {
-  return nsGlobalWindowOuter::Cast(this)->GetDevicePixelRatioOuter(aCallerType);
-}
-
 uint64_t nsGlobalWindowOuter::GetMozPaintCountOuter() {
   if (!mDocShell) {
     return 0;
