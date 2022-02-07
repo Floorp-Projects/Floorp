@@ -380,8 +380,6 @@ class IMMHandler final {
   class Selection {
    public:
     Selection() = default;
-    Selection(const Selection& aOther) = delete;
-    void operator=(const Selection& aOther) = delete;
 
     void ClearRange() {
       mOffsetAndData.reset();
@@ -399,35 +397,34 @@ class IMMHandler final {
     bool HasRange() const { return mOffsetAndData.isSome(); }
     void Update(
         const IMENotification::SelectionChangeDataBase& aSelectionChangeData);
-    /**
-     * EnsureSelectionRange() returns true if it has a selection range.
-     * Otherwise, i.e., there is no selection range (e.g.,
-     * `Selection.removeAllRanges()` is called), returns false.
-     */
-    bool EnsureSelectionRange(nsWindow* aWindow);
+
+    static Maybe<Selection> QuerySelection(nsWindow* aWindow);
 
    private:
-    void QuerySelection(nsWindow* aWindow);
-
     Maybe<OffsetAndData<uint32_t>> mOffsetAndData;
     WritingMode mWritingMode;
   };
   // mSelection stores the latest selection data only when sHasFocus is true.
-  // Don't access mSelection directly.  You should use GetSelection() for
-  // getting proper state.
-  Selection mSelection;
+  // Don't access mSelection directly.  You should use
+  // GetSelectionWithQueryIfNothing() for getting proper state.
+  Maybe<Selection> mSelection;
 
-  Selection& GetSelection() {
+  const Maybe<Selection>& GetSelectionWithQueryIfNothing(nsWindow* aWindow) {
     // When IME has focus, mSelection is automatically updated by
     // NOTIFY_IME_OF_SELECTION_CHANGE.
     if (sHasFocus) {
+      if (mSelection.isNothing()) {
+        // But if this is the first access of mSelection, we need to query
+        // selection now.
+        mSelection = Selection::QuerySelection(aWindow);
+      }
       return mSelection;
     }
     // Otherwise, i.e., While IME doesn't have focus, we cannot observe
     // selection changes.  So, in such case, we need to query selection
     // when it's necessary.
-    static Selection sTempSelection;
-    sTempSelection.ClearRange();
+    static Maybe<Selection> sTempSelection;
+    sTempSelection = Selection::QuerySelection(aWindow);
     return sTempSelection;
   }
 
