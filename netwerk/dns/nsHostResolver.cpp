@@ -1337,6 +1337,13 @@ bool nsHostResolver::MaybeRetryTRRLookup(
   }
 
   if (aAddrRec->mTrrAttempts > 1) {
+    if (aFirstAttemptSkipReason == TRRSkippedReason::TRR_TIMEOUT &&
+        StaticPrefs::network_trr_strict_native_fallback_allow_timeouts()) {
+      LOG(
+          ("nsHostResolver::MaybeRetryTRRLookup retry timed out. Using "
+           "native."));
+      return NS_SUCCEEDED(NativeLookup(aAddrRec, aLock));
+    }
     LOG(("nsHostResolver::MaybeRetryTRRLookup mTrrAttempts>1, not retrying."));
     return false;
   }
