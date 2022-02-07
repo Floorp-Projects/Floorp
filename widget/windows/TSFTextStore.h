@@ -368,7 +368,7 @@ class TSFTextStore final : public ITextStoreACP,
   // mPendingSelectionChangeData stores selection change data until notifying
   // TSF of selection change.  If two or more selection changes occur, this
   // stores the latest selection change data because only it is necessary.
-  SelectionChangeData mPendingSelectionChangeData;
+  Maybe<SelectionChangeData> mPendingSelectionChangeData;
 
   // mPendingTextChangeData stores one or more text change data until notifying
   // TSF of text change.  If two or more text changes occur, this merges
@@ -584,6 +584,18 @@ class TSFTextStore final : public ITextStoreACP,
     }
 
     bool SetSelection(const SelectionChangeDataBase& aSelectionChangeData) {
+      // XXX Treat invalid SelectionChangeData means as there is no selection
+      //     rather than an unexpected case.
+      if (!aSelectionChangeData.IsValid()) {
+        if (mACP.isNothing()) {
+          return false;
+        }
+        mACP.reset();
+        // Let's keep the WritingMode because users don't want to change the UI
+        // of TIP temporarily since no selection case is created only by web
+        // apps, but they or TIP would restore selection at last point later.
+        return true;
+      }
       return SetSelection(aSelectionChangeData.mOffset,
                           aSelectionChangeData.Length(),
                           aSelectionChangeData.mReversed,
