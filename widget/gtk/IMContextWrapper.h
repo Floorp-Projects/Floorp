@@ -17,6 +17,8 @@
 #include "nsIWidget.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/TextEvents.h"  // TODO: Stop this in the following patch
 #include "mozilla/TextEventDispatcherListener.h"
 #include "mozilla/WritingModes.h"
 #include "mozilla/widget/IMEData.h"
@@ -385,6 +387,20 @@ class IMContextWrapper final : public TextEventDispatcherListener {
   class Selection final {
    public:
     Selection() : mOffset(UINT32_MAX) {}
+    explicit Selection(
+        const IMENotification::SelectionChangeDataBase& aSelectionChangeData)
+        : mString(aSelectionChangeData.String()),
+          mOffset(aSelectionChangeData.mOffset),
+          mWritingMode(aSelectionChangeData.GetWritingMode()) {}
+    explicit Selection(const WidgetQueryContentEvent& aSelectedTextEvent)
+        : mString(aSelectedTextEvent.mReply->DataRef()),
+          mOffset(aSelectedTextEvent.mReply->StartOffset()),
+          mWritingMode(aSelectedTextEvent.mReply->WritingModeRef()) {
+      MOZ_ASSERT(aSelectedTextEvent.mMessage == eQuerySelectedText);
+      MOZ_ASSERT(aSelectedTextEvent.mReply->mOffsetAndData.isSome());
+    }
+    Selection(uint32_t aOffset, const WritingMode& aWritingMode)
+        : mOffset(aOffset), mWritingMode(aWritingMode) {}
 
     void Clear() {
       mString.Truncate();
@@ -395,9 +411,6 @@ class IMContextWrapper final : public TextEventDispatcherListener {
       mOffset = aOffset;
       mString.Truncate();
     }
-
-    void Assign(const IMENotification& aIMENotification);
-    void Assign(const WidgetQueryContentEvent& aSelectedTextEvent);
 
     bool IsValid() const { return mOffset != UINT32_MAX; }
     bool Collapsed() const { return mString.IsEmpty(); }
@@ -438,7 +451,13 @@ class IMContextWrapper final : public TextEventDispatcherListener {
     uint32_t mOffset;
     WritingMode mWritingMode;
   };
-  Selection mSelection;
+  // If mSelection is Nothing, it means that EnsureToCacheSelection failed to
+  // get selection or just not caching the selection.
+  Maybe<Selection> mSelection;
+
+  /**
+   * Return true if mSelection is set to some.  Otherwise, false.
+   */
   bool EnsureToCacheSelection(nsAString* aSelectedString = nullptr);
 
   // mIsIMFocused is set to TRUE when we call gtk_im_context_focus_in(). And
