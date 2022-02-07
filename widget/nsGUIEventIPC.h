@@ -703,6 +703,8 @@ struct ParamTraits<mozilla::widget::IMENotification::SelectionChangeDataBase> {
     WriteParam(aMsg, aParam.mOffset);
     WriteParam(aMsg, *aParam.mString);
     WriteParam(aMsg, aParam.mWritingModeBits);
+    WriteParam(aMsg, aParam.mIsInitialized);
+    WriteParam(aMsg, aParam.mHasRange);
     WriteParam(aMsg, aParam.mReversed);
     WriteParam(aMsg, aParam.mCausedByComposition);
     WriteParam(aMsg, aParam.mCausedBySelectionEvent);
@@ -715,6 +717,8 @@ struct ParamTraits<mozilla::widget::IMENotification::SelectionChangeDataBase> {
     return ReadParam(aMsg, aIter, &aResult->mOffset) &&
            ReadParam(aMsg, aIter, aResult->mString) &&
            ReadParam(aMsg, aIter, &aResult->mWritingModeBits) &&
+           ReadParam(aMsg, aIter, &aResult->mIsInitialized) &&
+           ReadParam(aMsg, aIter, &aResult->mHasRange) &&
            ReadParam(aMsg, aIter, &aResult->mReversed) &&
            ReadParam(aMsg, aIter, &aResult->mCausedByComposition) &&
            ReadParam(aMsg, aIter, &aResult->mCausedBySelectionEvent) &&

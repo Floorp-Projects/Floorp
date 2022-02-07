@@ -754,6 +754,8 @@ struct IMENotification final {
     // Writing mode at the selection.
     uint8_t mWritingModeBits;
 
+    bool mIsInitialized;
+    bool mHasRange;
     bool mReversed;
     bool mCausedByComposition;
     bool mCausedBySelectionEvent;
@@ -765,14 +767,30 @@ struct IMENotification final {
     WritingMode GetWritingMode() const;
 
     uint32_t StartOffset() const {
+      MOZ_ASSERT(mHasRange);
       return mOffset + (mReversed ? Length() : 0);
     }
-    uint32_t EndOffset() const { return mOffset + (mReversed ? 0 : Length()); }
-    const nsString& String() const { return *mString; }
-    uint32_t Length() const { return mString->Length(); }
-    bool IsInInt32Range() const { return mOffset + Length() <= INT32_MAX; }
-    bool IsCollapsed() const { return mString->IsEmpty(); }
+    uint32_t EndOffset() const {
+      MOZ_ASSERT(mHasRange);
+      return mOffset + (mReversed ? 0 : Length());
+    }
+    const nsString& String() const {
+      MOZ_ASSERT(mHasRange);
+      return *mString;
+    }
+    uint32_t Length() const {
+      MOZ_ASSERT(mHasRange);
+      return mString->Length();
+    }
+    bool IsInInt32Range() const {
+      return mHasRange && mOffset <= INT32_MAX && Length() <= INT32_MAX &&
+             mOffset + Length() <= INT32_MAX;
+    }
+    bool HasRange() const { return mIsInitialized && mHasRange; }
+    bool IsCollapsed() const { return !mHasRange || mString->IsEmpty(); }
     void ClearSelectionData() {
+      mIsInitialized = false;
+      mHasRange = false;
       mOffset = UINT32_MAX;
       mString->Truncate();
       mWritingModeBits = 0;
@@ -784,12 +802,23 @@ struct IMENotification final {
       mCausedBySelectionEvent = false;
       mOccurredDuringComposition = false;
     }
-    bool IsValid() const { return mOffset != UINT32_MAX; }
+    bool IsInitialized() const { return mIsInitialized; }
+    bool IsValid() const { return mIsInitialized && mHasRange; }
     void Assign(const SelectionChangeDataBase& aOther) {
-      mOffset = aOther.mOffset;
-      *mString = aOther.String();
-      mWritingModeBits = aOther.mWritingModeBits;
-      mReversed = aOther.mReversed;
+      mIsInitialized = aOther.mIsInitialized;
+      mHasRange = aOther.mHasRange;
+      if (mIsInitialized && mHasRange) {
+        mOffset = aOther.mOffset;
+        *mString = aOther.String();
+        mReversed = aOther.mReversed;
+        mWritingModeBits = aOther.mWritingModeBits;
+      } else {
+        mOffset = UINT32_MAX;
+        mString->Truncate();
+        mReversed = false;
+        // Let's keep the writing mode for avoiding temporarily changing the
+        // writing mode at no selection range.
+      }
       AssignReason(aOther.mCausedByComposition, aOther.mCausedBySelectionEvent,
                    aOther.mOccurredDuringComposition);
     }
@@ -802,11 +831,17 @@ struct IMENotification final {
     }
 
     bool EqualsRange(const SelectionChangeDataBase& aOther) const {
-      MOZ_ASSERT(IsValid());
+      if (HasRange() != aOther.HasRange()) {
+        return false;
+      }
+      if (!HasRange()) {
+        return true;
+      }
       return mOffset == aOther.mOffset && mString->Equals(*aOther.mString);
     }
     bool EqualsRangeAndDirection(const SelectionChangeDataBase& aOther) const {
-      return EqualsRange(aOther) && mReversed == aOther.mReversed;
+      return EqualsRange(aOther) &&
+             (!HasRange() || mReversed == aOther.mReversed);
     }
     bool EqualsRangeAndDirectionAndWritingMode(
         const SelectionChangeDataBase& aOther) const {
