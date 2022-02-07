@@ -698,7 +698,7 @@ class TSFTextStore final : public ITextStoreACP,
       return mACP.isSome() && mACP->style.fInterimChar != FALSE;
     }
 
-    WritingMode GetWritingMode() const { return mWritingMode; }
+    const WritingMode& WritingModeRef() const { return mWritingMode; }
 
     bool EqualsExceptDirection(const TS_SELECTION_ACP& aACP) const {
       if (mACP.isNothing()) {
