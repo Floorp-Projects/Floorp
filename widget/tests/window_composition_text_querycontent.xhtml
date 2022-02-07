@@ -204,7 +204,7 @@ function checkSelection(aExpectedOffset, aExpectedText, aMessage, aID)
     return false;
   }
   if (aExpectedOffset === null) {
-    todo_is(
+    is(
       selectedText.notFound,
       true,
       `${aMessage}: selection should not be found ${aID}`

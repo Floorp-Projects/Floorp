@@ -304,7 +304,8 @@ nsresult ContentEventHandler::InitRootContent(
   return NS_OK;
 }
 
-nsresult ContentEventHandler::InitCommon(SelectionType aSelectionType,
+nsresult ContentEventHandler::InitCommon(EventMessage aEventMessage,
+                                         SelectionType aSelectionType,
                                          bool aRequireFlush) {
   if (mSelection && mSelection->Type() == aSelectionType) {
     return NS_OK;
@@ -351,8 +352,9 @@ nsresult ContentEventHandler::InitCommon(SelectionType aSelectionType,
   }
 
   // Even if there are no selection ranges, it's usual case if aSelectionType
-  // is a special selection.
-  if (aSelectionType != SelectionType::eNormal) {
+  // is a special selection or we're handling eQuerySelectedText.
+  if (aSelectionType != SelectionType::eNormal ||
+      aEventMessage == eQuerySelectedText) {
     MOZ_ASSERT(!mFirstSelectedRawRange.IsPositioned());
     return NS_OK;
   }
@@ -385,7 +387,8 @@ nsresult ContentEventHandler::Init(WidgetQueryContentEvent* aEvent) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = InitCommon(selectionType, aEvent->NeedsToFlushLayout());
+  nsresult rv =
+      InitCommon(aEvent->mMessage, selectionType, aEvent->NeedsToFlushLayout());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Be aware, WidgetQueryContentEvent::mInput::mOffset should be made absolute
@@ -439,7 +442,7 @@ nsresult ContentEventHandler::Init(WidgetQueryContentEvent* aEvent) {
 nsresult ContentEventHandler::Init(WidgetSelectionEvent* aEvent) {
   NS_ASSERTION(aEvent, "aEvent must not be null");
 
-  nsresult rv = InitCommon();
+  nsresult rv = InitCommon(aEvent->mMessage);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aEvent->mSucceeded = false;
@@ -1317,7 +1320,6 @@ nsresult ContentEventHandler::OnQuerySelectedText(
   MOZ_ASSERT(aEvent->mReply->mOffsetAndData.isNothing());
 
   if (!mFirstSelectedRawRange.IsPositioned()) {
-    MOZ_ASSERT(aEvent->mInput.mSelectionType != SelectionType::eNormal);
     MOZ_ASSERT(aEvent->mReply->mOffsetAndData.isNothing());
     MOZ_ASSERT_IF(mSelection, !mSelection->RangeCount());
     // This is special case that `mReply` is emplaced, but mOffsetAndData is

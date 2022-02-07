@@ -548,7 +548,7 @@ void IMEContentObserver::OnSelectionChange(Selection& aSelection) {
     return;
   }
 
-  if (aSelection.RangeCount() && mWidget) {
+  if (mWidget) {
     bool causedByComposition = IsEditorHandlingEventForComposition();
     bool causedBySelectionEvent = TextComposition::IsHandlingSelectionEvent();
     bool duringComposition = IsEditorComposing();
