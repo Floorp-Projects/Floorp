@@ -1311,7 +1311,17 @@ AboutReader.prototype = {
    */
   _goToReference(ref) {
     if (ref) {
-      this._win.location.hash = ref;
+      if (this._doc.readyState == "complete") {
+        this._win.location.hash = ref;
+      } else {
+        this._win.addEventListener(
+          "load",
+          () => {
+            this._win.location.hash = ref;
+          },
+          { once: true }
+        );
+      }
     }
   },
 
