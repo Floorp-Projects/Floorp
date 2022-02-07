@@ -339,5 +339,18 @@ std::ostream& operator<<(std::ostream& aStream,
   return aStream;
 }
 
+/******************************************************************************
+ * IMENotification::SelectionChangeDataBase
+ ******************************************************************************/
+
+void IMENotification::SelectionChangeDataBase::SetWritingMode(
+    const WritingMode& aWritingMode) {
+  mWritingModeBits = aWritingMode.GetBits();
+}
+
+WritingMode IMENotification::SelectionChangeDataBase::GetWritingMode() const {
+  return WritingMode(mWritingModeBits);
+}
+
 }  // namespace widget
 }  // namespace mozilla
