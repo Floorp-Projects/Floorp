@@ -135,17 +135,6 @@ bool SocketProcessChild::Init(base::ProcessId aParentPid,
     return false;
   }
 
-  if (StaticPrefs::network_proxy_parse_pac_on_socket_process()) {
-    // For parsing PAC.
-    const char* jsInitFailureReason = JS_InitWithFailureDiagnostic();
-    if (jsInitFailureReason) {
-      MOZ_CRASH_UNSAFE(jsInitFailureReason);
-    }
-    sInitializedJS = true;
-
-    xpc::SelfHostedShmem::GetSingleton();
-  }
-
   BackgroundChild::Startup();
   BackgroundChild::InitSocketStarter(this);
 
@@ -690,6 +679,17 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvGetHttpConnectionData(
 
 mozilla::ipc::IPCResult SocketProcessChild::RecvInitProxyAutoConfigChild(
     Endpoint<PProxyAutoConfigChild>&& aEndpoint) {
+  // For parsing PAC.
+  if (!sInitializedJS) {
+    const char* jsInitFailureReason = JS_InitWithFailureDiagnostic();
+    if (jsInitFailureReason) {
+      MOZ_CRASH_UNSAFE(jsInitFailureReason);
+    }
+    sInitializedJS = true;
+
+    xpc::SelfHostedShmem::GetSingleton();
+  }
+
   Unused << ProxyAutoConfigChild::Create(std::move(aEndpoint));
   return IPC_OK();
 }
