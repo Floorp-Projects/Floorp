@@ -6,6 +6,7 @@
 #ifndef IMMHandler_h_
 #define IMMHandler_h_
 
+#include "mozilla/ContentData.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/WritingModes.h"
@@ -377,56 +378,35 @@ class IMMHandler final {
   int32_t mCursorPosition;
   uint32_t mCompositionStart;
 
-  class Selection {
-   public:
-    Selection() = default;
+  // mContentSelection stores the latest selection data only when sHasFocus is
+  // true. Don't access mContentSelection directly.  You should use
+  // GetContentSelectionWithQueryIfNothing() for getting proper state.
+  Maybe<ContentSelection> mContentSelection;
 
-    void ClearRange() {
-      mOffsetAndData.reset();
-      // Don't reset WritingMode because users must not want to update UI of IME
-      // temporarily since no selection range cause is created only by web apps,
-      // and they would restore selection later at the last point.
-    }
-
-    const OffsetAndData<uint32_t>& OffsetAndDataRef() const {
-      return mOffsetAndData.ref();
-    }
-
-    const WritingMode& WritingModeRef() const { return mWritingMode; }
-
-    bool HasRange() const { return mOffsetAndData.isSome(); }
-    void Update(
-        const IMENotification::SelectionChangeDataBase& aSelectionChangeData);
-
-    static Maybe<Selection> QuerySelection(nsWindow* aWindow);
-
-   private:
-    Maybe<OffsetAndData<uint32_t>> mOffsetAndData;
-    WritingMode mWritingMode;
-  };
-  // mSelection stores the latest selection data only when sHasFocus is true.
-  // Don't access mSelection directly.  You should use
-  // GetSelectionWithQueryIfNothing() for getting proper state.
-  Maybe<Selection> mSelection;
-
-  const Maybe<Selection>& GetSelectionWithQueryIfNothing(nsWindow* aWindow) {
-    // When IME has focus, mSelection is automatically updated by
+  const Maybe<ContentSelection>& GetContentSelectionWithQueryIfNothing(
+      nsWindow* aWindow) {
+    // When IME has focus, mContentSelection is automatically updated by
     // NOTIFY_IME_OF_SELECTION_CHANGE.
     if (sHasFocus) {
-      if (mSelection.isNothing()) {
-        // But if this is the first access of mSelection, we need to query
-        // selection now.
-        mSelection = Selection::QuerySelection(aWindow);
+      if (mContentSelection.isNothing()) {
+        // But if this is the first access of mContentSelection, we need to
+        // query selection now.
+        mContentSelection = QueryContentSelection(aWindow);
       }
-      return mSelection;
+      return mContentSelection;
     }
     // Otherwise, i.e., While IME doesn't have focus, we cannot observe
     // selection changes.  So, in such case, we need to query selection
     // when it's necessary.
-    static Maybe<Selection> sTempSelection;
-    sTempSelection = Selection::QuerySelection(aWindow);
-    return sTempSelection;
+    static Maybe<ContentSelection> sTempContentSelection;
+    sTempContentSelection = QueryContentSelection(aWindow);
+    return sTempContentSelection;
   }
+
+  /**
+   * Query content selection on aWindow with WidgetQueryContent event.
+   */
+  static Maybe<ContentSelection> QueryContentSelection(nsWindow* aWindow);
 
   bool mIsComposing;
 

@@ -468,7 +468,7 @@ void IMMHandler::OnFocusChange(bool aFocus, nsWindow* aWindow) {
     }
   }
   if (gIMMHandler) {
-    gIMMHandler->mSelection.reset();
+    gIMMHandler->mContentSelection.reset();
   }
   sHasFocus = aFocus;
 }
@@ -495,10 +495,8 @@ void IMMHandler::OnSelectionChange(nsWindow* aWindow,
   // MaybeAdjustCompositionFont() may create gIMMHandler.  So, check it
   // after a call of MaybeAdjustCompositionFont().
   if (gIMMHandler) {
-    if (gIMMHandler->mSelection.isNothing()) {
-      gIMMHandler->mSelection.emplace();
-    }
-    gIMMHandler->mSelection->Update(aIMENotification.mSelectionChangeData);
+    gIMMHandler->mContentSelection =
+        Some(ContentSelection(aIMENotification.mSelectionChangeData));
   }
 }
 
@@ -936,23 +934,24 @@ void IMMHandler::HandleStartComposition(nsWindow* aWindow,
   MOZ_ASSERT(!mIsComposing,
              "HandleStartComposition is called but mIsComposing is TRUE");
 
-  const Maybe<Selection>& selection = GetSelectionWithQueryIfNothing(aWindow);
-  if (selection.isNothing()) {
+  const Maybe<ContentSelection>& contentSelection =
+      GetContentSelectionWithQueryIfNothing(aWindow);
+  if (contentSelection.isNothing()) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("  IMMHandler::HandleStartComposition, FAILED, due to "
-             "Selection::GetSelectionWithQueryIfNothing() failure"));
+             "Selection::GetContentSelectionWithQueryIfNothing() failure"));
     return;
   }
-  if (!selection->HasRange()) {
+  if (!contentSelection->HasRange()) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("  IMMHandler::HandleStartComposition, FAILED, due to "
              "there is no selection"));
     return;
   }
 
-  AdjustCompositionFont(aWindow, aContext, selection->WritingModeRef());
+  AdjustCompositionFont(aWindow, aContext, contentSelection->WritingModeRef());
 
-  mCompositionStart = selection->OffsetAndDataRef().StartOffset();
+  mCompositionStart = contentSelection->OffsetAndDataRef().StartOffset();
   mCursorPosition = NO_IME_CARET;
 
   RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcherFor(aWindow);
@@ -1259,16 +1258,18 @@ bool IMMHandler::HandleReconvert(nsWindow* aWindow, LPARAM lParam,
   *oResult = 0;
   RECONVERTSTRING* pReconv = reinterpret_cast<RECONVERTSTRING*>(lParam);
 
-  const Maybe<Selection>& selection = GetSelectionWithQueryIfNothing(aWindow);
-  if (selection.isNothing()) {
+  const Maybe<ContentSelection>& contentSelection =
+      GetContentSelectionWithQueryIfNothing(aWindow);
+  if (contentSelection.isNothing()) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("IMMHandler::HandleReconvert, FAILED, due to "
-             "Selection::GetSelectionWithQueryIfNothing() failure"));
+             "Selection::GetContentSelectionWithQueryIfNothing() failure"));
     return false;
   }
 
-  const uint32_t len =
-      selection->HasRange() ? selection->OffsetAndDataRef().Length() : 0u;
+  const uint32_t len = contentSelection->HasRange()
+                           ? contentSelection->OffsetAndDataRef().Length()
+                           : 0u;
   uint32_t needSize = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
 
   if (!pReconv) {
@@ -1305,7 +1306,7 @@ bool IMMHandler::HandleReconvert(nsWindow* aWindow, LPARAM lParam,
 
   if (len) {
     ::CopyMemory(reinterpret_cast<LPVOID>(lParam + sizeof(RECONVERTSTRING)),
-                 selection->OffsetAndDataRef().DataRef().get(),
+                 contentSelection->OffsetAndDataRef().DataRef().get(),
                  len * sizeof(WCHAR));
   }
 
@@ -1414,18 +1415,19 @@ bool IMMHandler::HandleDocumentFeed(nsWindow* aWindow, LPARAM lParam,
 
   int32_t targetOffset, targetLength;
   if (!hasCompositionString) {
-    const Maybe<Selection>& selection = GetSelectionWithQueryIfNothing(aWindow);
-    if (selection.isNothing()) {
+    const Maybe<ContentSelection>& contentSelection =
+        GetContentSelectionWithQueryIfNothing(aWindow);
+    if (contentSelection.isNothing()) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("IMMHandler::HandleDocumentFeed, FAILED, due to "
-               "Selection::GetSelectionWithQueryIfNothing() failure"));
+               "Selection::GetContentSelectionWithQueryIfNothing() failure"));
       return false;
     }
-    if (selection->HasRange()) {
-      targetOffset =
-          static_cast<int32_t>(selection->OffsetAndDataRef().StartOffset());
+    if (contentSelection->HasRange()) {
+      targetOffset = static_cast<int32_t>(
+          contentSelection->OffsetAndDataRef().StartOffset());
       targetLength =
-          static_cast<int32_t>(selection->OffsetAndDataRef().Length());
+          static_cast<int32_t>(contentSelection->OffsetAndDataRef().Length());
     } else {
       // If there is no selection range, let's return all text in the editor.
       targetOffset = 0;
@@ -1821,17 +1823,18 @@ bool IMMHandler::GetCharacterRectOfSelectedTextAt(
     WritingMode* aWritingMode) {
   LayoutDeviceIntPoint point(0, 0);
 
-  const Maybe<Selection>& selection = GetSelectionWithQueryIfNothing(aWindow);
-  if (selection.isNothing()) {
+  const Maybe<ContentSelection>& contentSelection =
+      GetContentSelectionWithQueryIfNothing(aWindow);
+  if (contentSelection.isNothing()) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("IMMHandler::GetCharacterRectOfSelectedTextAt, FAILED, due to "
-             "Selection::GetSelectionWithQueryIfNothing() failure"));
+             "Selection::GetContentSelectionWithQueryIfNothing() failure"));
     return false;
   }
 
   // If there is neither a selection range nor composition string, cannot return
   // character rect, of course.
-  if (!selection->HasRange() && !mIsComposing) {
+  if (!contentSelection->HasRange() && !mIsComposing) {
     MOZ_LOG(gIMELog, LogLevel::Warning,
             ("IMMHandler::GetCharacterRectOfSelectedTextAt, FAILED, due to "
              "there is neither a selection range nor composition string"));
@@ -1842,9 +1845,9 @@ bool IMMHandler::GetCharacterRectOfSelectedTextAt(
   // string, we should return false since such case must be a bug of the caller
   // or the active IME.  If it's an IME's bug, we need to set targetLength to
   // aOffset.
-  const uint32_t targetLength = mIsComposing
-                                    ? mCompositionString.Length()
-                                    : selection->OffsetAndDataRef().Length();
+  const uint32_t targetLength =
+      mIsComposing ? mCompositionString.Length()
+                   : contentSelection->OffsetAndDataRef().Length();
   if (NS_WARN_IF(aOffset > targetLength)) {
     MOZ_LOG(
         gIMELog, LogLevel::Error,
@@ -1857,7 +1860,8 @@ bool IMMHandler::GetCharacterRectOfSelectedTextAt(
   // If there is caret, we might be able to use caret rect.
   uint32_t caretOffset = UINT32_MAX;
   // There is a caret only when the normal selection is collapsed.
-  if (selection.isNothing() || selection->OffsetAndDataRef().IsDataEmpty()) {
+  if (contentSelection.isNothing() ||
+      contentSelection->OffsetAndDataRef().IsDataEmpty()) {
     if (mIsComposing) {
       // If it's composing, mCursorPosition is the offset to caret in
       // the composition string.
@@ -2353,39 +2357,7 @@ bool IMMHandler::OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
   }
 }
 
-/******************************************************************************
- * IMMHandler::Selection
- ******************************************************************************/
-
-void IMMHandler::Selection::Update(
-    const IMENotification::SelectionChangeDataBase& aSelectionChangeData) {
-  if (!aSelectionChangeData.IsValid()) {
-    ClearRange();
-  }
-  mOffsetAndData = Some(aSelectionChangeData.ToUint32OffsetAndData());
-  if (mOffsetAndData.isSome()) {
-    // Don't reset WritingMode if there is no selection because users must not
-    // want to update UI of IME temporarily since no selection range cause is
-    // created only by web apps, and they would restore selection later at the
-    // last point.
-    mWritingMode = aSelectionChangeData.GetWritingMode();
-  }
-
-  MOZ_LOG(gIMELog, LogLevel::Info,
-          ("IMMHandler::Selection::Update, aIMENotification={ "
-           "mSelectionChangeData={ "
-           "mOffsetAndData=%s, mWritingMode=%s } }",
-           ToString(mOffsetAndData).c_str(), ToString(mWritingMode).c_str()));
-
-  if (!mOffsetAndData->IsValid()) {
-    MOZ_LOG(gIMELog, LogLevel::Error,
-            ("  IMMHandler::Selection::Update, FAILED, due to invalid range"));
-    ClearRange();
-  }
-}
-
-Maybe<IMMHandler::Selection> IMMHandler::Selection::QuerySelection(
-    nsWindow* aWindow) {
+Maybe<ContentSelection> IMMHandler::QueryContentSelection(nsWindow* aWindow) {
   WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
                                                  aWindow);
   LayoutDeviceIntPoint point(0, 0);
@@ -2406,21 +2378,19 @@ Maybe<IMMHandler::Selection> IMMHandler::Selection::QuerySelection(
     return Nothing();
   }
 
-  Selection selection;
-  selection.mOffsetAndData = querySelectedTextEvent.mReply->mOffsetAndData;
-  selection.mWritingMode = querySelectedTextEvent.mReply->WritingModeRef();
+  ContentSelection contentSelection(querySelectedTextEvent);
 
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("IMMHandler::Selection::Init, querySelectedTextEvent={ mReply=%s }",
            ToString(querySelectedTextEvent.mReply).c_str()));
 
-  if (selection.mOffsetAndData.isSome() &&
-      !selection.mOffsetAndData->IsValid()) {
+  if (contentSelection.HasRange() &&
+      !contentSelection.OffsetAndDataRef().IsValid()) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("  IMMHandler::Selection::Init, FAILED, due to invalid range"));
     return Nothing();
   }
-  return Some(selection);
+  return Some(contentSelection);
 }
 
 }  // namespace widget
