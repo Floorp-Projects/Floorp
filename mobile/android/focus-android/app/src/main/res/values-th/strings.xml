@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -640,6 +640,9 @@
 
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">ขั้นสูง</string>
+
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">สิทธิอนุญาตไซต์</string>
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">เล่นอัตโนมัติ</string>
