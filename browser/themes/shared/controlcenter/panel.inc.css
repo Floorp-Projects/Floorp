@@ -327,7 +327,7 @@
   height: -moz-fit-content;
 }
 
-.identity-popup-security-connection > hbox > description {
+.identity-popup-security-connection > hbox > label {
   margin-inline-start: 8px;
   margin-block: 0;
 }
