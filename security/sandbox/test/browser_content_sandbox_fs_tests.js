@@ -411,20 +411,8 @@ async function testFileAccessLinuxOnly() {
   let configDir = GetHomeSubdir(".config");
 
   const xdgConfigHome = GetEnvironmentVariable("XDG_CONFIG_HOME");
-  let populateFakeXdgConfigHome = async aPath => {
-    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-    await OS.File.makeDir(aPath, { unixMode: OS.Constants.S_IRWXU });
-    ok(await OS.File.exists(aPath), `XDG_CONFIG_HOME ${aPath} was created`);
-  };
-
-  let unpopulateFakeXdgConfigHome = async aPath => {
-    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-    await OS.File.removeDir(aPath);
-  };
 
   if (xdgConfigHome.length > 1) {
-    await populateFakeXdgConfigHome(xdgConfigHome);
-
     configDir = GetDir(xdgConfigHome);
     configDir.normalize();
 
@@ -635,7 +623,6 @@ async function testFileAccessLinuxOnly() {
       file: configDir,
       minLevel: minHomeReadSandboxLevel(),
       func: readDir,
-      cleanup: unpopulateFakeXdgConfigHome,
     });
   }
 
