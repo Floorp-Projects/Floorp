@@ -9883,6 +9883,16 @@
   value: true
   mirror: always
 
+# Set this pref to an integer like 99 to override the User-Agent string's
+# Firefox version. The value 0 means use the default Firefox version. If
+# enterprise users rely on sites that aren't compatible with Firefox version
+# 100's three-digit version number, enterprise admins can set this pref to a
+# known-good version (like 99) in an enterprise policy file.
+- name: network.http.useragent.forceVersion
+  type: uint32_t
+  value: 0
+  mirror: always
+
 # Whether or not we use Windows for SSO to Microsoft sites.
 - name: network.http.windows-sso.enabled
   type: RelaxedAtomicBool
