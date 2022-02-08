@@ -225,10 +225,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:Clamp_S32_D32_nofilter_trans_shaderproc\n"
          "race:SkSpriteBlitter_Memcpy\n"
 
-         // Bug 1606651
-         "race:nsPluginTag::nsPluginTag\n"
-         "race:nsFakePluginTag\n"
-
          // Bug 1606800
          "race:CallInitFunc\n"
 
