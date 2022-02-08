@@ -16,6 +16,7 @@
 #include "nsTextFragment.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 
 using namespace mozilla;
