@@ -77,7 +77,7 @@ dictionary AudioSinkDebugInfo {
   boolean isPlaying = false;
   boolean isStarted = false;
   boolean audioEnded = false;
-  long outputRate = 0;
+  unsigned long outputRate = 0;
   long long written = 0;
   boolean hasErrored = false;
   boolean playbackComplete = false;
