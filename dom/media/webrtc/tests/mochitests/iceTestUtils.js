@@ -20,37 +20,87 @@ const findStatsRelayCandidates = async (pc, protocol) => {
   );
 };
 
+// Trickles candidates if pcDst is set, and resolves the candidate list
+const trickleIce = async (pc, pcDst) => {
+  const candidates = [],
+    addCandidatePromises = [];
+  while (true) {
+    const { candidate } = await new Promise(r =>
+      pc.addEventListener("icecandidate", r, { once: true })
+    );
+    if (!candidate) {
+      break;
+    }
+    candidates.push(candidate);
+    if (pcDst) {
+      addCandidatePromises.push(pcDst.addIceCandidate(candidate));
+    }
+  }
+  await Promise.all(addCandidatePromises);
+  return candidates;
+};
+
 const gather = async pc => {
-  await pc.setLocalDescription(
-    await pc.createOffer({ offerToReceiveAudio: true })
-  );
-  return new Promise(r => {
-    const candidates = [];
-    const onCandidate = e => {
-      if (e.candidate) {
-        candidates.push(e.candidate);
-      } else {
-        r(candidates);
-        pc.removeEventListener("icecandidate", onCandidate);
-      }
-    };
-    pc.addEventListener("icecandidate", onCandidate);
-  });
+  if (pc.signalingState == "stable") {
+    await pc.setLocalDescription(
+      await pc.createOffer({ offerToReceiveAudio: true })
+    );
+  } else if (pc.signalingState == "have-remote-offer") {
+    await pc.setLocalDescription();
+  }
+
+  return trickleIce(pc);
 };
 
 const gatherWithTimeout = async (pc, timeout, context) => {
   const throwOnTimeout = async () => {
     await wait(timeout);
-    throw `Gathering did not complete within ${timeout} ms with ${context}`;
+    throw new Error(
+      `Gathering did not complete within ${timeout} ms with ${context}`
+    );
   };
 
-  let result = [];
-  try {
-    result = await Promise.race([gather(pc), throwOnTimeout()]);
-  } catch (e) {
-    ok(false, e);
-  }
-  return result;
+  return Promise.race([gather(pc), throwOnTimeout()]);
+};
+
+const iceConnected = async pc => {
+  return new Promise((resolve, reject) => {
+    pc.addEventListener("iceconnectionstatechange", () => {
+      if (["connected", "completed"].includes(pc.iceConnectionState)) {
+        resolve();
+      } else if (pc.iceConnectionState == "failed") {
+        reject(new Error(`ICE failed`));
+      }
+    });
+  });
+};
+
+const connect = async (offerer, answerer) => {
+  const trickle1 = trickleIce(offerer, answerer);
+  const trickle2 = trickleIce(answerer, offerer);
+  const offer = await offerer.createOffer({ offerToReceiveAudio: true });
+  await offerer.setLocalDescription(offer);
+  await answerer.setRemoteDescription(offer);
+  const answer = await answerer.createAnswer();
+  await Promise.all([
+    trickle1,
+    trickle2,
+    offerer.setRemoteDescription(answer),
+    answerer.setLocalDescription(answer),
+    iceConnected(offerer),
+    iceConnected(answerer),
+  ]);
+};
+
+const connectWithTimeout = async (offerer, answerer, timeout, context) => {
+  const throwOnTimeout = async () => {
+    await wait(timeout);
+    throw new Error(
+      `ICE did not complete within ${timeout} ms with ${context}`
+    );
+  };
+
+  return Promise.race([connect(offerer, answerer), throwOnTimeout()]);
 };
 
 const isV6HostCandidate = candidate => {
