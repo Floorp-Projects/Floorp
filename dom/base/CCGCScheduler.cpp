@@ -648,7 +648,7 @@ js::SliceBudget CCGCScheduler::ComputeInterSliceGCBudget(TimeStamp aDeadline,
   TimeDuration budget =
       aDeadline.IsNull() ? mActiveIntersliceGCBudget * 2 : aDeadline - aNow;
   if (!mCCBlockStart) {
-    return CreateGCSliceBudget(budget);
+    return CreateGCSliceBudget(budget, !aDeadline.IsNull(), false);
   }
 
   TimeDuration blockedTime = aNow - mCCBlockStart;
@@ -658,11 +658,14 @@ js::SliceBudget CCGCScheduler::ComputeInterSliceGCBudget(TimeStamp aDeadline,
   TimeDuration extendedBudget =
       maxSliceGCBudget.MultDouble(percentOfBlockedTime);
   if (budget >= extendedBudget) {
-    return CreateGCSliceBudget(budget);
+    return CreateGCSliceBudget(budget, !aDeadline.IsNull(), false);
   }
 
   // If the budget is being extended, do not allow it to be interrupted.
-  return js::SliceBudget(js::TimeBudget(extendedBudget));
+  auto result = js::SliceBudget(js::TimeBudget(extendedBudget), nullptr);
+  result.idle = !aDeadline.IsNull();
+  result.extended = true;
+  return result;
 }
 
 CCReason CCGCScheduler::ShouldScheduleCC(TimeStamp aNow,
