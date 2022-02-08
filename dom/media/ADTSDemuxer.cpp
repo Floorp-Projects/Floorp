@@ -67,7 +67,7 @@ class FrameHeader {
   FrameHeader() { Reset(); }
 
   // Header size
-  size_t HeaderSize() const { return (mHaveCrc) ? 9 : 7; }
+  uint64_t HeaderSize() const { return (mHaveCrc) ? 9 : 7; }
 
   bool IsValid() const { return mFrameLength > 0; }
 
@@ -89,13 +89,13 @@ class FrameHeader {
     mObjectType = ((p[2] & 0xC0) >> 6) + 1;
     mSamplingIndex = (p[2] & 0x3C) >> 2;
     mChannelConfig = (p[2] & 0x01) << 2 | (p[3] & 0xC0) >> 6;
-    mFrameLength =
-        (p[3] & 0x03) << 11 | (p[4] & 0xFF) << 3 | (p[5] & 0xE0) >> 5;
+    mFrameLength = static_cast<uint32_t>(
+        (p[3] & 0x03) << 11 | (p[4] & 0xFF) << 3 | (p[5] & 0xE0) >> 5);
     mNumAACFrames = (p[6] & 0x03) + 1;
 
-    static const int32_t SAMPLE_RATES[16] = {96000, 88200, 64000, 48000, 44100,
-                                             32000, 24000, 22050, 16000, 12000,
-                                             11025, 8000,  7350};
+    static const uint32_t SAMPLE_RATES[16] = {96000, 88200, 64000, 48000, 44100,
+                                              32000, 24000, 22050, 16000, 12000,
+                                              11025, 8000,  7350};
     mSampleRate = SAMPLE_RATES[mSamplingIndex];
 
     MOZ_ASSERT(mChannelConfig < 8);
@@ -111,7 +111,7 @@ class Frame {
  public:
   Frame() : mOffset(0), mHeader() {}
 
-  int64_t Offset() const { return mOffset; }
+  uint64_t Offset() const { return mOffset; }
   size_t Length() const {
     // TODO: If fields are zero'd when invalid, this check wouldn't be
     // necessary.
@@ -123,7 +123,7 @@ class Frame {
   }
 
   // Returns the offset to the start of frame's raw data.
-  int64_t PayloadOffset() const { return mOffset + mHeader.HeaderSize(); }
+  uint64_t PayloadOffset() const { return mOffset + mHeader.HeaderSize(); }
 
   // Returns the length of the frame's raw data (excluding the header) in bytes.
   size_t PayloadLength() const {
@@ -148,7 +148,7 @@ class Frame {
   }
 
   // Returns whether the valid
-  bool Parse(int64_t aOffset, const uint8_t* aStart, const uint8_t* aEnd) {
+  bool Parse(uint64_t aOffset, const uint8_t* aStart, const uint8_t* aEnd) {
     MOZ_ASSERT(aStart && aEnd);
 
     bool found = false;
@@ -160,14 +160,14 @@ class Frame {
       ptr++;
     }
 
-    mOffset = aOffset + (ptr - aStart) - 1;
+    mOffset = aOffset + (static_cast<size_t>(ptr - aStart)) - 1u;
 
     return found;
   }
 
  private:
   // The offset to the start of the header.
-  int64_t mOffset;
+  uint64_t mOffset;
 
   // The currently parsed frame header.
   FrameHeader mHeader;
@@ -197,7 +197,7 @@ class FrameParser {
   // true if one was found. After returning, the variable passed to
   // 'aBytesToSkip' holds the amount of bytes to be skipped (if any) in order to
   // jump across a large ID3v2 tag spanning multiple buffers.
-  bool Parse(int64_t aOffset, const uint8_t* aStart, const uint8_t* aEnd) {
+  bool Parse(uint64_t aOffset, const uint8_t* aStart, const uint8_t* aEnd) {
     const bool found = mFrame.Parse(aOffset, aStart, aEnd);
 
     if (mFrame.Length() && !mFirstFrame.Length()) {
@@ -370,7 +370,7 @@ TimeUnit ADTSTrackDemuxer::FastSeek(const TimeUnit& aTime) {
           aTime.ToMicroseconds(), AverageFrameLength(), mNumParsedFrames,
           mFrameIndex, mOffset);
 
-  const int64_t firstFrameOffset = mParser->FirstFrame().Offset();
+  const uint64_t firstFrameOffset = mParser->FirstFrame().Offset();
   if (!aTime.ToMicroseconds()) {
     // Quick seek to the beginning of the stream.
     mOffset = firstFrameOffset;
@@ -379,8 +379,9 @@ TimeUnit ADTSTrackDemuxer::FastSeek(const TimeUnit& aTime) {
         firstFrameOffset + FrameIndexFromTime(aTime) * AverageFrameLength();
   }
 
-  if (mOffset > firstFrameOffset && StreamLength() > 0) {
-    mOffset = std::min(StreamLength() - 1, mOffset);
+  const int64_t streamLength = StreamLength();
+  if (mOffset > firstFrameOffset && streamLength > 0) {
+    mOffset = std::min(static_cast<uint64_t>(streamLength - 1), mOffset);
   }
 
   mFrameIndex = FrameIndexFromOffset(mOffset);
@@ -390,7 +391,7 @@ TimeUnit ADTSTrackDemuxer::FastSeek(const TimeUnit& aTime) {
           " mFrameIndex=%" PRId64 " mFirstFrameOffset=%" PRIu64
           " mOffset=%" PRIu64 " SL=%" PRIu64 "",
           AverageFrameLength(), mNumParsedFrames, mFrameIndex, firstFrameOffset,
-          mOffset, StreamLength());
+          mOffset, streamLength);
 
   return Duration(mFrameIndex);
 }
@@ -526,10 +527,10 @@ const adts::Frame& ADTSTrackDemuxer::FindNextFrame(
            mSamplesPerFrame, mSamplesPerSecond, mChannels);
 
   uint8_t buffer[BUFFER_SIZE];
-  int32_t read = 0;
+  uint32_t read = 0;
 
   bool foundFrame = false;
-  int64_t frameHeaderOffset = mOffset;
+  uint64_t frameHeaderOffset = mOffset;
 
   // Prepare the parser for the next frame parsing session.
   mParser->EndFrameSession();
@@ -553,9 +554,9 @@ const adts::Frame& ADTSTrackDemuxer::FindNextFrame(
       // possible to find sync marker in AAC data. If sync marker
       // exists after the current frame then we've found a frame
       // header.
-      int64_t nextFrameHeaderOffset =
+      uint64_t nextFrameHeaderOffset =
           currentFrame.Offset() + currentFrame.Length();
-      int32_t read = Read(buffer, nextFrameHeaderOffset, 2);
+      uint32_t read = Read(buffer, nextFrameHeaderOffset, 2);
       if (read != 2 || !adts::FrameHeader::MatchesSync(buffer)) {
         frameHeaderOffset = currentFrame.Offset() + 1;
         mParser->Reset();
@@ -569,7 +570,7 @@ const adts::Frame& ADTSTrackDemuxer::FindNextFrame(
     }
 
     // Minimum header size is 7 bytes.
-    int64_t advance = read - 7;
+    uint64_t advance = read - 7;
 
     // Check for offset overflow.
     if (frameHeaderOffset + advance <= frameHeaderOffset) {
@@ -617,8 +618,7 @@ bool ADTSTrackDemuxer::SkipNextFrame(const adts::Frame& aFrame) {
 
 already_AddRefed<MediaRawData> ADTSTrackDemuxer::GetNextFrame(
     const adts::Frame& aFrame) {
-  ADTSLOG("GetNext() Begin({mOffset=%" PRId64
-          " HeaderSize()=%zu"
+  ADTSLOG("GetNext() Begin({mOffset=%" PRIu64 " HeaderSize()=%" PRIu64
           " Length()=%zu})",
           aFrame.Offset(), aFrame.Header().HeaderSize(),
           aFrame.PayloadLength());
@@ -661,8 +661,8 @@ already_AddRefed<MediaRawData> ADTSTrackDemuxer::GetNextFrame(
   return frame.forget();
 }
 
-int64_t ADTSTrackDemuxer::FrameIndexFromOffset(int64_t aOffset) const {
-  int64_t frameIndex = 0;
+int64_t ADTSTrackDemuxer::FrameIndexFromOffset(uint64_t aOffset) const {
+  uint64_t frameIndex = 0;
 
   if (AverageFrameLength() > 0) {
     frameIndex =
@@ -671,7 +671,7 @@ int64_t ADTSTrackDemuxer::FrameIndexFromOffset(int64_t aOffset) const {
 
   ADTSLOGV("FrameIndexFromOffset(%" PRId64 ") -> %" PRId64, aOffset,
            frameIndex);
-  return std::max<int64_t>(0, frameIndex);
+  return frameIndex;
 }
 
 int64_t ADTSTrackDemuxer::FrameIndexFromTime(const TimeUnit& aTime) const {
@@ -686,7 +686,7 @@ int64_t ADTSTrackDemuxer::FrameIndexFromTime(const TimeUnit& aTime) const {
 }
 
 void ADTSTrackDemuxer::UpdateState(const adts::Frame& aFrame) {
-  int32_t frameLength = aFrame.Length();
+  uint32_t frameLength = aFrame.Length();
   // Prevent overflow.
   if (mTotalFrameLen + frameLength < mTotalFrameLen) {
     // These variables have a linear dependency and are only used to derive the
@@ -711,8 +711,8 @@ void ADTSTrackDemuxer::UpdateState(const adts::Frame& aFrame) {
   MOZ_ASSERT(mFrameIndex > 0);
 }
 
-int32_t ADTSTrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset,
-                               int32_t aSize) {
+uint32_t ADTSTrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset,
+                                int32_t aSize) {
   ADTSLOGV("ADTSTrackDemuxer::Read(%p %" PRId64 " %d)", aBuffer, aOffset,
            aSize);
 
@@ -728,7 +728,7 @@ int32_t ADTSTrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset,
   const nsresult rv = mSource.ReadAt(aOffset, reinterpret_cast<char*>(aBuffer),
                                      static_cast<uint32_t>(aSize), &read);
   NS_ENSURE_SUCCESS(rv, 0);
-  return static_cast<int32_t>(read);
+  return read;
 }
 
 double ADTSTrackDemuxer::AverageFrameLength() const {
@@ -757,8 +757,10 @@ bool ADTSDemuxer::ADTSSniffer(const uint8_t* aData, const uint32_t aLength) {
   // possible to find sync marker in AAC data. If sync marker
   // exists after the current frame then we've found a frame
   // header.
-  int64_t nextFrameHeaderOffset = currentFrame.Offset() + currentFrame.Length();
-  return int64_t(aLength) > nextFrameHeaderOffset &&
+  uint64_t nextFrameHeaderOffset =
+      currentFrame.Offset() + currentFrame.Length();
+  MOZ_ASSERT(aLength >= nextFrameHeaderOffset);
+  return aLength > nextFrameHeaderOffset &&
          aLength - nextFrameHeaderOffset >= 2 &&
          adts::FrameHeader::MatchesSync(aData + nextFrameHeaderOffset);
 }
