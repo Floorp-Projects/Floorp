@@ -2705,7 +2705,7 @@ bool wasm::GenerateIndirectStub(MacroAssembler& masm,
   masm.switchToWasmTlsRealm(WasmTableCallIndexReg, WasmTableCallScratchReg1);
 
 #if defined(JS_CODEGEN_MIPS64)
-  masm.abiret();
+  masm.as_jr(ra);
 #elif defined(JS_CODEGEN_ARM64)
   // See comment in |GenerateCallablePrologue|.
   masm.Mov(PseudoStackPointer64, vixl::sp);
