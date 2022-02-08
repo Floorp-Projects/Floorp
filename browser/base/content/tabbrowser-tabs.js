@@ -432,8 +432,7 @@
       // Until canvas is HiDPI-aware (bug 780362), we need to scale the desired
       // canvas size (in CSS pixels) to the window's backing resolution in order
       // to get a full-resolution drag image for use on HiDPI displays.
-      let windowUtils = window.windowUtils;
-      let scale = windowUtils.screenPixelsPerCSSPixel / windowUtils.fullZoom;
+      let scale = window.devicePixelRatio;
       let canvas = this._dndCanvas;
       if (!canvas) {
         this._dndCanvas = canvas = document.createElementNS(

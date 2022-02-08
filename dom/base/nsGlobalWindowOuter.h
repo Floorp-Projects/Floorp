@@ -623,7 +623,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   nsresult GetControllers(nsIControllers** aControllers) override;
   float GetMozInnerScreenXOuter(mozilla::dom::CallerType aCallerType);
   float GetMozInnerScreenYOuter(mozilla::dom::CallerType aCallerType);
-  double GetDevicePixelRatioOuter(mozilla::dom::CallerType aCallerType);
   bool GetFullscreenOuter();
   bool GetFullScreen() override;
   void SetFullscreenOuter(bool aFullscreen, mozilla::ErrorResult& aError);

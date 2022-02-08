@@ -11,9 +11,8 @@
     "loosen-msvc-detection.patch",
     "fuzzing_ccov_build_clang_12.patch",
     "compiler-rt-13-no-codesign.patch",
-    "revert-llvmorg-14-init-3652-gf3c2094d8c11.patch",
-    "revert-llvmorg-14-init-3651-g85ba583eba19.patch",
-    "revert-llvmorg-14-init-3650-g50d7ecc560b2.patch",
+    "revert-llvmorg-14-init-3652-gf3c2094d8c11-clang-14.patch",
+    "revert-llvmorg-14-init-3651-g85ba583eba19-clang-14.patch",
     "revert-llvmorg-13-init-8182-gc2297544c047.patch"
   ]
 }

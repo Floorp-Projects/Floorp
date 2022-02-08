@@ -489,7 +489,7 @@ uint32_t TextComposition::GetSelectionStartOffset() {
   if (NS_WARN_IF(querySelectedTextEvent.DidNotFindSelection())) {
     return 0;  // XXX Is this okay?
   }
-  return querySelectedTextEvent.mReply->SelectionStartOffset();
+  return querySelectedTextEvent.mReply->AnchorOffset();
 }
 
 void TextComposition::OnCompositionEventDispatched(

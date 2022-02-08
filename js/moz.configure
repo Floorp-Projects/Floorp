@@ -958,46 +958,6 @@ def wasm_memory64(value, cranelift, simulator, target):
 set_config("ENABLE_WASM_MEMORY64", wasm_memory64)
 set_define("ENABLE_WASM_MEMORY64", wasm_memory64)
 
-# Support for checking for indirect call to null via traps
-# =====================================================
-
-
-@depends(milestone.is_nightly, "--enable-jit", "--enable-simulator")
-def default_wasm_call_indirect_null(is_nightly, enable_jit, simulator):
-    if not enable_jit:
-        return
-
-    if simulator:
-        return
-
-    if is_nightly:
-        return True
-
-
-option(
-    "--enable-wasm-call-indirect-null",
-    default=default_wasm_call_indirect_null,
-    help="{Enable|Disable} WebAssembly call-indirect-to-null optimization",
-)
-
-
-@depends("--enable-wasm-call-indirect-null", "--enable-jit", "--enable-simulator")
-def wasm_call_indirect_null(value, enable_jit, simulator):
-    if not value:
-        return
-
-    if not enable_jit:
-        return
-
-    if simulator:
-        return
-
-    return True
-
-
-set_config("ENABLE_WASM_CALL_INDIRECT_NULL", wasm_call_indirect_null)
-set_define("ENABLE_WASM_CALL_INDIRECT_NULL", wasm_call_indirect_null)
-
 # Options for generating the shell as a script
 # ============================================
 option("--with-qemu-exe", nargs=1, help="Use path as an arm emulator on host platforms")

@@ -111,6 +111,7 @@ static void FindRootsWithSubject(UniqueSECMODModule& rootsModule,
                                  SECItem subject,
                                  /*out*/ nsTArray<nsTArray<uint8_t>>& roots) {
   MOZ_ASSERT(rootsModule);
+  AutoSECMODListReadLock lock;
   for (int slotIndex = 0; slotIndex < rootsModule->slotCount; slotIndex++) {
     CERTCertificateList* rawResults = nullptr;
     if (PK11_FindRawCertsWithSubject(rootsModule->slots[slotIndex], &subject,

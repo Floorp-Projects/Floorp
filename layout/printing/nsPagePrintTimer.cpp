@@ -9,11 +9,29 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/Unused.h"
 #include "nsPrintJob.h"
+#include "nsPrintObject.h"
 
 using namespace mozilla;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsPagePrintTimer, mozilla::Runnable,
                             nsITimerCallback)
+
+nsPagePrintTimer::nsPagePrintTimer(nsPrintJob* aPrintJob,
+                                   nsIDocumentViewerPrint* aDocViewerPrint,
+                                   mozilla::dom::Document* aDocument,
+                                   uint32_t aDelay)
+    : Runnable("nsPagePrintTimer"),
+      mPrintJob(aPrintJob),
+      mDocViewerPrint(aDocViewerPrint),
+      mDocument(aDocument),
+      mDelay(aDelay),
+      mFiringCount(0),
+      mPrintObj(nullptr),
+      mWatchDogCount(0),
+      mDone(false) {
+  MOZ_ASSERT(aDocViewerPrint && aDocument);
+  mDocViewerPrint->IncrementDestroyBlockedCount();
+}
 
 nsPagePrintTimer::~nsPagePrintTimer() { Disconnect(); }
 

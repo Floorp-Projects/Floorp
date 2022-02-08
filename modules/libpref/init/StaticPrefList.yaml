@@ -3397,7 +3397,7 @@
 
 - name: dom.serviceWorkers.navigationPreload.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Mitigates ServiceWorker navigation faults by bypassing the ServiceWorker on
@@ -8104,6 +8104,12 @@
   mirror: always
   rust: true
 
+# Whether we want scrollbar-width: thin to behave as scrollbar-width: auto.
+- name: layout.css.scrollbar-width-thin.disabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether the `scrollbar-gutter` CSS property is enabled.
 - name: layout.css.scrollbar-gutter.enabled
   type: RelaxedAtomicBool
@@ -9276,11 +9282,6 @@
   value: true
   mirror: always
 
-- name: media.peerconnection.rtpsourcesapi.enabled
-  type: bool
-  value: true
-  mirror: always
-
 #ifdef MOZ_WEBRTC
   # Use MediaDataDecoder API for VP8/VP9 in WebRTC. This includes hardware
   # acceleration for decoding.
@@ -9880,6 +9881,16 @@
 - name: network.http.sanitize-headers-in-logs
   type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# Set this pref to an integer like 99 to override the User-Agent string's
+# Firefox version. The value 0 means use the default Firefox version. If
+# enterprise users rely on sites that aren't compatible with Firefox version
+# 100's three-digit version number, enterprise admins can set this pref to a
+# known-good version (like 99) in an enterprise policy file.
+- name: network.http.useragent.forceVersion
+  type: uint32_t
+  value: 0
   mirror: always
 
 # Whether or not we use Windows for SSO to Microsoft sites.
@@ -12785,7 +12796,7 @@
 - name: widget.disable-swipe-tracker
   type: bool
 #ifdef XP_WIN
-  value: true
+  value: @IS_NOT_NIGHTLY_BUILD@
 #else
   value: false
 #endif

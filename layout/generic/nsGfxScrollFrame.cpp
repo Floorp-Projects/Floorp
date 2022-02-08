@@ -461,7 +461,7 @@ ScrollReflowInput::ScrollReflowInput(nsHTMLScrollFrame* aFrame,
   // makes us suppress scrollbars in CreateAnonymousContent. But if this frame
   // initially had a non-'none' scrollbar-width and dynamically changed to
   // 'none', then we'll need to handle it here.
-  if (scrollbarStyle->StyleUIReset()->mScrollbarWidth ==
+  if (scrollbarStyle->StyleUIReset()->ScrollbarWidth() ==
       StyleScrollbarWidth::None) {
     mHScrollbar = ShowScrollbar::Never;
     mHScrollbarAllowedForScrollingVVInsideLV = false;
@@ -1111,7 +1111,7 @@ nscoord nsHTMLScrollFrame::IntrinsicScrollbarGutterSizeAtInlineEdges(
   }
 
   const auto* styleForScrollbar = nsLayoutUtils::StyleForScrollbar(this);
-  if (styleForScrollbar->StyleUIReset()->mScrollbarWidth ==
+  if (styleForScrollbar->StyleUIReset()->ScrollbarWidth() ==
       StyleScrollbarWidth::None) {
     // Scrollbar shouldn't appear at all with "scrollbar-width: none".
     return 0;
@@ -5465,7 +5465,7 @@ auto ScrollFrameHelper::GetNeededAnonymousContent() const
     result += AnonymousContentType::HorizontalScrollbar;
     result += AnonymousContentType::VerticalScrollbar;
     // If scrollbar-width is none, don't generate scrollbars.
-  } else if (mOuter->StyleUIReset()->mScrollbarWidth !=
+  } else if (mOuter->StyleUIReset()->ScrollbarWidth() !=
              StyleScrollbarWidth::None) {
     nsIScrollableFrame* scrollable = do_QueryFrame(mOuter);
     ScrollStyles styles = scrollable->GetScrollStyles();
@@ -6941,7 +6941,7 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     nsPresContext* pc = aState.PresContext();
     auto scrollbarWidth = nsLayoutUtils::StyleForScrollbar(mOuter)
                               ->StyleUIReset()
-                              ->mScrollbarWidth;
+                              ->ScrollbarWidth();
     auto sizes = pc->Theme()->GetScrollbarSizes(pc, scrollbarWidth,
                                                 nsITheme::Overlay::No);
     nsSize resizerMinSize = mResizerBox->GetXULMinSize(aState);

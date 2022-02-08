@@ -257,25 +257,20 @@ bool ProxyAutoConfig::ResolveAddress(const nsCString& aHostName,
     }
   }
 
-  mWaitingForDNSResolve = true;
   // Spin the event loop of the pac thread until lookup is complete.
   // nsPACman is responsible for keeping a queue and only allowing
   // one PAC execution at a time even when it is called re-entrantly.
   SpinEventLoopUntil("ProxyAutoConfig::ResolveAddress"_ns, [&, helper, this]() {
     if (!helper->mRequest) {
-      mWaitingForDNSResolve = false;
       return true;
     }
     if (this->mShutdown) {
       NS_WARNING("mShutdown set with PAC request not cancelled");
       MOZ_ASSERT(NS_FAILED(helper->mStatus));
-      mWaitingForDNSResolve = false;
       return true;
     }
     return false;
   });
-
-  MaybeInvokeDNSResolveCallbacks();
 
   if (NS_FAILED(helper->mStatus)) {
     return false;
@@ -612,29 +607,7 @@ nsresult ProxyAutoConfig::SetupJS() {
   mConcatenatedPACData.Truncate();
   mPACURI.Truncate();
 
-  MaybeInvokeDNSResolveCallbacks();
   return NS_OK;
-}
-
-void ProxyAutoConfig::MaybeInvokeDNSResolveCallbacks() {
-  if (mDNSResolveCallbacks.IsEmpty()) {
-    return;
-  }
-
-  // This function could be called in the middle of SetupJS(). If this is the
-  // case, we should wait until mJSContext is ready to use. Otherwise,
-  // GetProxyForURI() would fail.
-  if (!mJSContext || !mJSContext->IsOK()) {
-    return;
-  }
-
-  NS_DispatchToCurrentThread(
-      NS_NewRunnableFunction("InvokeDNSResolveCallback",
-                             [callbacks{std::move(mDNSResolveCallbacks)}]() {
-                               for (auto& callback : callbacks) {
-                                 callback();
-                               }
-                             }));
 }
 
 void ProxyAutoConfig::GetProxyForURIWithCallback(
@@ -739,7 +712,6 @@ void ProxyAutoConfig::Shutdown() {
   mShutdown = true;
   delete mJSContext;
   mJSContext = nullptr;
-  mDNSResolveCallbacks.Clear();
 }
 
 bool ProxyAutoConfig::SrcAddress(const NetAddr* remoteAddress,
@@ -930,7 +902,10 @@ nsresult RemoteProxyAutoConfig::ConfigurePAC(const nsCString& aPACURI,
 
 void RemoteProxyAutoConfig::Shutdown() { mProxyAutoConfigParent->Close(); }
 
-void RemoteProxyAutoConfig::GC() { Unused << mProxyAutoConfigParent->SendGC(); }
+void RemoteProxyAutoConfig::GC() {
+  // Do nothing. GC would be performed when there is not pending query in socket
+  // process.
+}
 
 void RemoteProxyAutoConfig::GetProxyForURIWithCallback(
     const nsCString& aTestURI, const nsCString& aTestHost,

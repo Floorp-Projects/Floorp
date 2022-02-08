@@ -54,7 +54,6 @@ hb_base_sources = files(
   'hb-map.cc',
   'hb-map.hh',
   'hb-meta.hh',
-  'hb-ms-feature-ranges.cc',
   'hb-ms-feature-ranges.hh',
   'hb-mutex.hh',
   'hb-null.hh',
@@ -363,6 +362,7 @@ endif
 if conf.get('HAVE_DIRECTWRITE', 0) == 1
   hb_sources += hb_directwrite_sources
   hb_headers += hb_directwrite_headers
+  harfbuzz_deps += directwrite_dep
   # hb-directwrite needs a C++ linker
   libharfbuzz_link_language = 'cpp'
 endif
@@ -492,6 +492,7 @@ if get_option('tests').enabled()
     'test-number': ['test-number.cc', 'hb-number.cc'],
     'test-ot-tag': ['hb-ot-tag.cc'],
     'test-set': ['test-set.cc', 'hb-static.cc'],
+    'test-serialize': ['test-serialize.cc', 'hb-static.cc'],
     'test-unicode-ranges': ['test-unicode-ranges.cc'],
     'test-vector': ['test-vector.cc', 'hb-static.cc'],
     'test-bimap': ['test-bimap.cc', 'hb-static.cc'],

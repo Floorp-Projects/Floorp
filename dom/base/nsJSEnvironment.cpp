@@ -1080,10 +1080,8 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
 // static
 void nsJSContext::RunIncrementalGCSlice(JS::GCReason aReason,
                                         IsShrinking aShrinking,
-                                        TimeDuration aBudget) {
-  js::SliceBudget budget = sScheduler.CreateGCSliceBudget(
-      aReason, static_cast<int64_t>(aBudget.ToMilliseconds()));
-  GarbageCollectImpl(aReason, aShrinking, budget);
+                                        js::SliceBudget& aBudget) {
+  GarbageCollectImpl(aReason, aShrinking, aBudget);
 }
 
 static void FinishAnyIncrementalGC() {
@@ -1938,7 +1936,7 @@ static bool ConsumeStream(JSContext* aCx, JS::HandleObject aObj,
 
 static js::SliceBudget CreateGCSliceBudget(JS::GCReason aReason,
                                            int64_t aMillis) {
-  return sScheduler.CreateGCSliceBudget(aReason, aMillis);
+  return sScheduler.CreateGCSliceBudget(mozilla::TimeDuration::FromMilliseconds(aMillis));
 }
 
 void nsJSContext::EnsureStatics() {

@@ -1,0 +1,15 @@
+diff --git a/clang/lib/Sema/SemaDecl.cpp b/clang/lib/Sema/SemaDecl.cpp
+index fce33991c4aa..f2a043ee3135 100644
+--- a/clang/lib/Sema/SemaDecl.cpp
++++ b/clang/lib/Sema/SemaDecl.cpp
+@@ -15317,10 +15317,6 @@ void Sema::AddKnownFunctionAttributes(FunctionDecl *FD) {
+     switch (BuiltinID) {
+     case Builtin::BImemalign:
+     case Builtin::BIaligned_alloc:
+-      if (!FD->hasAttr<AllocAlignAttr>())
+-        FD->addAttr(AllocAlignAttr::CreateImplicit(Context, ParamIdx(1, FD),
+-                                                   FD->getLocation()));
+-      LLVM_FALLTHROUGH;
+     case Builtin::BIcalloc:
+     case Builtin::BImalloc:
+     case Builtin::BIrealloc:

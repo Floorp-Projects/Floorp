@@ -25,11 +25,26 @@ with Files("reftests/*fallback*"):
 with Files("*CompositorWidget*"):
     BUG_COMPONENT = ("Core", "Graphics")
 
-with Files("*Gfx*"):
-    BUG_COMPONENT = ("Core", "Graphics")
+with Files("*ContentCache*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("*ContentData*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("*Events.h"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("*FontRange*"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("*Gfx*"):
+    BUG_COMPONENT = ("Core", "Graphics")
+
+with Files("*IMEData*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("*TextEventDispatcher*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
 
@@ -144,6 +159,7 @@ EXPORTS.mozilla += [
     "ColorScheme.h",
     "CommandList.h",
     "ContentCache.h",
+    "ContentData.h",
     "ContentEvents.h",
     "EventClassList.h",
     "EventForwards.h",
@@ -183,6 +199,7 @@ EXPORTS.mozilla.widget += [
 UNIFIED_SOURCES += [
     "CompositorWidget.cpp",
     "ContentCache.cpp",
+    "ContentData.cpp",
     "GfxDriverInfo.cpp",
     "GfxInfoBase.cpp",
     "GfxInfoCollector.cpp",

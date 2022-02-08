@@ -1,8 +1,6 @@
-%if 0
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-%endif
 
 /* Hide all conditional elements by default. */
 :is([when-connection],[when-customroot],[when-mixedcontent],[when-ciphers],[when-httpsonlystatus]) {
@@ -327,7 +325,7 @@
   height: -moz-fit-content;
 }
 
-.identity-popup-security-connection > hbox > description {
+.identity-popup-security-connection > hbox > label {
   margin-inline-start: 8px;
   margin-block: 0;
 }

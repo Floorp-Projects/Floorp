@@ -7,6 +7,7 @@
 #include "mozilla/dom/FontFace.h"
 
 #include <algorithm>
+#include "gfxPlatformFontList.h"
 #include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/FontFaceBinding.h"
 #include "mozilla/dom/FontFaceSet.h"

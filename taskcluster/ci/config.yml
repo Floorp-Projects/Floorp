@@ -49,6 +49,7 @@ treeherder:
         'M-a11y-checks': 'Mochitests with accessibility checks enabled'
         'M-a11y-checks-fis': 'Mochitests with accessibility checks enabled and fission enabled'
         'M-dfpi': 'Mochitests with dFPI enabled'
+        'M-dfpi-1proc': 'Mochitests with dFPI enabled and e10s disabled'
         'M-dfpi-fis': 'Mochitests with dFPI and Fission enabled'
         'M-dfpi-fis-xorig': 'Mochitests with dFPI, cross-origin and fission enabled'
         'M-fis': 'Mochitests with fission enabled'

@@ -3536,14 +3536,17 @@ NS_IMPL_ISUPPORTS(Preferences, nsIPrefService, nsIObserver, nsIPrefBranch,
                   nsISupportsWeakReference)
 
 /* static */
-void Preferences::SerializePreferences(nsCString& aStr) {
+void Preferences::SerializePreferences(
+    nsCString& aStr,
+    const std::function<bool(const char*)>& aShouldSerializeFn) {
   MOZ_RELEASE_ASSERT(InitStaticMembers());
 
   aStr.Truncate();
 
   for (auto iter = HashTable()->iter(); !iter.done(); iter.next()) {
     Pref* pref = iter.get().get();
-    if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues()) {
+    if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues() &&
+        aShouldSerializeFn(pref->Name())) {
       pref->SerializeAndAppend(aStr);
     }
   }

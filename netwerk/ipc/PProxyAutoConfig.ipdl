@@ -14,8 +14,6 @@ child:
                      bool aIncludePath, uint32_t aExtraHeapSize);
   async GetProxyForURI(nsCString aTestURI, nsCString aTestHost)
     returns (nsresult aStatus, nsCString aResult);
-  async GC();
-
 };
 
 } // namespace net

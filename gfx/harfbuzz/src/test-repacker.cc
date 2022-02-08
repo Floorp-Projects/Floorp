@@ -74,14 +74,13 @@ static void run_resolve_overflow_test (const char* name,
 
   graph_t graph (overflowing.object_graph ());
 
-  unsigned buffer_size = overflowing.end - overflowing.start;
-  void* out_buffer = malloc (buffer_size);
-  hb_serialize_context_t out (out_buffer, buffer_size);
 
   assert (overflowing.offset_overflow ());
-  hb_resolve_overflows (overflowing.object_graph (), HB_TAG ('G', 'S', 'U', 'B'), &out, num_iterations);
-  assert (!out.offset_overflow ());
-  hb_bytes_t result = out.copy_bytes ();
+  hb_blob_t* out = hb_resolve_overflows (overflowing.object_graph (),
+                                         HB_TAG ('G', 'S', 'U', 'B'), num_iterations);
+  assert (out);
+
+  hb_bytes_t result = out->as_bytes ();
 
   assert (!expected.offset_overflow ());
   hb_bytes_t expected_result = expected.copy_bytes ();
@@ -92,9 +91,8 @@ static void run_resolve_overflow_test (const char* name,
     assert (result[i] == expected_result[i]);
   }
 
-  result.fini ();
   expected_result.fini ();
-  free (out_buffer);
+  hb_blob_destroy (out);
 }
 
 static void add_virtual_offset (unsigned id,
@@ -137,6 +135,58 @@ populate_serializer_with_overflow (hb_serialize_context_t* c)
 
   c->end_serialize();
 }
+
+static void
+populate_serializer_with_priority_overflow (hb_serialize_context_t* c)
+{
+  std::string large_string(50000, 'a');
+  c->start_serialize<char> ();
+
+  unsigned obj_e = add_object ("e", 1, c);
+  unsigned obj_d = add_object ("d", 1, c);
+
+  start_object (large_string.c_str (), 50000, c);
+  add_offset (obj_e, c);
+  unsigned obj_c = c->pop_pack (false);
+
+  start_object (large_string.c_str (), 20000, c);
+  add_offset (obj_d, c);
+  unsigned obj_b = c->pop_pack (false);
+
+  start_object ("a", 1, c);
+  add_offset (obj_b, c);
+  add_offset (obj_c, c);
+  c->pop_pack (false);
+
+  c->end_serialize();
+}
+
+static void
+populate_serializer_with_priority_overflow_expected (hb_serialize_context_t* c)
+{
+  std::string large_string(50000, 'a');
+  c->start_serialize<char> ();
+
+  unsigned obj_e = add_object ("e", 1, c);
+
+  start_object (large_string.c_str (), 50000, c);
+  add_offset (obj_e, c);
+  unsigned obj_c = c->pop_pack (false);
+
+  unsigned obj_d = add_object ("d", 1, c);
+
+  start_object (large_string.c_str (), 20000, c);
+  add_offset (obj_d, c);
+  unsigned obj_b = c->pop_pack (false);
+
+  start_object ("a", 1, c);
+  add_offset (obj_b, c);
+  add_offset (obj_c, c);
+  c->pop_pack (false);
+
+  c->end_serialize();
+}
+
 
 static void
 populate_serializer_with_dedup_overflow (hb_serialize_context_t* c)
@@ -763,20 +813,20 @@ populate_serializer_virtual_link (hb_serialize_context_t* c)
 
   start_object ("b", 1, c);
   add_offset (obj_d, c);
-  unsigned obj_b = c->pop_pack ();
+  unsigned obj_b = c->pop_pack (false);
 
   start_object ("e", 1, c);
   add_virtual_offset (obj_b, c);
-  unsigned obj_e = c->pop_pack();
+  unsigned obj_e = c->pop_pack (false);
 
   start_object ("c", 1, c);
   add_offset (obj_e, c);
-  unsigned obj_c = c->pop_pack ();
+  unsigned obj_c = c->pop_pack (false);
 
   start_object ("a", 1, c);
   add_offset (obj_b, c);
   add_offset (obj_c, c);
-  c->pop_pack ();
+  c->pop_pack (false);
 
   c->end_serialize();
 }
@@ -792,19 +842,19 @@ static void test_sort_kahn_1 ()
   graph.sort_kahn ();
 
   assert(strncmp (graph.object (3).head, "abc", 3) == 0);
-  assert(graph.object (3).links.length == 2);
-  assert(graph.object (3).links[0].objidx == 2);
-  assert(graph.object (3).links[1].objidx == 1);
+  assert(graph.object (3).real_links.length == 2);
+  assert(graph.object (3).real_links[0].objidx == 2);
+  assert(graph.object (3).real_links[1].objidx == 1);
 
   assert(strncmp (graph.object (2).head, "def", 3) == 0);
-  assert(graph.object (2).links.length == 1);
-  assert(graph.object (2).links[0].objidx == 0);
+  assert(graph.object (2).real_links.length == 1);
+  assert(graph.object (2).real_links[0].objidx == 0);
 
   assert(strncmp (graph.object (1).head, "jkl", 3) == 0);
-  assert(graph.object (1).links.length == 0);
+  assert(graph.object (1).real_links.length == 0);
 
   assert(strncmp (graph.object (0).head, "ghi", 3) == 0);
-  assert(graph.object (0).links.length == 0);
+  assert(graph.object (0).real_links.length == 0);
 
   free (buffer);
 }
@@ -821,24 +871,24 @@ static void test_sort_kahn_2 ()
 
 
   assert(strncmp (graph.object (4).head, "abc", 3) == 0);
-  assert(graph.object (4).links.length == 3);
-  assert(graph.object (4).links[0].objidx == 3);
-    assert(graph.object (4).links[1].objidx == 0);
-  assert(graph.object (4).links[2].objidx == 2);
+  assert(graph.object (4).real_links.length == 3);
+  assert(graph.object (4).real_links[0].objidx == 3);
+    assert(graph.object (4).real_links[1].objidx == 0);
+  assert(graph.object (4).real_links[2].objidx == 2);
 
   assert(strncmp (graph.object (3).head, "def", 3) == 0);
-  assert(graph.object (3).links.length == 1);
-  assert(graph.object (3).links[0].objidx == 1);
+  assert(graph.object (3).real_links.length == 1);
+  assert(graph.object (3).real_links[0].objidx == 1);
 
   assert(strncmp (graph.object (2).head, "mn", 2) == 0);
-  assert(graph.object (2).links.length == 0);
+  assert(graph.object (2).real_links.length == 0);
 
   assert(strncmp (graph.object (1).head, "ghi", 3) == 0);
-  assert(graph.object (1).links.length == 1);
-  assert(graph.object (1).links[0].objidx == 0);
+  assert(graph.object (1).real_links.length == 1);
+  assert(graph.object (1).real_links[0].objidx == 0);
 
   assert(strncmp (graph.object (0).head, "jkl", 3) == 0);
-  assert(graph.object (0).links.length == 0);
+  assert(graph.object (0).real_links.length == 0);
 
   free (buffer);
 }
@@ -854,24 +904,24 @@ static void test_sort_shortest ()
   graph.sort_shortest_distance ();
 
   assert(strncmp (graph.object (4).head, "abc", 3) == 0);
-  assert(graph.object (4).links.length == 3);
-  assert(graph.object (4).links[0].objidx == 2);
-  assert(graph.object (4).links[1].objidx == 0);
-  assert(graph.object (4).links[2].objidx == 3);
+  assert(graph.object (4).real_links.length == 3);
+  assert(graph.object (4).real_links[0].objidx == 2);
+  assert(graph.object (4).real_links[1].objidx == 0);
+  assert(graph.object (4).real_links[2].objidx == 3);
 
   assert(strncmp (graph.object (3).head, "mn", 2) == 0);
-  assert(graph.object (3).links.length == 0);
+  assert(graph.object (3).real_links.length == 0);
 
   assert(strncmp (graph.object (2).head, "def", 3) == 0);
-  assert(graph.object (2).links.length == 1);
-  assert(graph.object (2).links[0].objidx == 1);
+  assert(graph.object (2).real_links.length == 1);
+  assert(graph.object (2).real_links[0].objidx == 1);
 
   assert(strncmp (graph.object (1).head, "ghi", 3) == 0);
-  assert(graph.object (1).links.length == 1);
-  assert(graph.object (1).links[0].objidx == 0);
+  assert(graph.object (1).real_links.length == 1);
+  assert(graph.object (1).real_links[0].objidx == 0);
 
   assert(strncmp (graph.object (0).head, "jkl", 3) == 0);
-  assert(graph.object (0).links.length == 0);
+  assert(graph.object (0).real_links.length == 0);
 
   free (buffer);
 }
@@ -887,27 +937,27 @@ static void test_duplicate_leaf ()
   graph.duplicate (4, 1);
 
   assert(strncmp (graph.object (5).head, "abc", 3) == 0);
-  assert(graph.object (5).links.length == 3);
-  assert(graph.object (5).links[0].objidx == 3);
-  assert(graph.object (5).links[1].objidx == 4);
-  assert(graph.object (5).links[2].objidx == 0);
+  assert(graph.object (5).real_links.length == 3);
+  assert(graph.object (5).real_links[0].objidx == 3);
+  assert(graph.object (5).real_links[1].objidx == 4);
+  assert(graph.object (5).real_links[2].objidx == 0);
 
   assert(strncmp (graph.object (4).head, "jkl", 3) == 0);
-  assert(graph.object (4).links.length == 0);
+  assert(graph.object (4).real_links.length == 0);
 
   assert(strncmp (graph.object (3).head, "def", 3) == 0);
-  assert(graph.object (3).links.length == 1);
-  assert(graph.object (3).links[0].objidx == 2);
+  assert(graph.object (3).real_links.length == 1);
+  assert(graph.object (3).real_links[0].objidx == 2);
 
   assert(strncmp (graph.object (2).head, "ghi", 3) == 0);
-  assert(graph.object (2).links.length == 1);
-  assert(graph.object (2).links[0].objidx == 1);
+  assert(graph.object (2).real_links.length == 1);
+  assert(graph.object (2).real_links[0].objidx == 1);
 
   assert(strncmp (graph.object (1).head, "jkl", 3) == 0);
-  assert(graph.object (1).links.length == 0);
+  assert(graph.object (1).real_links.length == 0);
 
   assert(strncmp (graph.object (0).head, "mn", 2) == 0);
-  assert(graph.object (0).links.length == 0);
+  assert(graph.object (0).real_links.length == 0);
 
   free (buffer);
 }
@@ -923,32 +973,32 @@ static void test_duplicate_interior ()
   graph.duplicate (3, 2);
 
   assert(strncmp (graph.object (6).head, "abc", 3) == 0);
-  assert(graph.object (6).links.length == 3);
-  assert(graph.object (6).links[0].objidx == 4);
-  assert(graph.object (6).links[1].objidx == 2);
-  assert(graph.object (6).links[2].objidx == 1);
+  assert(graph.object (6).real_links.length == 3);
+  assert(graph.object (6).real_links[0].objidx == 4);
+  assert(graph.object (6).real_links[1].objidx == 2);
+  assert(graph.object (6).real_links[2].objidx == 1);
 
   assert(strncmp (graph.object (5).head, "jkl", 3) == 0);
-  assert(graph.object (5).links.length == 1);
-  assert(graph.object (5).links[0].objidx == 0);
+  assert(graph.object (5).real_links.length == 1);
+  assert(graph.object (5).real_links[0].objidx == 0);
 
   assert(strncmp (graph.object (4).head, "def", 3) == 0);
-  assert(graph.object (4).links.length == 1);
-  assert(graph.object (4).links[0].objidx == 3);
+  assert(graph.object (4).real_links.length == 1);
+  assert(graph.object (4).real_links[0].objidx == 3);
 
   assert(strncmp (graph.object (3).head, "ghi", 3) == 0);
-  assert(graph.object (3).links.length == 1);
-  assert(graph.object (3).links[0].objidx == 5);
+  assert(graph.object (3).real_links.length == 1);
+  assert(graph.object (3).real_links[0].objidx == 5);
 
   assert(strncmp (graph.object (2).head, "jkl", 3) == 0);
-  assert(graph.object (2).links.length == 1);
-  assert(graph.object (2).links[0].objidx == 0);
+  assert(graph.object (2).real_links.length == 1);
+  assert(graph.object (2).real_links[0].objidx == 0);
 
   assert(strncmp (graph.object (1).head, "mn", 2) == 0);
-  assert(graph.object (1).links.length == 0);
+  assert(graph.object (1).real_links.length == 0);
 
   assert(strncmp (graph.object (0).head, "opqrst", 6) == 0);
-  assert(graph.object (0).links.length == 0);
+  assert(graph.object (0).real_links.length == 0);
 
   free (buffer);
 }
@@ -962,19 +1012,14 @@ test_serialize ()
   populate_serializer_simple (&c1);
   hb_bytes_t expected = c1.copy_bytes ();
 
-  void* buffer_2 = malloc (buffer_size);
-  hb_serialize_context_t c2 (buffer_2, buffer_size);
-
   graph_t graph (c1.object_graph ());
-  graph.serialize (&c2);
-  hb_bytes_t actual = c2.copy_bytes ();
-
-  assert (actual == expected);
-
-  actual.fini ();
-  expected.fini ();
+  hb_blob_t* out = graph.serialize ();
   free (buffer_1);
-  free (buffer_2);
+
+  hb_bytes_t actual = out->as_bytes ();
+  assert (actual == expected);
+  expected.fini ();
+  hb_blob_destroy (out);
 }
 
 static void test_will_overflow_1 ()
@@ -1024,17 +1069,13 @@ static void test_resolve_overflows_via_sort ()
   populate_serializer_with_overflow (&c);
   graph_t graph (c.object_graph ());
 
-  void* out_buffer = malloc (buffer_size);
-  hb_serialize_context_t out (out_buffer, buffer_size);
-
-  hb_resolve_overflows (c.object_graph (), HB_TAG_NONE, &out);
-  assert (!out.offset_overflow ());
-  hb_bytes_t result = out.copy_bytes ();
+  hb_blob_t* out = hb_resolve_overflows (c.object_graph (), HB_TAG_NONE);
+  assert (out);
+  hb_bytes_t result = out->as_bytes ();
   assert (result.length == (80000 + 3 + 3 * 2));
 
-  result.fini ();
   free (buffer);
-  free (out_buffer);
+  hb_blob_destroy (out);
 }
 
 static void test_resolve_overflows_via_duplication ()
@@ -1045,17 +1086,13 @@ static void test_resolve_overflows_via_duplication ()
   populate_serializer_with_dedup_overflow (&c);
   graph_t graph (c.object_graph ());
 
-  void* out_buffer = malloc (buffer_size);
-  hb_serialize_context_t out (out_buffer, buffer_size);
-
-  hb_resolve_overflows (c.object_graph (), HB_TAG_NONE, &out);
-  assert (!out.offset_overflow ());
-  hb_bytes_t result = out.copy_bytes ();
+  hb_blob_t* out = hb_resolve_overflows (c.object_graph (), HB_TAG_NONE);
+  assert (out);
+  hb_bytes_t result = out->as_bytes ();
   assert (result.length == (10000 + 2 * 2 + 60000 + 2 + 3 * 2));
 
-  result.fini ();
   free (buffer);
-  free (out_buffer);
+  hb_blob_destroy (out);
 }
 
 static void test_resolve_overflows_via_space_assignment ()
@@ -1085,19 +1122,15 @@ static void test_resolve_overflows_via_isolation ()
   populate_serializer_with_isolation_overflow (&c);
   graph_t graph (c.object_graph ());
 
-  void* out_buffer = malloc (buffer_size);
-  hb_serialize_context_t out (out_buffer, buffer_size);
-
   assert (c.offset_overflow ());
-  hb_resolve_overflows (c.object_graph (), HB_TAG ('G', 'S', 'U', 'B'), &out, 0);
-  assert (!out.offset_overflow ());
-  hb_bytes_t result = out.copy_bytes ();
+  hb_blob_t* out = hb_resolve_overflows (c.object_graph (), HB_TAG ('G', 'S', 'U', 'B'), 0);
+  assert (out);
+  hb_bytes_t result = out->as_bytes ();
   assert (result.length == (1 + 10000 + 60000 + 1 + 1
                             + 4 + 3 * 2));
 
-  result.fini ();
   free (buffer);
-  free (out_buffer);
+  hb_blob_destroy (out);
 }
 
 static void test_resolve_overflows_via_isolation_with_recursive_duplication ()
@@ -1164,21 +1197,17 @@ static void test_resolve_overflows_via_isolation_spaces ()
   populate_serializer_with_isolation_overflow_spaces (&c);
   graph_t graph (c.object_graph ());
 
-  void* out_buffer = malloc (buffer_size);
-  hb_serialize_context_t out (out_buffer, buffer_size);
-
   assert (c.offset_overflow ());
-  hb_resolve_overflows (c.object_graph (), HB_TAG ('G', 'S', 'U', 'B'), &out, 0);
-  assert (!out.offset_overflow ());
-  hb_bytes_t result = out.copy_bytes ();
+  hb_blob_t* out = hb_resolve_overflows (c.object_graph (), HB_TAG ('G', 'S', 'U', 'B'), 0);
+  assert (out);
+  hb_bytes_t result = out->as_bytes ();
 
   unsigned expected_length = 3 + 2 * 60000; // objects
   expected_length += 2 * 4 + 2 * 2; // links
   assert (result.length == expected_length);
 
-  result.fini ();
   free (buffer);
-  free (out_buffer);
+  hb_blob_destroy (out);
 }
 
 static void test_resolve_overflows_via_splitting_spaces ()
@@ -1221,6 +1250,26 @@ static void test_resolve_overflows_via_splitting_spaces_2 ()
   free (expected_buffer);
 }
 
+static void test_resolve_overflows_via_priority ()
+{
+  size_t buffer_size = 160000;
+  void* buffer = malloc (buffer_size);
+  hb_serialize_context_t c (buffer, buffer_size);
+  populate_serializer_with_priority_overflow (&c);
+
+  void* expected_buffer = malloc (buffer_size);
+  hb_serialize_context_t e (expected_buffer, buffer_size);
+  populate_serializer_with_priority_overflow_expected (&e);
+
+  run_resolve_overflow_test ("test_resolve_overflows_via_priority",
+                             c,
+                             e,
+                             3);
+  free (buffer);
+  free (expected_buffer);
+}
+
+
 static void test_virtual_link ()
 {
   size_t buffer_size = 100;
@@ -1228,13 +1277,10 @@ static void test_virtual_link ()
   hb_serialize_context_t c (buffer, buffer_size);
   populate_serializer_virtual_link (&c);
 
-  void* out_buffer = malloc (buffer_size);
-  hb_serialize_context_t out (out_buffer, buffer_size);
+  hb_blob_t* out = hb_resolve_overflows (c.object_graph (), HB_TAG_NONE);
+  assert (out);
 
-  hb_resolve_overflows (c.object_graph (), HB_TAG_NONE, &out);
-  assert (!out.offset_overflow ());
-
-  hb_bytes_t result = out.copy_bytes ();
+  hb_bytes_t result = out->as_bytes ();
   assert (result.length == 5 + 4 * 2);
   assert (result[0]  == 'a');
   assert (result[5]  == 'c');
@@ -1242,10 +1288,46 @@ static void test_virtual_link ()
   assert (result[9]  == 'b');
   assert (result[12] == 'd');
 
-  result.fini ();
   free (buffer);
-  free (out_buffer);
+  hb_blob_destroy (out);
 }
+
+static void
+test_shared_node_with_virtual_links ()
+{
+  size_t buffer_size = 100;
+  void* buffer = malloc (buffer_size);
+  hb_serialize_context_t c (buffer, buffer_size);
+
+  c.start_serialize<char> ();
+
+  unsigned obj_b = add_object ("b", 1, &c);
+  unsigned obj_c = add_object ("c", 1, &c);
+
+  start_object ("d", 1, &c);
+  add_virtual_offset (obj_b, &c);
+  unsigned obj_d_1 = c.pop_pack ();
+
+  start_object ("d", 1, &c);
+  add_virtual_offset (obj_c, &c);
+  unsigned obj_d_2 = c.pop_pack ();
+
+  assert (obj_d_1 == obj_d_2);
+
+  start_object ("a", 1, &c);
+  add_offset (obj_b, &c);
+  add_offset (obj_c, &c);
+  add_offset (obj_d_1, &c);
+  add_offset (obj_d_2, &c);
+  c.pop_pack ();
+  c.end_serialize ();
+
+  assert(c.object_graph() [obj_d_1]->virtual_links.length == 2);
+  assert(c.object_graph() [obj_d_1]->virtual_links[0].objidx == obj_b);
+  assert(c.object_graph() [obj_d_1]->virtual_links[1].objidx == obj_c);
+  free(buffer);
+}
+
 
 // TODO(garretrieger): update will_overflow tests to check the overflows array.
 // TODO(garretrieger): add tests for priority raising.
@@ -1262,6 +1344,7 @@ main (int argc, char **argv)
   test_will_overflow_3 ();
   test_resolve_overflows_via_sort ();
   test_resolve_overflows_via_duplication ();
+  test_resolve_overflows_via_priority ();
   test_resolve_overflows_via_space_assignment ();
   test_resolve_overflows_via_isolation ();
   test_resolve_overflows_via_isolation_with_recursive_duplication ();
@@ -1273,4 +1356,5 @@ main (int argc, char **argv)
   test_duplicate_leaf ();
   test_duplicate_interior ();
   test_virtual_link ();
+  test_shared_node_with_virtual_links ();
 }

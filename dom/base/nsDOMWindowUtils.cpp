@@ -2190,14 +2190,6 @@ nsDOMWindowUtils::GetViewId(Element* aElement, nsViewID* aResult) {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetScreenPixelsPerCSSPixel(float* aScreenPixels) {
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-  *aScreenPixels = window->GetDevicePixelRatio(CallerType::System);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetScreenPixelsPerCSSPixelNoOverride(float* aScreenPixels) {
   nsPresContext* presContext = GetPresContext();
   if (!presContext) {

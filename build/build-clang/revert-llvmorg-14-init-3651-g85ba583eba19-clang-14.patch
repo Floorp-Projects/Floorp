@@ -1,0 +1,64 @@
+diff --git a/clang/lib/CodeGen/CGCall.cpp b/clang/lib/CodeGen/CGCall.cpp
+index 7ee4cdbb6ef0..5e7f7c0c68b6 100644
+--- a/clang/lib/CodeGen/CGCall.cpp
++++ b/clang/lib/CodeGen/CGCall.cpp
+@@ -2091,6 +2091,24 @@ void CodeGenModule::ConstructAttributeList(StringRef Name,
+       // allows it to work on indirect virtual function calls.
+       if (AttrOnCallSite && TargetDecl->hasAttr<NoMergeAttr>())
+         FuncAttrs.addAttribute(llvm::Attribute::NoMerge);
++
++      // Add known guaranteed alignment for allocation functions.
++      if (unsigned BuiltinID = Fn->getBuiltinID()) {
++        switch (BuiltinID) {
++        case Builtin::BIaligned_alloc:
++        case Builtin::BIcalloc:
++        case Builtin::BImalloc:
++        case Builtin::BImemalign:
++        case Builtin::BIrealloc:
++        case Builtin::BIstrdup:
++        case Builtin::BIstrndup:
++          RetAttrs.addAlignmentAttr(Context.getTargetInfo().getNewAlign() /
++                                    Context.getTargetInfo().getCharWidth());
++          break;
++        default:
++          break;
++        }
++      }
+     }
+ 
+     // 'const', 'pure' and 'noalias' attributed functions are also nounwind.
+diff --git a/clang/lib/Sema/SemaDecl.cpp b/clang/lib/Sema/SemaDecl.cpp
+index f2a043ee3135..d0e65cd677da 100644
+--- a/clang/lib/Sema/SemaDecl.cpp
++++ b/clang/lib/Sema/SemaDecl.cpp
+@@ -15313,30 +15313,6 @@ void Sema::AddKnownFunctionAttributes(FunctionDecl *FD) {
+         FD->addAttr(CUDAHostAttr::CreateImplicit(Context, FD->getLocation()));
+     }
+ 
+-    // Add known guaranteed alignment for allocation functions.
+-    switch (BuiltinID) {
+-    case Builtin::BImemalign:
+-    case Builtin::BIaligned_alloc:
+-    case Builtin::BIcalloc:
+-    case Builtin::BImalloc:
+-    case Builtin::BIrealloc:
+-    case Builtin::BIstrdup:
+-    case Builtin::BIstrndup: {
+-      if (!FD->hasAttr<AssumeAlignedAttr>()) {
+-        unsigned NewAlign = Context.getTargetInfo().getNewAlign() /
+-                            Context.getTargetInfo().getCharWidth();
+-        IntegerLiteral *Alignment = IntegerLiteral::Create(
+-            Context, Context.MakeIntValue(NewAlign, Context.UnsignedIntTy),
+-            Context.UnsignedIntTy, FD->getLocation());
+-        FD->addAttr(AssumeAlignedAttr::CreateImplicit(
+-            Context, Alignment, /*Offset=*/nullptr, FD->getLocation()));
+-      }
+-      break;
+-    }
+-    default:
+-      break;
+-    }
+-
+     // Add allocsize attribute for allocation functions.
+     switch (BuiltinID) {
+     case Builtin::BIcalloc:
