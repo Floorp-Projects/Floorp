@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -290,6 +290,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Zavračaj samo sledilne piškotke tretjih strani</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Zavračaj samo piškotke tretjih strani</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Zavračaj spletne piškotke</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Da!</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
@@ -797,6 +798,10 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Način &quot;samo HTTPS&quot;</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Za večjo varnost poskuša samodejno vzpostaviti povezavo HTTPS. Povezava HTTPS zagotavljaja varno in šifrirano povezavo s spletnimi mesti, ki jih obiščete.</string>
+    <string name="preference_https_only_summary3">Za večjo varnost poskuša samodejno vzpostaviti povezavo s šifrirnim protokolom HTTPS.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Izjeme</string>
     <!-- Description for the exceptions preference screen-->
@@ -887,6 +892,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title">Spletno mesto, ki ste ga zahtevali, ne podpira HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Za večjo varnost poskuša %1$s privzeto vzpostaviti povezavo HTTPS. Za spremembo te nastavitve in več podatkov o tej temi pojdite v Nastavitve &gt; Zasebnost in varnost &gt; Varnost.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
