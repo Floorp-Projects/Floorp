@@ -80,6 +80,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    "public/BaseAndGeckoProfilerDetail.h",
     "public/BaseProfileJSONWriter.h",
     "public/BaseProfilerCounts.h",
     "public/BaseProfilerDetail.h",
@@ -108,6 +109,7 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
+    "core/BaseAndGeckoProfilerDetail.cpp",
     "core/ProfilerUtils.cpp",
 ]
 
