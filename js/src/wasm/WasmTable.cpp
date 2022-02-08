@@ -230,12 +230,10 @@ bool Table::fillFuncRef(Maybe<Tier> maybeTier, uint32_t index,
 
   Instance& instance = instanceObj->instance();
   Tier tier = maybeTier ? maybeTier.value() : instance.code().bestTier();
-  void* code = instance.ensureAndGetIndirectStub(tier, funcIndex);
+  void* code = instance.createIndirectStub(tier, funcIndex);
   if (!code) {
     return false;
   }
-
-  // Note, infallible beyond this point.
 
   for (uint32_t i = index, end = index + fillCount; i != end; i++) {
     setFuncRef(i, code, &instance);
