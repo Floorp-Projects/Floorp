@@ -1177,6 +1177,16 @@ void IMEContentObserver::PostTextChangeNotification() {
   MOZ_ASSERT(mTextChangeData.IsValid(),
              "mTextChangeData must have text change data");
   mNeedsToNotifyIMEOfTextChange = true;
+  // Even if the observer hasn't received selection change, selection in the
+  // flat text may have already been changed.  For example, when previous `<p>`
+  // element of another `<p>` element which contains caret is removed by a DOM
+  // mutation, selection change event won't be fired, but selection start offset
+  // should be decreased by the length of removed `<p>` element.
+  // In such case, HandleQueryContentEvent shouldn't use the selection cache
+  // anymore.  Therefore, we also need to post selection change notification
+  // too.  eQuerySelectedText event may be dispatched at sending a text change
+  // notification.
+  mNeedsToNotifyIMEOfSelectionChange = true;
 }
 
 void IMEContentObserver::PostSelectionChangeNotification() {
@@ -1608,14 +1618,6 @@ IMEContentObserver::IMENotificationSender::Run() {
   if (observer->mNeedsToNotifyIMEOfTextChange) {
     observer->mNeedsToNotifyIMEOfTextChange = false;
     SendTextChange();
-    // Even if the observer hasn't received selection change, let's try to send
-    // selection change notification to IME because selection start offset may
-    // be changed if the previous contents of selection start are changed.  For
-    // example, when previous `<p>` element of another `<p>` element which
-    // contains caret is removed by a DOM mutation, selection change event
-    // won't be fired, but selection start offset should be decreased by the
-    // length of removed `<p>` element.
-    observer->mNeedsToNotifyIMEOfSelectionChange = true;
   }
 
   // If a text change notification causes another text change again, we should

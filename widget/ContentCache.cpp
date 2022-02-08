@@ -721,16 +721,9 @@ bool ContentCacheInParent::HandleQueryContentEvent(
                  this));
         return false;
       }
-      if (!mSelection->IsCollapsed() &&
-          MOZ_UNLIKELY(NS_WARN_IF(mText.isNothing()) ||
-                       NS_WARN_IF(mSelection->EndOffset() > mText->Length()))) {
-        MOZ_LOG(
-            sContentCacheLog, LogLevel::Error,
-            ("0x%p   HandleQueryContentEvent(), FAILED because "
-             "mSelection->EndOffset()=%u is larger than mText->Length()=%zu",
-             this, mSelection->EndOffset(), mText->Length()));
-        return false;
-      }
+      MOZ_DIAGNOSTIC_ASSERT_IF(!mSelection->IsCollapsed(), mText.isSome());
+      MOZ_DIAGNOSTIC_ASSERT_IF(!mSelection->IsCollapsed(),
+                               mSelection->EndOffset() <= mText->Length());
       aEvent.EmplaceReply();
       aEvent.mReply->mFocusedWidget = aWidget;
       if (mSelection->mHasRange) {
