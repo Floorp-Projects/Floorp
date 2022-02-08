@@ -3396,11 +3396,7 @@ bool WasmTableObject::fillRange(JSContext* cx, uint32_t index, uint32_t length,
   switch (tab.repr()) {
     case TableRepr::Func:
       MOZ_RELEASE_ASSERT(!tab.isAsmJS());
-      if (!tab.fillFuncRef(Nothing(), index, length,
-                           FuncRef::fromJSFunction(fun), cx)) {
-        ReportOutOfMemory(cx);
-        return false;
-      }
+      tab.fillFuncRef(index, length, FuncRef::fromJSFunction(fun), cx);
       break;
     case TableRepr::Ref:
       tab.fillAnyRef(index, length, any);
@@ -3412,8 +3408,18 @@ bool WasmTableObject::fillRange(JSContext* cx, uint32_t index, uint32_t length,
 #ifdef DEBUG
 void WasmTableObject::assertRangeNull(uint32_t index, uint32_t length) const {
   Table& tab = table();
-  for (uint32_t i = index; i < index + length; i++) {
-    MOZ_ASSERT(tab.isNull(i));
+  switch (tab.repr()) {
+    case TableRepr::Func:
+      for (uint32_t i = index; i < index + length; i++) {
+        MOZ_ASSERT(tab.getFuncRef(i).tls == nullptr);
+        MOZ_ASSERT(tab.getFuncRef(i).code == nullptr);
+      }
+      break;
+    case TableRepr::Ref:
+      for (uint32_t i = index; i < index + length; i++) {
+        MOZ_ASSERT(tab.getAnyRef(i).isNull());
+      }
+      break;
   }
 }
 #endif

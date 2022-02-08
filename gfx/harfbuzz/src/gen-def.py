@@ -35,8 +35,7 @@ hb_draw_funcs_set_close_path_func
 hb_draw_funcs_set_cubic_to_func
 hb_draw_funcs_set_line_to_func
 hb_draw_funcs_set_move_to_func
-hb_draw_funcs_set_quadratic_to_func
-hb_font_get_var_coords_design""".splitlines ()
+hb_draw_funcs_set_quadratic_to_func""".splitlines ()
 	symbols = [x for x in symbols if x not in experimental_symbols]
 symbols = "\n".join (symbols)
 

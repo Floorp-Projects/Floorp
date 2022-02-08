@@ -1,0 +1,14 @@
+# Ensure that we correctly calculate the UV sampling rect for the backdrop
+# Similar to the mix-blend-mode-overflowing-child.html test in Gecko
+---
+root:
+  items:
+    - type: rect
+      bounds: [0, 0, 100, 100]
+      color: green
+    - type: rect
+      bounds: [50, 50, 100, 100]
+      color: green
+    - type: rect
+      bounds: [50, 50, 50, 50]
+      color: black

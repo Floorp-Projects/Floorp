@@ -61,8 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=987230
     } else {
       //XXXgijs set mouse position back outside the iframe:
       let frameRect = window.frameElement.getBoundingClientRect();
-      let utils = window.windowUtils;
-      let scale = utils.screenPixelsPerCSSPixel;
+      let scale = window.devicePixelRatio;
       let outsideOfFrameX = (window.mozInnerScreenX + frameRect.width + 100) * scale;
       let outsideOfFrameY = Math.max(0, window.mozInnerScreenY - 100) * scale;
 

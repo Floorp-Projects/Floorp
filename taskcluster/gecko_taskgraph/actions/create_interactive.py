@@ -63,6 +63,9 @@ SCOPE_WHITELIST = [
     re.compile(r"^docker-worker:feature:allowPtrace$"),
     # docker-worker capabilities include loopback devices
     re.compile(r"^docker-worker:capability:device:.*$"),
+    re.compile(r"^docker-worker:capability:privileged$"),
+    re.compile(r"^docker-worker:cache:gecko-level-1-checkouts.*$"),
+    re.compile(r"^docker-worker:cache:gecko-level-1-tooltool-cache.*$"),
 ]
 
 

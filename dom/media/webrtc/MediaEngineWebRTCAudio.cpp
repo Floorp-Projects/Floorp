@@ -456,10 +456,10 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop() {
           return;
         }
 
-        track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
-            track, inputProcessing, StartStopMessage::Stop));
         MOZ_ASSERT(track->DeviceId().value() == deviceInfo->DeviceID());
         track->DisconnectDeviceInput();
+        track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
+            track, inputProcessing, StartStopMessage::Stop));
       }));
 
   MOZ_ASSERT(mState == kStarted, "Should be started when stopping");
@@ -751,9 +751,8 @@ void AudioInputProcessing::ProcessOutputData(MediaTrackGraphImpl* aGraph,
                                              size_t aFrames, TrackRate aRate,
                                              uint32_t aChannels) {
   MOZ_ASSERT(aGraph->OnGraphThread());
-  MOZ_ASSERT(mEnabled);
 
-  if (PassThrough(aGraph)) {
+  if (!mEnabled || PassThrough(aGraph)) {
     return;
   }
 

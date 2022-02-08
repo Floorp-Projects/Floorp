@@ -31,17 +31,17 @@
                      oncommand="gIdentityHandler.showSecuritySubView();">
         <vbox class="identity-popup-security-connection identity-button">
           <hbox flex="1">
-            <description class="identity-popup-connection-not-secure"
-                        when-connection="not-secure secure-cert-user-overridden secure-custom-root cert-error-page https-only-error-page" data-l10n-id="identity-connection-not-secure"></description>
-            <description class="identity-popup-connection-secure"
-                        when-connection="secure secure-ev" data-l10n-id="identity-connection-secure"></description>
-            <description class="identity-popup-connection-failure"
-                        when-connection="net-error-page" data-l10n-id="identity-connection-failure"></description>
-            <description when-connection="chrome" data-l10n-id="identity-connection-internal"></description>
-            <description when-connection="file" data-l10n-id="identity-connection-file"></description>
-            <description when-connection="extension" data-l10n-id="identity-extension-page"></description>
-            <description class="identity-popup-connection-secure upgraded" when-httpsonlystatus="upgraded failed-sub"
-              data-l10n-id="identity-https-only-connection-upgraded"></description>
+            <label class="identity-popup-connection-not-secure"
+                        when-connection="not-secure secure-cert-user-overridden secure-custom-root cert-error-page https-only-error-page" data-l10n-id="identity-connection-not-secure"></label>
+            <label class="identity-popup-connection-secure"
+                        when-connection="secure secure-ev" data-l10n-id="identity-connection-secure"></label>
+            <label class="identity-popup-connection-failure"
+                        when-connection="net-error-page" data-l10n-id="identity-connection-failure"></label>
+            <label when-connection="chrome" data-l10n-id="identity-connection-internal"></label>
+            <label when-connection="file" data-l10n-id="identity-connection-file"></label>
+            <label when-connection="extension" data-l10n-id="identity-extension-page"></label>
+            <label class="identity-popup-connection-secure upgraded" when-httpsonlystatus="upgraded failed-sub"
+              data-l10n-id="identity-https-only-connection-upgraded"></label>
           </hbox>
         </vbox>
       </toolbarbutton>

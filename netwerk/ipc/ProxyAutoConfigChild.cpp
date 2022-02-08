@@ -19,7 +19,7 @@ static bool sThreadLocalSetup = false;
 static uint32_t sThreadLocalIndex = 0xdeadbeef;
 StaticRefPtr<nsIThread> ProxyAutoConfigChild::sPACThread;
 bool ProxyAutoConfigChild::sShutdownObserverRegistered = false;
-Atomic<uint32_t> ProxyAutoConfigChild::sLiveActorCount(0);
+static StaticRefPtr<ProxyAutoConfigChild> sActor;
 
 namespace {
 
@@ -46,6 +46,27 @@ ShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
 }  // namespace
 
 // static
+void ProxyAutoConfigChild::BindProxyAutoConfigChild(
+    RefPtr<ProxyAutoConfigChild>&& aActor,
+    Endpoint<PProxyAutoConfigChild>&& aEndpoint) {
+  // We only allow one ProxyAutoConfigChild at a time, so we need to
+  // wait until the old one to be destroyed.
+  if (sActor) {
+    NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+        "BindProxyAutoConfigChild",
+        [actor = std::move(aActor), endpoint = std::move(aEndpoint)]() mutable {
+          ProxyAutoConfigChild::BindProxyAutoConfigChild(std::move(actor),
+                                                         std::move(endpoint));
+        }));
+    return;
+  }
+
+  if (aEndpoint.Bind(aActor)) {
+    sActor = aActor;
+  }
+}
+
+// static
 bool ProxyAutoConfigChild::Create(Endpoint<PProxyAutoConfigChild>&& aEndpoint) {
   if (!sPACThread && !CreatePACThread()) {
     NS_WARNING("Failed to create pac thread!");
@@ -66,22 +87,14 @@ bool ProxyAutoConfigChild::Create(Endpoint<PProxyAutoConfigChild>&& aEndpoint) {
   }
 
   RefPtr<ProxyAutoConfigChild> actor = new ProxyAutoConfigChild();
-  if (NS_FAILED(sPACThread->Dispatch(
-          NS_NewRunnableFunction("ProxyAutoConfigChild::ProxyAutoConfigChild",
-                                 [actor = std::move(actor),
-                                  endpoint = std::move(aEndpoint)]() mutable {
-                                   MOZ_ASSERT(endpoint.IsValid());
-
-                                   // Transfer ownership to PAC thread. If
-                                   // Bind() fails then we will release this
-                                   // reference in Destroy.
-                                   ProxyAutoConfigChild* actorTmp;
-                                   actor.forget(&actorTmp);
-
-                                   if (!endpoint.Bind(actorTmp)) {
-                                     actorTmp->Destroy();
-                                   }
-                                 })))) {
+  if (NS_FAILED(sPACThread->Dispatch(NS_NewRunnableFunction(
+          "ProxyAutoConfigChild::ProxyAutoConfigChild",
+          [actor = std::move(actor),
+           endpoint = std::move(aEndpoint)]() mutable {
+            MOZ_ASSERT(endpoint.IsValid());
+            ProxyAutoConfigChild::BindProxyAutoConfigChild(std::move(actor),
+                                                           std::move(endpoint));
+          })))) {
     NS_WARNING("Failed to dispatch runnable!");
     return false;
   }
@@ -115,7 +128,7 @@ void ProxyAutoConfigChild::ShutdownPACThread() {
   if (sPACThread) {
     // Wait until all actos are released.
     SpinEventLoopUntil("ProxyAutoConfigChild::ShutdownPACThread"_ns,
-                       [&]() { return !sLiveActorCount; });
+                       [&]() { return !sActor; });
 
     nsCOMPtr<nsIThread> thread = sPACThread.get();
     sPACThread = nullptr;
@@ -131,52 +144,74 @@ ProxyAutoConfigChild::ProxyAutoConfigChild()
   }
 
   mPAC->SetThreadLocalIndex(sThreadLocalIndex);
-  sLiveActorCount++;
 }
 
-ProxyAutoConfigChild::~ProxyAutoConfigChild() {
-  MOZ_ASSERT(NS_IsMainThread());
-  sLiveActorCount--;
-}
+ProxyAutoConfigChild::~ProxyAutoConfigChild() = default;
 
 mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvConfigurePAC(
     const nsCString& aPACURI, const nsCString& aPACScriptData,
     const bool& aIncludePath, const uint32_t& aExtraHeapSize) {
   mPAC->ConfigurePAC(aPACURI, aPACScriptData, aIncludePath, aExtraHeapSize,
                      GetMainThreadSerialEventTarget());
+  mPACLoaded = true;
+  NS_DispatchToCurrentThread(
+      NewRunnableMethod("ProxyAutoConfigChild::ProcessPendingQ", this,
+                        &ProxyAutoConfigChild::ProcessPendingQ));
   return IPC_OK();
+}
+
+void ProxyAutoConfigChild::PendingQuery::Resolve(nsresult aStatus,
+                                                 const nsCString& aResult) {
+  mResolver(Tuple<const nsresult&, const nsCString&>(aStatus, aResult));
 }
 
 mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvGetProxyForURI(
     const nsCString& aTestURI, const nsCString& aTestHost,
     GetProxyForURIResolver&& aResolver) {
-  RefPtr<ProxyAutoConfigChild> self = this;
-  auto callResolver = [self, testURI(aTestURI), testHost(aTestHost),
-                       resolver{std::move(aResolver)}]() {
-    if (!self->CanSend()) {
-      return;
-    }
-
-    nsCString result;
-    nsresult rv = self->mPAC->GetProxyForURI(testURI, testHost, result);
-    resolver(Tuple<const nsresult&, const nsCString&>(rv, result));
-  };
-  if (mPAC->WaitingForDNSResolve()) {
-    mPAC->RegisterDNSResolveCallback(
-        [resolverCallback{std::move(callResolver)}]() { resolverCallback(); });
-    return IPC_OK();
-  }
-
-  callResolver();
+  mPendingQ.insertBack(
+      new PendingQuery(aTestURI, aTestHost, std::move(aResolver)));
+  ProcessPendingQ();
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvGC() {
-  mPAC->GC();
-  return IPC_OK();
+void ProxyAutoConfigChild::ProcessPendingQ() {
+  while (ProcessPending()) {
+    ;
+  }
+
+  if (mShutdown) {
+    mPAC->Shutdown();
+  } else {
+    // do GC while the thread has nothing pending
+    mPAC->GC();
+  }
+}
+
+bool ProxyAutoConfigChild::ProcessPending() {
+  if (mPendingQ.isEmpty()) {
+    return false;
+  }
+
+  if (mInProgress || !mPACLoaded) {
+    return false;
+  }
+
+  if (mShutdown) {
+    return true;
+  }
+
+  mInProgress = true;
+  RefPtr<PendingQuery> query = mPendingQ.popFirst();
+  nsCString result;
+  nsresult rv = mPAC->GetProxyForURI(query->URI(), query->Host(), result);
+  query->Resolve(rv, result);
+  mInProgress = false;
+  return true;
 }
 
 void ProxyAutoConfigChild::ActorDestroy(ActorDestroyReason aWhy) {
+  mPendingQ.clear();
+  mShutdown = true;
   mPAC->Shutdown();
 
   // To avoid racing with the main thread, we need to dispatch
@@ -185,18 +220,6 @@ void ProxyAutoConfigChild::ActorDestroy(ActorDestroyReason aWhy) {
       "ProxyAutoConfigChild::Destroy", this, &ProxyAutoConfigChild::Destroy)));
 }
 
-void ProxyAutoConfigChild::Destroy() {
-  // May be called on any thread!
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(NewNonOwningRunnableMethod(
-      "ProxyAutoConfigChild::MainThreadActorDestroy", this,
-      &ProxyAutoConfigChild::MainThreadActorDestroy)));
-}
-
-void ProxyAutoConfigChild::MainThreadActorDestroy() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // This may be the last reference!
-  Release();
-}
+void ProxyAutoConfigChild::Destroy() { sActor = nullptr; }
 
 }  // namespace mozilla::net

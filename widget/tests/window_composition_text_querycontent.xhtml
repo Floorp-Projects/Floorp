@@ -203,10 +203,33 @@ function checkSelection(aExpectedOffset, aExpectedText, aMessage, aID)
                                ": synthesizeQuerySelectedText " + aID)) {
     return false;
   }
-  is(selectedText.offset, aExpectedOffset,
-     aMessage + ": selection offset is wrong " + aID);
-  is(selectedText.text, aExpectedText,
-     aMessage + ": selected text is wrong " + aID);
+  if (aExpectedOffset === null) {
+    is(
+      selectedText.notFound,
+      true,
+      `${aMessage}: selection should not be found ${aID}`
+    );
+    return selectedText.notFound;
+  }
+
+  is(
+    selectedText.notFound,
+    false,
+    `${aMessage}: selection should be found ${aID}`
+  );
+  if (selectedText.notFound) {
+    return false;
+  }
+  is(
+    selectedText.offset,
+    aExpectedOffset,
+    `${aMessage}: selection offset should be ${aExpectedOffset} ${aID}`
+  );
+  is(
+    selectedText.text,
+    aExpectedText,
+    `${aMessage}: selected text should be "${aExpectedText}" ${aID}`
+  );
   return selectedText.offset == aExpectedOffset &&
          selectedText.text == aExpectedText;
 }
@@ -4551,18 +4574,54 @@ function runQuerySelectionEventTest()
 
   // #1
   contenteditable.innerHTML = "<br/>a";
-  selection.setBaseAndExtent(contenteditable.firstChild, 0, contenteditable.lastChild, 1);
-  checkSelection(0, kLF + "a", "runQuerySelectionEventTest #1, \"" + contenteditable.innerHTML + "\"");
+  selection.setBaseAndExtent(
+    contenteditable.firstChild,
+    0,
+    contenteditable.lastChild,
+    1
+  );
+  checkSelection(
+    0,
+    `${kLF}a`,
+    `runQuerySelectionEventTest #1, "${contenteditable.innerHTML}"`
+  );
 
   // #2
   contenteditable.innerHTML = "<p></p><p>abc</p>";
-  selection.setBaseAndExtent(contenteditable.firstChild, 0, contenteditable.lastChild.firstChild, 1);
-  checkSelection(kLFLen, kLF + "a", "runQuerySelectionEventTest #2, \"" + contenteditable.innerHTML + "\"");
+  selection.setBaseAndExtent(
+    contenteditable.firstChild,
+    0,
+    contenteditable.lastChild.firstChild,
+    1
+  );
+  checkSelection(
+    kLFLen,
+    `${kLF}a`,
+    `runQuerySelectionEventTest #2, "${contenteditable.innerHTML}"`
+  );
 
   // #3
   contenteditable.innerHTML = "<p>abc</p><p>def</p>";
-  selection.setBaseAndExtent(contenteditable.firstChild, 0, contenteditable.lastChild.firstChild, 1);
-  checkSelection(kLFLen, "abc" + kLF + "d", "runQuerySelectionEventTest #3, \"" + contenteditable.innerHTML + "\"");
+  selection.setBaseAndExtent(
+    contenteditable.firstChild,
+    0,
+    contenteditable.lastChild.firstChild,
+    1
+  );
+  checkSelection(
+    kLFLen,
+    `abc${kLF}d`,
+    `runQuerySelectionEventTest #3, "${contenteditable.innerHTML}"`
+  );
+
+  // #4
+  contenteditable.innerHTML = "<p>abc</p>";
+  selection.removeAllRanges();
+  checkSelection(
+    null,
+    null,
+    `runQuerySelectionEventTest #4, "${contenteditable.innerHTML}"`
+  );
 }
 
 function runQueryIMESelectionTest()
