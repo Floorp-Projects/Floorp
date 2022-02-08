@@ -528,10 +528,6 @@ class RTCPeerConnection {
       );
     }
 
-    this._validateConfig(rtcConfig);
-    this._config = Object.assign({}, rtcConfig);
-    this._applyPrefsToConfig(rtcConfig);
-
     this._documentPrincipal = Cu.getWebIDLCallerPrincipal();
 
     if (_globalPCList._networkdown) {
@@ -571,12 +567,9 @@ class RTCPeerConnection {
     // Add a reference to the PeerConnection to global list (before init).
     _globalPCList.addPC(this);
 
-    this._impl.initialize(
-      observer,
-      this._win,
-      rtcConfig,
-      Services.tm.currentThread
-    );
+    this._impl.initialize(observer, this._win, Services.tm.currentThread);
+
+    this.setConfiguration(rtcConfig);
 
     this._certificateReady = this._initCertificate(certificate);
     this._initIdp();
@@ -603,12 +596,14 @@ class RTCPeerConnection {
     this._checkClosed();
     this._validateConfig(rtcConfig);
     this._checkIfIceRestartRequired(rtcConfig);
-    this._config = Object.assign({}, rtcConfig);
 
     // Allow prefs to tweak these settings before passing to c++, but hide all
     // of that from JS.
-    this._applyPrefsToConfig(rtcConfig);
-    this._impl.setConfiguration(rtcConfig);
+    const configWithPrefTweaks = Object.assign({}, rtcConfig);
+    this._applyPrefsToConfig(configWithPrefTweaks);
+    this._impl.setConfiguration(configWithPrefTweaks);
+
+    this._config = Object.assign({}, rtcConfig);
   }
 
   async _initCertificate(certificate) {
