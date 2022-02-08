@@ -11,8 +11,8 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -30,6 +30,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class TopSitesTest {
     private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     private lateinit var mockWebServer: MockWebServer
+    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule()
@@ -40,17 +41,18 @@ class TopSitesTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
+
+        featureSettingsHelper.setJumpBackCFREnabled(false)
     }
 
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @Test
     fun verifyAddToFirefoxHome() {
-        val settings = activityIntentTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val defaultWebPageTitle = "Test_Page_1"
 
@@ -69,8 +71,6 @@ class TopSitesTest {
 
     @Test
     fun verifyOpenTopSiteNormalTab() {
-        val settings = activityIntentTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val defaultWebPageTitle = "Test_Page_1"
 
@@ -99,8 +99,6 @@ class TopSitesTest {
 
     @Test
     fun verifyOpenTopSitePrivateTab() {
-        val settings = activityIntentTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val defaultWebPageTitle = "Test_Page_1"
 
@@ -123,8 +121,6 @@ class TopSitesTest {
 
     @Test
     fun verifyRenameTopSite() {
-        val settings = activityIntentTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val defaultWebPageTitle = "Test_Page_1"
         val defaultWebPageTitleNew = "Test_Page_2"
@@ -149,8 +145,6 @@ class TopSitesTest {
 
     @Test
     fun verifyRemoveTopSite() {
-        val settings = activityIntentTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val defaultWebPageTitle = "Test_Page_1"
 
