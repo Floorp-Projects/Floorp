@@ -166,7 +166,6 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
       mSession, kVTCompressionPropertyKey_UsingHardwareAcceleratedVideoEncoder,
       kCFAllocatorDefault, &isUsingHW);
   mIsHardwareAccelerated = status == noErr && isUsingHW == kCFBooleanTrue;
-  CFRelease(isUsingHW);
 
   mError = NS_OK;
   return InitPromise::CreateAndResolve(TrackInfo::TrackType::kVideoTrack,
