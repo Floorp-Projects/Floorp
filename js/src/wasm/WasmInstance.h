@@ -66,7 +66,6 @@ class Instance {
   const void** addressOfTypeId(const TypeIdDesc& typeId) const;
   FuncImportTls& funcImportTls(const FuncImport& fi);
   TableTls& tableTls(const TableDesc& td) const;
-  void* checkedCallEntry(const uint32_t functionIndex, const Tier tier) const;
 
   // Only WasmInstanceObject can call the private trace function.
   friend class js::WasmInstanceObject;
@@ -170,25 +169,14 @@ class Instance {
   // Called to apply a single ElemSegment at a given offset, assuming
   // that all bounds validation has already been performed.
 
-  [[nodiscard]] bool initElems(JSContext* cx, uint32_t tableIndex,
-                               const ElemSegment& seg, uint32_t dstOffset,
-                               uint32_t srcOffset, uint32_t len);
+  [[nodiscard]] bool initElems(uint32_t tableIndex, const ElemSegment& seg,
+                               uint32_t dstOffset, uint32_t srcOffset,
+                               uint32_t len);
 
   // This will return null if an indirect stub for (func,tls) is not found in
   // the present instance.
   void* getIndirectStub(uint32_t funcIndex, TlsData* targetTlsData,
                         const Tier tier) const;
-
-  [[nodiscard]] bool createManyIndirectStubs(
-      const VectorOfIndirectStubTarget& targets, const Tier tier);
-  [[nodiscard]] bool ensureIndirectStubs(JSContext* cx,
-                                         const Uint32Vector& elemFuncIndices,
-                                         uint32_t srcOffset, uint32_t len,
-                                         const Tier tier,
-                                         const bool tableIsImportedOrExported);
-  [[nodiscard]] bool ensureIndirectStub(JSContext* cx, FuncRef* ref,
-                                        const Tier tier,
-                                        const bool tableIsImportedOrExported);
 
   // Debugger support:
 
