@@ -101,8 +101,6 @@ class ServiceWorkerUpdateFinishCallback {
  * }
  */
 class ServiceWorkerManager final : public nsIServiceWorkerManager,
-                                   public nsITimerCallback,
-                                   public nsINamed,
                                    public nsIObserver {
   friend class GetRegistrationsRunnable;
   friend class GetRegistrationRunnable;
@@ -117,8 +115,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVICEWORKERMANAGER
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSINAMED
 
   // Return true if the given principal and URI matches a registered service
   // worker which handles fetch event.
@@ -272,6 +268,16 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
       uint32_t aShutdownStateId,
       ServiceWorkerShutdownState::Progress aProgress) const;
 
+  // Record periodic telemetry on number of running ServiceWorkers.  When
+  // the number of running ServiceWorkers changes (or on shutdown),
+  // ServiceWorkerPrivateImpl will call RecordTelemetry with the number of
+  // running serviceworkers and those supporting Fetch.  We use
+  // mTelemetryLastChange to determine how many datapoints to inject into
+  // Telemetry, and dispatch a background runnable to call
+  // RecordTelemetryGap() and Accumulate them.
+  void RecordTelemetry(uint32_t aNumber, uint32_t aFetch);
+  void RecordTelemetryGap(uint32_t aNumber, uint32_t aFetch, uint32_t aRepeats);
+
  private:
   struct RegistrationDataPerPrincipal;
 
@@ -422,7 +428,8 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
 
   nsTArray<UniquePtr<PendingReadyData>> mPendingReadyList;
 
-  nsCOMPtr<nsITimer> mTelemetryTimer;
+  const uint32_t mTelemetryPeriodMs = 5 * 1000;
+  TimeStamp mTelemetryLastChange;
 };
 
 }  // namespace dom
