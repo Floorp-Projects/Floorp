@@ -272,7 +272,7 @@ nsresult NrIceTurnServer::ToNicerTurnStruct(nr_ice_turn_server* server) const {
   return NS_OK;
 }
 
-NrIceCtx::NrIceCtx(const std::string& name, const Config& aConfig)
+NrIceCtx::NrIceCtx(const std::string& name)
     : connection_state_(ICE_CTX_INIT),
       gathering_state_(ICE_CTX_GATHER_INIT),
       name_(name),
@@ -283,21 +283,64 @@ NrIceCtx::NrIceCtx(const std::string& name, const Config& aConfig)
       ice_handler_vtbl_(nullptr),
       ice_handler_(nullptr),
       trickle_(true),
-      config_(aConfig),
+      config_(),
       nat_(nullptr),
       proxy_config_(nullptr),
       obfuscate_host_addresses_(false) {}
 
 /* static */
-RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& aName,
-                                  const Config& aConfig) {
-  RefPtr<NrIceCtx> ctx = new NrIceCtx(aName, aConfig);
+RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& aName) {
+  RefPtr<NrIceCtx> ctx = new NrIceCtx(aName);
 
   if (!ctx->Initialize()) {
     return nullptr;
   }
 
   return ctx;
+}
+
+nsresult NrIceCtx::SetIceConfig(const Config& aConfig) {
+  config_ = aConfig;
+  switch (config_.mPolicy) {
+    case ICE_POLICY_RELAY:
+      MOZ_MTLOG(ML_DEBUG, "SetIceConfig: relay only");
+      nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES);
+      nr_ice_ctx_add_flags(ctx_, NR_ICE_CTX_FLAGS_RELAY_ONLY);
+      break;
+    case ICE_POLICY_NO_HOST:
+      MOZ_MTLOG(ML_DEBUG, "SetIceConfig: no host");
+      nr_ice_ctx_add_flags(ctx_, NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES);
+      nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_RELAY_ONLY);
+      break;
+    case ICE_POLICY_ALL:
+      MOZ_MTLOG(ML_DEBUG, "SetIceConfig: all");
+      nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES);
+      nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_RELAY_ONLY);
+      break;
+  }
+
+  // TODO: Support re-configuring the test NAT someday?
+  if (!nat_ && config_.mNatSimulatorConfig.isSome()) {
+    TestNat* test_nat = new TestNat;
+    test_nat->filtering_type_ = TestNat::ToNatBehavior(
+        config_.mNatSimulatorConfig->mFilteringType.get());
+    test_nat->mapping_type_ =
+        TestNat::ToNatBehavior(config_.mNatSimulatorConfig->mMappingType.get());
+    test_nat->block_udp_ = config_.mNatSimulatorConfig->mBlockUdp;
+    test_nat->block_tcp_ = config_.mNatSimulatorConfig->mBlockTcp;
+    test_nat->block_tls_ = config_.mNatSimulatorConfig->mBlockTls;
+    test_nat->error_code_for_drop_ =
+        config_.mNatSimulatorConfig->mErrorCodeForDrop;
+    if (config_.mNatSimulatorConfig->mRedirectAddress.Length()) {
+      test_nat
+          ->stun_redirect_map_[config_.mNatSimulatorConfig->mRedirectAddress] =
+          config_.mNatSimulatorConfig->mRedirectTargets;
+    }
+    test_nat->enabled_ = true;
+    SetNat(test_nat);
+  }
+
+  return NS_OK;
 }
 
 RefPtr<NrIceMediaStream> NrIceCtx::CreateStream(const std::string& id,
@@ -566,17 +609,6 @@ bool NrIceCtx::Initialize() {
   int r;
 
   UINT4 flags = NR_ICE_CTX_FLAGS_AGGRESSIVE_NOMINATION;
-  switch (config_.mPolicy) {
-    case ICE_POLICY_RELAY:
-      flags |= NR_ICE_CTX_FLAGS_RELAY_ONLY;
-      break;
-    case ICE_POLICY_NO_HOST:
-      flags |= NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES;
-      break;
-    case ICE_POLICY_ALL:
-      break;
-  }
-
   r = nr_ice_ctx_create(const_cast<char*>(name_.c_str()), flags, &ctx_);
 
   if (r) {
@@ -613,26 +645,6 @@ bool NrIceCtx::Initialize() {
       MOZ_MTLOG(ML_ERROR, "Couldn't set trickle cb for '" << name_ << "'");
       return false;
     }
-  }
-
-  if (config_.mNatSimulatorConfig.isSome()) {
-    TestNat* test_nat = new TestNat;
-    test_nat->filtering_type_ = TestNat::ToNatBehavior(
-        config_.mNatSimulatorConfig->mFilteringType.get());
-    test_nat->mapping_type_ =
-        TestNat::ToNatBehavior(config_.mNatSimulatorConfig->mMappingType.get());
-    test_nat->block_udp_ = config_.mNatSimulatorConfig->mBlockUdp;
-    test_nat->block_tcp_ = config_.mNatSimulatorConfig->mBlockTcp;
-    test_nat->block_tls_ = config_.mNatSimulatorConfig->mBlockTls;
-    test_nat->error_code_for_drop_ =
-        config_.mNatSimulatorConfig->mErrorCodeForDrop;
-    if (config_.mNatSimulatorConfig->mRedirectAddress.Length()) {
-      test_nat
-          ->stun_redirect_map_[config_.mNatSimulatorConfig->mRedirectAddress] =
-          config_.mNatSimulatorConfig->mRedirectTargets;
-    }
-    test_nat->enabled_ = true;
-    SetNat(test_nat);
   }
 
   // Create the handler objects
@@ -928,7 +940,7 @@ bool NrIceCtx::HasStreamsToConnect() const {
 nsresult NrIceCtx::StartChecks() {
   int r;
   if (!HasStreamsToConnect()) {
-    // Nothing to do
+    MOZ_MTLOG(ML_INFO, "In StartChecks, nothing to do on " << name_);
     return NS_OK;
   }
 
