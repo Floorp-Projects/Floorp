@@ -927,7 +927,7 @@ bool Module::instantiateLocalTable(JSContext* cx, const TableDesc& td,
 
   SharedTable table;
   Rooted<WasmTableObject*> tableObj(cx);
-  if (td.importedOrExported) {
+  if (td.isImportedOrExported) {
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTable));
     tableObj.set(WasmTableObject::create(cx, td.initialLength, td.maximumLength,
                                          td.elemType, proto));
