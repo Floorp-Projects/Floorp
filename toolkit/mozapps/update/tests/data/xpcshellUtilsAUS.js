@@ -3842,9 +3842,14 @@ function checkFilesAfterUpdateCommon(aStageDirExists, aToBeDeletedDirExists) {
  * Helper function for updater binary tests for verifying the contents of the
  * updater callback application log which should contain the arguments passed to
  * the callback application.
+ *
+ * @param appLaunchLog (optional)
+ *        The application log nsIFile to verify.  Defaults to the second
+ *        parameter passed to the callback executable (in the apply directory).
  */
-function checkCallbackLog() {
-  let appLaunchLog = getApplyDirFile(DIR_RESOURCES + gCallbackArgs[1]);
+function checkCallbackLog(
+  appLaunchLog = getApplyDirFile(DIR_RESOURCES + gCallbackArgs[1])
+) {
   if (!appLaunchLog.exists()) {
     // Uses do_timeout instead of do_execute_soon to lessen log spew.
     do_timeout(FILE_IN_USE_TIMEOUT_MS, checkCallbackLog);

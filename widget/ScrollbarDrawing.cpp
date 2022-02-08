@@ -124,12 +124,15 @@ sRGBColor ScrollbarDrawing::ComputeScrollbarTrackColor(
     return sRGBColor::FromABGR(
         ui->mScrollbarColor.AsColors().track.CalcColor(aStyle));
   }
-  if (aDocumentState.HasAllStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
-    return aColors.SystemOrElse(StyleSystemColor::ThemedScrollbarInactive,
-                                [] { return sScrollbarColor; });
-  }
-  return aColors.SystemOrElse(StyleSystemColor::ThemedScrollbar,
-                              [] { return sScrollbarColor; });
+
+  static constexpr gfx::sRGBColor sDefaultTrackColor(
+      gfx::sRGBColor::UnusualFromARGB(0xfff0f0f0));
+
+  auto systemColor =
+      aDocumentState.HasAllStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE)
+          ? StyleSystemColor::ThemedScrollbarInactive
+          : StyleSystemColor::ThemedScrollbar;
+  return aColors.SystemOrElse(systemColor, [] { return sDefaultTrackColor; });
 }
 
 // Don't use the theme color for dark scrollbars if it's not a color (if it's
@@ -191,7 +194,7 @@ sRGBColor ScrollbarDrawing::ComputeScrollbarThumbColor(
 
   return aColors.SystemOrElse(systemColor, [&] {
     return sRGBColor::FromABGR(ThemeColors::AdjustUnthemedScrollbarThumbColor(
-        sScrollbarThumbColor.ToABGR(), aElementState));
+        NS_RGB(0xcd, 0xcd, 0xcd), aElementState));
   });
 }
 

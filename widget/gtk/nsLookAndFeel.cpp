@@ -1580,6 +1580,10 @@ void nsLookAndFeel::PerThemeData::Init() {
 
   // Make sure that the thumb is visible, at least.
   const bool fallbackToUnthemedColors = [&] {
+    if (!StaticPrefs::widget_gtk_theme_scrollbar_colors_enabled()) {
+      return true;
+    }
+
     if (!ShouldHonorThemeScrollbarColors()) {
       return true;
     }
@@ -1600,15 +1604,17 @@ void nsLookAndFeel::PerThemeData::Init() {
   }();
 
   if (fallbackToUnthemedColors) {
-    mMozScrollbar = mThemedScrollbar = widget::sScrollbarColor.ToABGR();
-    mThemedScrollbarInactive = widget::sScrollbarColor.ToABGR();
-    mThemedScrollbarThumb = widget::sScrollbarThumbColor.ToABGR();
+    // Taken from Adwaita.
+    mMozScrollbar = mThemedScrollbar = NS_RGB(0xce, 0xce, 0xce);
+    mThemedScrollbarInactive = NS_RGB(0xec, 0xed, 0xef);
+    mThemedScrollbarThumb = NS_RGB(0x82, 0x81, 0x7e);
+    mThemedScrollbarThumbInactive = NS_RGB(0xce, 0xcf, 0xce);
+
     mThemedScrollbarThumbHover = ThemeColors::AdjustUnthemedScrollbarThumbColor(
         mThemedScrollbarThumb, NS_EVENT_STATE_HOVER);
     mThemedScrollbarThumbActive =
         ThemeColors::AdjustUnthemedScrollbarThumbColor(mThemedScrollbarThumb,
                                                        NS_EVENT_STATE_ACTIVE);
-    mThemedScrollbarThumbInactive = mThemedScrollbarThumb;
   }
 
   // The label is not added to a parent widget, but shared for constructing

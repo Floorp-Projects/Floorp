@@ -170,13 +170,13 @@ uint8_t FrameParser::FrameHeader::RawChannelMode() const {
   return 0x3 & mRaw[frame_header::CHANNELMODE_MODEEXT_COPY_ORIG_EMPH] >> 6;
 }
 
-int32_t FrameParser::FrameHeader::Layer() const {
+uint32_t FrameParser::FrameHeader::Layer() const {
   static const uint8_t LAYERS[4] = {0, 3, 2, 1};
 
   return LAYERS[RawLayer()];
 }
 
-int32_t FrameParser::FrameHeader::SampleRate() const {
+uint32_t FrameParser::FrameHeader::SampleRate() const {
   // Sample rates - use [version][srate]
   static const uint16_t SAMPLE_RATE[4][4] = {
       // clang-format off
@@ -190,13 +190,13 @@ int32_t FrameParser::FrameHeader::SampleRate() const {
   return SAMPLE_RATE[RawVersion()][RawSampleRate()];
 }
 
-int32_t FrameParser::FrameHeader::Channels() const {
+uint32_t FrameParser::FrameHeader::Channels() const {
   // 3 is single channel (mono), any other value is some variant of dual
   // channel.
   return RawChannelMode() == 3 ? 1 : 2;
 }
 
-int32_t FrameParser::FrameHeader::SamplesPerFrame() const {
+uint32_t FrameParser::FrameHeader::SamplesPerFrame() const {
   // Samples per frame - use [version][layer]
   static const uint16_t FRAME_SAMPLE[4][4] = {
       // clang-format off
@@ -211,7 +211,7 @@ int32_t FrameParser::FrameHeader::SamplesPerFrame() const {
   return FRAME_SAMPLE[RawVersion()][RawLayer()];
 }
 
-int32_t FrameParser::FrameHeader::Bitrate() const {
+uint32_t FrameParser::FrameHeader::Bitrate() const {
   // Bitrates - use [version][layer][bitrate]
   static const uint16_t BITRATE[4][4][16] = {
       // clang-format off
@@ -245,7 +245,7 @@ int32_t FrameParser::FrameHeader::Bitrate() const {
   return 1000 * BITRATE[RawVersion()][RawLayer()][RawBitrate()];
 }
 
-int32_t FrameParser::FrameHeader::SlotSize() const {
+uint32_t FrameParser::FrameHeader::SlotSize() const {
   // Slot size (MPEG unit of measurement) - use [layer]
   static const uint8_t SLOT_SIZE[4] = {0, 1, 1, 4};  // Rsvd, 3, 2, 1
 

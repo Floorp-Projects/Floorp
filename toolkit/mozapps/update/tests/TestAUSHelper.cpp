@@ -142,6 +142,7 @@ int NS_main(int argc, NS_tchar** argv) {
         "   or: setup-symlink dir1 dir2 file symlink\n"
         "   or: remove-symlink dir1 dir2 file symlink\n"
         "   or: check-symlink symlink\n"
+        "   or: check-umask existing-umask\n"
         "   or: post-update\n"
         "   or: create-update-dir\n"
         "\n"
@@ -280,6 +281,37 @@ int NS_main(int argc, NS_tchar** argv) {
       return 1;
     }
     return S_ISLNK(ss.st_mode) ? 0 : 1;
+#else
+    // Not implemented on non-Unix platforms
+    return 1;
+#endif
+  }
+
+  if (!NS_tstrcmp(argv[1], NS_T("check-umask"))) {
+#ifdef XP_UNIX
+    // Discover the current value of the umask.  There is no way to read the
+    // umask without changing it.  The system call is specified as unable to
+    // fail.
+    uint32_t umask = ::umask(0777);
+    ::umask(umask);
+
+    NS_tchar logFilePath[MAXPATHLEN];
+    if (!NS_tvsnprintf(logFilePath,
+                       sizeof(logFilePath) / sizeof(logFilePath[0]), NS_T("%s"),
+                       argv[2])) {
+      return 1;
+    }
+
+    FILE* logFP = NS_tfopen(logFilePath, NS_T("wb"));
+    if (!logFP) {
+      return 1;
+    }
+    fprintf(logFP, "check-umask\numask-%d\n", umask);
+
+    fclose(logFP);
+    logFP = nullptr;
+
+    return 0;
 #else
     // Not implemented on non-Unix platforms
     return 1;

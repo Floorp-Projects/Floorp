@@ -56,8 +56,14 @@ async function addGroupTest(shouldRebuild) {
     title: "example",
     builder: "domain",
     builderMetadata: { domain: "example.com" },
-    urls: TEST_URLS,
   });
+
+  let urls = await SnapshotGroups.getUrls({ id: groups[0].id });
+  Assert.deepEqual(
+    urls.sort(),
+    TEST_URLS.sort(),
+    "Should have inserted the expected URLs"
+  );
 }
 
 async function modifyGroupTest(shouldRebuild) {
@@ -84,10 +90,13 @@ async function modifyGroupTest(shouldRebuild) {
     title: "example",
     builder: "domain",
     builderMetadata: { domain: "example.com" },
-    // TODO: Replace when updateUrls API has been implemented.
-    urls: TEST_URLS,
-    // urls: [...TEST_URLS, TEST_URLS_EXTRA],
   });
+  let urls = await SnapshotGroups.getUrls({ id: groups[0].id });
+  Assert.deepEqual(
+    urls.sort(),
+    [...TEST_URLS, TEST_URLS_EXTRA].sort(),
+    "Should have inserted the expected URLs"
+  );
 }
 
 async function deleteGroupTest(shouldRebuild) {

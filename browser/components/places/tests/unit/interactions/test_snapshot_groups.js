@@ -9,6 +9,7 @@ const TEST_URL1 = "https://example.com/";
 const TEST_URL2 = "https://example.com/12345";
 const TEST_URL3 = "https://example.com/67890";
 const TEST_URL4 = "https://example.com/135246";
+const TEST_URL5 = "https://example.com/531246";
 
 async function delete_all_groups() {
   let groups = await SnapshotGroups.query({ skipMinimum: true });
@@ -159,6 +160,30 @@ add_task(async function test_update_metadata() {
   });
 });
 
+add_task(async function test_update_urls() {
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 1, "Should return 1 snapshot group");
+  Assert.equal(
+    groups[0].title,
+    "Modified title",
+    "SnapshotGroup title should be retrieved"
+  );
+
+  await SnapshotGroups.updateUrls(groups[0].id, [
+    TEST_URL5,
+    TEST_URL3,
+    TEST_URL1,
+  ]);
+
+  let updated_groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(updated_groups.length, 1, "Should return 1 SnapshotGroup");
+  assertSnapshotGroup(groups[0], {
+    title: "Modified title",
+    builder: "pinned",
+    snapshotCount: [TEST_URL5, TEST_URL3, TEST_URL1].length,
+  });
+});
+
 add_task(async function test_delete_group() {
   let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
@@ -268,6 +293,10 @@ add_task(async function test_get_snapshots_startIndex() {
 });
 
 add_task(async function test_minimum_size() {
+  let newGroup = { title: "Test Group 2", builder: "domain" };
+  let urls = [TEST_URL1, TEST_URL2, TEST_URL3];
+  let groupId = await SnapshotGroups.add(newGroup, urls);
+
   let groups = await SnapshotGroups.query();
   Assert.equal(
     groups.length,
@@ -275,15 +304,8 @@ add_task(async function test_minimum_size() {
     "Should return no groups when they are under the snapshot size limit."
   );
 
-  // TODO: Ideally this would use `updateUrls` to update 'Test Group' but that
-  // api is not implemented yet.
-  let newGroup = { title: "Test Group 2", builder: "domain" };
-  await SnapshotGroups.add(newGroup, [
-    TEST_URL1,
-    TEST_URL2,
-    TEST_URL3,
-    TEST_URL4,
-  ]);
+  urls.push(TEST_URL4);
+  await SnapshotGroups.updateUrls(groupId, urls);
 
   groups = await SnapshotGroups.query();
   Assert.equal(
