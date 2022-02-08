@@ -175,6 +175,12 @@ class IMContextWrapper final : public TextEventDispatcherListener {
  protected:
   ~IMContextWrapper();
 
+  /**
+   * SetInputPurposeAndInputHints() sets input-purpose and input-hints of
+   * current IM context to the values computed with mInputContext.
+   */
+  void SetInputPurposeAndInputHints();
+
   // Owner of an instance of this class. This should be top level window.
   // The owner window must release the contexts when it's destroyed because
   // the IME contexts need the native window.  If OnDestroyWindow() is called
@@ -452,6 +458,9 @@ class IMContextWrapper final : public TextEventDispatcherListener {
   // mIsKeySnooped is set to true if IM uses key snooper to listen key events.
   // In such case, we won't receive key events if IME consumes the event.
   bool mIsKeySnooped;
+  // mSetInputPurposeAndInputHints is set if `SetInputContext` wants `Focus`
+  // to set input-purpose and input-hints.
+  bool mSetInputPurposeAndInputHints;
 
   // sLastFocusedContext is a pointer to the last focused instance of this
   // class.  When a instance is destroyed and sLastFocusedContext refers it,
