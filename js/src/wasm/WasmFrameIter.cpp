@@ -150,11 +150,7 @@ void WasmFrameIter::popFrame() {
   }
 
   Frame* prevFP = fp_;
-  if (fp_->callerIsTrampolineFP()) {
-    fp_ = fp_->trampolineCaller();
-  } else {
-    fp_ = fp_->wasmCaller();
-  }
+  fp_ = fp_->wasmCaller();
   resumePCinCurrentFrame_ = prevFP->returnAddress();
 
   if (!fp_) {
@@ -956,10 +952,6 @@ static bool isSignatureCheckFail(uint32_t offsetInCode,
 
 const TlsData* js::wasm::GetNearestEffectiveTls(const Frame* fp) {
   while (true) {
-    if (fp->callerIsTrampolineFP()) {
-      return ExtractCalleeTlsFromFrameWithTls(fp);
-    }
-
     if (fp->callerIsExitOrJitEntryFP()) {
       // It is a direct call from JIT.
       MOZ_ASSERT(!LookupCode(fp->returnAddress()));
@@ -1163,11 +1155,9 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         }
 
         if (isSignatureCheckFail(offsetInCode, codeRange)) {
-          // Frame has been pushed and FP has been set.
+          // Frame have been pushed and FP has been set.
           const auto* frame = Frame::fromUntaggedWasmExitFP(fp);
-          fixedFP = frame->callerIsTrampolineFP()
-                        ? reinterpret_cast<uint8_t*>(frame->trampolineCaller())
-                        : reinterpret_cast<uint8_t*>(frame->wasmCaller());
+          fixedFP = frame->rawCaller();
           fixedPC = frame->returnAddress();
           AssertMatchesCallSite(fixedPC, fixedFP);
           break;
