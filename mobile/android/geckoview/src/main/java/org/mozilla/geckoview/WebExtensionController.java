@@ -1093,8 +1093,8 @@ public class WebExtensionController {
 
     final String url = sender.getString("url");
     final boolean isTopLevel;
-    if (session == null) {
-      // This message is coming from the background page
+    if (session == null || environmentType == WebExtension.MessageSender.ENV_TYPE_EXTENSION) {
+      // This message is coming from the background page, a popup, or an extension page
       isTopLevel = true;
     } else {
       // If session is present we are either receiving this message from a content script or
