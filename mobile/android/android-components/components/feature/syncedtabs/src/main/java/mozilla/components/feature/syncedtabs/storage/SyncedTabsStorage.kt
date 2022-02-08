@@ -69,7 +69,7 @@ class SyncedTabsStorage(
                 fxaDevice?.let { SyncedDeviceTabs(fxaDevice, tabs.sortedByDescending { it.lastUsed }) }
             }
             .sortedByDescending {
-                it.tabs.getOrNull(0)?.lastUsed
+                it.tabs.firstOrNull()?.lastUsed
             }
     }
 
