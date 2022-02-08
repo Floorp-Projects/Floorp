@@ -72,26 +72,6 @@ class MacroAssembler;
 
 namespace wasm {
 
-struct IndirectStubTarget {
-  uint32_t functionIdx;
-  void* checkedCallEntryAddress;
-  TlsData* tls;
-
-  bool operator==(const IndirectStubTarget& other) const {
-    bool result = functionIdx == other.functionIdx && tls == other.tls;
-    // Code pointers must be equal if function index and tls are equal.  Note
-    // it's possible for code pointers to be equal even if index and tls do not
-    // match, as the code pointer and function index are per-module but the tls
-    // is per-instance.
-    MOZ_ASSERT_IF(result,
-                  (checkedCallEntryAddress == other.checkedCallEntryAddress));
-    return result;
-  }
-};
-
-using VectorOfIndirectStubTarget =
-    Vector<IndirectStubTarget, 8, SystemAllocPolicy>;
-
 struct MetadataTier;
 struct Metadata;
 
@@ -509,7 +489,7 @@ struct MetadataTier {
 using UniqueMetadataTier = UniquePtr<MetadataTier>;
 
 // LazyStubSegment is a code segment lazily generated for function entry stubs
-// (both interpreter and jit ones) and for indirect stubs.
+// (both interpreter and jit ones).
 //
 // Because a stub is usually small (a few KiB) and an executable code segment
 // isn't (64KiB), a given stub segment can contain entry stubs of many
@@ -543,12 +523,6 @@ class LazyStubSegment : public CodeSegment {
                               uint8_t** codePtr,
                               size_t* indexFirstInsertedCodeRange);
 
-  [[nodiscard]] bool addIndirectStubs(size_t codeLength,
-                                      const VectorOfIndirectStubTarget& targets,
-                                      const CodeRangeVector& codeRanges,
-                                      uint8_t** codePtr,
-                                      size_t* indexFirstInsertedCodeRange);
-
   const CodeRangeVector& codeRanges() const { return codeRanges_; }
   [[nodiscard]] const CodeRange* lookupRange(const void* pc) const;
 
@@ -573,51 +547,8 @@ struct LazyFuncExport {
 
 using LazyFuncExportVector = Vector<LazyFuncExport, 0, SystemAllocPolicy>;
 
-// IndirectStub provides a mapping between a function index and an indirect stub
-// code range.
-//
-// The function index is the index of the function *within its defining module*,
-// not necessarily in the module that owns the stub.  That module's and
-// function's instance is provided by the tls field of the IndirectStubTable
-// entry within which this IndirectStub is found.
-
-struct IndirectStub {
-  size_t funcIndex;
-  size_t segmentIndex;
-  size_t codeRangeIndex;
-  IndirectStub(size_t funcIndex, size_t segmentIndex, size_t codeRangeIndex)
-      : funcIndex(funcIndex),
-        segmentIndex(segmentIndex),
-        codeRangeIndex(codeRangeIndex) {}
-};
-
-// IndirectStubVector represents a set of IndirectStubs.  These stubs all belong
-// to the same IndirectStubTable entry, and so all have the same tls value.
-//
-// The IndirectStubVector is ordered by IndirectStubComparator (WasmCode.cpp):
-// the sort key is the funcIndex.  The vector is binary-searched by that
-// predicate when an entry is needed.
-//
-// Creating an indirect stub is not an idempotent operation!  There must be NO
-// duplicate entries in the table, or equivalently, an entry that is in the
-// table must always be found by a binary search.
-
-using IndirectStubVector = Vector<IndirectStub, 0, SystemAllocPolicy>;
-
-// An IndirectStubTable represents a set of indirect stubs belonging to a
-// module.  There table is keyed uniquely by tls and there is one
-// IndirectStubVector per tls value represented in the set.
-//
-// While the set is usually very small, its can grow with the product of the
-// number of instances and the number of threads in a system, and we therefore
-// use a hash table.
-
-using IndirectStubTable =
-    HashMap<void*, IndirectStubVector, DefaultHasher<void*>, SystemAllocPolicy>;
-
 // LazyStubTier contains all the necessary information for lazy function entry
-// stubs and indirect stubs that are generated at runtime.
-// None of its data are ever serialized.
+// stubs that are generated at runtime. None of its data are ever serialized.
 //
 // It must be protected by a lock, because the main thread can both read and
 // write lazy stubs at any time while a background thread can regenerate lazy
@@ -626,7 +557,6 @@ using IndirectStubTable =
 class LazyStubTier {
   LazyStubSegmentVector stubSegments_;
   LazyFuncExportVector exports_;
-  IndirectStubTable indirectStubTable_;
   size_t lastStubSegmentIndex_;
 
   [[nodiscard]] bool createManyEntryStubs(const Uint32Vector& funcExportIndices,
@@ -648,15 +578,6 @@ class LazyStubTier {
   // Returns a pointer to the raw interpreter entry of a given function for
   // which stubs have been lazily generated.
   [[nodiscard]] void* lookupInterpEntry(uint32_t funcIndex) const;
-
-  // Creates many indirect stubs.
-  [[nodiscard]] bool createManyIndirectStubs(
-      const VectorOfIndirectStubTarget& targets, const CodeTier& codeTier);
-
-  // Returns a pointer to the indirect stub of a given function.
-  [[nodiscard]] void* lookupIndirectStub(uint32_t funcIndex, void* tls) const;
-
-  [[nodiscard]] const CodeRange* lookupRange(const void* pc) const;
 
   // Create one lazy stub for all the functions in funcExportIndices, putting
   // them in a single stub. Jit entries won't be used until
@@ -903,19 +824,12 @@ class Code : public ShareableBase<Code> {
 
   const CallSite* lookupCallSite(void* returnAddress) const;
   const CodeRange* lookupFuncRange(void* pc) const;
-  const CodeRange* lookupIndirectStubRange(void* pc) const;
   const StackMap* lookupStackMap(uint8_t* nextPC) const;
 #ifdef ENABLE_WASM_EXCEPTIONS
   const WasmTryNote* lookupWasmTryNote(void* pc, Tier* tier) const;
 #endif
   bool containsCodePC(const void* pc) const;
-  // It is possible for there to be two trap descriptors at the same address in
-  // the corner case when an indirect call which may trap on null is followed
-  // directly by another operation that can trap - the call's trap address is
-  // after the call while the other operation's trap address is at the
-  // operation.  Callers of lookupTrap must deal with this ambiguity.
-  bool lookupTrap(void* pc, Trap* trap1Out, Trap* trap2Out,
-                  BytecodeOffset* bytecode) const;
+  bool lookupTrap(void* pc, Trap* trap, BytecodeOffset* bytecode) const;
 
   // To save memory, profilingLabels_ are generated lazily when profiling mode
   // is enabled.

@@ -14,7 +14,6 @@
 #include "LiveResizeListener.h"
 #include "SwipeTracker.h"
 #include "TouchEvents.h"
-#include "WritingModes.h"
 #include "X11UndefineNone.h"
 #include "base/thread.h"
 #include "mozilla/ArrayUtils.h"
@@ -123,19 +122,6 @@ uint64_t AutoObserverNotifier::sObserverId = 0;
 // idle queue before timing out and moving it to the regular queue. Value is in
 // milliseconds.
 const uint32_t kAsyncDragDropTimeout = 1000;
-
-namespace mozilla::widget {
-
-void IMENotification::SelectionChangeDataBase::SetWritingMode(
-    const WritingMode& aWritingMode) {
-  mWritingMode = aWritingMode.mWritingMode.bits;
-}
-
-WritingMode IMENotification::SelectionChangeDataBase::GetWritingMode() const {
-  return WritingMode(mWritingMode);
-}
-
-}  // namespace mozilla::widget
 
 NS_IMPL_ISUPPORTS(nsBaseWidget, nsIWidget, nsISupportsWeakReference)
 

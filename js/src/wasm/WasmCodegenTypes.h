@@ -245,9 +245,7 @@ class CodeRange {
     TrapExit,          // calls C++ to report and jumps to throw stub
     DebugTrap,         // calls C++ to handle debug event
     FarJumpIsland,     // inserted to connect otherwise out-of-range insns
-    Throw,             // special stack-unwinding stub jumped to by other stubs
-    IndirectStub,  // a stub that take care of switching instance specific state
-                   // at cross-instance boundaries
+    Throw              // special stack-unwinding stub jumped to by other stubs
   };
 
  private:
@@ -329,9 +327,8 @@ class CodeRange {
   bool isJitEntry() const { return kind() == JitEntry; }
   bool isInterpEntry() const { return kind() == InterpEntry; }
   bool isEntry() const { return isInterpEntry() || isJitEntry(); }
-  bool isIndirectStub() const { return kind() == IndirectStub; }
   bool hasFuncIndex() const {
-    return isFunction() || isImportExit() || isEntry() || isIndirectStub();
+    return isFunction() || isImportExit() || isEntry();
   }
   uint32_t funcIndex() const {
     MOZ_ASSERT(hasFuncIndex());
@@ -433,6 +430,9 @@ class CallSiteDesc {
   Kind kind() const { return Kind(kind_); }
   bool isImportCall() const { return kind() == CallSiteDesc::Import; }
   bool isIndirectCall() const { return kind() == CallSiteDesc::Indirect; }
+  bool mightBeCrossInstance() const {
+    return isImportCall() || isIndirectCall();
+  }
 };
 
 class CallSite : public CallSiteDesc {

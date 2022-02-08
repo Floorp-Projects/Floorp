@@ -570,10 +570,6 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
         rfe->tlsData = iter.instance()->tlsData();
 
         size_t offsetAdjustment = 0;
-        if (iter.frame()->callerIsTrampolineFP()) {
-          offsetAdjustment =
-              FrameWithTls::sizeOfTlsFields() + IndirectStubAdditionalAlignment;
-        }
         rfe->stackPointer =
             (uint8_t*)(rfe->framePointer -
                        (tryNote->framePushed + offsetAdjustment));

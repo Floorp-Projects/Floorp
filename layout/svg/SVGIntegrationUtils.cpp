@@ -596,7 +596,8 @@ static MaskPaintResult CreateAndPaintMaskSurface(
     return paintResult;
   }
 
-  const Rect& maskSurfaceRect = aParams.maskRect.valueOr(Rect());
+  const LayoutDeviceRect& maskSurfaceRect =
+      aParams.maskRect.valueOr(LayoutDeviceRect());
   if (aParams.maskRect.isSome() && maskSurfaceRect.IsEmpty()) {
     // XXX: Is this ever true?
     paintResult.transparentBlackMask = true;
@@ -604,7 +605,7 @@ static MaskPaintResult CreateAndPaintMaskSurface(
   }
 
   RefPtr<DrawTarget> maskDT = ctx.GetDrawTarget()->CreateClippedDrawTarget(
-      maskSurfaceRect, SurfaceFormat::A8);
+      maskSurfaceRect.ToUnknownRect(), SurfaceFormat::A8);
   if (!maskDT || !maskDT->IsValid()) {
     return paintResult;
   }

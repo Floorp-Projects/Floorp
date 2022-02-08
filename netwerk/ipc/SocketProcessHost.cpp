@@ -6,6 +6,7 @@
 #include "SocketProcessHost.h"
 
 #include "SocketProcessParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/ProcessUtils.h"
 #include "nsAppRunner.h"
@@ -63,7 +64,8 @@ bool SocketProcessHost::Launch() {
   std::vector<std::string> extraArgs;
   ProcessChild::AddPlatformBuildID(extraArgs);
 
-  SharedPreferenceSerializer prefSerializer;
+  SharedPreferenceSerializer prefSerializer(
+      mozilla::dom::ContentParent::ShouldSyncPreference);
   if (!prefSerializer.SerializeToSharedMemory()) {
     return false;
   }

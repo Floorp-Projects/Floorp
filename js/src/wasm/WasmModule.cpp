@@ -604,7 +604,7 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
         return false;
       }
 
-      if (!instance.initElems(cx, seg->tableIndex, *seg, offset, 0, count)) {
+      if (!instance.initElems(seg->tableIndex, *seg, offset, 0, count)) {
         return false;  // OOM
       }
     }

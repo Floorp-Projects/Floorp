@@ -4626,9 +4626,10 @@ void IMEInputHandler::OpenSystemPreferredLanguageIME() {
 }
 
 void IMEInputHandler::OnSelectionChange(const IMENotification& aIMENotification) {
+  MOZ_ASSERT(aIMENotification.mSelectionChangeData.IsInitialized());
   MOZ_LOG(gIMELog, LogLevel::Info, ("%p IMEInputHandler::OnSelectionChange", this));
 
-  if (aIMENotification.mSelectionChangeData.mOffset == UINT32_MAX) {
+  if (!aIMENotification.mSelectionChangeData.HasRange()) {
     mSelectedRange.location = NSNotFound;
     mSelectedRange.length = 0;
     mRangeForWritingMode.location = NSNotFound;

@@ -160,6 +160,18 @@ gfx::IntRect RectFromBufferDescriptor(const BufferDescriptor& aDescriptor) {
   }
 }
 
+Maybe<gfx::IntSize> YSizeFromBufferDescriptor(
+    const BufferDescriptor& aDescriptor) {
+  switch (aDescriptor.type()) {
+    case BufferDescriptor::TRGBDescriptor:
+      return Nothing();
+    case BufferDescriptor::TYCbCrDescriptor:
+      return Some(aDescriptor.get_YCbCrDescriptor().ySize());
+    default:
+      MOZ_CRASH("GFX: YSizeFromBufferDescriptor");
+  }
+}
+
 Maybe<gfx::IntSize> CbCrSizeFromBufferDescriptor(
     const BufferDescriptor& aDescriptor) {
   switch (aDescriptor.type()) {

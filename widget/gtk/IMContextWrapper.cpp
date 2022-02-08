@@ -21,7 +21,7 @@
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/ToString.h"
-#include "WritingModes.h"
+#include "mozilla/WritingModes.h"
 
 // For collecting other people's log, tell `MOZ_LOG=IMEHandler:4,sync`
 // rather than `MOZ_LOG=IMEHandler:5,sync` since using `5` may create too
@@ -110,22 +110,6 @@ class GetEventStateName : public nsAutoCString {
     }
     Append(aModifierName);
   }
-};
-
-class GetWritingModeName : public nsAutoCString {
- public:
-  explicit GetWritingModeName(const WritingMode& aWritingMode) {
-    if (!aWritingMode.IsVertical()) {
-      AssignLiteral("Horizontal");
-      return;
-    }
-    if (aWritingMode.IsVerticalLR()) {
-      AssignLiteral("Vertical (LTR)");
-      return;
-    }
-    AssignLiteral("Vertical (RTL)");
-  }
-  virtual ~GetWritingModeName() = default;
 };
 
 class GetTextRangeStyleText final : public nsAutoCString {
@@ -340,7 +324,8 @@ IMContextWrapper::IMContextWrapper(nsWindow* aOwnerWindow)
       mPendingResettingIMContext(false),
       mRetrieveSurroundingSignalReceived(false),
       mMaybeInDeadKeySequence(false),
-      mIsIMInAsyncKeyHandlingMode(false) {
+      mIsIMInAsyncKeyHandlingMode(false),
+      mSetInputPurposeAndInputHints(false) {
   static bool sFirstInstance = true;
   if (sFirstInstance) {
     sFirstInstance = false;
@@ -572,7 +557,7 @@ IMContextWrapper::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
     case REQUEST_TO_CANCEL_COMPOSITION: {
       nsWindow* window =
           static_cast<nsWindow*>(aTextEventDispatcher->GetWidget());
-      return EndIMEComposition(window);
+      return IsComposing() ? EndIMEComposition(window) : NS_OK;
     }
     case NOTIFY_IME_OF_FOCUS:
       OnFocusChangeInGecko(true);
@@ -643,7 +628,9 @@ void IMContextWrapper::OnDestroyWindow(nsWindow* aWindow) {
   MOZ_ASSERT(aWindow, "aWindow must not be null");
 
   if (mLastFocusedWindow == aWindow) {
-    EndIMEComposition(aWindow);
+    if (IsComposing()) {
+      EndIMEComposition(aWindow);
+    }
     if (mIsIMFocused) {
       Blur();
     }
@@ -744,7 +731,6 @@ void IMContextWrapper::OnFocusWindow(nsWindow* aWindow) {
           ("0x%p OnFocusWindow(aWindow=0x%p), mLastFocusedWindow=0x%p", this,
            aWindow, mLastFocusedWindow));
   mLastFocusedWindow = aWindow;
-  Focus();
 }
 
 void IMContextWrapper::OnBlurWindow(nsWindow* aWindow) {
@@ -1108,20 +1094,33 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
 }
 
 void IMContextWrapper::OnFocusChangeInGecko(bool aFocus) {
-  MOZ_LOG(
-      gIMELog, LogLevel::Info,
-      ("0x%p OnFocusChangeInGecko(aFocus=%s), "
-       "mCompositionState=%s, mIsIMFocused=%s",
-       this, ToChar(aFocus), GetCompositionStateName(), ToChar(mIsIMFocused)));
+  MOZ_LOG(gIMELog, LogLevel::Info,
+          ("0x%p OnFocusChangeInGecko(aFocus=%s), "
+           "mCompositionState=%s, mIsIMFocused=%s, "
+           "mSetInputPurposeAndInputHints=%s",
+           this, ToChar(aFocus), GetCompositionStateName(),
+           ToChar(mIsIMFocused), ToChar(mSetInputPurposeAndInputHints)));
 
   // We shouldn't carry over the removed string to another editor.
   mSelectedStringRemovedByComposition.Truncate();
-  mSelection.Clear();
+  mContentSelection.reset();
+
+  if (aFocus) {
+    if (mSetInputPurposeAndInputHints) {
+      mSetInputPurposeAndInputHints = false;
+      SetInputPurposeAndInputHints();
+    }
+    if (!mIsIMFocused) {
+      Focus();
+    }
+  } else if (mIsIMFocused) {
+    Blur();
+  }
 
   // When the focus changes, we need to inform IM about the new cursor
   // position. Chinese input methods generally rely on this because they
   // usually don't start composition until a character is picked.
-  if (aFocus && EnsureToCacheSelection()) {
+  if (aFocus && EnsureToCacheContentSelection()) {
     SetCursorPosition(GetActiveContext());
   }
 }
@@ -1232,8 +1231,8 @@ void IMContextWrapper::OnUpdateComposition() {
   if (!IsComposing()) {
     // Composition has been committed.  So we need update selection for
     // caret later
-    mSelection.Clear();
-    EnsureToCacheSelection();
+    mContentSelection.reset();
+    EnsureToCacheContentSelection();
     mSetCursorPositionOnKeyEvent = true;
   }
 
@@ -1282,92 +1281,93 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
     return;
   }
 
-  bool changingEnabledState = aContext->IsInputAttributeChanged(mInputContext);
+  const bool changingEnabledState =
+      aContext->IsInputAttributeChanged(mInputContext);
 
   // Release current IME focus if IME is enabled.
   if (changingEnabledState && mInputContext.mIMEState.IsEditable()) {
-    EndIMEComposition(mLastFocusedWindow);
-    Blur();
+    if (IsComposing()) {
+      EndIMEComposition(mLastFocusedWindow);
+    }
+    if (mIsIMFocused) {
+      Blur();
+    }
   }
 
   mInputContext = *aContext;
 
-  if (changingEnabledState) {
-    if (mInputContext.mIMEState.IsEditable()) {
-      GtkIMContext* currentContext = GetCurrentContext();
-      if (currentContext) {
-        GtkInputPurpose purpose = GTK_INPUT_PURPOSE_FREE_FORM;
-        const nsString& inputType = mInputContext.mHTMLInputType;
-        // Password case has difficult issue.  Desktop IMEs disable
-        // composition if input-purpose is password.
-        // For disabling IME on |ime-mode: disabled;|, we need to check
-        // mEnabled value instead of inputType value.  This hack also
-        // enables composition on
-        // <input type="password" style="ime-mode: enabled;">.
-        // This is right behavior of ime-mode on desktop.
-        //
-        // On the other hand, IME for tablet devices may provide a
-        // specific software keyboard for password field.  If so,
-        // the behavior might look strange on both:
-        //   <input type="text" style="ime-mode: disabled;">
-        //   <input type="password" style="ime-mode: enabled;">
-        //
-        // Temporarily, we should focus on desktop environment for now.
-        // I.e., let's ignore tablet devices for now.  When somebody
-        // reports actual trouble on tablet devices, we should try to
-        // look for a way to solve actual problem.
-        if (mInputContext.mIMEState.mEnabled == IMEEnabled::Password) {
-          purpose = GTK_INPUT_PURPOSE_PASSWORD;
-        } else if (inputType.EqualsLiteral("email")) {
-          purpose = GTK_INPUT_PURPOSE_EMAIL;
-        } else if (inputType.EqualsLiteral("url")) {
-          purpose = GTK_INPUT_PURPOSE_URL;
-        } else if (inputType.EqualsLiteral("tel")) {
-          purpose = GTK_INPUT_PURPOSE_PHONE;
-        } else if (inputType.EqualsLiteral("number")) {
-          purpose = GTK_INPUT_PURPOSE_NUMBER;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("decimal")) {
-          purpose = GTK_INPUT_PURPOSE_NUMBER;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("email")) {
-          purpose = GTK_INPUT_PURPOSE_EMAIL;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("numeric")) {
-          purpose = GTK_INPUT_PURPOSE_DIGITS;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("tel")) {
-          purpose = GTK_INPUT_PURPOSE_PHONE;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("url")) {
-          purpose = GTK_INPUT_PURPOSE_URL;
-        }
-        // Search by type and inputmode isn't supported on GTK.
+  // Note that we cannot set input-purpose and input-hints right now because
+  // setting them may require to set focus immediately for IME own's UI.
+  // However, at this moment, `ContentCacheInParent` does not have content
+  // cache, it'll be available after `NOTIFY_IME_OF_FOCUS` notification.
+  // Therefore, we set them at receiving the notification.
+  mSetInputPurposeAndInputHints =
+      changingEnabledState && mInputContext.mIMEState.IsEditable();
+}
 
-        g_object_set(currentContext, "input-purpose", purpose, nullptr);
-
-        // Although GtkInputHints is enum type, value is bit field.
-        gint hints = GTK_INPUT_HINT_NONE;
-        if (mInputContext.mHTMLInputInputmode.EqualsLiteral("none")) {
-          hints |= GTK_INPUT_HINT_INHIBIT_OSK;
-        }
-
-        if (mInputContext.mAutocapitalize.EqualsLiteral("characters")) {
-          hints |= GTK_INPUT_HINT_UPPERCASE_CHARS;
-        } else if (mInputContext.mAutocapitalize.EqualsLiteral("sentences")) {
-          hints |= GTK_INPUT_HINT_UPPERCASE_SENTENCES;
-        } else if (mInputContext.mAutocapitalize.EqualsLiteral("words")) {
-          hints |= GTK_INPUT_HINT_UPPERCASE_WORDS;
-        }
-
-        g_object_set(currentContext, "input-hints", hints, nullptr);
-      }
-    }
-
-    // Even when aState is not enabled state, we need to set IME focus.
-    // Because some IMs are updating the status bar of them at this time.
-    // Be aware, don't use aWindow here because this method shouldn't move
-    // focus actually.
-    Focus();
-
-    // XXX Should we call Blur() when it's not editable?  E.g., it might be
-    //     better to close VKB automatically.
+void IMContextWrapper::SetInputPurposeAndInputHints() {
+  GtkIMContext* currentContext = GetCurrentContext();
+  if (!currentContext) {
+    return;
   }
+
+  GtkInputPurpose purpose = GTK_INPUT_PURPOSE_FREE_FORM;
+  const nsString& inputType = mInputContext.mHTMLInputType;
+  // Password case has difficult issue.  Desktop IMEs disable composition if
+  // input-purpose is password.  For disabling IME on |ime-mode: disabled;|, we
+  // need to check mEnabled value instead of inputType value.  This hack also
+  // enables composition on <input type="password" style="ime-mode: enabled;">.
+  // This is right behavior of ime-mode on desktop.
+  //
+  // On the other hand, IME for tablet devices may provide a specific software
+  // keyboard for password field.  If so, the behavior might look strange on
+  // both:
+  //   <input type="text" style="ime-mode: disabled;">
+  //   <input type="password" style="ime-mode: enabled;">
+  //
+  // Temporarily, we should focus on desktop environment for now.  I.e., let's
+  // ignore tablet devices for now.  When somebody reports actual trouble on
+  // tablet devices, we should try to look for a way to solve actual problem.
+  if (mInputContext.mIMEState.mEnabled == IMEEnabled::Password) {
+    purpose = GTK_INPUT_PURPOSE_PASSWORD;
+  } else if (inputType.EqualsLiteral("email")) {
+    purpose = GTK_INPUT_PURPOSE_EMAIL;
+  } else if (inputType.EqualsLiteral("url")) {
+    purpose = GTK_INPUT_PURPOSE_URL;
+  } else if (inputType.EqualsLiteral("tel")) {
+    purpose = GTK_INPUT_PURPOSE_PHONE;
+  } else if (inputType.EqualsLiteral("number")) {
+    purpose = GTK_INPUT_PURPOSE_NUMBER;
+  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("decimal")) {
+    purpose = GTK_INPUT_PURPOSE_NUMBER;
+  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("email")) {
+    purpose = GTK_INPUT_PURPOSE_EMAIL;
+  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("numeric")) {
+    purpose = GTK_INPUT_PURPOSE_DIGITS;
+  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("tel")) {
+    purpose = GTK_INPUT_PURPOSE_PHONE;
+  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("url")) {
+    purpose = GTK_INPUT_PURPOSE_URL;
+  }
+  // Search by type and inputmode isn't supported on GTK.
+
+  g_object_set(currentContext, "input-purpose", purpose, nullptr);
+
+  // Although GtkInputHints is enum type, value is bit field.
+  gint hints = GTK_INPUT_HINT_NONE;
+  if (mInputContext.mHTMLInputInputmode.EqualsLiteral("none")) {
+    hints |= GTK_INPUT_HINT_INHIBIT_OSK;
+  }
+
+  if (mInputContext.mAutocapitalize.EqualsLiteral("characters")) {
+    hints |= GTK_INPUT_HINT_UPPERCASE_CHARS;
+  } else if (mInputContext.mAutocapitalize.EqualsLiteral("sentences")) {
+    hints |= GTK_INPUT_HINT_UPPERCASE_SENTENCES;
+  } else if (mInputContext.mAutocapitalize.EqualsLiteral("words")) {
+    hints |= GTK_INPUT_HINT_UPPERCASE_WORDS;
+  }
+
+  g_object_set(currentContext, "input-hints", hints, nullptr);
 }
 
 InputContext IMContextWrapper::GetInputContext() {
@@ -1403,12 +1403,8 @@ void IMContextWrapper::Focus() {
   MOZ_LOG(
       gIMELog, LogLevel::Info,
       ("0x%p Focus(), sLastFocusedContext=0x%p", this, sLastFocusedContext));
-
-  if (mIsIMFocused) {
-    NS_ASSERTION(sLastFocusedContext == this,
-                 "We're not active, but the IM was focused?");
-    return;
-  }
+  MOZ_ASSERT(!mIsIMFocused);
+  MOZ_ASSERT(!mSetInputPurposeAndInputHints);
 
   GtkIMContext* currentContext = GetCurrentContext();
   if (!currentContext) {
@@ -1417,7 +1413,8 @@ void IMContextWrapper::Focus() {
     return;
   }
 
-  if (sLastFocusedContext && sLastFocusedContext != this) {
+  if (sLastFocusedContext && sLastFocusedContext != this &&
+      sLastFocusedContext->mIsIMFocused) {
     sLastFocusedContext->Blur();
   }
 
@@ -1442,10 +1439,7 @@ void IMContextWrapper::Focus() {
 void IMContextWrapper::Blur() {
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p Blur(), mIsIMFocused=%s", this, ToChar(mIsIMFocused)));
-
-  if (!mIsIMFocused) {
-    return;
-  }
+  MOZ_ASSERT(mIsIMFocused);
 
   GtkIMContext* currentContext = GetCurrentContext();
   if (!currentContext) {
@@ -1461,9 +1455,11 @@ void IMContextWrapper::Blur() {
 void IMContextWrapper::OnSelectionChange(
     nsWindow* aCaller, const IMENotification& aIMENotification) {
   const bool isSelectionRangeChanged =
-      mSelection.mOffset != aIMENotification.mSelectionChangeData.mOffset ||
-      mSelection.mString != *aIMENotification.mSelectionChangeData.mString;
-  mSelection.Assign(aIMENotification);
+      mContentSelection.isNothing() ||
+      !aIMENotification.mSelectionChangeData.EqualsRange(
+          mContentSelection.ref());
+  mContentSelection =
+      Some(ContentSelection(aIMENotification.mSelectionChangeData));
   const bool retrievedSurroundingSignalReceived =
       mRetrieveSurroundingSignalReceived;
   mRetrieveSurroundingSignalReceived = false;
@@ -1505,14 +1501,14 @@ void IMContextWrapper::OnSelectionChange(
   // event handler.  So, we're dispatching eCompositionStart,
   // we should ignore selection change notification.
   if (mCompositionState == eCompositionState_CompositionStartDispatched) {
-    if (NS_WARN_IF(!mSelection.IsValid())) {
+    if (NS_WARN_IF(mContentSelection.isNothing())) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   OnSelectionChange(), FAILED, "
                "new offset is too large, cannot keep composing",
                this));
-    } else {
+    } else if (mContentSelection->HasRange()) {
       // Modify the selection start offset with new offset.
-      mCompositionStart = mSelection.mOffset;
+      mCompositionStart = mContentSelection->OffsetAndDataRef().StartOffset();
       // XXX We should modify mSelectedStringRemovedByComposition?
       // But how?
       MOZ_LOG(gIMELog, LogLevel::Debug,
@@ -1521,6 +1517,12 @@ void IMContextWrapper::OnSelectionChange(
                "resetting IM context",
                this, mCompositionStart));
       // And don't reset the IM context.
+      return;
+    } else {
+      MOZ_LOG(
+          gIMELog, LogLevel::Debug,
+          ("0x%p   OnSelectionChange(), ignored, because of no selection range",
+           this));
       return;
     }
     // Otherwise, reset the IM context due to impossible to keep composing.
@@ -2135,10 +2137,18 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
     return false;
   }
 
-  if (NS_WARN_IF(!EnsureToCacheSelection())) {
+  if (NS_WARN_IF(!EnsureToCacheContentSelection())) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionStart(), FAILED, "
              "cannot query the selection offset",
+             this));
+    return false;
+  }
+
+  if (NS_WARN_IF(!mContentSelection->HasRange())) {
+    MOZ_LOG(gIMELog, LogLevel::Error,
+            ("0x%p   DispatchCompositionStart(), FAILED, "
+             "due to no selection",
              this));
     return false;
   }
@@ -2153,7 +2163,7 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
   //     even though we strongly hope it doesn't happen.
   //     Every composition event should have the start offset for the result
   //     because it may high cost if we query the offset every time.
-  mCompositionStart = mSelection.mOffset;
+  mCompositionStart = mContentSelection->OffsetAndDataRef().StartOffset();
   mDispatchedCompositionString.Truncate();
 
   // If this composition is started by a key press, we need to dispatch
@@ -2261,13 +2271,16 @@ bool IMContextWrapper::DispatchCompositionChangeEvent(
   // Store the selected string which will be removed by following
   // compositionchange event.
   if (mCompositionState == eCompositionState_CompositionStartDispatched) {
-    if (NS_WARN_IF(
-            !EnsureToCacheSelection(&mSelectedStringRemovedByComposition))) {
+    if (NS_WARN_IF(!EnsureToCacheContentSelection(
+            &mSelectedStringRemovedByComposition))) {
       // XXX How should we behave in this case??
-    } else {
+    } else if (mContentSelection->HasRange()) {
       // XXX We should assume, for now, any web applications don't change
       //     selection at handling this compositionchange event.
-      mCompositionStart = mSelection.mOffset;
+      mCompositionStart = mContentSelection->OffsetAndDataRef().StartOffset();
+    } else {
+      // If there is no selection range, we should keep previously storing
+      // mCompositionStart.
     }
   }
 
@@ -2352,7 +2365,7 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
                this));
       return true;
     }
-    if (MOZ_UNLIKELY(!EnsureToCacheSelection())) {
+    if (MOZ_UNLIKELY(!EnsureToCacheContentSelection())) {
       MOZ_LOG(gIMELog, LogLevel::Warning,
               ("0x%p   DispatchCompositionCommitEvent(), Warning, "
                "Failed to cache selection before dispatching "
@@ -2371,15 +2384,15 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
     // apps, i.e., selection range is same as what selection expects, we
     // shouldn't reset IME because the trigger of causing this commit may be an
     // input for next composition and we shouldn't cancel it.
-    if (mSelection.IsValid()) {
-      mSelection.CollapseTo(mSelection.mOffset + aCommitString->Length(),
-                            mSelection.mWritingMode);
+    if (mContentSelection.isSome()) {
+      mContentSelection->Collapse(
+          (mContentSelection->HasRange()
+               ? mContentSelection->OffsetAndDataRef().StartOffset()
+               : mCompositionStart) +
+          aCommitString->Length());
       MOZ_LOG(gIMELog, LogLevel::Info,
-              ("0x%p   DispatchCompositionCommitEvent(), "
-               "mSelection={ mOffset=%u, mString=\"%s\", mWritingMode=%s }",
-               this, mSelection.mOffset,
-               NS_ConvertUTF16toUTF8(mSelection.mString).get(),
-               ToString(mSelection.mWritingMode).c_str()));
+              ("0x%p   DispatchCompositionCommitEvent(), mContentSelection=%s",
+               this, ToString(mContentSelection).c_str()));
     }
     MOZ_ASSERT(!dispatcher);
   } else {
@@ -2423,11 +2436,17 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
     }
 
     // Emulate selection until receiving actual selection range.
-    mSelection.CollapseTo(
+    const uint32_t offsetToPutCaret =
         mCompositionStart + (aCommitString
                                  ? aCommitString->Length()
-                                 : mDispatchedCompositionString.Length()),
-        mSelection.mWritingMode);
+                                 : mDispatchedCompositionString.Length());
+    if (mContentSelection.isSome()) {
+      mContentSelection->Collapse(offsetToPutCaret);
+    } else {
+      // TODO: We should guarantee that there should be at least fake selection
+      //       for IME at here.  Then, we can keep the last writing mode.
+      mContentSelection.emplace(offsetToPutCaret, WritingMode());
+    }
   }
 
   mCompositionState = eCompositionState_NotComposing;
@@ -2821,18 +2840,24 @@ void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
   MOZ_LOG(
       gIMELog, LogLevel::Info,
       ("0x%p SetCursorPosition(aContext=0x%p), "
-       "mCompositionTargetRange={ mOffset=%u, mLength=%u }"
-       "mSelection={ mOffset=%u, Length()=%u, mWritingMode=%s }",
+       "mCompositionTargetRange={ mOffset=%u, mLength=%u }, "
+       "mContentSelection=%s",
        this, aContext, mCompositionTargetRange.mOffset,
-       mCompositionTargetRange.mLength, mSelection.mOffset, mSelection.Length(),
-       GetWritingModeName(mSelection.mWritingMode).get()));
+       mCompositionTargetRange.mLength, ToString(mContentSelection).c_str()));
 
   bool useCaret = false;
   if (!mCompositionTargetRange.IsValid()) {
-    if (!mSelection.IsValid()) {
+    if (mContentSelection.isNothing()) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   SetCursorPosition(), FAILED, "
-               "mCompositionTargetRange and mSelection are invalid",
+               "mCompositionTargetRange and mContentSelection are invalid",
+               this));
+      return;
+    }
+    if (!mContentSelection->HasRange()) {
+      MOZ_LOG(gIMELog, LogLevel::Warning,
+              ("0x%p   SetCursorPosition(), FAILED, "
+               "mCompositionTargetRange is invalid and there is no selection",
                this));
       return;
     }
@@ -2856,9 +2881,10 @@ void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
   WidgetQueryContentEvent queryCaretOrTextRectEvent(
       true, useCaret ? eQueryCaretRect : eQueryTextRect, mLastFocusedWindow);
   if (useCaret) {
-    queryCaretOrTextRectEvent.InitForQueryCaretRect(mSelection.mOffset);
+    queryCaretOrTextRectEvent.InitForQueryCaretRect(
+        mContentSelection->OffsetAndDataRef().StartOffset());
   } else {
-    if (mSelection.mWritingMode.IsVertical()) {
+    if (mContentSelection->WritingModeRef().IsVertical()) {
       // For preventing the candidate window to overlap the target
       // clause, we should set fake (typically, very tall) caret rect.
       uint32_t length =
@@ -2921,7 +2947,7 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
   // current selection.
   if (!EditorHasCompositionString()) {
     // Query cursor position & selection
-    if (NS_WARN_IF(!EnsureToCacheSelection())) {
+    if (NS_WARN_IF(!EnsureToCacheContentSelection())) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   GetCurrentParagraph(), FAILED, due to no "
                "valid selection information",
@@ -2929,8 +2955,14 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
       return NS_ERROR_FAILURE;
     }
 
-    selOffset = mSelection.mOffset;
-    selLength = mSelection.Length();
+    if (mContentSelection.isSome() && mContentSelection->HasRange()) {
+      selOffset = mContentSelection->OffsetAndDataRef().StartOffset();
+      selLength = mContentSelection->OffsetAndDataRef().Length();
+    } else {
+      // If there is no range, let's get all text instead...
+      selOffset = 0u;
+      selLength = INT32_MAX;  // TODO: Change to UINT32_MAX, but see below
+    }
   }
 
   MOZ_LOG(gIMELog, LogLevel::Debug,
@@ -3035,14 +3067,20 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
       return NS_ERROR_FAILURE;
     }
   } else {
-    if (NS_WARN_IF(!EnsureToCacheSelection())) {
+    if (NS_WARN_IF(!EnsureToCacheContentSelection())) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   DeleteText(), FAILED, due to no valid selection "
                "information",
                this));
       return NS_ERROR_FAILURE;
     }
-    selOffset = mSelection.mOffset;
+    if (!mContentSelection->HasRange()) {
+      MOZ_LOG(gIMELog, LogLevel::Debug,
+              ("0x%p   DeleteText(), does nothing, due to no selection range",
+               this));
+      return NS_OK;
+    }
+    selOffset = mContentSelection->OffsetAndDataRef().StartOffset();
   }
 
   // Get all text contents of the focused editor
@@ -3171,21 +3209,22 @@ void IMContextWrapper::InitEvent(WidgetGUIEvent& aEvent) {
   aEvent.mTime = PR_Now() / 1000;
 }
 
-bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
+bool IMContextWrapper::EnsureToCacheContentSelection(
+    nsAString* aSelectedString) {
   if (aSelectedString) {
     aSelectedString->Truncate();
   }
 
-  if (mSelection.IsValid()) {
-    if (aSelectedString) {
-      *aSelectedString = mSelection.mString;
+  if (mContentSelection.isSome()) {
+    if (mContentSelection->HasRange() && aSelectedString) {
+      aSelectedString->Assign(mContentSelection->OffsetAndDataRef().DataRef());
     }
     return true;
   }
 
   if (NS_WARN_IF(!mLastFocusedWindow)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
-            ("0x%p EnsureToCacheSelection(), FAILED, due to "
+            ("0x%p EnsureToCacheContentSelection(), FAILED, due to "
              "no focused window",
              this));
     return false;
@@ -3198,53 +3237,25 @@ bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
   mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
   if (NS_WARN_IF(querySelectedTextEvent.Failed())) {
     MOZ_LOG(gIMELog, LogLevel::Error,
-            ("0x%p EnsureToCacheSelection(), FAILED, due to "
+            ("0x%p EnsureToCacheContentSelection(), FAILED, due to "
              "failure of query selection event",
              this));
     return false;
   }
 
-  mSelection.Assign(querySelectedTextEvent);
-  if (!mSelection.IsValid()) {
-    MOZ_LOG(gIMELog, LogLevel::Error,
-            ("0x%p EnsureToCacheSelection(), FAILED, due to "
-             "failure of query selection event (invalid result)",
-             this));
-    return false;
+  mContentSelection = Some(ContentSelection(querySelectedTextEvent));
+  if (mContentSelection->HasRange()) {
+    if (!mContentSelection->OffsetAndDataRef().IsDataEmpty() &&
+        aSelectedString) {
+      aSelectedString->Assign(querySelectedTextEvent.mReply->DataRef());
+    }
   }
 
-  if (!mSelection.Collapsed() && aSelectedString) {
-    aSelectedString->Assign(querySelectedTextEvent.mReply->DataRef());
-  }
-
-  MOZ_LOG(gIMELog, LogLevel::Debug,
-          ("0x%p EnsureToCacheSelection(), Succeeded, mSelection="
-           "{ mOffset=%u, Length()=%u, mWritingMode=%s }",
-           this, mSelection.mOffset, mSelection.Length(),
-           GetWritingModeName(mSelection.mWritingMode).get()));
+  MOZ_LOG(
+      gIMELog, LogLevel::Debug,
+      ("0x%p EnsureToCacheContentSelection(), Succeeded, mContentSelection=%s",
+       this, ToString(mContentSelection).c_str()));
   return true;
-}
-
-/******************************************************************************
- * IMContextWrapper::Selection
- ******************************************************************************/
-
-void IMContextWrapper::Selection::Assign(
-    const IMENotification& aIMENotification) {
-  MOZ_ASSERT(aIMENotification.mMessage == NOTIFY_IME_OF_SELECTION_CHANGE);
-  mString = aIMENotification.mSelectionChangeData.String();
-  mOffset = aIMENotification.mSelectionChangeData.mOffset;
-  mWritingMode = aIMENotification.mSelectionChangeData.GetWritingMode();
-}
-
-void IMContextWrapper::Selection::Assign(
-    const WidgetQueryContentEvent& aEvent) {
-  MOZ_ASSERT(aEvent.mMessage == eQuerySelectedText);
-  MOZ_ASSERT(aEvent.Succeeded());
-  MOZ_ASSERT(aEvent.mReply->mOffsetAndData.isSome());
-  mString = aEvent.mReply->DataRef();
-  mOffset = aEvent.mReply->StartOffset();
-  mWritingMode = aEvent.mReply->WritingModeRef();
 }
 
 }  // namespace widget

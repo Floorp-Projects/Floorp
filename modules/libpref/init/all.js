@@ -409,6 +409,7 @@ pref("media.decoder-doctor.verbose", false);
 pref("media.decoder-doctor.new-issue-endpoint", "https://webcompat.com/issues/new");
 
 pref("media.videocontrols.picture-in-picture.enabled", false);
+pref("media.videocontrols.picture-in-picture.display-text-tracks.enabled", false);
 pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
 pref("media.videocontrols.picture-in-picture.video-toggle.always-show", false);
 pref("media.videocontrols.picture-in-picture.video-toggle.min-video-secs", 45);
@@ -4198,6 +4199,9 @@ pref("reader.has_used_toolbar", false);
 
 // Whether to use a vertical or horizontal toolbar.
 pref("reader.toolbar.vertical", true);
+
+// Whether or not we display additional UI (such as the full screen, reset to default, and browser theme buttons).
+pref("reader.improvements_H12022.enabled", false);
 
 #if !defined(ANDROID)
   pref("narrate.enabled", true);

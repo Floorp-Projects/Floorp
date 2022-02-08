@@ -20,6 +20,11 @@ ChromeUtils.defineModuleGetter(
   "webrtcUI",
   "resource:///modules/webrtcUI.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 // If there are only this many or fewer tabs open, just sort by weight, and close
 // the lowest tab. Otherwise, do a more intensive compuation that determines the
@@ -42,6 +47,7 @@ let criteriaTypes = [
   ["playingMedia", NEVER_DISCARD],
   ["usingWebRTC", NEVER_DISCARD],
   ["isPinned", 2],
+  ["isPrivate", NEVER_DISCARD],
 ];
 
 // Indicies into the criteriaTypes lists.
@@ -90,6 +96,12 @@ let DefaultTabUnloaderMethods = {
     // because hasActivePeerConnection is set only in the top window.
     return webrtcUI.browserHasStreams(browser) ||
       browser.browsingContext?.currentWindowGlobal?.hasActivePeerConnections()
+      ? weight
+      : 0;
+  },
+
+  isPrivate(tab, weight) {
+    return PrivateBrowsingUtils.isBrowserPrivate(tab.linkedBrowser)
       ? weight
       : 0;
   },

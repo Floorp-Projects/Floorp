@@ -578,25 +578,25 @@ mochitest-chrome-gpu:
     treeherder-symbol: M(gpu-c)
     loopback-video: true
     virtualization: virtual-with-gpu
+    run-without-variant: false
     variants:
-        - dynamic-first-party-isolation+fission
-        - fission
-        - socketprocess_networking
-        - wayland
-        - webrender-sw
+        - 1proc
+        - dynamic-first-party-isolation+1proc
+        - socketprocess_networking+1proc
+        - wayland+1proc
+        - webrender-sw+1proc
     run-on-projects:
         by-variant:
-            dynamic-first-party-isolation+fission:
+            dynamic-first-party-isolation+1proc:
                 by-test-platform:
                     (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['mozilla-central']
                     default: []
-            fission: []
-            socketprocess_networking: []
-            wayland:
+            socketprocess_networking+1proc: []
+            wayland+1proc:
                 by-test-platform:
                     linux.*64-qr/debug: built-projects
                     default: []
-            webrender-sw:
+            webrender-sw+1proc:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects

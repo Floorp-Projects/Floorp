@@ -341,6 +341,25 @@ static const char* gCallbackPrefs[] = {
     nullptr,
 };
 
+static void GetFirefoxVersionForUserAgent(nsACString& aVersion) {
+  // If the "network.http.useragent.forceVersion" pref has a non-zero value,
+  // then override the User-Agent string's Firefox version. The value 0 means
+  // use the default Firefox version. If enterprise users rely on sites that
+  // aren't compatible with Firefox version 100's three-digit version number,
+  // enterprise admins can set this pref to a known-good version (like 99) in an
+  // enterprise policy file.
+  uint32_t forceVersion =
+      mozilla::StaticPrefs::network_http_useragent_forceVersion();
+  if (forceVersion == 0) {
+    // Use the default Firefox version.
+    aVersion.AssignLiteral(MOZILLA_UAVERSION);
+  } else {
+    // Use the pref's version.
+    aVersion.AppendInt(forceVersion);
+    aVersion.AppendLiteral(".0");
+  }
+}
+
 nsresult nsHttpHandler::Init() {
   nsresult rv;
 
@@ -423,9 +442,14 @@ nsresult nsHttpHandler::Init() {
   Telemetry::ScalarSet(Telemetry::ScalarID::NETWORKING_HTTP3_ENABLED,
                        StaticPrefs::network_http_http3_enable());
 
-  mMisc.AssignLiteral("rv:" MOZILLA_UAVERSION);
+  nsAutoCString uaVersion;
+  GetFirefoxVersionForUserAgent(uaVersion);
 
-  mCompatFirefox.AssignLiteral("Firefox/" MOZILLA_UAVERSION);
+  mMisc.AssignLiteral("rv:");
+  mMisc.Append(uaVersion);
+
+  mCompatFirefox.AssignLiteral("Firefox/");
+  mCompatFirefox.Append(uaVersion);
 
   nsCOMPtr<nsIXULAppInfo> appInfo =
       do_GetService("@mozilla.org/xre/app-info;1");
@@ -457,7 +481,7 @@ nsresult nsHttpHandler::Init() {
   mRequestContextService = RequestContextService::GetOrCreate();
 
 #if defined(ANDROID)
-  mProductSub.AssignLiteral(MOZILLA_UAVERSION);
+  mProductSub.Assign(uaVersion);
 #else
   mProductSub.AssignLiteral(LEGACY_UA_GECKO_TRAIL);
 #endif

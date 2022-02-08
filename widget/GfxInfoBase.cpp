@@ -17,7 +17,6 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
-#include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsVersionComparator.h"
 #include "mozilla/Services.h"
@@ -30,9 +29,7 @@
 #include "nsIXULAppInfo.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs_gfx.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/Logging.h"
@@ -1888,29 +1885,6 @@ GfxInfoBase::ControlGPUProcessForXPCShell(bool aEnable, bool* _retval) {
   }
 
   *_retval = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfoBase::EnsureGPUProcessReadyForTests(JSContext* cx,
-                                           dom::Promise** aPromise) {
-  GPUProcessManager* gpm = GPUProcessManager::Get();
-  if (!gpm) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  ErrorResult rv;
-  RefPtr<dom::Promise> promise =
-      dom::Promise::Create(xpc::CurrentNativeGlobal(cx), rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "GfxInfoBase::EnsureGPUProcessReadyForTests",
-      [promise, gpm]() { promise->MaybeResolve(gpm->EnsureGPUReady()); }));
-
-  promise.forget(aPromise);
   return NS_OK;
 }
 

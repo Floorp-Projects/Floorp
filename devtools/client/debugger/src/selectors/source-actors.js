@@ -12,11 +12,7 @@ import {
   makeReduceAllQuery,
 } from "../utils/resource";
 
-function resourceAsSourceActor({
-  breakpointPositions,
-  breakableLines,
-  ...sourceActor
-}) {
+function resourceAsSourceActor({ breakableLines, ...sourceActor }) {
   return sourceActor;
 }
 
@@ -84,12 +80,6 @@ export function getSourceActorBreakableLines(state, id) {
   const { breakableLines } = getResource(state.sourceActors, id);
 
   return asSettled(breakableLines);
-}
-
-export function getSourceActorBreakpointColumns(state, id, line) {
-  const { breakpointPositions } = getResource(state.sourceActors, id);
-
-  return asSettled(breakpointPositions.get(line) || null);
 }
 
 // Used by sources selectors
