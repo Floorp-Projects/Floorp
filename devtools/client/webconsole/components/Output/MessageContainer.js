@@ -79,12 +79,6 @@ class MessageContainer extends Component {
     };
   }
 
-  static get defaultProps() {
-    return {
-      open: false,
-    };
-  }
-
   shouldComponentUpdate(nextProps) {
     const triggeringUpdateProps = [
       "repeat",
