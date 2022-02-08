@@ -262,7 +262,7 @@ def test_keyboard_interrupt():
     # quickly. The other (slow.yml) will run slowly.  This way the first worker
     # will be be stuck blocking on the ProcessPoolExecutor._call_queue when the
     # signal arrives and the other still be doing work.
-    cmd = [sys.executable, "runcli.py", "-l=string", "-l=slow"]
+    cmd = [sys.executable, "runcli.py", "-l=string", "-l=slow", "files/foobar.js"]
     env = os.environ.copy()
     env["PYTHONPATH"] = os.pathsep.join(sys.path)
     proc = subprocess.Popen(
