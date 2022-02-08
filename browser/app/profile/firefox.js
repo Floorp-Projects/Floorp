@@ -1496,11 +1496,6 @@ pref("browser.newtabpage.activity-stream.asrouter.providers.messaging-experiment
 pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons", true);
 pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", true);
 
-// Default to allowing the ASRouter captive portal VPN promo messages to be
-// shown when specified, but do so in a pref in case someone needs to override
-// it.
-pref("browser.newtabpage.activity-stream.asrouter.disable-captive-portal-vpn-promo", false);
-
 // The pref that controls if ASRouter uses the remote fluent files.
 // It's enabled by default, but could be disabled to force ASRouter to use the local files.
 pref("browser.newtabpage.activity-stream.asrouter.useRemoteL10n", true);
@@ -1895,11 +1890,11 @@ pref("browser.vpn_promo.disallowed_regions", "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,t
 
 // Default to enabling VPN promo messages to be shown when specified and allowed
 pref("browser.vpn_promo.enabled", true);
-
-// Enable the vpn card by default.
-pref("browser.contentblocking.report.vpn.enabled", true);
 // Only show vpn card to certain regions. Comma separated string of two letter ISO 3166-1 country codes.
-pref("browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb,de,fr");
+// The most recent list of supported countries can be found at https://support.mozilla.org/en-US/kb/mozilla-vpn-countries-available-subscribe
+pref("browser.contentblocking.report.vpn_regions", "at,be,ca,ch,de,fr,ie,it,my,nl,nz,sg,es,uk,us"
+);
+
 // Comma separated string of mozilla vpn supported platforms.
 pref("browser.contentblocking.report.vpn_platforms", "win,mac,linux");
 pref("browser.contentblocking.report.hide_vpn_banner", false);
