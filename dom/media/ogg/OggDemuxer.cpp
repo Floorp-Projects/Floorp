@@ -483,8 +483,9 @@ nsresult OggDemuxer::ReadMetadata() {
         return NS_ERROR_FAILURE;
       }
 
-      int serial = sandbox_invoke(*mSandbox, ogg_page_serialno, page)
-                       .unverified_safe_because(RLBOX_OGG_PAGE_SERIAL_REASON);
+      uint32_t serial = static_cast<uint32_t>(
+          sandbox_invoke(*mSandbox, ogg_page_serialno, page)
+              .unverified_safe_because(RLBOX_OGG_PAGE_SERIAL_REASON));
 
       if (!sandbox_invoke(*mSandbox, ogg_page_bos, page)
                .unverified_safe_because(
@@ -645,11 +646,11 @@ bool OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime) {
     return false;
   }
 
-  int serial =
+  uint32_t serial = static_cast<uint32_t>(
       sandbox_invoke(*mSandbox, ogg_page_serialno, page)
           .unverified_safe_because(
               "We are reading a new page with a serial number for the first "
-              "time and will check if we have seen it before prior to use.");
+              "time and will check if we have seen it before prior to use."));
   if (mCodecStore.Contains(serial)) {
     return false;
   }
@@ -820,8 +821,8 @@ bool OggDemuxer::ReadOggPage(TrackInfo::TrackType aType,
 nsresult OggDemuxer::DemuxOggPage(TrackInfo::TrackType aType,
                                   tainted_opaque_ogg<ogg_page*> aPage) {
   tainted_ogg<int> serial = sandbox_invoke(*mSandbox, ogg_page_serialno, aPage);
-  OggCodecState* codecState = mCodecStore.Get(
-      serial.unverified_safe_because(RLBOX_OGG_PAGE_SERIAL_REASON));
+  OggCodecState* codecState = mCodecStore.Get(static_cast<uint32_t>(
+      serial.unverified_safe_because(RLBOX_OGG_PAGE_SERIAL_REASON)));
   if (codecState == nullptr) {
     OGG_DEBUG("encountered packet for unrecognized codecState");
     return NS_ERROR_FAILURE;
@@ -1244,12 +1245,12 @@ OggDemuxer::IndexedSeekResult OggDemuxer::SeekToKeyframeUsingIndex(
         "or sync error after seek");
     return RollbackIndexedSeek(aType, tell);
   }
-  uint32_t serial =
+  uint32_t serial = static_cast<uint32_t>(
       sandbox_invoke(*mSandbox, ogg_page_serialno, page)
           .unverified_safe_because(
               "Serial is only used to locate the correct page. If the serial "
               "is incorrect the the renderer would just fail to seek with an "
-              "error code. This would not lead to any memory safety bugs.");
+              "error code. This would not lead to any memory safety bugs."));
   if (serial != keyframe.mSerial) {
     // Serialno of page at offset isn't what the index told us to expect.
     // Assume the index is invalid.
@@ -1309,7 +1310,7 @@ OggDemuxer::PageSyncResult OggDemuxer::PageSync(
       }
       char* buffer = buffer_tainted.copy_and_verify_buffer_address(
           [](uintptr_t val) { return reinterpret_cast<char*>(val); },
-          bytesToRead);
+          static_cast<size_t>(bytesToRead));
 
       nsresult rv = NS_OK;
       if (aCachedDataOnly) {
@@ -1522,13 +1523,14 @@ tainted_opaque_ogg<ogg_uint32_t> OggDemuxer::GetPageChecksum(
 
   const int CHECKSUM_BYTES_LENGTH = 4;
   const unsigned char* p =
-      (page->header + 22)
+      (page->header + 22u)
           .copy_and_verify_buffer_address(
               [](uintptr_t val) {
                 return reinterpret_cast<const unsigned char*>(val);
               },
               CHECKSUM_BYTES_LENGTH);
-  uint32_t c = p[0] + (p[1] << 8) + (p[2] << 16) + (p[3] << 24);
+  uint32_t c =
+      static_cast<uint32_t>(p[0] + (p[1] << 8) + (p[2] << 16) + (p[3] << 24));
   tainted_ogg<uint32_t> ret = c;
   return ret.to_opaque();
 }
@@ -1716,8 +1718,9 @@ int64_t OggDemuxer::RangeEndTime(TrackInfo::TrackType aType,
                 "If this is incorrect it may lead to incorrect seeking "
                 "behavior in the stream, however will not affect the memory "
                 "safety of the Firefox renderer.");
-    int serial = sandbox_invoke(*mSandbox, ogg_page_serialno, page)
-                     .unverified_safe_because(RLBOX_OGG_PAGE_SERIAL_REASON);
+    uint32_t serial = static_cast<uint32_t>(
+        sandbox_invoke(*mSandbox, ogg_page_serialno, page)
+            .unverified_safe_because(RLBOX_OGG_PAGE_SERIAL_REASON));
 
     OggCodecState* codecState = nullptr;
     codecState = mCodecStore.Get(serial);
@@ -2033,9 +2036,9 @@ nsresult OggDemuxer::SeekBisection(TrackInfo::TrackType aType, int64_t aTarget,
       ogg_int64_t videoTime = -1;
       do {
         // Add the page to its codec state, determine its granule time.
-        uint32_t serial =
+        uint32_t serial = static_cast<uint32_t>(
             sandbox_invoke(*mSandbox, ogg_page_serialno, page)
-                .unverified_safe_because(RLBOX_OGG_PAGE_SERIAL_REASON);
+                .unverified_safe_because(RLBOX_OGG_PAGE_SERIAL_REASON));
         OggCodecState* codecState = mCodecStore.Get(serial);
         if (codecState && GetCodecStateType(codecState) == aType) {
           if (codecState->mActive) {

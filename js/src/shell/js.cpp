@@ -11429,6 +11429,10 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.disableBailoutLoopCheck = true;
   }
 
+  if (op.getBoolOption("enable-watchtower")) {
+    jit::JitOptions.enableWatchtowerMegamorphic = true;
+  }
+
 #if defined(JS_SIMULATOR_ARM)
   if (op.getBoolOption("arm-sim-icache-checks")) {
     jit::SimulatorProcess::ICacheCheckingDisableCount = 0;
@@ -12142,6 +12146,8 @@ int main(int argc, char** argv) {
           "On-Stack Replacement (default: on, off to disable)") ||
       !op.addBoolOption('\0', "disable-bailout-loop-check",
                         "Turn off bailout loop check") ||
+      !op.addBoolOption('\0', "enable-watchtower",
+                        "Enable certain Watchtower optimizations") ||
       !op.addBoolOption('\0', "scalar-replace-arguments",
                         "Use scalar replacement to optimize ArgumentsObject") ||
       !op.addStringOption(

@@ -5398,6 +5398,21 @@
   value: true
   mirror: always
 
+#if defined(XP_WIN)
+# Whether the DirectWrite bold simulation should be used when a bold font-weight
+# is requested but no bold face available in the family. This renders poorly with
+# some third-party fonts, so by default we disable it for webfonts and allow it
+# only with locally-installed fonts.
+# Values:
+#   0 - never use DWrite bold simulation; always multi-strike instead
+#   1 - use DWrite bold for installed fonts, multi-strike for webfont resources
+#   2 - use DWrite bold for all fonts
+- name: gfx.font_rendering.directwrite.bold_simulation
+  type: uint32_t
+  value: 1
+  mirror: always
+#endif
+
 # The level of logging:
 # - 0: no logging;
 # - 1: adds errors;
@@ -6451,6 +6466,15 @@
   type: uint32_t
   value: 130
   mirror: always
+  do_not_use_directly: true
+
+# Whether the megamorphic property lookup cache is enabled.
+#
+# NOTE: This must match JitOptions defaults.
+- name: javascript.options.watchtower.megamorphic
+  type: bool
+  value: false
+  mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
 - name: javascript.options.compact_on_user_inactive
@@ -12634,6 +12658,12 @@
 - name: widget.content.allow-gtk-dark-theme
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+# Whether we honor the scrollbar colors from the gtk theme.
+- name: widget.gtk.theme-scrollbar-colors.enabled
+  type: bool
+  value: true
   mirror: always
 
 # Whether selection colors for the non-system theme get passed from the system

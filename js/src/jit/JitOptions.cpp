@@ -310,6 +310,9 @@ DefaultJitOptions::DefaultJitOptions() {
   // Controls how much assertion checking code is emitted
   SET_DEFAULT(lessDebugCode, false);
 
+  // Whether the MegamorphicCache is enabled.
+  SET_DEFAULT(enableWatchtowerMegamorphic, false);
+
   SET_DEFAULT(enableWasmJitExit, true);
   SET_DEFAULT(enableWasmJitEntry, true);
   SET_DEFAULT(enableWasmIonFastCalls, true);

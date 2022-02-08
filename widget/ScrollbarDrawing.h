@@ -17,11 +17,6 @@
 
 namespace mozilla::widget {
 
-static constexpr gfx::sRGBColor sScrollbarColor(
-    gfx::sRGBColor::UnusualFromARGB(0xfff0f0f0));
-static constexpr gfx::sRGBColor sScrollbarThumbColor(
-    gfx::sRGBColor::UnusualFromARGB(0xffcdcdcd));
-
 class ScrollbarDrawing {
  protected:
   using DPIRatio = mozilla::CSSToLayoutDeviceScale;
