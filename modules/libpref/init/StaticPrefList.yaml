@@ -12668,6 +12668,12 @@
   value: false
   mirror: always
 
+# Whether we honor the scrollbar colors from the gtk theme.
+- name: widget.gtk.theme-scrollbar-colors.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Whether selection colors for the non-system theme get passed from the system
 # GTK theme.
 - name: widget.gtk.alt-theme.selection

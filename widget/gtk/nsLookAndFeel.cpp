@@ -1580,6 +1580,10 @@ void nsLookAndFeel::PerThemeData::Init() {
 
   // Make sure that the thumb is visible, at least.
   const bool fallbackToUnthemedColors = [&] {
+    if (!StaticPrefs::widget_gtk_theme_scrollbar_colors_enabled()) {
+      return true;
+    }
+
     if (!ShouldHonorThemeScrollbarColors()) {
       return true;
     }
