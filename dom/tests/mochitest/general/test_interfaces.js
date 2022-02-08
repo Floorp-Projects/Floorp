@@ -799,7 +799,7 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Navigator", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "NetworkInformation", insecureContext: true, disabled: true },
+  { name: "NetworkInformation", insecureContext: true, desktop: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Node", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
