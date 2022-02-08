@@ -2010,7 +2010,7 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
                                     &env->tables)) {
         return false;
       }
-      env->tables.back().importedOrExported = true;
+      env->tables.back().isImportedOrExported = true;
       break;
     }
     case DefinitionKind::Memory: {
@@ -2366,7 +2366,7 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env,
       if (tableIndex >= env->tables.length()) {
         return d.fail("exported table index out of bounds");
       }
-      env->tables[tableIndex].importedOrExported = true;
+      env->tables[tableIndex].isImportedOrExported = true;
       return env->exports.emplaceBack(std::move(fieldName), tableIndex,
                                       DefinitionKind::Table);
     }
@@ -2653,7 +2653,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
     // segments either. But this is a temporary restriction.
     bool exportedTable = kind == ElemSegmentKind::Passive ||
                          kind == ElemSegmentKind::Declared ||
-                         env->tables[seg->tableIndex].importedOrExported;
+                         env->tables[seg->tableIndex].isImportedOrExported;
 #endif
     bool isAsmJS = seg->active() && env->tables[seg->tableIndex].isAsmJS;
 
