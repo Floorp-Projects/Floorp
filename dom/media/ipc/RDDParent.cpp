@@ -281,6 +281,7 @@ mozilla::ipc::IPCResult RDDParent::RecvTestTriggerMetrics(
 void RDDParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Shutting down RDD process early due to a crash!");
+    Telemetry::Accumulate(Telemetry::SUBPROCESS_ABNORMAL_ABORT, "rdd"_ns, 1);
     ProcessChild::QuickExit();
   }
 
