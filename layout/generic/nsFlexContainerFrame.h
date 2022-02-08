@@ -318,11 +318,10 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   void DoFlexLayout(const ReflowInput& aReflowInput,
                     nscoord& aContentBoxMainSize, nscoord& aContentBoxCrossSize,
                     nscoord& aFlexContainerAscent, nsTArray<FlexLine>& aLines,
-                    nsTArray<StrutInfo>& aStruts,
                     nsTArray<nsIFrame*>& aPlaceholders,
                     const FlexboxAxisTracker& aAxisTracker,
                     nscoord aMainGapSize, nscoord aCrossGapSize,
-                    bool aHasLineClampEllipsis,
+                    bool aHasLineClampEllipsis, nsTArray<StrutInfo>& aStruts,
                     ComputedFlexContainerInfo* const aContainerInfo);
 
   /**
