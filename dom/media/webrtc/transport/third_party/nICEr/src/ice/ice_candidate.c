@@ -377,8 +377,10 @@ static int nr_ice_get_foundation(nr_ice_ctx *ctx,nr_ice_candidate *cand)
       // foundation->type should probably match nr_ice_candidate_type
       if((int)cand->type != foundation->type)
         goto next;
-      if(cand->stun_server != foundation->stun_server)
-        goto next;
+      if(cand->type == SERVER_REFLEXIVE || cand->type == RELAYED) {
+        if(nr_transport_addr_cmp(&cand->stun_server->addr, &foundation->stun_server_addr, NR_TRANSPORT_ADDR_CMP_MODE_ADDR))
+          goto next;
+      }
 
       snprintf(fnd,sizeof(fnd),"%d",i);
       if(!(cand->foundation=r_strdup(fnd)))
@@ -394,7 +396,9 @@ static int nr_ice_get_foundation(nr_ice_ctx *ctx,nr_ice_candidate *cand)
       ABORT(R_NO_MEMORY);
     nr_transport_addr_copy(&foundation->addr,&cand->base);
     foundation->type=cand->type;
-    foundation->stun_server=cand->stun_server;
+    if(cand->type == SERVER_REFLEXIVE || cand->type == RELAYED) {
+      nr_transport_addr_copy(&foundation->stun_server_addr, &cand->stun_server->addr);
+    }
     STAILQ_INSERT_TAIL(&ctx->foundations,foundation,entry);
 
     snprintf(fnd,sizeof(fnd),"%d",i);
