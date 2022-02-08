@@ -1,0 +1,57 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIRunnable;
+
+/**
+ * Handle for the ongoing shutdown progress of a given thread which can be used
+ * to observe and interrupt async shutdown progress. Methods on this interface
+ * may generally only be used on the thread which called
+ * `nsIThread::beginShutdown`.
+ */
+[scriptable, builtinclass, uuid(70a43748-6130-4ea6-a440-7c74e1b7dd7c)]
+interface nsIThreadShutdown : nsISupports
+{
+  /**
+   * Register a runnable to be executed when the thread has completed shutdown,
+   * or shutdown has been cancelled due to `stopWaitingAndLeakThread()`.
+   *
+   * If the thread has already completed or cancelled shutdown, the runnable
+   * may be executed synchronously.
+   *
+   * May only be called on the thread which invoked `nsIThread::beginShutdown`.
+   */
+  void onCompletion(in nsIRunnable aEvent);
+
+  /**
+   * Check if the target thread has completed shutdown.
+   *
+   * May only be accessed on the thread which called `nsIThread::beginShutdown`.
+   */
+  [infallible] readonly attribute boolean completed;
+
+  /**
+   * Give up on waiting for the shutting down thread to exit. Calling this
+   * method will allow the thread to continue running, no longer block shutdown,
+   * and the thread will never be joined or have its resources reclaimed.
+   *
+   * Completion callbacks attached to this `nsIThreadShutdown` may be executed
+   * during this call.
+   *
+   * This method should NOT be called except in exceptional circumstances during
+   * shutdown, as it will cause resources for the shutting down thread to be
+   * leaked.
+   *
+   * May only be called on the thread which called `nsIThread::beginShutdown`
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *   Indicates that the target thread has already stopped running and a
+   *   request to be joined is already being dispatched to the waiting thread.
+   */
+  void stopWaitingAndLeakThread();
+};
