@@ -3951,7 +3951,7 @@ CodeOffset MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
            Address(getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
 
   Label nonNull;
-  branchTest32(Assembler::NonZero, WasmTlsReg, WasmTlsReg, &nonNull);
+  branchTestPtr(Assembler::NonZero, WasmTlsReg, WasmTlsReg, &nonNull);
   wasmTrap(wasm::Trap::IndirectCallToNull, trapOffset);
   bind(&nonNull);
 
