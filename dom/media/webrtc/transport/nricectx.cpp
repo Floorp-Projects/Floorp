@@ -766,8 +766,6 @@ NrIceCtx::Controlling NrIceCtx::GetControlling() {
 
 nsresult NrIceCtx::SetStunServers(
     const std::vector<NrIceStunServer>& stun_servers) {
-  if (stun_servers.empty()) return NS_OK;
-
   // We assume nr_ice_stun_server is memmoveable. That's true right now.
   std::vector<nr_ice_stun_server> servers;
 
@@ -795,8 +793,6 @@ nsresult NrIceCtx::SetStunServers(
 // Could we do a template or something?
 nsresult NrIceCtx::SetTurnServers(
     const std::vector<NrIceTurnServer>& turn_servers) {
-  if (turn_servers.empty()) return NS_OK;
-
   // We assume nr_ice_turn_server is memmoveable. That's true right now.
   std::vector<nr_ice_turn_server> servers;
 
