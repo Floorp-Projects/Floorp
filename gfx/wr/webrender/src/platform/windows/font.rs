@@ -587,7 +587,7 @@ impl FontContext {
             let (bold_pixels, bold_width) = apply_multistrike_bold(
                 &bgra_pixels,
                 (width + padding * 2) as usize,
-                height as usize,
+                (height + padding * 2) as usize,
                 is_subpixel,
                 extra_strikes,
                 pixel_step,
