@@ -471,6 +471,10 @@ bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
   MOZ_ASSERT(!flags.isCustomDataProperty(),
              "Use changeCustomDataPropAttributes for custom data properties");
 
+  if (!Watchtower::watchPropertyChange(cx, obj, id)) {
+    return false;
+  }
+
   Rooted<PropMap*> map(cx, obj->shape()->propMap());
   uint32_t mapLength = obj->shape()->propMapLength();
 
@@ -586,6 +590,10 @@ bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
   AssertValidArrayIndex(obj, id);
   AssertValidCustomDataProp(obj, flags);
 
+  if (!Watchtower::watchPropertyChange(cx, obj, id)) {
+    return false;
+  }
+
   Rooted<PropMap*> map(cx, obj->shape()->propMap());
   uint32_t mapLength = obj->shape()->propMapLength();
 
@@ -677,6 +685,10 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
 
   if (!propMap) {
     return true;
+  }
+
+  if (!Watchtower::watchPropertyRemove(cx, obj, id)) {
+    return false;
   }
 
   PropertyInfo prop = propMap->getPropertyInfo(propIndex);
@@ -792,6 +804,12 @@ bool NativeObject::densifySparseElements(JSContext* cx,
 // static
 bool NativeObject::freezeOrSealProperties(JSContext* cx, HandleNativeObject obj,
                                           IntegrityLevel level) {
+  AutoCheckShapeConsistency check(obj);
+
+  if (!Watchtower::watchFreezeOrSeal(cx, obj)) {
+    return false;
+  }
+
   uint32_t mapLength = obj->shape()->propMapLength();
   MOZ_ASSERT(mapLength > 0);
 
