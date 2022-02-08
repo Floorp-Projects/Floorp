@@ -4,11 +4,36 @@
 ChromeUtils.import("resource://services-sync/engines/tabs.js");
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
+const { SyncScheduler } = ChromeUtils.import(
+  "resource://services-sync/policies.js"
+);
+
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/NimbusTestUtils.jsm"
+);
+
+const { ExperimentAPI } = ChromeUtils.import(
+  "resource://nimbus/ExperimentAPI.jsm"
+);
+
+var scheduler = new SyncScheduler(Service);
 let clientsEngine;
+
+async function setupForExperimentFeature() {
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+  await manager.onStartup();
+
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  return { sandbox, manager };
+}
 
 add_task(async function setup() {
   await Service.promiseInitialized;
   clientsEngine = Service.clientsEngine;
+
+  scheduler.setDefaults();
 });
 
 function fakeSvcWinMediator() {
@@ -65,8 +90,7 @@ add_task(async function run_test() {
   tracker.start();
   Assert.equal(logs.length, 2);
   for (let log of logs) {
-    Assert.equal(log.addTopics.length, 5);
-    Assert.ok(log.addTopics.includes("pageshow"));
+    Assert.equal(log.addTopics.length, 4);
     Assert.ok(log.addTopics.includes("TabOpen"));
     Assert.ok(log.addTopics.includes("TabClose"));
     Assert.ok(log.addTopics.includes("TabSelect"));
@@ -82,8 +106,7 @@ add_task(async function run_test() {
   Assert.equal(logs.length, 2);
   for (let log of logs) {
     Assert.equal(log.addTopics.length, 0);
-    Assert.equal(log.remTopics.length, 5);
-    Assert.ok(log.remTopics.includes("pageshow"));
+    Assert.equal(log.remTopics.length, 4);
     Assert.ok(log.remTopics.includes("TabOpen"));
     Assert.ok(log.remTopics.includes("TabClose"));
     Assert.ok(log.remTopics.includes("TabSelect"));
@@ -112,7 +135,7 @@ add_task(async function run_test() {
   await tracker.clearChangedIDs();
   Assert.ok(!tracker.modified);
 
-  tracker.onTab({ type: "pageshow", originalTarget: "pageshow" });
+  tracker.onTab({ type: "TabOpen", originalTarget: "TabOpen" });
   Assert.ok(
     Utils.deepEquals(Object.keys(await engine.getChangedIDs()), [
       clientsEngine.localID,
@@ -146,4 +169,99 @@ add_task(async function run_test() {
       clientsEngine.localID,
     ])
   );
+});
+
+add_task(async function run_sync_on_tab_change_test() {
+  let { manager } = await setupForExperimentFeature();
+
+  await manager.onStartup();
+  await ExperimentAPI.ready();
+
+  let testExperimentDelay = 5000;
+  // We use this to ensure we're using a different value than the experiment
+  let prefDelayOffset = 500;
+
+  // This is the fallback pref if we don't have a experiment running
+  Svc.Prefs.set(
+    "services.sync.syncedTabs.syncDelayAfterTabChange",
+    testExperimentDelay + prefDelayOffset
+  );
+
+  let doEnrollmentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+    {
+      enabled: true,
+      featureId: "syncAfterTabChange",
+      value: { syncDelayAfterTabChange: testExperimentDelay },
+    },
+    {
+      manager,
+    }
+  );
+
+  let engine = Service.engineManager.get("tabs");
+
+  _("We assume that tabs have changed at startup.");
+  let tracker = engine._tracker;
+
+  Assert.ok(tracker.modified);
+  Assert.ok(
+    Utils.deepEquals(Object.keys(await engine.getChangedIDs()), [
+      clientsEngine.localID,
+    ])
+  );
+
+  _("Test sync is scheduled after a tab change if experiment is enabled");
+  for (let evttype of ["TabOpen", "TabClose", "TabSelect"]) {
+    // Send a fake tab event
+    tracker.onTab({ type: evttype, originalTarget: evttype });
+    // Ensure the tracker fired
+    Assert.ok(tracker.modified);
+    // We should be scheduling <= experiment value
+    Assert.ok(scheduler.nextSync - Date.now() <= testExperimentDelay);
+  }
+  await doEnrollmentCleanup();
+
+  _("If there is no experiment, fallback to the pref");
+  let delayPref = Svc.Prefs.get(
+    "services.sync.syncedTabs.syncDelayAfterTabChange"
+  );
+  let evttype = "TabOpen";
+  Assert.equal(delayPref, testExperimentDelay + prefDelayOffset);
+  // Fire ontab event
+  tracker.onTab({ type: evttype, originalTarget: evttype });
+
+  // Ensure the tracker fired
+  Assert.ok(tracker.modified);
+  // We should be scheduling <= preference value
+  Assert.ok(scheduler.nextSync - Date.now() <= delayPref);
+
+  _("We should not have a sync if experiment if off and pref is 0");
+
+  Svc.Prefs.set("services.sync.syncedTabs.syncDelayAfterTabChange", 0);
+  let doAnotherEnrollmentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+    {
+      enabled: true,
+      featureId: "syncAfterTabChange",
+      value: { syncDelayAfterTabChange: 0 },
+    },
+    {
+      manager,
+    }
+  );
+  // Schedule sync a super long time from now
+  scheduler.nextSync = Date.now() + 60000;
+
+  // Fire ontab event
+  evttype = "TabOpen";
+  tracker.onTab({ type: evttype, originalTarget: evttype });
+  // Ensure the tracker fired
+  Assert.ok(tracker.modified);
+
+  // We should NOT be scheduled for a sync soon
+  Assert.ok(scheduler.nextSync - Date.now() > testExperimentDelay);
+
+  // cleanup
+  await doAnotherEnrollmentCleanup();
+  scheduler.setDefaults();
+  Svc.Prefs.resetBranch("");
 });
