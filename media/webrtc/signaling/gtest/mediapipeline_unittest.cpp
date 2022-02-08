@@ -191,8 +191,9 @@ class LoopbackTransport : public MediaTransportHandler {
   void EnterPrivateMode() override {}
   void ExitPrivateMode() override {}
 
-  nsresult CreateIceCtx(const std::string& aName,
-                        const nsTArray<dom::RTCIceServer>& aIceServers,
+  void CreateIceCtx(const std::string& aName) override {}
+
+  nsresult SetIceConfig(const nsTArray<dom::RTCIceServer>& aIceServers,
                         dom::RTCIceTransportPolicy aIcePolicy) override {
     return NS_OK;
   }
