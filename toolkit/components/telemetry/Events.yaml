@@ -2550,6 +2550,37 @@ pictureinpicture:
       - 1730039
     expiry_version: "never"
     release_channel_collection: opt-out
+  saw_toggle:
+    objects: ["toggle"]
+    description: >
+      Recorded when the Picture-in-Picture toggle is shown
+    extra_keys:
+      firstTime: If the user has used Picture-in-Picture before
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: ["main", "content"]
+    bug_numbers:
+      - 1749585
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  opened_method:
+    objects: ["method"]
+    description: >
+      Records the method for opening the Picture-in-Picture window.
+    extra_keys:
+      method: Will be "toggle" or "contextMenu"
+      firstTimeToggle: If the user has used Picture-in-Picture before
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: ["main", "content"]
+    bug_numbers:
+      - 1749585
+    expiry_version: "never"
+    release_channel_collection: opt-out
 
 pictureinpicture.settings:
   enable:
