@@ -9,11 +9,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  Region: "resource://gre/modules/Region.jsm",
-  EveryWindow: "resource:///modules/EveryWindow.jsm",
   AboutReaderParent: "resource:///actors/AboutReaderParent.jsm",
-  ASRouterPreferences: "resource://activity-stream/lib/ASRouterPreferences.jsm",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+  EveryWindow: "resource:///modules/EveryWindow.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
 const FEW_MINUTES = 15 * 60 * 1000; // 15 mins
@@ -595,25 +594,8 @@ this.ASRouterTriggerListeners = new Map([
       _initialized: false,
       _triggerHandler: null,
 
-      // XXX For the moment, the captive-portal-login trigger is assumed to be
-      // for the VPN promo, and we check to make sure that hasn't been
-      // disabled by pref for a region (or maybe partner or OS distro?).
-      ///
-      // Ultimately, we'd like to unstaple the VPN promo checks from here,
-      // perhaps even doing them entirely using both ASRouter message targeting
-      // and experimenter/rollout targeting.  This work is being tracked in
-      // bug 1731176.
       _shouldShowCaptivePortalVPNPromo() {
-        const disablePromoPref =
-          ASRouterPreferences.disableCaptivePortalVPNPromo;
-        const homeRegion = Region.home || "";
-        const currentRegion = Region.current || "";
-
-        return (
-          !disablePromoPref &&
-          homeRegion.toLowerCase() !== "cn" &&
-          currentRegion.toLowerCase() !== "cn"
-        );
+        return BrowserUtils.shouldShowVPNPromo();
       },
 
       init(triggerHandler) {
