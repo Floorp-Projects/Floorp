@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.history.HistorySearchFragmentState
 
@@ -72,10 +73,17 @@ class ToolbarView(
 
             private = isPrivate
 
+            setOnUrlCommitListener {
+                hideKeyboard()
+
+                // We need to return false to not show display mode
+                false
+            }
+
             setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
                 override fun onCancelEditing(): Boolean {
                     interactor.onEditingCanceled()
-                    // We need to return false to notHistorySearchFragmentStore.kt show display mode
+                    // We need to return false to not show display mode
                     return false
                 }
 
