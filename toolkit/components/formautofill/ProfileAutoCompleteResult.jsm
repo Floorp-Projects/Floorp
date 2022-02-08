@@ -40,8 +40,6 @@ class ProfileAutoCompleteResult {
     matchingProfiles,
     { resultCode = null, isSecure = true, isInputAutofilled = false }
   ) {
-    log.debug("Constructing new ProfileAutoCompleteResult:", [...arguments]);
-
     // nsISupports
     this.QueryInterface = ChromeUtils.generateQI(["nsIAutoCompleteResult"]);
 
