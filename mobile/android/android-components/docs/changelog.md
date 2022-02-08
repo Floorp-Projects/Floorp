@@ -4,20 +4,26 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 98.0.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v97.0.0...main)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/145?closed=1)
+# 99.0.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v98.0.0...main)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/146?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
+
+# 98.0.0
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v97.0.0...v98.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/145?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/v98.0.0/main/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/v98.0.0/main/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/v98.0.0/main/.config.yml)
 
 * **support-utils**
   * 🌟️️ **Add a `PendingUtils.defaultFlags` property to ease setting PendingIntent mutability as required for Android 31+.
 
 * **feature-prompts**:
   * More prompts are dismissable.
-  * **Breaking change:** Success / dismiss callbacks are now consistently
-    ordered.
+  * ⚠️ **This is a breaking change**: Success / dismiss callbacks are now consistently ordered.
 
 * **feature-search**
   * Adds the `extraAdServersRegexps` of Baidu to help sending the baidu search telemetry of ads. [#11582](https://github.com/mozilla-mobile/android-components/pull/11582)
