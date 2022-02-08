@@ -181,6 +181,8 @@ AutofillProfileAutoCompleteSearch.prototype = {
     } = FormAutofillContent;
     this.forceStop = false;
 
+    this.debug("startSearch: for", searchString, "with input", activeInput);
+
     let isAddressField = FormAutofillUtils.isAddressField(
       activeFieldDetail.fieldName
     );
@@ -325,6 +327,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
    *          Promise that resolves when addresses returned from parent process.
    */
   _getRecords(input, data) {
+    this.debug("_getRecords with data:", data);
     if (!input) {
       return [];
     }
@@ -698,7 +701,8 @@ var FormAutofillContent = {
       this.debug("updateActiveElement: skipping check; autofill is imminent");
     } else if (element.value?.length !== 0) {
       this.debug(
-        `updateActiveElement: Not opening popup because field is not empty.`
+        "updateActiveElement: Not opening popup because field is " +
+          `not empty: element.value = "${element.value}"`
       );
     } else {
       this.debug(
@@ -782,7 +786,8 @@ var FormAutofillContent = {
 
   identifyAutofillFields(element) {
     this.debug(
-      `identifyAutofillFields: ${element.ownerDocument.location.hostname}`
+      "identifyAutofillFields:",
+      String(element.ownerDocument.location)
     );
 
     if (DELEGATE_AUTOCOMPLETE || !this.savedFieldNames) {
@@ -807,6 +812,7 @@ var FormAutofillContent = {
     let validDetails = formHandler.collectFormFields();
 
     this._formsDetails.set(formHandler.form.rootElement, formHandler);
+    this.debug("Adding form handler to _formsDetails:", formHandler);
 
     validDetails.forEach(detail =>
       this._markAsAutofillField(detail.elementWeakRef.get())
