@@ -151,6 +151,10 @@ static bool ReadableStreamDefaultControllerCanCloseOrEnqueueAndThrow(
     case ReadableStream::ReaderState::Errored:
       aRv.ThrowTypeError(prefix + "has errored."_ns);
       return false;
+
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown ReaderState");
+      return false;
   }
 }
 

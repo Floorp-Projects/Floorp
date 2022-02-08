@@ -1179,6 +1179,10 @@ JSObject* ConstructFromPullIntoConstructor(
       JS_FOR_EACH_TYPED_ARRAY(CONSTRUCT_TYPED_ARRAY_TYPE)
 
 #undef CONSTRUCT_TYPED_ARRAY_TYPE
+
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown PullIntoDescriptor::Constructor");
+      return nullptr;
   }
 }
 
@@ -1934,11 +1938,9 @@ void SetUpReadableByteStreamController(
   MOZ_ASSERT(!aStream->Controller());
 
   // Step 2. If autoAllocateChunkSize is not undefined,
-  if (aAutoAllocateChunkSize) {
-    // Step 2.1. Assert: ! IsInteger(autoAllocateChunkSize) is true. Implicit
-    // Step 2.2. Assert: autoAllocateChunkSize is positive.
-    MOZ_ASSERT(*aAutoAllocateChunkSize >= 0);
-  }
+  // Step 2.1. Assert: ! IsInteger(autoAllocateChunkSize) is true. Implicit
+  // Step 2.2. Assert: autoAllocateChunkSize is positive. (Implicit by
+  //           type.)
 
   // Step 3. Set controller.[[stream]] to stream.
   aController->SetStream(aStream);
