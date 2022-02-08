@@ -99,9 +99,6 @@ class Instance {
                        uint8_t* nextPC,
                        uintptr_t highestByteVisitedInPrevFrame);
 
-  Instance* getOriginalInstanceAndFunction(Tier tier, uint32_t funcIdx,
-                                           JSFunction** fun);
-
   JS::Realm* realm() const { return realm_; }
   const Code& code() const { return *code_; }
   const CodeTier& code(Tier t) const { return code_->codeTier(t); }
@@ -181,8 +178,7 @@ class Instance {
   // the present instance.
   void* getIndirectStub(uint32_t funcIndex, TlsData* targetTlsData,
                         const Tier tier) const;
-  // This will return null on OOM
-  [[nodiscard]] void* createIndirectStub(Tier tier, uint32_t funcIndex);
+
   [[nodiscard]] bool createManyIndirectStubs(
       const VectorOfIndirectStubTarget& targets, const Tier tier);
   [[nodiscard]] bool ensureIndirectStubs(JSContext* cx,
