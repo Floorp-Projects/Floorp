@@ -173,7 +173,7 @@ let RemotePageAccessManager = {
         "privacy.trackingprotection.socialtracking.enabled",
         "browser.contentblocking.report.show_mobile_app",
         "browser.contentblocking.report.hide_vpn_banner",
-        "browser.contentblocking.report.vpn.enabled",
+        "browser.vpn_promo.enabled",
       ],
       RPMGetStringPref: [
         "browser.contentblocking.category",
@@ -189,7 +189,6 @@ let RemotePageAccessManager = {
         "browser.contentblocking.report.vpn-promo.url",
         "browser.contentblocking.report.vpn-android.url",
         "browser.contentblocking.report.vpn-ios.url",
-        "browser.contentblocking.report.vpn_platforms",
       ],
       RPMGetIntPref: ["network.cookie.cookieBehavior"],
       RPMGetFormatURLPref: [
