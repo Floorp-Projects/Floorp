@@ -40,6 +40,8 @@ class Watchtower {
                                       HandleId id);
   static bool watchFreezeOrSealSlow(JSContext* cx, HandleNativeObject obj);
   static bool watchProtoChangeSlow(JSContext* cx, HandleObject obj);
+  static bool watchObjectSwapSlow(JSContext* cx, HandleObject a,
+                                  HandleObject b);
 
  public:
   static bool watchesPropertyAdd(NativeObject* obj) {
@@ -58,6 +60,12 @@ class Watchtower {
   static bool watchesProtoChange(JSObject* obj) {
     return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
                             ObjectFlag::UseWatchtowerTestingCallback});
+  }
+  static bool watchesObjectSwap(JSObject* a, JSObject* b) {
+    auto watches = [](JSObject* obj) {
+      return obj->hasAnyFlag({ObjectFlag::UseWatchtowerTestingCallback});
+    };
+    return watches(a) || watches(b);
   }
 
   static bool watchPropertyAdd(JSContext* cx, HandleNativeObject obj,
@@ -92,6 +100,12 @@ class Watchtower {
       return true;
     }
     return watchProtoChangeSlow(cx, obj);
+  }
+  static bool watchObjectSwap(JSContext* cx, HandleObject a, HandleObject b) {
+    if (MOZ_LIKELY(!watchesObjectSwap(a, b))) {
+      return true;
+    }
+    return watchObjectSwapSlow(cx, a, b);
   }
 };
 
