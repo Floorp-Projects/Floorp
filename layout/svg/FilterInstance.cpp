@@ -29,6 +29,7 @@
 #include "mozilla/SVGFilterInstance.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/Document.h"
+#include "nsLayoutUtils.h"
 #include "CSSFilterInstance.h"
 #include "SVGIntegrationUtils.h"
 
