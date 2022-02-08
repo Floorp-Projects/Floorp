@@ -1774,37 +1774,31 @@ bool HasNativeDataPropertyPure(JSContext* cx, JSObject* obj, Value* vp) {
   }
 
   do {
-    if (obj->is<NativeObject>()) {
-      uint32_t unused;
-      if (obj->shape()->lookup(cx, id, &unused)) {
-        vp[1].setBoolean(true);
-        return true;
+    if (MOZ_UNLIKELY(!obj->is<NativeObject>())) {
+      return false;
+    }
+
+    uint32_t unused;
+    if (obj->shape()->lookup(cx, id, &unused)) {
+      vp[1].setBoolean(true);
+      return true;
+    }
+
+    // Property not found. Watch out for Class hooks and TypedArrays.
+    if (MOZ_UNLIKELY(!obj->is<PlainObject>())) {
+      // Fail if there's a resolve hook, unless the mayResolve hook tells us
+      // the resolve hook won't define a property with this id.
+      if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj)) {
+        return false;
       }
 
-      // Property not found. Watch out for Class hooks and TypedArrays.
-      if (MOZ_UNLIKELY(!obj->is<PlainObject>())) {
-        // Fail if there's a resolve hook, unless the mayResolve hook tells us
-        // the resolve hook won't define a property with this id.
-        if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj)) {
+      // Don't skip past TypedArrayObjects if the id can be a TypedArray
+      // index.
+      if (obj->is<TypedArrayObject>()) {
+        if (MaybeTypedArrayIndexString(id)) {
           return false;
         }
-
-        // Don't skip past TypedArrayObjects if the id can be a TypedArray
-        // index.
-        if (obj->is<TypedArrayObject>()) {
-          if (MaybeTypedArrayIndexString(id)) {
-            return false;
-          }
-        }
       }
-    } else if (obj->is<TypedObject>()) {
-      RootedTypedObject typedObj(cx, &obj->as<TypedObject>());
-      if (typedObj->rttValue().hasProperty(cx, typedObj, id)) {
-        vp[1].setBoolean(true);
-        return true;
-      }
-    } else {
-      return false;
     }
 
     // If implementing Object.hasOwnProperty, don't follow protochain.
