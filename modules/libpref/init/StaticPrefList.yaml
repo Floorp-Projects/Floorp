@@ -3397,7 +3397,7 @@
 
 - name: dom.serviceWorkers.navigationPreload.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Mitigates ServiceWorker navigation faults by bypassing the ServiceWorker on
