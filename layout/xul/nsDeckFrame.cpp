@@ -14,7 +14,6 @@
 #include "nsDeckFrame.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
-#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
