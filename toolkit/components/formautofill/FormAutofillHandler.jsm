@@ -307,6 +307,11 @@ class FormAutofillSection {
             profile[key] = profile[key] % Math.pow(10, maxLength);
             break;
           default:
+            log.warn(
+              "adaptFieldMaxLength: Don't know how to truncate",
+              typeof profile[key],
+              profile[key]
+            );
         }
       } else {
         delete profile[key];
@@ -337,9 +342,10 @@ class FormAutofillSection {
     }
 
     if (!(await this.prepareFillingProfile(profile))) {
-      log.debug("profile cannot be filled");
+      log.debug("profile cannot be filled", profile);
       return false;
     }
+    log.debug("profile in autofillFields:", profile);
 
     let focusedInput = focusedDetail.elementWeakRef.get();
 
@@ -418,6 +424,8 @@ class FormAutofillSection {
    *        A profile to be previewed with
    */
   previewFormFields(profile) {
+    log.debug("preview profile: ", profile);
+
     this.preparePreviewProfile(profile);
 
     for (let fieldDetail of this.fieldDetails) {
@@ -457,7 +465,7 @@ class FormAutofillSection {
    * Clear preview text and background highlight of all fields.
    */
   clearPreviewedFormFields() {
-    log.debug("clear previewed fields");
+    log.debug("clear previewed fields in:", this.form);
 
     for (let fieldDetail of this.fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
@@ -1603,7 +1611,7 @@ class FormAutofillHandler {
         throw new Error("Unknown section type");
       }
     }
-
+    log.debug("Create records:", records);
     return records;
   }
 }
