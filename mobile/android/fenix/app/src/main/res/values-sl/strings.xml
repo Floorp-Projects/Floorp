@@ -291,10 +291,24 @@
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_title_2">Kaj je novega v Firefoxu</string>
 
+    <!-- Onboarding home screen dialog description text. -->
+    <string name="onboarding_home_screen_description_2">Zdaj je lažje nadaljevati, kjer ste nazadnje končali.</string>
+    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_section_home_title_2">Prilagojena domača stran Firefoxa</string>
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">Skočite na odprte zavihke, zaznamke in zgodovino brskanja.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
     <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Čisti, urejeni zavihki</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Počistite nered med zavihki z izboljšano postavitvijo in samodejnim zapiranjem zavihkov.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string name="onboarding_home_screen_section_useful_history_title_2">Nedavna iskanja</string>
+
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">Znova obiščite najnovejša iskanja na domači strani in v zavihkih.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Vaša prilagojena domača stran Firefoxa zdaj olajša nadaljevanje nedokončanih opravil. Poiščite svoje nedavne zavihke, zaznamke in rezultate iskanja.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -474,6 +488,8 @@
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label">Tapnite na logotip za spremembo ozadja</string>
 
+    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_description">Listajte med slikami in posodobite ozadje brez zapuščanja domače strani.</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string name="wallpaper_logo_content_description">Logtip Firefoxa – spremeni ozadje, gumb</string>
@@ -1034,6 +1050,8 @@
     <string name="preference_phone_feature_notification">Obvestilo</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Trajna shramba</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Spletni piškotki</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Vsebina, zaščitena z DRM</string>
     <!-- Label that indicates that a permission must be asked always -->

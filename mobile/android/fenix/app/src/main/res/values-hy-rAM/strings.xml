@@ -396,7 +396,7 @@
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Կրկին կապակցվեք՝ համաժամեցումը վերսկսելու համար</string>
     <!-- Preference for language -->
-    <string name="preferences_language">Լեզուն</string>
+    <string name="preferences_language">Լեզու</string>
 
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Տվյալների ընտրություն</string>
