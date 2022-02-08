@@ -12,7 +12,6 @@
 #endif
 
 #include "GeckoProfiler.h"
-#include "mozilla/BaseAndGeckoProfilerDetail.h"
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DataMutex.h"
@@ -627,22 +626,15 @@ void ProfilerParent::Init() {
     ipcParams.features() = features;
     ipcParams.activeTabID() = activeTabID;
 
-    // If the filters exclude our pid, make sure it's stopped, otherwise
-    // continue with starting it.
-    if (!profiler::detail::FiltersExcludePid(
-            filters, ProfilerProcessId::FromNumber(mChildPid))) {
-      ipcParams.filters().SetCapacity(filters.length());
-      for (const char* filter : filters) {
-        ipcParams.filters().AppendElement(filter);
-      }
-
-      Unused << SendEnsureStarted(ipcParams);
-      RequestChunkManagerUpdate();
-      return;
+    for (uint32_t i = 0; i < filters.length(); ++i) {
+      ipcParams.filters().AppendElement(filters[i]);
     }
-  }
 
-  Unused << SendStop();
+    Unused << SendEnsureStarted(ipcParams);
+    RequestChunkManagerUpdate();
+  } else {
+    Unused << SendStop();
+  }
 }
 
 ProfilerParent::~ProfilerParent() {
@@ -761,21 +753,10 @@ void ProfilerParent::ProfilerStarted(nsIProfilerStartParams* aParams) {
   aParams->GetInterval(&ipcParams.interval());
   aParams->GetFeatures(&ipcParams.features());
   ipcParams.filters() = aParams->GetFilters().Clone();
-  // We need filters as a Span<const char*> to test pids in the lambda below.
-  auto filtersCStrings = nsTArray<const char*>{aParams->GetFilters().Length()};
-  for (const auto& filter : aParams->GetFilters()) {
-    filtersCStrings.AppendElement(filter.Data());
-  }
   aParams->GetActiveTabID(&ipcParams.activeTabID());
 
   ProfilerParentTracker::ProfilerStarted(ipcParams.entries());
   ProfilerParentTracker::Enumerate([&](ProfilerParent* profilerParent) {
-    if (profiler::detail::FiltersExcludePid(
-            filtersCStrings,
-            ProfilerProcessId::FromNumber(profilerParent->mChildPid))) {
-      // This pid is excluded, don't start the profiler at all.
-      return;
-    }
     Unused << profilerParent->SendStart(ipcParams);
     profilerParent->RequestChunkManagerUpdate();
   });
