@@ -554,10 +554,6 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   /**
    * Perform a final Reflow for our child frames.
    *
-   * @param aContentBoxMainSize the final content-box main-size of the flex
-   *                            container.
-   * @param aContentBoxCrossSize the final content-box cross-size of the flex
-   *                             container.
    * @param aContainerSize this frame's tentative physical border-box size, used
    *                       only for logical to physical coordinate conversion.
    * @param aAvailableSizeForItems the size of the available space for our
@@ -567,26 +563,25 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *                       continuation chain).
    * @param aSumOfPrevInFlowsChildrenBlockSize See the comment for
    *                                           SumOfChildrenBlockSizeProperty.
-   * @param aFlexContainerAscent [in/out] initially, the "tentative" flex
-   *                             container ascent computed in DoFlexLayout; or,
-   *                             nscoord_MIN if the ascent hasn't been
-   *                             established yet. If the latter, this will be
-   *                             updated with an ascent derived from the first
-   *                             flex item (if there are any flex items).
+   * @param aFlr the result returned by DoFlexLayout.
+   *             Note: aFlr is mostly an "input" parameter, but we use
+   *             aFlr.mAscent an "in/out" parameter; it's initially the
+   *             "tentative" flex container ascent computed in DoFlexLayout; or,
+   *             nscoord_MIN if the ascent hasn't been established yet. If the
+   *             latter, this will be updated with an ascent derived from the
+   *             first flex item (if there are any flex items).
    * @return nscoord the maximum block-end edge of children of this fragment in
    *                 flex container's coordinate space.
    * @return bool true if any child being reflowed is incomplete; false
    *              otherwise.
    */
   std::tuple<nscoord, bool> ReflowChildren(
-      const ReflowInput& aReflowInput, const nscoord aContentBoxMainSize,
-      const nscoord aContentBoxCrossSize, const nsSize& aContainerSize,
+      const ReflowInput& aReflowInput, const nsSize& aContainerSize,
       const mozilla::LogicalSize& aAvailableSizeForItems,
       const mozilla::LogicalMargin& aBorderPadding,
       const nscoord aSumOfPrevInFlowsChildrenBlockSize,
-      nscoord& aFlexContainerAscent, nsTArray<FlexLine>& aLines,
-      nsTArray<nsIFrame*>& aPlaceholders,
-      const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis);
+      const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis,
+      FlexLayoutResult& aFlr);
 
   /**
    * Moves the given flex item's frame to the given LogicalPosition (modulo any
