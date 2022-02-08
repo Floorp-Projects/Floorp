@@ -494,9 +494,12 @@ struct AutoHandlingTrap {
     }
 
     // Check that the stack would be aligned for the Wasm ABI after popping the
-    // return address.
+    // return address.  Outgoing argument areas are a multiple of
+    // WasmStackAlignment but calls are only aligned to JitStackAlignment.
 
-    if (uintptr_t(sp + sizeof(uintptr_t)) & (jit::WasmStackAlignment - 1)) {
+    static_assert(jit::WasmStackAlignment >= jit::JitStackAlignment,
+                  "subsumes");
+    if (uintptr_t(sp + sizeof(uintptr_t)) & (jit::JitStackAlignment - 1)) {
       return false;
     }
 
@@ -572,40 +575,23 @@ struct AutoHandlingTrap {
 
   const ModuleSegment& segment = *codeSegment->asModule();
 
-  Trap trap1, trap2;
+  Trap trap;
   BytecodeOffset bytecode;
-  if (!segment.code().lookupTrap(pc, &trap1, &trap2, &bytecode)) {
+  if (!segment.code().lookupTrap(pc, &trap, &bytecode)) {
     return false;
   }
 
 #  ifdef ENABLE_WASM_CALL_INDIRECT_NULL
   if (indirectCallToNull) {
     // Final validation: We must find the right trap type at the call.
-    if (trap1 != Trap::IndirectCallToNull &&
-        trap2 != Trap::IndirectCallToNull) {
+    if (trap != Trap::IndirectCallToNull) {
       return false;
     }
 
-    // Commit.  Quash the other trap (if present) and roll the PC back to the
-    // return point in the caller.
-    if (trap1 != Trap::IndirectCallToNull) {
-      trap1 = trap2;
-    }
-    trap2 = Trap::Limit;
+    // Roll the PC back to the return point in the caller.
     SetContextPC(context, pc);
-  } else {
-    // Not an indirect call to null, so pick the other trap, if present.
-    if (trap1 == Trap::IndirectCallToNull) {
-      if (trap2 == Trap::Limit) {
-        return false;
-      }
-      trap1 = trap2;
-    }
-    trap2 = Trap::Limit;
   }
 #  endif
-  // We must have exactly one trap here.
-  MOZ_ASSERT(trap1 != Trap::Limit && trap2 == Trap::Limit);
 
   // We have a safe, expected wasm trap, so fp is well-defined to be a Frame*.
   // For the first sanity check, the Trap::IndirectCallBadSig special case is
@@ -619,7 +605,7 @@ struct AutoHandlingTrap {
   auto* frame = reinterpret_cast<Frame*>(ContextToFP(context));
   Instance* instance = GetNearestEffectiveTls(frame)->instance;
   MOZ_RELEASE_ASSERT(&instance->code() == &segment.code() ||
-                     trap1 == Trap::IndirectCallBadSig);
+                     trap == Trap::IndirectCallBadSig);
 
   JSContext* cx =
       instance->realm()->runtimeFromAnyThread()->mainContextFromAnyThread();
@@ -629,7 +615,7 @@ struct AutoHandlingTrap {
   // point of the trap to allow stack unwinding or resumption, both of which
   // will call finishWasmTrap().
   jit::JitActivation* activation = cx->activation()->asJit();
-  activation->startWasmTrap(trap1, bytecode.offset(), ToRegisterState(context));
+  activation->startWasmTrap(trap, bytecode.offset(), ToRegisterState(context));
   SetContextPC(context, segment.trapCode());
   return true;
 }
@@ -1073,10 +1059,10 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
 
   const wasm::ModuleSegment& segment = *codeSegment->asModule();
 
-  Trap trap1, trap2;
+  Trap trap;
   BytecodeOffset bytecode;
-  if (!segment.code().lookupTrap(regs.pc, &trap1, &trap2, &bytecode) ||
-      (trap1 != Trap::OutOfBounds && trap2 != Trap::OutOfBounds)) {
+  if (!segment.code().lookupTrap(regs.pc, &trap, &bytecode) ||
+      trap != Trap::OutOfBounds) {
     return false;
   }
 
@@ -1104,16 +1090,15 @@ bool wasm::HandleIllegalInstruction(const RegisterState& regs,
 
   const wasm::ModuleSegment& segment = *codeSegment->asModule();
 
-  Trap trap1, trap2;
+  Trap trap;
   BytecodeOffset bytecode;
-  if (!segment.code().lookupTrap(regs.pc, &trap1, &trap2, &bytecode)) {
+  if (!segment.code().lookupTrap(regs.pc, &trap, &bytecode)) {
     return false;
   }
-  MOZ_ASSERT(trap2 == Trap::Limit, "There should only be one trap here");
 
   JSContext* cx = TlsContext.get();  // Cold simulator helper function
   jit::JitActivation* activation = cx->activation()->asJit();
-  activation->startWasmTrap(trap1, bytecode.offset(), regs);
+  activation->startWasmTrap(trap, bytecode.offset(), regs);
   *newPC = segment.trapCode();
   return true;
 }
