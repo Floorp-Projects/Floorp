@@ -55,10 +55,16 @@ static bool InvokeWatchtowerCallback(JSContext* cx, const char* kind,
 
 static bool ReshapeForShadowedProp(JSContext* cx, HandleNativeObject obj,
                                    HandleId id) {
+  // |obj| has been used as the prototype of another object. Check if we're
+  // shadowing a property on its proto chain. In this case we need to reshape
+  // that object for shape teleporting to work correctly.
+  //
+  // See also the 'Shape Teleporting Optimization' comment in jit/CacheIR.cpp.
+
   MOZ_ASSERT(obj->isUsedAsPrototype());
 
   // Lookups on integer ids cannot be cached through prototypes.
-  if (JSID_IS_INT(id)) {
+  if (id.isInt()) {
     return true;
   }
 
@@ -84,11 +90,6 @@ bool Watchtower::watchPropertyAddSlow(JSContext* cx, HandleNativeObject obj,
                                       HandleId id) {
   MOZ_ASSERT(watchesPropertyAdd(obj));
 
-  // If |obj| is a prototype of another object, check if we're shadowing a
-  // property on its proto chain. In this case we need to reshape that object
-  // for shape teleporting to work correctly.
-  //
-  // See also the 'Shape Teleporting Optimization' comment in jit/CacheIR.cpp.
   if (obj->isUsedAsPrototype()) {
     if (!ReshapeForShadowedProp(cx, obj, id)) {
       return false;
