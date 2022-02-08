@@ -123,6 +123,7 @@ int nr_ice_ctx_set_stun_servers(nr_ice_ctx *ctx,nr_ice_stun_server *servers,int 
 
     if(ctx->stun_servers_cfg){
       RFREE(ctx->stun_servers_cfg);
+      ctx->stun_servers_cfg=NULL;
       ctx->stun_server_ct_cfg=0;
     }
 
@@ -144,7 +145,12 @@ int nr_ice_ctx_set_turn_servers(nr_ice_ctx *ctx,nr_ice_turn_server *servers,int 
     int _status;
 
     if(ctx->turn_servers_cfg){
+      for (int i = 0; i < ctx->turn_server_ct_cfg; i++) {
+        RFREE(ctx->turn_servers_cfg[i].username);
+        r_data_destroy(&ctx->turn_servers_cfg[i].password);
+      }
       RFREE(ctx->turn_servers_cfg);
+      ctx->turn_servers_cfg=NULL;
       ctx->turn_server_ct_cfg=0;
     }
 
