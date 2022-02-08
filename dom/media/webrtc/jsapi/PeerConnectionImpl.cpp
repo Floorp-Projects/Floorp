@@ -453,8 +453,9 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   res = PeerConnectionCtx::InitializeGlobal(mThread);
   NS_ENSURE_SUCCESS(res, res);
 
-  res = mTransportHandler->CreateIceCtx("PC:" + GetName(),
-                                        aConfiguration.mIceServers,
+  mTransportHandler->CreateIceCtx("PC:" + GetName());
+
+  res = mTransportHandler->SetIceConfig(aConfiguration.mIceServers,
                                         aConfiguration.mIceTransportPolicy);
   if (NS_FAILED(res)) {
     CSFLogError(LOGTAG, "%s: Failed to init mtransport", __FUNCTION__);
@@ -1995,6 +1996,11 @@ PeerConnectionImpl::Close() {
   }
 
   return NS_OK;
+}
+
+nsresult PeerConnectionImpl::SetConfiguration(const RTCConfiguration& aConfig) {
+  return mTransportHandler->SetIceConfig(aConfig.mIceServers,
+                                         aConfig.mIceTransportPolicy);
 }
 
 bool PeerConnectionImpl::PluginCrash(uint32_t aPluginID,
