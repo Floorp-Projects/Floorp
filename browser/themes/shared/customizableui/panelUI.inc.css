@@ -4,9 +4,7 @@
 
 %filter substitution
 
-%define buttonStateHover :not([disabled],[open],:active):is(:hover)
 %define menuStateHover :not([disabled],:active)[_moz-menuactive]
-%define buttonStateActive :not([disabled]):is([open],:hover:active)
 %define menuStateActive :not([disabled])[_moz-menuactive]:active
 %define menuStateMenuActive :not([disabled])[_moz-menuactive]
 %define inAnyPanel :is(:not([cui-areatype="toolbar"]), [overflowedItem=true])
