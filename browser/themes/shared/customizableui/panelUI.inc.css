@@ -1021,7 +1021,8 @@ panelview .toolbarbutton-1,
   padding: 4px;
 }
 
-#appMenu-zoom-controls2 > .subviewbutton:is(@buttonStateHover@, @buttonStateActive@) {
+/* hover and active color changes are applied to child elements not the button itself */
+#appMenu-zoom-controls2 > .subviewbutton:not([disabled]):is(:hover, :hover:active) {
   color: unset;
   background-color: unset;
 }
@@ -1040,7 +1041,7 @@ panelview .toolbarbutton-1,
   -moz-context-properties: fill, stroke;
   fill: var(--button-color);
   /* the stroke color is used to fill the circle in the icon */
-  stroke: var(--zoom-controls-bgcolor, var(--button-bgcolor, ButtonFace));
+  stroke: var(--button-bgcolor);
   border-radius: 50%;
   padding: 0;
 }
@@ -1052,24 +1053,24 @@ panelview .toolbarbutton-1,
 
 #appMenu-fullscreen-button2 > .toolbarbutton-icon {
   padding: 1px;
-  background-color: var(--zoom-controls-bgcolor, var(--button-bgcolor, ButtonFace));
+  background-color: var(--button-bgcolor);
 }
 
-#appMenu-zoomReset-button2@buttonStateHover@ > .toolbarbutton-text,
-#appMenu-fullscreen-button2@buttonStateHover@ > .toolbarbutton-icon {
+#appMenu-zoomReset-button2:not([disabled]):hover > .toolbarbutton-text,
+#appMenu-fullscreen-button2:not([disabled]):hover > .toolbarbutton-icon {
   background-color: var(--panel-item-hover-bgcolor);
 }
-#appMenu-zoomReduce-button2@buttonStateHover@ > .toolbarbutton-icon,
-#appMenu-zoomEnlarge-button2@buttonStateHover@ > .toolbarbutton-icon {
+#appMenu-zoomReduce-button2:not([disabled]):hover > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2:not([disabled]):hover > .toolbarbutton-icon {
   stroke: var(--panel-item-hover-bgcolor);
 }
 
-#appMenu-zoomReset-button2@buttonStateActive@ > .toolbarbutton-text,
-#appMenu-fullscreen-button2@buttonStateActive@ > .toolbarbutton-icon {
+#appMenu-zoomReset-button2:not([disabled]):active:hover > .toolbarbutton-text,
+#appMenu-fullscreen-button2:not([disabled]):active:hover > .toolbarbutton-icon {
   background-color: var(--panel-item-active-bgcolor);
 }
-#appMenu-zoomReduce-button2@buttonStateActive@ > .toolbarbutton-icon,
-#appMenu-zoomEnlarge-button2@buttonStateActive@ > .toolbarbutton-icon {
+#appMenu-zoomReduce-button2:not([disabled]):active:hover > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2:not([disabled]):active:hover > .toolbarbutton-icon {
   stroke: var(--panel-item-active-bgcolor);
 }
 
