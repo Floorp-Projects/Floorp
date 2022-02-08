@@ -854,16 +854,6 @@ bool LazyStubTier::createOneEntryStub(uint32_t funcExportIndex,
   return true;
 }
 
-const CodeRange* LazyStubTier::lookupRange(const void* pc) const {
-  for (const UniqueLazyStubSegment& stubSegment : stubSegments_) {
-    const CodeRange* result = stubSegment->lookupRange(pc);
-    if (result) {
-      return result;
-    }
-  }
-  return nullptr;
-}
-
 bool LazyStubTier::createTier2(const Uint32Vector& funcExportIndices,
                                const CodeTier& codeTier,
                                Maybe<size_t>* outStubSegmentIndex) {
@@ -1372,22 +1362,6 @@ const CodeRange* Code::lookupFuncRange(void* pc) const {
   for (Tier t : tiers()) {
     const CodeRange* result = codeTier(t).lookupRange(pc);
     if (result && result->isFunction()) {
-      return result;
-    }
-  }
-  return nullptr;
-}
-
-const CodeRange* Code::lookupIndirectStubRange(void* pc) const {
-  // TODO / OPTIMIZE:
-  // There is only one client of this function - Table::getFuncRef.
-  // Table::getFuncRef can return only exported function,
-  // so if we pregenerate indirect stubs for all exported functions
-  // we can eliminate the lock below.
-  for (Tier tier : tiers()) {
-    auto stubs = codeTier(tier).lazyStubs().lock();
-    const CodeRange* result = stubs->lookupRange(pc);
-    if (result && result->isIndirectStub()) {
       return result;
     }
   }

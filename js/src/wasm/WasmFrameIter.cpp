@@ -925,7 +925,6 @@ void ProfilingFrameIterator::initFromExitFP(const Frame* fp) {
       callerFP_ = fp->rawCaller();
       AssertMatchesCallSite(callerPC_, callerFP_);
       break;
-    case CodeRange::IndirectStub:
     case CodeRange::ImportJitExit:
     case CodeRange::ImportInterpExit:
     case CodeRange::BuiltinThunk:
@@ -1198,8 +1197,6 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
       // entry trampoline also doesn't GeneratePrologue/Epilogue so we can't
       // use the general unwinding logic above.
       break;
-    case CodeRange::IndirectStub:
-      MOZ_CRASH("NYI");
     case CodeRange::JitEntry:
       // There's a jit frame above the current one; we don't care about pc
       // since the Jit entry frame is a jit frame which can be considered as
@@ -1380,8 +1377,6 @@ void ProfilingFrameIterator::operator++() {
     }
     case CodeRange::InterpEntry:
       MOZ_CRASH("should have had null caller fp");
-    case CodeRange::IndirectStub:
-      MOZ_CRASH("we can't profile indirect stub");
     case CodeRange::JitEntry:
       MOZ_CRASH("should have been guarded above");
     case CodeRange::Throw:
@@ -1621,8 +1616,6 @@ const char* ProfilingFrameIterator::label() const {
       return code_->profilingLabel(codeRange_->funcIndex());
     case CodeRange::InterpEntry:
       MOZ_CRASH("should be an ExitReason");
-    case CodeRange::IndirectStub:
-      return "indirect stub";
     case CodeRange::JitEntry:
       return "fast entry trampoline (in wasm)";
     case CodeRange::ImportJitExit:
