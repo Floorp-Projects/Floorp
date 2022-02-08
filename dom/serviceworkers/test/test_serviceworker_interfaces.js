@@ -226,8 +226,6 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "NetworkInformation", android: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "NavigationPreloadManager",
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   "Notification",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "NotificationEvent",
