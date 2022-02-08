@@ -723,6 +723,19 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
         "toggle",
         1
       );
+      let args = {
+        method: "toggle",
+        firstTimeToggle: (!Services.prefs.getBoolPref(
+          "media.videocontrols.picture-in-picture.video-toggle.has-used"
+        )).toString(),
+      };
+      Services.telemetry.recordEvent(
+        "pictureinpicture",
+        "opened_method",
+        "method",
+        null,
+        args
+      );
 
       let pipEvent = new this.contentWindow.CustomEvent(
         "MozTogglePictureInPicture",
@@ -988,12 +1001,21 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       !toggle.hasAttribute("hidden")
     ) {
       Services.telemetry.scalarAdd("pictureinpicture.saw_toggle", 1);
+      const hasUsedPiP = Services.prefs.getBoolPref(
+        "media.videocontrols.picture-in-picture.video-toggle.has-used"
+      );
+      let args = {
+        firstTime: (!hasUsedPiP).toString(),
+      };
+      Services.telemetry.recordEvent(
+        "pictureinpicture",
+        "saw_toggle",
+        "toggle",
+        null,
+        args
+      );
       // only record if this is the first time seeing the toggle
-      if (
-        !Services.prefs.getBoolPref(
-          "media.videocontrols.picture-in-picture.video-toggle.has-used"
-        )
-      ) {
+      if (!hasUsedPiP) {
         NimbusFeatures.pictureinpicture.recordExposureEvent();
       }
     }
