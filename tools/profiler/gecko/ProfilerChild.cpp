@@ -298,19 +298,15 @@ void ProfilerChild::GatherProfileThreadFunction(
   using namespace mozilla::literals::ProportionValue_literals;  // For `1_pc`.
 
   auto writer = MakeUnique<SpliceableChunkedJSONWriter>();
-  if (!profiler_get_profile_json(
-          *writer,
-          /* aSinceTime */ 0,
-          /* aIsShuttingDown */ false,
-          progressLogger.CreateSubLoggerFromTo(
-              1_pc,
-              "profiler_get_profile_json_into_lazily_allocated_buffer started",
-              99_pc,
-              "profiler_get_profile_json_into_lazily_allocated_buffer done"))) {
-    // Failed to get a profile (profiler not running?), reset the writer
-    // pointer, so that we'll send an empty string.
-    writer.reset();
-  }
+  profiler_get_profile_json(
+      *writer,
+      /* aSinceTime */ 0,
+      /* aIsShuttingDown */ false,
+      progressLogger.CreateSubLoggerFromTo(
+          1_pc,
+          "profiler_get_profile_json_into_lazily_allocated_buffer started",
+          99_pc,
+          "profiler_get_profile_json_into_lazily_allocated_buffer done"));
 
   if (NS_WARN_IF(NS_FAILED(
           parameters->profilerChild->mThread->Dispatch(NS_NewRunnableFunction(
@@ -334,26 +330,17 @@ void ProfilerChild::GatherProfileThreadFunction(
                 // Shmem allocation and promise resolution must be made on the
                 // ProfilerChild thread, that's why this task was needed here.
                 mozilla::ipc::Shmem shmem;
-                if (writer) {
-                  writer->ChunkedWriteFunc().CopyDataIntoLazilyAllocatedBuffer(
-                      [&](size_t allocationSize) -> char* {
-                        if (parameters->profilerChild->AllocShmem(
-                                allocationSize,
-                                mozilla::ipc::Shmem::SharedMemory::TYPE_BASIC,
-                                &shmem)) {
-                          return shmem.get<char>();
-                        }
-                        return nullptr;
-                      });
-                  writer = nullptr;
-                } else {
-                  // No profile, send an empty string.
-                  if (parameters->profilerChild->AllocShmem(
-                          1, mozilla::ipc::Shmem::SharedMemory::TYPE_BASIC,
-                          &shmem)) {
-                    shmem.get<char>()[0] = '\0';
-                  }
-                }
+                writer->ChunkedWriteFunc().CopyDataIntoLazilyAllocatedBuffer(
+                    [&](size_t allocationSize) -> char* {
+                      if (parameters->profilerChild->AllocShmem(
+                              allocationSize,
+                              mozilla::ipc::Shmem::SharedMemory::TYPE_BASIC,
+                              &shmem)) {
+                        return shmem.get<char>();
+                      }
+                      return nullptr;
+                    });
+                writer = nullptr;
 
                 parameters->resolver(std::move(shmem));
               }))))) {
