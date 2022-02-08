@@ -13,9 +13,30 @@
 #ifndef BaseAndGeckoProfilerDetail_h
 #define BaseAndGeckoProfilerDetail_h
 
+#include "mozilla/BaseProfilerUtils.h"
+#include "mozilla/Span.h"
+#include "mozilla/Types.h"
+
 namespace mozilla::profiler::detail {
 
-;  // TODO Add APIs here.
+// True if the filter is exactly "pid:<aPid>".
+[[nodiscard]] MFBT_API bool FilterHasPid(
+    const char* aFilter, baseprofiler::BaseProfilerProcessId aPid =
+                             baseprofiler::profiler_current_process_id());
+
+// Only true if the filters only contain "pid:..." strings, and *none* of them
+// is exactly "pid:<aPid>". E.g.:
+// - [], 123                     -> false (no pids)
+// - ["main"], 123               -> false (not all pids)
+// - ["main", "pid:123"], 123    -> false (not all pids)
+// - ["pid:123"], 123            -> false (all pids, including "pid:123")
+// - ["pid:123", "pid:456"], 123 -> false (all pids, including "pid:123")
+// - ["pid:456"], 123            -> true (all pids, but no "pid:123")
+// - ["pid:456", "pid:789"], 123 -> true (all pids, but no "pid:123")
+[[nodiscard]] MFBT_API bool FiltersExcludePid(
+    Span<const char* const> aFilters,
+    baseprofiler::BaseProfilerProcessId aPid =
+        baseprofiler::profiler_current_process_id());
 
 }  // namespace mozilla::profiler::detail
 
