@@ -4,7 +4,7 @@ title: Release checklist
 permalink: /contributing/release-checklist
 ---
 
-This is instructions for preparing a release branch for Android Components Beta release and starting the next development cycle.
+These are instructions for preparing a release branch for Android Components and starting the next Nightly development cycle.
 
 ## Creating a new Beta release branch
 
@@ -37,7 +37,7 @@ This is instructions for preparing a release branch for Android Components Beta 
 3. Create a commit and pull request named `Update to first GeckoView [beta_version] Beta` for this change. The pull request should be committed into the `releases/[beta_version].0` branch.
 4. After this pull request has landed, [Draft a new release](https://github.com/mozilla-mobile/android-components/releases/new):
     - Release title: `Android-Components [beta_version].0.0`
-    - Create a new tag and select it in "Choose a tag": `v[beta_version.0.0]`
+    - Create a new tag and select it in "Choose a tag": `v[beta_version].0.0`
     - Target: `releases/[beta_version].0`
     - Description: Follow this template and bump the release note URL, specify the correct commit range and milestone.
 
@@ -82,7 +82,7 @@ See [https://github.com/mozilla-mobile/android-components/pull/11520](https://gi
     +99.0.0
     ```
 
-3. Create a new [Milestone](https://github.com/mozilla-mobile/android-components/milestones) with the following format `[nightly_version].0.0 <insert an emoji>` (for example, `99.0.0 🛎`). Close the existing milestone and bump all the remaining opened issues to the next milestone or simply remove the tagged milestone depending on whhat is appropriate.
+3. Create a new [Milestone](https://github.com/mozilla-mobile/android-components/milestones) with the following format `[nightly_version].0.0 <insert an emoji>` (for example, `99.0.0 🛎`). Close the existing milestone and bump all the remaining opened issues to the next milestone or simply remove the tagged milestone depending on what is appropriate.
 4. Create a commit named `Update changelog for [nightly_version].0.0 release` that will update the following in [changelog.md](https://github.com/mozilla-mobile/android-components/blob/main/docs/changelog.md):
   - Add a new `[nightly_version].0.0 (In Development)` section for the next Nightly version of AC with the next commit and milestone numbers.
   - Update the `[beta_version].0.0` section, change `blob` in the links to `v[beta_version].0.0` and specifying the correct commit ranges.
