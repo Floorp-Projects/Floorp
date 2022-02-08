@@ -127,12 +127,6 @@ static bool IsImportedFunction(const uint32_t functionIndex,
   return functionIndex < metadataTier.funcImports.length();
 }
 
-static bool IsJSExportedFunction(JSFunction* fun) {
-  // There's an assumption here that the function is in fact an imported
-  // function.  The caller must ensure this.
-  return !IsWasmExportedFunction(fun);
-}
-
 // TODO: This could usefully be used in WasmValidate.cpp too.
 static bool IsNullFunction(const uint32_t functionIndex) {
   return functionIndex == NullFuncIndex;
@@ -878,7 +872,6 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       if (IsImportedFunction(funcIndex, metadataTier)) {
         FuncImportTls& import = funcImportTls(funcImports[funcIndex]);
         JSFunction* fun = import.fun;
-        (void)IsJSExportedFunction(fun);  // Use it
         if (IsWasmExportedFunction(fun)) {
           // This element is a wasm function imported from another
           // instance. To preserve the === function identity required by
