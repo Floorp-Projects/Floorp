@@ -606,6 +606,91 @@ class ExtensionActionTest : BaseSessionTest() {
     }
 
     @Test
+    fun testPopupMessaging() {
+        val popupSession = sessionRule.createOpenSession()
+
+        val actionResult = GeckoResult<WebExtension.Action>()
+        testActionApi("""{
+           "action": "setPopup",
+           "popup": "test-popup-messaging.html"
+        }""") { action ->
+            assertEquals(action.title, "Test action default")
+            assertEquals(action.enabled, true)
+            actionResult.complete(action)
+        }
+
+        val messages = mutableListOf<String>()
+        val messageResult = GeckoResult<List<String>>()
+        val portResult = GeckoResult<WebExtension.Port>()
+        val messageDelegate = object : WebExtension.MessageDelegate {
+            override fun onMessage(
+                nativeApp: String,
+                message: Any,
+                sender: WebExtension.MessageSender
+            ): GeckoResult<Any>? {
+                assertEquals(extension!!.id, sender.webExtension.id)
+                assertEquals(WebExtension.MessageSender.ENV_TYPE_EXTENSION,
+                    sender.environmentType)
+                assertEquals(sender.isTopLevel, true)
+                assertEquals("${extension!!.metaData.baseUrl}test-popup-messaging.html",
+                    sender.url)
+                assertEquals(sender.session, popupSession)
+                messages.add(message as String)
+                if (messages.size == 2) {
+                    messageResult.complete(messages)
+                    return null
+                } else {
+                    return GeckoResult.fromValue("TEST_RESPONSE")
+                }
+            }
+
+            override fun onConnect(port: WebExtension.Port) {
+                assertEquals(extension!!.id, port.sender.webExtension.id)
+                assertEquals(WebExtension.MessageSender.ENV_TYPE_EXTENSION,
+                    port.sender.environmentType)
+                assertEquals(true, port.sender.isTopLevel)
+                assertEquals("${extension!!.metaData.baseUrl}test-popup-messaging.html",
+                    port.sender.url)
+                assertEquals(port.sender.session, popupSession)
+                portResult.complete(port)
+            }
+        }
+
+        popupSession.webExtensionController.setMessageDelegate(
+            extension!!, messageDelegate, "browser")
+
+        val action = sessionRule.waitForResult(actionResult)
+        extension!!.setActionDelegate(object : WebExtension.ActionDelegate {
+            override fun onTogglePopup(extension: WebExtension,
+                                       popupAction: WebExtension.Action): GeckoResult<GeckoSession>? {
+                assertEquals(extension, this@ExtensionActionTest.extension)
+                assertEquals(popupAction, action)
+                return GeckoResult.fromValue(popupSession)
+            }
+        })
+
+        action.click()
+
+        val message = sessionRule.waitForResult(messageResult)
+        assertThat("Message should match", message, equalTo(listOf(
+            "testPopupMessage", "response: TEST_RESPONSE")))
+
+        val port = sessionRule.waitForResult(portResult)
+        val portMessageResult = GeckoResult<String>()
+
+        port.setDelegate(object : WebExtension.PortDelegate {
+            override fun onPortMessage(message: Any, p: WebExtension.Port) {
+                assertEquals(port, p)
+                portMessageResult.complete(message as String)
+            }
+        })
+
+        val portMessage = sessionRule.waitForResult(portMessageResult)
+        assertThat("Message should match", portMessage,
+            equalTo("testPopupPortMessage"))
+    }
+
+    @Test
     fun testPopupsCanCloseThemselves() {
         val onCloseRequestResult = GeckoResult<Void>()
         val popupSession = sessionRule.createOpenSession()
