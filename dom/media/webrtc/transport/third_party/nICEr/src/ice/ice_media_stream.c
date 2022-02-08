@@ -1064,8 +1064,6 @@ void nr_ice_media_stream_role_change(nr_ice_media_stream *stream)
      * re-sorting the check list. */
     nr_ice_cand_pair_head old_checklist;
 
-    assert(stream->ice_state != NR_ICE_MEDIA_STREAM_UNPAIRED);
-
     /* Move check_list to old_checklist (not POD, have to do the hard way) */
     TAILQ_INIT(&old_checklist);
     TAILQ_FOREACH_SAFE(pair,&stream->check_list,check_queue_entry,temp_pair) {
