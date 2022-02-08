@@ -342,6 +342,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
 PeerConnectionImpl::~PeerConnectionImpl() {
   if (mTimeCard) {
     STAMP_TIMECARD(mTimeCard, "Destructor Invoked");
+    STAMP_TIMECARD(mTimeCard, mHandle.c_str());
     print_timecard(mTimeCard);
     destroy_timecard(mTimeCard);
     mTimeCard = nullptr;
@@ -2396,10 +2397,12 @@ const std::string& PeerConnectionImpl::GetName() {
 void PeerConnectionImpl::CandidateReady(const std::string& candidate,
                                         const std::string& transportId,
                                         const std::string& ufrag) {
+  STAMP_TIMECARD(mTimeCard, "Ice Candidate gathered");
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
   if (mForceIceTcp && std::string::npos != candidate.find(" UDP ")) {
     CSFLogWarn(LOGTAG, "Blocking local UDP candidate: %s", candidate.c_str());
+    STAMP_TIMECARD(mTimeCard, "UDP Ice Candidate blocked");
     return;
   }
 
@@ -2413,6 +2416,7 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
   if (NS_FAILED(res)) {
     std::string errorString = mJsepSession->GetLastError();
 
+    STAMP_TIMECARD(mTimeCard, "Local Ice Candidate invalid");
     CSFLogError(LOGTAG,
                 "Failed to incorporate local candidate into SDP:"
                 " res = %u, candidate = %s, transport-id = %s,"
@@ -2423,12 +2427,13 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
   }
 
   if (skipped) {
-    CSFLogDebug(LOGTAG,
-                "Skipped adding local candidate %s (transport-id %s) "
-                "to SDP, this typically happens because the m-section "
-                "is bundled, which means it doesn't make sense for it "
-                "to have its own transport-related attributes.",
-                candidate.c_str(), transportId.c_str());
+    STAMP_TIMECARD(mTimeCard, "Local Ice Candidate skipped");
+    CSFLogInfo(LOGTAG,
+               "Skipped adding local candidate %s (transport-id %s) "
+               "to SDP, this typically happens because the m-section "
+               "is bundled, which means it doesn't make sense for it "
+               "to have its own transport-related attributes.",
+               candidate.c_str(), transportId.c_str());
     return;
   }
 
@@ -2436,14 +2441,15 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
       mJsepSession->GetLocalDescription(kJsepDescriptionPending);
   mCurrentLocalDescription =
       mJsepSession->GetLocalDescription(kJsepDescriptionCurrent);
-  CSFLogDebug(LOGTAG, "Passing local candidate to content: %s",
-              candidate.c_str());
+  CSFLogInfo(LOGTAG, "Passing local candidate to content: %s",
+             candidate.c_str());
   SendLocalIceCandidateToContent(level, mid, candidate, ufrag);
 }
 
 void PeerConnectionImpl::SendLocalIceCandidateToContent(
     uint16_t level, const std::string& mid, const std::string& candidate,
     const std::string& ufrag) {
+  STAMP_TIMECARD(mTimeCard, "Send Ice Candidate to content");
   JSErrorResult rv;
   mPCObserver->OnIceCandidate(level, ObString(mid.c_str()),
                               ObString(candidate.c_str()),
