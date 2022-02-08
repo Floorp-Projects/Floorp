@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FetchLog.h"
 #include "nsILoadGroup.h"
 #include "nsILoadInfo.h"
 #include "nsIPrincipal.h"
@@ -12,7 +11,6 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/FetchService.h"
@@ -22,8 +20,6 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 
 namespace mozilla::dom {
-
-mozilla::LazyLogModule gFetchLog("Fetch");
 
 // FetchInstance
 
@@ -36,31 +32,31 @@ nsresult FetchService::FetchInstance::Initialize(nsIChannel* aChannel) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
+  // Setup principal form InternalRequest
+  const mozilla::UniquePtr<mozilla::ipc::PrincipalInfo>& principalInfo =
+      mRequest->GetPrincipalInfo();
+  MOZ_ASSERT(principalInfo);
+  auto principalOrErr = PrincipalInfoToPrincipal(*principalInfo);
+  if (NS_WARN_IF(principalOrErr.isErr())) {
+    return principalOrErr.unwrapErr();
+  }
+  mPrincipal = principalOrErr.unwrap();
+
   // Get needed information for FetchDriver from passed-in channel.
   if (aChannel) {
-    FETCH_LOG(("FetchInstance::Initialize [%p] aChannel[%p]", this, aChannel));
-
     nsresult rv;
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     MOZ_ASSERT(loadInfo);
 
-    rv = loadInfo->GetLoadingPrincipal(getter_AddRefs(mPrincipal));
+    // Principal in the InternalRequest should be the same with the triggering
+    // principal in the LoadInfo
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+    rv = loadInfo->GetTriggeringPrincipal(getter_AddRefs(triggeringPrincipal));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    // Top level document load has no loadingPrincipal, try to use channel's URI
-    if (!mPrincipal) {
-      nsCOMPtr<nsIURI> channelURI;
-      rv = aChannel->GetURI(getter_AddRefs(channelURI));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      mPrincipal = BasePrincipal::CreateContentPrincipal(
-          channelURI, loadInfo->GetOriginAttributes());
-      if (!mPrincipal) {
-        return NS_ERROR_UNEXPECTED;
-      }
+    if (!mPrincipal->Equals(triggeringPrincipal)) {
+      return NS_ERROR_UNEXPECTED;
     }
 
     // Get loadGroup from channel
@@ -100,13 +96,6 @@ RefPtr<FetchServiceResponsePromise> FetchService::FetchInstance::Fetch() {
   MOZ_ASSERT(mPrincipal);
   MOZ_ASSERT(mLoadGroup);
 
-  nsAutoCString principalSpec;
-  MOZ_ALWAYS_SUCCEEDS(mPrincipal->GetAsciiSpec(principalSpec));
-  nsAutoCString requestURL;
-  mRequest->GetURL(requestURL);
-  FETCH_LOG(("FetchInstance::Fetch [%p], mRequest URL: %s mPrincipal: %s", this,
-             requestURL.BeginReading(), principalSpec.BeginReading()));
-
   nsresult rv;
 
   // Create a FetchDriver instance
@@ -127,8 +116,6 @@ RefPtr<FetchServiceResponsePromise> FetchService::FetchInstance::Fetch() {
   // FetchService::CancelFetch() to abort the running fetch.
   rv = mFetchDriver->Fetch(nullptr, this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    FETCH_LOG(
-        ("FetchInstance::Fetch FetchDriver::Fetch failed(0x%X)", (uint32_t)rv));
     return FetchServiceResponsePromise::CreateAndResolve(
         InternalResponse::NetworkError(rv), __func__);
   }
@@ -140,14 +127,9 @@ void FetchService::FetchInstance::Cancel() {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  FETCH_LOG(("FetchInstance::Cancel() [%p]", this));
-
   if (mFetchDriver) {
     mFetchDriver->RunAbortAlgorithm();
   }
-
-  mResponsePromiseHolder.ResolveIfExists(
-      InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
 }
 
 void FetchService::FetchInstance::OnResponseEnd(
@@ -160,21 +142,15 @@ void FetchService::FetchInstance::OnResponseEnd(
 
 void FetchService::FetchInstance::OnResponseAvailableInternal(
     SafeRefPtr<InternalResponse> aResponse) {
-  FETCH_LOG(("FetchInstance::OnResponseAvailableInternal [%p]", this));
-  if (!mResponsePromiseHolder.IsEmpty()) {
-    // Remove the FetchInstance from FetchInstanceTable
-    RefPtr<FetchServiceResponsePromise> responsePromise =
-        mResponsePromiseHolder.Ensure(__func__);
-    RefPtr<FetchService> fetchService = FetchService::GetInstance();
-    MOZ_ASSERT(fetchService);
-    auto entry = fetchService->mFetchInstanceTable.Lookup(responsePromise);
-    MOZ_ASSERT(entry);
-    entry.Remove();
-    FETCH_LOG(
-        ("FetchInstance::OnResponseAvailableInternal entry of "
-         "responsePromise[%p] is removed",
-         responsePromise.get()));
-  }
+  // Remove the FetchInstance from FetchInstanceTable
+  RefPtr<FetchServiceResponsePromise> responsePromise =
+      mResponsePromiseHolder.Ensure(__func__);
+  RefPtr<FetchService> fetchService = FetchService::GetInstance();
+  MOZ_ASSERT(fetchService);
+  auto entry = fetchService->mFetchInstanceTable.Lookup(responsePromise);
+  MOZ_ASSERT(entry);
+  entry.Remove();
+
   // Resolve the FetchServiceResponsePromise
   mResponsePromiseHolder.ResolveIfExists(std::move(aResponse), __func__);
 }
@@ -222,9 +198,6 @@ RefPtr<FetchServiceResponsePromise> FetchService::Fetch(
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  FETCH_LOG(("FetchService::Fetch aRequest[%p], aChannel[%p]",
-             aRequest.unsafeGetRawPtr(), aChannel));
-
   // Create FetchInstance
   RefPtr<FetchInstance> fetch = MakeRefPtr<FetchInstance>(aRequest.clonePtr());
 
@@ -237,22 +210,19 @@ RefPtr<FetchServiceResponsePromise> FetchService::Fetch(
   // Call FetchInstance::Fetch() to start an asynchronous fetching.
   RefPtr<FetchServiceResponsePromise> responsePromise = fetch->Fetch();
 
-  if (!responsePromise->IsResolved()) {
-    // Insert the created FetchInstance into FetchInstanceTable.
-    if (!mFetchInstanceTable.WithEntryHandle(responsePromise,
-                                             [&](auto&& entry) {
-                                               if (entry.HasEntry()) {
-                                                 return false;
-                                               }
-                                               entry.Insert(fetch);
-                                               return true;
-                                             })) {
-      FETCH_LOG(("FetchService::Fetch entry of responsePromise[%p] exists",
-                 responsePromise.get()));
-      return NetworkErrorResponse(NS_ERROR_UNEXPECTED);
-    }
-    FETCH_LOG(("FetchService::Fetch responsePromise[%p], fetchInstance[%p]",
-               responsePromise.get(), fetch.get()));
+  // Insert the created FetchInstance into FetchInstanceTable.
+  // TODO: the FetchInstance should be removed from FetchInstanceTable, once the
+  //       fetching finishes or be aborted. This should be implemented in
+  //       following patches when implementing FetchDriverObserver on
+  //       FetchInstance
+  if (!mFetchInstanceTable.WithEntryHandle(responsePromise, [&](auto&& entry) {
+        if (entry.HasEntry()) {
+          return false;
+        }
+        entry.Insert(fetch);
+        return true;
+      })) {
+    return NetworkErrorResponse(NS_ERROR_UNEXPECTED);
   }
   return responsePromise;
 }
@@ -262,15 +232,11 @@ void FetchService::CancelFetch(
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aResponsePromise);
-  FETCH_LOG(("FetchService::CancelFetch aResponsePromise[%p]",
-             aResponsePromise.get()));
 
   auto entry = mFetchInstanceTable.Lookup(aResponsePromise);
   if (entry) {
     entry.Data()->Cancel();
     entry.Remove();
-    FETCH_LOG(("FetchService::CancelFetch aResponsePromise[%p] is removed",
-               aResponsePromise.get()));
   }
 }
 
