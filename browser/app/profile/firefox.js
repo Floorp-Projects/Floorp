@@ -1430,11 +1430,6 @@ pref("services.sync.prefs.dangerously_allow_arbitrary", false);
 // user's tabs and bookmarks. Note this pref is also synced.
 pref("services.sync.syncedTabs.showRemoteIcons", true);
 
-// A preference (in milliseconds) controlling if we sync after a tab change and
-// how long to delay before we schedule the sync
-// Anything <= 0 means disabled
-pref("services.sync.syncedTabs.syncDelayAfterTabChange", 0);
-
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.
 pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
