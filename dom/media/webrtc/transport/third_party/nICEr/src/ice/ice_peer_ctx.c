@@ -422,9 +422,11 @@ int nr_ice_peer_ctx_pair_candidates(nr_ice_peer_ctx *pctx)
 
     stream=STAILQ_FIRST(&pctx->peer_streams);
     while(stream){
-      if(r=nr_ice_media_stream_pair_candidates(pctx, stream->local_stream,
-        stream))
-        ABORT(r);
+      if(!stream->local_stream->obsolete) {
+        if(r=nr_ice_media_stream_pair_candidates(pctx, stream->local_stream,
+          stream))
+          ABORT(r);
+      }
 
       stream=STAILQ_NEXT(stream,entry);
     }
@@ -557,25 +559,27 @@ int nr_ice_peer_ctx_start_checks2(nr_ice_peer_ctx *pctx, int allow_non_first)
       ABORT(R_FAILED);
 
     while (stream) {
-      assert(stream->ice_state != NR_ICE_MEDIA_STREAM_UNPAIRED);
+      if(!stream->local_stream->obsolete) {
+        assert(stream->ice_state != NR_ICE_MEDIA_STREAM_UNPAIRED);
 
-      if (stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_FROZEN) {
-        if(!TAILQ_EMPTY(&stream->check_list))
-          break;
+        if (stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_FROZEN) {
+          if(!TAILQ_EMPTY(&stream->check_list))
+            break;
 
-        if(!allow_non_first){
-          /* This test applies if:
+          if(!allow_non_first){
+            /* This test applies if:
 
-             1. allow_non_first is 0 (i.e., non-trickle ICE)
-             2. the first stream has an empty check list.
+               1. allow_non_first is 0 (i.e., non-trickle ICE)
+               2. the first stream has an empty check list.
 
-             But in the non-trickle ICE case, the other side should have provided
-             some candidates or ICE is pretty much not going to work and we're
-             just going to fail. Hence R_FAILED as opposed to R_NOT_FOUND and
-             immediate termination here.
-          */
-          r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) first stream has empty check list",pctx->ctx->label,pctx->label);
-          ABORT(R_FAILED);
+               But in the non-trickle ICE case, the other side should have provided
+               some candidates or ICE is pretty much not going to work and we're
+               just going to fail. Hence R_FAILED as opposed to R_NOT_FOUND and
+               immediate termination here.
+            */
+            r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) first stream has empty check list",pctx->ctx->label,pctx->label);
+            ABORT(R_FAILED);
+          }
         }
       }
 
