@@ -571,6 +571,7 @@ class CalleeDesc {
     struct {
       uint32_t globalDataOffset_;
       uint32_t minLength_;
+      Maybe<uint32_t> maxLength_;
       TypeIdDesc funcTypeId_;
     } table;
     SymbolicAddress builtin_;
@@ -609,6 +610,10 @@ class CalleeDesc {
   uint32_t wasmTableMinLength() const {
     MOZ_ASSERT(which_ == WasmTable);
     return u.table.minLength_;
+  }
+  Maybe<uint32_t> wasmTableMaxLength() const {
+    MOZ_ASSERT(which_ == WasmTable);
+    return u.table.maxLength_;
   }
   SymbolicAddress builtin() const {
     MOZ_ASSERT(which_ == Builtin || which_ == BuiltinInstanceMethod);

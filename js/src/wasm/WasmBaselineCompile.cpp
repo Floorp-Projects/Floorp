@@ -1361,7 +1361,8 @@ CodeOffset BaseCompiler::callIndirect(uint32_t funcTypeIndex,
 
   CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Indirect);
   CalleeDesc callee = CalleeDesc::wasmTable(table, funcTypeId);
-  return masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true));
+  return masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true),
+                               mozilla::Nothing());
 }
 
 // Precondition: sync()
