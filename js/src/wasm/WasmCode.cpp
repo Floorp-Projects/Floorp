@@ -854,27 +854,6 @@ bool LazyStubTier::createOneEntryStub(uint32_t funcExportIndex,
   return true;
 }
 
-// This uses the funcIndex as the major key and the tls pointer value as the
-// minor key, the same as the < and == predicates used in RemoveDuplicates.
-
-auto IndirectStubComparator = [](uint32_t funcIndex, void* tlsData,
-                                 const IndirectStub& stub) -> int {
-  if (funcIndex < stub.funcIndex) {
-    return -1;
-  }
-  if (funcIndex > stub.funcIndex) {
-    return 1;
-  }
-  // Function indices are equal.
-  if (uintptr_t(tlsData) < uintptr_t(stub.tls)) {
-    return -1;
-  }
-  if (uintptr_t(tlsData) > uintptr_t(stub.tls)) {
-    return 1;
-  }
-  return 0;
-};
-
 const CodeRange* LazyStubTier::lookupRange(const void* pc) const {
   for (const UniqueLazyStubSegment& stubSegment : stubSegments_) {
     const CodeRange* result = stubSegment->lookupRange(pc);
@@ -943,24 +922,6 @@ void* LazyStubTier::lookupInterpEntry(uint32_t funcIndex) const {
   const LazyFuncExport& fe = exports_[match];
   const LazyStubSegment& stub = *stubSegments_[fe.lazyStubSegmentIndex];
   return stub.base() + stub.codeRanges()[fe.funcCodeRangeIndex].begin();
-}
-
-void* LazyStubTier::lookupIndirectStub(uint32_t funcIndex, void* tls) const {
-  size_t match;
-  if (!BinarySearchIf(
-          indirectStubVector_, 0, indirectStubVector_.length(),
-          [funcIndex, tls](const IndirectStub& stub) {
-            return IndirectStubComparator(funcIndex, tls, stub);
-          },
-          &match)) {
-    return nullptr;
-  }
-
-  const IndirectStub& indirectStub = indirectStubVector_[match];
-
-  const LazyStubSegment& segment = *stubSegments_[indirectStub.segmentIndex];
-  return segment.base() +
-         segment.codeRanges()[indirectStub.codeRangeIndex].begin();
 }
 
 void LazyStubTier::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,

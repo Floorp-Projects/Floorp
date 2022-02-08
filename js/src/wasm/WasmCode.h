@@ -489,7 +489,7 @@ struct MetadataTier {
 using UniqueMetadataTier = UniquePtr<MetadataTier>;
 
 // LazyStubSegment is a code segment lazily generated for function entry stubs
-// (both interpreter and jit ones) and for indirect stubs.
+// (both interpreter and jit ones).
 //
 // Because a stub is usually small (a few KiB) and an executable code segment
 // isn't (64KiB), a given stub segment can contain entry stubs of many
@@ -545,31 +545,8 @@ struct LazyFuncExport {
 
 using LazyFuncExportVector = Vector<LazyFuncExport, 0, SystemAllocPolicy>;
 
-// IndirectStub provides a mapping between function indices and
-// indirect stubs code ranges.
-
-// The function index is the index of the function *within a specific module*,
-// not necessarily in the module that owns the stub.  That module's and
-// function's instance is provided by the tls field.
-
-struct IndirectStub {
-  size_t funcIndex;
-  size_t segmentIndex;
-  size_t codeRangeIndex;
-  void* tls;
-  IndirectStub(size_t funcIndex, size_t segmentIndex, size_t codeRangeIndex,
-               TlsData* tls)
-      : funcIndex(funcIndex),
-        segmentIndex(segmentIndex),
-        codeRangeIndex(codeRangeIndex),
-        tls(tls) {}
-};
-
-using IndirectStubVector = Vector<IndirectStub, 0, SystemAllocPolicy>;
-
 // LazyStubTier contains all the necessary information for lazy function entry
-// stubs and indirect stubs that are generated at runtime.
-// None of its data are ever serialized.
+// stubs that are generated at runtime. None of its data is ever serialized.
 //
 // It must be protected by a lock, because the main thread can both read and
 // write lazy stubs at any time while a background thread can regenerate lazy
@@ -578,15 +555,6 @@ using IndirectStubVector = Vector<IndirectStub, 0, SystemAllocPolicy>;
 class LazyStubTier {
   LazyStubSegmentVector stubSegments_;
   LazyFuncExportVector exports_;
-  // The indirectStubVector_ is totally ordered by IndirectStubComparator (in
-  // WasmCode.cpp): the primary index is the funcIndex, the secondary index the
-  // pointer value of the tls.  The vector is binary-searched by that predicate
-  // when an entry is needed.
-  //
-  // Creating an indirect stub is not an idempotent operation!  There must be NO
-  // duplicate entries in the table, which is another way of saying that an
-  // entry that is in the table must always be found by a lookup.
-  IndirectStubVector indirectStubVector_;
   size_t lastStubSegmentIndex_;
 
   bool createManyEntryStubs(const Uint32Vector& funcExportIndices,
@@ -607,9 +575,6 @@ class LazyStubTier {
   // Returns a pointer to the raw interpreter entry of a given function for
   // which stubs have been lazily generated.
   void* lookupInterpEntry(uint32_t funcIndex) const;
-
-  // Returns a pointer to the indirect stub of a given function.
-  void* lookupIndirectStub(uint32_t funcIndex, void* tls) const;
 
   const CodeRange* lookupRange(const void* pc) const;
 
