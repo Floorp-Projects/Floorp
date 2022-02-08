@@ -53,7 +53,7 @@ class Table : public ShareableBase<Table> {
   TableAnyRefVector objects_;     //   or objects_, but not both
   const RefType elemType_;
   const bool isAsmJS_;
-  const bool isPublic_;
+  const bool importedOrExported;
   uint32_t length_;
   const Maybe<uint32_t> maximum_;
 
@@ -80,9 +80,9 @@ class Table : public ShareableBase<Table> {
     return isAsmJS_;
   }
 
-  bool isPublic() const {
+  bool isImportedOrExported() const {
     MOZ_ASSERT(elemType_.isFunc());
-    return isPublic_;
+    return importedOrExported;
   }
 
   bool isFunction() const { return elemType().isFunc(); }
