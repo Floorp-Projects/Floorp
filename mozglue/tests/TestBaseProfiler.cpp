@@ -7,6 +7,7 @@
 #include "BaseProfiler.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/BaseAndGeckoProfilerDetail.h"
 #include "mozilla/BaseProfileJSONWriter.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/ProgressLogger.h"
@@ -227,6 +228,92 @@ void TestProfilerUtils() {
                             mozilla::baseprofiler::BaseProfilerThreadId>);
 
   printf("TestProfilerUtils done\n");
+}
+
+void TestBaseAndProfilerDetail() {
+  printf("TestBaseAndProfilerDetail...\n");
+
+  {
+    using mozilla::profiler::detail::FilterHasPid;
+
+    const auto pid123 =
+        mozilla::baseprofiler::BaseProfilerProcessId::FromNumber(123);
+    MOZ_RELEASE_ASSERT(FilterHasPid("pid:123", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid(" ", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("123", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid=123", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:123 ", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid: 123", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:0123", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:0000000000000000000000123", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:12", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:1234", pid123));
+    MOZ_RELEASE_ASSERT(!FilterHasPid("pid:0", pid123));
+
+    using PidNumber = mozilla::baseprofiler::BaseProfilerProcessId::NumberType;
+    const PidNumber maxNumber = std::numeric_limits<PidNumber>::max();
+    const auto maxPid =
+        mozilla::baseprofiler::BaseProfilerProcessId::FromNumber(maxNumber);
+    const std::string maxPidString = "pid:" + std::to_string(maxNumber);
+    MOZ_RELEASE_ASSERT(FilterHasPid(maxPidString.c_str(), maxPid));
+
+    const std::string tooBigPidString = maxPidString + "0";
+    MOZ_RELEASE_ASSERT(!FilterHasPid(tooBigPidString.c_str(), maxPid));
+  }
+
+  {
+    using mozilla::profiler::detail::FiltersExcludePid;
+    const auto pid123 =
+        mozilla::baseprofiler::BaseProfilerProcessId::FromNumber(123);
+
+    MOZ_RELEASE_ASSERT(
+        !FiltersExcludePid(mozilla::Span<const char*>{}, pid123));
+
+    {
+      const char* const filters[] = {"main"};
+      MOZ_RELEASE_ASSERT(!FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"main", "pid:123"};
+      MOZ_RELEASE_ASSERT(!FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"main", "pid:456"};
+      MOZ_RELEASE_ASSERT(!FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"pid:123"};
+      MOZ_RELEASE_ASSERT(!FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"pid:123", "pid:456"};
+      MOZ_RELEASE_ASSERT(!FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"pid:456", "pid:123"};
+      MOZ_RELEASE_ASSERT(!FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"pid:456"};
+      MOZ_RELEASE_ASSERT(FiltersExcludePid(filters, pid123));
+    }
+
+    {
+      const char* const filters[] = {"pid:456", "pid:789"};
+      MOZ_RELEASE_ASSERT(FiltersExcludePid(filters, pid123));
+    }
+  }
+
+  printf("TestBaseAndProfilerDetail done\n");
 }
 
 void TestProportionValue() {
@@ -5129,6 +5216,7 @@ int main()
 #endif  // MOZ_GECKO_PROFILER
 
   TestProfilerUtils();
+  TestBaseAndProfilerDetail();
   TestProportionValue();
   TestProgressLogger();
   // Note that there are two `TestProfiler{,Markers}` functions above, depending
