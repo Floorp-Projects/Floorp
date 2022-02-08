@@ -410,8 +410,7 @@ class CallSiteDesc {
 
   enum Kind {
     Func,        // pc-relative call to a specific function
-    Import,      // wasm import call
-    Indirect,    // wasm indirect call
+    Dynamic,     // dynamic callee called via register
     Symbolic,    // call to a single symbolic callee
     EnterFrame,  // call to a enter frame handler
     LeaveFrame,  // call to a leave frame handler
@@ -428,12 +427,7 @@ class CallSiteDesc {
   }
   uint32_t lineOrBytecode() const { return lineOrBytecode_; }
   Kind kind() const { return Kind(kind_); }
-  bool isImportCall() const { return kind() == CallSiteDesc::Import; }
-  bool isIndirectCall() const { return kind() == CallSiteDesc::Indirect; }
-  // TODO: Remove this
-  bool mightBeCrossInstance() const {
-    return isImportCall() || isIndirectCall();
-  }
+  bool mightBeCrossInstance() const { return kind() == CallSiteDesc::Dynamic; }
 };
 
 class CallSite : public CallSiteDesc {
