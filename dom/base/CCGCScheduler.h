@@ -156,8 +156,12 @@ class CCGCScheduler {
   void KillCCRunner();
   void KillAllTimersAndRunners();
 
-  js::SliceBudget CreateGCSliceBudget(mozilla::TimeDuration aDuration) {
-    return js::SliceBudget(aDuration, &mInterruptRequested);
+  js::SliceBudget CreateGCSliceBudget(mozilla::TimeDuration aDuration,
+                                      bool isIdle, bool isExtended) {
+    auto budget = js::SliceBudget(aDuration, &mInterruptRequested);
+    budget.idle = isIdle;
+    budget.extended = isExtended;
+    return budget;
   }
 
   /*
