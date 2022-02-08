@@ -24,7 +24,6 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPtr.h"
 #include "nsBaseWidget.h"
-#include "nsWindow.h"
 #include "transport/runnable_utils.h"
 #include "WinUtils.h"
 
@@ -323,12 +322,6 @@ void WinWindowOcclusionTracker::Ensure() {
 
   sTracker = new WinWindowOcclusionTracker(thread);
   WindowOcclusionCalculator::CreateInstance();
-
-  RefPtr<Runnable> runnable =
-      WrapRunnable(RefPtr<WindowOcclusionCalculator>(
-                       WindowOcclusionCalculator::GetInstance()),
-                   &WindowOcclusionCalculator::Initialize);
-  sTracker->mSerializedTaskDispatcher->PostTaskToCalculator(runnable.forget());
 }
 
 /* static */
@@ -772,27 +765,6 @@ void WinWindowOcclusionTracker::WindowOcclusionCalculator::ClearInstance() {
   sCalculator = nullptr;
 }
 
-void WinWindowOcclusionTracker::WindowOcclusionCalculator::Initialize() {
-  MOZ_ASSERT(IsInWinWindowOcclusionThread());
-  MOZ_ASSERT(!mVirtualDesktopManager);
-  CALC_LOG(LogLevel::Info, "Initialize()");
-
-#ifndef __MINGW32__
-  if (!IsWin10OrLater()) {
-    return;
-  }
-
-  RefPtr<IVirtualDesktopManager> desktopManager;
-  HRESULT hr = ::CoCreateInstance(
-      CLSID_VirtualDesktopManager, NULL, CLSCTX_INPROC_SERVER,
-      __uuidof(IVirtualDesktopManager), getter_AddRefs(desktopManager));
-  if (FAILED(hr)) {
-    return;
-  }
-  mVirtualDesktopManager = desktopManager;
-#endif
-}
-
 void WinWindowOcclusionTracker::WindowOcclusionCalculator::Shutdown(
     layers::SynchronousTask* aTask) {
   MOZ_ASSERT(IsInWinWindowOcclusionThread());
@@ -805,7 +777,6 @@ void WinWindowOcclusionTracker::WindowOcclusionCalculator::Shutdown(
     mOcclusionUpdateRunnable->Cancel();
     mOcclusionUpdateRunnable = nullptr;
   }
-  mVirtualDesktopManager = nullptr;
 }
 
 void WinWindowOcclusionTracker::WindowOcclusionCalculator::
@@ -1317,35 +1288,9 @@ Maybe<bool> WinWindowOcclusionTracker::WindowOcclusionCalculator::
     return Some(true);
   }
 
-  BOOL onCurrentDesktop;
-  HRESULT hr = mVirtualDesktopManager->IsWindowOnCurrentVirtualDesktop(
-      aHwnd, &onCurrentDesktop);
-  if (FAILED(hr)) {
-    // In this case, we do not know the window is in which virtual desktop.
-    return Nothing();
-  }
+  // XXX VirtualDesktopManager is going to be handled by Bug 1732737.
 
-  if (onCurrentDesktop) {
-    return Some(true);
-  }
-
-  GUID workspaceGuid;
-  hr = mVirtualDesktopManager->GetWindowDesktopId(aHwnd, &workspaceGuid);
-  if (FAILED(hr)) {
-    // In this case, we do not know the window is in which virtual desktop.
-    return Nothing();
-  }
-
-  // IsWindowOnCurrentVirtualDesktop() is flaky for newly opened windows,
-  // which causes test flakiness. Occasionally, it incorrectly says a window
-  // is not on the current virtual desktop when it is. In this situation,
-  // it also returns GUID_NULL for the desktop id.
-  if (workspaceGuid == GUID_NULL) {
-    // In this case, we do not know the window is in which virtual desktop.
-    return Nothing();
-  }
-
-  return Some(false);
+  return Nothing();
 }
 
 #undef LOG
