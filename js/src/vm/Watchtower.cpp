@@ -213,3 +213,24 @@ bool Watchtower::watchFreezeOrSealSlow(JSContext* cx, HandleNativeObject obj) {
 
   return true;
 }
+
+// static
+bool Watchtower::watchObjectSwapSlow(JSContext* cx, HandleObject a,
+                                     HandleObject b) {
+  MOZ_ASSERT(watchesObjectSwap(a, b));
+
+  if (MOZ_UNLIKELY(a->useWatchtowerTestingCallback() ||
+                   b->useWatchtowerTestingCallback())) {
+    RootedValue extra(cx, ObjectValue(*b));
+    if (!InvokeWatchtowerCallback(cx, "object-swap", a, extra)) {
+      // The JSObject::swap caller unfortunately assumes failures are OOM and
+      // crashes. Ignore non-OOM exceptions for now.
+      if (cx->isThrowingOutOfMemory()) {
+        return false;
+      }
+      cx->clearPendingException();
+    }
+  }
+
+  return true;
+}
