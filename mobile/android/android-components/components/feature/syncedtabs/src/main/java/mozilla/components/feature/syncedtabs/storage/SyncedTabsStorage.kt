@@ -66,7 +66,10 @@ class SyncedTabsStorage(
             .mapNotNull { (client, tabs) ->
                 val fxaDevice = otherDevices.find { it.id == client.id }
 
-                fxaDevice?.let { SyncedDeviceTabs(fxaDevice, tabs) }
+                fxaDevice?.let { SyncedDeviceTabs(fxaDevice, tabs.sortedByDescending { it.lastUsed }) }
+            }
+            .sortedByDescending {
+                it.tabs.getOrNull(0)?.lastUsed
             }
     }
 
