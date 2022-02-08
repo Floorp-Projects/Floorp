@@ -46,7 +46,6 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 using mozilla::BinarySearch;
-using mozilla::BinarySearchIf;
 using mozilla::MakeEnumeratedRange;
 using mozilla::PodAssign;
 
@@ -687,12 +686,21 @@ static void PadCodeForSingleStub(MacroAssembler& masm) {
   }
 }
 
+struct ProjectLazyFuncIndex {
+  const LazyFuncExportVector& funcExports;
+  explicit ProjectLazyFuncIndex(const LazyFuncExportVector& funcExports)
+      : funcExports(funcExports) {}
+  uint32_t operator[](size_t index) const {
+    return funcExports[index].funcIndex;
+  }
+};
+
 static constexpr unsigned LAZY_STUB_LIFO_DEFAULT_CHUNK_SIZE = 8 * 1024;
 
-bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
-                                        const CodeTier& codeTier,
-                                        bool flushAllThreadsIcaches,
-                                        size_t* stubSegmentIndex) {
+bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
+                              const CodeTier& codeTier,
+                              bool flushAllThreadsIcaches,
+                              size_t* stubSegmentIndex) {
   MOZ_ASSERT(funcExportIndices.length());
 
   LifoAlloc lifo(LAZY_STUB_LIFO_DEFAULT_CHUNK_SIZE);
@@ -799,13 +807,9 @@ bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
                               interpRangeIndex);
 
     size_t exportIndex;
-    const uint32_t targetFunctionIndex = fe.funcIndex();
-    MOZ_ALWAYS_FALSE(BinarySearchIf(
-        exports_, 0, exports_.length(),
-        [targetFunctionIndex](const LazyFuncExport& funcExport) {
-          return targetFunctionIndex - funcExport.funcIndex;
-        },
-        &exportIndex));
+    MOZ_ALWAYS_FALSE(BinarySearch(ProjectLazyFuncIndex(exports_), 0,
+                                  exports_.length(), fe.funcIndex(),
+                                  &exportIndex));
     MOZ_ALWAYS_TRUE(
         exports_.insert(exports_.begin() + exportIndex, std::move(lazyExport)));
 
@@ -816,21 +820,21 @@ bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
   return true;
 }
 
-bool LazyStubTier::createOneEntryStub(uint32_t funcExportIndex,
-                                      const CodeTier& codeTier) {
+bool LazyStubTier::createOne(uint32_t funcExportIndex,
+                             const CodeTier& codeTier) {
   Uint32Vector funcExportIndexes;
   if (!funcExportIndexes.append(funcExportIndex)) {
     return false;
   }
 
-  // This happens on the executing thread (when createOneEntryStub is called
-  // from GetInterpEntryAndEnsureStubs), so no need to flush the icaches on all
-  // the threads.
+  // This happens on the executing thread (when createOne is called from
+  // GetInterpEntryAndEnsureStubs), so no need to flush the icaches on all the
+  // threads.
   bool flushAllThreadIcaches = false;
 
   size_t stubSegmentIndex;
-  if (!createManyEntryStubs(funcExportIndexes, codeTier, flushAllThreadIcaches,
-                            &stubSegmentIndex)) {
+  if (!createMany(funcExportIndexes, codeTier, flushAllThreadIcaches,
+                  &stubSegmentIndex)) {
     return false;
   }
 
@@ -866,8 +870,8 @@ bool LazyStubTier::createTier2(const Uint32Vector& funcExportIndices,
   bool flushAllThreadIcaches = true;
 
   size_t stubSegmentIndex;
-  if (!createManyEntryStubs(funcExportIndices, codeTier, flushAllThreadIcaches,
-                            &stubSegmentIndex)) {
+  if (!createMany(funcExportIndices, codeTier, flushAllThreadIcaches,
+                  &stubSegmentIndex)) {
     return false;
   }
 
@@ -889,24 +893,16 @@ void LazyStubTier::setJitEntries(const Maybe<size_t>& stubSegmentIndex,
   }
 }
 
-bool LazyStubTier::hasEntryStub(uint32_t funcIndex) const {
+bool LazyStubTier::hasStub(uint32_t funcIndex) const {
   size_t match;
-  return BinarySearchIf(
-      exports_, 0, exports_.length(),
-      [funcIndex](const LazyFuncExport& funcExport) {
-        return funcIndex - funcExport.funcIndex;
-      },
-      &match);
+  return BinarySearch(ProjectLazyFuncIndex(exports_), 0, exports_.length(),
+                      funcIndex, &match);
 }
 
 void* LazyStubTier::lookupInterpEntry(uint32_t funcIndex) const {
   size_t match;
-  if (!BinarySearchIf(
-          exports_, 0, exports_.length(),
-          [funcIndex](const LazyFuncExport& funcExport) {
-            return funcIndex - funcExport.funcIndex;
-          },
-          &match)) {
+  if (!BinarySearch(ProjectLazyFuncIndex(exports_), 0, exports_.length(),
+                    funcIndex, &match)) {
     return nullptr;
   }
   const LazyFuncExport& fe = exports_[match];
@@ -1103,7 +1099,7 @@ bool CodeTier::initialize(IsTier2 isTier2, const Code& code,
   MOZ_ASSERT(!initialized());
   code_ = &code;
 
-  MOZ_ASSERT(lazyStubs_.lock()->entryStubsEmpty());
+  MOZ_ASSERT(lazyStubs_.lock()->empty());
 
   // See comments in CodeSegment::initialize() for why this must be last.
   if (!segment_->initialize(isTier2, *this, linkData, metadata, *metadata_)) {
