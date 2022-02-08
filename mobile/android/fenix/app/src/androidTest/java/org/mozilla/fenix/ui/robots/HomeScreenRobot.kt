@@ -15,6 +15,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItem
+import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
@@ -297,6 +298,16 @@ class HomeScreenRobot {
             return Transition()
         }
 
+        fun deleteTopSiteFromHistory(interact: HomeScreenRobot.() -> Unit): Transition {
+            mDevice.findObject(
+                UiSelector().resourceId("$packageName:id/simple_text")
+            ).waitForExists(waitingTime)
+            deleteFromHistory.click()
+
+            HomeScreenRobot().interact()
+            return Transition()
+        }
+
         fun openTopSiteInPrivateTab(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             onView(withText("Open in private tab"))
                 .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
@@ -561,10 +572,17 @@ private fun assertExistingTopSitesList() =
     onView(allOf(withId(R.id.top_sites_list)))
         .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 
-private fun assertExistingTopSitesTabs(title: String) =
+private fun assertExistingTopSitesTabs(title: String) {
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("$packageName:id/top_site_title")
+            .textContains(title)
+    ).waitForExists(waitingTime)
+
     onView(allOf(withId(R.id.top_sites_list)))
         .check(matches(hasDescendant(withText(title))))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
 
 private fun assertNotExistingTopSitesList(title: String) =
     onView(allOf(withId(R.id.top_sites_list)))
@@ -623,3 +641,11 @@ private fun startBrowsingButton(): UiObject {
         .ensureFullyVisible(startBrowsingButton)
     return startBrowsingButton
 }
+
+val deleteFromHistory =
+    onView(
+        allOf(
+            withId(R.id.simple_text),
+            withText(R.string.delete_from_history)
+        )
+    ).inRoot(RootMatchers.isPlatformPopup())
