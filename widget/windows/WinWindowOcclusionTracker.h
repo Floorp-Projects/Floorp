@@ -99,7 +99,6 @@ class WinWindowOcclusionTracker final : public DisplayStatusListener,
     // Returns existing WindowOcclusionCalculator instance.
     static WindowOcclusionCalculator* GetInstance() { return sCalculator; }
 
-    void Initialize();
     void Shutdown(layers::SynchronousTask* aTask);
 
     void EnableOcclusionTrackingForWindow(HWND hwnd);
@@ -237,6 +236,7 @@ class WinWindowOcclusionTracker final : public DisplayStatusListener,
     HWND mMovingWindow = 0;
 
     // Only used on Win10+.
+    // XXX VirtualDesktopManager is going to be handled by Bug 1732737.
     RefPtr<IVirtualDesktopManager> mVirtualDesktopManager;
 
     // Used to serialize tasks related to mRootWindowHwndsOcclusionState.
