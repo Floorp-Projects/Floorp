@@ -18,7 +18,7 @@
 
 namespace js {
 
-static MOZ_ALWAYS_INLINE js::HashNumber HashPropertyKey(PropertyKey key) {
+static MOZ_ALWAYS_INLINE HashNumber HashPropertyKey(PropertyKey key) {
   // HashGeneric alone would work, but bits of atom and symbol addresses
   // could then be recovered from the hash code. See bug 1330769.
   if (MOZ_LIKELY(key.isAtom())) {
@@ -28,6 +28,16 @@ static MOZ_ALWAYS_INLINE js::HashNumber HashPropertyKey(PropertyKey key) {
     return key.toSymbol()->hash();
   }
   return mozilla::HashGeneric(key.asBits);
+}
+
+// Like HashPropertyKey but optimized for callers that only use atom or symbol
+// keys.
+static MOZ_ALWAYS_INLINE HashNumber
+HashAtomOrSymbolPropertyKey(PropertyKey key) {
+  if (MOZ_LIKELY(key.isAtom())) {
+    return key.toAtom()->hash();
+  }
+  return key.toSymbol()->hash();
 }
 
 }  // namespace js
