@@ -122,16 +122,6 @@ TableTls& Instance::tableTls(const TableDesc& td) const {
   return *(TableTls*)(globalData() + td.globalDataOffset);
 }
 
-void* Instance::checkedCallEntry(const uint32_t functionIndex,
-                                 const Tier tier) const {
-  uint8_t* codeBaseTier = codeBase(tier);
-  const MetadataTier& metadataTier = metadata(tier);
-  const CodeRangeVector& codeRanges = metadataTier.codeRanges;
-  const Uint32Vector& funcToCodeRange = metadataTier.funcToCodeRange;
-  return codeBaseTier +
-         codeRanges[funcToCodeRange[functionIndex]].funcCheckedCallEntry();
-}
-
 static bool IsImportedFunction(const uint32_t functionIndex,
                                const MetadataTier& metadataTier) {
   return functionIndex < metadataTier.funcImports.length();
@@ -857,17 +847,6 @@ static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
   return 0;
 }
 
-bool Instance::createManyIndirectStubs(
-    const VectorOfIndirectStubTarget& targets, const Tier tier) {
-  if (targets.empty()) {
-    return true;
-  }
-
-  const CodeTier& codeTier = code(tier);
-  auto stubs = codeTier.lazyStubs().lock();
-  return stubs->createManyIndirectStubs(targets, codeTier);
-}
-
 void* Instance::getIndirectStub(uint32_t funcIndex, TlsData* targetTlsData,
                                 const Tier tier) const {
   MOZ_ASSERT(funcIndex != NullFuncIndex);
@@ -876,102 +855,8 @@ void* Instance::getIndirectStub(uint32_t funcIndex, TlsData* targetTlsData,
   return stubs->lookupIndirectStub(funcIndex, targetTlsData);
 }
 
-static void RemoveDuplicates(VectorOfIndirectStubTarget* vector) {
-  auto comparator = [](const IndirectStubTarget& lhs,
-                       const IndirectStubTarget& rhs) {
-    if (lhs.functionIdx == rhs.functionIdx) {
-      const auto lshTls = reinterpret_cast<uintptr_t>(lhs.tls);
-      const auto rshTls = reinterpret_cast<uintptr_t>(rhs.tls);
-      return lshTls < rshTls;
-    }
-    return lhs.functionIdx < rhs.functionIdx;
-  };
-  std::sort(vector->begin(), vector->end(), comparator);
-  auto* newEnd = std::unique(vector->begin(), vector->end());
-  vector->erase(newEnd, vector->end());
-}
-
-bool Instance::ensureIndirectStubs(JSContext* cx,
-                                   const Uint32Vector& elemFuncIndices,
-                                   uint32_t srcOffset, uint32_t len,
-                                   const Tier tier,
-                                   const bool tableIsImportedOrExported) {
-  const MetadataTier& metadataTier = metadata(tier);
-  VectorOfIndirectStubTarget targets;
-
-  for (uint32_t i = 0; i < len; i++) {
-    const uint32_t funcIndex = elemFuncIndices[srcOffset + i];
-    if (IsNullFunction(funcIndex)) {
-      continue;
-    }
-
-    if (IsImportedFunction(funcIndex, metadataTier)) {
-      FuncImportTls& import =
-          funcImportTls(metadataTier.funcImports[funcIndex]);
-      JSFunction* fun = import.fun;
-      if (IsJSExportedFunction(fun)) {
-        continue;
-      }
-
-      Rooted<WasmInstanceObject*> calleeInstanceObj(
-          cx, ExportedFunctionToInstanceObject(fun));
-      Instance& calleeInstance = calleeInstanceObj->instance();
-      TlsData* calleeTls = calleeInstance.tlsData();
-      if (getIndirectStub(funcIndex, calleeTls, tier)) {
-        continue;
-      }
-
-      Tier calleeTier = calleeInstance.code().bestTier();
-      const CodeRange& calleeCodeRange =
-          calleeInstanceObj->getExportedFunctionCodeRange(fun, calleeTier);
-      void* calleeEntry = calleeInstance.codeBase(calleeTier) +
-                          calleeCodeRange.funcCheckedCallEntry();
-      if (!targets.append(
-              IndirectStubTarget{funcIndex, calleeEntry, calleeTls})) {
-        return false;
-      }
-      continue;
-    }
-
-    if (!tableIsImportedOrExported ||
-        getIndirectStub(funcIndex, tlsData(), tier)) {
-      continue;
-    }
-
-    if (!targets.append(IndirectStubTarget{
-            funcIndex, checkedCallEntry(funcIndex, tier), tlsData()})) {
-      return false;
-    }
-  }
-
-  // This removes duplicates from the list.  In addition, we have already
-  // filtered these so that those that have stubs at the tier are not in this
-  // list.  So these are unique (funcIndex,tls) pairs that do not yet appear in
-  // the list for the tier.
-
-  RemoveDuplicates(&targets);
-  return createManyIndirectStubs(targets, tier);
-}
-
-bool Instance::ensureIndirectStub(JSContext* cx, FuncRef* ref, const Tier tier,
-                                  const bool tableIsImportedOrExported) {
-  if (ref->isNull()) {
-    return true;
-  }
-
-  uint32_t functionIndex = ExportedFunctionToFuncIndex(ref->asJSFunction());
-  Uint32Vector functionIndices;
-  if (!functionIndices.append(functionIndex)) {
-    return false;
-  }
-
-  return ensureIndirectStubs(cx, functionIndices, 0, 1u, tier,
-                             tableIsImportedOrExported);
-}
-
-bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
-                         const ElemSegment& seg, uint32_t dstOffset,
-                         uint32_t srcOffset, uint32_t len) {
+bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
+                         uint32_t dstOffset, uint32_t srcOffset, uint32_t len) {
   Table& table = *tables_[tableIndex];
   MOZ_ASSERT(dstOffset <= table.length());
   MOZ_ASSERT(len <= table.length() - dstOffset);
@@ -1071,7 +956,7 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
     return -1;
   }
 
-  if (!instance->initElems(cx, tableIndex, seg, dstOffset, srcOffset, len)) {
+  if (!instance->initElems(tableIndex, seg, dstOffset, srcOffset, len)) {
     return -1;  // OOM, which has already been reported.
   }
 
