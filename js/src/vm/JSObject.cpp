@@ -62,6 +62,7 @@
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
+#include "vm/Watchtower.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 #ifdef ENABLE_RECORD_TUPLE
 #  include "builtin/RecordObject.h"
@@ -1162,6 +1163,10 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
   // JITs to better optimize objects that can never swap.
   MOZ_RELEASE_ASSERT(js::ObjectMayBeSwapped(a));
   MOZ_RELEASE_ASSERT(js::ObjectMayBeSwapped(b));
+
+  if (!Watchtower::watchObjectSwap(cx, a, b)) {
+    oomUnsafe.crash("Watchtower::watchObjectSwap");
+  }
 
   /*
    * Neither object may be in the nursery, but ensure we update any embedded
