@@ -1979,8 +1979,9 @@ static void UpdateRegExpStatics(MacroAssembler& masm, Register regexp,
                       temp1, JSVAL_TYPE_PRIVATE_GCTHING);
   masm.loadPtr(Address(temp1, RegExpShared::offsetOfSource()), temp2);
   masm.storePtr(temp2, lazySourceAddress);
-  masm.load32(Address(temp1, RegExpShared::offsetOfFlags()), temp2);
-  masm.store32(temp2, Address(staticsReg, RegExpStatics::offsetOfLazyFlags()));
+  static_assert(sizeof(JS::RegExpFlags) == 1, "load size must match flag size");
+  masm.load8ZeroExtend(Address(temp1, RegExpShared::offsetOfFlags()), temp2);
+  masm.store8(temp2, Address(staticsReg, RegExpStatics::offsetOfLazyFlags()));
 }
 
 // Prepare an InputOutputData and optional MatchPairs which space has been
