@@ -997,85 +997,57 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
   MOZ_ASSERT(dstOffset <= table.length());
   MOZ_ASSERT(len <= table.length() - dstOffset);
 
-  const Tier tier = code().bestTier();
+  Tier tier = code().bestTier();
   const MetadataTier& metadataTier = metadata(tier);
   const FuncImportVector& funcImports = metadataTier.funcImports;
+  const CodeRangeVector& codeRanges = metadataTier.codeRanges;
+  const Uint32Vector& funcToCodeRange = metadataTier.funcToCodeRange;
   const Uint32Vector& elemFuncIndices = seg.elemFuncIndices;
   MOZ_ASSERT(srcOffset <= elemFuncIndices.length());
   MOZ_ASSERT(len <= elemFuncIndices.length() - srcOffset);
 
-  if (table.isFunction()) {
-    // The purpose of this call is to avoid OOM handling below when we store
-    // code pointers in the table.  This ensures that either the table is
-    // updated with all pointers, or with none.
-    if (!ensureIndirectStubs(cx, elemFuncIndices, srcOffset, len, tier,
-                             table.isImportedOrExported())) {
-      return false;
-    }
-  }
-
+  uint8_t* codeBaseTier = codeBase(tier);
   for (uint32_t i = 0; i < len; i++) {
     uint32_t funcIndex = elemFuncIndices[srcOffset + i];
     if (IsNullFunction(funcIndex)) {
       table.setNull(dstOffset + i);
-      continue;
-    }
-
-    if (!table.isFunction()) {
+    } else if (!table.isFunction()) {
       // Note, fnref must be rooted if we do anything more than just store it.
       void* fnref = Instance::refFunc(this, funcIndex);
       if (fnref == AnyRef::invalid().forCompiledCode()) {
         return false;  // OOM, which has already been reported.
       }
       table.fillAnyRef(dstOffset + i, 1, AnyRef::fromCompiledCode(fnref));
-      continue;
-    }
-
-    // Table-of-function and function is not null.  We need to compute the code
-    // pointer to install in the table.
-
-    void* code = nullptr;
-    if (IsImportedFunction(funcIndex, metadataTier)) {
-      FuncImportTls& import = funcImportTls(funcImports[funcIndex]);
-      JSFunction* fun = import.fun;
-      if (IsJSExportedFunction(fun)) {
-        code = checkedCallEntry(funcIndex, tier);
-      } else {
-        code = getIndirectStub(funcIndex, import.tls, tier);
-        MOZ_ASSERT(code);
-      }
     } else {
-      // The function is an internal wasm function that belongs to the current
-      // instance. If table is isImportedOrExported then some other module can
-      // import this table and call its functions so we have to use indirect
-      // stub, otherwise we can use checked call entry because we don't cross
-      // instance's borders.
-      if (table.isImportedOrExported()) {
-        code = getIndirectStub(funcIndex, tlsData(), tier);
-        MOZ_ASSERT(code);
-      } else {
-        code = checkedCallEntry(funcIndex, tier);
+      if (IsImportedFunction(funcIndex, metadataTier)) {
+        FuncImportTls& import = funcImportTls(funcImports[funcIndex]);
+        JSFunction* fun = import.fun;
+        (void)IsJSExportedFunction(fun);  // Use it
+        if (IsWasmExportedFunction(fun)) {
+          // This element is a wasm function imported from another
+          // instance. To preserve the === function identity required by
+          // the JS embedding spec, we must set the element to the
+          // imported function's underlying CodeRange.funcCheckedCallEntry and
+          // Instance so that future Table.get()s produce the same
+          // function object as was imported.
+          WasmInstanceObject* calleeInstanceObj =
+              ExportedFunctionToInstanceObject(fun);
+          Instance& calleeInstance = calleeInstanceObj->instance();
+          Tier calleeTier = calleeInstance.code().bestTier();
+          const CodeRange& calleeCodeRange =
+              calleeInstanceObj->getExportedFunctionCodeRange(fun, calleeTier);
+          void* code = calleeInstance.codeBase(calleeTier) +
+                       calleeCodeRange.funcCheckedCallEntry();
+          table.setFuncRef(dstOffset + i, code, &calleeInstance);
+          continue;
+        }
       }
+      void* code =
+          codeBaseTier +
+          codeRanges[funcToCodeRange[funcIndex]].funcCheckedCallEntry();
+      table.setFuncRef(dstOffset + i, code, this);
     }
-
-    // Install the code pointer along with the current instance.
-    //
-    // Using the current instance is correct:
-    //
-    // - if it's an imported JS function, the current instance is correct,
-    //   because that's how we've always done it
-    //
-    // - if it's an indirect stub, the current instance is correct, and the
-    //   indirect stub holds the correct remote instance for that call.
-    //
-    // - otherwise it's a local function, and the current instance is correct
-
-    // Utter paranoia to use _RELEASE_ here but we must never store null, all
-    // null stores should be handled above.
-    MOZ_RELEASE_ASSERT(code);
-    table.setFuncRef(dstOffset + i, code, this);
   }
-
   return true;
 }
 
@@ -1149,8 +1121,8 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
       break;
     case TableRepr::Func:
       MOZ_RELEASE_ASSERT(!table.isAsmJS());
-      if (!table.fillFuncRef(Nothing(), start, len,
-                             FuncRef::fromCompiledCode(value), cx)) {
+      if (!table.fillFuncRef(start, len, FuncRef::fromCompiledCode(value),
+                             cx)) {
         ReportOutOfMemory(cx);
         return -1;
       }
@@ -1193,35 +1165,19 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
   RootedAnyRef ref(cx, AnyRef::fromCompiledCode(initValue));
   Table& table = *instance->tables()[tableIndex];
 
-  if (table.isFunction()) {
-    RootedFuncRef functionForFill(cx, FuncRef::fromAnyRefUnchecked(ref));
-
-    const Tier tier = instance->code().bestTier();
-    // Call ensureIndirectStub first so as to be able to signal OOM before the
-    // table is grown; we don't want a grown table that then can't be
-    // initialized because a stub can't be created for the function.
-    //
-    // Be sure to use the same tier for creating the stub and filling the
-    // table, or the later call to fillFuncRef may want to create a new stub
-    // for the better tier and may OOM anyway, and it must not.
-    if (!instance->ensureIndirectStub(cx, functionForFill.address(), tier,
-                                      table.isImportedOrExported())) {
-      return -1;
-    }
-    uint32_t oldSize = table.grow(delta);
-    if (oldSize != uint32_t(-1) && initValue != nullptr) {
-      MOZ_RELEASE_ASSERT(!table.isAsmJS());
-      MOZ_ALWAYS_TRUE(
-          table.fillFuncRef(Some(tier), oldSize, delta, functionForFill, cx));
-    }
-    return oldSize;
-  }
-
-  MOZ_ASSERT(!table.isFunction());
   uint32_t oldSize = table.grow(delta);
 
   if (oldSize != uint32_t(-1) && initValue != nullptr) {
-    table.fillAnyRef(oldSize, delta, ref);
+    switch (table.repr()) {
+      case TableRepr::Ref:
+        table.fillAnyRef(oldSize, delta, ref);
+        break;
+      case TableRepr::Func:
+        MOZ_RELEASE_ASSERT(!table.isAsmJS());
+        MOZ_ALWAYS_TRUE(table.fillFuncRef(
+            oldSize, delta, FuncRef::fromAnyRefUnchecked(ref), cx));
+        break;
+    }
   }
 
   return oldSize;
@@ -1245,8 +1201,7 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
       break;
     case TableRepr::Func:
       MOZ_RELEASE_ASSERT(!table.isAsmJS());
-      if (!table.fillFuncRef(Nothing(), index, 1,
-                             FuncRef::fromCompiledCode(value), cx)) {
+      if (!table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value), cx)) {
         ReportOutOfMemory(cx);
         return -1;
       }
