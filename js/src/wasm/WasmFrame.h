@@ -157,7 +157,7 @@
 #include <stdint.h>
 #include <type_traits>
 
-#include "jit/Registers.h"  // For js::jit::ShadowStackSpace
+#include "jit/Registers.h"
 
 namespace js {
 namespace wasm {
@@ -306,10 +306,6 @@ static_assert(sizeof(Frame) == 2 * sizeof(void*),
               "Frame is a two pointer structure");
 
 class FrameWithTls : public Frame {
-  // `ShadowStackSpace` bytes will be allocated here on Win64, at higher
-  // addresses than Frame and at lower addresses than the TLS fields.
-
-  // The TLS area MUST be two pointers exactly.
   TlsData* calleeTls_;
   TlsData* callerTls_;
 
@@ -321,35 +317,25 @@ class FrameWithTls : public Frame {
     return sizeof(wasm::FrameWithTls) + js::jit::ShadowStackSpace;
   }
 
-  constexpr static uint32_t sizeOfTlsFields() {
+  constexpr static uint32_t sizeWithoutFrame() {
     return sizeof(wasm::FrameWithTls) - sizeof(wasm::Frame);
   }
 
-  constexpr static uint32_t calleeTlsOffset() {
-    return offsetof(FrameWithTls, calleeTls_) + js::jit::ShadowStackSpace;
+  constexpr static uint32_t calleeTLSOffset() {
+    return offsetof(FrameWithTls, calleeTls_) - sizeof(wasm::Frame);
   }
 
-  constexpr static uint32_t calleeTlsOffsetWithoutFrame() {
-    return calleeTlsOffset() - sizeof(wasm::Frame);
-  }
-
-  constexpr static uint32_t callerTlsOffset() {
-    return offsetof(FrameWithTls, callerTls_) + js::jit::ShadowStackSpace;
-  }
-
-  constexpr static uint32_t callerTlsOffsetWithoutFrame() {
-    return callerTlsOffset() - sizeof(wasm::Frame);
+  constexpr static uint32_t callerTLSOffset() {
+    return offsetof(FrameWithTls, callerTls_) - sizeof(wasm::Frame);
   }
 };
 
-static_assert(FrameWithTls::calleeTlsOffsetWithoutFrame() ==
-                  js::jit::ShadowStackSpace,
+static_assert(FrameWithTls::calleeTLSOffset() == 0u,
               "Callee tls stored right above the return address.");
-static_assert(FrameWithTls::callerTlsOffsetWithoutFrame() ==
-                  js::jit::ShadowStackSpace + sizeof(void*),
+static_assert(FrameWithTls::callerTLSOffset() == sizeof(void*),
               "Caller tls stored right above the callee tls.");
 
-static_assert(FrameWithTls::sizeOfTlsFields() == 2 * sizeof(void*),
+static_assert(FrameWithTls::sizeWithoutFrame() == 2 * sizeof(void*),
               "There are only two additional slots");
 
 #if defined(JS_CODEGEN_ARM64)
