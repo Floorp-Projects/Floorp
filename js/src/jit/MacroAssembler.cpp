@@ -3793,13 +3793,6 @@ std::pair<CodeOffset, uint32_t> MacroAssembler::wasmReserveStackChecked(
   return std::pair<CodeOffset, uint32_t>(trapInsnOffset, amount);
 }
 
-void MacroAssembler::loadWasmGlobalPtr(uint32_t globalDataOffset,
-                                       Register dest) {
-  loadPtr(Address(WasmTlsReg,
-                  offsetof(wasm::TlsData, globalArea) + globalDataOffset),
-          dest);
-}
-
 CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
                                           const wasm::CalleeDesc& callee) {
   storePtr(WasmTlsReg,
@@ -3881,45 +3874,34 @@ CodeOffset MacroAssembler::wasmCallBuiltinInstanceMethod(
   return ret;
 }
 
-CodeOffset MacroAssembler::asmCallIndirect(const wasm::CallSiteDesc& desc,
-                                           const wasm::CalleeDesc& callee) {
-  MOZ_ASSERT(callee.which() == wasm::CalleeDesc::AsmJSTable);
-
+CodeOffset MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
+                                            const wasm::CalleeDesc& callee,
+                                            bool needsBoundsCheck) {
   Register scratch = WasmTableCallScratchReg0;
   Register index = WasmTableCallIndexReg;
 
-  // asm.js tables require no signature check, and have had their index
-  // masked into range and thus need no bounds check.
-  loadWasmGlobalPtr(callee.tableFunctionBaseGlobalDataOffset(), scratch);
-  loadPtr(BaseIndex(scratch, index, ScalePointer), scratch);
-  storePtr(WasmTlsReg,
-           Address(getStackPointer(), WasmCallerTLSOffsetBeforeCall));
-  storePtr(WasmTlsReg,
-           Address(getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
-  return call(desc, scratch);
-}
+  if (callee.which() == wasm::CalleeDesc::AsmJSTable) {
+    // asm.js tables require no signature check, and have had their index
+    // masked into range and thus need no bounds check.
+    loadWasmGlobalPtr(callee.tableFunctionBaseGlobalDataOffset(), scratch);
+    loadPtr(BaseIndex(scratch, index, ScalePointer), scratch);
+    storePtr(WasmTlsReg,
+             Address(getStackPointer(), WasmCallerTLSOffsetBeforeCall));
+    storePtr(WasmTlsReg,
+             Address(getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
+    return call(desc, scratch);
+  }
 
-CodeOffset MacroAssembler::wasmCallIndirect(
-    const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee,
-    bool needsBoundsCheck, mozilla::Maybe<uint32_t> tableSize) {
   MOZ_ASSERT(callee.which() == wasm::CalleeDesc::WasmTable);
-
-  Register scratch = WasmTableCallScratchReg0;
-  Register index = WasmTableCallIndexReg;
 
   wasm::BytecodeOffset trapOffset(desc.lineOrBytecode());
 
   // WebAssembly throws if the index is out-of-bounds.
   if (needsBoundsCheck) {
+    loadWasmGlobalPtr(callee.tableLengthGlobalDataOffset(), scratch);
+
     Label ok;
-    if (tableSize.isSome()) {
-      branch32(Assembler::Condition::Below, index, Imm32(*tableSize), &ok);
-    } else {
-      branch32(Assembler::Condition::Above,
-               Address(WasmTlsReg, offsetof(wasm::TlsData, globalArea) +
-                                       callee.tableLengthGlobalDataOffset()),
-               index, &ok);
-    }
+    branch32(Assembler::Condition::Below, index, scratch, &ok);
     wasmTrap(wasm::Trap::OutOfBounds, trapOffset);
     bind(&ok);
   }
