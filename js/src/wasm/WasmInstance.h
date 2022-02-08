@@ -173,11 +173,6 @@ class Instance {
                                uint32_t dstOffset, uint32_t srcOffset,
                                uint32_t len);
 
-  // This will return null if an indirect stub for (func,tls) is not found in
-  // the present instance.
-  void* getIndirectStub(uint32_t funcIndex, TlsData* targetTlsData,
-                        const Tier tier) const;
-
   // Debugger support:
 
   JSString* createDisplayURL(JSContext* cx);
