@@ -88,28 +88,7 @@ const SnapshotGroups = new (class SnapshotGroups {
         );
         id = row[0].getResultByIndex(0);
 
-        // Construct the sql parameters for the urls
-        let params = {};
-        let SQLInFragment = [];
-        let i = 0;
-        for (let url of urls) {
-          params[`url${i}`] = url;
-          SQLInFragment.push(`hash(:url${i})`);
-          i++;
-        }
-        params.id = id;
-
-        await db.execute(
-          `
-          INSERT INTO moz_places_metadata_groups_to_snapshots (group_id, place_id)
-          SELECT :id, s.place_id
-          FROM moz_places h
-          JOIN moz_places_metadata_snapshots s
-          ON h.id = s.place_id
-          WHERE h.url_hash IN (${SQLInFragment.join(",")})
-        `,
-          params
-        );
+        await this.#insertUrls(db, id, urls);
       }
     );
 
@@ -148,6 +127,8 @@ const SnapshotGroups = new (class SnapshotGroups {
 
   /**
    * Modifies the urls for a snapshot group.
+   * Note: This API does not manage deleting of groups if the number of urls is
+   * 0. If there are no urls in the group, consider calling `delete()` instead.
    *
    * @param {number} id
    *   The id of the group to modify.
@@ -155,7 +136,21 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   An array of snapshot urls for the group. If the urls do not have associated snapshots, then they are ignored.
    */
   async updateUrls(id, urls) {
-    // TODO
+    await PlacesUtils.withConnectionWrapper(
+      "SnapshotsGroups.jsm:updateUrls",
+      async db => {
+        // Some entries need removing, others modifying or adding. The easiest
+        // way to do this is to remove the existing group information first and
+        // then add only what we need.
+        await db.executeCached(
+          `DELETE FROM moz_places_metadata_groups_to_snapshots WHERE group_id = :id`,
+          { id }
+        );
+
+        await this.#insertUrls(db, id, urls);
+      }
+    );
+
     Services.obs.notifyObservers(null, "places-snapshot-group-updated");
   }
 
@@ -304,6 +299,41 @@ const SnapshotGroups = new (class SnapshotGroups {
     }
 
     return snapshots;
+  }
+
+  /**
+   * Inserts a set of urls into the database for a given snapshot group.
+   *
+   * @param {object} db
+   *   The database connection to use.
+   * @param {number} id
+   *   The id of the group to add the urls to.
+   * @param {string[]} urls
+   *   An array of urls to insert for the group.
+   */
+  async #insertUrls(db, id, urls) {
+    // Construct the sql parameters for the urls
+    let params = {};
+    let SQLInFragment = [];
+    let i = 0;
+    for (let url of urls) {
+      params[`url${i}`] = url;
+      SQLInFragment.push(`hash(:url${i})`);
+      i++;
+    }
+    params.id = id;
+
+    await db.execute(
+      `
+      INSERT INTO moz_places_metadata_groups_to_snapshots (group_id, place_id)
+      SELECT :id, s.place_id
+      FROM moz_places h
+      JOIN moz_places_metadata_snapshots s
+      ON h.id = s.place_id
+      WHERE h.url_hash IN (${SQLInFragment.join(",")})
+    `,
+      params
+    );
   }
 
   /**
