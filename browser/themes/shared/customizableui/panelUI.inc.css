@@ -1234,34 +1234,49 @@ toolbarbutton.subviewbutton:focus-visible,
   outline-offset: calc(var(--focus-outline-width) * -1);
 }
 
-panelview .toolbarbutton-1@buttonStateHover@,
-toolbarbutton.subviewbutton@buttonStateHover@,
+/* hover styles for not-disabled, not-active buttons */
+:is(
+  panelview .toolbarbutton-1,
+  toolbarbutton.subviewbutton,
+  .widget-overflow-list .toolbarbutton-1,
+  .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton
+):not([disabled]):hover {
+  color: inherit;
+  background-color: var(--panel-item-hover-bgcolor);
+}
+
+/* hovered-and-active styles for not-disabled buttons */
+:is(
+  panelview .toolbarbutton-1,
+  toolbarbutton.subviewbutton,
+  .widget-overflow-list .toolbarbutton-1,
+  .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton
+):not([disabled]):hover:active {
+  color: inherit;
+  background-color: var(--panel-item-active-bgcolor);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
+}
+
 menu.subviewbutton@menuStateHover@,
 #PlacesToolbar menuitem@menuStateHover@,
 #PlacesToolbar menu@menuStateHover@,
-menuitem.subviewbutton@menuStateHover@,
-.widget-overflow-list .toolbarbutton-1@buttonStateHover@,
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
+menuitem.subviewbutton@menuStateHover@ {
   color: inherit;
   background-color: var(--panel-item-hover-bgcolor);
+}
+
+menu.subviewbutton@menuStateActive@,
+#PlacesToolbar menuitem@menuStateActive@,
+#PlacesToolbar menu@menuStateActive@,
+menuitem.subviewbutton@menuStateActive@ {
+  color: inherit;
+  background-color: var(--panel-item-active-bgcolor);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
 .subview-subheader {
   font-size: 11px;
   padding-block: 4px;
-}
-
-panelview .toolbarbutton-1@buttonStateActive@,
-toolbarbutton.subviewbutton@buttonStateActive@,
-menu.subviewbutton@menuStateActive@,
-#PlacesToolbar menuitem@menuStateActive@,
-#PlacesToolbar menu@menuStateActive@,
-menuitem.subviewbutton@menuStateActive@,
-.widget-overflow-list .toolbarbutton-1@buttonStateActive@,
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
-  color: inherit;
-  background-color: var(--panel-item-active-bgcolor);
-  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
 #PlacesToolbar menuitem,
