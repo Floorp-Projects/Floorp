@@ -586,7 +586,7 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
     // When running as a snap, the directory pointed to by $SNAP is guaranteed
     // to exist before the app is launched, but unit tests need to create it
     // dynamically, hence the use of AddFutureDir().
-    policy->AddFutureDir(rdonly, snap);
+    policy->AddDir(rdonly, snap);
   }
 
   // Read any extra paths that will get write permissions,
