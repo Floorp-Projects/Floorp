@@ -516,10 +516,12 @@ class LazyStubSegment : public CodeSegment {
   }
 
   bool hasSpace(size_t bytes) const;
-  [[nodiscard]] bool addStubs(size_t codeLength, const Uint32Vector& funcExportIndices,
-                const FuncExportVector& funcExports,
-                const CodeRangeVector& codeRanges, uint8_t** codePtr,
-                size_t* indexFirstInsertedCodeRange);
+  [[nodiscard]] bool addStubs(size_t codeLength,
+                              const Uint32Vector& funcExportIndices,
+                              const FuncExportVector& funcExports,
+                              const CodeRangeVector& codeRanges,
+                              uint8_t** codePtr,
+                              size_t* indexFirstInsertedCodeRange);
 
   const CodeRangeVector& codeRanges() const { return codeRanges_; }
   [[nodiscard]] const CodeRange* lookupRange(const void* pc) const;
@@ -558,16 +560,17 @@ class LazyStubTier {
   size_t lastStubSegmentIndex_;
 
   [[nodiscard]] bool createManyEntryStubs(const Uint32Vector& funcExportIndices,
-                            const CodeTier& codeTier,
-                            bool flushAllThreadsIcaches,
-                            size_t* stubSegmentIndex);
+                                          const CodeTier& codeTier,
+                                          bool flushAllThreadsIcaches,
+                                          size_t* stubSegmentIndex);
 
  public:
   LazyStubTier() : lastStubSegmentIndex_(0) {}
 
   // Creates one lazy stub for the exported function, for which the jit entry
   // will be set to the lazily-generated one.
-  [[nodiscard]] bool createOneEntryStub(uint32_t funcExportIndex, const CodeTier& codeTier);
+  [[nodiscard]] bool createOneEntryStub(uint32_t funcExportIndex,
+                                        const CodeTier& codeTier);
 
   bool entryStubsEmpty() const { return stubSegments_.empty(); }
   bool hasEntryStub(uint32_t funcIndex) const;
@@ -581,7 +584,8 @@ class LazyStubTier {
   // setJitEntries() is actually called, after the Code owner has committed
   // tier2.
   [[nodiscard]] bool createTier2(const Uint32Vector& funcExportIndices,
-                   const CodeTier& codeTier, Maybe<size_t>* stubSegmentIndex);
+                                 const CodeTier& codeTier,
+                                 Maybe<size_t>* stubSegmentIndex);
   void setJitEntries(const Maybe<size_t>& stubSegmentIndex, const Code& code);
 
   void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
@@ -602,7 +606,7 @@ class CodeTier {
   const UniqueModuleSegment segment_;
 
   // Lazy stubs, not serialized.
-  ExclusiveData<LazyStubTier> lazyStubs_;
+  RWExclusiveData<LazyStubTier> lazyStubs_;
 
   static const MutexId& mutexForTier(Tier tier) {
     if (tier == Tier::Baseline) {
@@ -624,7 +628,7 @@ class CodeTier {
                   const Metadata& metadata);
 
   Tier tier() const { return segment_->tier(); }
-  const ExclusiveData<LazyStubTier>& lazyStubs() const { return lazyStubs_; }
+  const RWExclusiveData<LazyStubTier>& lazyStubs() const { return lazyStubs_; }
   const MetadataTier& metadata() const { return *metadata_.get(); }
   const ModuleSegment& segment() const { return *segment_.get(); }
   const Code& code() const {

@@ -1010,7 +1010,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
         break;
       case TableRepr::Func:
         MOZ_RELEASE_ASSERT(!table.isAsmJS());
-        table.fillFuncRef(oldSize, delta, FuncRef::fromAnyRefUnchecked(ref), cx);
+        table.fillFuncRef(oldSize, delta, FuncRef::fromAnyRefUnchecked(ref),
+                          cx);
         break;
     }
   }
@@ -1900,7 +1901,7 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
   //
   // Also see doc block for stubs in WasmJS.cpp.
 
-  auto stubs = instance.code(tier).lazyStubs().lock();
+  auto stubs = instance.code(tier).lazyStubs().writeLock();
   *interpEntry = stubs->lookupInterpEntry(fe.funcIndex());
   if (*interpEntry) {
     return true;
@@ -1921,7 +1922,7 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
   }
 
   MOZ_RELEASE_ASSERT(prevTier == Tier::Baseline && tier == Tier::Optimized);
-  auto stubs2 = instance.code(tier).lazyStubs().lock();
+  auto stubs2 = instance.code(tier).lazyStubs().writeLock();
 
   // If it didn't have a stub in the first tier, background compilation
   // shouldn't have made one in the second tier.
