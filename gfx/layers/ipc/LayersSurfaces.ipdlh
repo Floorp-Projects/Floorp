@@ -4,7 +4,7 @@
 
 include "gfxipc/ShadowLayerUtils.h";
 
-using struct gfxPoint from "gfxPoint.h";
+using gfxPoint from "gfxPoint.h";
 using nsIntRegion from "nsRegion.h";
 using mozilla::StereoMode from "ImageTypes.h";
 using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
