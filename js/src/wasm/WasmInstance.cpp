@@ -1782,8 +1782,7 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
   // We have to calculate |scanStart|, the lowest address that is described by
   // |map|, by consulting |map->frameOffsetFromTop|.
 
-  const size_t numMappedBytes =
-      (map->numMappedWords + frame->numberOfTrampolineSlots()) * sizeof(void*);
+  const size_t numMappedBytes = map->numMappedWords * sizeof(void*);
   const uintptr_t scanStart = uintptr_t(frame) +
                               (map->frameOffsetFromTop * sizeof(void*)) -
                               numMappedBytes;
@@ -1811,9 +1810,6 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
 #endif
 
   uintptr_t* stackWords = (uintptr_t*)scanStart;
-  const uint32_t trampolineBeginIdx =
-      map->numMappedWords - static_cast<uint32_t>(map->frameOffsetFromTop) +
-      frame->numberOfTrampolineSlots();
 
   // If we have some exit stub words, this means the map also covers an area
   // created by a exit stub, and so the highest word of that should be a
@@ -1824,15 +1820,8 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
           TrapExitDummyValue);
 
   // And actually hand them off to the GC.
-  uint32_t stackIdx = 0;
-  for (uint32_t mapIdx = 0; mapIdx < map->numMappedWords;
-       ++mapIdx, ++stackIdx) {
-    if (frame->callerIsTrampolineFP() && mapIdx == trampolineBeginIdx) {
-      // Skip trampoline frame.
-      stackIdx += frame->numberOfTrampolineSlots();
-    }
-
-    if (map->getBit(mapIdx) == 0) {
+  for (uint32_t i = 0; i < map->numMappedWords; i++) {
+    if (map->getBit(i) == 0) {
       continue;
     }
 
@@ -1842,11 +1831,10 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
 
     // This assertion seems at least moderately effective in detecting
     // discrepancies or misalignments between the map and reality.
-    MOZ_ASSERT(
-        js::gc::IsCellPointerValidOrNull((const void*)stackWords[stackIdx]));
+    MOZ_ASSERT(js::gc::IsCellPointerValidOrNull((const void*)stackWords[i]));
 
-    if (stackWords[stackIdx]) {
-      TraceRoot(trc, (JSObject**)&stackWords[stackIdx],
+    if (stackWords[i]) {
+      TraceRoot(trc, (JSObject**)&stackWords[i],
                 "Instance::traceWasmFrame: normal word");
     }
   }
