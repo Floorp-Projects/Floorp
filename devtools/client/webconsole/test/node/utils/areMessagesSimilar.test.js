@@ -2,15 +2,17 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { getRepeatId } = require("devtools/client/webconsole/utils/messages");
+const {
+  areMessagesSimilar,
+} = require("devtools/client/webconsole/utils/messages");
 const {
   stubPreparedMessages,
 } = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
 
 const expect = require("expect");
 
-describe("getRepeatId:", () => {
-  it("returns same repeatId for duplicate values", () => {
+describe("areMessagesSimilar:", () => {
+  it("returns true for duplicated messages", () => {
     const baseMessage = stubPreparedMessages.get(
       "console.log('foobar', 'test')"
     );
@@ -19,33 +21,30 @@ describe("getRepeatId:", () => {
     const message1 = Object.assign({}, baseMessage, { timeStamp: 1 });
     const message2 = Object.assign({}, baseMessage, { timeStamp: 2 });
 
-    expect(getRepeatId(message1)).toEqual(getRepeatId(message2));
+    expect(areMessagesSimilar(message1, message2)).toEqual(true);
   });
 
-  it("returns different repeatIds for different values", () => {
+  it("returns false for different messages", () => {
     const message1 = stubPreparedMessages.get("console.log('foobar', 'test')");
     const message2 = Object.assign({}, message1, {
       parameters: ["funny", "monkey"],
     });
-    expect(getRepeatId(message1)).toNotEqual(getRepeatId(message2));
+    expect(areMessagesSimilar(message1, message2)).toEqual(false);
   });
 
-  it("returns different repeatIds for different severities", () => {
+  it("returns false for messages with different severities", () => {
     const message1 = stubPreparedMessages.get("console.log('foobar', 'test')");
     const message2 = Object.assign({}, message1, { level: "error" });
-    expect(getRepeatId(message1)).toNotEqual(getRepeatId(message2));
+    expect(areMessagesSimilar(message1, message2)).toEqual(false);
   });
 
-  it("handles falsy values distinctly", () => {
+  it("return false for messages with different falsy values", () => {
     const messageNaN = stubPreparedMessages.get("console.log(NaN)");
     const messageUnd = stubPreparedMessages.get("console.log(undefined)");
     const messageNul = stubPreparedMessages.get("console.log(null)");
 
-    const repeatIds = new Set([
-      getRepeatId(messageNaN),
-      getRepeatId(messageUnd),
-      getRepeatId(messageNul),
-    ]);
-    expect(repeatIds.size).toEqual(3);
+    expect(areMessagesSimilar(messageNaN, messageUnd)).toEqual(false);
+    expect(areMessagesSimilar(messageUnd, messageNul)).toEqual(false);
+    expect(areMessagesSimilar(messageNul, messageNaN)).toEqual(false);
   });
 });
