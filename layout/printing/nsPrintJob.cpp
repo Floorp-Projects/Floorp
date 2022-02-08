@@ -77,6 +77,7 @@ static const char kPrintingPromptService[] =
 #include "nsISupportsUtils.h"
 #include "nsIScriptContext.h"
 #include "nsIDocumentObserver.h"
+#include "nsComponentManagerUtils.h"
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"
 #include "nsContentUtils.h"
