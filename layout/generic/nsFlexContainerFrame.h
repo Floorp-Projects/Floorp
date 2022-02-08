@@ -306,6 +306,10 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *                                     of the flex container; "tentative"
    *                                     because it may be unconstrained or may
    *                                     run off the page.
+   * @param aTentativeContentBoxCrossSize the "tentative" content-box cross-size
+   *                                      of the flex container; "tentative"
+   *                                      because it may be unconstrained or may
+   *                                      run off the page.
    */
   struct FlexLayoutResult final {
     // The flex lines of the flex container.
@@ -329,6 +333,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   FlexLayoutResult DoFlexLayout(
       const ReflowInput& aReflowInput,
       const nscoord aTentativeContentBoxMainSize,
+      const nscoord aTentativeContentBoxCrossSize,
       const FlexboxAxisTracker& aAxisTracker, nscoord aMainGapSize,
       nscoord aCrossGapSize, bool aHasLineClampEllipsis,
       nsTArray<StrutInfo>& aStruts,
@@ -380,10 +385,11 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * updating aLine's bookkeeping (via FlexLine::AddLastItemToMainSizeTotals),
    * or moving the new item to a new line otherwise.
    */
-  FlexItem* GenerateFlexItemForChild(FlexLine& aLine, nsIFrame* aChildFrame,
-                                     const ReflowInput& aParentReflowInput,
-                                     const FlexboxAxisTracker& aAxisTracker,
-                                     bool aHasLineClampEllipsis);
+  FlexItem* GenerateFlexItemForChild(
+      FlexLine& aLine, nsIFrame* aChildFrame,
+      const ReflowInput& aParentReflowInput,
+      const FlexboxAxisTracker& aAxisTracker,
+      const nscoord aTentativeContentBoxCrossSize, bool aHasLineClampEllipsis);
 
   /**
    * This method looks up cached block-axis measurements for a flex item, or
@@ -441,7 +447,8 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * (Absolutely positioned children of a flex container are *not* flex items.)
    */
   void GenerateFlexLines(const ReflowInput& aReflowInput,
-                         nscoord aContentBoxMainSize,
+                         const nscoord aTentativeContentBoxMainSize,
+                         const nscoord aTentativeContentBoxCrossSize,
                          const nsTArray<StrutInfo>& aStruts,
                          const FlexboxAxisTracker& aAxisTracker,
                          nscoord aMainGapSize, bool aHasLineClampEllipsis,
@@ -474,16 +481,16 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * the spec. https://drafts.csswg.org/css-flexbox-1/#algo-main-container
    *
    * (Note: This function should be structurally similar to
-   * 'ComputeCrossSize()', except that here, the caller has already grabbed the
-   * tentative size from the reflow input.)
+   *  ComputeCrossSize().)
    */
   nscoord ComputeMainSize(const ReflowInput& aReflowInput,
                           const FlexboxAxisTracker& aAxisTracker,
-                          nscoord aTentativeMainSize,
+                          const nscoord aTentativeContentBoxMainSize,
                           nsTArray<FlexLine>& aLines) const;
 
   nscoord ComputeCrossSize(const ReflowInput& aReflowInput,
                            const FlexboxAxisTracker& aAxisTracker,
+                           const nscoord aTentativeContentBoxCrossSize,
                            nscoord aSumLineCrossSizes, bool* aIsDefinite) const;
 
   /**
