@@ -541,7 +541,6 @@ MediaResult AppleVTDecoder::InitializeSession() {
     LOG("AppleVTDecoder: maybe hardware accelerated decoding "
         "(VTSessionCopyProperty query failed)");
   }
-  CFRelease(isUsingHW);
 
   return NS_OK;
 }
