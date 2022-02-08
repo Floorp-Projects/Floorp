@@ -13,6 +13,10 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v99
+- Removed deprecated `GeckoRuntimeSettings.Builder.enterpiseRootsEnabled`.
+  ([bug 1754244]({{bugzilla}}1754244))
+
 ## v98
 - Add [`WebRequest.beConservative`][98.1] to allow critical infrastructure to
   avoid using bleeding-edge network features.
@@ -1135,4 +1139,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f6d4d5bfa6295b82c1f528532ae9b8ae37fe1824
+[api-version]: 9a66c9bcb58ffd198b90bb4f1845efe26dbb244b
