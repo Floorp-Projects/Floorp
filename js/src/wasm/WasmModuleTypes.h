@@ -542,7 +542,7 @@ static_assert(MaxMemory32LimitField <= UINT64_MAX / PageSize);
 
 struct TableDesc {
   RefType elemType;
-  bool importedOrExported;
+  bool isImportedOrExported;
   bool isAsmJS;
   uint32_t globalDataOffset;
   uint32_t initialLength;
@@ -551,9 +551,9 @@ struct TableDesc {
   TableDesc() = default;
   TableDesc(RefType elemType, uint32_t initialLength,
             Maybe<uint32_t> maximumLength, bool isAsmJS,
-            bool importedOrExported = false)
+            bool isImportedOrExported = false)
       : elemType(elemType),
-        importedOrExported(importedOrExported),
+        isImportedOrExported(isImportedOrExported),
         isAsmJS(isAsmJS),
         globalDataOffset(UINT32_MAX),
         initialLength(initialLength),
