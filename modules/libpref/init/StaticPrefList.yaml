@@ -2827,14 +2827,9 @@
   mirror: always
 
 # Network Information API
-# This feature is not available on Firefox desktop. It exposes too much
-# user information. Let's be consistent and disable it on Android.
-# But let's keep it around in case it becomes necessary for webcompat
-# reasons
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1637922
 - name: dom.netinfo.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_ANDROID@
   mirror: always
 
 # Whether we should open noopener links in a new process.
