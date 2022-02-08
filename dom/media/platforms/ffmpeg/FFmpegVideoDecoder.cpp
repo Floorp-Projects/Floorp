@@ -697,7 +697,8 @@ int FFmpegVideoDecoder<LIBAV_VER>::GetVideoBuffer(
   }
 
   FFMPEG_LOG("Created av buffer, buf=%p, data=%p, image=%p, sz=%d",
-             aFrame->buf[0], aFrame->data[0], image.get(), dataSize.value());
+             aFrame->buf[0], aFrame->data[0], imageWrapper.get(),
+             dataSize.value());
   mAllocatedImages.Insert(imageWrapper.get());
   mIsUsingShmemBufferForDecode = Some(true);
   return 0;
@@ -1031,6 +1032,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
       // except ffmpeg decoder. After finisheing decoding, texture's data would
       // be avaliable for accessing for everyone so we unlock texture.
       texture->Unlock();
+      FFMPEG_LOGV("Create a video data from a shmem image=%p", wrapper.get());
       v = VideoData::CreateFromImage(
           mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
           TimeUnit::FromMicroseconds(aDuration), image, !!mFrame->key_frame,
