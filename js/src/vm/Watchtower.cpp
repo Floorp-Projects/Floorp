@@ -169,3 +169,47 @@ bool Watchtower::watchProtoChangeSlow(JSContext* cx, HandleObject obj) {
 
   return true;
 }
+
+// static
+bool Watchtower::watchPropertyRemoveSlow(JSContext* cx, HandleNativeObject obj,
+                                         HandleId id) {
+  MOZ_ASSERT(watchesPropertyRemove(obj));
+
+  if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
+    RootedValue val(cx, IdToValue(id));
+    if (!InvokeWatchtowerCallback(cx, "remove-prop", obj, val)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// static
+bool Watchtower::watchPropertyChangeSlow(JSContext* cx, HandleNativeObject obj,
+                                         HandleId id) {
+  MOZ_ASSERT(watchesPropertyChange(obj));
+
+  if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
+    RootedValue val(cx, IdToValue(id));
+    if (!InvokeWatchtowerCallback(cx, "change-prop", obj, val)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// static
+bool Watchtower::watchFreezeOrSealSlow(JSContext* cx, HandleNativeObject obj) {
+  MOZ_ASSERT(watchesFreezeOrSeal(obj));
+
+  if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
+    if (!InvokeWatchtowerCallback(cx, "freeze-or-seal", obj,
+                                  JS::UndefinedHandleValue)) {
+      return false;
+    }
+  }
+
+  return true;
+}

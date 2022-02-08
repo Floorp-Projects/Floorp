@@ -34,12 +34,26 @@ namespace js {
 class Watchtower {
   static bool watchPropertyAddSlow(JSContext* cx, HandleNativeObject obj,
                                    HandleId id);
+  static bool watchPropertyRemoveSlow(JSContext* cx, HandleNativeObject obj,
+                                      HandleId id);
+  static bool watchPropertyChangeSlow(JSContext* cx, HandleNativeObject obj,
+                                      HandleId id);
+  static bool watchFreezeOrSealSlow(JSContext* cx, HandleNativeObject obj);
   static bool watchProtoChangeSlow(JSContext* cx, HandleObject obj);
 
  public:
   static bool watchesPropertyAdd(NativeObject* obj) {
     return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
                             ObjectFlag::UseWatchtowerTestingCallback});
+  }
+  static bool watchesPropertyRemove(NativeObject* obj) {
+    return obj->hasAnyFlag({ObjectFlag::UseWatchtowerTestingCallback});
+  }
+  static bool watchesPropertyChange(NativeObject* obj) {
+    return obj->hasAnyFlag({ObjectFlag::UseWatchtowerTestingCallback});
+  }
+  static bool watchesFreezeOrSeal(NativeObject* obj) {
+    return obj->hasAnyFlag({ObjectFlag::UseWatchtowerTestingCallback});
   }
   static bool watchesProtoChange(JSObject* obj) {
     return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
@@ -52,6 +66,26 @@ class Watchtower {
       return true;
     }
     return watchPropertyAddSlow(cx, obj, id);
+  }
+  static bool watchPropertyRemove(JSContext* cx, HandleNativeObject obj,
+                                  HandleId id) {
+    if (MOZ_LIKELY(!watchesPropertyRemove(obj))) {
+      return true;
+    }
+    return watchPropertyRemoveSlow(cx, obj, id);
+  }
+  static bool watchPropertyChange(JSContext* cx, HandleNativeObject obj,
+                                  HandleId id) {
+    if (MOZ_LIKELY(!watchesPropertyChange(obj))) {
+      return true;
+    }
+    return watchPropertyChangeSlow(cx, obj, id);
+  }
+  static bool watchFreezeOrSeal(JSContext* cx, HandleNativeObject obj) {
+    if (MOZ_LIKELY(!watchesFreezeOrSeal(obj))) {
+      return true;
+    }
+    return watchFreezeOrSealSlow(cx, obj);
   }
   static bool watchProtoChange(JSContext* cx, HandleObject obj) {
     if (MOZ_LIKELY(!watchesProtoChange(obj))) {
