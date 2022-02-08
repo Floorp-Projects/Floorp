@@ -90,7 +90,8 @@ let gPrevTheme = AddonManager.getAddonsByTypes(["theme"]).then(addons => {
 // Helper to switch themes.
 async function enableTheme(id) {
   await BuiltInThemes.ensureBuiltInThemes();
-  (await AddonManager.getAddonByID(id)).enable();
+  // The UI shows a fixed set of themes even when expired, so silently skip.
+  (await AddonManager.getAddonByID(id))?.enable();
 }
 
 // Helper to show the theme in chrome with an adjusted modal backdrop.
