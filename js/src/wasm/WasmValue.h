@@ -239,7 +239,7 @@ class FuncRef {
 
   JSFunction* asJSFunction() { return value_; }
 
-  bool isNull() { return value_ == nullptr; }
+  bool isNull() const { return value_ == nullptr; }
 
   void trace(JSTracer* trc) const;
 };
