@@ -4560,7 +4560,6 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   nscoord flexContainerAscent;
 
   AutoTArray<FlexLine, 1> lines;
-  AutoTArray<StrutInfo, 1> struts;
   AutoTArray<nsIFrame*, 1> placeholders;
 
   if (!GetPrevInFlow()) {
@@ -4593,9 +4592,10 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     // TODO: This line will be removed in a later patch once the output
     // arguments to DoFlexLayout is removed.
     contentBoxMainSize = tentativeContentBoxMainSize;
+    AutoTArray<StrutInfo, 1> struts;
     DoFlexLayout(aReflowInput, contentBoxMainSize, contentBoxCrossSize,
-                 flexContainerAscent, lines, struts, placeholders, axisTracker,
-                 mainGapSize, crossGapSize, hasLineClampEllipsis,
+                 flexContainerAscent, lines, placeholders, axisTracker,
+                 mainGapSize, crossGapSize, hasLineClampEllipsis, struts,
                  containerInfo);
 
     if (!struts.IsEmpty()) {
@@ -4603,8 +4603,8 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
       lines.Clear();
       placeholders.Clear();
       DoFlexLayout(aReflowInput, contentBoxMainSize, contentBoxCrossSize,
-                   flexContainerAscent, lines, struts, placeholders,
-                   axisTracker, mainGapSize, crossGapSize, hasLineClampEllipsis,
+                   flexContainerAscent, lines, placeholders, axisTracker,
+                   mainGapSize, crossGapSize, hasLineClampEllipsis, struts,
                    containerInfo);
     }
   } else {
@@ -5085,9 +5085,10 @@ bool nsFlexContainerFrame::IsUsedFlexBasisContent(
 void nsFlexContainerFrame::DoFlexLayout(
     const ReflowInput& aReflowInput, nscoord& aContentBoxMainSize,
     nscoord& aContentBoxCrossSize, nscoord& aFlexContainerAscent,
-    nsTArray<FlexLine>& aLines, nsTArray<StrutInfo>& aStruts,
-    nsTArray<nsIFrame*>& aPlaceholders, const FlexboxAxisTracker& aAxisTracker,
-    nscoord aMainGapSize, nscoord aCrossGapSize, bool aHasLineClampEllipsis,
+    nsTArray<FlexLine>& aLines, nsTArray<nsIFrame*>& aPlaceholders,
+    const FlexboxAxisTracker& aAxisTracker, nscoord aMainGapSize,
+    nscoord aCrossGapSize, bool aHasLineClampEllipsis,
+    nsTArray<StrutInfo>& aStruts,
     ComputedFlexContainerInfo* const aContainerInfo) {
   MOZ_ASSERT(aLines.IsEmpty(), "Caller should pass an empty array for lines!");
   MOZ_ASSERT(aPlaceholders.IsEmpty(),
