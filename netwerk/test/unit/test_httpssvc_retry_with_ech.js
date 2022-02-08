@@ -26,6 +26,7 @@ function setup() {
   Services.prefs.setBoolPref("network.dns.use_https_rr_as_altsvc", true);
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
   Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", true);
+  Services.prefs.setIntPref("network.http.speculative-parallel-limit", 6);
 
   add_tls_server_setup(
     "EncryptedClientHelloServer",
@@ -52,6 +53,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.echconfig.enabled");
   Services.prefs.clearUserPref("network.dns.http3_echconfig.enabled");
   Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
+  Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
   if (trrServer) {
     await trrServer.stop();
   }
