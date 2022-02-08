@@ -109,7 +109,10 @@ struct CCRunnerStep {
 
 class CCGCScheduler {
  public:
-  CCGCScheduler() : mInterruptRequested(false) {}
+  CCGCScheduler()
+      : mAskParentBeforeMajorGC(XRE_IsContentProcess()),
+        mReadyForMajorGC(!mAskParentBeforeMajorGC),
+        mInterruptRequested(false) {}
 
   static bool CCRunnerFired(TimeStamp aDeadline);
 
@@ -434,12 +437,16 @@ class CCGCScheduler {
   // duration (or until it goes too long and is finished synchronously.)
   bool mInIncrementalGC = false;
 
+  // Whether to ask the parent process if now is a good time to GC (false for
+  // the parent process.)
+  const bool mAskParentBeforeMajorGC;
+
   // We've asked the parent process if now is a good time to GC (do not ask
   // again).
   bool mHaveAskedParent = false;
 
   // The parent process is ready for us to do a major GC.
-  bool mReadyForMajorGC = false;
+  bool mReadyForMajorGC;
 
   // Set when the IdleTaskRunner requests the current task be interrupted.
   // Cleared when the GC slice budget has detected the interrupt request.
