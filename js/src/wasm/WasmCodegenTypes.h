@@ -433,6 +433,10 @@ class CallSiteDesc {
   Kind kind() const { return Kind(kind_); }
   bool isImportCall() const { return kind() == CallSiteDesc::Import; }
   bool isIndirectCall() const { return kind() == CallSiteDesc::Indirect; }
+  // TODO: Remove this
+  bool mightBeCrossInstance() const {
+    return isImportCall() || isIndirectCall();
+  }
 };
 
 class CallSite : public CallSiteDesc {
