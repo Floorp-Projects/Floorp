@@ -1155,7 +1155,7 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         }
 
         if (isSignatureCheckFail(offsetInCode, codeRange)) {
-          // Frame have been pushed and FP has been set.
+          // Frame has been pushed and FP has been set.
           const auto* frame = Frame::fromUntaggedWasmExitFP(fp);
           fixedFP = frame->rawCaller();
           fixedPC = frame->returnAddress();

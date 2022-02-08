@@ -859,7 +859,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       }
       table.fillAnyRef(dstOffset + i, 1, AnyRef::fromCompiledCode(fnref));
     } else {
-      if (funcIndex < funcImports.length()) {
+      if (funcIndex < metadataTier.funcImports.length()) {
         FuncImportTls& import = funcImportTls(funcImports[funcIndex]);
         JSFunction* fun = import.fun;
         if (IsWasmExportedFunction(fun)) {
@@ -1911,7 +1911,7 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
   tier = instance.code().bestTier();
   const CodeTier& codeTier = instance.code(tier);
   if (tier == prevTier) {
-    if (!stubs->createOne(funcExportIndex, codeTier)) {
+    if (!stubs->createOneEntryStub(funcExportIndex, codeTier)) {
       return false;
     }
 
@@ -1925,9 +1925,9 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
 
   // If it didn't have a stub in the first tier, background compilation
   // shouldn't have made one in the second tier.
-  MOZ_ASSERT(!stubs2->hasStub(fe.funcIndex()));
+  MOZ_ASSERT(!stubs2->hasEntryStub(fe.funcIndex()));
 
-  if (!stubs2->createOne(funcExportIndex, codeTier)) {
+  if (!stubs2->createOneEntryStub(funcExportIndex, codeTier)) {
     return false;
   }
 
