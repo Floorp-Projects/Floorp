@@ -28,9 +28,13 @@ add_task(async function double_click() {
 });
 
 add_task(async function theme_change() {
+  // Skip this test if the theme has expired.
   const theme = await AddonManager.getAddonByID(
     "foto-soft-colorway@mozilla.org"
   );
+  if (!theme) {
+    return;
+  }
 
   await showAndWaitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "variations");
