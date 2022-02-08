@@ -33,12 +33,12 @@ add_task(async function test_proc_info() {
     { gBrowser, url: DUMMY_URL },
     async function(browser) {
       let cpuThreads = 0;
-      let cpuUser = 0;
+      let cpuTime = 0;
 
       // We test `SAMPLE_SIZE` times to increase a tad the chance of encountering race conditions.
       for (let z = 0; z < SAMPLE_SIZE; z++) {
         let parentProc = await ChromeUtils.requestProcInfo();
-        cpuUser += parentProc.cpuUser;
+        cpuTime += parentProc.cpuTime;
 
         Assert.equal(
           parentProc.type,
@@ -47,7 +47,7 @@ add_task(async function test_proc_info() {
         );
 
         for (var x = 0; x < parentProc.threads.length; x++) {
-          cpuThreads += parentProc.threads[x].cpuUser;
+          cpuThreads += parentProc.threads[x].cpuTime;
         }
 
         // Under Windows, thread names appeared with Windows 10.
@@ -97,9 +97,9 @@ add_task(async function test_proc_info() {
           }
 
           for (var y = 0; y < childProc.threads.length; y++) {
-            cpuThreads += childProc.threads[y].cpuUser;
+            cpuThreads += childProc.threads[y].cpuTime;
           }
-          cpuUser += childProc.cpuUser;
+          cpuTime += childProc.cpuTime;
         }
 
         // We only check other properties on the `privilegedabout` subprocess, which
@@ -144,11 +144,8 @@ add_task(async function test_proc_info() {
           "We have found the privileged about process"
         );
       }
-      // see https://bugzilla.mozilla.org/show_bug.cgi?id=1529023
-      if (!MAC) {
-        Assert.greater(cpuThreads, 0, "Got some cpu time in the threads");
-      }
-      Assert.greater(cpuUser, 0, "Got some cpu time");
+      Assert.greater(cpuThreads, 0, "Got some cpu time in the threads");
+      Assert.greater(cpuTime, 0, "Got some cpu time");
 
       for (let tab of tabsAboutHome) {
         BrowserTestUtils.removeTab(tab);
