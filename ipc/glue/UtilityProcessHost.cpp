@@ -268,9 +268,9 @@ void UtilityProcessHost::OnChannelClosed() {
   if (!mShutdownRequested && mListener) {
     // This is an unclean shutdown. Notify our listener that we're going away.
     mListener->OnProcessUnexpectedShutdown(this);
-  } else {
-    DestroyProcess();
   }
+
+  DestroyProcess();
 
   // Release the actor.
   UtilityProcessParent::Destroy(std::move(mUtilityProcessParent));
