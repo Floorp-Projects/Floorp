@@ -473,3 +473,13 @@ pbNewtab:
   schema: >-
     browser/components/newtab/content-src/asrouter/templates/PBNewtab/NewtabPromoMessage.schema.json
   variables: {}
+syncAfterTabChange:
+  description: "Schedule a sync after any tab change"
+  hasExposure: false
+  isEarlyStartup: false
+  variables:
+    syncDelayAfterTabChange:
+      type: int
+      fallbackPref: "services.sync.syncedTabs.syncDelayAfterTabChange"
+      description: >-
+        "How long to wait (in milliseconds) to schedule a sync after tab change"
