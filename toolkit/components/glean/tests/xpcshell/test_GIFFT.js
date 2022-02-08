@@ -235,7 +235,8 @@ add_task(function test_gifft_labeled_counter() {
   );
   Glean.testOnlyIpc.aLabeledCounter.a_label.add(1);
   Glean.testOnlyIpc.aLabeledCounter.another_label.add(2);
-  Assert.equal(1, Glean.testOnlyIpc.aLabeledCounter.a_label.testGetValue());
+  Glean.testOnlyIpc.aLabeledCounter.a_label.add(3);
+  Assert.equal(4, Glean.testOnlyIpc.aLabeledCounter.a_label.testGetValue());
   Assert.equal(
     2,
     Glean.testOnlyIpc.aLabeledCounter.another_label.testGetValue()
@@ -255,7 +256,7 @@ add_task(function test_gifft_labeled_counter() {
   let value = keyedScalarValue("telemetry.test.keyed_unsigned_int");
   Assert.deepEqual(
     {
-      a_label: 1,
+      a_label: 4,
       another_label: 2,
       InvalidLabel: 3,
     },

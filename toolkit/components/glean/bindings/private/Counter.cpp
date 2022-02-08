@@ -26,7 +26,7 @@ void CounterMetric::Add(int32_t aAmount) const {
       auto lock = GetLabeledMirrorLock();
       auto tuple = lock.ref()->MaybeGet(mId);
       if (tuple && aAmount > 0) {
-        Telemetry::ScalarSet(Get<0>(tuple.ref()), Get<1>(tuple.ref()),
+        Telemetry::ScalarAdd(Get<0>(tuple.ref()), Get<1>(tuple.ref()),
                              (uint32_t)aAmount);
       }
     }
