@@ -495,7 +495,10 @@ void CCGCScheduler::EnsureGCRunner(TimeDuration aDelay) {
       TimeDuration::FromMilliseconds(
           StaticPrefs::javascript_options_gc_delay_interslice()),
       mActiveIntersliceGCBudget, true, [this] { return mDidShutdown; },
-      [this](uint32_t) { mInterruptRequested = true; });
+      [this](uint32_t) {
+        PROFILER_MARKER_UNTYPED("GC Interrupt", GCCC);
+        mInterruptRequested = true;
+      });
 }
 
 // nsJSEnvironmentObserver observes the user-interaction-inactive notifications
