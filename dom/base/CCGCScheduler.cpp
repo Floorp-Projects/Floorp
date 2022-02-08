@@ -113,7 +113,7 @@ void CCGCScheduler::NoteGCBegin() {
   // Treat all GC as incremental here; non-incremental GC will just appear to
   // be one slice.
   mInIncrementalGC = true;
-  mReadyForMajorGC = false;
+  mReadyForMajorGC = !mAskParentBeforeMajorGC;
 
   // Tell the parent process that we've started a GC (it might not know if
   // we hit a threshold in the JS engine).
@@ -129,7 +129,7 @@ void CCGCScheduler::NoteGCEnd() {
 
   mInIncrementalGC = false;
   mCCBlockStart = TimeStamp();
-  mReadyForMajorGC = false;
+  mReadyForMajorGC = !mAskParentBeforeMajorGC;
   mWantAtLeastRegularGC = false;
   mNeedsFullCC = CCReason::GC_FINISHED;
   mHasRunGC = true;
@@ -203,7 +203,7 @@ void CCGCScheduler::NoteCCEnd(TimeStamp aWhen) {
 }
 
 void CCGCScheduler::NoteWontGC() {
-  mReadyForMajorGC = false;
+  mReadyForMajorGC = !mAskParentBeforeMajorGC;
   mMajorGCReason = JS::GCReason::NO_REASON;
   mWantAtLeastRegularGC = false;
   // Don't clear the WantFullGC state, we will do a full GC the next time a
@@ -365,7 +365,13 @@ RefPtr<CCGCScheduler::MayGCPromise> CCGCScheduler::MayGCNow(
       break;
   }
 
-  return MayGCPromise::CreateAndResolve(true, __func__);
+  // We use synchronous task dispatch here to avoid a trip through the event
+  // loop if we're on the parent process or it's a GC reason that does not
+  // require permission to GC.
+  RefPtr<MayGCPromise::Private> p = MakeRefPtr<MayGCPromise::Private>(__func__);
+  p->UseSynchronousTaskDispatch(__func__);
+  p->Resolve(true, __func__);
+  return p;
 }
 
 void CCGCScheduler::RunNextCollectorTimer(JS::GCReason aReason,
