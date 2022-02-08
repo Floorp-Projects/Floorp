@@ -300,11 +300,6 @@ class BrowsertimeRunner(NodeRunner):
 
         args_list = [
             "--android",
-            # Work around a `selenium-webdriver` issue where Browsertime
-            # fails to find a Firefox binary even though we're going to
-            # actually do things on an Android device.
-            "--firefox.binaryPath",
-            self.node_path,
             "--firefox.android.package",
             app_name,
         ]
