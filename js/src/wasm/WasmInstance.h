@@ -179,12 +179,10 @@ class Instance {
 
   // This will return null if an indirect stub for (func,tls) is not found in
   // the present instance.
-  [[nodiscard]] void* getIndirectStub(uint32_t funcIndex,
-                                      TlsData* targetTlsData,
-                                      const Tier tier) const;
-  // This combines ensureIndirectStub and getIndirectStub, but returns null only
-  // on OOM (because the get should not fail).
-  [[nodiscard]] void* ensureAndGetIndirectStub(Tier tier, uint32_t funcIndex);
+  void* getIndirectStub(uint32_t funcIndex, TlsData* targetTlsData,
+                        const Tier tier) const;
+  // This will return null on OOM
+  [[nodiscard]] void* createIndirectStub(Tier tier, uint32_t funcIndex);
   [[nodiscard]] bool createManyIndirectStubs(
       const VectorOfIndirectStubTarget& targets, const Tier tier);
   [[nodiscard]] bool ensureIndirectStubs(JSContext* cx,
