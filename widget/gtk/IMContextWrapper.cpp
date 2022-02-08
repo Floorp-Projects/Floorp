@@ -324,7 +324,8 @@ IMContextWrapper::IMContextWrapper(nsWindow* aOwnerWindow)
       mPendingResettingIMContext(false),
       mRetrieveSurroundingSignalReceived(false),
       mMaybeInDeadKeySequence(false),
-      mIsIMInAsyncKeyHandlingMode(false) {
+      mIsIMInAsyncKeyHandlingMode(false),
+      mSetInputPurposeAndInputHints(false) {
   static bool sFirstInstance = true;
   if (sFirstInstance) {
     sFirstInstance = false;
@@ -556,7 +557,7 @@ IMContextWrapper::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
     case REQUEST_TO_CANCEL_COMPOSITION: {
       nsWindow* window =
           static_cast<nsWindow*>(aTextEventDispatcher->GetWidget());
-      return EndIMEComposition(window);
+      return IsComposing() ? EndIMEComposition(window) : NS_OK;
     }
     case NOTIFY_IME_OF_FOCUS:
       OnFocusChangeInGecko(true);
@@ -627,7 +628,9 @@ void IMContextWrapper::OnDestroyWindow(nsWindow* aWindow) {
   MOZ_ASSERT(aWindow, "aWindow must not be null");
 
   if (mLastFocusedWindow == aWindow) {
-    EndIMEComposition(aWindow);
+    if (IsComposing()) {
+      EndIMEComposition(aWindow);
+    }
     if (mIsIMFocused) {
       Blur();
     }
@@ -728,7 +731,6 @@ void IMContextWrapper::OnFocusWindow(nsWindow* aWindow) {
           ("0x%p OnFocusWindow(aWindow=0x%p), mLastFocusedWindow=0x%p", this,
            aWindow, mLastFocusedWindow));
   mLastFocusedWindow = aWindow;
-  Focus();
 }
 
 void IMContextWrapper::OnBlurWindow(nsWindow* aWindow) {
@@ -1092,15 +1094,28 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
 }
 
 void IMContextWrapper::OnFocusChangeInGecko(bool aFocus) {
-  MOZ_LOG(
-      gIMELog, LogLevel::Info,
-      ("0x%p OnFocusChangeInGecko(aFocus=%s), "
-       "mCompositionState=%s, mIsIMFocused=%s",
-       this, ToChar(aFocus), GetCompositionStateName(), ToChar(mIsIMFocused)));
+  MOZ_LOG(gIMELog, LogLevel::Info,
+          ("0x%p OnFocusChangeInGecko(aFocus=%s), "
+           "mCompositionState=%s, mIsIMFocused=%s, "
+           "mSetInputPurposeAndInputHints=%s",
+           this, ToChar(aFocus), GetCompositionStateName(),
+           ToChar(mIsIMFocused), ToChar(mSetInputPurposeAndInputHints)));
 
   // We shouldn't carry over the removed string to another editor.
   mSelectedStringRemovedByComposition.Truncate();
   mContentSelection.reset();
+
+  if (aFocus) {
+    if (mSetInputPurposeAndInputHints) {
+      mSetInputPurposeAndInputHints = false;
+      SetInputPurposeAndInputHints();
+    }
+    if (!mIsIMFocused) {
+      Focus();
+    }
+  } else if (mIsIMFocused) {
+    Blur();
+  }
 
   // When the focus changes, we need to inform IM about the new cursor
   // position. Chinese input methods generally rely on this because they
@@ -1266,92 +1281,93 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
     return;
   }
 
-  bool changingEnabledState = aContext->IsInputAttributeChanged(mInputContext);
+  const bool changingEnabledState =
+      aContext->IsInputAttributeChanged(mInputContext);
 
   // Release current IME focus if IME is enabled.
   if (changingEnabledState && mInputContext.mIMEState.IsEditable()) {
-    EndIMEComposition(mLastFocusedWindow);
-    Blur();
+    if (IsComposing()) {
+      EndIMEComposition(mLastFocusedWindow);
+    }
+    if (mIsIMFocused) {
+      Blur();
+    }
   }
 
   mInputContext = *aContext;
 
-  if (changingEnabledState) {
-    if (mInputContext.mIMEState.IsEditable()) {
-      GtkIMContext* currentContext = GetCurrentContext();
-      if (currentContext) {
-        GtkInputPurpose purpose = GTK_INPUT_PURPOSE_FREE_FORM;
-        const nsString& inputType = mInputContext.mHTMLInputType;
-        // Password case has difficult issue.  Desktop IMEs disable
-        // composition if input-purpose is password.
-        // For disabling IME on |ime-mode: disabled;|, we need to check
-        // mEnabled value instead of inputType value.  This hack also
-        // enables composition on
-        // <input type="password" style="ime-mode: enabled;">.
-        // This is right behavior of ime-mode on desktop.
-        //
-        // On the other hand, IME for tablet devices may provide a
-        // specific software keyboard for password field.  If so,
-        // the behavior might look strange on both:
-        //   <input type="text" style="ime-mode: disabled;">
-        //   <input type="password" style="ime-mode: enabled;">
-        //
-        // Temporarily, we should focus on desktop environment for now.
-        // I.e., let's ignore tablet devices for now.  When somebody
-        // reports actual trouble on tablet devices, we should try to
-        // look for a way to solve actual problem.
-        if (mInputContext.mIMEState.mEnabled == IMEEnabled::Password) {
-          purpose = GTK_INPUT_PURPOSE_PASSWORD;
-        } else if (inputType.EqualsLiteral("email")) {
-          purpose = GTK_INPUT_PURPOSE_EMAIL;
-        } else if (inputType.EqualsLiteral("url")) {
-          purpose = GTK_INPUT_PURPOSE_URL;
-        } else if (inputType.EqualsLiteral("tel")) {
-          purpose = GTK_INPUT_PURPOSE_PHONE;
-        } else if (inputType.EqualsLiteral("number")) {
-          purpose = GTK_INPUT_PURPOSE_NUMBER;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("decimal")) {
-          purpose = GTK_INPUT_PURPOSE_NUMBER;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("email")) {
-          purpose = GTK_INPUT_PURPOSE_EMAIL;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("numeric")) {
-          purpose = GTK_INPUT_PURPOSE_DIGITS;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("tel")) {
-          purpose = GTK_INPUT_PURPOSE_PHONE;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("url")) {
-          purpose = GTK_INPUT_PURPOSE_URL;
-        }
-        // Search by type and inputmode isn't supported on GTK.
+  // Note that we cannot set input-purpose and input-hints right now because
+  // setting them may require to set focus immediately for IME own's UI.
+  // However, at this moment, `ContentCacheInParent` does not have content
+  // cache, it'll be available after `NOTIFY_IME_OF_FOCUS` notification.
+  // Therefore, we set them at receiving the notification.
+  mSetInputPurposeAndInputHints =
+      changingEnabledState && mInputContext.mIMEState.IsEditable();
+}
 
-        g_object_set(currentContext, "input-purpose", purpose, nullptr);
-
-        // Although GtkInputHints is enum type, value is bit field.
-        gint hints = GTK_INPUT_HINT_NONE;
-        if (mInputContext.mHTMLInputInputmode.EqualsLiteral("none")) {
-          hints |= GTK_INPUT_HINT_INHIBIT_OSK;
-        }
-
-        if (mInputContext.mAutocapitalize.EqualsLiteral("characters")) {
-          hints |= GTK_INPUT_HINT_UPPERCASE_CHARS;
-        } else if (mInputContext.mAutocapitalize.EqualsLiteral("sentences")) {
-          hints |= GTK_INPUT_HINT_UPPERCASE_SENTENCES;
-        } else if (mInputContext.mAutocapitalize.EqualsLiteral("words")) {
-          hints |= GTK_INPUT_HINT_UPPERCASE_WORDS;
-        }
-
-        g_object_set(currentContext, "input-hints", hints, nullptr);
-      }
-    }
-
-    // Even when aState is not enabled state, we need to set IME focus.
-    // Because some IMs are updating the status bar of them at this time.
-    // Be aware, don't use aWindow here because this method shouldn't move
-    // focus actually.
-    Focus();
-
-    // XXX Should we call Blur() when it's not editable?  E.g., it might be
-    //     better to close VKB automatically.
+void IMContextWrapper::SetInputPurposeAndInputHints() {
+  GtkIMContext* currentContext = GetCurrentContext();
+  if (!currentContext) {
+    return;
   }
+
+  GtkInputPurpose purpose = GTK_INPUT_PURPOSE_FREE_FORM;
+  const nsString& inputType = mInputContext.mHTMLInputType;
+  // Password case has difficult issue.  Desktop IMEs disable composition if
+  // input-purpose is password.  For disabling IME on |ime-mode: disabled;|, we
+  // need to check mEnabled value instead of inputType value.  This hack also
+  // enables composition on <input type="password" style="ime-mode: enabled;">.
+  // This is right behavior of ime-mode on desktop.
+  //
+  // On the other hand, IME for tablet devices may provide a specific software
+  // keyboard for password field.  If so, the behavior might look strange on
+  // both:
+  //   <input type="text" style="ime-mode: disabled;">
+  //   <input type="password" style="ime-mode: enabled;">
+  //
+  // Temporarily, we should focus on desktop environment for now.  I.e., let's
+  // ignore tablet devices for now.  When somebody reports actual trouble on
+  // tablet devices, we should try to look for a way to solve actual problem.
+  if (mInputContext.mIMEState.mEnabled == IMEEnabled::Password) {
+    purpose = GTK_INPUT_PURPOSE_PASSWORD;
+  } else if (inputType.EqualsLiteral("email")) {
+    purpose = GTK_INPUT_PURPOSE_EMAIL;
+  } else if (inputType.EqualsLiteral("url")) {
+    purpose = GTK_INPUT_PURPOSE_URL;
+  } else if (inputType.EqualsLiteral("tel")) {
+    purpose = GTK_INPUT_PURPOSE_PHONE;
+  } else if (inputType.EqualsLiteral("number")) {
+    purpose = GTK_INPUT_PURPOSE_NUMBER;
+  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("decimal")) {
+    purpose = GTK_INPUT_PURPOSE_NUMBER;
+  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("email")) {
+    purpose = GTK_INPUT_PURPOSE_EMAIL;
+  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("numeric")) {
+    purpose = GTK_INPUT_PURPOSE_DIGITS;
+  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("tel")) {
+    purpose = GTK_INPUT_PURPOSE_PHONE;
+  } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("url")) {
+    purpose = GTK_INPUT_PURPOSE_URL;
+  }
+  // Search by type and inputmode isn't supported on GTK.
+
+  g_object_set(currentContext, "input-purpose", purpose, nullptr);
+
+  // Although GtkInputHints is enum type, value is bit field.
+  gint hints = GTK_INPUT_HINT_NONE;
+  if (mInputContext.mHTMLInputInputmode.EqualsLiteral("none")) {
+    hints |= GTK_INPUT_HINT_INHIBIT_OSK;
+  }
+
+  if (mInputContext.mAutocapitalize.EqualsLiteral("characters")) {
+    hints |= GTK_INPUT_HINT_UPPERCASE_CHARS;
+  } else if (mInputContext.mAutocapitalize.EqualsLiteral("sentences")) {
+    hints |= GTK_INPUT_HINT_UPPERCASE_SENTENCES;
+  } else if (mInputContext.mAutocapitalize.EqualsLiteral("words")) {
+    hints |= GTK_INPUT_HINT_UPPERCASE_WORDS;
+  }
+
+  g_object_set(currentContext, "input-hints", hints, nullptr);
 }
 
 InputContext IMContextWrapper::GetInputContext() {
@@ -1387,12 +1403,8 @@ void IMContextWrapper::Focus() {
   MOZ_LOG(
       gIMELog, LogLevel::Info,
       ("0x%p Focus(), sLastFocusedContext=0x%p", this, sLastFocusedContext));
-
-  if (mIsIMFocused) {
-    NS_ASSERTION(sLastFocusedContext == this,
-                 "We're not active, but the IM was focused?");
-    return;
-  }
+  MOZ_ASSERT(!mIsIMFocused);
+  MOZ_ASSERT(!mSetInputPurposeAndInputHints);
 
   GtkIMContext* currentContext = GetCurrentContext();
   if (!currentContext) {
@@ -1401,7 +1413,8 @@ void IMContextWrapper::Focus() {
     return;
   }
 
-  if (sLastFocusedContext && sLastFocusedContext != this) {
+  if (sLastFocusedContext && sLastFocusedContext != this &&
+      sLastFocusedContext->mIsIMFocused) {
     sLastFocusedContext->Blur();
   }
 
@@ -1426,10 +1439,7 @@ void IMContextWrapper::Focus() {
 void IMContextWrapper::Blur() {
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p Blur(), mIsIMFocused=%s", this, ToChar(mIsIMFocused)));
-
-  if (!mIsIMFocused) {
-    return;
-  }
+  MOZ_ASSERT(mIsIMFocused);
 
   GtkIMContext* currentContext = GetCurrentContext();
   if (!currentContext) {
