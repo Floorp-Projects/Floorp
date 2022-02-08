@@ -477,7 +477,8 @@ bool ModuleGenerator::linkCallSites() {
     const CallSiteTarget& target = callSiteTargets_[lastPatchedCallSite_];
     uint32_t callerOffset = callSite.returnAddressOffset();
     switch (callSite.kind()) {
-      case CallSiteDesc::Dynamic:
+      case CallSiteDesc::Import:
+      case CallSiteDesc::Indirect:
       case CallSiteDesc::Symbolic:
         break;
       case CallSiteDesc::Func: {

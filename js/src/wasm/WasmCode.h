@@ -516,13 +516,13 @@ class LazyStubSegment : public CodeSegment {
   }
 
   bool hasSpace(size_t bytes) const;
-  bool addStubs(size_t codeLength, const Uint32Vector& funcExportIndices,
+  [[nodiscard]] bool addStubs(size_t codeLength, const Uint32Vector& funcExportIndices,
                 const FuncExportVector& funcExports,
                 const CodeRangeVector& codeRanges, uint8_t** codePtr,
                 size_t* indexFirstInsertedCodeRange);
 
   const CodeRangeVector& codeRanges() const { return codeRanges_; }
-  const CodeRange* lookupRange(const void* pc) const;
+  [[nodiscard]] const CodeRange* lookupRange(const void* pc) const;
 
   void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
                      size_t* data) const;
@@ -546,7 +546,7 @@ struct LazyFuncExport {
 using LazyFuncExportVector = Vector<LazyFuncExport, 0, SystemAllocPolicy>;
 
 // LazyStubTier contains all the necessary information for lazy function entry
-// stubs that are generated at runtime. None of its data is ever serialized.
+// stubs that are generated at runtime. None of its data are ever serialized.
 //
 // It must be protected by a lock, because the main thread can both read and
 // write lazy stubs at any time while a background thread can regenerate lazy
@@ -557,29 +557,30 @@ class LazyStubTier {
   LazyFuncExportVector exports_;
   size_t lastStubSegmentIndex_;
 
-  bool createMany(const Uint32Vector& funcExportIndices,
-                  const CodeTier& codeTier, bool flushAllThreadsIcaches,
-                  size_t* stubSegmentIndex);
+  [[nodiscard]] bool createManyEntryStubs(const Uint32Vector& funcExportIndices,
+                            const CodeTier& codeTier,
+                            bool flushAllThreadsIcaches,
+                            size_t* stubSegmentIndex);
 
  public:
   LazyStubTier() : lastStubSegmentIndex_(0) {}
 
-  bool empty() const { return stubSegments_.empty(); }
-  bool hasStub(uint32_t funcIndex) const;
-
-  // Returns a pointer to the raw interpreter entry of a given function which
-  // stubs have been lazily generated.
-  void* lookupInterpEntry(uint32_t funcIndex) const;
-
   // Creates one lazy stub for the exported function, for which the jit entry
   // will be set to the lazily-generated one.
-  bool createOne(uint32_t funcExportIndex, const CodeTier& codeTier);
+  [[nodiscard]] bool createOneEntryStub(uint32_t funcExportIndex, const CodeTier& codeTier);
+
+  bool entryStubsEmpty() const { return stubSegments_.empty(); }
+  bool hasEntryStub(uint32_t funcIndex) const;
+
+  // Returns a pointer to the raw interpreter entry of a given function for
+  // which stubs have been lazily generated.
+  [[nodiscard]] void* lookupInterpEntry(uint32_t funcIndex) const;
 
   // Create one lazy stub for all the functions in funcExportIndices, putting
   // them in a single stub. Jit entries won't be used until
   // setJitEntries() is actually called, after the Code owner has committed
   // tier2.
-  bool createTier2(const Uint32Vector& funcExportIndices,
+  [[nodiscard]] bool createTier2(const Uint32Vector& funcExportIndices,
                    const CodeTier& codeTier, Maybe<size_t>* stubSegmentIndex);
   void setJitEntries(const Maybe<size_t>& stubSegmentIndex, const Code& code);
 
