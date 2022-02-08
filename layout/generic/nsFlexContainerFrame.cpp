@@ -4233,12 +4233,17 @@ void nsFlexContainerFrame::GenerateFlexLines(
   }
 }
 
-void nsFlexContainerFrame::GenerateFlexLines(const SharedFlexData& aData,
-                                             nsTArray<FlexLine>& aLines) {
+nsFlexContainerFrame::FlexLayoutResult
+nsFlexContainerFrame::GenerateFlexLayoutResult() {
   MOZ_ASSERT(GetPrevInFlow(), "This should be called by non-first-in-flows!");
 
+  auto* data = FirstInFlow()->GetProperty(SharedFlexData::Prop());
+  MOZ_ASSERT(data, "SharedFlexData should be set by our first-in-flow!");
+
+  FlexLayoutResult flr;
+
   // Pretend we have only one line and zero main gap size.
-  aLines.AppendElement(FlexLine(0));
+  flr.mLines.AppendElement(FlexLine(0));
 
   // The order state of the children is consistent across entire continuation
   // chain due to calling nsContainerFrame::NormalizeChildLists() at the
@@ -4255,7 +4260,7 @@ void nsFlexContainerFrame::GenerateFlexLines(const SharedFlexData& aData,
       CSSOrderAwareFrameIterator::ChildFilter::SkipPlaceholders,
       OrderStateForIter(this), OrderingPropertyForIter(this));
 
-  FlexItemIterator itemIter(aData.mLines);
+  FlexItemIterator itemIter(data->mLines);
 
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* const child = *iter;
@@ -4266,12 +4271,17 @@ void nsFlexContainerFrame::GenerateFlexLines(const SharedFlexData& aData,
 
     for (; !itemIter.AtEnd(); itemIter.Next()) {
       if (itemIter->Frame() == childFirstInFlow) {
-        aLines[0].Items().AppendElement(itemIter->CloneFor(child));
+        flr.mLines[0].Items().AppendElement(itemIter->CloneFor(child));
         itemIter.Next();
         break;
       }
     }
   }
+
+  flr.mContentBoxMainSize = data->mContentBoxMainSize;
+  flr.mContentBoxCrossSize = data->mContentBoxCrossSize;
+
+  return flr;
 }
 
 // Returns the largest outer hypothetical main-size of any line in |aLines|.
@@ -4600,12 +4610,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
                          containerInfo);
     }
   } else {
-    auto* data = FirstInFlow()->GetProperty(SharedFlexData::Prop());
-    MOZ_ASSERT(data, "SharedFlexData should be set by our first-in-flow!");
-
-    GenerateFlexLines(*data, flr.mLines);
-    flr.mContentBoxMainSize = data->mContentBoxMainSize;
-    flr.mContentBoxCrossSize = data->mContentBoxCrossSize;
+    flr = GenerateFlexLayoutResult();
   }
 
   const LogicalSize contentBoxSize =

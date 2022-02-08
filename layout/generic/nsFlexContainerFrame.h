@@ -456,12 +456,11 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                          nsTArray<FlexLine>& aLines);
 
   /**
-   * This method creates FlexLines and FlexItems for children in flex
-   * container's next-in-flows by using the SharedFlexData stored in flex
-   * container's first-in-flow. Returns FlexLines in the outparam |aLines|.
+   * Generates and returns a FlexLayoutResult that contains the FlexLines and
+   * some sizing metrics that should be used to lay out a particular flex
+   * container continuation (i.e. don't call this on the first-in-flow).
    */
-  void GenerateFlexLines(const SharedFlexData& aData,
-                         nsTArray<FlexLine>& aLines);
+  FlexLayoutResult GenerateFlexLayoutResult();
 
   /**
    * Resolves the content-box main-size of a flex container frame,
