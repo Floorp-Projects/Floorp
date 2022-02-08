@@ -85,6 +85,17 @@ static bool ReshapeForShadowedProp(JSContext* cx, HandleNativeObject obj,
   return true;
 }
 
+static void InvalidateMegamorphicCache(JSContext* cx, HandleNativeObject obj) {
+  // The megamorphic cache only checks the receiver object's shape. We need to
+  // invalidate the cache when a prototype object changes its set of properties,
+  // to account for cached properties that are deleted, turned into an accessor
+  // property, or shadowed by another object on the proto chain.
+
+  MOZ_ASSERT(obj->isUsedAsPrototype());
+
+  cx->caches().megamorphicCache.bumpGeneration();
+}
+
 // static
 bool Watchtower::watchPropertyAddSlow(JSContext* cx, HandleNativeObject obj,
                                       HandleId id) {
@@ -93,6 +104,9 @@ bool Watchtower::watchPropertyAddSlow(JSContext* cx, HandleNativeObject obj,
   if (obj->isUsedAsPrototype()) {
     if (!ReshapeForShadowedProp(cx, obj, id)) {
       return false;
+    }
+    if (!id.isInt()) {
+      InvalidateMegamorphicCache(cx, obj);
     }
   }
 
@@ -159,6 +173,9 @@ bool Watchtower::watchProtoChangeSlow(JSContext* cx, HandleObject obj) {
     if (!ReshapeForProtoMutation(cx, obj)) {
       return false;
     }
+    if (obj->is<NativeObject>()) {
+      InvalidateMegamorphicCache(cx, obj.as<NativeObject>());
+    }
   }
 
   if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
@@ -176,6 +193,10 @@ bool Watchtower::watchPropertyRemoveSlow(JSContext* cx, HandleNativeObject obj,
                                          HandleId id) {
   MOZ_ASSERT(watchesPropertyRemove(obj));
 
+  if (obj->isUsedAsPrototype() && !id.isInt()) {
+    InvalidateMegamorphicCache(cx, obj);
+  }
+
   if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
     RootedValue val(cx, IdToValue(id));
     if (!InvokeWatchtowerCallback(cx, "remove-prop", obj, val)) {
@@ -190,6 +211,10 @@ bool Watchtower::watchPropertyRemoveSlow(JSContext* cx, HandleNativeObject obj,
 bool Watchtower::watchPropertyChangeSlow(JSContext* cx, HandleNativeObject obj,
                                          HandleId id) {
   MOZ_ASSERT(watchesPropertyChange(obj));
+
+  if (obj->isUsedAsPrototype() && !id.isInt()) {
+    InvalidateMegamorphicCache(cx, obj);
+  }
 
   if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
     RootedValue val(cx, IdToValue(id));
@@ -219,6 +244,13 @@ bool Watchtower::watchFreezeOrSealSlow(JSContext* cx, HandleNativeObject obj) {
 bool Watchtower::watchObjectSwapSlow(JSContext* cx, HandleObject a,
                                      HandleObject b) {
   MOZ_ASSERT(watchesObjectSwap(a, b));
+
+  if (a->isUsedAsPrototype() && a->is<NativeObject>()) {
+    InvalidateMegamorphicCache(cx, a.as<NativeObject>());
+  }
+  if (b->isUsedAsPrototype() && b->is<NativeObject>()) {
+    InvalidateMegamorphicCache(cx, b.as<NativeObject>());
+  }
 
   if (MOZ_UNLIKELY(a->useWatchtowerTestingCallback() ||
                    b->useWatchtowerTestingCallback())) {

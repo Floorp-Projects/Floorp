@@ -28,6 +28,9 @@ namespace js {
 // - Invalidating the shape teleporting optimization. See the "Shape Teleporting
 //   Optimization" SMDOC comment in CacheIR.cpp.
 //
+// - Invalidating the MegamorphicCache, a property lookup cache for megamorphic
+//   property accesses. See the SMDOC comment in vm/Caches.h.
+//
 // There's also a testing mechanism that lets us write tests for Watchtower
 // hooks. See setWatchtowerCallback and addWatchtowerTarget defined in
 // TestingFunctions.cpp.
@@ -49,10 +52,12 @@ class Watchtower {
                             ObjectFlag::UseWatchtowerTestingCallback});
   }
   static bool watchesPropertyRemove(NativeObject* obj) {
-    return obj->hasAnyFlag({ObjectFlag::UseWatchtowerTestingCallback});
+    return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
+                            ObjectFlag::UseWatchtowerTestingCallback});
   }
   static bool watchesPropertyChange(NativeObject* obj) {
-    return obj->hasAnyFlag({ObjectFlag::UseWatchtowerTestingCallback});
+    return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
+                            ObjectFlag::UseWatchtowerTestingCallback});
   }
   static bool watchesFreezeOrSeal(NativeObject* obj) {
     return obj->hasAnyFlag({ObjectFlag::UseWatchtowerTestingCallback});
@@ -63,7 +68,8 @@ class Watchtower {
   }
   static bool watchesObjectSwap(JSObject* a, JSObject* b) {
     auto watches = [](JSObject* obj) {
-      return obj->hasAnyFlag({ObjectFlag::UseWatchtowerTestingCallback});
+      return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
+                              ObjectFlag::UseWatchtowerTestingCallback});
     };
     return watches(a) || watches(b);
   }
