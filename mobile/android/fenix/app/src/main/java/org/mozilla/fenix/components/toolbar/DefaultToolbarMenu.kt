@@ -39,10 +39,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixAccountManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.theme.ThemeManager
-import org.mozilla.fenix.utils.BrowsersCache
 
 /**
  * Builds the toolbar object used with the 3-dot menu in the browser fragment.
@@ -446,10 +444,11 @@ open class DefaultToolbarMenu(
         }
     }
 
-    private fun getSetDefaultBrowserItem(): BrowserMenuImageText? =
-        if (BrowsersCache.all(context).isFirefoxDefaultBrowser) {
-            null
-        } else if (FxNimbus.features.defaultBrowserMessage.value().messageLocation == MessageSurfaceId.APP_MENU_ITEM) {
+    private fun getSetDefaultBrowserItem(): BrowserMenuImageText? {
+        val settings = context.components.settings
+        return if (
+            settings.isDefaultBrowserMessageLocation(MessageSurfaceId.APP_MENU_ITEM)
+        ) {
             BrowserMenuImageText(
                 label = context.getString(R.string.preferences_set_as_default_browser),
                 imageResource = R.mipmap.ic_launcher
@@ -459,4 +458,5 @@ open class DefaultToolbarMenu(
         } else {
             null
         }
+    }
 }

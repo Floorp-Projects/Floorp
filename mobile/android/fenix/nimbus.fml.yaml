@@ -54,13 +54,20 @@ features:
         description: If true, the feature shows up on the homescreen and on the new tab screen.
         type: Boolean
         default: false
+    defaults:
+      - channel: nightly
+        value:
+          enabled: true
+      - channel: developer
+        value:
+          enabled: true
   default-browser-message:
     description: A small feature allowing experiments on the placement of a default browser message.
     variables:
       message-location:
         description: Where is the message to be put.
-        type: MessageSurfaceId
-        default: homescreen-banner
+        type: Option<MessageSurfaceId>
+        default: null
 types:
   objects: {}
   enums:

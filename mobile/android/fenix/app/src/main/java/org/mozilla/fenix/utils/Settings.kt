@@ -37,6 +37,7 @@ import org.mozilla.fenix.components.settings.lazyFeatureFlagPreference
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.nimbus.DefaultBrowserMessage
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.HomeScreenSection
 import org.mozilla.fenix.nimbus.MessageSurfaceId
@@ -326,14 +327,24 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * Shows if the set default browser experiment card should be shown on home screen.
      */
     fun shouldShowSetAsDefaultBrowserCard(): Boolean {
-        val browsers = BrowsersCache.all(appContext)
-        val feature = FxNimbus.features.defaultBrowserMessage.value()
-        val isExperimentBranch = feature.messageLocation == MessageSurfaceId.HOMESCREEN_BANNER
-        return isExperimentBranch &&
+        return isDefaultBrowserMessageLocation(MessageSurfaceId.HOMESCREEN_BANNER) &&
             !userDismissedExperimentCard &&
-            !browsers.isFirefoxDefaultBrowser &&
             numberOfAppLaunches > APP_LAUNCHES_TO_SHOW_DEFAULT_BROWSER_CARD
     }
+
+    private val defaultBrowserFeature: DefaultBrowserMessage by lazy {
+        FxNimbus.features.defaultBrowserMessage.value()
+    }
+
+    fun isDefaultBrowserMessageLocation(surfaceId: MessageSurfaceId): Boolean =
+        defaultBrowserFeature.messageLocation?.let { experimentalSurfaceId ->
+            if (experimentalSurfaceId == surfaceId) {
+                val browsers = BrowsersCache.all(appContext)
+                !browsers.isFirefoxDefaultBrowser
+            } else {
+                false
+            }
+        } ?: false
 
     var gridTabView by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_tab_view_grid),
@@ -453,9 +464,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the user has enabled the search term tab groups feature.
      */
-    var searchTermTabGroupsAreEnabled by featureFlagPreference(
+    var searchTermTabGroupsAreEnabled by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_term_tab_groups),
-        default = FeatureFlags.tabGroupFeature,
+        default = { FxNimbus.features.searchTermGroups.value(appContext).enabled },
         featureFlag = FeatureFlags.tabGroupFeature
     )
 
