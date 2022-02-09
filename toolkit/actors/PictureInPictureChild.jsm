@@ -2239,12 +2239,12 @@ class PictureInPictureChildVideoWrapper {
     });
   }
 
-  setMuted(video, isMuted) {
+  setMuted(video, shouldMute) {
     return this.#callWrapperMethod({
       name: "setMuted",
-      args: [video, isMuted],
+      args: [video, shouldMute],
       fallback: () => {
-        video.muted = isMuted;
+        video.muted = shouldMute;
       },
       validateRetVal: retVal => retVal == null,
     });
