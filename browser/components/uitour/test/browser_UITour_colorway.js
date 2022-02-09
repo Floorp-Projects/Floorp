@@ -12,11 +12,12 @@ const { AddonManager } = ChromeUtils.import(
 );
 
 // Tests assume there's at least 1 builtin theme with colorway id.
-const { BuiltInThemeConfig } = ChromeUtils.import(
-  "resource:///modules/BuiltInThemeConfig.jsm"
+const { BuiltInThemes } = ChromeUtils.import(
+  "resource:///modules/BuiltInThemes.jsm"
 );
-const COLORWAY_IDS = [...BuiltInThemeConfig.keys()].filter(id =>
-  id.endsWith("-colorway@mozilla.org")
+const COLORWAY_IDS = [...BuiltInThemes.builtInThemeMap.keys()].filter(
+  id =>
+    id.endsWith("-colorway@mozilla.org") && !BuiltInThemes.themeIsExpired(id)
 );
 
 add_UITour_task(async function test_getColorways() {
