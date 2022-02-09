@@ -1783,7 +1783,7 @@ class gfxFont {
 
   virtual bool AllowSubpixelAA() { return true; }
 
-  bool ApplySyntheticBold() const { return mApplySyntheticBold; }
+  bool IsSyntheticBold() const { return mApplySyntheticBold; }
 
   float AngleForSyntheticOblique() const;
   float SkewForSyntheticOblique() const;
