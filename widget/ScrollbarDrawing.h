@@ -76,7 +76,6 @@ class ScrollbarDrawing {
   static ScrollbarParams ComputeScrollbarParams(nsIFrame* aFrame,
                                                 const ComputedStyle& aStyle,
                                                 bool aIsHorizontal);
-  static bool ShouldUseDarkScrollbar(nsIFrame*, const ComputedStyle&);
 
   nscolor GetScrollbarButtonColor(nscolor aTrackColor, EventStates);
   Maybe<nscolor> GetScrollbarArrowColor(nscolor aButtonColor);
