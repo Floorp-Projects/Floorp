@@ -1075,8 +1075,8 @@ add_task(async function test_submit_generic_creditCard_logo() {
         let number = form.querySelector("#cc-number");
         number.setUserInput(card["cc-number"]);
 
-        // Wait 100ms before submission to make sure the input value applied
-        await new Promise(resolve => content.setTimeout(resolve, 100));
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
       });
 
@@ -1125,8 +1125,8 @@ add_task(async function test_update_generic_creditCard_logo() {
         form
           .querySelector("#cc-exp-year")
           .setUserInput(new Date().getFullYear());
-        // Wait 100ms before submission to make sure the input value applied
-        await new Promise(resolve => content.setTimeout(resolve, 100));
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => content.setTimeout(resolve, 1000));
         form.querySelector("input[type=submit").click();
       });
 
