@@ -475,6 +475,26 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
   return theme.GetColor(aID, aColor);
 }
 
+static bool ShouldUseColorForActiveDarkScrollbarThumb(nscolor aColor) {
+  auto IsDifferentEnough = [](int32_t aChannel, int32_t aOtherChannel) {
+    return std::abs(aChannel - aOtherChannel) > 10;
+  };
+  return IsDifferentEnough(NS_GET_R(aColor), NS_GET_G(aColor)) ||
+         IsDifferentEnough(NS_GET_R(aColor), NS_GET_B(aColor));
+}
+
+static bool ShouldUseThemedScrollbarColor(StyleSystemColor aID, nscolor aColor,
+                                          bool aIsDark) {
+  if (!aIsDark) {
+    return true;
+  }
+  if (StaticPrefs::widget_non_native_theme_scrollbar_dark_themed()) {
+    return true;
+  }
+  return aID == StyleSystemColor::ThemedScrollbarThumbActive &&
+         StaticPrefs::widget_non_native_theme_scrollbar_active_always_themed();
+}
+
 nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
                                                nscolor& aColor) const {
   nsresult res = NS_OK;
@@ -543,23 +563,44 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::SpellCheckerUnderline:
       aColor = NS_RGB(0xff, 0, 0);
       break;
+    case ColorID::Scrollbar:
+      aColor = mThemedScrollbar;
+      break;
     case ColorID::ThemedScrollbar:
       aColor = mThemedScrollbar;
+      if (!ShouldUseThemedScrollbarColor(aID, aColor, mIsDark)) {
+        return NS_ERROR_FAILURE;
+      }
       break;
     case ColorID::ThemedScrollbarInactive:
       aColor = mThemedScrollbarInactive;
+      if (!ShouldUseThemedScrollbarColor(aID, aColor, mIsDark)) {
+        return NS_ERROR_FAILURE;
+      }
       break;
     case ColorID::ThemedScrollbarThumb:
       aColor = mThemedScrollbarThumb;
+      if (!ShouldUseThemedScrollbarColor(aID, aColor, mIsDark)) {
+        return NS_ERROR_FAILURE;
+      }
       break;
     case ColorID::ThemedScrollbarThumbHover:
       aColor = mThemedScrollbarThumbHover;
+      if (!ShouldUseThemedScrollbarColor(aID, aColor, mIsDark)) {
+        return NS_ERROR_FAILURE;
+      }
       break;
     case ColorID::ThemedScrollbarThumbActive:
       aColor = mThemedScrollbarThumbActive;
+      if (!ShouldUseThemedScrollbarColor(aID, aColor, mIsDark)) {
+        return NS_ERROR_FAILURE;
+      }
       break;
     case ColorID::ThemedScrollbarThumbInactive:
       aColor = mThemedScrollbarThumbInactive;
+      if (!ShouldUseThemedScrollbarColor(aID, aColor, mIsDark)) {
+        return NS_ERROR_FAILURE;
+      }
       break;
 
       // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
@@ -604,11 +645,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       // menu text
       aColor = mMenuText;
       break;
-    case ColorID::Scrollbar:
-      // scrollbar gray area
-      aColor = mMozScrollbar;
-      break;
-
     case ColorID::Threedface:
     case ColorID::Buttonface:
     case ColorID::MozButtondisabledface:
@@ -1250,23 +1286,14 @@ void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
       mAltTheme.mTextSelectedBackground = mSystemTheme.mTextSelectedBackground;
     }
 
-    if (StaticPrefs::widget_gtk_alt_theme_scrollbar()) {
-      mAltTheme.mThemedScrollbar = mSystemTheme.mThemedScrollbar;
-      mAltTheme.mThemedScrollbarInactive =
-          mSystemTheme.mThemedScrollbarInactive;
-      mAltTheme.mThemedScrollbarThumb = mSystemTheme.mThemedScrollbarThumb;
-      mAltTheme.mThemedScrollbarThumbHover =
-          mSystemTheme.mThemedScrollbarThumbHover;
-      mAltTheme.mThemedScrollbarThumbInactive =
-          mSystemTheme.mThemedScrollbarThumbInactive;
-    }
-
-    if (StaticPrefs::widget_gtk_alt_theme_scrollbar_active()) {
+    if (StaticPrefs::widget_gtk_alt_theme_scrollbar_active() &&
+        (!mAltTheme.mIsDark || ShouldUseColorForActiveDarkScrollbarThumb(
+                                   mSystemTheme.mThemedScrollbarThumbActive))) {
       mAltTheme.mThemedScrollbarThumbActive =
           mSystemTheme.mThemedScrollbarThumbActive;
     }
 
-    if (StaticPrefs::widget_gtk_alt_theme_selection()) {
+    if (StaticPrefs::widget_gtk_alt_theme_accent()) {
       mAltTheme.mAccentColor = mSystemTheme.mAccentColor;
       mAltTheme.mAccentColorForeground = mSystemTheme.mAccentColorForeground;
     }
@@ -1562,8 +1589,6 @@ void nsLookAndFeel::PerThemeData::Init() {
   mThemedScrollbarInactive =
       NS_ComposeColors(mThemedScrollbarInactive, GDK_RGBA_TO_NS_RGBA(color));
 
-  mMozScrollbar = mThemedScrollbar;
-
   style = GetStyleContext(MOZ_GTK_SCROLLBAR_THUMB_VERTICAL);
   gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
   mThemedScrollbarThumb = GDK_RGBA_TO_NS_RGBA(color);
@@ -1604,11 +1629,19 @@ void nsLookAndFeel::PerThemeData::Init() {
   }();
 
   if (fallbackToUnthemedColors) {
-    // Taken from Adwaita.
-    mMozScrollbar = mThemedScrollbar = NS_RGB(0xce, 0xce, 0xce);
-    mThemedScrollbarInactive = NS_RGB(0xec, 0xed, 0xef);
-    mThemedScrollbarThumb = NS_RGB(0x82, 0x81, 0x7e);
-    mThemedScrollbarThumbInactive = NS_RGB(0xce, 0xcf, 0xce);
+    if (mIsDark) {
+      // Taken from Adwaita-dark.
+      mThemedScrollbar = NS_RGB(0x31, 0x31, 0x31);
+      mThemedScrollbarInactive = NS_RGB(0x2d, 0x2d, 0x2d);
+      mThemedScrollbarThumb = NS_RGB(0xa3, 0xa4, 0xa4);
+      mThemedScrollbarThumbInactive = NS_RGB(0x59, 0x5a, 0x5a);
+    } else {
+      // Taken from Adwaita.
+      mThemedScrollbar = NS_RGB(0xce, 0xce, 0xce);
+      mThemedScrollbarInactive = NS_RGB(0xec, 0xed, 0xef);
+      mThemedScrollbarThumb = NS_RGB(0x82, 0x81, 0x7e);
+      mThemedScrollbarThumbInactive = NS_RGB(0xce, 0xcf, 0xce);
+    }
 
     mThemedScrollbarThumbHover = ThemeColors::AdjustUnthemedScrollbarThumbColor(
         mThemedScrollbarThumb, NS_EVENT_STATE_HOVER);
