@@ -686,8 +686,10 @@ void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
     task->errors_ = std::move(errors);
   }
 
-  // Schedule delazification task.
-  HelperThreadState().submitTask(task.release(), lock);
+  // Schedule delazification task if there is any function to delazify.
+  if (!task->strategy->done()) {
+    HelperThreadState().submitTask(task.release(), lock);
+  }
 }
 
 template <typename Unit>
