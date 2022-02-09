@@ -161,7 +161,6 @@ impl TableDesc {
 
 #[derive(Clone)]
 pub struct FuncType {
-    ptr: *const low_level::FuncType,
     args: Vec<TypeCode>,
     results: Vec<TypeCode>,
 }
@@ -184,7 +183,7 @@ impl FuncType {
             .map(|val_type| unsafe { low_level::env_unpack(*val_type) })
             .collect();
 
-        Self { ptr, args, results }
+        Self { args, results }
     }
 
     pub(crate) fn args(&self) -> &[TypeCode] {
