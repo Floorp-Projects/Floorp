@@ -110,6 +110,7 @@ int32_t RootCABinNumber(Span<const uint8_t> cert) {
   // here as a backstop to catch situations where a built-in root was added but
   // the built-in telemetry information was not updated.
   UniqueSECMODModule rootsModule(SECMOD_FindModule(kRootModuleName));
+  AutoSECMODListReadLock secmodLock;
   if (!rootsModule || rootsModule->slotCount != 1) {
     return ROOT_CERTIFICATE_UNKNOWN;
   }
