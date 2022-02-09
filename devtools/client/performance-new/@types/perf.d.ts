@@ -399,6 +399,13 @@ export interface PerformancePref {
    */
   UIBaseUrlPathPref: "devtools.performance.recording.ui-base-url-path";
   /**
+   * This controls whether we enable the active tab view when capturing in web
+   * developer preset.
+   * We're not enabling the active-tab view in all environments until we
+   * iron out all its issues.
+   */
+  UIEnableActiveTabView: "devtools.performance.recording.active-tab-view.enabled";
+  /**
    * The profiler popup has some introductory text explaining what it is the first
    * time that you open it. After that, it is not displayed by default.
    */
