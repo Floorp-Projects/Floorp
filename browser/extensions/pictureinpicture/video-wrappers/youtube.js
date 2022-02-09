@@ -5,12 +5,13 @@
 "use strict";
 
 class PictureInPictureVideoWrapper {
-  setMuted(video, isMuted) {
+  setMuted(video, shouldMute) {
     let muteButton = document.querySelector("#player .ytp-mute-button");
-    if (muteButton) {
+
+    if (video.muted !== shouldMute && muteButton) {
       muteButton.click();
     } else {
-      video.muted = isMuted;
+      video.muted = shouldMute;
     }
   }
 }
