@@ -69,19 +69,26 @@ LSValue::Converter::Converter(const LSValue& aValue) {
     if (CompressionType::UNCOMPRESSED != compressionType) {
       nsCString buffer;
       MOZ_ASSERT(CompressionType::SNAPPY == compressionType);
-      MOZ_ALWAYS_TRUE(SnappyUncompress(aValue.mBuffer, buffer));
+      if (NS_WARN_IF(!SnappyUncompress(aValue.mBuffer, buffer))) {
+        buffer.Truncate();
+      }
       return buffer;
     }
+
     return aValue.mBuffer;
   }();
 
   if (ConversionType::NONE != conversionType) {
     MOZ_ASSERT(ConversionType::UTF16_UTF8 == conversionType);
-    MOZ_ALWAYS_TRUE(CopyUTF8toUTF16(uncompressed, mBuffer, fallible));
+    if (NS_WARN_IF(!CopyUTF8toUTF16(uncompressed, mBuffer, fallible))) {
+      mBuffer.SetIsVoid(true);
+    }
     return;
   }
 
-  MOZ_ALWAYS_TRUE(PutCStringBytesToString(uncompressed, mBuffer));
+  if (NS_WARN_IF(!PutCStringBytesToString(uncompressed, mBuffer))) {
+    mBuffer.SetIsVoid(true);
+  }
 }
 
 bool LSValue::InitFromString(const nsAString& aBuffer) {
