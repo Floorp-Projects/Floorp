@@ -1028,11 +1028,11 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
     if (!texture) {
       NS_WARNING("Failed to get the texture client!");
     } else {
+      FFMPEG_LOGV("Create a video data from a shmem image=%p", wrapper.get());
       // Texture was locked to ensure no one can modify or access texture's data
       // except ffmpeg decoder. After finisheing decoding, texture's data would
       // be avaliable for accessing for everyone so we unlock texture.
       texture->Unlock();
-      FFMPEG_LOGV("Create a video data from a shmem image=%p", wrapper.get());
       v = VideoData::CreateFromImage(
           mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
           TimeUnit::FromMicroseconds(aDuration), image, !!mFrame->key_frame,
