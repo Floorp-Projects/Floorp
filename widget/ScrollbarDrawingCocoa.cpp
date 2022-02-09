@@ -18,22 +18,22 @@
 using namespace mozilla::gfx;
 namespace mozilla::widget {
 
-struct FillRectType {
-  gfx::Rect mRect;
-  nscolor mColor;
+struct ColoredRect {
+  LayoutDeviceRect mRect;
+  nscolor mColor = 0;
 };
 
 // The caller can draw this rectangle with rounded corners as appropriate.
 struct ThumbRect {
-  gfx::Rect mRect;
-  nscolor mFillColor;
-  nscolor mStrokeColor;
-  float mStrokeWidth;
-  float mStrokeOutset;
+  LayoutDeviceRect mRect;
+  nscolor mFillColor = 0;
+  nscolor mStrokeColor = 0;
+  float mStrokeWidth = 0.0f;
+  float mStrokeOutset = 0.0f;
 };
 
-using ScrollbarTrackRects = Array<FillRectType, 4>;
-using ScrollCornerRects = Array<FillRectType, 7>;
+using ScrollbarTrackRects = Array<ColoredRect, 4>;
+using ScrollCornerRects = Array<ColoredRect, 7>;
 
 struct ScrollbarParams {
   bool isOverlay = false;
@@ -145,8 +145,8 @@ auto ScrollbarDrawingCocoa::GetScrollbarSizes(nsPresContext* aPresContext,
   return {size, size};
 }
 
-static ThumbRect GetThumbRect(const Rect& aRect, const ScrollbarParams& aParams,
-                              float aScale) {
+static ThumbRect GetThumbRect(const LayoutDeviceRect& aRect,
+                              const ScrollbarParams& aParams, float aScale) {
   // This matches the sizing checks in GetMinimumWidgetSize etc.
   aScale = aScale >= 2.0f ? 2.0f : 1.0f;
 
@@ -165,7 +165,7 @@ static ThumbRect GetThumbRect(const Rect& aRect, const ScrollbarParams& aParams,
   // Compute the thumb rect.
   const float outerSpacing =
       ((aParams.isOverlay || aParams.isSmall) ? 1.0f : 2.0f) * aScale;
-  Rect thumbRect = aRect;
+  LayoutDeviceRect thumbRect = aRect;
   thumbRect.Deflate(1.0f * aScale);
   if (aParams.isHorizontal) {
     float bottomEdge = thumbRect.YMost() - outerSpacing;
@@ -241,7 +241,7 @@ static ScrollbarTrackDecorationColors ComputeScrollbarTrackDecorationColors(
   return result;
 }
 
-static bool GetScrollbarTrackRects(const Rect& aRect,
+static bool GetScrollbarTrackRects(const LayoutDeviceRect& aRect,
                                    const ScrollbarParams& aParams, float aScale,
                                    ScrollbarTrackRects& aRects) {
   if (aParams.isOverlay && !aParams.isRolledOver) {
@@ -288,7 +288,7 @@ static bool GetScrollbarTrackRects(const Rect& aRect,
   auto current = aRects.begin();
   float accumulatedThickness = 0.0f;
   for (const auto& segment : segments) {
-    Rect segmentRect = aRect;
+    LayoutDeviceRect segmentRect = aRect;
     float startThickness = accumulatedThickness;
     float endThickness = startThickness + segment.thickness;
     if (aParams.isHorizontal) {
@@ -309,7 +309,7 @@ static bool GetScrollbarTrackRects(const Rect& aRect,
   return true;
 }
 
-static bool GetScrollCornerRects(const Rect& aRect,
+static bool GetScrollCornerRects(const LayoutDeviceRect& aRect,
                                  const ScrollbarParams& aParams, float aScale,
                                  ScrollCornerRects& aRects) {
   if (aParams.isOverlay && !aParams.isRolledOver) {
@@ -348,7 +348,7 @@ static bool GetScrollCornerRects(const Rect& aRect,
       ComputeScrollbarTrackDecorationColors(trackColor);
   struct {
     nscolor color;
-    Rect relativeRect;
+    LayoutDeviceRect relativeRect;
   } pieces[] = {
       {colors.mInnerColor, {0.0f, 0.0f, 1.0f * aScale, 1.0f * aScale}},
       {colors.mShadowColor,
@@ -366,7 +366,7 @@ static bool GetScrollCornerRects(const Rect& aRect,
 
   auto current = aRects.begin();
   for (const auto& piece : pieces) {
-    Rect pieceRect = piece.relativeRect + aRect.TopLeft();
+    LayoutDeviceRect pieceRect = piece.relativeRect + aRect.TopLeft();
     if (aParams.isRtl) {
       pieceRect.x = aRect.XMost() - piece.relativeRect.XMost();
     }
@@ -382,23 +382,24 @@ void ScrollbarDrawingCocoa::DoPaintScrollbarThumb(
     const EventStates& aElementState, const EventStates& aDocumentState,
     const DPIRatio& aDpiRatio) {
   ScrollbarParams params = ComputeScrollbarParams(aFrame, aStyle, aHorizontal);
-  auto thumb = GetThumbRect(aRect.ToUnknownRect(), params, aDpiRatio.scale);
-  auto thumbRect = LayoutDeviceRect::FromUnknownRect(thumb.mRect);
+  auto thumb = GetThumbRect(aRect, params, aDpiRatio.scale);
   LayoutDeviceCoord radius =
-      (params.isHorizontal ? thumbRect.Height() : thumbRect.Width()) / 2.0f;
+      (params.isHorizontal ? thumb.mRect.Height() : thumb.mRect.Width()) / 2.0f;
   ThemeDrawing::PaintRoundedRectWithRadius(
-      aPaintData, thumbRect, thumbRect, sRGBColor::FromABGR(thumb.mFillColor),
-      sRGBColor::White(0.0f), 0.0f, radius / aDpiRatio, aDpiRatio);
+      aPaintData, thumb.mRect, thumb.mRect,
+      sRGBColor::FromABGR(thumb.mFillColor), sRGBColor::White(0.0f), 0.0f,
+      radius / aDpiRatio, aDpiRatio);
   if (!thumb.mStrokeColor) {
     return;
   }
 
   // Paint the stroke if needed.
-  thumbRect.Inflate(thumb.mStrokeOutset + thumb.mStrokeWidth);
+  auto strokeRect = thumb.mRect;
+  strokeRect.Inflate(thumb.mStrokeOutset + thumb.mStrokeWidth);
   radius =
-      (params.isHorizontal ? thumbRect.Height() : thumbRect.Width()) / 2.0f;
+      (params.isHorizontal ? strokeRect.Height() : strokeRect.Width()) / 2.0f;
   ThemeDrawing::PaintRoundedRectWithRadius(
-      aPaintData, thumbRect, sRGBColor::White(0.0f),
+      aPaintData, strokeRect, sRGBColor::White(0.0f),
       sRGBColor::FromABGR(thumb.mStrokeColor), thumb.mStrokeWidth,
       radius / aDpiRatio, aDpiRatio);
 }
@@ -432,11 +433,9 @@ void ScrollbarDrawingCocoa::DoPaintScrollbarTrack(
     const EventStates& aDocumentState, const DPIRatio& aDpiRatio) {
   ScrollbarParams params = ComputeScrollbarParams(aFrame, aStyle, aHorizontal);
   ScrollbarTrackRects rects;
-  if (GetScrollbarTrackRects(aRect.ToUnknownRect(), params, aDpiRatio.scale,
-                             rects)) {
+  if (GetScrollbarTrackRects(aRect, params, aDpiRatio.scale, rects)) {
     for (const auto& rect : rects) {
-      ThemeDrawing::FillRect(aPaintData,
-                             LayoutDeviceRect::FromUnknownRect(rect.mRect),
+      ThemeDrawing::FillRect(aPaintData, rect.mRect,
                              sRGBColor::FromABGR(rect.mColor));
     }
   }
@@ -471,11 +470,9 @@ void ScrollbarDrawingCocoa::DoPaintScrollCorner(
     const EventStates& aDocumentState, const DPIRatio& aDpiRatio) {
   ScrollbarParams params = ComputeScrollbarParams(aFrame, aStyle, false);
   ScrollCornerRects rects;
-  if (GetScrollCornerRects(aRect.ToUnknownRect(), params, aDpiRatio.scale,
-                           rects)) {
+  if (GetScrollCornerRects(aRect, params, aDpiRatio.scale, rects)) {
     for (const auto& rect : rects) {
-      ThemeDrawing::FillRect(aPaintData,
-                             LayoutDeviceRect::FromUnknownRect(rect.mRect),
+      ThemeDrawing::FillRect(aPaintData, rect.mRect,
                              sRGBColor::FromABGR(rect.mColor));
     }
   }
