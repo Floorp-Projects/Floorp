@@ -100,7 +100,7 @@ class DefaultTopSitesStorage(
         ) {
             try {
                 val providerTopSites = topSitesProvider
-                    .getTopSites()
+                    .getTopSites(allowCache = true)
                     .take(numSitesRequired)
                 topSites.addAll(providerTopSites)
                 numSitesRequired -= providerTopSites.size

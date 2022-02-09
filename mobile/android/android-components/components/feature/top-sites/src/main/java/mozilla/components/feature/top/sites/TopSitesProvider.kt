@@ -11,6 +11,10 @@ interface TopSitesProvider {
 
     /**
      * Provides a list of top sites.
+     *
+     * @param allowCache Whether or not the result may be provided from a previously
+     * cached response.
+     * @return a list of top sites from the provider.
      */
-    suspend fun getTopSites(): List<TopSite>
+    suspend fun getTopSites(allowCache: Boolean = true): List<TopSite>
 }
