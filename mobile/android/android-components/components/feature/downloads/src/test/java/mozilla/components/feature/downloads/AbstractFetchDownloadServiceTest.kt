@@ -68,6 +68,7 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -1470,8 +1471,7 @@ class AbstractFetchDownloadServiceTest {
             path = any(),
             length = anyLong(),
             showNotification = anyBoolean(),
-            uri = any(),
-            referer = any()
+            download = any()
         )
     }
 
@@ -1499,8 +1499,7 @@ class AbstractFetchDownloadServiceTest {
             path = any(),
             length = anyLong(),
             showNotification = anyBoolean(),
-            uri = any(),
-            referer = any()
+            download = any()
         )
         doReturn(true).`when`(service).shouldUseScopedStorage()
 
@@ -1514,8 +1513,7 @@ class AbstractFetchDownloadServiceTest {
             path = any(),
             length = anyLong(),
             showNotification = anyBoolean(),
-            uri = any(),
-            referer = any()
+            download = any()
         )
     }
 
@@ -1579,6 +1577,41 @@ class AbstractFetchDownloadServiceTest {
         service.addToDownloadSystemDatabaseCompat(download, this)
         verify(downloadManager).addCompletedDownload(anyString(), anyString(), anyBoolean(), anyString(), anyString(), anyLong(), anyBoolean(), isNull(), any())
     }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowFileProvider::class])
+    @Suppress("Deprecation")
+    fun `GIVEN a download that throws an exception WHEN adding to the system database THEN handle the exception`() =
+        runBlockingTest {
+            val download = DownloadState(
+                url = "url",
+                fileName = "example.apk",
+                destinationDirectory = folder.root.path
+            )
+
+            val service = spy(object : AbstractFetchDownloadService() {
+                override val httpClient = client
+                override val store = browserStore
+            })
+
+            val spyContext = spy(testContext)
+            val downloadManager: DownloadManager = mock()
+
+            doReturn(spyContext).`when`(service).context
+            doReturn(downloadManager).`when`(spyContext).getSystemService<DownloadManager>()
+
+            doAnswer { throw IllegalArgumentException() }.`when`(downloadManager)
+                .addCompletedDownload(
+                    anyString(), anyString(), anyBoolean(), anyString(),
+                    anyString(), anyLong(), anyBoolean(), isNull(), any()
+                )
+
+            try {
+                service.addToDownloadSystemDatabaseCompat(download, this)
+            } catch (e: IOException) {
+                fail()
+            }
+        }
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowFileProvider::class])

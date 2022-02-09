@@ -451,7 +451,6 @@ abstract class AbstractFetchDownloadService : Service() {
                 ?: throw IllegalStateException("A fileName for a download is required")
             val file = File(download.filePath)
             // addCompletedDownload can't handle any non http(s) urls
-            val url = if (!download.isScheme(listOf("http", "https"))) null else download.url.toUri()
             scope.launch {
                 addCompletedDownload(
                     title = fileName,
@@ -462,8 +461,7 @@ abstract class AbstractFetchDownloadService : Service() {
                     length = download.contentLength ?: file.length(),
                     // Only show notifications if our channel is blocked
                     showNotification = !DownloadNotification.isChannelEnabled(context),
-                    uri = url,
-                    referer = download.referrerUrl?.toUri()
+                    download
                 )
             }
         }
@@ -479,21 +477,25 @@ abstract class AbstractFetchDownloadService : Service() {
         path: String,
         length: Long,
         showNotification: Boolean,
-        uri: Uri?,
-        referer: Uri?
+        download: DownloadState
     ) {
-        context.addCompletedDownload(
-            title = title,
-            description = description,
-            isMediaScannerScannable = isMediaScannerScannable,
-            mimeType = mimeType,
-            path = path,
-            length = length,
-            // Only show notifications if our channel is blocked
-            showNotification = showNotification,
-            uri = uri,
-            referer = referer
-        )
+        try {
+            val url = if (!download.isScheme(listOf("http", "https"))) null else download.url.toUri()
+            context.addCompletedDownload(
+                title = title,
+                description = description,
+                isMediaScannerScannable = isMediaScannerScannable,
+                mimeType = mimeType,
+                path = path,
+                length = length,
+                // Only show notifications if our channel is blocked
+                showNotification = showNotification,
+                uri = url,
+                referer = download.referrerUrl?.toUri()
+            )
+        } catch (e: IllegalArgumentException) {
+            logger.error("Unable add the download to the system database", e)
+        }
     }
 
     @VisibleForTesting
