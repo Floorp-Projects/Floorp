@@ -251,7 +251,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
 
     let visibilityThresholdPref = Services.prefs.getFloatPref(
       TOGGLE_VISIBILITY_THRESHOLD_PREF,
-      "0.9"
+      "1.0"
     );
 
     if (!state) {
@@ -892,7 +892,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
 
       let visibilityThresholdPref = Services.prefs.getFloatPref(
         TOGGLE_VISIBILITY_THRESHOLD_PREF,
-        "0.9"
+        "1.0"
       );
 
       // Do we have any toggle overrides? If so, try to apply them.
