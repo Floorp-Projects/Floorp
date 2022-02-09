@@ -324,14 +324,14 @@ Fragment brush_fs() {
             result.rgb = Luminosity(Cb.rgb, Cs.rgb);
             break;
         case MixBlendMode_PlusLighter:
-            // TODO(emilio): Implement.
+            // This should be unreachable, since we implement
+            // MixBlendMode::PlusLighter using glBlendFuncSeparate.
             break;
         default: break;
     }
 
     result.rgb = (1.0 - Cb.a) * Cs.rgb + Cb.a * result.rgb;
     result.a = Cs.a;
-
     result.rgb *= result.a;
 
     return Fragment(result);
