@@ -24,7 +24,6 @@ interface PeerConnectionImpl  {
   /* Must be called first. Observer events dispatched on the thread provided */
   [Throws]
   void initialize(PeerConnectionObserver observer, Window window,
-                  RTCConfiguration iceServers,
                   nsISupports thread);
 
   /* JSEP calls */
@@ -78,6 +77,9 @@ interface PeerConnectionImpl  {
   /* Shuts down threads, deletes state */
   [Throws]
   void close();
+
+  [Throws]
+  void setConfiguration(optional RTCConfiguration config = {});
 
   /* Notify DOM window if this plugin crash is ours. */
   boolean pluginCrash(unsigned long long pluginId, DOMString name);

@@ -1,0 +1,450 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="iceTestUtils.js"></script>
+  <script type="application/javascript" src="helpers_from_wpt/sdp.js"></script></head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1253706",
+    title: "Test ICE gathering when setConfiguration is used to change the ICE config"
+  });
+
+  const tests = [
+    async function baselineV4Cases() {
+      await checkSrflx([{urls:[`stun:${turnAddressV4}`]}]);
+      await checkRelayUdp([{urls:[`turn:${turnAddressV4}`], username, credential}]);
+      await checkRelayTcp([{urls:[`turn:${turnAddressV4}?transport=tcp`], username, credential}]);
+      await checkRelayUdpTcp([{urls:[`turn:${turnAddressV4}`, `turn:${turnAddressV4}?transport=tcp`], username, credential}]);
+      await checkNoSrflx();
+      await checkNoRelay();
+    },
+
+    async function addStunServerBeforeOffer() {
+      const pc = new RTCPeerConnection();
+      try {
+        pc.setConfiguration({iceServers: [{urls:[`stun:${turnAddressV4}`]}]});
+        const candidates = await gatherWithTimeout(pc, 32000, `just a stun server`);
+        ok(candidates.some(c => c.candidate.includes("srflx")), "Should get at least one srflx candidate");
+        ok(!candidates.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+      } finally {
+        pc.close();
+      }
+    },
+
+    async function addTurnServerBeforeOffer() {
+      const pc = new RTCPeerConnection();
+      try {
+        pc.setConfiguration({iceServers: [{urls:[`turn:${turnAddressV4}`], username, credential}]});
+        const candidates = await gatherWithTimeout(pc, 32000, `a turn (udp) server`);
+        ok(candidates.some(c => c.candidate.includes("srflx")), "Should get at least one srflx candidate");
+        ok(candidates.some(c => c.candidate.includes("relay")), "Should get at least one relay candidate");
+      } finally {
+        pc.close();
+      }
+    },
+
+    async function addTurnTcpServerBeforeOffer() {
+      const pc = new RTCPeerConnection();
+      try {
+        pc.setConfiguration({iceServers: [{urls:[`turn:${turnAddressV4}?transport=tcp`], username, credential}]});
+        const candidates = await gatherWithTimeout(pc, 32000, `a turn (tcp) server`);
+        ok(!candidates.some(c => c.candidate.includes("srflx")), "Should not get any srflx candidates");
+        ok(candidates.some(c => c.candidate.includes("relay")), "Should get at least one relay candidate");
+      } finally {
+        pc.close();
+      }
+    },
+
+    async function addStunServerAfterOffer() {
+      const pc = new RTCPeerConnection();
+      try {
+        const candidates1 = await gatherWithTimeout(pc, 32000, `no ICE servers`);
+        ok(!candidates1.some(c => c.candidate.includes("srflx")), "Should not get any srflx candidates");
+        ok(!candidates1.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+        await pc.setLocalDescription({type: "rollback"});
+
+        pc.setConfiguration({iceServers: [{urls:[`stun:${turnAddressV4}`]}]});
+        const candidates2 = await gatherWithTimeout(pc, 32000, `just a stun server`);
+        ok(candidates2.some(c => c.candidate.includes("srflx")), "Should get at least one srflx candidate");
+        ok(!candidates2.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+      } finally {
+        pc.close();
+      }
+    },
+
+    async function addTurnServerAfterOffer() {
+      const pc = new RTCPeerConnection();
+      try {
+        const candidates1 = await gatherWithTimeout(pc, 32000, `no ICE servers`);
+        ok(!candidates1.some(c => c.candidate.includes("srflx")), "Should not get any srflx candidates");
+        ok(!candidates1.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+        await pc.setLocalDescription({type: "rollback"});
+
+        pc.setConfiguration({iceServers: [{urls:[`turn:${turnAddressV4}`], username, credential}]});
+        const candidates2 = await gatherWithTimeout(pc, 32000, `a turn (udp) server`);
+        ok(candidates2.some(c => c.candidate.includes("srflx")), "Should get at least one srflx candidate");
+        ok(candidates2.some(c => c.candidate.includes("relay")), "Should get at least one relay candidate");
+      } finally {
+        pc.close();
+      }
+    },
+
+    async function addTurnTcpServerAfterOffer() {
+      const pc = new RTCPeerConnection();
+      try {
+        const candidates1 = await gatherWithTimeout(pc, 32000, `no ICE servers`);
+        ok(!candidates1.some(c => c.candidate.includes("srflx")), "Should not get any srflx candidates");
+        ok(!candidates1.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+        await pc.setLocalDescription({type: "rollback"});
+
+        pc.setConfiguration({iceServers: [{urls:[`turn:${turnAddressV4}?transport=tcp`], username, credential}]});
+        const candidates2 = await gatherWithTimeout(pc, 32000, `a turn (tcp) server`);
+        ok(!candidates2.some(c => c.candidate.includes("srflx")), "Should get no srflx candidates");
+        ok(candidates2.some(c => c.candidate.includes("relay")), "Should get at least one relay candidate");
+      } finally {
+        pc.close();
+      }
+    },
+
+    async function removeStunServerBeforeOffer() {
+      const pc = new RTCPeerConnection({iceServers: [{urls:[`stun:${turnAddressV4}`]}]});
+      try {
+        pc.setConfiguration({});
+        const candidates = await gatherWithTimeout(pc, 32000, `no ICE servers`);
+        ok(!candidates.some(c => c.candidate.includes("srflx")), "Should not get any srflx candidates");
+        ok(!candidates.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+      } finally {
+        pc.close();
+      }
+    },
+
+    async function removeTurnServerBeforeOffer() {
+      const pc = new RTCPeerConnection({iceServers: [{urls:[`turn:${turnAddressV4}`], username, credential}]});
+      try {
+        pc.setConfiguration({});
+        const candidates = await gatherWithTimeout(pc, 32000, `no ICE servers`);
+        ok(!candidates.some(c => c.candidate.includes("srflx")), "Should not get any srflx candidates");
+        ok(!candidates.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+      } finally {
+        pc.close();
+      }
+    },
+
+    async function removeTurnTcpServerBeforeOffer() {
+      const pc = new RTCPeerConnection({iceServers: [{urls:[`turn:${turnAddressV4}?transport=tcp`], username, credential}]});
+      try {
+        pc.setConfiguration({});
+        const candidates = await gatherWithTimeout(pc, 32000, `no ICE servers`);
+        ok(!candidates.some(c => c.candidate.includes("srflx")), "Should not get any srflx candidates");
+        ok(!candidates.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+      } finally {
+        pc.close();
+      }
+    },
+
+    async function removeStunServerAfterOffer() {
+      const pc = new RTCPeerConnection({iceServers: [{urls:[`stun:${turnAddressV4}`]}]});
+      try {
+        const candidates1 = await gatherWithTimeout(pc, 32000, `just a stun server`);
+        ok(candidates1.some(c => c.candidate.includes("srflx")), "Should get at least one srflx candidate");
+        ok(!candidates1.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+        await pc.setLocalDescription({type: "rollback"});
+
+        pc.setConfiguration({});
+        const candidates2 = await gatherWithTimeout(pc, 32000, `no ICE servers`);
+        ok(!candidates2.some(c => c.candidate.includes("srflx")), "Should not get any srflx candidates");
+        ok(!candidates2.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+      } finally {
+        pc.close();
+      }
+    },
+
+    async function removeTurnServerAfterOffer() {
+      const pc = new RTCPeerConnection({iceServers: [{urls:[`turn:${turnAddressV4}`], username, credential}]});
+      try {
+        const candidates1 = await gatherWithTimeout(pc, 32000, `a turn (udp) server`);
+        ok(candidates1.some(c => c.candidate.includes("srflx")), "Should get at least one srflx candidate");
+        ok(candidates1.some(c => c.candidate.includes("relay")), "Should get at least one relay candidate");
+        await pc.setLocalDescription({type: "rollback"});
+
+        pc.setConfiguration({});
+        const candidates2 = await gatherWithTimeout(pc, 32000, `no ICE servers`);
+        ok(!candidates2.some(c => c.candidate.includes("srflx")), "Should not get any srflx candidates");
+        ok(!candidates2.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+      } finally {
+        pc.close();
+      }
+    },
+
+    async function removeTurnTcpServerAfterOffer() {
+      const pc = new RTCPeerConnection({iceServers: [{urls:[`turn:${turnAddressV4}?transport=tcp`], username, credential}]});
+      try {
+        const candidates1 = await gatherWithTimeout(pc, 32000, `a turn (tcp) server`);
+        ok(!candidates1.some(c => c.candidate.includes("srflx")), "Should get no srflx candidates");
+        ok(candidates1.some(c => c.candidate.includes("relay")), "Should get at least one relay candidate");
+        await pc.setLocalDescription({type: "rollback"});
+
+        pc.setConfiguration({});
+        const candidates2 = await gatherWithTimeout(pc, 32000, `no ICE servers`);
+        ok(!candidates2.some(c => c.candidate.includes("srflx")), "Should not get any srflx candidates");
+        ok(!candidates2.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+      } finally {
+        pc.close();
+      }
+    },
+
+    async function addStunServerAfterNegotiation() {
+      const offerer = new RTCPeerConnection();
+      const answerer = new RTCPeerConnection({iceServers: [{urls:[`stun:${turnAddressV4}`]}]});
+      try {
+        const candidatePromise = trickleIce(offerer);
+        await connect(offerer, answerer, 32000, `no ICE servers`);
+        const candidates = await candidatePromise;
+        const ufrags = Array.from(new Set(candidates.map(c => c.usernameFragment)));
+        is(ufrags.length, 1, "Should have one ufrag in candidate set");
+
+        offerer.setConfiguration({iceServers: [{urls:[`stun:${turnAddressV4}`]}]});
+        const candidates2 = await gatherWithTimeout(offerer, 32000, `just a stun server`);
+        ok(candidates2.some(c => c.candidate.includes("srflx")), "Should get at least one srflx candidate");
+        ok(!candidates2.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+        const ufrags2 = Array.from(new Set(candidates2.map(c => c.usernameFragment)));
+        is(ufrags2.length, 1, "Should have one ufrag in candidate set");
+        isnot(ufrags[0], ufrags2[0], "ufrag should change, because setConfiguration should have triggered an ICE restart");
+      } finally {
+        offerer.close();
+        answerer.close();
+      }
+    },
+
+    async function addTurnServerAfterNegotiation() {
+      const offerer = new RTCPeerConnection();
+      const answerer = new RTCPeerConnection({iceServers: [{urls:[`stun:${turnAddressV4}`]}]});
+      try {
+        const candidatePromise = trickleIce(offerer);
+        await connect(offerer, answerer, 32000, `no ICE servers`);
+        const candidates = await candidatePromise;
+        const ufrags = Array.from(new Set(candidates.map(c => c.usernameFragment)));
+        is(ufrags.length, 1, "Should have one ufrag in candidate set");
+
+        offerer.setConfiguration({iceServers: [{urls:[`turn:${turnAddressV4}`], username, credential}]});
+        const candidates2 = await gatherWithTimeout(offerer, 32000, `a turn (udp) server`);
+        ok(candidates2.some(c => c.candidate.includes("srflx")), "Should get at least one srflx candidate");
+        ok(candidates2.some(c => c.candidate.includes("relay")), "Should get at least one relay candidate");
+        const ufrags2 = Array.from(new Set(candidates2.map(c => c.usernameFragment)));
+        is(ufrags2.length, 1, "Should have one ufrag in candidate set");
+        isnot(ufrags[0], ufrags2[0], "ufrag should change, because setConfiguration should have triggered an ICE restart");
+      } finally {
+        offerer.close();
+        answerer.close();
+      }
+    },
+
+    async function addTurnTcpServerAfterNegotiation() {
+      const offerer = new RTCPeerConnection();
+      const answerer = new RTCPeerConnection({iceServers: [{urls:[`stun:${turnAddressV4}`]}]});
+      try {
+        const candidatePromise = trickleIce(offerer);
+        await connect(offerer, answerer, 32000, `no ICE servers`);
+        const candidates = await candidatePromise;
+        const ufrags = Array.from(new Set(candidates.map(c => c.usernameFragment)));
+        is(ufrags.length, 1, "Should have one ufrag in candidate set");
+
+        offerer.setConfiguration({iceServers: [{urls:[`turn:${turnAddressV4}?transport=tcp`], username, credential}]});
+        const candidates2 = await gatherWithTimeout(offerer, 32000, `a turn (tcp) server`);
+        ok(!candidates2.some(c => c.candidate.includes("srflx")), "Should not get any srflx candidates");
+        ok(candidates2.some(c => c.candidate.includes("relay")), "Should get at least one relay candidate");
+        const ufrags2 = Array.from(new Set(candidates2.map(c => c.usernameFragment)));
+        is(ufrags2.length, 1, "Should have one ufrag in candidate set");
+        isnot(ufrags[0], ufrags2[0], "ufrag should change, because setConfiguration should have triggered an ICE restart");
+      } finally {
+        offerer.close();
+        answerer.close();
+      }
+    },
+
+    async function addStunServerBeforeCreateAnswer() {
+      const offerer = new RTCPeerConnection();
+      const answerer = new RTCPeerConnection();
+
+      try {
+        await answerer.setRemoteDescription(await offerer.createOffer({offerToReceiveAudio: true}));
+
+        answerer.setConfiguration({iceServers: [{urls:[`stun:${turnAddressV4}`]}]});
+        const candidates = await gatherWithTimeout(answerer, 32000, `just a stun server`);
+        ok(candidates.some(c => c.candidate.includes("srflx")), "Should get at least one srflx candidate");
+        ok(!candidates.some(c => c.candidate.includes("relay")), "Should not get any relay candidates");
+      } finally {
+        offerer.close();
+        answerer.close();
+      }
+    },
+
+    async function addTurnServerBeforeCreateAnswer() {
+      const offerer = new RTCPeerConnection();
+      const answerer = new RTCPeerConnection();
+
+      try {
+        await answerer.setRemoteDescription(await offerer.createOffer({offerToReceiveAudio: true}));
+
+        answerer.setConfiguration({iceServers: [{urls:[`turn:${turnAddressV4}`], username, credential}]});
+        const candidates = await gatherWithTimeout(answerer, 32000, `a turn (udp) server`);
+        ok(candidates.some(c => c.candidate.includes("srflx")), "Should get at least one srflx candidate");
+        ok(candidates.some(c => c.candidate.includes("relay")), "Should get at least one relay candidate");
+      } finally {
+        offerer.close();
+        answerer.close();
+      }
+    },
+
+    async function addTurnTcpServerBeforeCreateAnswer() {
+      const offerer = new RTCPeerConnection();
+      const answerer = new RTCPeerConnection();
+
+      try {
+        await answerer.setRemoteDescription(await offerer.createOffer({offerToReceiveAudio: true}));
+
+        answerer.setConfiguration({iceServers: [{urls:[`turn:${turnAddressV4}?transport=tcp`], username, credential}]});
+        const candidates = await gatherWithTimeout(answerer, 32000, `a turn (tcp) server`);
+        ok(!candidates.some(c => c.candidate.includes("srflx")), "Should not get any srflx candidates");
+        ok(candidates.some(c => c.candidate.includes("relay")), "Should get at least one relay candidate");
+      } finally {
+        offerer.close();
+        answerer.close();
+      }
+    },
+
+    async function relayPolicyPreventsSrflx() {
+      const pc = new RTCPeerConnection();
+      try {
+        pc.setConfiguration({iceServers: [{urls:[`turn:${turnAddressV4}`], username, credential}], iceTransportPolicy: "relay"});
+        const candidates = await gatherWithTimeout(pc, 32000, `a turn (udp) server`);
+        ok(!candidates.some(c => c.candidate.includes("srflx")), "Should not get a srflx candidate");
+        ok(candidates.some(c => c.candidate.includes("relay")), "Should get at least one relay candidate");
+      } finally {
+        pc.close();
+      }
+    },
+
+    async function addOffererStunServerAllowsIceToConnect() {
+      const offerer = new RTCPeerConnection();
+      const answerer = new RTCPeerConnection();
+
+      try {
+        try {
+          // Both ends are behind a simulated endpoint-independent NAT, which
+          // requires at least one side to have a srflx candidate to work.
+          await connect(offerer, answerer, 2000, `no ICE servers`);
+          ok(false, "ICE should either have failed, or timed out!");
+        } catch (e) {
+          if (!(e instanceof Error)) throw e;
+          ok(true, "ICE should either have failed, or timed out!");
+        }
+
+        offerer.setConfiguration({iceServers: [{urls:[`stun:${turnAddressV4}`]}]});
+        await connect(offerer, answerer, 32000, `just a STUN server`);
+      } finally {
+        offerer.close();
+        answerer.close();
+      }
+    },
+
+    async function addAnswererStunServerDoesNotAllowIceToConnect() {
+      const offerer = new RTCPeerConnection();
+      const answerer = new RTCPeerConnection();
+
+      try {
+        try {
+          // Both ends are behind a simulated endpoint-independent NAT, which
+          // requires at least one side to have a srflx candidate to work.
+          await connect(offerer, answerer, 2000, `no ICE servers`);
+          ok(false, "ICE should either have failed, or timed out!");
+        } catch (e) {
+          if (!(e instanceof Error)) throw e;
+          ok(true, "ICE should either have failed, or timed out!");
+        }
+
+        // This _won't_ help, because the answerer does not get to decide to
+        // trigger an ICE restart.
+        answerer.setConfiguration({iceServers: [{urls:[`stun:${turnAddressV4}`]}]});
+        try {
+          await connectNoTrickleWait(offerer, answerer, 2000, `no ICE servers`);
+          ok(false, "ICE should either have failed, or timed out!");
+        } catch (e) {
+          if (!(e instanceof Error)) throw e;
+          ok(true, "ICE should either have failed, or timed out!");
+        }
+      } finally {
+        offerer.close();
+        answerer.close();
+      }
+    },
+
+    async function addOffererTurnServerAllowsIceToConnect() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.filtering_type', 'PORT_DEPENDENT'],
+          ['media.peerconnection.nat_simulator.mapping_type', 'PORT_DEPENDENT']);
+
+      const offerer = new RTCPeerConnection({iceServers: [{urls:[`stun:${turnAddressV4}`]}]});
+      const answerer = new RTCPeerConnection({iceServers: [{urls:[`stun:${turnAddressV4}`]}]});
+
+      try {
+        try {
+          // Both ends are behind a simulated port-dependent NAT, which
+          // requires at least one side to have a relay candidate to work.
+          await connect(offerer, answerer, 2000, `just a STUN server`);
+          ok(false, "ICE should either have failed, or timed out!");
+        } catch (e) {
+          if (!(e instanceof Error)) throw e;
+          ok(true, "ICE should either have failed, or timed out!");
+        }
+
+        offerer.setConfiguration({iceServers: [{urls:[`turn:${turnAddressV4}`], username, credential}]});
+        await connect(offerer, answerer, 32000, `a TURN (udp) server`);
+      } finally {
+        offerer.close();
+        answerer.close();
+        await SpecialPowers.popPrefEnv();
+      }
+    },
+
+  ];
+
+  runNetworkTest(async () => {
+    const turnServer = iceServersArray.find(server => "username" in server);
+    username = turnServer.username;
+    credential = turnServer.credential;
+    // Just use the first url. It might make sense to look for TURNS first,
+    // since that will always use a hostname, but on CI we don't have TURNS
+    // support anyway (see bug 1323439).
+    const turnHostname = getTurnHostname(turnServer.urls[0]);
+    turnAddressV4 = await dnsLookupV4(turnHostname);
+
+    await pushPrefs(
+        ['media.peerconnection.ice.obfuscate_host_addresses', false],
+        ['media.peerconnection.nat_simulator.filtering_type', 'ENDPOINT_INDEPENDENT'],
+        ['media.peerconnection.nat_simulator.mapping_type', 'ENDPOINT_INDEPENDENT'],
+        ['media.peerconnection.ice.loopback', true],
+        ['media.getusermedia.insecure.enabled', true]);
+
+    for (const test of tests) {
+      info(`Running test: ${test.name}`);
+      try {
+        await test();
+      } catch (e) {
+        ok(false, `Caught ${e.name}: ${e.message} ${e.stack}`);
+      }
+      info(`Done running test: ${test.name}`);
+      // Make sure we don't build up a pile of GC work, and also get PCImpl to
+      // print their timecards.
+      await new Promise(r => SpecialPowers.exactGC(r));
+    }
+
+    await SpecialPowers.popPrefEnv();
+  }, { useIceServer: true });
+</script>
+</pre>
+</body>
+</html>

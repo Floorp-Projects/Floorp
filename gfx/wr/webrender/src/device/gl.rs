@@ -3877,6 +3877,12 @@ impl Device {
             (gl::ONE, gl::ONE_MINUS_SRC_ALPHA),
         );
     }
+    pub fn set_blend_mode_plus_lighter(&mut self) {
+        self.set_blend_factors(
+            (gl::ONE, gl::ONE),
+            (gl::ONE, gl::ONE),
+        );
+    }
     pub fn set_blend_mode_exclusion(&mut self) {
         self.set_blend_factors(
             (gl::ONE_MINUS_DST_COLOR, gl::ONE_MINUS_SRC_COLOR),
@@ -3914,6 +3920,9 @@ impl Device {
                 // blend factor only make sense for the normal mode
                 self.gl.blend_func_separate(gl::ZERO, gl::SRC_COLOR, gl::ZERO, gl::SRC_ALPHA);
                 gl::FUNC_ADD
+            },
+            MixBlendMode::PlusLighter => {
+                return self.set_blend_mode_plus_lighter();
             },
             MixBlendMode::Multiply => gl::MULTIPLY_KHR,
             MixBlendMode::Screen => gl::SCREEN_KHR,

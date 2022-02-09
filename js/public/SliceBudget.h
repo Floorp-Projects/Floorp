@@ -50,6 +50,14 @@ class JS_PUBLIC_API SliceBudget {
  public:
   using InterruptRequestFlag = mozilla::Atomic<bool>;
 
+  // Whether this slice is running in (predicted to be) idle time.
+  // Only used for recording in the profile.
+  bool idle = false;
+
+  // Whether this slice was given an extended budget, larger than
+  // the predicted idle time.
+  bool extended = false;
+
  private:
   static const intptr_t UnlimitedCounter = INTPTR_MAX;
 

@@ -352,8 +352,6 @@ class AutofillRecords {
    *          The GUID of the newly added item..
    */
   async add(record, { sourceSync = false } = {}) {
-    this.log.debug("add:", record);
-
     let recordToSave = this._clone(record);
 
     if (sourceSync) {
@@ -460,7 +458,7 @@ class AutofillRecords {
    *         Preserve old record's properties if they don't exist in new record.
    */
   async update(guid, record, preserveOldProperties = false) {
-    this.log.debug("update:", guid, record);
+    this.log.debug(`update: ${guid}`);
 
     let recordFoundIndex = this._findIndexByGUID(guid);
     if (recordFoundIndex == -1) {
@@ -633,7 +631,7 @@ class AutofillRecords {
    *          A clone of the record.
    */
   async get(guid, { rawData = false } = {}) {
-    this.log.debug("get:", guid, rawData);
+    this.log.debug(`get: ${guid}`);
 
     let recordFound = this._findByGUID(guid);
     if (!recordFound) {
@@ -661,7 +659,7 @@ class AutofillRecords {
    *          An array containing clones of all records.
    */
   async getAll({ rawData = false, includeDeleted = false } = {}) {
-    this.log.debug("getAll", rawData, includeDeleted);
+    this.log.debug(`getAll. includeDeleted = ${includeDeleted}`);
 
     let records = this._data.filter(r => !r.deleted || includeDeleted);
     // Records are cloned to avoid accidental modifications from outside.
@@ -1997,21 +1995,10 @@ class FormAutofillStorageBase {
     if (!this._initializePromise) {
       this._store = this._initializeStore();
       this._initializePromise = this._store.load().then(() => {
-        let initializeAutofillRecords = [this.addresses.initialize()];
-        if (FormAutofill.isAutofillCreditCardsAvailable) {
-          initializeAutofillRecords.push(this.creditCards.initialize());
-        } else {
-          // Make creditCards records unavailable to other modules
-          // because we never initialize it.
-          Object.defineProperty(this, "creditCards", {
-            get() {
-              throw new Error(
-                "CreditCards is not initialized. " +
-                  "Please restart if you flip the pref manually."
-              );
-            },
-          });
-        }
+        let initializeAutofillRecords = [
+          this.addresses.initialize(),
+          this.creditCards.initialize(),
+        ];
         return Promise.all(initializeAutofillRecords);
       });
     }

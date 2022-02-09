@@ -22,6 +22,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/LateWriteChecks.h"
+#include "mozilla/RandomNum.h"
 #include "nsThreadUtils.h"
 
 #ifdef FUZZING
@@ -72,27 +73,22 @@ Channel::ChannelImpl::ChannelImpl(const ChannelId& channel_id, Mode mode,
   }
 }
 
-Channel::ChannelImpl::ChannelImpl(const ChannelId& channel_id,
-                                  HANDLE server_pipe, Mode mode,
+Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
                                   Listener* listener)
     : ALLOW_THIS_IN_INITIALIZER_LIST(input_state_(this)),
       ALLOW_THIS_IN_INITIALIZER_LIST(output_state_(this)),
       ALLOW_THIS_IN_INITIALIZER_LIST(factory_(this)) {
   Init(mode, listener);
 
-  if (mode == MODE_SERVER) {
-    // We don't need the pipe name because we've been passed a handle, but we do
-    // need to get the shared secret from the channel_id.
-    PipeName(channel_id, &shared_secret_);
-    waiting_for_shared_secret_ = !!shared_secret_;
-
-    // Use the existing handle that was dup'd to us
-    pipe_ = server_pipe;
-    EnqueueHelloMessage();
-  } else {
-    // Take the normal init path to connect to the server pipe
-    CreatePipe(channel_id, mode);
+  if (!pipe) {
+    closed_ = true;
+    return;
   }
+
+  shared_secret_ = 0;
+  waiting_for_shared_secret_ = false;
+  pipe_ = pipe.release();
+  EnqueueHelloMessage();
 }
 
 void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
@@ -123,8 +119,6 @@ void Channel::ChannelImpl::OutputQueuePop() {
   mozilla::UniquePtr<Message> message = output_queue_.Pop();
   output_queue_length_--;
 }
-
-HANDLE Channel::ChannelImpl::GetServerPipeHandle() const { return pipe_; }
 
 void Channel::ChannelImpl::Close() {
   ASSERT_OWNINGTHREAD(ChannelImpl);
@@ -763,9 +757,8 @@ Channel::Channel(const ChannelId& channel_id, Mode mode, Listener* listener)
   MOZ_COUNT_CTOR(IPC::Channel);
 }
 
-Channel::Channel(const ChannelId& channel_id, void* server_pipe, Mode mode,
-                 Listener* listener)
-    : channel_impl_(new ChannelImpl(channel_id, server_pipe, mode, listener)) {
+Channel::Channel(ChannelHandle pipe, Mode mode, Listener* listener)
+    : channel_impl_(new ChannelImpl(std::move(pipe), mode, listener)) {
   MOZ_COUNT_CTOR(IPC::Channel);
 }
 
@@ -777,10 +770,6 @@ Channel::~Channel() {
 bool Channel::Connect() { return channel_impl_->Connect(); }
 
 void Channel::Close() { channel_impl_->Close(); }
-
-void* Channel::GetServerPipeHandle() const {
-  return channel_impl_->GetServerPipeHandle();
-}
 
 void Channel::StartAcceptingHandles(Mode mode) {
   channel_impl_->StartAcceptingHandles(mode);
@@ -830,6 +819,52 @@ Channel::ChannelId Channel::GenerateVerifiedChannelID() {
 Channel::ChannelId Channel::ChannelIDForCurrentProcess() {
   return CommandLine::ForCurrentProcess()->GetSwitchValue(
       switches::kProcessChannelID);
+}
+
+// static
+bool Channel::CreateRawPipe(ChannelHandle* server, ChannelHandle* client) {
+  std::wstring pipe_name =
+      StringPrintf(L"\\\\.\\pipe\\gecko.%lu.%lu.%I64u", ::GetCurrentProcessId(),
+                   ::GetCurrentThreadId(), mozilla::RandomUint64OrDie());
+  const DWORD kOpenMode =
+      PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED | FILE_FLAG_FIRST_PIPE_INSTANCE;
+  const DWORD kPipeMode = PIPE_TYPE_BYTE | PIPE_READMODE_BYTE;
+  *server = mozilla::UniqueFileHandle(
+      ::CreateNamedPipeW(pipe_name.c_str(), kOpenMode, kPipeMode,
+                         1,                         // Max instances.
+                         Channel::kReadBufferSize,  // Output buffer size.
+                         Channel::kReadBufferSize,  // Input buffer size.
+                         5000,                      // Timeout in ms.
+                         nullptr));  // Default security descriptor.
+  if (!server) {
+    NS_WARNING(
+        nsPrintfCString("CreateNamedPipeW Failed %u", ::GetLastError()).get());
+    return false;
+  }
+
+  const DWORD kDesiredAccess = GENERIC_READ | GENERIC_WRITE;
+  // The SECURITY_ANONYMOUS flag means that the server side cannot impersonate
+  // the client, which is useful as both server & client may be unprivileged.
+  const DWORD kFlags =
+      SECURITY_SQOS_PRESENT | SECURITY_ANONYMOUS | FILE_FLAG_OVERLAPPED;
+  *client = mozilla::UniqueFileHandle(
+      ::CreateFileW(pipe_name.c_str(), kDesiredAccess, 0, nullptr,
+                    OPEN_EXISTING, kFlags, nullptr));
+  if (!client) {
+    NS_WARNING(
+        nsPrintfCString("CreateFileW Failed %u", ::GetLastError()).get());
+    return false;
+  }
+
+  // Since a client has connected, ConnectNamedPipe() should return zero and
+  // GetLastError() should return ERROR_PIPE_CONNECTED.
+  if (::ConnectNamedPipe(server->get(), nullptr) ||
+      ::GetLastError() != ERROR_PIPE_CONNECTED) {
+    NS_WARNING(
+        nsPrintfCString("ConnectNamedPipe Failed %u", ::GetLastError()).get());
+    return false;
+  }
+  return true;
 }
 
 }  // namespace IPC

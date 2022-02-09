@@ -1436,8 +1436,12 @@ int SliceBudget::describe(char* buffer, size_t maxlen) const {
     if (interruptRequested) {
       interruptStr = interrupted ? "INTERRUPTED " : "interruptible ";
     }
-    return snprintf(buffer, maxlen, "%s%" PRId64 "ms", interruptStr,
-                    timeBudget());
+    const char* extra = "";
+    if (idle) {
+      extra = extended ? " (started idle but extended)" : " (idle)";
+    }
+    return snprintf(buffer, maxlen, "%s%" PRId64 "ms%s", interruptStr,
+                    timeBudget(), extra);
   }
 }
 
@@ -3470,12 +3474,17 @@ bool GCRuntime::maybeIncreaseSliceBudget(SliceBudget& budget) {
   return wasIncreasedForLongCollections || wasIncreasedForUgentCollections;
 }
 
+static void ExtendBudget(SliceBudget& budget, double newDuration) {
+  bool idleTriggered = budget.idle;
+  budget = SliceBudget(TimeBudget(newDuration), nullptr);  // Uninterruptible.
+  budget.idle = idleTriggered;
+  budget.extended = true;
+}
+
 bool GCRuntime::maybeIncreaseSliceBudgetForLongCollections(
     SliceBudget& budget) {
   // For long-running collections, enforce a minimum time budget that increases
   // linearly with time up to a maximum.
-
-  bool wasIncreased = false;
 
   // All times are in milliseconds.
   struct BudgetAtTime {
@@ -3491,20 +3500,18 @@ bool GCRuntime::maybeIncreaseSliceBudgetForLongCollections(
       LinearInterpolate(totalTime, MinBudgetStart.time, MinBudgetStart.budget,
                         MinBudgetEnd.time, MinBudgetEnd.budget);
 
-  if (budget.timeBudget() < minBudget) {
-    budget = SliceBudget(TimeBudget(minBudget), nullptr);  // Uninterruptible.
-    wasIncreased = true;
+  if (budget.timeBudget() >= minBudget) {
+    return false;
   }
 
-  return wasIncreased;
+  ExtendBudget(budget, minBudget);
+  return true;
 }
 
 bool GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
     SliceBudget& budget) {
   // Enforce a minimum time budget based on how close we are to the incremental
   // limit.
-
-  bool wasIncreased = false;
 
   size_t minBytesRemaining = SIZE_MAX;
   for (AllZonesIter zone(this); !zone.done(); zone.next()) {
@@ -3527,12 +3534,12 @@ bool GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
         double(minBytesRemaining) / double(tunables.urgentThresholdBytes());
     double minBudget = double(defaultSliceBudgetMS()) / fractionRemaining;
     if (budget.timeBudget() < minBudget) {
-      budget = SliceBudget(TimeBudget(minBudget), nullptr);  // Uninterruptible.
-      wasIncreased = true;
+      ExtendBudget(budget, minBudget);
+      return true;
     }
   }
 
-  return wasIncreased;
+  return false;
 }
 
 static void ScheduleZones(GCRuntime* gc) {

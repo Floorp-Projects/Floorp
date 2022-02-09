@@ -388,7 +388,14 @@ function isPaused(dbg) {
   return dbg.selectors.getIsCurrentThreadPaused();
 }
 
-// Make sure the debugger is paused at a certain source ID and line.
+/**
+ * Make sure the debugger is paused at a certain source ID and line.
+ *
+ * @memberof mochitest/asserts
+ * @param {Object} dbg
+ * @param {String} expectedSourceId
+ * @param {String} expectedLine
+ */
 function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine) {
   // Check that the debugger is paused.
   assertPaused(dbg);
@@ -398,7 +405,9 @@ function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine) {
 
   const frames = dbg.selectors.getCurrentThreadFrames();
   ok(frames.length >= 1, "Got at least one frame");
-  const { sourceId, line } = frames[0].location;
+
+  // Lets make sure we can assert both original and generated file locations when needed
+  const { sourceId, line } =  isGeneratedId(expectedSourceId) ? frames[0].generatedLocation : frames[0].location;
   is(sourceId, expectedSourceId, "Frame has correct source");
   ok(
     line == expectedLine,
@@ -2200,7 +2209,7 @@ async function setLogPoint(dbg, index, value) {
  * @return Object Test server with two functions:
  *   - urlFor(path)
  *     Returns the absolute url for a given file.
- *   - switchToNextVersion() 
+ *   - switchToNextVersion()
  *     Start serving files from the next available sub folder.
  */
 function createVersionizedHttpTestServer(testFolderName) {
