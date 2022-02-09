@@ -25,7 +25,7 @@ struct URLClassifierLocalResult
   nsCString matchingList;
 };
 
-[ChildImpl="URLClassifierLocalChild", ParentImpl="URLClassifierLocalParent"]
+[ManualDealloc, ChildImpl="URLClassifierLocalChild", ParentImpl="URLClassifierLocalParent"]
 protocol PURLClassifierLocal
 {
   manager PContent;

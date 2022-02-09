@@ -10,7 +10,7 @@ include "nsContentPermissionHelper.h";
 namespace mozilla {
 namespace dom {
 
-[ChildImpl="RemotePermissionRequest", ParentImpl=virtual]
+[ManualDealloc, ChildImpl="RemotePermissionRequest", ParentImpl=virtual]
 protocol PContentPermissionRequest
 {
   manager PContent;

@@ -13,7 +13,7 @@ struct DummyStruct {
     int x;
 };
 
-[ChildImpl="TestUniquePtrIPCChild", ParentImpl="TestUniquePtrIPCParent"]
+[ManualDealloc, ChildImpl="TestUniquePtrIPCChild", ParentImpl="TestUniquePtrIPCParent"]
 protocol PTestUniquePtrIPC
 {
 child:

@@ -14,7 +14,7 @@ using cdm::HdcpVersion from "GMPSanitizedExports.h";
 namespace mozilla {
 namespace gmp {
 
-[RefCounted, ChildImpl=virtual, ParentImpl="ChromiumCDMParent"]
+[ChildImpl=virtual, ParentImpl="ChromiumCDMParent"]
 async protocol PChromiumCDM
 {
   manager PGMPContent;

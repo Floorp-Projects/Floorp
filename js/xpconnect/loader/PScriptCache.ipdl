@@ -23,7 +23,7 @@ struct ScriptData {
     uint8_t[] xdrData;
 };
 
-[ChildImpl="ScriptCacheChild", ParentImpl="ScriptCacheParent"]
+[ManualDealloc, ChildImpl="ScriptCacheChild", ParentImpl="ScriptCacheParent"]
 protocol PScriptCache
 {
     manager PContent;

@@ -84,7 +84,7 @@ union CursorResponse
   IndexKeyCursorResponse[];
 };
 
-[RefCounted, ChildImpl="indexedDB::BackgroundCursorChildBase", ParentImpl=virtual]
+[ChildImpl="indexedDB::BackgroundCursorChildBase", ParentImpl=virtual]
 protocol PBackgroundIDBCursor
 {
   manager PBackgroundIDBTransaction or PBackgroundIDBVersionChangeTransaction;

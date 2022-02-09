@@ -6,7 +6,7 @@ include "mozilla/_ipdltest/TestMultiMgrs.h";
 namespace mozilla {
 namespace _ipdltest {
 
-[ChildImpl="TestMultiMgrsLeftChild", ParentImpl="TestMultiMgrsLeftParent"]
+[ManualDealloc, ChildImpl="TestMultiMgrsLeftChild", ParentImpl="TestMultiMgrsLeftParent"]
 protocol PTestMultiMgrsLeft {
     manager PTestMultiMgrs;
 

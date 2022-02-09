@@ -923,7 +923,7 @@ class GatherDecls(TcheckVisitor):
             self.checkAttributes(
                 p.attributes,
                 {
-                    "RefCounted": None,
+                    "ManualDealloc": None,
                     "NestedUpTo": ("not", "inside_sync", "inside_cpow"),
                     "NeedsOtherPid": None,
                     "ChildImpl": ("virtual", StringLiteral),
@@ -944,7 +944,7 @@ class GatherDecls(TcheckVisitor):
                     qname,
                     p.nestedUpTo(),
                     p.sendSemantics,
-                    "RefCounted" in p.attributes,
+                    "ManualDealloc" not in p.attributes,
                     "NeedsOtherPid" in p.attributes,
                 ),
                 shortname=p.name,

@@ -6,6 +6,7 @@
 
 namespace mozilla {
 
+[ManualDealloc]
 async protocol PSandboxTesting {
 parent:
   async ReportTestResults(nsCString testName, bool passed, nsCString message);

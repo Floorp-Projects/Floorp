@@ -80,7 +80,7 @@ struct LSSnapshotInitInfo
  * ContentParent::AboutToLoadHttpFtpDocumentForChild, the central place
  * for pre-loading.)
  */
-[ChildImpl=virtual, ParentImpl=virtual]
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PBackgroundLSDatabase
 {
   manager PBackground;

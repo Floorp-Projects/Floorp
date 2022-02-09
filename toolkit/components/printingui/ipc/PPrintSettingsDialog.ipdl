@@ -17,7 +17,7 @@ union PrintDataOrNSResult
   nsresult;
 };
 
-[ChildImpl=virtual, ParentImpl=virtual]
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PPrintSettingsDialog
 {
   manager PPrinting;

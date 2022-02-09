@@ -3,7 +3,7 @@ include "mozilla/_ipdltest/TestShmem.h";
 namespace mozilla {
 namespace _ipdltest {
 
-[ChildImpl="TestShmemChild", ParentImpl="TestShmemParent"]
+[ManualDealloc, ChildImpl="TestShmemChild", ParentImpl="TestShmemParent"]
 protocol PTestShmem {
 child:
     async Give(Shmem mem, Shmem unsafe, uint32_t expectedSize);

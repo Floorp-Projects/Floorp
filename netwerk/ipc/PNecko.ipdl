@@ -49,7 +49,7 @@ namespace mozilla {
 namespace net {
 
 //-------------------------------------------------------------------
-[NestedUpTo=inside_cpow] sync protocol PNecko
+[ManualDealloc, NestedUpTo=inside_cpow] sync protocol PNecko
 {
   manager PContent;
   manages PHttpChannel;

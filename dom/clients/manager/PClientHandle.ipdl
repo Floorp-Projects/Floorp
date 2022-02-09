@@ -15,7 +15,7 @@ include "mozilla/ipc/ProtocolMessageUtils.h";
 namespace mozilla {
 namespace dom {
 
-[ChildImpl=virtual, ParentImpl=virtual]
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PClientHandle
 {
   manager PClientManager;

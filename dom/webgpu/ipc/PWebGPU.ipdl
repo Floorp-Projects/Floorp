@@ -26,7 +26,7 @@ namespace webgpu {
  * command from the content process, and a WebGPUParent in the compositor
  * process that runs the commands.
  */
-[RefCounted] async protocol PWebGPU
+async protocol PWebGPU
 {
   manager PCanvasManager;
 

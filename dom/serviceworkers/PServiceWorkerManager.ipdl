@@ -12,6 +12,7 @@ using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 namespace mozilla {
 namespace dom {
 
+[ManualDealloc]
 protocol PServiceWorkerManager
 {
   manager PBackground;
