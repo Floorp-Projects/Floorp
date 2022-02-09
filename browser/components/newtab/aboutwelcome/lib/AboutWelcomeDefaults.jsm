@@ -222,12 +222,13 @@ async function getAddonFromRepository(data) {
   if (addonInfo.sourceURI.scheme !== "https") {
     return null;
   }
+
   return {
     name: addonInfo.name,
     url: addonInfo.sourceURI.spec,
     iconURL: addonInfo.icons["64"] || addonInfo.icons["32"],
     type: addonInfo.type,
-    themePreviewInfo: addonInfo.previews,
+    screenshots: addonInfo.screenshots,
   };
 }
 
