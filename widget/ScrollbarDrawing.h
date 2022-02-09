@@ -32,19 +32,6 @@ class ScrollbarDrawing {
   ScrollbarDrawing() = default;
   virtual ~ScrollbarDrawing() = default;
 
-  struct ScrollbarParams {
-    bool isOverlay = false;
-    bool isRolledOver = false;
-    bool isSmall = false;
-    bool isHorizontal = false;
-    bool isRtl = false;
-    bool isOnDarkBackground = false;
-    bool isCustom = false;
-    // Two colors only used when custom is true.
-    nscolor trackColor = NS_RGBA(0, 0, 0, 0);
-    nscolor faceColor = NS_RGBA(0, 0, 0, 0);
-  };
-
   static DPIRatio GetDPIRatioForScrollbarPart(nsPresContext*);
 
   static nsIFrame* GetParentScrollbarFrame(nsIFrame* aFrame);
@@ -72,10 +59,6 @@ class ScrollbarDrawing {
   virtual sRGBColor ComputeScrollbarThumbColor(
       nsIFrame*, const ComputedStyle&, const EventStates& aElementState,
       const EventStates& aDocumentState, const Colors&);
-
-  static ScrollbarParams ComputeScrollbarParams(nsIFrame* aFrame,
-                                                const ComputedStyle& aStyle,
-                                                bool aIsHorizontal);
 
   nscolor GetScrollbarButtonColor(nscolor aTrackColor, EventStates);
   Maybe<nscolor> GetScrollbarArrowColor(nscolor aButtonColor);
