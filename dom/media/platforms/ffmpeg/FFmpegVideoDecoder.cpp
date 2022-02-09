@@ -1023,7 +1023,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
     RefPtr<ImageBufferWrapper> wrapper = static_cast<ImageBufferWrapper*>(
         mLib->av_buffer_get_opaque(mFrame->buf[0]));
     MOZ_ASSERT(wrapper);
-    auto* image = wrapper->AsPlanarYCbCrImage();
+    auto* image = wrapper->AsImage();
     RefPtr<layers::TextureClient> texture = image->GetTextureClient(nullptr);
     if (!texture) {
       NS_WARNING("Failed to get the texture client!");
