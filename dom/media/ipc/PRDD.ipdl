@@ -43,7 +43,8 @@ parent:
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
 
   async NewContentRemoteDecoderManager(
-            Endpoint<PRemoteDecoderManagerParent> endpoint);
+            Endpoint<PRemoteDecoderManagerParent> endpoint,
+            bool allowHardwareDecoding);
 
   async RequestMemoryReport(uint32_t generation,
                             bool anonymize,
