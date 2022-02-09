@@ -880,6 +880,13 @@ pref("devtools.performance.recording.child.timeout_s", 0);
   pref("devtools.performance.recording.preset", "web-developer");
   pref("devtools.performance.recording.preset.remote", "web-developer");
 #endif
+// The profiler's active tab view has a few issues. Disable it in most
+// environments until the issues are ironed out.
+#if defined(NIGHTLY_BUILD)
+  pref("devtools.performance.recording.active-tab-view.enabled", true);
+#else
+  pref("devtools.performance.recording.active-tab-view.enabled", false);
+#endif
 // Profiler buffer size. It is the maximum number of 8-bytes entries in the
 // profiler's buffer. 10000000 is ~80mb.
 pref("devtools.performance.recording.entries", 10000000);
