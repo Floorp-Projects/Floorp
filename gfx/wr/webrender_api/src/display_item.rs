@@ -974,6 +974,7 @@ pub enum MixBlendMode {
     Saturation = 13,
     Color = 14,
     Luminosity = 15,
+    PlusLighter = 16,
 }
 
 #[repr(C)]

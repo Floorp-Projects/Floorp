@@ -8,6 +8,7 @@
 
 #include "gfxTypes.h"
 #include "ipc/EnumSerializer.h"
+#include "ipc/IPCMessageUtils.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/ipc/Shmem.h"

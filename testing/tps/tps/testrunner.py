@@ -425,11 +425,7 @@ class TPSTestRunner(object):
         else:
             try:
 
-                if self.numfailed > 0 or self.numpassed == 0:
-                    To = self.config["email"].get("notificationlist")
-                else:
-                    To = self.config["email"].get("passednotificationlist")
-                self.writeToResultFile(self.postdata, sendTo=To)
+                self.writeToResultFile(self.postdata)
             except Exception:
                 traceback.print_exc()
                 try:

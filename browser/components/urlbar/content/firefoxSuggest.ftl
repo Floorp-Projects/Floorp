@@ -11,9 +11,9 @@
 
 ## These strings are used in the urlbar panel.
 
-# A label shown above the best match group in the urlbar results.
+# A label shown above the top pick group in the urlbar results.
 urlbar-group-best-match =
-  .label = { -firefox-suggest-brand-name } · Best Match
+  .label = { -firefox-suggest-brand-name } · Top pick
 
 # Tooltip text for the help button shown in Firefox Suggest urlbar results.
 firefox-suggest-urlbar-learn-more =

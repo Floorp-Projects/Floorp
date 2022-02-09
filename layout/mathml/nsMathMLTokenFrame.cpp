@@ -7,6 +7,7 @@
 #include "nsMathMLTokenFrame.h"
 
 #include "mozilla/PresShell.h"
+#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
 #include "nsTextFrame.h"

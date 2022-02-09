@@ -438,6 +438,7 @@ impl BrushShader {
             BlendMode::SubpixelConstantTextColor(..) |
             BlendMode::SubpixelWithBgColor |
             BlendMode::Screen |
+            BlendMode::PlusLighter |
             BlendMode::Exclusion => {
                 if features.contains(BatchFeatures::ALPHA_PASS) {
                     &mut self.alpha

@@ -10,11 +10,11 @@
 // Keep others in (case-insensitive) order:
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
-#include "nsIFrame.h"
 #include "mozilla/ISVGDisplayableFrame.h"
 #include "mozilla/SVGContainerFrame.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/SVGViewportElement.h"
+#include "nsLayoutUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::gfx;

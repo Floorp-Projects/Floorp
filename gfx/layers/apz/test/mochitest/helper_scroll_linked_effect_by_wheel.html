@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<title>A scroll linked effect scrolled by wheel events</title>
+<style>
+html, body { margin: 0; }
+body {
+  height: 1000vh;
+}
+#target {
+  position: absolute;
+  height: 800px;
+  background-color: #cc00cc;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+</style>
+<div id="target"></div>
+<script>
+// Set up a scroll linked effect element.
+window.addEventListener("scroll", () => {
+  target.style.top = window.scrollY + "px";
+});
+
+async function test() {
+  let rect = rectRelativeToScreen(target);
+  // We only care the top 10px here since the scroll linked effect on the
+  // main-thread can't keep up with the async scrolling by wheel events so that
+  // the position absolute element is often partially scrolled out.
+  rect.h = 10;
+  const initialSnapshot = await getSnapshot(rect);
+
+  let snapshots = [];
+  for (let i = 0; i < 10; i++) {
+    await synthesizeNativeWheel(window, 50, 50, 0, -10);
+    snapshots.push(await getSnapshot(rect));
+  }
+
+  const sampledData = collectSampledScrollOffsets(document.scrollingElement);
+  const hasPoint5FractionalOffset = sampledData.some(data => {
+    return SpecialPowers.wrap(data).scrollOffsetY.toString().split(".")?.[1] === "5"
+  });
+
+  if (hasPoint5FractionalOffset) {
+    todo(false, "Bug 1752789: There's at least one sampled scroll offset " +
+         "having .5 fractional part in such cases scroll linked effects can " +
+         "not be rendered at the same position of the async scroll offset");
+    return;
+  }
+
+  snapshots.forEach(snapshot => {
+    is(initialSnapshot, snapshot);
+  });
+}
+
+pushPrefs([["apz.test.logging_enabled", true]])
+.then(waitUntilApzStable)
+.then(test)
+.then(subtestDone, subtestFailed);
+</script>

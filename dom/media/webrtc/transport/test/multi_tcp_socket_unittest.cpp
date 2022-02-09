@@ -44,7 +44,7 @@ class MultiTcpSocketTest : public MtransportTest {
     MtransportTest::SetUp();
 
     NrIceCtx::InitializeGlobals(NrIceCtx::GlobalConfig());
-    ice_ctx_ = NrIceCtx::Create("stun", NrIceCtx::Config());
+    ice_ctx_ = NrIceCtx::Create("stun");
 
     test_utils_->sts_target()->Dispatch(
         WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET),
@@ -111,8 +111,8 @@ class MultiTcpSocketTest : public MtransportTest {
           (char*)"127.0.0.1", EnsureEphemeral(port_s++), IPPROTO_TCP, &local);
       ASSERT_EQ(0, r);
 
-      r = nr_socket_multi_tcp_create(ice_ctx_->ctx(), &local, tcp_type, 1, 2048,
-                                     sock);
+      r = nr_socket_multi_tcp_create(ice_ctx_->ctx(), nullptr, &local, tcp_type,
+                                     1, 2048, sock);
     }
 
     ASSERT_EQ(0, r);

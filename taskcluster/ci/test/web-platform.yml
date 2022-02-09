@@ -416,6 +416,7 @@ test-verify-wpt:
         category: test-verify
         name: test-verify-wpt
     variants: [fission]
+    run-without-variant: false
     treeherder-symbol: TVw
     max-run-time: 10800
     run-on-projects:
@@ -450,9 +451,7 @@ test-coverage-wpt:
         by-variant:
             fission:
                 by-test-platform:
-                    linux.*64-qr/debug: ['trunk']
-                    linux.*64(-shippable)?-qr/opt: ['trunk']
-                    windows10-64-2004(-shippable)?-qr/opt: ['trunk']
+                    .*-ccov.*/.*: built-projects
                     default: []
             webrender-sw:
                 by-test-platform:
@@ -461,7 +460,6 @@ test-coverage-wpt:
             default:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    .*-ccov.*/.*: built-projects
                     default: []
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 2

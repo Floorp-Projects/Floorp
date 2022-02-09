@@ -41,6 +41,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExperimentAPI",
+  "resource://nimbus/ExperimentAPI.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+});
+
 function TabSetRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
@@ -312,7 +322,7 @@ TabTracker.prototype = {
     this.modified = false;
   },
 
-  _topics: ["pageshow", "TabOpen", "TabClose", "TabSelect"],
+  _topics: ["TabOpen", "TabClose", "TabSelect"],
 
   _registerListenersForWindow(window) {
     this._log.trace("Registering tab listeners in window");
@@ -385,10 +395,21 @@ TabTracker.prototype = {
     this._log.trace("onTab event: " + event.type);
     this.modified = true;
 
-    // For page shows, bump the score 10% of the time, emulating a partial
-    // score. We don't want to sync too frequently. For all other page
-    // events, always bump the score.
-    if (event.type != "pageshow" || Math.random() < 0.1) {
+    const delayInMs = NimbusFeatures.syncAfterTabChange.getVariable(
+      "syncDelayAfterTabChange"
+    );
+
+    // If we are part of the experiment don't use score here
+    // and instead schedule a sync once we detect a tab change
+    //  to ensure the server always has the most up to date tabs
+    if (delayInMs > 0) {
+      this._log.debug(
+        "Detected a tab change: scheduling a sync in " + delayInMs + "ms"
+      );
+      this.engine.service.scheduler.scheduleNextSync(delayInMs, {
+        why: "tabschanged",
+      });
+    } else {
       this.score += SCORE_INCREMENT_SMALL;
     }
   },

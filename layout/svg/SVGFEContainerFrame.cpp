@@ -13,6 +13,8 @@
 #include "nsIFrame.h"
 #include "nsLiteralString.h"
 
+using namespace mozilla::dom;
+
 nsIFrame* NS_NewSVGFEContainerFrame(mozilla::PresShell* aPresShell,
                                     mozilla::ComputedStyle* aStyle);
 
