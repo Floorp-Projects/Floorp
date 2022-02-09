@@ -40,7 +40,7 @@ union FactoryRequestParams
   DeleteDatabaseRequestParams;
 };
 
-[RefCounted, ChildImpl="indexedDB::BackgroundFactoryChild", ParentImpl=virtual]
+[ChildImpl="indexedDB::BackgroundFactoryChild", ParentImpl=virtual]
 sync protocol PBackgroundIDBFactory
 {
   manager PBackground;

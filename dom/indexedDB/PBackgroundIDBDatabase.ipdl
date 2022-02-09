@@ -40,7 +40,7 @@ union DatabaseRequestParams
   CreateFileParams;
 };
 
-[ChildImpl="indexedDB::BackgroundDatabaseChild", ParentImpl=virtual]
+[ManualDealloc, ChildImpl="indexedDB::BackgroundDatabaseChild", ParentImpl=virtual]
 sync protocol PBackgroundIDBDatabase
 {
   manager PBackgroundIDBFactory;

@@ -79,7 +79,7 @@ struct TextRangeData
   int32_t EndOffset;
 };
 
-[NestedUpTo=inside_sync, ChildImpl=virtual, ParentImpl=virtual]
+[ManualDealloc, NestedUpTo=inside_sync, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PDocAccessible
 {
   manager PBrowser;

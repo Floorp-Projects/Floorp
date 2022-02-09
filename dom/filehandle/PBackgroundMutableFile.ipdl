@@ -15,7 +15,7 @@ using mozilla::dom::FileMode
 namespace mozilla {
 namespace dom {
 
-[ChildImpl="indexedDB::BackgroundMutableFileChild", ParentImpl="BackgroundMutableFileParentBase"]
+[ManualDealloc, ChildImpl="indexedDB::BackgroundMutableFileChild", ParentImpl="BackgroundMutableFileParentBase"]
 sync protocol PBackgroundMutableFile
 {
   manager PBackgroundIDBDatabase;

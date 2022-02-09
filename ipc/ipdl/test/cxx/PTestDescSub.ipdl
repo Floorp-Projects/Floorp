@@ -6,7 +6,7 @@ include "mozilla/_ipdltest/TestDesc.h";
 namespace mozilla {
 namespace _ipdltest {
 
-[ChildImpl="TestDescSubChild", ParentImpl="TestDescSubParent"]
+[ManualDealloc, ChildImpl="TestDescSubChild", ParentImpl="TestDescSubParent"]
 intr protocol PTestDescSub {
     manager PTestDesc;
     manages PTestDescSubsub;

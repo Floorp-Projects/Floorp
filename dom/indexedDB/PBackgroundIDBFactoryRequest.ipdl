@@ -30,7 +30,7 @@ union FactoryRequestResponse
   DeleteDatabaseRequestResponse;
 };
 
-[ChildImpl="indexedDB::BackgroundFactoryRequestChild", ParentImpl=virtual]
+[ManualDealloc, ChildImpl="indexedDB::BackgroundFactoryRequestChild", ParentImpl=virtual]
 protocol PBackgroundIDBFactoryRequest
 {
   manager PBackgroundIDBFactory;

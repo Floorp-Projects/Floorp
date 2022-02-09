@@ -22,7 +22,7 @@ union DatabaseRequestResponse
   CreateFileRequestResponse;
 };
 
-[ChildImpl="indexedDB::BackgroundDatabaseRequestChild", ParentImpl=virtual]
+[ManualDealloc, ChildImpl="indexedDB::BackgroundDatabaseRequestChild", ParentImpl=virtual]
 protocol PBackgroundIDBDatabaseRequest
 {
   manager PBackgroundIDBDatabase;

@@ -7,6 +7,7 @@ include protocol PBackground;
 namespace mozilla {
 namespace dom {
 
+[ManualDealloc]
 protocol PEndpointForReport
 {
   manager PBackground;

@@ -31,7 +31,7 @@ union JSONVariant {
     JSONVariant[];
 };
 
-[ChildImpl="TestJSONChild", ParentImpl="TestJSONParent"]
+[ManualDealloc, ChildImpl="TestJSONChild", ParentImpl="TestJSONParent"]
 sync protocol PTestJSON {
     manages PTestHandle;
 

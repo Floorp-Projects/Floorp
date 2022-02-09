@@ -36,7 +36,7 @@ using mozilla::VsyncId from "mozilla/VsyncDispatcher.h";
 namespace mozilla {
 namespace layers {
 
-[ParentImpl=virtual]
+[ManualDealloc, ParentImpl=virtual]
 sync protocol PWebRenderBridge
 {
   manager PCompositorBridge;

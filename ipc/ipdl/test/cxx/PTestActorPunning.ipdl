@@ -9,7 +9,7 @@ using struct mozilla::_ipdltest::Bad from "mozilla/_ipdltest/IPDLUnitTestUtils.h
 namespace mozilla {
 namespace _ipdltest {
 
-[ChildImpl="TestActorPunningChild", ParentImpl="TestActorPunningParent"]
+[ManualDealloc, ChildImpl="TestActorPunningChild", ParentImpl="TestActorPunningParent"]
 protocol PTestActorPunning {
     manages PTestActorPunningPunned;
     manages PTestActorPunningSub;

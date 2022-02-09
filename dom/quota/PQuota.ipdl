@@ -153,7 +153,7 @@ union RequestParams
   ListOriginsParams;
 };
 
-[ChildImpl=virtual, ParentImpl=virtual]
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PQuota
 {
   manager PBackground;
