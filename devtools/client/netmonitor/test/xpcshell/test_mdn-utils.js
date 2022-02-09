@@ -16,6 +16,7 @@ function run_test() {
   const GTM_PARAMS_WC =
     "?utm_source=mozilla" +
     "&utm_medium=devtools-webconsole&utm_campaign=default";
+  const USER_DOC_URL = "https://firefox-source-docs.mozilla.org/devtools-user/";
 
   const {
     getHeadersURL,
@@ -46,17 +47,16 @@ function run_test() {
 
   equal(
     getNetMonitorTimingsURL(),
-    `${MDN_URL}Tools/Network_Monitor/request_details${GTM_PARAMS_NM}#Timings`
+    `${USER_DOC_URL}network_monitor/request_details/#network-monitor-request-details-timings-tab`
   );
 
   equal(
     getPerformanceAnalysisURL(),
-    `${MDN_URL}Tools/Network_Monitor/Performance_analysis${GTM_PARAMS_NM}`
+    `${USER_DOC_URL}network_monitor/performance_analysis/`
   );
 
   equal(
     getFilterBoxURL(),
-    `${MDN_URL}Tools/Network_Monitor/request_list` +
-      `${GTM_PARAMS_NM}#Filtering_by_properties`
+    `${USER_DOC_URL}network_monitor/request_list/#filtering-by-properties`
   );
 }
