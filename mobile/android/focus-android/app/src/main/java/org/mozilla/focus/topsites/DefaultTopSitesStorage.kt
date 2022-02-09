@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.feature.top.sites.TopSitesProviderConfig
 import mozilla.components.feature.top.sites.TopSitesStorage
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -53,8 +54,8 @@ class DefaultTopSitesStorage(
 
     override suspend fun getTopSites(
         totalSites: Int,
-        fetchProvidedTopSites: Boolean,
-        frecencyConfig: FrecencyThresholdOption?
+        frecencyConfig: FrecencyThresholdOption?,
+        providerConfig: TopSitesProviderConfig?
     ): List<TopSite> = pinnedSitesStorage.getPinnedSites().take(totalSites)
 
     companion object {
