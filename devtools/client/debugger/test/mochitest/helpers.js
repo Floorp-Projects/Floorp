@@ -262,11 +262,13 @@ function assertEmptyLines(dbg, lines) {
 }
 
 function getVisibleSelectedFrameLine(dbg) {
-  const {
-    selectors: { getVisibleSelectedFrame },
-  } = dbg;
-  const frame = getVisibleSelectedFrame();
-  return frame && frame.location.line;
+  const frame = dbg.selectors.getVisibleSelectedFrame();
+  return frame?.location.line;
+}
+
+function getVisibleSelectedFrameColumn(dbg) {
+  const frame = dbg.selectors.getVisibleSelectedFrame();
+  return frame?.location.column;
 }
 
 /**
@@ -281,7 +283,8 @@ function assertPausedLocation(dbg) {
 
   // Check the pause location
   const pauseLine = getVisibleSelectedFrameLine(dbg);
-  assertDebugLine(dbg, pauseLine);
+  const pauseColumn = getVisibleSelectedFrameColumn(dbg);
+  assertDebugLine(dbg, pauseLine, pauseColumn);
 
   ok(isVisibleInEditor(dbg, getCM(dbg).display.gutters), "gutter is visible");
 }
@@ -394,9 +397,10 @@ function isPaused(dbg) {
  * @memberof mochitest/asserts
  * @param {Object} dbg
  * @param {String} expectedSourceId
- * @param {String} expectedLine
+ * @param {Number} expectedLine
+ * @param {Number} [expectedColumn]
  */
-function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine) {
+function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine, expectedColumn) {
   // Check that the debugger is paused.
   assertPaused(dbg);
 
@@ -407,12 +411,19 @@ function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine) {
   ok(frames.length >= 1, "Got at least one frame");
 
   // Lets make sure we can assert both original and generated file locations when needed
-  const { sourceId, line } =  isGeneratedId(expectedSourceId) ? frames[0].generatedLocation : frames[0].location;
+  const { sourceId, line, column } =  isGeneratedId(expectedSourceId) ? frames[0].generatedLocation : frames[0].location;
   is(sourceId, expectedSourceId, "Frame has correct source");
   ok(
     line == expectedLine,
-    `Frame paused at ${line}, but expected ${expectedLine}`
+    `Frame paused at line ${line}, but expected line ${expectedLine}`
   );
+
+  if (expectedColumn) {
+    ok(
+      column == expectedColumn,
+      `Frame paused at column ${column}, but expected column ${expectedColumn}`
+    );
+  }
 }
 
 async function waitForThreadCount(dbg, count) {
