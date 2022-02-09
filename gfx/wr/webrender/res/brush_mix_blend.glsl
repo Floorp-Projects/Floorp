@@ -238,6 +238,7 @@ const int MixBlendMode_Hue         = 12;
 const int MixBlendMode_Saturation  = 13;
 const int MixBlendMode_Color       = 14;
 const int MixBlendMode_Luminosity  = 15;
+const int MixBlendMode_PlusLighter = 16;
 
 Fragment brush_fs() {
     float perspective_divisor = mix(gl_FragCoord.w, 1.0, v_perspective.x);
@@ -321,6 +322,9 @@ Fragment brush_fs() {
             break;
         case MixBlendMode_Luminosity:
             result.rgb = Luminosity(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_PlusLighter:
+            // TODO(emilio): Implement.
             break;
         default: break;
     }
