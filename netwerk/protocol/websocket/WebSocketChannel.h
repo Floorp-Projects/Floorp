@@ -112,7 +112,6 @@ class WebSocketChannel : public BaseWebSocketChannel,
 
   WebSocketChannel();
   static void Shutdown();
-  bool IsOnTargetThread();
 
   // Off main thread URI access.
   void GetEffectiveURL(nsAString& aEffectiveURL) const override;
