@@ -76,17 +76,6 @@ uint32_t ServiceWorkerPrivateImpl::sRunningServiceWorkersFetch = 0;
 uint32_t ServiceWorkerPrivateImpl::sRunningServiceWorkersMax = 0;
 uint32_t ServiceWorkerPrivateImpl::sRunningServiceWorkersFetchMax = 0;
 
-/*static*/ void ServiceWorkerPrivateImpl::ReportRunning() {
-  if (sRunningServiceWorkers > 0) {
-    LOG(("ServiceWorkers running %d (%d Fetch)", sRunningServiceWorkers,
-         sRunningServiceWorkersFetch));
-  }
-  Telemetry::Accumulate(Telemetry::SERVICE_WORKER_RUNNING, "All"_ns,
-                        sRunningServiceWorkers);
-  Telemetry::Accumulate(Telemetry::SERVICE_WORKER_RUNNING, "Fetch"_ns,
-                        sRunningServiceWorkersFetch);
-}
-
 ServiceWorkerPrivateImpl::RAIIActorPtrHolder::RAIIActorPtrHolder(
     already_AddRefed<RemoteWorkerControllerChild> aActor)
     : mActor(aActor) {
@@ -271,8 +260,13 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
   return NS_OK;
 }
 
+/* static */
 void ServiceWorkerPrivateImpl::UpdateRunning(int32_t aDelta,
                                              int32_t aFetchDelta) {
+  // Record values for time we were running at the current values
+  RefPtr<ServiceWorkerManager> manager(ServiceWorkerManager::GetInstance());
+  manager->RecordTelemetry(sRunningServiceWorkers, sRunningServiceWorkersFetch);
+
   MOZ_ASSERT(((int64_t)sRunningServiceWorkers) + aDelta >= 0);
   sRunningServiceWorkers += aDelta;
   if (sRunningServiceWorkers > sRunningServiceWorkersMax) {
