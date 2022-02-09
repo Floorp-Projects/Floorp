@@ -19,6 +19,7 @@
     <string name="pref_key_allow_autoplay_audio_video" translatable="false"><xliff:g id="preference_key">pref_key_allow_audio_video_autoplay</xliff:g></string>
     <string name="pref_key_block_autoplay_audio_only" translatable="false"><xliff:g id="preference_key">pref_key_block_autoplay_audio_only</xliff:g></string>
     <string name="pref_key_block_autoplay_audio_video" translatable="false"><xliff:g id="preference_key">pref_key_block_audio_video_autoplay</xliff:g></string>
+    <string name="pref_key_tool_tip" translatable="false"><xliff:g id="preference_key">pref_key_tool_tip</xliff:g></string>
 
     <string name="pref_key_performance_block_webfonts" translatable="false"><xliff:g id="preference_key">pref_performance_block_webfonts</xliff:g></string>
     <string name="pref_key_performance_block_javascript" translatable="false"><xliff:g id="preference_key">pref_performance_block_javascript</xliff:g></string>
@@ -79,6 +80,7 @@
         <xliff:g id="preference_key">pref_screen_exceptions</xliff:g>
     </string>
     <string name="pref_cfr_visibility_for_shield_toolbar_icon" translatable="false"><xliff:g id="preference_key">pref_cfr_visibility_for_shield_toolbar_icon</xliff:g></string>
+    <string name="pref_tool_tip_privacy_security_settings" translatable="false"><xliff:g id="preference_key">pref_tool_tip_privacy_security_settings</xliff:g></string>
     <!-- Theme Settings -->
     <string name="pref_key_light_theme" translatable="false">pref_key_light_theme</string>
     <string name="pref_key_dark_theme" translatable="false">pref_key_dark_theme</string>

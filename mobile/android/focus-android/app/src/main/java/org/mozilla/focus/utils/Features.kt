@@ -10,6 +10,9 @@ package org.mozilla.focus.utils
 object Features {
     const val SEARCH_TERMS_OR_URL: Boolean = true
     val SHOULD_SHOW_CFR_FOR_SHIELD_TOOLBAR_ICON = AppConstants.isDevOrNightlyBuild
+    val SHOULD_SHOW_TOOLTIP_FOR_PRIVACY_SECURITY_SETTINGS_SCREEN = AppConstants.isDevOrNightlyBuild
+    const val SHOULD_SHOW_HOME_PAGE_PRO_TIPS = true
+
     /**
      * HTTPS-Only mode.
      * https://support.mozilla.org/en-US/kb/https-only-prefs-focus

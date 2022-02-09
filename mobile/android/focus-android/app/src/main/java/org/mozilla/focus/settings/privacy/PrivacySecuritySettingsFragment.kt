@@ -21,6 +21,7 @@ import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.Features
 import org.mozilla.focus.widget.CookiesPreference
 
 class PrivacySecuritySettingsFragment :
@@ -40,6 +41,11 @@ class PrivacySecuritySettingsFragment :
             )
         ) {
             preferenceScreen.removePreference(biometricPreference)
+        }
+        if (!Features.SHOULD_SHOW_TOOLTIP_FOR_PRIVACY_SECURITY_SETTINGS_SCREEN ||
+            !requireContext().settings.shouldShowPrivacySecuritySettingsToolTip
+        ) {
+            preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_tool_tip)))
         }
 
         val preferencesListener = EngineSharedPreferencesListener(requireContext())

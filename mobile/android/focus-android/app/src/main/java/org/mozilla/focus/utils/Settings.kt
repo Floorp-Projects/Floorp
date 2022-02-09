@@ -184,6 +184,14 @@ class Settings(
                 .apply()
         }
 
+    var shouldShowPrivacySecuritySettingsToolTip: Boolean
+        get() = preferences.getBoolean(getPreferenceKey(R.string.pref_tool_tip_privacy_security_settings), true)
+        set(value) {
+            preferences.edit()
+                .putBoolean(getPreferenceKey(R.string.pref_tool_tip_privacy_security_settings), value)
+                .apply()
+        }
+
     private var autoplayPrefKey: String? = preferences.getString(
         getPreferenceKey(R.string.pref_key_autoplay),
         context.getString(R.string.pref_key_block_autoplay_audio_only)

@@ -868,4 +868,10 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
     <string name="cfr_for_toolbar_shield_icon">Looks like this site was trying to track you. Click the shield for site settings and tracker blocking stats.</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings  -->
+    <string name="tool_tip_title">You’re protected!</string>
+    <string name="tool_tip_message">Something about optimizing their protection, but also educating on what is being blocked, etc.</string>
+    <string name="tool_tip_dismiss_button_content_description">Dismiss</string>
+
 </resources>

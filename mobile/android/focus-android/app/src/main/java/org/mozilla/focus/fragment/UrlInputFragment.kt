@@ -353,7 +353,11 @@ class UrlInputFragment :
 
         binding.browserToolbar.editMode()
         setHomeMenu()
-        updateTipsLabel()
+        if (Features.SHOULD_SHOW_HOME_PAGE_PRO_TIPS) {
+            updateTipsLabel()
+        } else {
+            binding.homeTips.visibility = View.GONE
+        }
     }
 
     private fun setHomeMenu() {

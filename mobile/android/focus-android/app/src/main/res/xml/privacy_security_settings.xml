@@ -2,10 +2,17 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <!--- <Preference
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_privacy_and_security_description"/> -->
+
+    <org.mozilla.focus.settings.privacy.PreferenceToolTipCompose
+        android:key="@string/pref_key_tool_tip"
+        android:layout="@layout/focus_preference_compose_layout"
+        app:allowDividerBelow="false"
+        android:selectable="false"/>
 
     <androidx.preference.PreferenceCategory
         android:layout="@layout/preference_section_header_layout"
