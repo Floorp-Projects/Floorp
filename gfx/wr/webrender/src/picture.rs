@@ -4828,7 +4828,6 @@ impl PicturePrimitive {
                     .local_rect;
 
                 let parent_surface_index = parent_surface_index.expect("bug: no parent for child surface");
-                let device_pixel_scale = frame_state.surfaces[raster_config.surface_index.0].device_pixel_scale;
 
                 // Layout space for the picture is picture space from the
                 // perspective of its child primitives.
@@ -4858,14 +4857,17 @@ impl PicturePrimitive {
                 }
 
                 let surface_rects = match get_surface_rects(
-                    &frame_state.surfaces[raster_config.surface_index.0],
+                    raster_config.surface_index,
                     &raster_config.composite_mode,
-                    &frame_state.surfaces[parent_surface_index.0],
+                    parent_surface_index,
+                    &mut frame_state.surfaces,
                     frame_context.spatial_tree,
                 ) {
                     Some(rects) => rects,
                     None => return None,
                 };
+
+                let device_pixel_scale = frame_state.surfaces[raster_config.surface_index.0].device_pixel_scale;
 
                 let primary_render_task_id;
                 match raster_config.composite_mode {
@@ -5705,20 +5707,6 @@ impl PicturePrimitive {
         // rect into the parent surface coordinate space, and propagate that up
         // to the parent.
         if let Some(ref mut raster_config) = self.raster_config {
-            // No need to adjust the surface size for picture caches, as they're tiled
-            match raster_config.composite_mode {
-                PictureCompositeMode::TileCache { .. } => {},
-                _ => {
-                    let pic_rect = raster_config.composite_mode.get_rect(surface, None);
-                    let desired_size = (pic_rect.size().cast_unit() * surface.device_pixel_scale).ceil();
-
-                    if desired_size.width > MAX_SURFACE_SIZE || desired_size.height > MAX_SURFACE_SIZE {
-                        let max_dimension = pic_rect.size().width.max(pic_rect.size().height);
-                        surface.device_pixel_scale = Scale::new(MAX_SURFACE_SIZE / max_dimension);
-                    }
-                }
-            }
-
             // Propagate up to parent surface, now that we know this surface's static rect
             if let Some(parent_surface_index) = parent_surface_index {
                 let surface_rect = raster_config.composite_mode.get_coverage(surface, None);
@@ -6591,14 +6579,17 @@ fn calculate_screen_uv(
 }
 
 fn get_surface_rects(
-    surface: &SurfaceInfo,
+    surface_index: SurfaceIndex,
     composite_mode: &PictureCompositeMode,
-    parent_surface: &SurfaceInfo,
+    parent_surface_index: SurfaceIndex,
+    surfaces: &mut [SurfaceInfo],
     spatial_tree: &SpatialTree,
 ) -> Option<SurfaceAllocInfo> {
+    let parent_surface = &surfaces[parent_surface_index.0];
+
     let local_to_parent = SpaceMapper::new_with_target(
         parent_surface.raster_spatial_node_index,
-        surface.raster_spatial_node_index,
+        surfaces[surface_index.0].raster_spatial_node_index,
         parent_surface.clipping_rect,
         spatial_tree,
     );
@@ -6607,6 +6598,8 @@ fn get_surface_rects(
         .unmap(&parent_surface.clipping_rect)
         .unwrap_or(PictureRect::max_rect())
         .cast_unit();
+
+    let surface = &mut surfaces[surface_index.0];
 
     let (clipped_local, unclipped_local) = match composite_mode {
         PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
@@ -6676,15 +6669,27 @@ fn get_surface_rects(
         }
     };
 
+    let mut clipped = (clipped_local.cast_unit() * surface.device_pixel_scale).round_out();
+    let task_size_f = clipped.size();
+
+    if task_size_f.width > MAX_SURFACE_SIZE || task_size_f.height > MAX_SURFACE_SIZE {
+        let max_dimension = task_size_f.width.max(task_size_f.height);
+
+        surface.device_pixel_scale = Scale::new(MAX_SURFACE_SIZE / max_dimension);
+
+        clipped = (clipped_local.cast_unit() * surface.device_pixel_scale).round();
+    }
+
     let unclipped = unclipped_local.cast_unit() * surface.device_pixel_scale;
-    let clipped = (clipped_local.cast_unit() * surface.device_pixel_scale).round_out();
+    let task_size = clipped.size().to_i32();
+
+    debug_assert!(task_size.width <= MAX_SURFACE_SIZE as i32);
+    debug_assert!(task_size.height <= MAX_SURFACE_SIZE as i32);
 
     let uv_rect_kind = calculate_uv_rect_kind(
         clipped,
         unclipped,
     );
-
-    let task_size = clipped.size().to_i32();
 
     Some(SurfaceAllocInfo {
         task_size,
