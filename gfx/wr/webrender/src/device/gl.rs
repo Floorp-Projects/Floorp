@@ -3915,6 +3915,11 @@ impl Device {
                 self.gl.blend_func_separate(gl::ZERO, gl::SRC_COLOR, gl::ZERO, gl::SRC_ALPHA);
                 gl::FUNC_ADD
             },
+            MixBlendMode::PlusLighter => {
+                // TODO(emilio): Implement.
+                self.gl.blend_func_separate(gl::ZERO, gl::SRC_COLOR, gl::ZERO, gl::SRC_ALPHA);
+                gl::FUNC_ADD
+            },
             MixBlendMode::Multiply => gl::MULTIPLY_KHR,
             MixBlendMode::Screen => gl::SCREEN_KHR,
             MixBlendMode::Overlay => gl::OVERLAY_KHR,
