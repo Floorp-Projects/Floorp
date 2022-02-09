@@ -15,9 +15,66 @@
 #include "nsLookAndFeel.h"
 #include "nsNativeTheme.h"
 
-using namespace mozilla;
 using namespace mozilla::gfx;
-using namespace mozilla::widget;
+namespace mozilla::widget {
+
+struct FillRectType {
+  gfx::Rect mRect;
+  nscolor mColor;
+};
+
+// The caller can draw this rectangle with rounded corners as appropriate.
+struct ThumbRect {
+  gfx::Rect mRect;
+  nscolor mFillColor;
+  nscolor mStrokeColor;
+  float mStrokeWidth;
+  float mStrokeOutset;
+};
+
+using ScrollbarTrackRects = Array<FillRectType, 4>;
+using ScrollCornerRects = Array<FillRectType, 7>;
+
+struct ScrollbarParams {
+  bool isOverlay = false;
+  bool isRolledOver = false;
+  bool isSmall = false;
+  bool isHorizontal = false;
+  bool isRtl = false;
+  bool isOnDarkBackground = false;
+  bool isCustom = false;
+  // Two colors only used when custom is true.
+  nscolor trackColor = NS_RGBA(0, 0, 0, 0);
+  nscolor faceColor = NS_RGBA(0, 0, 0, 0);
+};
+
+static ScrollbarParams ComputeScrollbarParams(nsIFrame* aFrame,
+                                              const ComputedStyle& aStyle,
+                                              bool aIsHorizontal) {
+  ScrollbarParams params;
+  params.isOverlay =
+      nsLookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0;
+  params.isRolledOver = ScrollbarDrawing::IsParentScrollbarRolledOver(aFrame);
+  params.isSmall =
+      aStyle.StyleUIReset()->ScrollbarWidth() == StyleScrollbarWidth::Thin;
+  params.isRtl = nsNativeTheme::IsFrameRTL(aFrame);
+  params.isHorizontal = aIsHorizontal;
+  params.isOnDarkBackground = !StaticPrefs::widget_disable_dark_scrollbar() &&
+                              nsNativeTheme::IsDarkBackground(aFrame);
+  // Don't use custom scrollbars for overlay scrollbars since they are
+  // generally good enough for use cases of custom scrollbars.
+  if (!params.isOverlay) {
+    const nsStyleUI* ui = aStyle.StyleUI();
+    if (ui->HasCustomScrollbars()) {
+      const auto& colors = ui->mScrollbarColor.AsColors();
+      params.isCustom = true;
+      params.trackColor = colors.track.CalcColor(aStyle);
+      params.faceColor = colors.thumb.CalcColor(aStyle);
+    }
+  }
+
+  return params;
+}
 
 LayoutDeviceIntSize ScrollbarDrawingCocoa::GetMinimumWidgetSize(
     nsPresContext* aPresContext, StyleAppearance aAppearance,
@@ -88,10 +145,8 @@ auto ScrollbarDrawingCocoa::GetScrollbarSizes(nsPresContext* aPresContext,
   return {size, size};
 }
 
-/*static*/
-auto ScrollbarDrawingCocoa::GetThumbRect(const Rect& aRect,
-                                         const ScrollbarParams& aParams,
-                                         float aScale) -> ThumbRect {
+static ThumbRect GetThumbRect(const Rect& aRect, const ScrollbarParams& aParams,
+                              float aScale) {
   // This matches the sizing checks in GetMinimumWidgetSize etc.
   aScale = aScale >= 2.0f ? 2.0f : 1.0f;
 
@@ -186,10 +241,9 @@ static ScrollbarTrackDecorationColors ComputeScrollbarTrackDecorationColors(
   return result;
 }
 
-/*static*/
-bool ScrollbarDrawingCocoa::GetScrollbarTrackRects(
-    const Rect& aRect, const ScrollbarParams& aParams, float aScale,
-    ScrollbarTrackRects& aRects) {
+static bool GetScrollbarTrackRects(const Rect& aRect,
+                                   const ScrollbarParams& aParams, float aScale,
+                                   ScrollbarTrackRects& aRects) {
   if (aParams.isOverlay && !aParams.isRolledOver) {
     // Non-hovered overlay scrollbars don't have a track. Draw nothing.
     return false;
@@ -255,11 +309,9 @@ bool ScrollbarDrawingCocoa::GetScrollbarTrackRects(
   return true;
 }
 
-/*static*/
-bool ScrollbarDrawingCocoa::GetScrollCornerRects(const Rect& aRect,
-                                                 const ScrollbarParams& aParams,
-                                                 float aScale,
-                                                 ScrollCornerRects& aRects) {
+static bool GetScrollCornerRects(const Rect& aRect,
+                                 const ScrollbarParams& aParams, float aScale,
+                                 ScrollCornerRects& aRects) {
   if (aParams.isOverlay && !aParams.isRolledOver) {
     // Non-hovered overlay scrollbars don't have a corner. Draw nothing.
     return false;
@@ -460,3 +512,5 @@ void ScrollbarDrawingCocoa::RecomputeScrollbarParams() {
   }
   mHorizontalScrollbarHeight = mVerticalScrollbarWidth = defaultSize;
 }
+
+}  // namespace mozilla::widget
