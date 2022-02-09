@@ -15,6 +15,10 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/FOGIPC.h"
 
+#include "nsHashPropertyBag.h"
+#include "mozilla/Services.h"
+#include "nsIObserverService.h"
+
 namespace mozilla::ipc {
 
 static std::atomic<UtilityProcessParent*> sUtilityProcessParent;
@@ -79,7 +83,24 @@ mozilla::ipc::IPCResult UtilityProcessParent::RecvFOGData(ByteBuf&& aBuf) {
 
 void UtilityProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (aWhy == AbnormalShutdown) {
-    GenerateCrashReport(OtherPid());
+    nsAutoString dumpID;
+    GenerateCrashReport(OtherPid(), &dumpID);
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      RefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
+      // It's okay for dumpID to be empty if there was no minidump generated
+      // tests like ipc/glue/test/browser/browser_utility_crashReporter.js are
+      // there to verify this
+      if (!dumpID.IsEmpty()) {
+        props->SetPropertyAsAString(u"dumpID"_ns, dumpID);
+      }
+
+      nsAutoString pid;
+      pid.AppendInt(static_cast<uint64_t>(OtherPid()));
+      obs->NotifyObservers((nsIPropertyBag2*)props, "ipc:utility-shutdown",
+                           pid.get());
+    }
   }
 
   mHost->OnChannelClosed();
