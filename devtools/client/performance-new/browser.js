@@ -41,6 +41,10 @@ const UI_BASE_URL_PREF = "devtools.performance.recording.ui-base-url";
 /** @type {PerformancePref["UIBaseUrlPathPref"]} */
 const UI_BASE_URL_PATH_PREF = "devtools.performance.recording.ui-base-url-path";
 
+/** @type {PerformancePref["UIEnableActiveTabView"]} */
+const UI_ENABLE_ACTIVE_TAB_PREF =
+  "devtools.performance.recording.active-tab-view.enabled";
+
 const UI_BASE_URL_DEFAULT = "https://profiler.firefox.com";
 const UI_BASE_URL_PATH_DEFAULT = "/from-browser";
 
@@ -73,13 +77,25 @@ async function openProfilerTab(profilerViewMode) {
     UI_BASE_URL_PATH_PREF,
     UI_BASE_URL_PATH_DEFAULT
   );
+  // This controls whether we enable the active tab view when capturing in web
+  // developer preset.
+  const enableActiveTab = Services.prefs.getBoolPref(
+    UI_ENABLE_ACTIVE_TAB_PREF,
+    false
+  );
 
   // We automatically open up the "full" mode if no query string is present.
   // `undefined` also means nothing is specified, and it should open the "full"
   // timeline view in that case.
   let viewModeQueryString = "";
   if (profilerViewMode === "active-tab") {
-    viewModeQueryString = "?view=active-tab&implementation=js";
+    // We're not enabling the active-tab view in all environments until we
+    // iron out all its issues.
+    if (enableActiveTab) {
+      viewModeQueryString = "?view=active-tab&implementation=js";
+    } else {
+      viewModeQueryString = "?implementation=js";
+    }
   } else if (profilerViewMode !== undefined && profilerViewMode !== "full") {
     viewModeQueryString = `?view=${profilerViewMode}`;
   }
