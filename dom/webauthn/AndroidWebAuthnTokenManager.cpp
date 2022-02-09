@@ -229,14 +229,14 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
         // This is likely running on the main thread, so we'll always dispatch
         // to the background for state updates.
         MozPromise<AndroidWebAuthnResult, AndroidWebAuthnResult,
-                   false>::FromGeckoResult(geckoResult)
+                   true>::FromGeckoResult(geckoResult)
             ->Then(
                 GetMainThreadSerialEventTarget(), __func__,
-                [self = std::move(self)](const AndroidWebAuthnResult& aValue) {
-                  self->HandleRegisterResult(aValue);
+                [self = std::move(self)](AndroidWebAuthnResult&& aValue) {
+                  self->HandleRegisterResult(std::move(aValue));
                 },
-                [self = std::move(self)](const AndroidWebAuthnResult& aValue) {
-                  self->HandleRegisterResult(aValue);
+                [self = std::move(self)](AndroidWebAuthnResult&& aValue) {
+                  self->HandleRegisterResult(std::move(aValue));
                 });
       }));
 
@@ -244,7 +244,7 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
 }
 
 void AndroidWebAuthnTokenManager::HandleRegisterResult(
-    const AndroidWebAuthnResult& aResult) {
+    AndroidWebAuthnResult&& aResult) {
   if (!gAndroidPBackgroundThread) {
     // Promise is already rejected when shutting down background thread
     return;
@@ -262,7 +262,8 @@ void AndroidWebAuthnTokenManager::HandleRegisterResult(
   } else {
     gAndroidPBackgroundThread->Dispatch(NS_NewRunnableFunction(
         "AndroidWebAuthnTokenManager::RegisterComplete",
-        [self = RefPtr<AndroidWebAuthnTokenManager>(this), aResult]() {
+        [self = RefPtr<AndroidWebAuthnTokenManager>(this),
+         aResult = std::move(aResult)]() {
           CryptoBuffer emptyBuffer;
           nsTArray<WebAuthnExtensionResult> extensions;
           WebAuthnMakeCredentialResult result(
@@ -350,14 +351,14 @@ RefPtr<U2FSignPromise> AndroidWebAuthnTokenManager::Sign(
             extensionsBundle);
         auto geckoResult = java::GeckoResult::LocalRef(std::move(result));
         MozPromise<AndroidWebAuthnResult, AndroidWebAuthnResult,
-                   false>::FromGeckoResult(geckoResult)
+                   true>::FromGeckoResult(geckoResult)
             ->Then(
                 GetMainThreadSerialEventTarget(), __func__,
-                [self = std::move(self)](const AndroidWebAuthnResult& aValue) {
-                  self->HandleSignResult(aValue);
+                [self = std::move(self)](AndroidWebAuthnResult&& aValue) {
+                  self->HandleSignResult(std::move(aValue));
                 },
-                [self = std::move(self)](const AndroidWebAuthnResult& aValue) {
-                  self->HandleSignResult(aValue);
+                [self = std::move(self)](AndroidWebAuthnResult&& aValue) {
+                  self->HandleSignResult(std::move(aValue));
                 });
       }));
 
@@ -365,7 +366,7 @@ RefPtr<U2FSignPromise> AndroidWebAuthnTokenManager::Sign(
 }
 
 void AndroidWebAuthnTokenManager::HandleSignResult(
-    const AndroidWebAuthnResult& aResult) {
+    AndroidWebAuthnResult&& aResult) {
   if (!gAndroidPBackgroundThread) {
     // Promise is already rejected when shutting down background thread
     return;
@@ -383,7 +384,8 @@ void AndroidWebAuthnTokenManager::HandleSignResult(
   } else {
     gAndroidPBackgroundThread->Dispatch(NS_NewRunnableFunction(
         "AndroidWebAuthnTokenManager::SignComplete",
-        [self = RefPtr<AndroidWebAuthnTokenManager>(this), aResult]() {
+        [self = RefPtr<AndroidWebAuthnTokenManager>(this),
+         aResult = std::move(aResult)]() {
           CryptoBuffer emptyBuffer;
 
           nsTArray<WebAuthnExtensionResult> emptyExtensions;
