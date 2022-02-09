@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -19,6 +19,8 @@
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Daa nnánukunu nnaá.</string>
+
+    <string name="feedback_erase2">Nná da a nnánukunu</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">Daa nnánukunu nnaá nuu pestaña.</string>
@@ -45,6 +47,11 @@
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Tee-ma nuu kajie´e</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Tee nuu acceso ñama</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Xita da acceso ñama</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Nakuvi a jíía íyo</string>
@@ -116,6 +123,19 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">Nánuku yɨ´ɨ yu´u</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s taji kajinu.</p>
+<p>Ni´ima kua iin nuu nánuku yu´u:
+  <ul>
+    <li>Nánuku jee kaka nuu ka̱a̱ ya´a</li>
+    <li>Chiyu´u daa a nita no´o (a xíín kaji kuvi kuntadaja noo´o)</li>
+    <li>Xina saa kuvi naá cokies jii daa tu´un nnánukunu</li>
+  </ul>
+</p>
+<p>%1$s kuviji iin nsa´a Mozilla. Nukudani iin internet vii jee va´a.<br/>
+<a href="%2$s">Ka´vi ku´eka</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privacidad jii seguridad</string>
 
@@ -181,6 +201,9 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+Tee a sá´á vii URL</string>
 
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Tee URL</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Tee URL vii</string>
 
@@ -245,8 +268,13 @@
     <string name="preference_privacy_block_content_summary2">Dee tee ya´a kuvi sá´á daa web nsatiñu vii</string>
     <string name="preference_privacy_category_cookies">Kasɨ cookies</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Ntuvi, kuta´vini</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Nakasɨ 3 cookies daa inka kuvi kuntada noo´o</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Nakasɨ ntu xini cookies daa inka</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Kuvi</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Ni´in ka̱a̱ na´a tɨɨ saa kuvi síne ka̱a̱ ya´a</string>
@@ -299,6 +327,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Ka̱a̱ nánuku yɨ´ɨ</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Kaji inka ka̱a̱ nánuku</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Na tee tuku ka̱a̱ nánuku kua vaji</string>
 
@@ -307,6 +338,11 @@
     <string name="preference_search_add2">+ Tee inka ka̱a̱ nánuku</string>
     <string name="preference_search_remove_title">Xita ka̱a̱ nánuku</string>
     <string name="preference_search_remove">Xita</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Tee inka ka̱a̱ nánuku</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Kaji ka̱a̱ nánuku kuvi ni´inu:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -555,6 +591,15 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">A biji</string>
 
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Kasɨ nasun ji tutu kana</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Kuni kue´eka</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Xita</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Depuración remota jii USB/Wi-Fi</string>
 
@@ -628,11 +673,14 @@
     <string name="preference_open_new_tab">Sama kuvi chunta´a pestaña jíía ñama</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">Nánuku yu´u</string>
+    <string moz:removedIn="97" name="preference_category_safe_browsing">Nánuku yu´u</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Tee ntuvi daa sitios tixin jiin sitios kantu´un</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">Tee ntuvi daa sitios kuvi sa´a xeen, jee daa sitios kumi ka̱a̱ ntu íyo vatu.</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">Ntu xini HTTPS</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Exceptions</string>
@@ -660,4 +708,18 @@
 
     <!-- Tracking protection bottom sheet -->
 
-    </resources>
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Xita</string>
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Natee</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Natee</string>
+
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Teku tun</string>
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">Nakasɨ pestaña</string>
+</resources>
