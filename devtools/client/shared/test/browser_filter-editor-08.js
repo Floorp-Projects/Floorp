@@ -84,6 +84,7 @@ add_task(async function() {
     "Should decrease value by slow multiplier using down arrow"
   );
 
+  widget.destroy();
   triggerKey = null;
 });
 

@@ -127,6 +127,7 @@ add_task(async function() {
     "Should increase float numbers correctly"
   );
 
+  widget.destroy();
   triggerKey = null;
 });
 
