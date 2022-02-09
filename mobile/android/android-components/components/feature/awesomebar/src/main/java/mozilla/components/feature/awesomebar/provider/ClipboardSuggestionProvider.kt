@@ -84,18 +84,18 @@ private fun findUrl(text: String): String? {
 }
 
 private fun getTextFromClipboard(clipboardManager: ClipboardManager): String? {
-    if (clipboardManager.isPrimaryClipEmpty() || !clipboardManager.isPrimaryClipPlainText()) {
+    val primaryClip = clipboardManager.primaryClip
+
+    if (primaryClip?.itemCount == 0 || !clipboardManager.isPrimaryClipPlainText()) {
         // We only care about a primary clip with type "text/plain"
         return null
     }
 
-    return clipboardManager.firstPrimaryClipItem?.text?.toString()
+    return primaryClip?.firstClipItemText
 }
 
 private fun ClipboardManager.isPrimaryClipPlainText() =
     primaryClipDescription?.hasMimeType(MIME_TYPE_TEXT_PLAIN) ?: false
 
-private fun ClipboardManager.isPrimaryClipEmpty() = primaryClip?.itemCount == 0
-
-private val ClipboardManager.firstPrimaryClipItem: ClipData.Item?
-    get() = primaryClip?.getItemAt(0)
+private val ClipData.firstClipItemText: String
+    get() = getItemAt(0).text.toString()
