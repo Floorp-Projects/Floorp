@@ -42,12 +42,12 @@ class Browsers private constructor(
 
         FIREFOX_BETA("org.mozilla.firefox_beta"),
         FIREFOX_AURORA("org.mozilla.fennec_aurora"),
-        FIREFOX_NIGHTLY("org.mozilla.fennec"),
+        FIREFOX_FENNEC_NIGHTLY("org.mozilla.fennec"),
         FIREFOX_FDROID("org.mozilla.fennec_fdroid"),
 
         FIREFOX_LITE("org.mozilla.rocket"),
 
-        FENIX_PREVIEW("org.mozilla.fenix"),
+        FIREFOX_NIGHTLY("org.mozilla.fenix"),
         FENIX_DEBUG("org.mozilla.fenix.debug"),
 
         FIREFOX_FOCUS_DEBUG("org.mozilla.focus.debug"),
@@ -135,6 +135,7 @@ class Browsers private constructor(
                 defaultBrowser.packageName == KnownBrowser.FIREFOX.packageName ||
                     defaultBrowser.packageName == KnownBrowser.FIREFOX_BETA.packageName ||
                     defaultBrowser.packageName == KnownBrowser.FIREFOX_AURORA.packageName ||
+                    defaultBrowser.packageName == KnownBrowser.FIREFOX_FENNEC_NIGHTLY.packageName ||
                     defaultBrowser.packageName == KnownBrowser.FIREFOX_NIGHTLY.packageName ||
                     defaultBrowser.packageName == KnownBrowser.FIREFOX_FDROID.packageName
                 )
