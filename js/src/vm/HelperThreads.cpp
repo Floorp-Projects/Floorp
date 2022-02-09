@@ -947,6 +947,10 @@ bool DelazifyTask::init(
       break;
   }
 
+  if (!strategy) {
+    return false;
+  }
+
   // Queue functions from the top-level to be delazify.
   BorrowingCompilationStencil borrow(merger.getResult());
   ScriptIndex topLevel{0};
