@@ -273,7 +273,7 @@ void NativeInputTrack::RemoveDataListener(AudioDataListener* aListener) {
           mInputTrack(aInputTrack),
           mListener(aListener) {}
     void Run() override {
-      TRACE("NativeInputTrack::AddDataListener ControlMessage");
+      TRACE("NativeInputTrack::RemoveDataListener ControlMessage");
       DebugOnly<bool> wasPresent =
           mInputTrack->mDataUsers.RemoveElement(mListener.get());
       MOZ_ASSERT(wasPresent, "Remove an unknown listener");
