@@ -11,17 +11,18 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.LazyVerticalGrid
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Snackbar
 import androidx.compose.material.SnackbarDuration
@@ -66,6 +67,9 @@ import java.util.Locale
  *
  * @param wallpapers Wallpapers to add to grid.
  * @param selectedWallpaper The currently selected wallpaper.
+ * @param defaultWallpaper The default wallpaper
+ * @param loadWallpaperResource Callback to handle loading a wallpaper bitmap. Only optional in the
+ *   default case.
  * @param onSelectWallpaper Callback for when a new wallpaper is selected.
  * @param onViewWallpaper Callback for when the view action is clicked from snackbar.
  * @param tapLogoSwitchChecked Enabled state for switch controlling taps to change wallpaper.
@@ -95,7 +99,7 @@ fun WallpaperSettings(
             }
         },
     ) {
-        Column {
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
             WallpaperThumbnails(
                 wallpapers = wallpapers,
                 defaultWallpaper = defaultWallpaper,
@@ -159,6 +163,9 @@ private fun WallpaperSnackbar(
  * A grid of selectable wallpaper thumbnails.
  *
  * @param wallpapers Wallpapers to add to grid.
+ * @param defaultWallpaper The default wallpaper
+ * @param loadWallpaperResource Callback to handle loading a wallpaper bitmap. Only optional in the
+ *   default case.
  * @param selectedWallpaper The currently selected wallpaper.
  * @param numColumns The number of columns that will occupy the grid.
  * @param onSelectWallpaper Action to take when a new wallpaper is selected.
@@ -175,18 +182,29 @@ private fun WallpaperThumbnails(
     onSelectWallpaper: (Wallpaper) -> Unit,
 ) {
     Surface(color = FirefoxTheme.colors.layer2) {
-        LazyVerticalGrid(
-            cells = GridCells.Fixed(numColumns),
-            modifier = Modifier.padding(vertical = 30.dp, horizontal = 20.dp)
-        ) {
-            items(wallpapers) { wallpaper ->
-                WallpaperThumbnailItem(
-                    wallpaper = wallpaper,
-                    defaultWallpaper = defaultWallpaper,
-                    loadWallpaperResource = loadWallpaperResource,
-                    isSelected = selectedWallpaper == wallpaper,
-                    onSelect = onSelectWallpaper
-                )
+        Column(modifier = Modifier.padding(vertical = 30.dp, horizontal = 20.dp)) {
+            val numRows = (wallpapers.size + numColumns - 1) / numColumns
+            for (rowIndex in 0 until numRows) {
+                Row {
+                    for (columnIndex in 0 until numColumns) {
+                        val itemIndex = rowIndex * numColumns + columnIndex
+                        if (itemIndex < wallpapers.size) {
+                            Box(
+                                modifier = Modifier.weight(1f, fill = true).padding(4.dp),
+                            ) {
+                                WallpaperThumbnailItem(
+                                    wallpaper = wallpapers[itemIndex],
+                                    defaultWallpaper = defaultWallpaper,
+                                    loadWallpaperResource = loadWallpaperResource,
+                                    isSelected = selectedWallpaper == wallpapers[itemIndex],
+                                    onSelect = onSelectWallpaper
+                                )
+                            }
+                        } else {
+                            Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
             }
         }
     }
@@ -234,7 +252,6 @@ private fun WallpaperThumbnailItem(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(aspectRatio)
-            .padding(4.dp)
             .then(border)
             .clickable { onSelect(wallpaper) }
     ) {
