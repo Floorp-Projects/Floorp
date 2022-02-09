@@ -2259,12 +2259,11 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
     fontParams.contextPaint = contextPaint.get();
   }
 
-  // Synthetic-bold strikes are each offset one device pixel in run direction
-  // (these values are only needed if ApplySyntheticBold() is true).
-  // If drawing via webrender, it will do multistrike internally so we don't
-  // need to handle it here.
-  bool doMultistrikeBold = ApplySyntheticBold() && !textDrawer;
-  if (doMultistrikeBold) {
+  // Synthetic-bold strikes are each offset one device pixel in run direction.
+  // (these values are only needed if IsSyntheticBold() is true)
+  // WebRender handles synthetic bold independently via FontInstanceFlags,
+  // so just ignore requests in that case.
+  if (IsSyntheticBold() && !textDrawer) {
     gfx::Float xscale = CalcXScale(aRunParams.context->GetDrawTarget());
     fontParams.synBoldOnePixelOffset = aRunParams.direction * xscale;
     if (xscale != 0.0) {
@@ -2947,7 +2946,7 @@ bool gfxFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
 void gfxFont::PostShapingFixup(DrawTarget* aDrawTarget, const char16_t* aText,
                                uint32_t aOffset, uint32_t aLength,
                                bool aVertical, gfxShapedText* aShapedText) {
-  if (ApplySyntheticBold()) {
+  if (IsSyntheticBold()) {
     const Metrics& metrics = GetMetrics(aVertical ? nsFontMetrics::eVertical
                                                   : nsFontMetrics::eHorizontal);
     if (metrics.maxAdvance > metrics.aveCharWidth) {
