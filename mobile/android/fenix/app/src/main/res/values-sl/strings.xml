@@ -308,7 +308,7 @@
     <string name="onboarding_home_screen_section_useful_history_description_2">Znova obiščite najnovejša iskanja na domači strani in v zavihkih.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Vaša prilagojena domača stran Firefoxa zdaj olajša nadaljevanje nedokončanih opravil. Poiščite svoje nedavne zavihke, zaznamke in rezultate iskanja.</string>
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Prilagojena domača stran Firefoxa vam zdaj olajšuje nadaljevanje nedokončanih opravil. Poiščite svoje nedavne zavihke, zaznamke in rezultate iskanja.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
