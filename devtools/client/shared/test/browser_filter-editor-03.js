@@ -80,4 +80,5 @@ add_task(async function() {
     `${INVERT_MIN}%`,
     "Shouldn't allow values less than INVERT_MIN"
   );
+  widget.destroy();
 });

@@ -162,4 +162,5 @@ add_task(async function() {
     "test.svg",
     "Label-dragging on string-type filters shouldn't affect their value"
   );
+  widget.destroy();
 });

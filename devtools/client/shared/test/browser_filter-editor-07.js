@@ -28,4 +28,5 @@ add_task(async function() {
     "contrast(200%)",
     "Should remove the clicked filter"
   );
+  widget.destroy();
 });
