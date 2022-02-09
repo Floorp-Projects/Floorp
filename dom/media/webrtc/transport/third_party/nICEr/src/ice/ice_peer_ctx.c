@@ -390,6 +390,7 @@ static void nr_ice_peer_ctx_start_trickle_timer(nr_ice_peer_ctx *pctx)
     NR_reg_get_uint4(NR_ICE_REG_TRICKLE_GRACE_PERIOD,&grace_period_timeout);
 
     if (grace_period_timeout) {
+      r_log(LOG_ICE,LOG_INFO,"ICE(%s): peer (%s) starting grace period timer for %u ms",pctx->ctx->label,pctx->label, grace_period_timeout);
       /* If we're doing trickle, we need to allow a grace period for new
        * trickle candidates to arrive in case the pairs we have fail quickly. */
        NR_ASYNC_TIMER_SET(grace_period_timeout,nr_ice_peer_ctx_trickle_wait_cb,pctx,&pctx->trickle_grace_period_timer);
@@ -422,9 +423,11 @@ int nr_ice_peer_ctx_pair_candidates(nr_ice_peer_ctx *pctx)
 
     stream=STAILQ_FIRST(&pctx->peer_streams);
     while(stream){
-      if(r=nr_ice_media_stream_pair_candidates(pctx, stream->local_stream,
-        stream))
-        ABORT(r);
+      if(!stream->local_stream->obsolete) {
+        if(r=nr_ice_media_stream_pair_candidates(pctx, stream->local_stream,
+          stream))
+          ABORT(r);
+      }
 
       stream=STAILQ_NEXT(stream,entry);
     }
@@ -557,25 +560,27 @@ int nr_ice_peer_ctx_start_checks2(nr_ice_peer_ctx *pctx, int allow_non_first)
       ABORT(R_FAILED);
 
     while (stream) {
-      assert(stream->ice_state != NR_ICE_MEDIA_STREAM_UNPAIRED);
+      if(!stream->local_stream->obsolete) {
+        assert(stream->ice_state != NR_ICE_MEDIA_STREAM_UNPAIRED);
 
-      if (stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_FROZEN) {
-        if(!TAILQ_EMPTY(&stream->check_list))
-          break;
+        if (stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_FROZEN) {
+          if(!TAILQ_EMPTY(&stream->check_list))
+            break;
 
-        if(!allow_non_first){
-          /* This test applies if:
+          if(!allow_non_first){
+            /* This test applies if:
 
-             1. allow_non_first is 0 (i.e., non-trickle ICE)
-             2. the first stream has an empty check list.
+               1. allow_non_first is 0 (i.e., non-trickle ICE)
+               2. the first stream has an empty check list.
 
-             But in the non-trickle ICE case, the other side should have provided
-             some candidates or ICE is pretty much not going to work and we're
-             just going to fail. Hence R_FAILED as opposed to R_NOT_FOUND and
-             immediate termination here.
-          */
-          r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) first stream has empty check list",pctx->ctx->label,pctx->label);
-          ABORT(R_FAILED);
+               But in the non-trickle ICE case, the other side should have provided
+               some candidates or ICE is pretty much not going to work and we're
+               just going to fail. Hence R_FAILED as opposed to R_NOT_FOUND and
+               immediate termination here.
+            */
+            r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) first stream has empty check list",pctx->ctx->label,pctx->label);
+            ABORT(R_FAILED);
+          }
         }
       }
 
@@ -614,8 +619,8 @@ int nr_ice_peer_ctx_start_checks2(nr_ice_peer_ctx *pctx, int allow_non_first)
       stream=STAILQ_NEXT(stream, entry);
     }
 
-    if (!started) {
-      r_log(LOG_ICE,LOG_NOTICE,"ICE(%s): peer (%s) no checks to start",pctx->ctx->label,pctx->label);
+    if (!started && pctx->ctx->uninitialized_candidates) {
+      r_log(LOG_ICE,LOG_INFO,"ICE(%s): peer (%s) no checks to start, but gathering is not done yet, cancelling grace period timer",pctx->ctx->label,pctx->label);
       /* Never mind on the grace period timer */
       NR_async_timer_cancel(pctx->trickle_grace_period_timer);
       pctx->trickle_grace_period_timer=0;
@@ -744,6 +749,7 @@ void nr_ice_peer_ctx_check_if_connected(nr_ice_peer_ctx *pctx)
 
     /* Make sure grace period timer is cancelled */
     if(pctx->trickle_grace_period_timer) {
+      r_log(LOG_ICE,LOG_INFO,"ICE(%s): peer (%s) cancelling grace period timer",pctx->ctx->label,pctx->label);
       NR_async_timer_cancel(pctx->trickle_grace_period_timer);
       pctx->trickle_grace_period_timer=0;
     }

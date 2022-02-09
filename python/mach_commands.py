@@ -8,6 +8,7 @@ import argparse
 import logging
 import os
 import tempfile
+import subprocess
 from multiprocessing import cpu_count
 
 from concurrent.futures import ThreadPoolExecutor, as_completed, thread
@@ -157,7 +158,7 @@ def run_python_tests(
     jobs=None,
     exitfirst=False,
     extra=None,
-    **kwargs
+    **kwargs,
 ):
 
     command_context.activate_virtualenv()
@@ -250,10 +251,20 @@ def run_python_tests(
 
     try:
         with ThreadPoolExecutor(max_workers=jobs) as executor:
-            futures = [
-                executor.submit(_run_python_test, command_context, test, jobs, verbose)
-                for test in parallel
-            ]
+            futures = []
+
+            for test in parallel:
+                command_context.log(
+                    logging.DEBUG,
+                    "python-test",
+                    {"line": f"Launching thread for test {test['file_relpath']}"},
+                    "{line}",
+                )
+                futures.append(
+                    executor.submit(
+                        _run_python_test, command_context, test, jobs, verbose
+                    )
+                )
 
             try:
                 for future in as_completed(futures):
@@ -289,8 +300,6 @@ def run_python_tests(
 
 
 def _run_python_test(command_context, test, jobs, verbose):
-    from mozprocess import ProcessHandler
-
     output = []
 
     def _log(line):
@@ -302,36 +311,31 @@ def _run_python_test(command_context, test, jobs, verbose):
                 logging.INFO, "python-test", {"line": line.rstrip()}, "{line}"
             )
 
-    file_displayed_test = []  # used as boolean
-
-    def _line_handler(line):
-        if not file_displayed_test:
-            output = "Ran" in line or "collected" in line or line.startswith("TEST-")
-            if output:
-                file_displayed_test.append(True)
-
-        # Hack to make sure treeherder highlights pytest failures
-        if "FAILED" in line.rsplit(" ", 1)[-1]:
-            line = line.replace("FAILED", "TEST-UNEXPECTED-FAIL")
-
-        _log(line)
-
     _log(test["path"])
     python = command_context.virtualenv_manager.python_path
     cmd = [python, test["path"]]
     env = os.environ.copy()
     env["PYTHONDONTWRITEBYTECODE"] = "1"
 
-    proc = ProcessHandler(
-        cmd,
-        env=env,
-        processOutputLine=_line_handler,
-        storeOutput=False,
-        universal_newlines=True,
+    result = subprocess.run(
+        cmd, env=env, stdout=subprocess.PIPE, universal_newlines=True, encoding="UTF-8"
     )
-    proc.run()
 
-    return_code = proc.wait()
+    return_code = result.returncode
+
+    file_displayed_test = False
+
+    for line in result.stdout.split(os.linesep):
+        if not file_displayed_test:
+            test_ran = "Ran" in line or "collected" in line or line.startswith("TEST-")
+            if test_ran:
+                file_displayed_test = True
+
+        # Hack to make sure treeherder highlights pytest failures
+        if "FAILED" in line.rsplit(" ", 1)[-1]:
+            line = line.replace("FAILED", "TEST-UNEXPECTED-FAIL")
+
+        _log(line)
 
     if not file_displayed_test:
         _log(

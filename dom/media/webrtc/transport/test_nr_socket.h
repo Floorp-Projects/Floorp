@@ -310,7 +310,7 @@ class TestNrSocket : public NrSocketBase {
   };
 
   bool is_port_mapping_stale(const PortMapping& port_mapping) const;
-  bool allow_ingress(const nr_transport_addr& from,
+  bool allow_ingress(const nr_transport_addr& to, const nr_transport_addr& from,
                      PortMapping** port_mapping_used) const;
   void destroy_stale_port_mappings();
 
@@ -330,6 +330,9 @@ class TestNrSocket : public NrSocketBase {
 
   PortMapping* get_port_mapping(const nr_transport_addr& remote_addr,
                                 TestNat::NatBehavior filter) const;
+  static bool port_mapping_matches(const PortMapping& port_mapping,
+                                   const nr_transport_addr& remote_addr,
+                                   TestNat::NatBehavior filter);
   PortMapping* create_port_mapping(
       const nr_transport_addr& remote_addr,
       const RefPtr<NrSocketBase>& external_socket) const;

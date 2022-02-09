@@ -392,10 +392,11 @@ int TestNrSocket::recvfrom(void* buf, size_t maxlen, size_t* len, int flags,
   if (readable_socket_) {
     // If any of the external sockets got data, see if it will be passed through
     r = readable_socket_->recvfrom(buf, maxlen, len, 0, from);
+    const nr_transport_addr to = readable_socket_->my_addr();
     readable_socket_ = nullptr;
     if (!r) {
       PortMapping* port_mapping_used;
-      ingress_allowed = allow_ingress(*from, &port_mapping_used);
+      ingress_allowed = allow_ingress(to, *from, &port_mapping_used);
       if (ingress_allowed) {
         r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s received from %s via %s",
               internal_socket_->my_addr().as_string, from->as_string,
@@ -440,17 +441,34 @@ int TestNrSocket::recvfrom(void* buf, size_t maxlen, size_t* len, int flags,
   return r;
 }
 
-bool TestNrSocket::allow_ingress(const nr_transport_addr& from,
+bool TestNrSocket::allow_ingress(const nr_transport_addr& to,
+                                 const nr_transport_addr& from,
                                  PortMapping** port_mapping_used) const {
   // This is only called for traffic arriving at a port mapping
   MOZ_ASSERT(nat_->enabled_);
   MOZ_ASSERT(!nat_->is_an_internal_tuple(from));
 
-  *port_mapping_used = get_port_mapping(from, nat_->filtering_type_);
-  if (!(*port_mapping_used)) {
+  // Find the port mapping (if any) that this packet landed on
+  for (PortMapping* port_mapping : port_mappings_) {
+    if (!nr_transport_addr_cmp(&to, &port_mapping->external_socket_->my_addr(),
+                               NR_TRANSPORT_ADDR_CMP_MODE_ALL)) {
+      *port_mapping_used = port_mapping;
+    }
+  }
+
+  if (NS_WARN_IF(!(*port_mapping_used))) {
+    MOZ_ASSERT(false);
     r_log(LOG_GENERIC, LOG_INFO,
           "TestNrSocket %s denying ingress from %s: "
-          "Filtered",
+          "No port mapping for this local port! What?",
+          internal_socket_->my_addr().as_string, from.as_string);
+    return false;
+  }
+
+  if (!port_mapping_matches(**port_mapping_used, from, nat_->filtering_type_)) {
+    r_log(LOG_GENERIC, LOG_INFO,
+          "TestNrSocket %s denying ingress from %s: "
+          "Filtered (no port mapping for source)",
           internal_socket_->my_addr().as_string, from.as_string);
     return false;
   }
@@ -872,6 +890,18 @@ bool TestNrSocket::is_tcp_connection_behind_nat() const {
 TestNrSocket::PortMapping* TestNrSocket::get_port_mapping(
     const nr_transport_addr& remote_address,
     TestNat::NatBehavior filter) const {
+  for (PortMapping* port_mapping : port_mappings_) {
+    if (port_mapping_matches(*port_mapping, remote_address, filter)) {
+      return port_mapping;
+    }
+  }
+  return nullptr;
+}
+
+/* static */
+bool TestNrSocket::port_mapping_matches(const PortMapping& port_mapping,
+                                        const nr_transport_addr& remote_addr,
+                                        TestNat::NatBehavior filter) {
   int compare_flags;
   switch (filter) {
     case TestNat::ENDPOINT_INDEPENDENT:
@@ -885,13 +915,8 @@ TestNrSocket::PortMapping* TestNrSocket::get_port_mapping(
       break;
   }
 
-  for (PortMapping* port_mapping : port_mappings_) {
-    if (!nr_transport_addr_cmp(&remote_address, &port_mapping->remote_address_,
-                               compare_flags)) {
-      return port_mapping;
-    }
-  }
-  return nullptr;
+  return !nr_transport_addr_cmp(&remote_addr, &port_mapping.remote_address_,
+                                compare_flags);
 }
 
 TestNrSocket::PortMapping* TestNrSocket::create_port_mapping(

@@ -219,14 +219,11 @@ class PeerConnectionImpl final
   }
 
   nsresult Initialize(PeerConnectionObserver& aObserver,
-                      nsGlobalWindowInner* aWindow,
-                      const RTCConfiguration& aConfiguration,
-                      nsISupports* aThread);
+                      nsGlobalWindowInner* aWindow, nsISupports* aThread);
 
   // Initialize PeerConnection from an RTCConfiguration object (JS entrypoint)
   void Initialize(PeerConnectionObserver& aObserver,
-                  nsGlobalWindowInner& aWindow,
-                  const RTCConfiguration& aConfiguration, nsISupports* aThread,
+                  nsGlobalWindowInner& aWindow, nsISupports* aThread,
                   ErrorResult& rv);
 
   void SetCertificate(mozilla::dom::RTCCertificate& aCertificate);
@@ -384,6 +381,11 @@ class PeerConnectionImpl final
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY bool PluginCrash(uint32_t aPluginID,
                                                const nsAString& aPluginName);
+
+  NS_IMETHODIMP_TO_ERRORRESULT(SetConfiguration, ErrorResult& rv,
+                               const RTCConfiguration& aConfiguration) {
+    rv = SetConfiguration(aConfiguration);
+  }
 
   void RecordEndOfCallTelemetry();
 

@@ -115,7 +115,7 @@ static int nr_ice_candidate_format_stun_label(char *label, size_t size, nr_ice_c
 
 int nr_ice_candidate_create(nr_ice_ctx *ctx,nr_ice_component *comp,nr_ice_socket *isock, nr_socket *osock, nr_ice_candidate_type ctype, nr_socket_tcp_type tcp_type, nr_ice_stun_server *stun_server, UCHAR component_id, nr_ice_candidate **candp)
   {
-    assert(!(ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) || ctype == RELAYED);
+    assert(!(comp->stream->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) || ctype == RELAYED);
     nr_ice_candidate *cand=0;
     nr_ice_candidate *tmp=0;
     int r,_status;
@@ -377,8 +377,10 @@ static int nr_ice_get_foundation(nr_ice_ctx *ctx,nr_ice_candidate *cand)
       // foundation->type should probably match nr_ice_candidate_type
       if((int)cand->type != foundation->type)
         goto next;
-      if(cand->stun_server != foundation->stun_server)
-        goto next;
+      if(cand->type == SERVER_REFLEXIVE || cand->type == RELAYED) {
+        if(nr_transport_addr_cmp(&cand->stun_server->addr, &foundation->stun_server_addr, NR_TRANSPORT_ADDR_CMP_MODE_ADDR))
+          goto next;
+      }
 
       snprintf(fnd,sizeof(fnd),"%d",i);
       if(!(cand->foundation=r_strdup(fnd)))
@@ -394,7 +396,9 @@ static int nr_ice_get_foundation(nr_ice_ctx *ctx,nr_ice_candidate *cand)
       ABORT(R_NO_MEMORY);
     nr_transport_addr_copy(&foundation->addr,&cand->base);
     foundation->type=cand->type;
-    foundation->stun_server=cand->stun_server;
+    if(cand->type == SERVER_REFLEXIVE || cand->type == RELAYED) {
+      nr_transport_addr_copy(&foundation->stun_server_addr, &cand->stun_server->addr);
+    }
     STAILQ_INSERT_TAIL(&ctx->foundations,foundation,entry);
 
     snprintf(fnd,sizeof(fnd),"%d",i);
@@ -993,7 +997,7 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
     len=strlen(attr); attr+=len; maxlen-=len;
 
     /* raddr, rport */
-    raddr = (cand->stream->ctx->flags &
+    raddr = (cand->stream->flags &
              (NR_ICE_CTX_FLAGS_RELAY_ONLY |
               NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES)) ?
       &cand->addr : &cand->base;

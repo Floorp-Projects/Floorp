@@ -34,7 +34,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
 
   // Mirror methods of Channel, see ipc_channel.h for description.
   ChannelImpl(const ChannelId& channel_id, Mode mode, Listener* listener);
-  ChannelImpl(int fd, Mode mode, Listener* listener);
+  ChannelImpl(ChannelHandle pipe, Mode mode, Listener* listener);
   ~ChannelImpl() { Close(); }
   bool Connect();
   void Close();
@@ -45,8 +45,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   }
   bool Send(mozilla::UniquePtr<Message> message);
   void GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const;
-
-  void ResetFileDescriptor(int fd);
 
   int GetFileDescriptor() const { return pipe_; }
   void CloseClientFileDescriptor();

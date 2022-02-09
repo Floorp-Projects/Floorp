@@ -255,7 +255,6 @@ class ChildImpl final : public BackgroundChildImpl {
   friend class mozilla::ipc::BackgroundStarterChild;
 
   typedef base::ProcessId ProcessId;
-  typedef mozilla::ipc::Transport Transport;
 
   class ShutdownObserver;
 

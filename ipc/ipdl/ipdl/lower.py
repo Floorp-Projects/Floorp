@@ -1411,15 +1411,11 @@ class _DecorateWithCxxStuff(ipdl.ast.Visitor):
                 Typedef(Type("mozilla::ipc::ActorHandle"), "ActorHandle"),
                 Typedef(Type("base::ProcessId"), "ProcessId"),
                 Typedef(Type("mozilla::ipc::ProtocolId"), "ProtocolId"),
-                Typedef(Type("mozilla::ipc::Transport"), "Transport"),
                 Typedef(Type("mozilla::ipc::Endpoint"), "Endpoint", ["FooSide"]),
                 Typedef(
                     Type("mozilla::ipc::ManagedEndpoint"),
                     "ManagedEndpoint",
                     ["FooSide"],
-                ),
-                Typedef(
-                    Type("mozilla::ipc::TransportDescriptor"), "TransportDescriptor"
                 ),
                 Typedef(Type("mozilla::UniquePtr"), "UniquePtr", ["T"]),
                 Typedef(
@@ -1646,6 +1642,10 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             self.hdrfile.addthing(
                 CppDirective("include", '"' + _ipdlhHeaderName(inc.tu) + '.h"')
             )
+            # Inherit cpp includes defined by imported header files, as they may
+            # be required to serialize an imported `using` type.
+            for cxxinc in inc.tu.cxxIncludes:
+                cxxinc.accept(self)
         else:
             self.cppIncludeHeaders += [
                 _protocolHeaderName(inc.tu.protocol, "parent") + ".h",
@@ -3573,33 +3573,46 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.externalIncludes.add(inc.file)
 
     def visitInclude(self, inc):
-        ip = inc.tu.protocol
-        if not ip:
-            return
+        if inc.tu.filetype == "header":
+            # Including a header will declare any globals defined by "using"
+            # statements into our scope. To serialize these, we also may need
+            # cxx include statements, so visit them as well.
+            for cxxinc in inc.tu.cxxIncludes:
+                cxxinc.accept(self)
+            for using in inc.tu.using:
+                using.accept(self)
+        else:
+            # Includes for protocols only include types explicitly exported by
+            # those protocols.
+            ip = inc.tu.protocol
+            if ip == self.protocol:
+                return
 
-        self.actorForwardDecls.extend(
-            [
-                _makeForwardDeclForActor(ip.decl.type, self.side),
-                _makeForwardDeclForActor(ip.decl.type, _otherSide(self.side)),
-                Whitespace.NL,
-            ]
-        )
-        self.protocolCxxIncludes.append(_protocolHeaderName(ip, self.side))
-
-        if ip.decl.fullname is not None:
-            self.includedActorTypedefs.append(
-                Typedef(
-                    Type(_actorName(ip.decl.fullname, self.side.title())),
-                    _actorName(ip.decl.shortname, self.side.title()),
-                )
+            self.actorForwardDecls.extend(
+                [
+                    _makeForwardDeclForActor(ip.decl.type, self.side),
+                    _makeForwardDeclForActor(ip.decl.type, _otherSide(self.side)),
+                    Whitespace.NL,
+                ]
             )
+            self.protocolCxxIncludes.append(_protocolHeaderName(ip, self.side))
 
-            self.includedActorTypedefs.append(
-                Typedef(
-                    Type(_actorName(ip.decl.fullname, _otherSide(self.side).title())),
-                    _actorName(ip.decl.shortname, _otherSide(self.side).title()),
+            if ip.decl.fullname is not None:
+                self.includedActorTypedefs.append(
+                    Typedef(
+                        Type(_actorName(ip.decl.fullname, self.side.title())),
+                        _actorName(ip.decl.shortname, self.side.title()),
+                    )
                 )
-            )
+
+                self.includedActorTypedefs.append(
+                    Typedef(
+                        Type(
+                            _actorName(ip.decl.fullname, _otherSide(self.side).title())
+                        ),
+                        _actorName(ip.decl.shortname, _otherSide(self.side).title()),
+                    )
+                )
 
     def visitProtocol(self, p):
         self.hdrfile.addcode(

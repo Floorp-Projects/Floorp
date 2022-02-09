@@ -11,8 +11,11 @@
 #include "mozilla/ProfilerRunnable.h"
 #include "mozilla/TaskQueue.h"
 #include "VideoUtils.h"
+#include "mozilla/media/MediaUtils.h"  // For media::Await
 
 namespace mozilla {
+
+enum class DeletionPolicy : uint8_t { Blocking, NonBlocking };
 
 /**
  * A wrapper around Mozilla TaskQueues in the shape of a libwebrtc TaskQueue.
@@ -24,6 +27,7 @@ namespace mozilla {
  * wrapped TaskQueue to run things on the right thread when interacting with
  * libwebrtc.
  */
+template <DeletionPolicy Deletion>
 class TaskQueueWrapper : public webrtc::TaskQueueBase {
  public:
   TaskQueueWrapper(RefPtr<TaskQueue> aTaskQueue, nsCString aName)
@@ -31,16 +35,38 @@ class TaskQueueWrapper : public webrtc::TaskQueueBase {
   ~TaskQueueWrapper() = default;
 
   void Delete() override {
-    MOZ_ASSERT(!mTaskQueue->IsOnCurrentThread(),
-               "TaskQueue::AwaitIdle must not be called on itself");
-    // Must block this thread until shutdown is complete.
     {
+      // Scope this to make sure it does not race against the promise chain we
+      // set up below.
       auto hasShutdown = mHasShutdown.Lock();
       *hasShutdown = true;
-      mTaskQueue->BeginShutdown();
     }
-    mTaskQueue->AwaitIdle();
-    delete this;
+
+    MOZ_RELEASE_ASSERT(Deletion == DeletionPolicy::NonBlocking ||
+                       !mTaskQueue->IsOnCurrentThread());
+
+    nsCOMPtr<nsISerialEventTarget> backgroundTaskQueue;
+    NS_CreateBackgroundTaskQueue(__func__, getter_AddRefs(backgroundTaskQueue));
+    if (NS_WARN_IF(!backgroundTaskQueue)) {
+      // Ok... that's pretty broken. Try main instead.
+      MOZ_ASSERT(false);
+      backgroundTaskQueue = GetMainThreadSerialEventTarget();
+    }
+
+    RefPtr<GenericPromise> shutdownPromise = mTaskQueue->BeginShutdown()->Then(
+        backgroundTaskQueue, __func__, [this] {
+          // Wait until shutdown is complete, then delete for real. Although we
+          // prevent queued tasks from executing with mHasShutdown, that is a
+          // member variable, which means we still need to ensure that the
+          // queue is done executing tasks before destroying it.
+          delete this;
+          return GenericPromise::CreateAndResolve(true, __func__);
+        });
+    if constexpr (Deletion == DeletionPolicy::Blocking) {
+      media::Await(backgroundTaskQueue.forget(), shutdownPromise);
+    } else {
+      Unused << shutdownPromise;
+    }
   }
 
   already_AddRefed<Runnable> CreateTaskRunner(
@@ -107,10 +133,11 @@ class TaskQueueWrapper : public webrtc::TaskQueueBase {
       false, "TaskQueueWrapper::mHasShutdown"};
 };
 
-template <>
-class DefaultDelete<TaskQueueWrapper> : public webrtc::TaskQueueDeleter {
+template <DeletionPolicy Deletion>
+class DefaultDelete<TaskQueueWrapper<Deletion>>
+    : public webrtc::TaskQueueDeleter {
  public:
-  void operator()(TaskQueueWrapper* aPtr) const {
+  void operator()(TaskQueueWrapper<Deletion>* aPtr) const {
     webrtc::TaskQueueDeleter::operator()(aPtr);
   }
 };
@@ -119,14 +146,16 @@ class SharedThreadPoolWebRtcTaskQueueFactory : public webrtc::TaskQueueFactory {
  public:
   SharedThreadPoolWebRtcTaskQueueFactory() {}
 
-  UniquePtr<TaskQueueWrapper> CreateTaskQueueWrapper(
+  template <DeletionPolicy Deletion>
+  UniquePtr<TaskQueueWrapper<Deletion>> CreateTaskQueueWrapper(
       absl::string_view aName, bool aSupportTailDispatch, Priority aPriority,
       MediaThreadType aThreadType = MediaThreadType::WEBRTC_WORKER) const {
     // XXX Do something with aPriority
     nsCString name(aName.data(), aName.size());
     auto taskQueue = MakeRefPtr<TaskQueue>(GetMediaThreadPool(aThreadType),
                                            name.get(), aSupportTailDispatch);
-    return MakeUnique<TaskQueueWrapper>(std::move(taskQueue), std::move(name));
+    return MakeUnique<TaskQueueWrapper<Deletion>>(std::move(taskQueue),
+                                                  std::move(name));
   }
 
   std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
@@ -134,9 +163,12 @@ class SharedThreadPoolWebRtcTaskQueueFactory : public webrtc::TaskQueueFactory {
     // libwebrtc will dispatch some tasks sync, i.e., block the origin thread
     // until they've run, and that doesn't play nice with tail dispatching since
     // there will never be a tail.
+    // DeletionPolicy::Blocking because this is for libwebrtc use and that's
+    // what they expect.
     constexpr bool supportTailDispatch = false;
     return std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>(
-        CreateTaskQueueWrapper(std::move(aName), supportTailDispatch, aPriority)
+        CreateTaskQueueWrapper<DeletionPolicy::Blocking>(
+            std::move(aName), supportTailDispatch, aPriority)
             .release(),
         webrtc::TaskQueueDeleter());
   }

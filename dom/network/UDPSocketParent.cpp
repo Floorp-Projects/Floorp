@@ -104,6 +104,7 @@ mozilla::ipc::IPCResult UDPSocketParent::RecvBind(
 
   UDPSOCKET_LOG(
       ("%s: SendCallbackOpened: %s:%u", __FUNCTION__, addr.get(), port));
+  mAddress = {addr, port};
   mozilla::Unused << SendCallbackOpened(UDPAddressInfo(addr, port));
 
   return IPC_OK();
@@ -319,6 +320,9 @@ mozilla::ipc::IPCResult UDPSocketParent::RecvOutgoingData(
 
     bool allowed;
     const nsTArray<uint8_t>& data(aData.get_ArrayOfuint8_t());
+    UDPSOCKET_LOG(("%s(%s:%d): Filtering outgoing packet", __FUNCTION__,
+                   mAddress.addr().get(), mAddress.port()));
+
     rv = mFilter->FilterPacket(&aAddr.get_NetAddr(), data.Elements(),
                                data.Length(), nsISocketFilter::SF_OUTGOING,
                                &allowed);
@@ -489,6 +493,8 @@ UDPSocketParent::OnPacketReceived(nsIUDPSocket* aSocket,
     bool allowed;
     mozilla::net::NetAddr addr;
     fromAddr->GetNetAddr(&addr);
+    UDPSOCKET_LOG(("%s(%s:%d): Filtering incoming packet", __FUNCTION__,
+                   mAddress.addr().get(), mAddress.port()));
     nsresult rv = mFilter->FilterPacket(&addr, (const uint8_t*)buffer, len,
                                         nsISocketFilter::SF_INCOMING, &allowed);
     // Receiving unallowed data, drop.

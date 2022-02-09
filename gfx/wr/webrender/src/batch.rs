@@ -742,7 +742,8 @@ impl AlphaBatchBuilder {
             BlendMode::Advanced(_) |
             BlendMode::MultiplyDualSource |
             BlendMode::Screen |
-            BlendMode::Exclusion => {
+            BlendMode::Exclusion |
+            BlendMode::PlusLighter => {
                 self.alpha_batch_list
                     .set_params_and_get_batch(key, features, bounding_rect, z_id)
             }

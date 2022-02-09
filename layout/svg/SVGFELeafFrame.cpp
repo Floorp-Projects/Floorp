@@ -13,6 +13,8 @@
 #include "nsIFrame.h"
 #include "nsGkAtoms.h"
 
+using namespace mozilla::dom;
+
 nsIFrame* NS_NewSVGFELeafFrame(mozilla::PresShell* aPresShell,
                                mozilla::ComputedStyle* aStyle);
 namespace mozilla {

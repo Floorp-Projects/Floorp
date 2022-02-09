@@ -80,11 +80,11 @@ menu.subviewbutton > .menu-right {
   padding: 2px 6px;
 }
 
-.panel-button@buttonStateHover@ {
+.panel-button:not([disabled]):hover {
   background-color: var(--panel-item-hover-bgcolor);
 }
 
-.panel-button@buttonStateActive@ {
+.panel-button:not([disabled]):hover:active {
   background-color: var(--panel-item-active-bgcolor);
 }
 

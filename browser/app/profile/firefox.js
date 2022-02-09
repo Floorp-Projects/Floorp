@@ -1430,6 +1430,11 @@ pref("services.sync.prefs.dangerously_allow_arbitrary", false);
 // user's tabs and bookmarks. Note this pref is also synced.
 pref("services.sync.syncedTabs.showRemoteIcons", true);
 
+// A preference (in milliseconds) controlling if we sync after a tab change and
+// how long to delay before we schedule the sync
+// Anything <= 0 means disabled
+pref("services.sync.syncedTabs.syncDelayAfterTabChange", 0);
+
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.
 pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
@@ -1736,7 +1741,7 @@ pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked, 5=All Blocked
 
 pref("media.videocontrols.picture-in-picture.enabled", true);
 pref("media.videocontrols.picture-in-picture.video-toggle.enabled", true);
-pref("media.videocontrols.picture-in-picture.video-toggle.visibility-threshold", "0.9");
+pref("media.videocontrols.picture-in-picture.video-toggle.visibility-threshold", "1.0");
 pref("media.videocontrols.picture-in-picture.keyboard-controls.enabled", true);
 
 #ifdef NIGHTLY_BUILD
