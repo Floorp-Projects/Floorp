@@ -198,8 +198,7 @@ function getDisplayedPopupItems(
   );
 }
 
-async function sleep(ms = 500, reason = "Intentionally wait for UI ready") {
-  SimpleTest.requestFlakyTimeout(reason);
+async function sleep(ms = 500) {
   await new Promise(resolve => setTimeout(resolve, ms));
 }
 
