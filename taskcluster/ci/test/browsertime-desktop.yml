@@ -65,13 +65,13 @@ browsertime-tp6:
                 fission:
                     by-test-platform:
                         windows.*-32.*: []
-                        .*shippable-qr/.*: [trunk, mozilla-beta]
+                        .*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                         default: []
                 default:
                     by-app:
                         firefox:
                             by-test-platform:
-                                (!.*shippable-qr/.*): [trunk, mozilla-beta]
+                                (!.*shippable-qr/.*): [trunk, mozilla-beta, mozilla-release]
                                 default: []
                         default: []
         treeherder-symbol: Btime(tp6)
@@ -177,13 +177,13 @@ browsertime-tp6-essential:
                 by-test-platform:
                     windows.*-32.*: []
                     macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
-                    .*shippable-qr/.*: [trunk, mozilla-beta]
+                    .*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                     default: []
             default:
                 by-app:
                     firefox:
                         by-test-platform:
-                            (!.*shippable-qr/.*): [trunk]
+                            (!.*shippable-qr/.*): [trunk, mozilla-release]
                             default: []
                     default: []
     tier:
