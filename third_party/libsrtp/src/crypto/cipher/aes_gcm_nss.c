@@ -53,7 +53,7 @@
 #include "err.h" /* for srtp_debug */
 #include "crypto_types.h"
 #include "cipher_types.h"
-#include <nss.h>
+#include "cipher_test_cases.h"
 #include <secerr.h>
 #include <nspr.h>
 
@@ -82,6 +82,7 @@ static srtp_err_status_t srtp_aes_gcm_nss_alloc(srtp_cipher_t **c,
                                                 int tlen)
 {
     srtp_aes_gcm_ctx_t *gcm;
+    NSSInitContext *nss;
 
     debug_print(srtp_mod_aes_gcm, "allocating cipher with key length %d",
                 key_len);
@@ -99,23 +100,31 @@ static srtp_err_status_t srtp_aes_gcm_nss_alloc(srtp_cipher_t **c,
         return (srtp_err_status_bad_param);
     }
 
-    /* Initialize NSS */
-    if (!NSS_IsInitialized() && NSS_NoDB_Init(NULL) != SECSuccess) {
+    /* Initialize NSS equiv of NSS_NoDB_Init(NULL) */
+    nss = NSS_InitContext("", "", "", "", NULL,
+                          NSS_INIT_READONLY | NSS_INIT_NOCERTDB |
+                              NSS_INIT_NOMODDB | NSS_INIT_FORCEOPEN |
+                              NSS_INIT_OPTIMIZESPACE);
+    if (!nss) {
         return (srtp_err_status_cipher_fail);
     }
 
     /* allocate memory a cipher of type aes_gcm */
     *c = (srtp_cipher_t *)srtp_crypto_alloc(sizeof(srtp_cipher_t));
     if (*c == NULL) {
+        NSS_ShutdownContext(nss);
         return (srtp_err_status_alloc_fail);
     }
 
     gcm = (srtp_aes_gcm_ctx_t *)srtp_crypto_alloc(sizeof(srtp_aes_gcm_ctx_t));
     if (gcm == NULL) {
+        NSS_ShutdownContext(nss);
         srtp_crypto_free(*c);
         *c = NULL;
         return (srtp_err_status_alloc_fail);
     }
+
+    gcm->nss = nss;
 
     /* set pointers */
     (*c)->state = gcm;
@@ -159,6 +168,11 @@ static srtp_err_status_t srtp_aes_gcm_nss_dealloc(srtp_cipher_t *c)
         /* release NSS resources */
         if (ctx->key) {
             PK11_FreeSymKey(ctx->key);
+        }
+
+        if (ctx->nss) {
+            NSS_ShutdownContext(ctx->nss);
+            ctx->nss = NULL;
         }
 
         /* zeroize the key material */
@@ -271,7 +285,6 @@ static srtp_err_status_t srtp_aes_gcm_nss_do_crypto(void *cv,
 
     c->params.pIv = c->iv;
     c->params.ulIvLen = GCM_IV_LEN;
-    c->params.ulIvBits = GCM_IV_LEN * 8;
     c->params.pAAD = c->aad;
     c->params.ulAADLen = c->aad_size;
 
@@ -391,174 +404,6 @@ static const char srtp_aes_gcm_128_nss_description[] = "AES-128 GCM using NSS";
 static const char srtp_aes_gcm_256_nss_description[] = "AES-256 GCM using NSS";
 
 /*
- * KAT values for AES self-test.  These
- * values we're derived from independent test code
- * using OpenSSL.
- */
-/* clang-format off */
-static const uint8_t srtp_aes_gcm_test_case_0_key[SRTP_AES_GCM_128_KEY_LEN_WSALT] = {
-    0xfe, 0xff, 0xe9, 0x92, 0x86, 0x65, 0x73, 0x1c,
-    0x6d, 0x6a, 0x8f, 0x94, 0x67, 0x30, 0x83, 0x08,
-    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-    0x09, 0x0a, 0x0b, 0x0c,
-};
-/* clang-format on */
-
-/* clang-format off */
-static uint8_t srtp_aes_gcm_test_case_0_iv[12] = {
-    0xca, 0xfe, 0xba, 0xbe, 0xfa, 0xce, 0xdb, 0xad,
-    0xde, 0xca, 0xf8, 0x88
-};
-/* clang-format on */
-
-/* clang-format off */
-static const uint8_t srtp_aes_gcm_test_case_0_plaintext[60] =  {
-    0xd9, 0x31, 0x32, 0x25, 0xf8, 0x84, 0x06, 0xe5,
-    0xa5, 0x59, 0x09, 0xc5, 0xaf, 0xf5, 0x26, 0x9a,
-    0x86, 0xa7, 0xa9, 0x53, 0x15, 0x34, 0xf7, 0xda,
-    0x2e, 0x4c, 0x30, 0x3d, 0x8a, 0x31, 0x8a, 0x72,
-    0x1c, 0x3c, 0x0c, 0x95, 0x95, 0x68, 0x09, 0x53,
-    0x2f, 0xcf, 0x0e, 0x24, 0x49, 0xa6, 0xb5, 0x25,
-    0xb1, 0x6a, 0xed, 0xf5, 0xaa, 0x0d, 0xe6, 0x57,
-    0xba, 0x63, 0x7b, 0x39
-};
-
-/* clang-format off */
-static const uint8_t srtp_aes_gcm_test_case_0_aad[20] = {
-    0xfe, 0xed, 0xfa, 0xce, 0xde, 0xad, 0xbe, 0xef,
-    0xfe, 0xed, 0xfa, 0xce, 0xde, 0xad, 0xbe, 0xef,
-    0xab, 0xad, 0xda, 0xd2
-};
-/* clang-format on */
-
-/* clang-format off */
-static const uint8_t srtp_aes_gcm_test_case_0_ciphertext[76] = {
-    0x42, 0x83, 0x1e, 0xc2, 0x21, 0x77, 0x74, 0x24,
-    0x4b, 0x72, 0x21, 0xb7, 0x84, 0xd0, 0xd4, 0x9c,
-    0xe3, 0xaa, 0x21, 0x2f, 0x2c, 0x02, 0xa4, 0xe0,
-    0x35, 0xc1, 0x7e, 0x23, 0x29, 0xac, 0xa1, 0x2e,
-    0x21, 0xd5, 0x14, 0xb2, 0x54, 0x66, 0x93, 0x1c,
-    0x7d, 0x8f, 0x6a, 0x5a, 0xac, 0x84, 0xaa, 0x05,
-    0x1b, 0xa3, 0x0b, 0x39, 0x6a, 0x0a, 0xac, 0x97,
-    0x3d, 0x58, 0xe0, 0x91,
-    /* the last 16 bytes are the tag */
-    0x5b, 0xc9, 0x4f, 0xbc, 0x32, 0x21, 0xa5, 0xdb,
-    0x94, 0xfa, 0xe9, 0x5a, 0xe7, 0x12, 0x1a, 0x47,
-};
-/* clang-format on */
-
-static const srtp_cipher_test_case_t srtp_aes_gcm_test_case_0a = {
-    SRTP_AES_GCM_128_KEY_LEN_WSALT,      /* octets in key            */
-    srtp_aes_gcm_test_case_0_key,        /* key                      */
-    srtp_aes_gcm_test_case_0_iv,         /* packet index             */
-    60,                                  /* octets in plaintext      */
-    srtp_aes_gcm_test_case_0_plaintext,  /* plaintext                */
-    68,                                  /* octets in ciphertext     */
-    srtp_aes_gcm_test_case_0_ciphertext, /* ciphertext  + tag        */
-    20,                                  /* octets in AAD            */
-    srtp_aes_gcm_test_case_0_aad,        /* AAD                      */
-    GCM_AUTH_TAG_LEN_8,                  /* */
-    NULL                                 /* pointer to next testcase */
-};
-
-static const srtp_cipher_test_case_t srtp_aes_gcm_test_case_0 = {
-    SRTP_AES_GCM_128_KEY_LEN_WSALT,      /* octets in key            */
-    srtp_aes_gcm_test_case_0_key,        /* key                      */
-    srtp_aes_gcm_test_case_0_iv,         /* packet index             */
-    60,                                  /* octets in plaintext      */
-    srtp_aes_gcm_test_case_0_plaintext,  /* plaintext                */
-    76,                                  /* octets in ciphertext     */
-    srtp_aes_gcm_test_case_0_ciphertext, /* ciphertext  + tag        */
-    20,                                  /* octets in AAD            */
-    srtp_aes_gcm_test_case_0_aad,        /* AAD                      */
-    GCM_AUTH_TAG_LEN,                    /* */
-    &srtp_aes_gcm_test_case_0a           /* pointer to next testcase */
-};
-
-/* clang-format off */
-static const uint8_t srtp_aes_gcm_test_case_1_key[SRTP_AES_GCM_256_KEY_LEN_WSALT] = {
-    0xfe, 0xff, 0xe9, 0x92, 0x86, 0x65, 0x73, 0x1c,
-    0xa5, 0x59, 0x09, 0xc5, 0x54, 0x66, 0x93, 0x1c,
-    0xaf, 0xf5, 0x26, 0x9a, 0x21, 0xd5, 0x14, 0xb2,
-    0x6d, 0x6a, 0x8f, 0x94, 0x67, 0x30, 0x83, 0x08,
-    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-    0x09, 0x0a, 0x0b, 0x0c,
-};
-/* clang-format on */
-
-/* clang-format off */
-static uint8_t srtp_aes_gcm_test_case_1_iv[12] = {
-    0xca, 0xfe, 0xba, 0xbe, 0xfa, 0xce, 0xdb, 0xad,
-    0xde, 0xca, 0xf8, 0x88
-};
-/* clang-format on */
-
-/* clang-format off */
-static const uint8_t srtp_aes_gcm_test_case_1_plaintext[60] =  {
-    0xd9, 0x31, 0x32, 0x25, 0xf8, 0x84, 0x06, 0xe5,
-    0xa5, 0x59, 0x09, 0xc5, 0xaf, 0xf5, 0x26, 0x9a,
-    0x86, 0xa7, 0xa9, 0x53, 0x15, 0x34, 0xf7, 0xda,
-    0x2e, 0x4c, 0x30, 0x3d, 0x8a, 0x31, 0x8a, 0x72,
-    0x1c, 0x3c, 0x0c, 0x95, 0x95, 0x68, 0x09, 0x53,
-    0x2f, 0xcf, 0x0e, 0x24, 0x49, 0xa6, 0xb5, 0x25,
-    0xb1, 0x6a, 0xed, 0xf5, 0xaa, 0x0d, 0xe6, 0x57,
-    0xba, 0x63, 0x7b, 0x39
-};
-/* clang-format on */
-
-/* clang-format off */
-static const uint8_t srtp_aes_gcm_test_case_1_aad[20] = {
-    0xfe, 0xed, 0xfa, 0xce, 0xde, 0xad, 0xbe, 0xef,
-    0xfe, 0xed, 0xfa, 0xce, 0xde, 0xad, 0xbe, 0xef,
-    0xab, 0xad, 0xda, 0xd2
-};
-/* clang-format on */
-
-/* clang-format off */
-static const uint8_t srtp_aes_gcm_test_case_1_ciphertext[76] = {
-    0x0b, 0x11, 0xcf, 0xaf, 0x68, 0x4d, 0xae, 0x46,
-    0xc7, 0x90, 0xb8, 0x8e, 0xb7, 0x6a, 0x76, 0x2a,
-    0x94, 0x82, 0xca, 0xab, 0x3e, 0x39, 0xd7, 0x86,
-    0x1b, 0xc7, 0x93, 0xed, 0x75, 0x7f, 0x23, 0x5a,
-    0xda, 0xfd, 0xd3, 0xe2, 0x0e, 0x80, 0x87, 0xa9,
-    0x6d, 0xd7, 0xe2, 0x6a, 0x7d, 0x5f, 0xb4, 0x80,
-    0xef, 0xef, 0xc5, 0x29, 0x12, 0xd1, 0xaa, 0x10,
-    0x09, 0xc9, 0x86, 0xc1,
-    /* the last 16 bytes are the tag */
-    0x45, 0xbc, 0x03, 0xe6, 0xe1, 0xac, 0x0a, 0x9f,
-    0x81, 0xcb, 0x8e, 0x5b, 0x46, 0x65, 0x63, 0x1d,
-};
-/* clang-format on */
-
-static const srtp_cipher_test_case_t srtp_aes_gcm_test_case_1a = {
-    SRTP_AES_GCM_256_KEY_LEN_WSALT,      /* octets in key            */
-    srtp_aes_gcm_test_case_1_key,        /* key                      */
-    srtp_aes_gcm_test_case_1_iv,         /* packet index             */
-    60,                                  /* octets in plaintext      */
-    srtp_aes_gcm_test_case_1_plaintext,  /* plaintext                */
-    68,                                  /* octets in ciphertext     */
-    srtp_aes_gcm_test_case_1_ciphertext, /* ciphertext  + tag        */
-    20,                                  /* octets in AAD            */
-    srtp_aes_gcm_test_case_1_aad,        /* AAD                      */
-    GCM_AUTH_TAG_LEN_8,                  /* */
-    NULL                                 /* pointer to next testcase */
-};
-
-static const srtp_cipher_test_case_t srtp_aes_gcm_test_case_1 = {
-    SRTP_AES_GCM_256_KEY_LEN_WSALT,      /* octets in key            */
-    srtp_aes_gcm_test_case_1_key,        /* key                      */
-    srtp_aes_gcm_test_case_1_iv,         /* packet index             */
-    60,                                  /* octets in plaintext      */
-    srtp_aes_gcm_test_case_1_plaintext,  /* plaintext                */
-    76,                                  /* octets in ciphertext     */
-    srtp_aes_gcm_test_case_1_ciphertext, /* ciphertext  + tag        */
-    20,                                  /* octets in AAD            */
-    srtp_aes_gcm_test_case_1_aad,        /* AAD                      */
-    GCM_AUTH_TAG_LEN,                    /* */
-    &srtp_aes_gcm_test_case_1a           /* pointer to next testcase */
-};
-
-/*
  * This is the vector function table for this crypto engine.
  */
 /* clang-format off */
@@ -572,7 +417,7 @@ const srtp_cipher_type_t srtp_aes_gcm_128 = {
     srtp_aes_gcm_nss_set_iv,
     srtp_aes_gcm_nss_get_tag,
     srtp_aes_gcm_128_nss_description,
-    &srtp_aes_gcm_test_case_0,
+    &srtp_aes_gcm_128_test_case_0,
     SRTP_AES_GCM_128
 };
 /* clang-format on */
@@ -591,7 +436,7 @@ const srtp_cipher_type_t srtp_aes_gcm_256 = {
     srtp_aes_gcm_nss_set_iv,
     srtp_aes_gcm_nss_get_tag,
     srtp_aes_gcm_256_nss_description,
-    &srtp_aes_gcm_test_case_1,
+    &srtp_aes_gcm_256_test_case_0,
     SRTP_AES_GCM_256
 };
 /* clang-format on */

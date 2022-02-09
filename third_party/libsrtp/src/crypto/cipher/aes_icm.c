@@ -52,6 +52,7 @@
 #include "aes_icm.h"
 #include "alloc.h"
 #include "cipher_types.h"
+#include "cipher_test_cases.h"
 
 srtp_debug_module_t srtp_mod_aes_icm = {
     0,        /* debugging is off by default */
@@ -398,104 +399,6 @@ static const char srtp_aes_icm_128_description[] =
     "AES-128 integer counter mode";
 static const char srtp_aes_icm_256_description[] =
     "AES-256 integer counter mode";
-
-/* clang-format off */
-static const uint8_t srtp_aes_icm_128_test_case_0_key[SRTP_AES_ICM_128_KEY_LEN_WSALT] = {
-    0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
-    0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c,
-    0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7,
-    0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd
-};
-/* clang-format on */
-
-/* clang-format off */
-static uint8_t srtp_aes_icm_128_test_case_0_nonce[16] = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-/* clang-format on */
-
-/* clang-format off */
-static const uint8_t srtp_aes_icm_128_test_case_0_plaintext[32] =  {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
-/* clang-format on */
-
-/* clang-format off */
-static const uint8_t srtp_aes_icm_128_test_case_0_ciphertext[32] = {
-    0xe0, 0x3e, 0xad, 0x09, 0x35, 0xc9, 0x5e, 0x80,
-    0xe1, 0x66, 0xb1, 0x6d, 0xd9, 0x2b, 0x4e, 0xb4,
-    0xd2, 0x35, 0x13, 0x16, 0x2b, 0x02, 0xd0, 0xf7,
-    0x2a, 0x43, 0xa2, 0xfe, 0x4a, 0x5f, 0x97, 0xab
-};
-/* clang-format on */
-
-static const srtp_cipher_test_case_t srtp_aes_icm_128_test_case_0 = {
-    SRTP_AES_ICM_128_KEY_LEN_WSALT,          /* octets in key            */
-    srtp_aes_icm_128_test_case_0_key,        /* key                      */
-    srtp_aes_icm_128_test_case_0_nonce,      /* packet index             */
-    32,                                      /* octets in plaintext      */
-    srtp_aes_icm_128_test_case_0_plaintext,  /* plaintext                */
-    32,                                      /* octets in ciphertext     */
-    srtp_aes_icm_128_test_case_0_ciphertext, /* ciphertext               */
-    0,                                       /* */
-    NULL,                                    /* */
-    0,                                       /* */
-    NULL                                     /* pointer to next testcase */
-};
-
-/* clang-format off */
-static const uint8_t srtp_aes_icm_256_test_case_0_key[SRTP_AES_ICM_256_KEY_LEN_WSALT] = {
-    0x57, 0xf8, 0x2f, 0xe3, 0x61, 0x3f, 0xd1, 0x70,
-    0xa8, 0x5e, 0xc9, 0x3c, 0x40, 0xb1, 0xf0, 0x92,
-    0x2e, 0xc4, 0xcb, 0x0d, 0xc0, 0x25, 0xb5, 0x82,
-    0x72, 0x14, 0x7c, 0xc4, 0x38, 0x94, 0x4a, 0x98,
-    0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7,
-    0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd
-};
-/* clang-format on */
-
-/* clang-format off */
-static uint8_t srtp_aes_icm_256_test_case_0_nonce[16] = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-/* clang-format on */
-
-/* clang-format off */
-static const uint8_t srtp_aes_icm_256_test_case_0_plaintext[32] =  {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
-/* clang-format on */
-
-/* clang-format off */
-static const uint8_t srtp_aes_icm_256_test_case_0_ciphertext[32] = {
-    0x92, 0xbd, 0xd2, 0x8a, 0x93, 0xc3, 0xf5, 0x25,
-    0x11, 0xc6, 0x77, 0xd0, 0x8b, 0x55, 0x15, 0xa4,
-    0x9d, 0xa7, 0x1b, 0x23, 0x78, 0xa8, 0x54, 0xf6,
-    0x70, 0x50, 0x75, 0x6d, 0xed, 0x16, 0x5b, 0xac
-};
-/* clang-format on */
-
-static const srtp_cipher_test_case_t srtp_aes_icm_256_test_case_0 = {
-    SRTP_AES_ICM_256_KEY_LEN_WSALT,          /* octets in key            */
-    srtp_aes_icm_256_test_case_0_key,        /* key                      */
-    srtp_aes_icm_256_test_case_0_nonce,      /* packet index             */
-    32,                                      /* octets in plaintext      */
-    srtp_aes_icm_256_test_case_0_plaintext,  /* plaintext                */
-    32,                                      /* octets in ciphertext     */
-    srtp_aes_icm_256_test_case_0_ciphertext, /* ciphertext               */
-    0,                                       /* */
-    NULL,                                    /* */
-    0,                                       /* */
-    NULL,                                    /* pointer to next testcase */
-};
 
 /*
  * note: the encrypt function is identical to the decrypt function
