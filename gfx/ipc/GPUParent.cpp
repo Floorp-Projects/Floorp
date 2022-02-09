@@ -541,7 +541,7 @@ mozilla::ipc::IPCResult GPUParent::RecvNewContentVRManager(
 
 mozilla::ipc::IPCResult GPUParent::RecvNewContentRemoteDecoderManager(
     Endpoint<PRemoteDecoderManagerParent>&& aEndpoint) {
-  if (!RemoteDecoderManagerParent::CreateForContent(std::move(aEndpoint))) {
+  if (!RemoteDecoderManagerParent::CreateForContent(std::move(aEndpoint), /* AllowHardwareDecoding */ true)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
