@@ -80,14 +80,8 @@ class AndroidWebAuthnResult {
     }
   }
 
-  AndroidWebAuthnResult(const AndroidWebAuthnResult& aOther)
-      : mAttObj(aOther.mAttObj.InfallibleClone()),
-        mKeyHandle(aOther.mKeyHandle.InfallibleClone()),
-        mClientDataJSON(aOther.mClientDataJSON),
-        mAuthData(aOther.mAuthData.InfallibleClone()),
-        mSignature(aOther.mSignature.InfallibleClone()),
-        mUserHandle(aOther.mUserHandle.InfallibleClone()),
-        mErrorCode(aOther.mErrorCode) {}
+  AndroidWebAuthnResult(const AndroidWebAuthnResult&) = delete;
+  AndroidWebAuthnResult(AndroidWebAuthnResult&&) = default;
 
   // Attestation-only
   CryptoBuffer mAttObj;
@@ -126,9 +120,9 @@ class AndroidWebAuthnTokenManager final : public U2FTokenTransport {
   static AndroidWebAuthnTokenManager* GetInstance();
 
  private:
-  void HandleRegisterResult(const AndroidWebAuthnResult& aResult);
+  void HandleRegisterResult(AndroidWebAuthnResult&& aResult);
 
-  void HandleSignResult(const AndroidWebAuthnResult& aResult);
+  void HandleSignResult(AndroidWebAuthnResult&& aResult);
 
   void ClearPromises() {
     mRegisterPromise.RejectIfExists(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
