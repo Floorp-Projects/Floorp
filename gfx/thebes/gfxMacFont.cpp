@@ -382,18 +382,22 @@ void gfxMacFont::InitMetrics() {
     mMetrics.ideographicWidth = -1.0;
   }
 
-  if (IsSyntheticBold()) {
-    mMetrics.spaceWidth += GetSyntheticBoldOffset();
-    mMetrics.aveCharWidth += GetSyntheticBoldOffset();
-    mMetrics.maxAdvance += GetSyntheticBoldOffset();
-    if (mMetrics.zeroWidth > 0) {
-      mMetrics.zeroWidth += GetSyntheticBoldOffset();
-    }
-  }
-
   CalculateDerivedMetrics(mMetrics);
 
   SanitizeMetrics(&mMetrics, mFontEntry->mIsBadUnderlineFont);
+
+  if (ApplySyntheticBold()) {
+    auto delta = GetSyntheticBoldOffset();
+    mMetrics.spaceWidth += delta;
+    mMetrics.aveCharWidth += delta;
+    mMetrics.maxAdvance += delta;
+    if (mMetrics.zeroWidth > 0) {
+      mMetrics.zeroWidth += delta;
+    }
+    if (mMetrics.ideographicWidth > 0) {
+      mMetrics.ideographicWidth += delta;
+    }
+  }
 
 #if 0
     fprintf (stderr, "Font: %p (%s) size: %f\n", this,
@@ -583,7 +587,7 @@ already_AddRefed<ScaledFont> gfxMacFont::GetScaledFont(
     mAzureScaledFont = Factory::CreateScaledFontForMacFont(
         GetCGFontRef(), GetUnscaledFont(), GetAdjustedSize(),
         ToDeviceColor(mFontSmoothingBackgroundColor),
-        !mStyle.useGrayscaleAntialiasing, IsSyntheticBold(), hasColorGlyphs);
+        !mStyle.useGrayscaleAntialiasing, ApplySyntheticBold(), hasColorGlyphs);
     if (!mAzureScaledFont) {
       return nullptr;
     }
