@@ -136,10 +136,6 @@ vec3 Difference(vec3 Cb, vec3 Cs) {
     return abs(Cb - Cs);
 }
 
-vec3 Exclusion(vec3 Cb, vec3 Cs) {
-    return Cb + Cs - 2.0 * Cb * Cs;
-}
-
 // These functions below are taken from the spec.
 // There's probably a much quicker way to implement
 // them in GLSL...
@@ -274,9 +270,6 @@ Fragment brush_fs() {
         case MixBlendMode_Multiply:
             result.rgb = Multiply(Cb.rgb, Cs.rgb);
             break;
-        case MixBlendMode_Screen:
-            result.rgb = Screen(Cb.rgb, Cs.rgb);
-            break;
         case MixBlendMode_Overlay:
             // Overlay is inverse of Hardlight
             result.rgb = HardLight(Cs.rgb, Cb.rgb);
@@ -308,9 +301,6 @@ Fragment brush_fs() {
         case MixBlendMode_Difference:
             result.rgb = Difference(Cb.rgb, Cs.rgb);
             break;
-        case MixBlendMode_Exclusion:
-            result.rgb = Exclusion(Cb.rgb, Cs.rgb);
-            break;
         case MixBlendMode_Hue:
             result.rgb = Hue(Cb.rgb, Cs.rgb);
             break;
@@ -323,8 +313,11 @@ Fragment brush_fs() {
         case MixBlendMode_Luminosity:
             result.rgb = Luminosity(Cb.rgb, Cs.rgb);
             break;
+        case MixBlendMode_Screen:
+        case MixBlendMode_Exclusion:
         case MixBlendMode_PlusLighter:
             // This should be unreachable, since we implement
+            // MixBlendMode::Screen, MixBlendMode::Exclusion and
             // MixBlendMode::PlusLighter using glBlendFuncSeparate.
             break;
         default: break;
