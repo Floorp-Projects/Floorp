@@ -46,12 +46,8 @@ requestLongerTimeout(2);
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.vpn_promo.enabled", true],
       ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb"],
-      [
-        "browser.vpn_promo.disallowed_regions",
-        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
-      ],
+      ["browser.contentblocking.report.vpn_platforms", "win"],
 
       // Change the endpoints to prevent non-local network connections when landing on the page.
       ["browser.contentblocking.report.monitor.url", ""],
@@ -87,7 +83,7 @@ add_task(async function checkTelemetryLoadEvents() {
       ["browser.contentblocking.report.monitor.enabled", false],
       ["browser.contentblocking.report.lockwise.enabled", false],
       ["browser.contentblocking.report.proxy.enabled", false],
-      ["browser.vpn_promo.enabled", false],
+      ["browser.contentblocking.report.vpn.enabled", false],
     ],
   });
   await addArbitraryTimeout();
@@ -184,7 +180,7 @@ add_task(async function checkTelemetryClickEvents() {
       ["browser.contentblocking.report.monitor.enabled", true],
       ["browser.contentblocking.report.lockwise.enabled", true],
       ["browser.contentblocking.report.proxy.enabled", true],
-      ["browser.vpn_promo.enabled", false],
+      ["browser.contentblocking.report.vpn.enabled", false],
     ],
   });
   await addArbitraryTimeout();
@@ -791,7 +787,7 @@ add_task(async function checkTelemetryLoadEventForEntrypoint() {
       ["browser.contentblocking.report.monitor.enabled", false],
       ["browser.contentblocking.report.lockwise.enabled", false],
       ["browser.contentblocking.report.proxy.enabled", false],
-      ["browser.vpn_promo.enabled", false],
+      ["browser.contentblocking.report.vpn.enabled", false],
     ],
   });
   await addArbitraryTimeout();
@@ -896,16 +892,13 @@ add_task(async function checkTelemetryClickEventsVPN() {
   AboutProtectionsParent.setTestOverride(getVPNOverrides(false, "us"));
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.vpn_promo.enabled", true],
-      [
-        "browser.vpn_promo.disallowed_regions",
-        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
-      ],
-      ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb"],
       ["browser.contentblocking.database.enabled", false],
       ["browser.contentblocking.report.monitor.enabled", false],
       ["browser.contentblocking.report.lockwise.enabled", false],
       ["browser.contentblocking.report.proxy.enabled", false],
+      ["browser.contentblocking.report.vpn.enabled", true],
+      ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb,cn"],
+      ["browser.contentblocking.report.vpn_platforms", "win"],
       ["browser.contentblocking.report.hide_vpn_banner", true],
       ["browser.contentblocking.report.vpn-android.url", ""],
       ["browser.contentblocking.report.vpn-ios.url", ""],
@@ -1027,16 +1020,13 @@ add_task(async function checkTelemetryEventsVPNBanner() {
   AboutProtectionsParent.setTestOverride(getVPNOverrides(false, "us"));
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.vpn_promo.enabled", true],
-      ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb"],
-      [
-        "browser.vpn_promo.disallowed_regions",
-        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
-      ],
       ["browser.contentblocking.database.enabled", false],
       ["browser.contentblocking.report.monitor.enabled", false],
       ["browser.contentblocking.report.lockwise.enabled", false],
       ["browser.contentblocking.report.proxy.enabled", false],
+      ["browser.contentblocking.report.vpn.enabled", true],
+      ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb"],
+      ["browser.contentblocking.report.vpn_platforms", "win"],
       ["browser.contentblocking.report.hide_vpn_banner", false],
       ["browser.contentblocking.report.vpn-promo.url", ""],
     ],

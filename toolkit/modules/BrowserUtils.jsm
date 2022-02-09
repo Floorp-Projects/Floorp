@@ -20,15 +20,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Region.jsm"
 );
 
-function stringPrefToSet(prefVal) {
-  return new Set(
-    prefVal
-      .toLowerCase()
-      .split(/\s*,\s*/g) // split on commas, ignoring whitespace
-      .filter(v => !!v) // discard any falsey values
-  );
-}
-
 var BrowserUtils = {
   /**
    * Return or create a principal with the content of one, and the originAttributes
@@ -314,29 +305,20 @@ var BrowserUtils = {
 
   // Returns true if user should see VPN promos
   shouldShowVPNPromo() {
-    const vpnPromoEnabled = Services.prefs.getBoolPref(
+    const enablePromoPref = Services.prefs.getBoolPref(
       "browser.vpn_promo.enabled"
     );
     const homeRegion = Region.home || "";
     const currentRegion = Region.current || "";
-    const supportedRegions = BrowserUtils.vpnSupportedRegions;
-    const inSupportedRegion =
-      supportedRegions.has(currentRegion.toLowerCase()) ||
-      supportedRegions.has(homeRegion.toLowerCase());
-    const avoidAdsCountries = BrowserUtils.vpnDisallowedRegions;
+    let avoidAdsCountries = BrowserUtils.vpnDisallowedRegions;
     // Extra check for countries where VPNs are illegal and compliance is strongly enforced
-    const vpnIllegalCountries = ["cn", "kp", "tm"];
+    let vpnIllegalCountries = ["cn", "kp", "tm"];
     vpnIllegalCountries.forEach(country => avoidAdsCountries.add(country));
-    // Don't show promo if there's an active enterprise policy
-    const noActivePolicy =
-      Services.policies.status !== Services.policies.ACTIVE;
 
     return (
-      vpnPromoEnabled &&
+      enablePromoPref &&
       !avoidAdsCountries.has(homeRegion.toLowerCase()) &&
-      !avoidAdsCountries.has(currentRegion.toLowerCase()) &&
-      inSupportedRegion &&
-      noActivePolicy
+      !avoidAdsCountries.has(currentRegion.toLowerCase())
     );
   },
 
@@ -360,18 +342,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   BrowserUtils,
-  "vpnSupportedRegions",
-  "browser.contentblocking.report.vpn_regions",
-  "",
-  null,
-  stringPrefToSet
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  BrowserUtils,
   "vpnDisallowedRegions",
   "browser.vpn_promo.disallowed_regions",
   "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
   null,
-  stringPrefToSet
+  prefVal =>
+    new Set(
+      prefVal
+        .toLowerCase()
+        .split(/\s*,\s*/g) // split on commas, ignoring whitespace
+        .filter(v => !!v) // discard any falsey values
+    )
 );
