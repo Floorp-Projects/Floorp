@@ -127,6 +127,8 @@ enum class ExplicitActiveStatus : uint8_t {
   FIELD(ShouldDelayMediaFromStart, bool)                                      \
   /* See nsSandboxFlags.h for the possible flags. */                          \
   FIELD(SandboxFlags, uint32_t)                                               \
+  /* The value of SandboxFlags when the BrowsingContext is first created.     \
+   * Used for sandboxing the initial about:blank document. */                 \
   FIELD(InitialSandboxFlags, uint32_t)                                        \
   /* A non-zero unique identifier for the browser element that is hosting     \
    * this                                                                     \
