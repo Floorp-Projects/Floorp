@@ -380,6 +380,22 @@ The following is a list of the keywords and operators that have been introduced 
 ``[Compress=all]``            Like ``[Compress]`` but discards the older message regardless of whether they are adjacent in the message queue.
 ``[Priority=Foo]``            Priority of ``MessageTask`` that runs the C++ message handler.  ``Foo`` is one of:
                               ``normal``, ``input``, ``vsync``, ``mediumhigh``, or ``control``.
+``[ChildImpl="RemoteFoo"]``   Indicates that the child side implementation of the actor is a class
+                              named ``RemoteFoo``, and the definition is included by one of the
+                              ``include "...";`` statements in the file.
+                              *New uses of this attribute are discouraged.*
+``[ParentImpl="FooImpl"]``    Indicates that the parent side implementation of the actor is a class
+                              named ``FooImpl``, and the definition is included by one of the
+                              ``include "...";`` statements in the file.
+                              *New uses of this attribute are discouraged.*
+``[ChildImpl=virtual]``       Indicates that the child side implementation of the actor is not
+                              exported by a header, so virtual ``Recv`` methods should be
+                              used instead of direct function calls.
+                              *New uses of this attribute are discouraged.*
+``[ParentImpl=virtual]``      Indicates that the parent side implementation of the actor is not
+                              exported by a header, so virtual ``Recv`` methods should be
+                              used instead of direct function calls.
+                              *New uses of this attribute are discouraged.*
 ============================= ========================================================
 
 The C++ Interface
