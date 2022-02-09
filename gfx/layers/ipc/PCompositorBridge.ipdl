@@ -88,7 +88,7 @@ struct FrameStats {
  * protocol, which is per-browser. A lot of the functions in the protocol are
  * basically multiplexing/demultiplexing stuff in PLayerTransaction.
  */
-[RefCounted, ParentImpl="CompositorBridgeParentBase"]
+[ParentImpl="CompositorBridgeParentBase"]
 sync protocol PCompositorBridge
 {
   manager PCompositorManager;

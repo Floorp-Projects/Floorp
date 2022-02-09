@@ -11,7 +11,7 @@ namespace _ipdltest {
 
 // (Bridge protocols can have different semantics than the endpoints
 // they bridge)
-[ChildImpl="TestEndpointBridgeMainSubChild", ParentImpl="TestEndpointBridgeMainSubParent"]
+[ManualDealloc, ChildImpl="TestEndpointBridgeMainSubChild", ParentImpl="TestEndpointBridgeMainSubParent"]
 intr protocol PTestEndpointBridgeMainSub {
 child:
   async Hi();

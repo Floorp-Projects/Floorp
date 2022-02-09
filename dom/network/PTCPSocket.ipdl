@@ -34,7 +34,7 @@ namespace mozilla {
 namespace net {
 
 //-------------------------------------------------------------------
-[ChildImpl="mozilla::dom::TCPSocketChild", ParentImpl="mozilla::dom::TCPSocketParent"]
+[ManualDealloc, ChildImpl="mozilla::dom::TCPSocketChild", ParentImpl="mozilla::dom::TCPSocketParent"]
 protocol PTCPSocket
 {
   manager PNecko;

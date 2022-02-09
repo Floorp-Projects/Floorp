@@ -12,7 +12,7 @@ using mozilla::OriginAttributesPattern
 namespace mozilla {
 namespace dom {
 
-[RefCounted, ChildImpl=virtual, ParentImpl=virtual]
+[ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PBackgroundSessionStorageManager
 {
  manager PBackground;

@@ -10,7 +10,7 @@ namespace mozilla {
 namespace _ipdltest {
 
 
-[ChildImpl="TestEndpointBridgeMainChild", ParentImpl="TestEndpointBridgeMainParent"]
+[ManualDealloc, ChildImpl="TestEndpointBridgeMainChild", ParentImpl="TestEndpointBridgeMainParent"]
 protocol PTestEndpointBridgeMain {
 
 child:

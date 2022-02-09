@@ -24,7 +24,7 @@ using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 namespace mozilla {
 namespace net {
 
-[ChildImpl="WebSocketChannelChild", ParentImpl="WebSocketChannelParent"]
+[ManualDealloc, ChildImpl="WebSocketChannelChild", ParentImpl="WebSocketChannelParent"]
 async protocol PWebSocket
 {
   manager PNecko;

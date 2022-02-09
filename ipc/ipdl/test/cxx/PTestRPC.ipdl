@@ -3,7 +3,7 @@ include "mozilla/_ipdltest/TestRPC.h";
 namespace mozilla {
 namespace _ipdltest {
 
-[NestedUpTo=inside_sync, ChildImpl="TestRPCChild", ParentImpl="TestRPCParent"]
+[ManualDealloc, NestedUpTo=inside_sync, ChildImpl="TestRPCChild", ParentImpl="TestRPCParent"]
 sync protocol PTestRPC
 {
 parent:

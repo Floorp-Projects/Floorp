@@ -49,7 +49,7 @@ union FileRequestResponse
   FileRequestFlushResponse;
 };
 
-[ChildImpl="indexedDB::BackgroundFileRequestChild", ParentImpl=virtual]
+[ManualDealloc, ChildImpl="indexedDB::BackgroundFileRequestChild", ParentImpl=virtual]
 protocol PBackgroundFileRequest
 {
   manager PBackgroundFileHandle;

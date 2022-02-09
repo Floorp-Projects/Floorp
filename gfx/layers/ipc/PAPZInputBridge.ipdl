@@ -30,7 +30,7 @@ namespace layers {
  * The parent side lives on the main thread in the GPU process. If there is no
  * GPU process, then this protocol is not instantiated.
  */
-[RefCounted] sync protocol PAPZInputBridge
+sync protocol PAPZInputBridge
 {
 parent:
   // The following messages are used to

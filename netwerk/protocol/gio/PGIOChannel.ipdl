@@ -16,7 +16,7 @@ using PRTime from "prtime.h";
 namespace mozilla {
 namespace net {
 
-[ChildImpl=virtual, ParentImpl=virtual]
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 async protocol PGIOChannel
 {
   manager PNecko;

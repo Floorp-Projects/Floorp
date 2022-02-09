@@ -6,7 +6,7 @@ include "mozilla/_ipdltest/TestFailedCtor.h";
 namespace mozilla {
 namespace _ipdltest {
 
-[ChildImpl="TestFailedCtorSubsub", ParentImpl="TestFailedCtorSubsub"]
+[ManualDealloc, ChildImpl="TestFailedCtorSubsub", ParentImpl="TestFailedCtorSubsub"]
 intr protocol PTestFailedCtorSubsub {
     manager PTestFailedCtorSub;
 

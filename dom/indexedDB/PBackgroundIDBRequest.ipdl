@@ -147,7 +147,7 @@ union PreprocessResponse
   ObjectStoreGetAllPreprocessResponse;
 };
 
-[ChildImpl="indexedDB::BackgroundRequestChild", ParentImpl=virtual]
+[ManualDealloc, ChildImpl="indexedDB::BackgroundRequestChild", ParentImpl=virtual]
 protocol PBackgroundIDBRequest
 {
   manager PBackgroundIDBTransaction or PBackgroundIDBVersionChangeTransaction;

@@ -28,6 +28,7 @@ using net::NrIceStunAddrArray from "mozilla/net/PStunAddrsParams.h";
 namespace mozilla {
 namespace dom {
 
+[ManualDealloc]
 async protocol PMediaTransport {
   manager PBackground;
 

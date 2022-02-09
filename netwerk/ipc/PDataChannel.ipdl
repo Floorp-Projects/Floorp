@@ -10,7 +10,7 @@ include protocol PNecko;
 namespace mozilla {
 namespace net {
 
-[RefCounted, ChildImpl=virtual]
+[ChildImpl=virtual]
 async protocol PDataChannel
 {
   manager PNecko;

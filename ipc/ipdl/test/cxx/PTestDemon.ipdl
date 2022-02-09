@@ -3,7 +3,7 @@ include "mozilla/_ipdltest/TestDemon.h";
 namespace mozilla {
 namespace _ipdltest {
 
-[NestedUpTo=inside_cpow, ChildImpl="TestDemonChild", ParentImpl="TestDemonParent"]
+[ManualDealloc, NestedUpTo=inside_cpow, ChildImpl="TestDemonChild", ParentImpl="TestDemonParent"]
 sync protocol PTestDemon
 {
 child:

@@ -68,7 +68,7 @@ union FileSystemResponseValue
   FileSystemErrorResponse;
 };
 
-[RefCounted, ChildImpl="FileSystemTaskChildBase"]
+[ChildImpl="FileSystemTaskChildBase"]
 protocol PFileSystemRequest
 {
   manager PBackground;
