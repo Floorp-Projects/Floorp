@@ -6,6 +6,7 @@
 
 #include "MFTEncoder.h"
 #include "mozilla/Logging.h"
+#include "mozilla/WindowsProcessMitigations.h"
 #include "mozilla/mscom/Utils.h"
 
 // Missing from MinGW.
@@ -86,6 +87,13 @@ static const char* CodecStr(const GUID& aGUID) {
 }
 
 static UINT32 EnumHW(const GUID& aSubtype, IMFActivate**& aActivates) {
+  if (IsWin32kLockedDown()) {
+    // Some HW encoders use system calls and crash when locked down.
+    // TODO: move HW encoding to RDD.
+    MFT_ENC_SLOGD("Don't use HW encoder when win32k locked down.");
+    return 0;
+  }
+
   UINT32 num = 0;
   MFT_REGISTER_TYPE_INFO inType = {.guidMajorType = MFMediaType_Video,
                                    .guidSubtype = MFVideoFormat_NV12};
