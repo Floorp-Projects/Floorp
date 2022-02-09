@@ -118,6 +118,7 @@ import org.mozilla.gecko.util.GeckoBundle;
     DIRECT,
   }
 
+  @WrapForJNI
   public static class MakeCredentialResponse {
     public final byte[] clientDataJson;
     public final byte[] keyHandle;
@@ -302,7 +303,6 @@ import org.mozilla.gecko.util.GeckoBundle;
                   },
                   e -> {
                     Log.w(LOGTAG, "Failed to launch activity: ", e);
-                    Log.w(LOGTAG, "Failed to launch activity: ", e);
                     result.completeExceptionally(new WebAuthnTokenManager.Exception("ABORT_ERR"));
                   });
         });
@@ -317,7 +317,7 @@ import org.mozilla.gecko.util.GeckoBundle;
   }
 
   @WrapForJNI(calledFrom = "gecko")
-  private static void webAuthnMakeCredential(
+  private static GeckoResult<MakeCredentialResponse> webAuthnMakeCredential(
       final GeckoBundle credentialBundle,
       final ByteBuffer userId,
       final ByteBuffer challenge,
@@ -326,8 +326,6 @@ import org.mozilla.gecko.util.GeckoBundle;
       final GeckoBundle authenticatorSelection,
       final GeckoBundle extensions) {
     final ArrayList<WebAuthnPublicCredential> excludeList;
-
-    // TODO: Return a GeckoResult instead, Bug 1550116
 
     final byte[] challBytes = new byte[challenge.remaining()];
     final byte[] userBytes = new byte[userId.remaining()];
@@ -338,44 +336,28 @@ import org.mozilla.gecko.util.GeckoBundle;
       excludeList = WebAuthnPublicCredential.CombineBuffers(idList, transportList);
     } catch (final RuntimeException e) {
       Log.w(LOGTAG, "Couldn't extract nio byte arrays!", e);
-      webAuthnMakeCredentialReturnError("UNKNOWN_ERR");
-      return;
+      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
     }
 
     try {
-      final GeckoResult<MakeCredentialResponse> result =
-          makeCredential(
-              credentialBundle,
-              userBytes,
-              challBytes,
-              excludeList.toArray(new WebAuthnPublicCredential[0]),
-              authenticatorSelection,
-              extensions);
-      result.accept(
-          cred -> {
-            webAuthnMakeCredentialFinish(
-                cred.clientDataJson, cred.keyHandle, cred.attestationObject);
-          },
-          e -> {
-            webAuthnGetAssertionReturnError(e.getMessage());
-          });
+      return makeCredential(
+          credentialBundle,
+          userBytes,
+          challBytes,
+          excludeList.toArray(new WebAuthnPublicCredential[0]),
+          authenticatorSelection,
+          extensions);
     } catch (final Exception e) {
       // We need to ensure we catch any possible exception here in order to ensure
       // that the Promise on the content side is appropriately rejected. In particular,
       // we will get `NoClassDefFoundError` if we're running on a device that does not
       // have Google Play Services.
       Log.w(LOGTAG, "Couldn't make credential", e);
-      webAuthnMakeCredentialReturnError("UNKNOWN_ERR");
+      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
     }
   }
 
-  @WrapForJNI(dispatchTo = "gecko")
-  /* package */ static native void webAuthnMakeCredentialFinish(
-      final byte[] clientDataJson, final byte[] keyHandle, final byte[] attestationObject);
-
-  @WrapForJNI(dispatchTo = "gecko")
-  /* package */ static native void webAuthnMakeCredentialReturnError(String errorCode);
-
+  @WrapForJNI
   public static class GetAssertionResponse {
     public final byte[] clientDataJson;
     public final byte[] keyHandle;
@@ -412,7 +394,7 @@ import org.mozilla.gecko.util.GeckoBundle;
     return new WebAuthnTokenManager.Exception(responseData.getErrorCode().name());
   }
 
-  public static GeckoResult<GetAssertionResponse> getAssertion(
+  private static GeckoResult<GetAssertionResponse> getAssertion(
       final byte[] challenge,
       final WebAuthnTokenManager.WebAuthnPublicCredential[] allowList,
       final GeckoBundle assertionBundle,
@@ -533,7 +515,7 @@ import org.mozilla.gecko.util.GeckoBundle;
   }
 
   @WrapForJNI(calledFrom = "gecko")
-  private static void webAuthnGetAssertion(
+  private static GeckoResult<GetAssertionResponse> webAuthnGetAssertion(
       final ByteBuffer challenge,
       final Object[] idList,
       final ByteBuffer transportList,
@@ -541,52 +523,26 @@ import org.mozilla.gecko.util.GeckoBundle;
       final GeckoBundle extensions) {
     final ArrayList<WebAuthnPublicCredential> allowList;
 
-    // TODO: Return a GeckoResult instead, Bug 1550116
-
     final byte[] challBytes = new byte[challenge.remaining()];
     try {
       challenge.get(challBytes);
       allowList = WebAuthnPublicCredential.CombineBuffers(idList, transportList);
     } catch (final RuntimeException e) {
       Log.w(LOGTAG, "Couldn't extract nio byte arrays!", e);
-      webAuthnGetAssertionReturnError("UNKNOWN_ERR");
-      return;
+      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
     }
 
     try {
-      getAssertion(
-              challBytes,
-              allowList.toArray(new WebAuthnPublicCredential[0]),
-              assertionBundle,
-              extensions)
-          .accept(
-              response -> {
-                webAuthnGetAssertionFinish(
-                    response.clientDataJson,
-                    response.keyHandle,
-                    response.authData,
-                    response.signature,
-                    response.userHandle);
-              },
-              e -> {
-                webAuthnGetAssertionReturnError(e.getMessage());
-              });
+      return getAssertion(
+          challBytes,
+          allowList.toArray(new WebAuthnPublicCredential[0]),
+          assertionBundle,
+          extensions);
     } catch (final java.lang.Exception e) {
       Log.w(LOGTAG, "Couldn't get assertion", e);
-      webAuthnGetAssertionReturnError("UNKNOWN_ERR");
+      return GeckoResult.fromException(new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
     }
   }
-
-  @WrapForJNI(dispatchTo = "gecko")
-  /* package */ static native void webAuthnGetAssertionFinish(
-      final byte[] clientDataJson,
-      final byte[] keyHandle,
-      final byte[] authData,
-      final byte[] signature,
-      final byte[] userHandle);
-
-  @WrapForJNI(dispatchTo = "gecko")
-  /* package */ static native void webAuthnGetAssertionReturnError(String errorCode);
 
   @WrapForJNI(calledFrom = "gecko")
   private static GeckoResult<Boolean> webAuthnIsUserVerifyingPlatformAuthenticatorAvailable() {
