@@ -318,6 +318,12 @@ async function testSteps() {
 
       // 9th snapshot
 
+      try {
+        storage.setItem(String.fromCharCode(0xdbff), "dummy");
+      } catch (e) {
+        is(e.name, "NS_ERROR_ILLEGAL_VALUE", "Key is text");
+      }
+
       info("Clearing");
 
       storage.clear();
