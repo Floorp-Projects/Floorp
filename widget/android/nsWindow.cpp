@@ -1022,10 +1022,6 @@ class LayerViewSupport final
 
     if (!mCompositorPaused) {
       mUiCompositorControllerChild->Resume();
-
-      if (!mCapturePixelsResults.empty()) {
-        mUiCompositorControllerChild->RequestScreenPixels();
-      }
     }
   }
 
@@ -1033,6 +1029,20 @@ class LayerViewSupport final
   void NotifyCompositorSessionLost() {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
     mUiCompositorControllerChild = nullptr;
+
+    if (auto window = mWindow.Access()) {
+      while (!mCapturePixelsResults.empty()) {
+        auto result =
+            java::GeckoResult::LocalRef(mCapturePixelsResults.front().mResult);
+        if (result) {
+          result->CompleteExceptionally(
+              java::sdk::IllegalStateException::New(
+                  "Compositor session lost during screen pixels request")
+                  .Cast<jni::Throwable>());
+        }
+        mCapturePixelsResults.pop();
+      }
+    }
   }
 
   java::sdk::Surface::Param GetSurface() { return mSurface; }
@@ -1338,11 +1348,24 @@ class LayerViewSupport final
                            int32_t aSrcHeight, int32_t aOutWidth,
                            int32_t aOutHeight) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+    auto result = java::GeckoResult::LocalRef(aResult);
+
+    if (!mUiCompositorControllerChild) {
+      if (result) {
+        if (auto window = mWindow.Access()) {
+          result->CompleteExceptionally(
+              java::sdk::IllegalStateException::New(
+                  "Compositor session lost prior to screen pixels request")
+                  .Cast<jni::Throwable>());
+        }
+      }
+      return;
+    }
 
     int size = 0;
     if (auto window = mWindow.Access()) {
       mCapturePixelsResults.push(CaptureRequest(
-          java::GeckoResult::GlobalRef(java::GeckoResult::LocalRef(aResult)),
+          java::GeckoResult::GlobalRef(result),
           java::sdk::Bitmap::GlobalRef(java::sdk::Bitmap::LocalRef(aTarget)),
           ScreenRect(aXOffset, aYOffset, aSrcWidth, aSrcHeight),
           IntSize(aOutWidth, aOutHeight)));
@@ -1350,9 +1373,7 @@ class LayerViewSupport final
     }
 
     if (size == 1) {
-      if (mUiCompositorControllerChild) {
-        mUiCompositorControllerChild->RequestScreenPixels();
-      }
+      mUiCompositorControllerChild->RequestScreenPixels();
     }
   }
 
