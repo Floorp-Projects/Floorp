@@ -294,7 +294,8 @@ bool RDDProcessManager::CreateContentBridge(
     return false;
   }
 
-  mRDDChild->SendNewContentRemoteDecoderManager(std::move(parentPipe));
+  mRDDChild->SendNewContentRemoteDecoderManager(std::move(parentPipe),
+      /* aAllowHardwareDecoding */ mNumUnexpectedCrashes == 0);
 
   *aOutRemoteDecoderManager = std::move(childPipe);
   return true;

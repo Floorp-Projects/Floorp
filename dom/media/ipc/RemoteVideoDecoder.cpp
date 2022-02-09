@@ -158,7 +158,9 @@ IPCResult RemoteVideoDecoderParent::RecvConstruct(
       imageContainer, CreateDecoderParams::VideoFrameRate(mFramerate),
       mOptions,       CreateDecoderParams::NoWrapper(true),
   };
-
+  if (!mParent->AllowHardwareDecoding()) {
+    params.mOptions += CreateDecoderParams::Option::HardwareDecoderNotAllowed;
+  }
   mParent->EnsurePDMFactory().CreateDecoder(params)->Then(
       GetCurrentSerialEventTarget(), __func__,
       [resolver = std::move(aResolver), self = RefPtr{this}](
