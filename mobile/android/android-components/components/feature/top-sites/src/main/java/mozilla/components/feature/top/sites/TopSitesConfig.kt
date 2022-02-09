@@ -19,8 +19,8 @@ import mozilla.components.concept.storage.FrecencyThresholdOption
  */
 data class TopSitesConfig(
     val totalSites: Int,
-    val frecencyConfig: FrecencyThresholdOption?,
-    val providerConfig: TopSitesProviderConfig?
+    val frecencyConfig: FrecencyThresholdOption? = null,
+    val providerConfig: TopSitesProviderConfig? = null
 )
 
 /**

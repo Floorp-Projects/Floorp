@@ -318,7 +318,6 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 5,
-            frecencyConfig = null,
             providerConfig = TopSitesProviderConfig(
                 showProviderTopSites = true,
                 maxThreshold = 2
