@@ -10,6 +10,7 @@ include protocol PNecko;
 namespace mozilla {
 namespace net {
 
+[ChildImpl=virtual]
 async protocol PSimpleChannel
 {
   manager PNecko;
