@@ -57,6 +57,8 @@ class WebRenderTextureHost : public TextureHost {
 
   WebRenderTextureHost* AsWebRenderTextureHost() override { return this; }
 
+  bool IsWrappingBufferTextureHost() override;
+
   virtual void PrepareForUse() override;
 
   wr::ExternalImageId GetExternalImageKey();
