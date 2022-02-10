@@ -85,6 +85,16 @@ class ProxyRunner(Layer):
             "or a URL to zip/manifest file. "
             "For recording, it's a zip fle.",
         },
+        "perftest-page": {
+            "type": str,
+            "default": None,
+            "help": "This option can be used to specify a single test to record rather than "
+            "having to continuously modify the pageload_sites.json. This flag should only be "
+            "used by the perftest team and selects items from "
+            "`testing/performance/pageload_sites.json` based on the name field. Note that "
+            "the login fields won't be checked with a request such as this (i.e. it overrides "
+            "those settings).",
+        },
     }
 
     def __init__(self, env, mach_cmd):
