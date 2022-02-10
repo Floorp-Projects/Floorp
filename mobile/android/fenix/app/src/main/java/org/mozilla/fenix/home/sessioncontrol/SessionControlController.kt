@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.widget.EditText
 import androidx.annotation.VisibleForTesting
@@ -333,6 +334,7 @@ class DefaultSessionControlController(
         )
     }
 
+    @SuppressLint("InflateParams")
     override fun handleRenameTopSiteClicked(topSite: TopSite) {
         activity.let {
             val customLayout =

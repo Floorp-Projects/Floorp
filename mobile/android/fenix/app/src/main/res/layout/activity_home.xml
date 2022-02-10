@@ -18,7 +18,8 @@
         android:layout_width="match_parent"
         android:layout_height="56dp" />
 
-    <fragment
+    <!--The navGraph is set dynamically in NavGraphProvider -->
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/container"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"

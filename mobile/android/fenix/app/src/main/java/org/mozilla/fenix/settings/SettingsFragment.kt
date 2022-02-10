@@ -227,6 +227,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         updateMakeDefaultBrowserPreference()
     }
 
+    @SuppressLint("InflateParams")
     @Suppress("ComplexMethod", "LongMethod")
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         // Hide the scrollbar so the animation looks smoother

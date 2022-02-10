@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.search
 
+import android.annotation.SuppressLint
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
@@ -238,6 +239,7 @@ class AddSearchEngineFragment :
         toggleCustomForm(selectedIndex == -1)
     }
 
+    @SuppressLint("InflateParams")
     private fun makeCustomButton(layoutInflater: LayoutInflater): CustomSearchEngineRadioButtonBinding {
         val wrapper = layoutInflater
             .inflate(R.layout.custom_search_engine_radio_button, null) as ConstraintLayout
@@ -254,6 +256,7 @@ class AddSearchEngineFragment :
         customSearchEngine.customSearchEnginesLearnMore.isEnabled = isEnabled
     }
 
+    @SuppressLint("InflateParams")
     private fun makeButtonFromSearchEngine(
         engine: SearchEngine,
         layoutInflater: LayoutInflater,

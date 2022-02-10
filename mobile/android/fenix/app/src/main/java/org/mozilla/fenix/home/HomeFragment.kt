@@ -868,6 +868,7 @@ class HomeFragment : Fragment() {
         requireComponents.useCases.sessionUseCases.updateLastAccess()
     }
 
+    @SuppressLint("InflateParams")
     private fun recommendPrivateBrowsingShortcut() {
         context?.let { context ->
             val layout = LayoutInflater.from(context)

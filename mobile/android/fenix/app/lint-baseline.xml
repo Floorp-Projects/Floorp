@@ -9,28 +9,6 @@
     </issue>
 
     <issue
-        id="ScopedStorage"
-        message="WRITE_EXTERNAL_STORAGE no longer provides write access when targeting Android 10+"
-        errorLine1="    &lt;uses-permission android:name=&quot;android.permission.WRITE_EXTERNAL_STORAGE&quot; />"
-        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/AndroidManifest.xml"
-            line="9"
-            column="36"/>
-    </issue>
-
-    <issue
-        id="ScopedStorage"
-        message="WRITE_EXTERNAL_STORAGE no longer provides write access when targeting Android 10+"
-        errorLine1="    &lt;uses-permission android:name=&quot;android.permission.WRITE_EXTERNAL_STORAGE&quot; />"
-        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/debug/AndroidManifest.xml"
-            line="12"
-            column="36"/>
-    </issue>
-
-    <issue
         id="UnusedAttribute"
         message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
         errorLine1="    android:foreground=&quot;?android:attr/selectableItemBackground&quot;"
@@ -702,149 +680,6 @@
     </issue>
 
     <issue
-        id="FragmentTagUsage"
-        message="Replace the &lt;fragment> tag with FragmentContainerView."
-        errorLine1="    &lt;fragment"
-        errorLine2="     ~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_home.xml"
-            line="21"
-            column="6"/>
-    </issue>
-
-    <issue
-        id="InflateParams"
-        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
-        errorLine1="            .inflate(R.layout.custom_search_engine_radio_button, null) as ConstraintLayout"
-        errorLine2="                                                                 ~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/settings/search/AddSearchEngineFragment.kt"
-            line="243"
-            column="66"/>
-    </issue>
-
-    <issue
-        id="InflateParams"
-        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
-        errorLine1="            .inflate(R.layout.search_engine_radio_button, null) as LinearLayout"
-        errorLine2="                                                          ~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/settings/search/AddSearchEngineFragment.kt"
-            line="263"
-            column="59"/>
-    </issue>
-
-    <issue
-        id="InflateParams"
-        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
-        errorLine1="                .inflate(R.layout.pbm_shortcut_popup, null)"
-        errorLine2="                                                      ~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/home/HomeFragment.kt"
-            line="842"
-            column="55"/>
-    </issue>
-
-    <issue
-        id="InflateParams"
-        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
-        errorLine1="        val dialogView = LayoutInflater.from(context).inflate(R.layout.mp_migration_dialog, null)"
-        errorLine2="                                                                                            ~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/components/tips/providers/MasterPasswordTipProvider.kt"
-            line="75"
-            column="93"/>
-    </issue>
-
-    <issue
-        id="InflateParams"
-        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
-        errorLine1="            LayoutInflater.from(context).inflate(R.layout.mp_migration_done_dialog, null)"
-        errorLine2="                                                                                    ~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/components/tips/providers/MasterPasswordTipProvider.kt"
-            line="164"
-            column="85"/>
-    </issue>
-
-    <issue
-        id="InflateParams"
-        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
-        errorLine1="            LayoutInflater.from(context).inflate(R.layout.mp_migration_done_dialog, null)"
-        errorLine2="                                                                                    ~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/components/tips/providers/MasterPasswordTipProvider.kt"
-            line="221"
-            column="85"/>
-    </issue>
-
-    <issue
-        id="InflateParams"
-        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
-        errorLine1="                LayoutInflater.from(it).inflate(R.layout.top_sites_rename_dialog, null)"
-        errorLine2="                                                                                  ~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/home/sessioncontrol/SessionControlController.kt"
-            line="323"
-            column="83"/>
-    </issue>
-
-    <issue
-        id="InflateParams"
-        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
-        errorLine1="                val dialogView = LayoutInflater.from(context).inflate(R.layout.amo_collection_override_dialog, null)"
-        errorLine2="                                                                                                               ~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/settings/SettingsFragment.kt"
-            line="355"
-            column="112"/>
-    </issue>
-
-    <issue
-        id="InvalidLicenseFormat"
-        message="The license comment must be followed by a newline character"
-        errorLine1=" * file, You can obtain one at http://mozilla.org/MPL/2.0/. */"
-        errorLine2="                                                             ~">
-        <location
-            file="src/main/java/org/mozilla/fenix/components/FxaServer.kt"
-            line="3"
-            column="62"/>
-    </issue>
-
-    <issue
-        id="MissingLicense"
-        message="The file must start with a comment containing the license"
-        errorLine1="package org.mozilla.fenix.utils;"
-        errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/utils/OnWifiChanged.java"
-            line="1"
-            column="1"/>
-    </issue>
-
-    <issue
-        id="UseSwitchCompatOrMaterialCode"
-        message="Use `SwitchCompat` from AppCompat or `SwitchMaterial` from Material library"
-        errorLine1="    private var switchView: Switch? = null"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/settings/DefaultBrowserPreference.kt"
-            line="20"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UseSwitchCompatOrMaterialXml"
-        message="Use `SwitchCompat` from AppCompat or `SwitchMaterial` from Material library"
-        errorLine1="&lt;Switch xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
-        errorLine2="^">
-        <location
-            file="src/main/res/layout/preference_default_browser.xml"
-            line="6"
-            column="1"/>
-    </issue>
-
-    <issue
         id="VectorRaster"
         message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
         errorLine1="    android:width=&quot;1889dp&quot;"
@@ -862,7 +697,7 @@
         errorLine2="                                     ~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
-            line="99"
+            line="96"
             column="38"/>
     </issue>
 
@@ -873,7 +708,7 @@
         errorLine2="                                     ~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
-            line="121"
+            line="118"
             column="38"/>
     </issue>
 
@@ -884,7 +719,7 @@
         errorLine2="                    ~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
-            line="144"
+            line="141"
             column="21"/>
     </issue>
 
@@ -895,7 +730,7 @@
         errorLine2="                        ~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
-            line="158"
+            line="155"
             column="25"/>
     </issue>
 
@@ -906,7 +741,7 @@
         errorLine2="                           ~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
-            line="186"
+            line="183"
             column="28"/>
     </issue>
 
@@ -917,7 +752,7 @@
         errorLine2="        ~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
-            line="276"
+            line="273"
             column="9"/>
     </issue>
 
@@ -972,7 +807,7 @@
         errorLine2="                                               ^">
         <location
             file="src/main/res/values-tr/strings.xml"
-            line="737"
+            line="749"
             column="48"/>
     </issue>
 
@@ -983,7 +818,7 @@
         errorLine2="         ~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="44"
+            line="48"
             column="10"/>
     </issue>
 
@@ -994,7 +829,7 @@
         errorLine2="         ~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="68"
+            line="72"
             column="10"/>
     </issue>
 
@@ -1005,7 +840,7 @@
         errorLine2="         ~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="76"
+            line="80"
             column="10"/>
     </issue>
 
@@ -1016,7 +851,7 @@
         errorLine2="         ~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="260"
+            line="273"
             column="10"/>
     </issue>
 
@@ -1027,7 +862,7 @@
         errorLine2="         ~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="286"
+            line="299"
             column="10"/>
     </issue>
 
@@ -1137,7 +972,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/tabstray/TabsTrayFragment.kt"
-            line="383"
+            line="384"
             column="13"/>
     </issue>
 
@@ -1440,6 +1275,17 @@
 
     <issue
         id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/scrimBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/scrimBackground&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_history_search_dialog.xml"
+            line="13"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
         message="Possible overdraw: Root element paints background `?homeBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
         errorLine1="    android:background=&quot;?homeBackground&quot;>"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
@@ -1577,7 +1423,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/arrays.xml"
-            line="34"
+            line="36"
             column="13"/>
     </issue>
 
@@ -1588,7 +1434,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/arrays.xml"
-            line="35"
+            line="37"
             column="13"/>
     </issue>
 
@@ -1599,7 +1445,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/arrays.xml"
-            line="36"
+            line="38"
             column="13"/>
     </issue>
 
@@ -1610,7 +1456,7 @@
         errorLine2="                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/arrays.xml"
-            line="37"
+            line="39"
             column="19"/>
     </issue>
 
@@ -1660,7 +1506,7 @@
 
     <issue
         id="IconXmlAndPng"
-        message="The following images appear both as density independent `.xml` files and as bitmap files: /Users/oracle/Projects/fenix/app/src/main/res/drawable-hdpi/ic_logo_wordmark_normal.png, /Users/oracle/Projects/fenix/app/src/main/res/drawable-night/ic_logo_wordmark_normal.xml">
+        message="The following images appear both as density independent `.xml` files and as bitmap files: /Users/oracle/Projects/fenix/app/src/main/res/drawable-hdpi/ic_logo_wordmark_normal.png, /Users/rotbolt/AndroidStudioProjects/fenix/app/src/main/res/drawable-night/ic_logo_wordmark_normal.xml">
         <location
             file="src/main/res/drawable-xxxhdpi/ic_logo_wordmark_normal.png"/>
         <location
@@ -1686,7 +1532,7 @@
         id="ConvertToWebp"
         message="One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion">
         <location
-            file="src/main/res/drawable-xxxhdpi/ic_logo_wordmark_private.png"/>
+            file="src/main/res/drawable-land-xxhdpi/sunrise.jpg"/>
     </issue>
 
     <issue
@@ -1725,36 +1571,22 @@
     </issue>
 
     <issue
-        id="IconLocation"
-        message="Found bitmap drawable `res/drawable/wallpaper_1.png` in densityless folder">
-        <location
-            file="src/main/res/drawable/wallpaper_1.png"/>
-    </issue>
-
-    <issue
-        id="IconLocation"
-        message="Found bitmap drawable `res/drawable/wallpaper_2.png` in densityless folder">
-        <location
-            file="src/main/res/drawable/wallpaper_2.png"/>
-    </issue>
-
-    <issue
         id="IconDensities"
-        message="Missing the following drawables in `drawable-mdpi`: fenix_search_widget.png (found in drawable-hdpi)">
+        message="Missing the following drawables in `drawable-mdpi`: amethyst.png, cerulean.png, fenix_search_widget.png, sunrise.jpg">
         <location
             file="src/main/res/drawable-mdpi"/>
     </issue>
 
     <issue
         id="IconDensities"
-        message="Missing the following drawables in `drawable-xhdpi`: fenix_search_widget.png (found in drawable-hdpi)">
+        message="Missing the following drawables in `drawable-xhdpi`: amethyst.png, cerulean.png, fenix_search_widget.png, sunrise.jpg">
         <location
             file="src/main/res/drawable-xhdpi"/>
     </issue>
 
     <issue
         id="IconDensities"
-        message="Missing the following drawables in `drawable-xxhdpi`: fenix_search_widget.png (found in drawable-hdpi)">
+        message="Missing the following drawables in `drawable-xxhdpi`: amethyst.png, cerulean.png, fenix_search_widget.png, sunrise.jpg">
         <location
             file="src/main/res/drawable-xxhdpi"/>
     </issue>
@@ -1878,6 +1710,17 @@
             file="src/main/res/layout/sign_in_preference.xml"
             line="17"
             column="6"/>
+    </issue>
+
+    <issue
+        id="RtlSymmetry"
+        message="When you define `paddingStart` you should probably also define `paddingEnd` for right-to-left symmetry"
+        errorLine1="    android:paddingStart=&quot;@dimen/custom_checkbox_alignment_margin&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/checkbox_left_sub_preference.xml"
+            line="15"
+            column="5"/>
     </issue>
 
     <issue

@@ -6,9 +6,9 @@ package org.mozilla.fenix.settings
 
 import android.content.Context
 import android.util.AttributeSet
-import android.widget.Switch
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
+import com.google.android.material.switchmaterial.SwitchMaterial
 import org.mozilla.fenix.R
 import org.mozilla.fenix.utils.BrowsersCache
 
@@ -17,7 +17,7 @@ class DefaultBrowserPreference @JvmOverloads constructor(
     attrs: AttributeSet? = null
 ) : Preference(context, attrs) {
 
-    private var switchView: Switch? = null
+    private var switchView: SwitchMaterial? = null
 
     init {
         widgetLayoutResource = R.layout.preference_default_browser
@@ -25,7 +25,7 @@ class DefaultBrowserPreference @JvmOverloads constructor(
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
-        switchView = holder.findViewById(R.id.switch_widget) as Switch
+        switchView = holder.findViewById(R.id.switch_widget) as SwitchMaterial
 
         updateSwitch()
     }

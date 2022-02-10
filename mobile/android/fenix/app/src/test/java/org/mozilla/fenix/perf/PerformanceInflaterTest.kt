@@ -30,7 +30,12 @@ class PerformanceInflaterTest {
     private val layoutsNotToTest = setOf(
         "fragment_browser",
         "fragment_add_on_internal_settings",
-        "activity_privacy_content_display"
+        "activity_privacy_content_display",
+        /**
+         *  activity_home.xml contains FragmentContainerView which needs to be
+         *  put inside FragmentActivity in order to get inflated
+         */
+        "activity_home"
     )
 
     @Before
