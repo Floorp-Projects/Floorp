@@ -335,8 +335,8 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   list-style-image: url("chrome://browser/skin/customizableui/density-touch.svg");
 }
 
-.customization-uidensity-menuitem:hover,
-.customization-lwtheme-menu-theme:hover {
+.customization-uidensity-menuitem:is(:hover, :focus-visible),
+.customization-lwtheme-menu-theme:is(:hover, :focus-visible) {
   background-color: var(--button-hover-bgcolor);
 }
 
