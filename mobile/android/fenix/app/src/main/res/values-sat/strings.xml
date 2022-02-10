@@ -487,6 +487,10 @@
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_description">ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱵᱤᱱᱟᱹ ᱟᱲᱟᱜ ᱠᱟᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱟᱞᱟᱜ ᱟᱨ ᱪᱤᱛᱟᱹᱨ ᱦᱟᱹᱞᱤᱭᱟᱹᱠ ᱢᱮ ᱾</string>
 
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">Firefox ᱪᱤᱱᱦᱟᱹᱯ - ᱠᱟᱸᱛᱷᱥᱟᱦᱴᱟ, ᱵᱩᱛᱟᱹᱢ ᱵᱚᱫᱚᱞ ᱢᱮ</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">ᱮᱰᱼᱚᱱ ᱫᱚ ᱵᱟᱭ ᱟᱠᱟᱱᱟ</string>
