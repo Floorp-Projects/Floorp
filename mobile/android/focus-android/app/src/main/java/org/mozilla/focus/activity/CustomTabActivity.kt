@@ -45,7 +45,7 @@ class CustomTabActivity : LocaleAwareAppCompatActivity() {
 
         setContentView(R.layout.activity_customtab)
 
-        if (savedInstanceState == null) {
+        if (savedInstanceState == null || !this::browserFragment.isInitialized) {
             browserFragment = BrowserFragment.createForTab(customTabId)
             supportFragmentManager.beginTransaction()
                 .add(R.id.container, browserFragment)
