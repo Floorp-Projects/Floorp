@@ -73,3 +73,17 @@ See the [documentation for defining static components](https://firefox-source-do
 ### Most background tasks do not process updates
 
 To prevent unexpected interactions between background tasks and the Firefox runtime lifecycle, such as those uncovered by [Bug 1736373](https://bugzilla.mozilla.org/show_bug.cgi?id=1736373), most background tasks do not process application updates.  The startup process decides whether to process updates in [`::ShouldProcessUpdates`](https://searchfox.org/mozilla-central/source/toolkit/xre/nsAppRunner.cpp) and the predicate that determines whether a particular background task *does* process updates is [`BackgroundTasks::IsUpdatingTaskName`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/BackgroundTasks.h).
+
+Background tasks that are launched at shutdown (and that are not updating) do not prevent Firefox from updating.  However, this can result in Firefox updating out from underneath a running background task: see [this summary of the issue](https://bugzilla.mozilla.org/show_bug.cgi?id=1480452#c8).  Generally, background tasks should be minimal and short-lived and are unlikely to launch additional child subprocesses after startup, so they should not witness this issue, but it is still possible.  See the diagram below visualizing process lifetimes.
+
+```{mermaid}
+    gantt
+        title Background tasks launched at Firefox shutdown
+        dateFormat  YYYY-MM-DD
+        axisFormat  
+        section Firefox
+        firefox (version N)                      :2014-01-03, 3d
+        updater                                  :2014-01-06, 1d
+        firefox (version N+1)                    :2014-01-07, 3d
+        firefox --backgroundtask ... (version N) :2014-01-05, 3d
+```
