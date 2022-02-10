@@ -1219,6 +1219,8 @@ class PictureInPictureChild extends JSWindowActorChild {
 
   /**
    * Sets up Picture-in-Picture to support displaying text tracks from WebVTT
+   * or if WebVTT isn't supported we will register the caption change mutation observer if
+   * the site wrapper exists.
    *
    * If the originating video supports WebVTT, try to read the
    * active track and cues. Display any active cues on the pip window
@@ -1231,6 +1233,7 @@ class PictureInPictureChild extends JSWindowActorChild {
     const isWebVTTSupported = !!originatingVideo.textTracks?.length;
 
     if (!isWebVTTSupported) {
+      this.setUpCaptionChangeListener(originatingVideo);
       return;
     }
 
@@ -1431,6 +1434,7 @@ class PictureInPictureChild extends JSWindowActorChild {
             videoWidth: video.videoWidth,
           });
         }
+        this.setupTextTracks(video);
         break;
       }
       case "change": {
@@ -1600,6 +1604,12 @@ class PictureInPictureChild extends JSWindowActorChild {
     }
   }
 
+  setUpCaptionChangeListener(originatingVideo) {
+    if (this.videoWrapper) {
+      this.videoWrapper.setCaptionContainerObserver(originatingVideo, this);
+    }
+  }
+
   /**
    * Stops tracking the originating video's document. This should
    * happen once the Picture-in-Picture window goes away (or is about
@@ -1665,7 +1675,8 @@ class PictureInPictureChild extends JSWindowActorChild {
         : null;
     this.videoWrapper = new PictureInPictureChildVideoWrapper(
       wrapperPath,
-      originatingVideo
+      originatingVideo,
+      this
     );
   }
 
@@ -1740,6 +1751,7 @@ class PictureInPictureChild extends JSWindowActorChild {
     textTracks.style.bottom = "30px";
     textTracks.style.backgroundColor = "black";
     textTracks.style.color = "white";
+    textTracks.style.whiteSpace = "pre-wrap";
 
     doc.body.appendChild(playerVideo);
     doc.body.appendChild(textTracks);
@@ -2027,6 +2039,7 @@ class PictureInPictureChild extends JSWindowActorChild {
 class PictureInPictureChildVideoWrapper {
   #sandbox;
   #siteWrapper;
+  #PictureInPictureChild;
 
   /**
    * Create a wrapper for the original <video>
@@ -2038,10 +2051,11 @@ class PictureInPictureChildVideoWrapper {
    * @param {HTMLVideoElement} video
    *        The original <video> we want to create a wrapper class for.
    */
-  constructor(videoWrapperScriptPath, video) {
+  constructor(videoWrapperScriptPath, video, piPChild) {
     this.#sandbox = videoWrapperScriptPath
       ? this.#createSandbox(videoWrapperScriptPath, video)
       : null;
+    this.#PictureInPictureChild = piPChild;
   }
 
   /**
@@ -2152,6 +2166,17 @@ class PictureInPictureChildVideoWrapper {
     }
   }
 
+  /**
+   * Function to display the captions on the PiP window
+   * @param text The captions to be shown on the PiP window
+   */
+  updatePiPTextTracks(text) {
+    let pipWindowTracksContainer = this.#PictureInPictureChild.document.getElementById(
+      "texttracks"
+    );
+    pipWindowTracksContainer.textContent = text;
+  }
+
   /* Video methods to be used for video controls from the PiP window. */
 
   play(video) {
@@ -2246,6 +2271,20 @@ class PictureInPictureChildVideoWrapper {
       fallback: () => {
         video.muted = shouldMute;
       },
+      validateRetVal: retVal => retVal == null,
+    });
+  }
+
+  setCaptionContainerObserver(video) {
+    return this.#callWrapperMethod({
+      name: "setCaptionContainerObserver",
+      args: [
+        video,
+        text => {
+          this.updatePiPTextTracks(text);
+        },
+      ],
+      fallback: () => {},
       validateRetVal: retVal => retVal == null,
     });
   }
