@@ -1080,7 +1080,15 @@ StyleGuideOverlay.prototype = {
       style: "primary"
     }, "Primary Button"), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement(Button_Button, {
       style: "secondary"
-    }, "Secondary Button"), /*#__PURE__*/react.createElement("h4", {
+    }, "Secondary Button"), /*#__PURE__*/react.createElement("span", {
+      className: "stp_button_wide"
+    }, /*#__PURE__*/react.createElement(Button_Button, {
+      style: "primary"
+    }, "Primary Wide Button")), /*#__PURE__*/react.createElement("span", {
+      className: "stp_button_wide"
+    }, /*#__PURE__*/react.createElement(Button_Button, {
+      style: "secondary"
+    }, "Secondary Wide Button")), /*#__PURE__*/react.createElement("h4", {
       className: "stp_styleguide_h4"
     }, "Header"), /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement(Button_Button, {
       style: "primary"
@@ -1124,7 +1132,13 @@ StyleGuideOverlay.prototype = {
         url: "https://example.org",
         alt: "Alt Text"
       }]
-    })), document.querySelector(`#stp_style_guide_components`));
+    }), /*#__PURE__*/react.createElement("h3", null, "Typography:"), /*#__PURE__*/react.createElement("h2", {
+      className: "header_large"
+    }, ".header_large"), /*#__PURE__*/react.createElement("h3", {
+      className: "header_medium"
+    }, ".header_medium"), /*#__PURE__*/react.createElement("p", null, "paragraph"), /*#__PURE__*/react.createElement("h3", null, "Native Elements:"), /*#__PURE__*/react.createElement("h4", {
+      className: "stp_styleguide_h4"
+    }, "Horizontal Rule"), /*#__PURE__*/react.createElement("hr", null)), document.querySelector(`#stp_style_guide_components`));
   }
 
 };

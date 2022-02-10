@@ -4391,7 +4391,6 @@ static UniquePtr<WidgetMouseEvent> CreateMouseOrPointerWidgetEvent(
   newEvent->mButton = aMouseEvent->mButton;
   newEvent->mButtons = aMouseEvent->mButtons;
   newEvent->mPressure = aMouseEvent->mPressure;
-  newEvent->mPluginEvent = aMouseEvent->mPluginEvent;
   newEvent->mInputSource = aMouseEvent->mInputSource;
   newEvent->pointerId = aMouseEvent->pointerId;
 
