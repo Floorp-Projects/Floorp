@@ -18,9 +18,10 @@
     --sidebar-width: calc(var(--in-content-sidebar-width) - var(--main-margin-start));
   }
 }
+
 @media (prefers-color-scheme: dark) {
     .card.addon {
-    border: solid #5e5e5e 3px;
+    border: solid #5e5e5e 3px !important;
     margin-right: -3px;
   }
 }
