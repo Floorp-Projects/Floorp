@@ -3739,7 +3739,7 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
                                           argIndex);
           }
 
-          JSLinearString* name = JSID_TO_LINEAR_STRING(id);
+          JSLinearString* name = id.toLinearString();
           const FieldInfo* field =
               StructType::LookupField(cx, targetType, name);
           if (!field) {
@@ -5843,7 +5843,7 @@ static JSLinearString* ExtractStructField(JSContext* cx, HandleValue val,
     return nullptr;
   }
 
-  return JSID_TO_LINEAR_STRING(nameid);
+  return nameid.toLinearString();
 }
 
 // For a struct field with 'name' and 'type', add an element of the form
