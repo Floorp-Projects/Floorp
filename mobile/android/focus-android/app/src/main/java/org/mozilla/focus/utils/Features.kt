@@ -24,5 +24,5 @@ object Features {
      * When this flag it will be removed all classes, methods, tests, etc. which
      * has "firstrun" in their name should be renamed to use "onboarding"
      */
-    val ONBOARDING = AppConstants.isDevOrNightlyBuild
+    var ONBOARDING = AppConstants.isDevOrNightlyBuild
 }

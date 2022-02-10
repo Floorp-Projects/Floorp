@@ -30,10 +30,12 @@ open class MainActivityFirstrunTestRule(
     private val showFirstRun: Boolean
 ) : ActivityTestRule<MainActivity>(MainActivity::class.java, launchActivity) {
     private val longTapUserPreference = getLongPressTimeout()
+    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @CallSuper
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
+        featureSettingsHelper.showNewOnboardingScreen(false)
         updateFirstRun(showFirstRun)
         setLongTapTimeout(3000)
     }
@@ -51,6 +53,7 @@ open class MainActivityFirstrunTestRule(
                 .removeAllTabs()
         }
 
+        featureSettingsHelper.resetAllFeatureFlags()
         closeNotificationShade()
         setLongTapTimeout(longTapUserPreference)
     }
