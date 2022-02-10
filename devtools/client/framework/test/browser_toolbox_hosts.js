@@ -7,6 +7,11 @@ var { Toolbox } = require("devtools/client/framework/toolbox");
 var { LEFT, RIGHT, BOTTOM, WINDOW } = Toolbox.HostType;
 var toolbox;
 
+// We are opening/close toolboxes many times,
+// which introduces long GC pauses between each sub task
+// and requires some more time to run in DEBUG builds.
+requestLongerTimeout(2);
+
 const URL =
   "data:text/html;charset=utf8,test for opening toolbox in different hosts";
 
