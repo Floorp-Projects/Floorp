@@ -47,6 +47,8 @@ template <class T> class AlignedVector {
     }
 
     AlignedVector &operator=(AlignedVector &&from) {
+      if (this == &from) return *this;
+      release();
       mem_ = from.mem_;
       size_ = from.size_;
       from.mem_ = nullptr;
@@ -57,13 +59,7 @@ template <class T> class AlignedVector {
     AlignedVector(const AlignedVector&) = delete;
     AlignedVector& operator=(const AlignedVector&) = delete;
 
-    ~AlignedVector() {
-#ifdef _MSC_VER
-      _aligned_free(mem_);
-#else
-      std::free(mem_);
-#endif
-    }
+    ~AlignedVector() { release(); }
 
     std::size_t size() const { return size_; }
 
@@ -81,6 +77,14 @@ template <class T> class AlignedVector {
   private:
     T *mem_;
     std::size_t size_;
+
+    void release() {
+#ifdef _MSC_VER
+      _aligned_free(mem_);
+#else
+      std::free(mem_);
+#endif
+    }
 };
 
 } // namespace intgemm
