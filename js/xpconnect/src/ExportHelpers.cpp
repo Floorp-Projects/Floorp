@@ -505,7 +505,7 @@ bool ExportFunction(JSContext* cx, HandleValue vfunction, HandleValue vscope,
     } else {
       JS_MarkCrossZoneId(cx, id);
     }
-    MOZ_ASSERT(JSID_IS_STRING(id));
+    MOZ_ASSERT(id.isString());
 
     // The function forwarder will live in the target compartment. Since
     // this function will be referenced from its private slot, to avoid a

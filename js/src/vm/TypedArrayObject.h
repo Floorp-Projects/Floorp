@@ -237,7 +237,7 @@ inline bool CanStartTypedArrayIndex(CharT ch) {
     return true;
   }
 
-  if (MOZ_UNLIKELY(!JSID_IS_STRING(id))) {
+  if (MOZ_UNLIKELY(!id.isString())) {
     MOZ_ASSERT(indexp->isNothing());
     return true;
   }

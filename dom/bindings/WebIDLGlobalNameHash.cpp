@@ -44,8 +44,7 @@ static JSObject* FindNamedConstructorForXray(
        slot < JSCLASS_RESERVED_SLOTS(JS::GetClass(interfaceObject)); ++slot) {
     JSObject* constructor =
         &JS::GetReservedSlot(interfaceObject, slot).toObject();
-    if (JS_GetFunctionId(JS_GetObjectFunction(constructor)) ==
-        JSID_TO_STRING(aId)) {
+    if (JS_GetFunctionId(JS_GetObjectFunction(constructor)) == aId.toString()) {
       return constructor;
     }
   }
@@ -60,7 +59,7 @@ bool WebIDLGlobalNameHash::DefineIfEnabled(
     JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
     JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> aDesc,
     bool* aFound) {
-  MOZ_ASSERT(JSID_IS_STRING(aId), "Check for string id before calling this!");
+  MOZ_ASSERT(aId.isString(), "Check for string id before calling this!");
 
   const WebIDLNameTableEntry* entry = GetEntry(JSID_TO_LINEAR_STRING(aId));
   if (!entry) {
@@ -217,7 +216,7 @@ bool WebIDLGlobalNameHash::ResolveForSystemGlobal(JSContext* aCx,
   }
 
   // We don't resolve any non-string entries.
-  if (!JSID_IS_STRING(aId)) {
+  if (!aId.isString()) {
     return true;
   }
 

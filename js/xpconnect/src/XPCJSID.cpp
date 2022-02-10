@@ -516,7 +516,7 @@ static bool IID_NewEnumerate(JSContext* cx, HandleObject obj,
 static bool IID_Resolve(JSContext* cx, HandleObject obj, HandleId id,
                         bool* resolvedp) {
   *resolvedp = false;
-  if (!JSID_IS_STRING(id)) {
+  if (!id.isString()) {
     return true;
   }
 
@@ -537,7 +537,7 @@ static bool IID_Resolve(JSContext* cx, HandleObject obj, HandleId id,
 
 static bool IID_MayResolve(const JSAtomState& names, jsid id,
                            JSObject* maybeObj) {
-  if (!JSID_IS_STRING(id)) {
+  if (!id.isString()) {
     return false;
   }
 

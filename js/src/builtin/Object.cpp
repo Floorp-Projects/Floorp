@@ -1651,11 +1651,11 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
 
         if constexpr (kind == EnumerableOwnPropertiesKind::Keys ||
                       kind == EnumerableOwnPropertiesKind::Names) {
-          value.setString(JSID_TO_STRING(id));
+          value.setString(id.toString());
         } else if constexpr (kind == EnumerableOwnPropertiesKind::Values) {
           value.set(nobj->getSlot(iter->slot()));
         } else {
-          key.setString(JSID_TO_STRING(id));
+          key.setString(id.toString());
           value.set(nobj->getSlot(iter->slot()));
           if (!NewValuePair(cx, key, value, &value)) {
             return false;
@@ -1722,7 +1722,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
       }
 
       if (kind == EnumerableOwnPropertiesKind::KeysAndValues) {
-        key.setString(JSID_TO_STRING(id));
+        key.setString(id.toString());
         if (!NewValuePair(cx, key, value, &value)) {
           return false;
         }
