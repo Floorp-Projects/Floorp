@@ -35,6 +35,9 @@ interface WorkerDebuggerGlobalScope : EventTarget {
   [Throws]
   void setConsoleEventHandler(AnyCallback? handler);
 
+  [Throws]
+  void clearConsoleEvents();
+
   // base64 utility methods
   [Throws]
   DOMString btoa(DOMString btoa);
