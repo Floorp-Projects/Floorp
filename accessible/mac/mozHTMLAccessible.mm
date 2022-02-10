@@ -27,6 +27,8 @@ using namespace mozilla::a11y;
     proxy->Title(title);
   }
 
+  title.CompressWhitespace();
+
   return nsCocoaUtils::ToNSString(title);
 }
 
