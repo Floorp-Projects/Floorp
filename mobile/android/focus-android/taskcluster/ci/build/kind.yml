@@ -67,6 +67,7 @@ jobs:
             release-type: release
         run-on-tasks-for: [github-pull-request]
         include-shippable-secrets: true
+        include-release-version: true
         run:
             gradle-build-type: release
             gradle-build-name: focusRelease
@@ -80,6 +81,7 @@ jobs:
             release-type: release
         run-on-tasks-for: [github-pull-request]
         include-shippable-secrets: true
+        include-release-version: true
         run:
             gradle-build-type: release
             gradle-build-name: klarRelease
@@ -108,6 +110,7 @@ jobs:
             release-type: beta
         run-on-tasks-for: []
         include-shippable-secrets: true
+        include-release-version: true
         run:
             gradle-build-type: beta
             gradle-build-name: focusBeta
