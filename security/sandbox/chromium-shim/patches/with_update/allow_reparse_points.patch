@@ -1,0 +1,170 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1631294898 -3600
+#      Fri Sep 10 18:28:18 2021 +0100
+# Node ID adbc9b3051ab7f3c9360f65fe0fc26bd9d9dd499
+# Parent  004b5bea4e78db7ecd665173ce4cf6aa0a1af199
+Bug 1695556 p1: Allow reparse points in chromium sandbox code.
+
+Differential Revision: https://phabricator.services.mozilla.com/D135692
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_dispatcher.cc b/security/sandbox/chromium/sandbox/win/src/filesystem_dispatcher.cc
+--- a/security/sandbox/chromium/sandbox/win/src/filesystem_dispatcher.cc
++++ b/security/sandbox/chromium/sandbox/win/src/filesystem_dispatcher.cc
+@@ -87,17 +87,16 @@ bool FilesystemDispatcher::NtCreateFile(
+                                         std::wstring* name,
+                                         uint32_t attributes,
+                                         uint32_t desired_access,
+                                         uint32_t file_attributes,
+                                         uint32_t share_access,
+                                         uint32_t create_disposition,
+                                         uint32_t create_options) {
+   if (!PreProcessName(name)) {
+-    // The path requested might contain a reparse point.
+     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
+     return true;
+   }
+ 
+   const wchar_t* filename = name->c_str();
+ 
+   uint32_t broker = BROKER_TRUE;
+   CountedParameterSet<OpenFile> params;
+@@ -141,17 +140,16 @@ bool FilesystemDispatcher::NtCreateFile(
+ 
+ bool FilesystemDispatcher::NtOpenFile(IPCInfo* ipc,
+                                       std::wstring* name,
+                                       uint32_t attributes,
+                                       uint32_t desired_access,
+                                       uint32_t share_access,
+                                       uint32_t open_options) {
+   if (!PreProcessName(name)) {
+-    // The path requested might contain a reparse point.
+     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
+     return true;
+   }
+ 
+   const wchar_t* filename = name->c_str();
+ 
+   uint32_t broker = BROKER_TRUE;
+   uint32_t create_disposition = FILE_OPEN;
+@@ -196,17 +194,16 @@ bool FilesystemDispatcher::NtOpenFile(IP
+ bool FilesystemDispatcher::NtQueryAttributesFile(IPCInfo* ipc,
+                                                  std::wstring* name,
+                                                  uint32_t attributes,
+                                                  CountedBuffer* info) {
+   if (sizeof(FILE_BASIC_INFORMATION) != info->Size())
+     return false;
+ 
+   if (!PreProcessName(name)) {
+-    // The path requested might contain a reparse point.
+     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
+     return true;
+   }
+ 
+   uint32_t broker = BROKER_TRUE;
+   const wchar_t* filename = name->c_str();
+   CountedParameterSet<FileName> params;
+   params[FileName::NAME] = ParamPickerMake(filename);
+@@ -245,17 +242,16 @@ bool FilesystemDispatcher::NtQueryAttrib
+ bool FilesystemDispatcher::NtQueryFullAttributesFile(IPCInfo* ipc,
+                                                      std::wstring* name,
+                                                      uint32_t attributes,
+                                                      CountedBuffer* info) {
+   if (sizeof(FILE_NETWORK_OPEN_INFORMATION) != info->Size())
+     return false;
+ 
+   if (!PreProcessName(name)) {
+-    // The path requested might contain a reparse point.
+     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
+     return true;
+   }
+ 
+   uint32_t broker = BROKER_TRUE;
+   const wchar_t* filename = name->c_str();
+   CountedParameterSet<FileName> params;
+   params[FileName::NAME] = ParamPickerMake(filename);
+@@ -307,17 +303,16 @@ bool FilesystemDispatcher::NtSetInformat
+ 
+   if (!IsSupportedRenameCall(rename_info, length, info_class))
+     return false;
+ 
+   std::wstring name;
+   name.assign(rename_info->FileName,
+               rename_info->FileNameLength / sizeof(rename_info->FileName[0]));
+   if (!PreProcessName(&name)) {
+-    // The path requested might contain a reparse point.
+     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
+     return true;
+   }
+ 
+   uint32_t broker = BROKER_TRUE;
+   const wchar_t* filename = name.c_str();
+   CountedParameterSet<FileName> params;
+   params[FileName::NAME] = ParamPickerMake(filename);
+diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc b/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc
+--- a/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc
++++ b/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc
+@@ -39,22 +39,16 @@ NTSTATUS NtCreateFileInTarget(HANDLE* ta
+   NTSTATUS status =
+       NtCreateFile(&local_handle, desired_access, obj_attributes,
+                    io_status_block, nullptr, file_attributes, share_access,
+                    create_disposition, create_options, ea_buffer, ea_length);
+   if (!NT_SUCCESS(status)) {
+     return status;
+   }
+ 
+-  if (!sandbox::SameObject(local_handle, obj_attributes->ObjectName->Buffer)) {
+-    // The handle points somewhere else. Fail the operation.
+-    ::CloseHandle(local_handle);
+-    return STATUS_ACCESS_DENIED;
+-  }
+-
+   if (!::DuplicateHandle(::GetCurrentProcess(), local_handle, target_process,
+                          target_file_handle, 0, false,
+                          DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)) {
+     return STATUS_ACCESS_DENIED;
+   }
+   return STATUS_SUCCESS;
+ }
+ 
+@@ -400,23 +394,35 @@ bool FileSystemPolicy::SetInformationFil
+       static_cast<FILE_INFORMATION_CLASS>(info_class);
+   *nt_status = NtSetInformationFile(local_handle, io_block, file_info, length,
+                                     file_info_class);
+ 
+   return true;
+ }
+ 
+ bool PreProcessName(std::wstring* path) {
+-  ConvertToLongPath(path);
++  // We now allow symbolic links to be opened via the broker, so we can no
++  // longer rely on the same object check where we checked the path of the
++  // opened file against the original. We don't specify a root when creating
++  // OBJECT_ATTRIBUTES from file names for brokering so they must be fully
++  // qualified and we can just check for the parent directory double dot between
++  // two backslashes. NtCreateFile doesn't seem to allow it anyway, but this is
++  // just an extra precaution. It also doesn't seem to allow the forward slash
++  // at least in fully qualified names so we rule out that as well, to simplify
++  // the combinations we might have to check.
++  if (path->find(L'/') != std::wstring::npos) {
++    return false;
++  }
+ 
+-  if (ERROR_NOT_A_REPARSE_POINT == IsReparsePoint(*path))
+-    return true;
++  if (path->find(L"\\..\\") != std::wstring::npos) {
++    return false;
++  }
+ 
+-  // We can't process a reparsed file.
+-  return false;
++  ConvertToLongPath(path);
++  return true;
+ }
+ 
+ std::wstring FixNTPrefixForMatch(const std::wstring& name) {
+   std::wstring mod_name = name;
+ 
+   // NT prefix escaped for rule matcher
+   const wchar_t kNTPrefixEscaped[] = L"\\/?/?\\";
+   const int kNTPrefixEscapedLen = base::size(kNTPrefixEscaped) - 1;
