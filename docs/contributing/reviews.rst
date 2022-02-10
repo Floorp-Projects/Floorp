@@ -73,6 +73,9 @@ Review groups
    * - #linter-reviewers
      - tools/lint/*
      - `Member list <https://phabricator.services.mozilla.com/project/members/119/>`__
+   * - #mac-reviewers
+     - Changes to Mac-specific code
+     - `Member list <https://phabricator.services.mozilla.com/project/members/149/>`__
    * - #mozbase
      - Changes to Mozbase
      - `Member list <https://phabricator.services.mozilla.com/project/members/113/>`__
