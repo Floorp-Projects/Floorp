@@ -343,11 +343,11 @@ static bool DefinePropertyIfFound(
 
       bool defineProperty = false;
       do {
-        if (!JSID_IS_STRING(id)) {
+        if (!id.isString()) {
           break;
         }
 
-        name = JS_EncodeStringToLatin1(ccx, JSID_TO_STRING(id));
+        name = JS_EncodeStringToLatin1(ccx, id.toString());
         if (!name) {
           break;
         }

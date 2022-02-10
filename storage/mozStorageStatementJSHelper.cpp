@@ -192,7 +192,7 @@ NS_IMETHODIMP
 StatementJSHelper::Resolve(nsIXPConnectWrappedNative* aWrapper, JSContext* aCtx,
                            JSObject* aScopeObj, jsid aId, bool* aResolvedp,
                            bool* _retval) {
-  if (!JSID_IS_STRING(aId)) return NS_OK;
+  if (!aId.isString()) return NS_OK;
 
   JS::Rooted<JSObject*> scope(aCtx, aScopeObj);
   JS::Rooted<jsid> id(aCtx, aId);

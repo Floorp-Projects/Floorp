@@ -181,12 +181,6 @@ using jsid = JS::PropertyKey;
 
 #define JSID_BITS(id) (id.asBits)
 
-static MOZ_ALWAYS_INLINE bool JSID_IS_STRING(jsid id) { return id.isString(); }
-
-static MOZ_ALWAYS_INLINE JSString* JSID_TO_STRING(jsid id) {
-  return id.toString();
-}
-
 static MOZ_ALWAYS_INLINE bool JSID_IS_INT(jsid id) { return id.isInt(); }
 
 static MOZ_ALWAYS_INLINE int32_t JSID_TO_INT(jsid id) { return id.toInt(); }
@@ -264,8 +258,7 @@ struct BarrierMethods<jsid> {
     return nullptr;
   }
   static void postWriteBarrier(jsid* idp, jsid prev, jsid next) {
-    MOZ_ASSERT_IF(JSID_IS_STRING(next),
-                  !gc::IsInsideNursery(JSID_TO_STRING(next)));
+    MOZ_ASSERT_IF(next.isString(), !gc::IsInsideNursery(next.toString()));
   }
   static void exposeToJS(jsid id) {
     if (id.isGCThing()) {

@@ -1162,7 +1162,7 @@ nsresult mozJSComponentLoader::ExtractExports(
     symbolHolder = ResolveModuleObjectPropertyById(cx, aMod->obj, symbolId);
     if (!symbolHolder ||
         !JS_GetPropertyById(cx, symbolHolder, symbolId, &value)) {
-      RootedString symbolStr(cx, JSID_TO_STRING(symbolId));
+      RootedString symbolStr(cx, symbolId.toString());
       JS::UniqueChars bytes = JS_EncodeStringToUTF8(cx, symbolStr);
       if (!bytes) {
         return NS_ERROR_FAILURE;
@@ -1174,7 +1174,7 @@ nsresult mozJSComponentLoader::ExtractExports(
     // It's possible |value| is the uninitialized lexical MagicValue when
     // there's a cyclic import: const obj = ChromeUtils.import("parent.jsm").
     if (value.isMagic(JS_UNINITIALIZED_LEXICAL)) {
-      RootedString symbolStr(cx, JSID_TO_STRING(symbolId));
+      RootedString symbolStr(cx, symbolId.toString());
       JS::UniqueChars bytes = JS_EncodeStringToUTF8(cx, symbolStr);
       if (!bytes) {
         return NS_ERROR_FAILURE;
@@ -1188,7 +1188,7 @@ nsresult mozJSComponentLoader::ExtractExports(
     }
 
     if (!JS_SetPropertyById(cx, aExports, symbolId, value)) {
-      RootedString symbolStr(cx, JSID_TO_STRING(symbolId));
+      RootedString symbolStr(cx, symbolId.toString());
       JS::UniqueChars bytes = JS_EncodeStringToUTF8(cx, symbolStr);
       if (!bytes) {
         return NS_ERROR_FAILURE;
@@ -1200,8 +1200,7 @@ nsresult mozJSComponentLoader::ExtractExports(
     if (i == 0) {
       logBuffer.AssignLiteral("Installing symbols [ ");
     }
-    JS::UniqueChars bytes =
-        JS_EncodeStringToLatin1(cx, JSID_TO_STRING(symbolId));
+    JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, symbolId.toString());
     if (!!bytes) {
       logBuffer.Append(bytes.get());
     }

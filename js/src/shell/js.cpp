@@ -5664,7 +5664,7 @@ static bool GetModuleEnvironmentNames(JSContext* cx, unsigned argc, Value* vp) {
 
   array->setDenseInitializedLength(length);
   for (uint32_t i = 0; i < length; i++) {
-    array->initDenseElement(i, StringValue(JSID_TO_STRING(ids[i])));
+    array->initDenseElement(i, StringValue(ids[i].toString()));
   }
 
   args.rval().setObject(*array);

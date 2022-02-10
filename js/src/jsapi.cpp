@@ -2181,7 +2181,7 @@ JS_PUBLIC_API JSFunction* JS::NewFunctionFromSpec(JSContext* cx,
     MOZ_ASSERT(SYMBOL_TO_JSID(cx->wellKnownSymbols().get(fs->name.symbol())) ==
                id);
   } else {
-    MOZ_ASSERT(JSID_IS_STRING(id) &&
+    MOZ_ASSERT(id.isString() &&
                StringEqualsAscii(JSID_TO_LINEAR_STRING(id), fs->name.string()));
   }
 #endif
