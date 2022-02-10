@@ -127,6 +127,7 @@ add_task(async function host_permissions() {
           "about:*",
           "about://*/",
           "resource://*/",
+          "moz-extension://*/*"
         ],
       },
       expectedOrigins: [],
@@ -137,8 +138,10 @@ add_task(async function host_permissions() {
       manifest: {
         permissions: ["moz-extension://*/*", "moz-extension://uuid/"],
       },
-      // moz-extension:-origin does not appear in the permission list,
-      // but it is implicitly granted anyway.
+      /*
+       moz-extension:-origin does not appear in the permission list,
+       but it is implicitly granted anyway.
+       */
       expectedOrigins: [],
       expectedWarnings: [],
     },

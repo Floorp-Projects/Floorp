@@ -888,6 +888,14 @@ void gfxWindowsPlatform::GetCommonFallbackFonts(
   // Arial Unicode MS has lots of glyphs for obscure characters,
   // use it as a last resort
   aFontList.AppendElement(kFontArialUnicodeMS);
+
+  // If we didn't begin with the color-emoji fonts, include them here
+  // so that they'll be preferred over user-installed (and possibly
+  // broken) fonts in the global fallback path.
+  if (!PrefersColor(aPresentation)) {
+    aFontList.AppendElement(kFontSegoeUIEmoji);
+    aFontList.AppendElement(kFontTwemojiMozilla);
+  }
 }
 
 bool gfxWindowsPlatform::DidRenderingDeviceReset(
