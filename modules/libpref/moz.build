@@ -64,7 +64,6 @@ pref_groups = [
     "network",
     "nglayout",
     "page_load",
-    "pdfjs",
     "permissions",
     "plain_text",
     "plugin",
