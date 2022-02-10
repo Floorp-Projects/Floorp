@@ -325,7 +325,7 @@ uint32_t ResizeObserver::BroadcastActiveObservations() {
     gfx::Size devicePixelContentBoxSize = CalculateBoxSize(
         target, ResizeObserverBoxOptions::Device_pixel_content_box);
     RefPtr<ResizeObserverEntry> entry =
-        new ResizeObserverEntry(this, *target, borderBoxSize, contentBoxSize,
+        new ResizeObserverEntry(mOwner, *target, borderBoxSize, contentBoxSize,
                                 devicePixelContentBoxSize);
 
     if (!entries.AppendElement(entry.forget(), fallible)) {
@@ -413,7 +413,7 @@ void ResizeObserverEntry::GetDevicePixelContentBoxSize(
 void ResizeObserverEntry::SetBorderBoxSize(const gfx::Size& aSize) {
   nsIFrame* frame = mTarget->GetPrimaryFrame();
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  mBorderBoxSize = new ResizeObserverSize(this, aSize, wm);
+  mBorderBoxSize = new ResizeObserverSize(mOwner, aSize, wm);
 }
 
 void ResizeObserverEntry::SetContentRectAndSize(const gfx::Size& aSize) {
@@ -425,19 +425,19 @@ void ResizeObserverEntry::SetContentRectAndSize(const gfx::Size& aSize) {
   // our contentRect.
   nsRect rect(nsPoint(padding.left, padding.top),
               CSSPixel::ToAppUnits(CSSSize::FromUnknownSize(aSize)));
-  RefPtr<DOMRect> contentRect = new DOMRect(this);
+  RefPtr<DOMRect> contentRect = new DOMRect(mOwner);
   contentRect->SetLayoutRect(rect);
   mContentRect = std::move(contentRect);
 
   // 2. Update mContentBoxSize.
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  mContentBoxSize = new ResizeObserverSize(this, aSize, wm);
+  mContentBoxSize = new ResizeObserverSize(mOwner, aSize, wm);
 }
 
 void ResizeObserverEntry::SetDevicePixelContentSize(const gfx::Size& aSize) {
   nsIFrame* frame = mTarget->GetPrimaryFrame();
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  mDevicePixelContentBoxSize = new ResizeObserverSize(this, aSize, wm);
+  mDevicePixelContentBoxSize = new ResizeObserverSize(mOwner, aSize, wm);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ResizeObserverSize, mOwner)
