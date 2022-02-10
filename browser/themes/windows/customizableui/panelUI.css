@@ -64,7 +64,7 @@
 }
 
 /* Add border-radius on Windows 7 */
-@media (-moz-os-version: windows-win7) {
+@media (-moz-platform: windows-win7) {
   #BMB_bookmarksPopup menupopup::part(content) {
     border-radius: 3.5px;
   }
