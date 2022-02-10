@@ -363,11 +363,7 @@ JS_PUBLIC_API bool JS::ReadableStreamUpdateDataAvailableFromSource(
     size_t bytesWritten;
     {
       AutoRealm ar(cx, unwrappedStream);
-      JS::AutoSuppressGCAnalysis suppressGC(cx);
-      JS::AutoCheckCannotGC noGC;
-      bool dummy;
-      void* buffer = JS_GetArrayBufferViewData(transferredView, &dummy, noGC);
-      source->writeIntoReadRequestBuffer(cx, unwrappedStream, buffer,
+      source->writeIntoReadRequestBuffer(cx, unwrappedStream, transferredView,
                                          availableData, &bytesWritten);
     }
 
