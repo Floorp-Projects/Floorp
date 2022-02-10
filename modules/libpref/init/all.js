@@ -18,7 +18,11 @@
 // Please indent all prefs defined within #ifdef/#ifndef conditions. This
 // improves readability, particular for conditional blocks that exceed a single
 // screen.
-
+pref("extensions.htmlaboutaddons.recommendations.enabled", false);
+pref("datareporting.policy.dataSubmissionEnable", false);
+pref("datareporting.healthreport.uploadEnabled", false);
+pref("extensions.webextensions.restrictedDomains", "");
+/*------------------------------------以下、Firefox の設定-----------------------------------*/
 pref("security.tls.version.min", 3);
 pref("security.tls.version.max", 4);
 pref("security.tls.version.enable-deprecated", false);
@@ -791,6 +795,7 @@ pref("findbar.iteratorTimeout", 100);
 //     1 - "always" (match diacritics)
 // other - "auto"   (match diacritics if input has diacritics, ignore otherwise)
 pref("findbar.matchdiacritics", 0);
+pref("findbar.modalHighlight", false);
 
 // use Mac OS X Appearance panel text smoothing setting when rendering text, disabled by default
 pref("gfx.use_text_smoothing_setting", false);
@@ -1399,7 +1404,7 @@ pref("network.http.fast-fallback-to-IPv4", true);
 
 // Try and use SPDY when using SSL
 pref("network.http.spdy.enabled", true);
-pref("network.http.spdy.enabled.http2", false);
+pref("network.http.spdy.enabled.http2", true);
 pref("network.http.spdy.enabled.deps", true);
 pref("network.http.spdy.enforce-tls-profile", true);
 pref("network.http.spdy.chunk-size", 16000);
@@ -2460,9 +2465,9 @@ pref("dom.ipc.plugins.forcedirect.enabled", true);
 
 // Enable multi by default.
 #if !defined(MOZ_ASAN) && !defined(MOZ_TSAN)
-  pref("dom.ipc.processCount", 3);
+  pref("dom.ipc.processCount", 2);
 #else
-  pref("dom.ipc.processCount", 3);
+  pref("dom.ipc.processCount", 2);
 #endif
 
 // Default to allow only one file:// URL content process.
@@ -3715,9 +3720,6 @@ pref("network.psl.onUpdate_notify", false);
   pref("widget.disable-workspace-management", false);
   pref("widget.titlebar-x11-use-shape-mask", false);
 #endif
-#ifdef MOZ_WAYLAND
-  pref("widget.use-xdg-desktop-portal", false);
-#endif
 
 // All the Geolocation preferences are here.
 //
@@ -3773,7 +3775,7 @@ pref("extensions.webextensions.keepStorageOnUninstall", false);
 pref("extensions.webextensions.keepUuidOnUninstall", false);
 // Redirect basedomain used by identity api
 pref("extensions.webextensions.identity.redirectDomain", "extensions.allizom.org");
-pref("extensions.webextensions.restrictedDomains", "accounts-static.cdn.mozilla.net,accounts.firefox.com,addons.cdn.mozilla.net,addons.mozilla.org,api.accounts.firefox.com,content.cdn.mozilla.net,discovery.addons.mozilla.org,install.mozilla.org,oauth.accounts.firefox.com,profile.accounts.firefox.com,support.mozilla.org,sync.services.mozilla.com");
+//アドオン動作 pref("extensions.webextensions.restrictedDomains", "accounts-static.cdn.mozilla.net,accounts.firefox.com,addons.cdn.mozilla.net,addons.mozilla.org,api.accounts.firefox.com,content.cdn.mozilla.net,discovery.addons.mozilla.org,install.mozilla.org,oauth.accounts.firefox.com,profile.accounts.firefox.com,support.mozilla.org,sync.services.mozilla.com");
 
 // Whether or not the moz-extension resource loads are remoted. For debugging
 // purposes only. Setting this to false will break moz-extension URI loading
@@ -3799,7 +3801,7 @@ pref("extensions.webextensions.performanceCountersMaxAge", 5000);
 // Whether to allow the inline options browser in HTML about:addons page.
 pref("extensions.htmlaboutaddons.inline-options.enabled", true);
 // Show recommendations on the extension and theme list views.
-pref("extensions.htmlaboutaddons.recommendations.enabled", false);
+//pref("extensions.htmlaboutaddons.recommendations.enabled", false);
 
 // The URL for the privacy policy related to recommended add-ons.
 pref("extensions.recommendations.privacyPolicyUrl", "");
@@ -4110,8 +4112,6 @@ pref("dom.wakelock.enabled", false);
 // Search service settings
 pref("browser.search.log", false);
 pref("browser.search.update", true);
-pref("browser.search.update.log", false);
-pref("browser.search.update.interval", 21600);
 pref("browser.search.suggest.enabled", true);
 pref("browser.search.suggest.enabled.private", false);
 pref("browser.search.separatePrivateDefault", false);
@@ -4329,10 +4329,10 @@ pref("toolkit.aboutProcesses.profileDuration", 5);
 // user profile directory for these stylesheets:
 //  * userContent.css
 //  * userChrome.css
-pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
+pref("toolkit.legacyUserProfileCustomizations.stylesheets", false);
 
 #ifdef MOZ_DATA_REPORTING
-  pref("datareporting.policy.dataSubmissionEnabled", false);
+  //pref("datareporting.policy.dataSubmissionEnabled", false);
   pref("datareporting.policy.dataSubmissionPolicyNotifiedTime", "0");
   pref("datareporting.policy.dataSubmissionPolicyAcceptedVersion", 0);
   pref("datareporting.policy.dataSubmissionPolicyBypassNotification", false);
@@ -4347,7 +4347,7 @@ pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
     pref("datareporting.healthreport.infoURL", "https://www.mozilla.org/legal/privacy/firefox.html#health-report");
 
     // Health Report is enabled by default on all channels.
-    pref("datareporting.healthreport.uploadEnabled", false);
+   // pref("datareporting.healthreport.uploadEnabled", false);
   #endif
 #endif
 
@@ -4599,17 +4599,14 @@ pref("browser.privatebrowsing.autostart", false);
 pref("security.external_protocol_requires_permission", true);
 
 // Preferences for the form autofill toolkit component.
-// The truthy values of "extensions.formautofill.addresses.available"
-// and "extensions.formautofill.creditCards.available" are "on" and "detect",
+// The truthy values of "extensions.formautofill.available" are "on" and "detect",
 // any other value means autofill isn't available.
 // "detect" means it's enabled if conditions defined in the extension are met.
-pref("extensions.formautofill.addresses.available", "detect");
+pref("extensions.formautofill.available", "detect");
 pref("extensions.formautofill.addresses.enabled", true);
 pref("extensions.formautofill.addresses.capture.enabled", false);
-pref("extensions.formautofill.addresses.supportedCountries", "US,CA");
-pref("extensions.formautofill.creditCards.available", "detect");
+pref("extensions.formautofill.creditCards.available", true);
 pref("extensions.formautofill.creditCards.enabled", true);
-pref("extensions.formautofill.creditCards.supportedCountries", "US,CA");
 // Temporary preference to control displaying the UI elements for
 // credit card autofill used for the duration of the A/B test.
 pref("extensions.formautofill.creditCards.hideui", false);
@@ -4628,4 +4625,5 @@ pref("extensions.formautofill.loglevel", "Warn");
 
 pref("toolkit.osKeyStore.loglevel", "Warn");
 
+pref("extensions.formautofill.supportedCountries", "US,CA");
 pref("extensions.formautofill.supportRTL", false);
