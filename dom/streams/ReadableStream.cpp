@@ -32,6 +32,7 @@
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/ReadableStreamDefaultReader.h"
 #include "mozilla/dom/ReadableStreamTee.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StreamUtils.h"
 #include "mozilla/dom/TeeState.h"
@@ -178,7 +179,7 @@ already_AddRefed<ReadableStream> ReadableStream::Constructor(
       aUnderlyingSource.WasPassed() ? aUnderlyingSource.Value() : nullptr);
 
   // Step 2.
-  UnderlyingSource underlyingSourceDict;
+  RootedDictionary<UnderlyingSource> underlyingSourceDict(aGlobal.Context());
   if (underlyingSourceObj) {
     JS::RootedValue objValue(aGlobal.Context(),
                              JS::ObjectValue(*underlyingSourceObj));
