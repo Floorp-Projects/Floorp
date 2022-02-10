@@ -203,10 +203,6 @@ static MOZ_ALWAYS_INLINE jsid SYMBOL_TO_JSID(JS::Symbol* sym) {
   return id;
 }
 
-static MOZ_ALWAYS_INLINE bool JSID_IS_VOID(const jsid id) {
-  return id.isVoid();
-}
-
 constexpr const jsid JSID_VOID;
 
 extern JS_PUBLIC_DATA const JS::HandleId JSID_VOIDHANDLE;
