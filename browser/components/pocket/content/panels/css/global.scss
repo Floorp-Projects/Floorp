@@ -4,5 +4,25 @@ body {
 
 hr {
   margin: 12px -8px;
-  color: #F0F0F4;
+  background-color: #F0F0F4;
+  height: 1px;
+  border: none;
+}
+
+.header_large {
+  margin: 12px 0 8px;
+  font-size: 1.15em;
+  line-height: 1.53em;
+}
+
+.header_medium {
+  margin: 12px 0 8px;
+  font-size: 1em;
+  line-height: 1.23em;
+}
+
+p {
+  margin: 8px 0;
+  font-size: 0.84em;
+  line-height: 1.07em;
 }

@@ -84,33 +84,16 @@ struct ParamTraits<mozilla::WidgetEvent> {
 };
 
 template <>
-struct ParamTraits<mozilla::NativeEventData> {
-  typedef mozilla::NativeEventData paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mBuffer);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mBuffer);
-  }
-};
-
-template <>
 struct ParamTraits<mozilla::WidgetGUIEvent> {
   typedef mozilla::WidgetGUIEvent paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, static_cast<const mozilla::WidgetEvent&>(aParam));
-    WriteParam(aMsg, aParam.mPluginEvent);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    return ReadParam(aMsg, aIter,
-                     static_cast<mozilla::WidgetEvent*>(aResult)) &&
-           ReadParam(aMsg, aIter, &aResult->mPluginEvent);
+    return ReadParam(aMsg, aIter, static_cast<mozilla::WidgetEvent*>(aResult));
   }
 };
 
