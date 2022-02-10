@@ -8,7 +8,7 @@ pub mod shell;
 #[cfg(test)]
 pub mod test;
 
-use log::{debug, warn};
+use log::{debug, info, trace, warn};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::BTreeMap;
@@ -202,7 +202,7 @@ fn read_response(stream: &mut TcpStream, has_output: bool, has_length: bool) -> 
                     warn!("adb server response contained hexstring len {} but remaining message length is {}", n, message.len());
                 }
 
-                debug!(
+                trace!(
                     "adb server response was {:?}",
                     std::str::from_utf8(&message)?
                 );
@@ -408,12 +408,12 @@ impl Device {
         };
 
         if device.is_rooted {
-            debug!("Device is rooted");
+            info!("Device is rooted");
 
             // Set Permissive=1 if we have root.
             device.execute_host_shell_command("setenforce permissive")?;
         } else {
-            debug!("Device is unrooted");
+            info!("Device is unrooted");
         }
 
         Ok(device)
@@ -458,18 +458,17 @@ impl Device {
         let mut stream = self.host.connect()?;
 
         let switch_command = format!("host:transport:{}", self.serial);
-        debug!("execute_host_command: >> {:?}", &switch_command);
+        trace!("execute_host_command: >> {:?}", &switch_command);
         stream.write_all(encode_message(&switch_command)?.as_bytes())?;
         let _bytes = read_response(&mut stream, false, false)?;
-        debug!("execute_host_command: << {:?}", _bytes);
+        trace!("execute_host_command: << {:?}", _bytes);
         // TODO: should we assert no bytes were read?
 
-        debug!("execute_host_command: >> {:?}", &command);
+        trace!("execute_host_command: >> {:?}", &command);
         stream.write_all(encode_message(command)?.as_bytes())?;
         let bytes = read_response(&mut stream, has_output, has_length)?;
-
         let response = std::str::from_utf8(&bytes)?;
-        debug!("execute_host_command: << {:?}", response);
+        trace!("execute_host_command: << {:?}", response);
 
         // Unify new lines by removing possible carriage returns
         Ok(response.replace("\r\n", "\n"))
@@ -760,14 +759,14 @@ impl Device {
                     enable_run_as,
                 );
                 if self.remove(dest1).is_err() {
-                    debug!("Failed to remove {}", dest1.display());
+                    warn!("Failed to remove {}", dest1.display());
                 }
                 result?;
             }
             Ok(())
         } else if buf.starts_with(SyncCommand::Fail.code()) {
             if enable_run_as && self.remove(dest1).is_err() {
-                debug!("Failed to remove {}", dest1.display());
+                warn!("Failed to remove {}", dest1.display());
             }
             let n = buf.len().min(read_length_little_endian(&mut stream)?);
 
@@ -780,7 +779,7 @@ impl Device {
             Err(DeviceError::Adb(message))
         } else {
             if self.remove(dest1).is_err() {
-                debug!("Failed to remove {}", dest1.display());
+                warn!("Failed to remove {}", dest1.display());
             }
             Err(DeviceError::Adb("FAIL (unknown)".to_owned()))
         }
