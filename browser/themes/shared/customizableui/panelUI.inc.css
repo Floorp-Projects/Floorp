@@ -4,9 +4,6 @@
 
 %filter substitution
 
-%define menuStateHover :not([disabled],:active)[_moz-menuactive]
-%define menuStateActive :not([disabled])[_moz-menuactive]:active
-%define menuStateMenuActive :not([disabled])[_moz-menuactive]
 %define inAnyPanel :is(:not([cui-areatype="toolbar"]), [overflowedItem=true])
 
 :root {
@@ -1256,18 +1253,22 @@ toolbarbutton.subviewbutton:focus-visible,
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
-menu.subviewbutton@menuStateHover@,
-#PlacesToolbar menuitem@menuStateHover@,
-#PlacesToolbar menu@menuStateHover@,
-menuitem.subviewbutton@menuStateHover@ {
+:is(
+  menu.subviewbutton,
+  #PlacesToolbar menuitem,
+  #PlacesToolbar menu,
+  menuitem.subviewbutton
+):not([disabled])[_moz-menuactive] {
   color: inherit;
   background-color: var(--panel-item-hover-bgcolor);
 }
 
-menu.subviewbutton@menuStateActive@,
-#PlacesToolbar menuitem@menuStateActive@,
-#PlacesToolbar menu@menuStateActive@,
-menuitem.subviewbutton@menuStateActive@ {
+:is(
+  menu.subviewbutton,
+  #PlacesToolbar menuitem,
+  #PlacesToolbar menu,
+  menuitem.subviewbutton
+):not([disabled])[_moz-menuactive]:active {
   color: inherit;
   background-color: var(--panel-item-active-bgcolor);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
