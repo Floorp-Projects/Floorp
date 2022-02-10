@@ -8,29 +8,29 @@ DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
 DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
 
 
-FINAL_TARGET_FILES.features["translate@mozilla.org"] += [
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"] += [
     "crowdin.yml",
     "manifest.json",
 
 ]
 
-FINAL_TARGET_FILES.features["translate@mozilla.org"]["_locales"]["ja"] += [
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["ja"] += [
     "_locales/ja/messages.json",
 ]  
 
-FINAL_TARGET_FILES.features["translate@mozilla.org"]["_locales"]["en"] += [
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["en"] += [
     "_locales/en/messages.json",
 ]  
 
 
-FINAL_TARGET_FILES.features["translate@mozilla.org"]["background"] += [
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["background"] += [
     "background/background.js",
     "background/textToSpeech.js",
     "background/translationCache.js",
     "background/translationService.js",
 ]    
 
-FINAL_TARGET_FILES.features["translate@mozilla.org"]["contentScript"] += [
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["contentScript"] += [
     "contentScript/checkScriptIsInjected.js",
     "contentScript/deepl.js",
     "contentScript/pageTranslator.js",
@@ -40,14 +40,14 @@ FINAL_TARGET_FILES.features["translate@mozilla.org"]["contentScript"] += [
     "contentScript/translateSelected.js",
 ]    
 
-FINAL_TARGET_FILES.features["translate@mozilla.org"]["contentScript"]["css"] += [
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["contentScript"]["css"] += [
     "contentScript/css/popupMobile.css",
     "contentScript/css/showOriginal.css",
     "contentScript/css/showTranslated.css",
     "contentScript/css/translateSelected.css",
 ]  
 
-FINAL_TARGET_FILES.features["translate@mozilla.org"]["icons"] += [
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["icons"] += [
     "icons/btn_donate_LG.webp",
     "icons/coinpayments.png",
     "icons/google-translate-32.png",
@@ -61,20 +61,20 @@ FINAL_TARGET_FILES.features["translate@mozilla.org"]["icons"] += [
     "icons/yandex-translate-32.png",
 ]
 
-FINAL_TARGET_FILES.features["translate@mozilla.org"]["lib"] += [
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["lib"] += [
     "lib/config.js",
     "lib/i18n.js",
     "lib/languages.js",
     "lib/platformInfo.js",
 ]
 
-FINAL_TARGET_FILES.features["translate@mozilla.org"]["options"] += [
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["options"] += [
     "options/options.css",
     "options/options.html",
     "options/options.js",
 ]
 
-FINAL_TARGET_FILES.features["translate@mozilla.org"]["popup"] += [
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["popup"] += [
     "popup/detect-pdf.js",
     "popup/old-popup.css",
     "popup/old-popup.html",
@@ -91,7 +91,7 @@ FINAL_TARGET_FILES.features["translate@mozilla.org"]["popup"] += [
 
 ]
 
-FINAL_TARGET_FILES.features["translate@mozilla.org"]["w3css"]["4"] += [
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["w3css"]["4"] += [
     "w3css/4/w3.css",
 ]  
 
