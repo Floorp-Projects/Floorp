@@ -29,8 +29,10 @@ namespace tllformat {
 #  pragma GCC diagnostic pop
 #endif
 namespace tfformat {
+#undef NAN
+#define NAN std::nan("")
 #include "glibc_printf_tests/tfformat.c"
-}
+}  // namespace tfformat
 
 // A simple implementation of PrintfTarget, just for testing
 // PrintfTarget::print.
