@@ -25,12 +25,16 @@ add_task(async function() {
     "PAGE"
   );
   const { devtoolsDocument, devtoolsTab, devtoolsWindow } = devToolsToolbox;
+  const toolbox = getToolbox(devtoolsWindow);
 
   const urlInput = devtoolsDocument.querySelector(".devtools-textinput");
+  const waitForLoadedPanelsReload = await watchForLoadedPanelsReload(toolbox);
+
   await synthesizeUrlKeyInput(devToolsToolbox, urlInput, NEW_TAB_URL);
 
+  await waitForLoadedPanelsReload();
+
   info("Test that the debug target navigated to the specified URL.");
-  const toolbox = getToolbox(devtoolsWindow);
   await waitUntil(
     () =>
       toolbox.target.url === NEW_TAB_URL &&
