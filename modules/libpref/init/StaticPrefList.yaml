@@ -2829,7 +2829,7 @@
 # Network Information API
 - name: dom.netinfo.enabled
   type: RelaxedAtomicBool
-  value: @IS_ANDROID@
+  value: false
   mirror: always
 
 # Whether we should open noopener links in a new process.
