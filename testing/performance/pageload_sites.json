@@ -398,6 +398,7 @@
       "login": false,
       "name": "wikia",
       "test_url": "https://marvel.fandom.com/wiki/Black_Panther",
+      "secondary_url": "https://marvel.fandom.com/wiki/Celestials",
       "test_cmds":  [
         ["click.byXpathAndWait", "/html/body/div[6]/div/div/div[2]/div[1]"],
         ["click.byXpathAndWait", "/html/body/div[7]/div/div/div[2]/div[2]"]

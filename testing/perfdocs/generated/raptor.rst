@@ -19735,8 +19735,9 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-wikia.manifest
-   * **playback version**: 5.1.1
+   * **playback pageset manifest**: mitm7-linux-firefox-wikia.manifest
+   * **playback version**: 7.0.4
+   * **secondary url**: `<https://marvel.fandom.com/wiki/Celestials>`__
    * **test url**: `<https://marvel.fandom.com/wiki/Black_Panther>`__
    * **type**: pageload
    * **unit**: ms
