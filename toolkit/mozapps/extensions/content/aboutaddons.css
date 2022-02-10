@@ -18,9 +18,20 @@
     --sidebar-width: calc(var(--in-content-sidebar-width) - var(--main-margin-start));
   }
 }
+@media (prefers-color-scheme: dark) {
+    .card.addon {
+    border: solid #5e5e5e 3px;
+    margin-right: -3px;
+  }
+}
 
 *|*[hidden] {
   display: none !important;
+}
+
+.card.addon {
+  border: solid #fff 3px;
+  margin-right: -3px;
 }
 
 body {
