@@ -29,8 +29,8 @@ add_task(async function() {
 
   info("Select the Changes panel");
   const { document: doc, store } = selectChangesView(inspector);
-  const onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
-  const onResetChanges = waitUntilAction(store, "RESET_CHANGES");
+  const onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
+  const onResetChanges = waitForDispatch(store, "RESET_CHANGES");
 
   info("Wait for change to be tracked");
   await onTrackChange;

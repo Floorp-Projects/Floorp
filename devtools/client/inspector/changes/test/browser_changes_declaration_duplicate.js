@@ -28,13 +28,13 @@ async function testAddDuplicateDeclarations(ruleView, store, doc) {
   info(`Test that adding declarations with the same property name and value
         are both tracked.`);
 
-  let onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  let onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   info("Add CSS declaration");
   await addProperty(ruleView, 1, "color", "red");
   info("Wait for the change to be tracked");
   await onTrackChange;
 
-  onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   info("Add duplicate CSS declaration");
   await addProperty(ruleView, 1, "color", "red");
   info("Wait for the change to be tracked");
@@ -60,7 +60,7 @@ async function testChangeDuplicateDeclarations(ruleView, store, doc) {
   const prop = getTextProperty(ruleView, 1, { color: "red" });
 
   info("Change the value of the first of the duplicate declarations");
-  const onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  const onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   await setProperty(ruleView, prop, "black");
   info("Wait for the change to be tracked");
   await onTrackChange;
@@ -85,7 +85,7 @@ async function testRemoveDuplicateDeclarations(ruleView, store, doc) {
   const prop = getTextProperty(ruleView, 1, { color: "black" });
 
   info("Remove first declaration");
-  const onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  const onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   await removeProperty(ruleView, prop);
   info("Wait for the change to be tracked");
   await onTrackChange;
