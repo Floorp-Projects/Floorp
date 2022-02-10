@@ -769,6 +769,9 @@ main.has-snippet {
   border-radius: 4px;
   position: absolute;
 }
+.top-site-icon.search-topsite{
+  background-size: 1rem !important;
+}
 .top-site-outer .rich-icon {
   background-size: cover;
   height: 100%;
