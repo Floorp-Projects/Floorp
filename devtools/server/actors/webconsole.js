@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global clearConsoleEvents */
-
 "use strict";
 
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
@@ -1464,8 +1462,11 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    */
   clearMessagesCache: function() {
     if (isWorker) {
-      // Defined on WorkerScope
-      clearConsoleEvents();
+      // At the moment there is no mechanism available to clear the Console API cache for
+      // a given worker target (See https://bugzilla.mozilla.org/show_bug.cgi?id=1674336).
+      // Worker messages from the console service (e.g. error) are emitted from the main
+      // thread, so this cache will be cleared when the associated document target cache
+      // is cleared.
       return;
     }
 
