@@ -1102,6 +1102,11 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
       kinds.add(kind);
 
       for (const styleActor of [...this.refMap.values()]) {
+        // Ignore StyleRuleActor that don't have a parent stylesheet.
+        // i.e. actor whose type is ELEMENT_STYLE.
+        if (!styleActor._parentSheet) {
+          continue;
+        }
         const resourceId = this.styleSheetsManager.getStyleSheetResourceId(
           styleActor._parentSheet
         );
