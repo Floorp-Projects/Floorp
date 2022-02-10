@@ -11,6 +11,8 @@ from perfdocs.logger import PerfDocLogger
 
 logger = PerfDocLogger()
 
+ON_TRY = "MOZ_AUTOMATION" in os.environ
+
 
 def save_file(file_content, path, extension="rst"):
     """
@@ -81,9 +83,19 @@ def are_dirs_equal(dir_1, dir_2):
 
     if mismatch or errors:
         logger.log(f"Found mismatches: {mismatch}")
-        with open("/builds/worker/diff.txt", "w") as difffile:
+
+        # The root for where to save the diff will be different based on
+        # whether we are running in CI or not
+        diff_filename = "diff.txt"
+        diff_root = "/builds/worker/"
+        if not ON_TRY:
+            diff_root = f"{PerfDocLogger.TOP_DIR}artifacts/"
+        diff_path = f"{diff_root}{diff_filename}"
+
+        with open(diff_path, "w") as diff_file:
             for entry in mismatch:
                 logger.log(f"Mismatch found on {entry}")
+
                 with open(os.path.join(dir_1, entry)) as f:
                     newlines = f.readlines()
                 with open(os.path.join(dir_2, entry)) as f:
@@ -93,21 +105,31 @@ def are_dirs_equal(dir_1, dir_2):
                 ):
                     logger.log(line)
 
-                # here we want to add to diff.txt in a patch format
+                # Here we want to add to diff.txt in a patch format, we use
+                # the basedir to make the file names/paths relative and this is
+                # different in CI vs local runs.
                 basedir = "/builds/worker/checkouts/gecko/"
+                if not ON_TRY:
+                    basedir = diff_root
+
                 relative_path = os.path.join(dir_2, entry).split(basedir)[-1]
                 patch = difflib.unified_diff(
                     baselines, newlines, fromfile=relative_path, tofile=relative_path
                 )
+
                 write_header = True
                 for line in patch:
                     if write_header:
-                        difffile.write(
+                        diff_file.write(
                             f"diff --git a/{relative_path} b/{relative_path}\n"
                         )
                         write_header = False
-                    difffile.write(line)
+                    diff_file.write(line)
+
                 logger.log(f"Completed diff on {entry}")
+
+        logger.log(f"Saved diff to {diff_path}")
+
         return False
 
     for common_dir in dirs_cmp.common_dirs:
