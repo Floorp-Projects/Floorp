@@ -49,10 +49,8 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
 
   int32_t OtherPid() const { return other_pid_; }
 
-  // See the comment in ipc_channel.h for info on Unsound_IsClosed() and
-  // Unsound_NumQueuedMessages().
-  bool Unsound_IsClosed() const;
-  uint32_t Unsound_NumQueuedMessages() const;
+  // See the comment in ipc_channel.h for info on IsClosed()
+  bool IsClosed() const;
 
  private:
   void Init(Mode mode, Listener* listener);
@@ -126,12 +124,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   // We keep track of the PID of the other side of this channel so that we can
   // record this when generating logs of IPC messages.
   int32_t other_pid_ = -1;
-
-  // This variable is updated so it matches output_queue_.Count(), except we can
-  // read output_queue_length_ from any thread (if we're OK getting an
-  // occasional out-of-date or bogus value).  We use output_queue_length_ to
-  // implement Unsound_NumQueuedMessages.
-  std::atomic<size_t> output_queue_length_ = 0;
 
   ScopedRunnableMethodFactory<ChannelImpl> factory_;
 

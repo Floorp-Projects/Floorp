@@ -100,7 +100,6 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   waiting_connect_ = (mode == MODE_SERVER);
   processing_incoming_ = false;
   closed_ = false;
-  output_queue_length_ = 0;
   input_buf_offset_ = 0;
   input_buf_ = mozilla::MakeUnique<char[]>(Channel::kReadBufferSize);
   accept_handles_ = false;
@@ -112,12 +111,10 @@ void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
   mozilla::LogIPCMessage::LogDispatchWithPid(msg.get(), other_pid_);
 
   output_queue_.Push(std::move(msg));
-  output_queue_length_++;
 }
 
 void Channel::ChannelImpl::OutputQueuePop() {
   mozilla::UniquePtr<Message> message = output_queue_.Pop();
-  output_queue_length_--;
 }
 
 void Channel::ChannelImpl::Close() {
@@ -744,11 +741,7 @@ bool Channel::ChannelImpl::TransferHandles(Message& msg) {
   return true;
 }
 
-bool Channel::ChannelImpl::Unsound_IsClosed() const { return closed_; }
-
-uint32_t Channel::ChannelImpl::Unsound_NumQueuedMessages() const {
-  return output_queue_length_;
-}
+bool Channel::ChannelImpl::IsClosed() const { return closed_; }
 
 //------------------------------------------------------------------------------
 // Channel's methods simply call through to ChannelImpl.
@@ -785,13 +778,7 @@ bool Channel::Send(mozilla::UniquePtr<Message> message) {
 
 int32_t Channel::OtherPid() const { return channel_impl_->OtherPid(); }
 
-bool Channel::Unsound_IsClosed() const {
-  return channel_impl_->Unsound_IsClosed();
-}
-
-uint32_t Channel::Unsound_NumQueuedMessages() const {
-  return channel_impl_->Unsound_NumQueuedMessages();
-}
+bool Channel::IsClosed() const { return channel_impl_->IsClosed(); }
 
 namespace {
 
