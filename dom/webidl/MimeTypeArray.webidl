@@ -8,7 +8,6 @@
  Exposed=Window]
 interface MimeTypeArray {
   readonly attribute unsigned long length;
-
   getter MimeType? item(unsigned long index);
   getter MimeType? namedItem(DOMString name);
 };
