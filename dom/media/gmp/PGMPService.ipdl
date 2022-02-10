@@ -11,7 +11,7 @@ using base::ProcessId from "base/process.h";
 namespace mozilla {
 namespace gmp {
 
-[RefCounted, NeedsOtherPid]
+[NeedsOtherPid, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PGMPService
 {
 parent:

@@ -12,7 +12,8 @@ include "mozilla/dom/ServiceWorkerIPCUtils.h";
 namespace mozilla {
 namespace dom {
 
-[RefCounted] protocol PServiceWorkerContainer
+[ChildImpl=virtual, ParentImpl=virtual]
+protocol PServiceWorkerContainer
 {
   manager PBackground;
 

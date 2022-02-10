@@ -67,6 +67,7 @@ class AboutWelcome extends React.PureComponent {
           name={props.name}
           url={props.url}
           iconURL={props.iconURL}
+          themeScreenshots={props.screenshots}
           metricsFlowUri={this.state.metricsFlowUri}
         />
       );
@@ -89,7 +90,7 @@ class AboutWelcome extends React.PureComponent {
 function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
   let messageId =
     welcomeContent.template === "return_to_amo"
-      ? "RTAMO_DEFAULT_WELCOME"
+      ? `RTAMO_DEFAULT_WELCOME_${welcomeContent.type.toUpperCase()}`
       : "DEFAULT_ID";
   let UTMTerm = "default";
 

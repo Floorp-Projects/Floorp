@@ -40,7 +40,8 @@ struct SSCacheCopy {
   SSSetItemInfo[] data;
 };
 
-[RefCounted] sync protocol PBackgroundSessionStorageCache
+[ChildImpl=virtual, ParentImpl=virtual]
+sync protocol PBackgroundSessionStorageCache
 {
  manager PBackgroundSessionStorageManager;
 

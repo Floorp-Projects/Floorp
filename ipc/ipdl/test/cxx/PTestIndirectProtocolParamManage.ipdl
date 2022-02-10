@@ -4,6 +4,7 @@ include protocol PTestIndirectProtocolParamSecond;
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PTestIndirectProtocolParamManage {
     manages PTestIndirectProtocolParamFirst;
     manages PTestIndirectProtocolParamSecond;

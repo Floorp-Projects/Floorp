@@ -18,6 +18,7 @@ include InputStreamParams;
 include PBackgroundIDBSharedTypes;
 
 include "mozilla/dom/indexedDB/SerializationHelpers.h";
+include "mozilla/dom/indexedDB/ActorsChild.h";
 
 using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
 
@@ -39,6 +40,7 @@ union DatabaseRequestParams
   CreateFileParams;
 };
 
+[ManualDealloc, ChildImpl="indexedDB::BackgroundDatabaseChild", ParentImpl=virtual]
 sync protocol PBackgroundIDBDatabase
 {
   manager PBackgroundIDBFactory;

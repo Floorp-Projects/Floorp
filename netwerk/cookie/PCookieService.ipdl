@@ -27,7 +27,7 @@ namespace net {
  * @see nsICookiePermission
  */
 
-[NestedUpTo=inside_cpow] sync protocol PCookieService
+[ManualDealloc, NestedUpTo=inside_cpow] sync protocol PCookieService
 {
   manager PNecko;
 

@@ -1,6 +1,9 @@
+include "mozilla/_ipdltest/TestRaceDeferral.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestRaceDeferralChild", ParentImpl="TestRaceDeferralParent"]
 intr protocol PTestRaceDeferral {
 parent:
     [LegacyIntr] intr Lose();

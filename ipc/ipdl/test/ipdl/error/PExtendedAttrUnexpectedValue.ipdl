@@ -1,6 +1,6 @@
-//error: unexpected value for valueless attribute `RefCounted'
+//error: unexpected value for valueless attribute `ManualDealloc'
 
-[RefCounted=invalid] async protocol PExtendedAttrUnexpectedValue {
+[ManualDealloc=invalid] async protocol PExtendedAttrUnexpectedValue {
 parent:
     async Msg();
 };

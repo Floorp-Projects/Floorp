@@ -8,6 +8,7 @@ include ClientIPCTypes;
 namespace mozilla {
 namespace dom {
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PClientNavigateOp
 {
   manager PClientManager;

@@ -13,6 +13,7 @@ include ClientIPCTypes;
 namespace mozilla {
 namespace dom {
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PClientSource
 {
   manager PClientManager;

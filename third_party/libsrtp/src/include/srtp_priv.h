@@ -55,7 +55,6 @@
 #include "cipher.h"
 #include "auth.h"
 #include "aes.h"
-#include "key.h"
 #include "crypto_kernel.h"
 
 #ifdef __cplusplus
@@ -147,7 +146,6 @@ typedef struct srtp_stream_ctx_t_ {
     srtp_sec_serv_t rtcp_services;
     direction_t direction;
     int allow_repeat_tx;
-    srtp_ekt_stream_t ekt;
     int *enc_xtn_hdr;
     int enc_xtn_hdr_count;
     uint32_t pending_roc;
@@ -215,7 +213,7 @@ typedef struct {
  * srtcp_hdr_t represents a secure rtcp header
  *
  * in this implementation, an srtcp header is assumed to be 32-bit
- * alinged
+ * aligned
  */
 
 #ifndef WORDS_BIGENDIAN

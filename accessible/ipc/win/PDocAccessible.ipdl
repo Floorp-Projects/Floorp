@@ -43,6 +43,7 @@ struct ShowEventData
   bool EventSuppressed;
 };
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PDocAccessible
 {
   manager PBrowser;

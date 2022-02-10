@@ -1,11 +1,14 @@
 include protocol PTestBadActorSub;
 
+include "mozilla/_ipdltest/TestBadActor.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
 // Test that a parent sending a reentrant __delete__ message
 // is not killed if a child's message races with the reply.
 
+[ManualDealloc, ChildImpl="TestBadActorChild", ParentImpl="TestBadActorParent"]
 intr protocol PTestBadActor {
   manages PTestBadActorSub;
 

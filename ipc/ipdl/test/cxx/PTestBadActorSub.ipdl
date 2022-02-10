@@ -1,8 +1,11 @@
 include protocol PTestBadActor;
 
+include "mozilla/_ipdltest/TestBadActor.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestBadActorSubChild", ParentImpl="TestBadActorSubParent"]
 intr protocol PTestBadActorSub {
   manager PTestBadActor;
 

@@ -34,6 +34,7 @@ union MaybeInputData
   void_t;
 };
 
+[ManualDealloc, ChildImpl=virtual]
 protocol PFilePicker
 {
   manager PBrowser;

@@ -135,7 +135,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::collections::hash_map::Entry;
 use std::ops::Range;
 use crate::picture_textures::PictureCacheTextureHandle;
-use crate::util::{MaxRect, VecHelper, MatrixHelpers, Recycler, raster_rect_to_device_pixels, ScaleOffset};
+use crate::util::{MaxRect, VecHelper, MatrixHelpers, Recycler, ScaleOffset};
 use crate::filterdata::{FilterDataHandle};
 use crate::tile_cache::{SliceDebugInfo, TileDebugInfo, DirtyTileDebugInfo};
 use crate::visibility::{PrimitiveVisibilityFlags, FrameVisibilityContext};
@@ -5031,15 +5031,8 @@ impl PicturePrimitive {
 
                         // Apply device pixel ratio for parent surface to get into device
                         // pixels for that surface.
-                        let backdrop_rect = raster_rect_to_device_pixels(
-                            pic_in_raster_space,
-                            parent_device_pixel_scale,
-                        );
-
-                        let parent_surface_rect = raster_rect_to_device_pixels(
-                            parent_surface.clipping_rect.cast_unit(),
-                            parent_device_pixel_scale,
-                        );
+                        let backdrop_rect = pic_in_raster_space.cast_unit() * parent_device_pixel_scale;
+                        let parent_surface_rect = parent_surface.clipping_rect.cast_unit() * parent_device_pixel_scale;
 
                         // If there is no available parent surface to read back from (for example, if
                         // the parent surface is affected by a clip that doesn't affect the child
@@ -5053,6 +5046,7 @@ impl PicturePrimitive {
                                 // from the primitive rect within the readback region. This is
                                 // 0..1 for aligned surfaces, but doing it this way allows
                                 // accurate sampling if the primitive bounds have fractional values.
+                                let available_rect = available_rect.round_out();
 
                                 let backdrop_uv = calculate_uv_rect_kind(
                                     available_rect,

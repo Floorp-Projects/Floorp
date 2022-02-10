@@ -44,6 +44,7 @@ union LSRequestResponse
  * response types above for their corresponding responses, and `RequestHelper`
  * for more on the usage and lifecycle of this mechanism.
  */
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PBackgroundLSRequest
 {
   manager PBackground;
