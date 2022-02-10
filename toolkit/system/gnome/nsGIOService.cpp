@@ -588,7 +588,8 @@ nsGIOService::OrgFreedesktopFileManager1ShowItems(const nsACString& aPath) {
   g_variant_builder_add(&builder, "s", uri.get());
 
   const int32_t timeout =
-    StaticPrefs::widget_gtk_file_manager_show_items_timeout_ms();;
+      StaticPrefs::widget_gtk_file_manager_show_items_timeout_ms();
+  ;
   const char* startupId = "";
   RefPtr<GVariant> result = dont_AddRef(g_dbus_proxy_call_sync(
       proxy, "ShowItems", g_variant_new("(ass)", &builder, startupId),
