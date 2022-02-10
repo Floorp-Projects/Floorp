@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const testServer = createVersionizedHttpTestServer("sourcemaps-reload2");
+const testServer = createVersionizedHttpTestServer("sourcemaps-reload");
 const TEST_URL = testServer.urlFor("index.html");
 
 // Assert the behavior of the gutter that grays out non-breakable lines
