@@ -1722,7 +1722,7 @@ static MOZ_ALWAYS_INLINE bool ValueToAtomOrSymbolPure(JSContext* cx,
   // Watch out for ids that may be stored in dense elements.
   static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT < JSID_INT_MAX,
                 "All dense elements must have integer jsids");
-  if (MOZ_UNLIKELY(JSID_IS_INT(*id))) {
+  if (MOZ_UNLIKELY(id->isInt())) {
     return false;
   }
 

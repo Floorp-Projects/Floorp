@@ -475,8 +475,8 @@ struct SortComparatorIds {
       return true;
     }
 
-    if (JSID_IS_INT(a)) {
-      *lessOrEqualp = (JSID_TO_INT(a) <= JSID_TO_INT(b));
+    if (a.isInt()) {
+      *lessOrEqualp = (a.toInt() <= b.toInt());
       return true;
     }
 
