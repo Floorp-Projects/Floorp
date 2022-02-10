@@ -681,6 +681,8 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvInitProxyAutoConfigChild(
     Endpoint<PProxyAutoConfigChild>&& aEndpoint) {
   // For parsing PAC.
   if (!sInitializedJS) {
+    JS::DisableJitBackend();
+
     const char* jsInitFailureReason = JS_InitWithFailureDiagnostic();
     if (jsInitFailureReason) {
       MOZ_CRASH_UNSAFE(jsInitFailureReason);
