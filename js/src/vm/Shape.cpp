@@ -152,7 +152,7 @@ static void AssertValidCustomDataProp(NativeObject* obj, PropertyFlags flags) {
 /* static */
 bool NativeObject::addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
                                          HandleId id, PropertyFlags flags) {
-  MOZ_ASSERT(!JSID_IS_VOID(id));
+  MOZ_ASSERT(!id.isVoid());
   MOZ_ASSERT(!id.isPrivateName());
   MOZ_ASSERT(!obj->containsPure(id));
 
@@ -275,16 +275,15 @@ bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
 
   // The object must not contain a property named |id|. The object must be
   // extensible, but allow private fields and sparsifying dense elements.
-  MOZ_ASSERT(!JSID_IS_VOID(id));
+  MOZ_ASSERT(!id.isVoid());
   MOZ_ASSERT(!obj->containsPure(id));
-  MOZ_ASSERT_IF(
-      !id.isPrivateName(),
-      obj->isExtensible() ||
-          (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) ||
-          // R&T wrappers are non-extensible, but we still want to be able to
-          // lazily resolve their properties. We can special-case them to
-          // allow doing so.
-          IF_RECORD_TUPLE(IsExtendedPrimitiveWrapper(*obj), false));
+  MOZ_ASSERT_IF(!id.isPrivateName(),
+                obj->isExtensible() ||
+                    (id.isInt() && obj->containsDenseElement(id.toInt())) ||
+                    // R&T wrappers are non-extensible, but we still want to be
+                    // able to lazily resolve their properties. We can
+                    // special-case them to allow doing so.
+                    IF_RECORD_TUPLE(IsExtendedPrimitiveWrapper(*obj), false));
 
   if (!Watchtower::watchPropertyAdd(cx, obj, id)) {
     return false;
@@ -391,7 +390,7 @@ bool NativeObject::addPropertyInReservedSlot(JSContext* cx,
   MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(obj->getClass()));
 
   // The object must not contain a property named |id| and must be extensible.
-  MOZ_ASSERT(!JSID_IS_VOID(id));
+  MOZ_ASSERT(!id.isVoid());
   MOZ_ASSERT(!obj->containsPure(id));
   MOZ_ASSERT(!id.isPrivateName());
   MOZ_ASSERT(obj->isExtensible());
@@ -464,7 +463,7 @@ static void AssertValidArrayIndex(NativeObject* obj, jsid id) {
 bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
                                   HandleId id, PropertyFlags flags,
                                   uint32_t* slotOut) {
-  MOZ_ASSERT(!JSID_IS_VOID(id));
+  MOZ_ASSERT(!id.isVoid());
 
   AutoCheckShapeConsistency check(obj);
   AssertValidArrayIndex(obj, id);
@@ -584,7 +583,7 @@ bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
                                                   HandleNativeObject obj,
                                                   HandleId id,
                                                   PropertyFlags flags) {
-  MOZ_ASSERT(!JSID_IS_VOID(id));
+  MOZ_ASSERT(!id.isVoid());
 
   AutoCheckShapeConsistency check(obj);
   AssertValidArrayIndex(obj, id);

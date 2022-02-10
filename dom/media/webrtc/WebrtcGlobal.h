@@ -259,6 +259,7 @@ static void WriteRTCRtpStreamStats(
   WriteParam(aMsg, aParam.mMediaType);
   WriteParam(aMsg, aParam.mKind);
   WriteParam(aMsg, aParam.mTransportId);
+  WriteParam(aMsg, aParam.mCodecId);
   WriteRTCStats(aMsg, aParam);
 }
 
@@ -268,6 +269,7 @@ static bool ReadRTCRtpStreamStats(const Message* aMsg, PickleIterator* aIter,
          ReadParam(aMsg, aIter, &(aResult->mMediaType)) &&
          ReadParam(aMsg, aIter, &(aResult->mKind)) &&
          ReadParam(aMsg, aIter, &(aResult->mTransportId)) &&
+         ReadParam(aMsg, aIter, &(aResult->mCodecId)) &&
          ReadRTCStats(aMsg, aIter, aResult);
 }
 

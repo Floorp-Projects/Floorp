@@ -618,16 +618,18 @@ function renderRTPStats(report, history) {
   for (const stat of rtpStats.filter(s => "remoteId" in s)) {
     stat.remoteRtpStats = remoteRtpStatsMap[stat.remoteId];
   }
-  const stats = [...rtpStats, ...remoteRtpStats];
+  for (const stat of rtpStats.filter(s => "codecId" in s)) {
+    stat.codecStat = report.codecStats.find(({ id }) => id == stat.codecId);
+  }
 
   // Render stats set
   return renderElements("div", { id: "rtp-stats: " + report.pcid }, [
     renderElement("h4", {}, "about-webrtc-rtp-stats-heading"),
-    ...stats.map(stat => {
-      const { id, remoteId, remoteRtpStats } = stat;
+    ...rtpStats.map(stat => {
+      const { ssrc, remoteId, remoteRtpStats } = stat;
       const div = renderElements("div", {}, [
-        renderText("h5", id),
-        renderCoderStats(stat),
+        renderText("h5", `SSRC ${ssrc}`),
+        renderCodecStats(stat),
         renderTransportStats(stat, true, history),
       ]);
       if (remoteId && remoteRtpStats) {
@@ -638,25 +640,53 @@ function renderRTPStats(report, history) {
   ]);
 }
 
-function renderCoderStats({
-  framesPerSecond,
+function renderCodecStats({
+  codecStat,
+  framesEncoded,
+  framesDecoded,
   framesDropped,
   discardedPackets,
   packetsReceived,
 }) {
   let elements = [];
 
-  if (framesPerSecond) {
+  if (codecStat) {
     elements.push(
-      renderElement(
+      renderText("span", `${codecStat.payloadType} ${codecStat.mimeType}`, {})
+    );
+    if (framesEncoded !== undefined || framesDecoded !== undefined) {
+      elements.push(
+        renderElement(
+          "span",
+          { className: "stat-label" },
+          "about-webrtc-frames",
+          {
+            frames: framesEncoded || framesDecoded || 0,
+          }
+        )
+      );
+    }
+    if (codecStat.channels !== undefined) {
+      elements.push(
+        renderElement(
+          "span",
+          { className: "stat-label" },
+          "about-webrtc-channels",
+          {
+            channels: codecStat.channels,
+          }
+        )
+      );
+    }
+    elements.push(
+      renderText(
         "span",
-        { className: "stat-label" },
-        "about-webrtc-current-framerate-label"
+        ` ${codecStat.clockRate} ${codecStat.sdpFmtpLine || ""}`,
+        {}
       )
     );
-    elements.push(renderText("span", ` ${framesPerSecond.toFixed(2)} fps`, {}));
   }
-  if (framesDropped) {
+  if (framesDropped !== undefined) {
     elements.push(
       renderElement(
         "span",
@@ -666,7 +696,7 @@ function renderCoderStats({
     );
     elements.push(renderText("span", ` ${framesDropped}`, {}));
   }
-  if (discardedPackets) {
+  if (discardedPackets !== undefined) {
     elements.push(
       renderElement(
         "span",
@@ -677,7 +707,7 @@ function renderCoderStats({
     elements.push(renderText("span", ` ${discardedPackets}`, {}));
   }
   if (elements.length) {
-    if (packetsReceived) {
+    if (packetsReceived !== undefined) {
       elements.unshift(
         renderElement("span", {}, "about-webrtc-decoder-label"),
         renderText("span", ": ")
@@ -697,7 +727,6 @@ function renderTransportStats(
     id,
     timestamp,
     type,
-    ssrc,
     packetsReceived,
     bytesReceived,
     packetsLost,
@@ -741,7 +770,7 @@ function renderTransportStats(
   }
 
   const time = new Date(timestamp).toTimeString();
-  elements.push(renderText("span", `${time} ${type} SSRC: ${ssrc}`));
+  elements.push(renderText("span", `${time} ${type}`));
 
   if (packetsReceived) {
     elements.push(

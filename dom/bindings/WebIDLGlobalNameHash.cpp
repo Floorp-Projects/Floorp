@@ -44,8 +44,7 @@ static JSObject* FindNamedConstructorForXray(
        slot < JSCLASS_RESERVED_SLOTS(JS::GetClass(interfaceObject)); ++slot) {
     JSObject* constructor =
         &JS::GetReservedSlot(interfaceObject, slot).toObject();
-    if (JS_GetFunctionId(JS_GetObjectFunction(constructor)) ==
-        JSID_TO_STRING(aId)) {
+    if (JS_GetFunctionId(JS_GetObjectFunction(constructor)) == aId.toString()) {
       return constructor;
     }
   }
@@ -60,9 +59,9 @@ bool WebIDLGlobalNameHash::DefineIfEnabled(
     JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
     JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> aDesc,
     bool* aFound) {
-  MOZ_ASSERT(JSID_IS_STRING(aId), "Check for string id before calling this!");
+  MOZ_ASSERT(aId.isString(), "Check for string id before calling this!");
 
-  const WebIDLNameTableEntry* entry = GetEntry(JSID_TO_LINEAR_STRING(aId));
+  const WebIDLNameTableEntry* entry = GetEntry(aId.toLinearString());
   if (!entry) {
     *aFound = false;
     return true;
@@ -174,7 +173,7 @@ bool WebIDLGlobalNameHash::DefineIfEnabled(
 
 /* static */
 bool WebIDLGlobalNameHash::MayResolve(jsid aId) {
-  return GetEntry(JSID_TO_LINEAR_STRING(aId)) != nullptr;
+  return GetEntry(aId.toLinearString()) != nullptr;
 }
 
 /* static */
@@ -217,7 +216,7 @@ bool WebIDLGlobalNameHash::ResolveForSystemGlobal(JSContext* aCx,
   }
 
   // We don't resolve any non-string entries.
-  if (!JSID_IS_STRING(aId)) {
+  if (!aId.isString()) {
     return true;
   }
 
@@ -227,7 +226,7 @@ bool WebIDLGlobalNameHash::ResolveForSystemGlobal(JSContext* aCx,
   MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(aObj), "Xrays not supported!");
 
   // Look up the corresponding entry in the name table, and resolve if enabled.
-  const WebIDLNameTableEntry* entry = GetEntry(JSID_TO_LINEAR_STRING(aId));
+  const WebIDLNameTableEntry* entry = GetEntry(aId.toLinearString());
   if (entry && (!entry->mEnabled || entry->mEnabled(aCx, aObj))) {
     if (NS_WARN_IF(!GetPerInterfaceObjectHandle(
             aCx, entry->mConstructorId, entry->mCreate,

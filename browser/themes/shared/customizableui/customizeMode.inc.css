@@ -295,8 +295,7 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   margin-bottom: var(--arrowpanel-padding);
 }
 
-#customization-uidensity-menu,
-#customization-lwtheme-menu {
+#customization-uidensity-menu {
   font: menu;
   margin-inline: 0;
 
@@ -305,15 +304,13 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   --arrowpanel-padding: 8px;
 }
 
-.customization-uidensity-menuitem > .menu-iconic-left > .menu-iconic-icon,
-.customization-lwtheme-menu-theme > .toolbarbutton-icon {
+.customization-uidensity-menuitem > .menu-iconic-left > .menu-iconic-icon {
   width: 32px;
   height: 32px;
   margin: 5px;
 }
 
-.customization-uidensity-menuitem,
-.customization-lwtheme-menu-theme {
+.customization-uidensity-menuitem {
   appearance: none;
   color: inherit;
   border: 1px solid transparent;
@@ -335,70 +332,23 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   list-style-image: url("chrome://browser/skin/customizableui/density-touch.svg");
 }
 
-.customization-uidensity-menuitem:hover,
-.customization-lwtheme-menu-theme:hover {
+.customization-uidensity-menuitem:is(:hover, :focus-visible) {
   background-color: var(--button-hover-bgcolor);
 }
 
-.customization-uidensity-menuitem:is(:hover:active, [active="true"]),
-.customization-lwtheme-menu-theme:is(:hover:active, [active="true"]) {
+.customization-uidensity-menuitem:is(:hover:active, [active="true"]) {
   background-color: var(--button-active-bgcolor);
 }
 
-.customization-uidensity-menuitem > .menu-iconic-text,
-.customization-lwtheme-menu-theme > .toolbarbutton-text {
+.customization-uidensity-menuitem > .menu-iconic-text {
   text-align: start;
 }
 
-#customization-lwtheme-menu-header {
-  padding: 10px;
-  margin-top: calc(-1 * var(--arrowpanel-padding));
-  margin-inline: calc(-1 * var(--arrowpanel-padding));
-  margin-bottom: 5px;
-  text-align: center;
-  font-weight: 600;
-  border-bottom: 1px solid var(--panel-separator-color);
-}
-
-.customization-lwtheme-menu-footeritem {
-  appearance: none;
-  -moz-box-flex: 1;
-  color: inherit;
-  border-style: none;
-  padding: 8px 16px;
-  font-weight: 600;
-  border-radius: 4px;
-  margin: 0;
-  margin-top: 4px;
-  background-color: var(--button-bgcolor);
-}
-
-.customization-lwtheme-menu-footeritem:hover {
-  background-color: var(--button-hover-bgcolor);
-}
-
-.customization-lwtheme-menu-footeritem:hover:active {
-  background-color: var(--button-active-bgcolor);
-}
-
-/* Builtin themes use a round gradient image that look better with a border. */
-.customization-lwtheme-menu-theme[image^="resource:"] > .toolbarbutton-icon {
-  border-radius: 100%;
-  outline: 1px solid var(--checkbox-border-color);
-  outline-offset: -0.5px;
-}
-
-.customization-lwtheme-menu-footeritem:first-child {
-  margin-inline-end: 8px;
-}
-
-.customization-uidensity-menuitem > .menu-iconic-left > .menu-iconic-icon:-moz-locale-dir(rtl),
-.customization-lwtheme-menu-theme > .toolbarbutton-icon:-moz-locale-dir(rtl) {
+.customization-uidensity-menuitem > .menu-iconic-left > .menu-iconic-icon:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
 
-#customization-uidensity-button > .box-inherit > .box-inherit > .button-icon:-moz-locale-dir(rtl),
-#customization-lwtheme-button > .box-inherit > .box-inherit > .button-icon:-moz-locale-dir(rtl) {
+#customization-uidensity-button > .box-inherit > .box-inherit > .button-icon:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
 
