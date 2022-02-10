@@ -17,9 +17,7 @@
   "permissions": [
     "tabs",
     "storage",
-    "downloads",
     "clipboardWrite",
-    "notifications",
     "search"
   ],
   "manifest_version": 2,
@@ -27,7 +25,7 @@
   "version": "1",
   "applications": {
     "gecko": {
-      "id": "superdrag@floorp.ablaze.one"
+      "id": "hypert@addons.info"
     }
   }
 }
