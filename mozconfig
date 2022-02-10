@@ -1,6 +1,7 @@
 ac_add_options --with-branding=browser/branding/official
 ac_add_options --with-l10n-base=D:/Floorp-l10-central/Windows-l10-central
-ac_add_options --with-wasi-sysroot=C:/wasi-sysroot
 ac_add_options --disable-maintenance-service
 ac_add_options --disable-crashreporter
 ac_add_options --enable-optimize=-O2
+
+## いくつかの機能をオフにします。disable-maintenance-service はオフにしても Floorp には意味がないかもしれません。
