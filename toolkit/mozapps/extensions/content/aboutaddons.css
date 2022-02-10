@@ -26,6 +26,10 @@
   }
 }
 
+.sidebar-footer-list {
+  margin-bottom: revert-layer;
+}
+
 *|*[hidden] {
   display: none !important;
 }
@@ -935,7 +939,7 @@ section:not(:empty) ~ #empty-addons-message {
   }
 
   .sidebar-footer-link{
-    margin-left: -25px;
+    margin-left: -15px;
     margin-right: 19px;
      margin-top: 6px;
 }
