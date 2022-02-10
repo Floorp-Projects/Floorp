@@ -489,6 +489,8 @@ class WorkerDebuggerGlobalScope final : public WorkerGlobalScopeBase {
   void RetrieveConsoleEvents(JSContext* aCx, nsTArray<JS::Value>& aEvents,
                              ErrorResult& aRv);
 
+  void ClearConsoleEvents(JSContext* aCx, ErrorResult& aRv);
+
   void SetConsoleEventHandler(JSContext* aCx, AnyCallback* aHandler,
                               ErrorResult& aRv);
 
