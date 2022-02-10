@@ -161,8 +161,13 @@ already_AddRefed<Promise> RTCRtpReceiver::GetStats() {
     return nullptr;
   }
 
-  if (!mTransceiverImpl) {
-    return nullptr;
+  if (NS_WARN_IF(!mTransceiverImpl)) {
+    // TODO(bug 1056433): When we stop nulling this out when the PC is closed
+    // (or when the transceiver is stopped), we can remove this code. We
+    // resolve instead of reject in order to make this eventual change in
+    // behavior a little smaller.
+    promise->MaybeResolve(new RTCStatsReport(mWindow));
+    return promise.forget();
   }
 
   nsTArray<RTCCodecStats> codecStats;
