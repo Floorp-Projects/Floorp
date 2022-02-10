@@ -723,12 +723,36 @@ const POLICIES_TESTS = [
     policies: {
       PDFjs: {
         Enabled: false,
-        EnablePermissions: true,
       },
     },
     lockedPrefs: {
       "pdfjs.disabled": true,
+    },
+  },
+
+  {
+    policies: {
+      PDFjs: {
+        Enabled: true,
+        EnablePermissions: true,
+      },
+    },
+    lockedPrefs: {
+      "pdfjs.disabled": false,
       "pdfjs.enablePermissions": true,
+    },
+  },
+
+  {
+    policies: {
+      PDFjs: {
+        Enabled: true,
+        EnablePermissions: false,
+      },
+    },
+    lockedPrefs: {
+      "pdfjs.disabled": false,
+      "pdfjs.enablePermissions": false,
     },
   },
 
