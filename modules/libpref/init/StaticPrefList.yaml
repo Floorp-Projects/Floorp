@@ -12756,7 +12756,20 @@
 #endif
 
 #ifdef MOZ_WIDGET_GTK
+
+# The time we should spend on a DBUS call to the FileManager1 interface before
+# giving up and trying an alternative method.
 #
+# -1 for the default system timeout, INT_MAX for "infinite time".
+#
+# This happens right now on the main thread so 1 second should be enough, we
+# should consider moving it to a background task and just use the default
+# timeout.
+- name: widget.gtk.file-manager-show-items-timeout-ms
+  type: int32_t
+  value: 1000
+  mirror: always
+
 # Whether to use gtk portal for the file picker.
 #  - 0: never
 #  - 1: always

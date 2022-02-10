@@ -16,6 +16,7 @@
 #include "mozilla/GUniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WidgetUtilsGtk.h"
+#include "mozilla/StaticPrefs_widget.h"
 
 #include <gio/gio.h>
 #include <gtk/gtk.h>
@@ -586,10 +587,12 @@ nsGIOService::OrgFreedesktopFileManager1ShowItems(const nsACString& aPath) {
   g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
   g_variant_builder_add(&builder, "s", uri.get());
 
+  const int32_t timeout =
+    StaticPrefs::widget_gtk_file_manager_show_items_timeout_ms();;
   const char* startupId = "";
   RefPtr<GVariant> result = dont_AddRef(g_dbus_proxy_call_sync(
       proxy, "ShowItems", g_variant_new("(ass)", &builder, startupId),
-      G_DBUS_CALL_FLAGS_NONE, -1, nullptr, getter_Transfers(error)));
+      G_DBUS_CALL_FLAGS_NONE, timeout, nullptr, getter_Transfers(error)));
 
   g_variant_builder_clear(&builder);
   if (!result) {
