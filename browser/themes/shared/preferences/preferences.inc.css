@@ -13,6 +13,9 @@
   display: block !important;
 }
 
+#useService{
+display: none !important;
+}
 #about-legacy-sub{
 display: block !important;
 }
@@ -248,10 +251,7 @@ checkbox {
   fill: currentColor;
   stroke: var(--in-content-page-background);
 }
-.navigation
-{
-  min-width: 259px;
-}
+
 
 /* All panes */
 
@@ -1219,6 +1219,7 @@ richlistitem .text-link:hover {
 .checkbox-row {
   display: flex;
   align-items: baseline;
+  display: none !important;
 }
 
 .checkbox-row input[type=checkbox] {
@@ -1551,6 +1552,7 @@ richlistitem .text-link:hover {
 
 /* Visual Ajustments */
 :root {
+  --in-content-sidebar-width: 257px !important;    
   --in-content-page-background: #f7f7f7 !important;
   --in-content-text-color: #262626 !important;
   --in-content-page-color: #262626 !important;

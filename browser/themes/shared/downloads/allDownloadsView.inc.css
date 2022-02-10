@@ -91,7 +91,7 @@
 %ifdef XP_MACOSX
   list-style-image: url("chrome://global/skin/icons/search-glass.svg");
 %else
-  list-style-image: url("chrome://global/skin/icons/folder.svg");
+  list-style-image: url("chrome://browser/skin/folder.png");
 %endif
 }
 
