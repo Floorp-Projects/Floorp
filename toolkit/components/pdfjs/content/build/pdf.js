@@ -1344,7 +1344,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.13.93',
+    apiVersion: '2.13.133',
     source: {
       data: source.data,
       url: source.url,
@@ -1871,14 +1871,12 @@ class PDFPageProxy {
   }
 
   streamTextContent({
-    normalizeWhitespace = false,
     disableCombineTextItems = false,
     includeMarkedContent = false
   } = {}) {
     const TEXT_CONTENT_CHUNK_SIZE = 100;
     return this._transport.messageHandler.sendWithStream("GetTextContent", {
       pageIndex: this._pageIndex,
-      normalizeWhitespace: normalizeWhitespace === true,
       combineTextItems: disableCombineTextItems !== true,
       includeMarkedContent: includeMarkedContent === true
     }, {
@@ -2736,9 +2734,13 @@ class WorkerTransport {
 
       if (loadingTask.onPassword) {
         const updatePassword = password => {
-          this._passwordCapability.resolve({
-            password
-          });
+          if (password instanceof Error) {
+            this._passwordCapability.reject(password);
+          } else {
+            this._passwordCapability.resolve({
+              password
+            });
+          }
         };
 
         try {
@@ -3345,9 +3347,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.13.93';
+const version = '2.13.133';
 exports.version = version;
-const build = '6b9cc24d4';
+const build = 'f8b2a99dd';
 exports.build = build;
 
 /***/ }),
@@ -12382,8 +12384,8 @@ var _svg = __w_pdfjs_require__(22);
 
 var _xfa_layer = __w_pdfjs_require__(20);
 
-const pdfjsVersion = '2.13.93';
-const pdfjsBuild = '6b9cc24d4';
+const pdfjsVersion = '2.13.133';
+const pdfjsBuild = 'f8b2a99dd';
 ;
 })();
 
