@@ -351,8 +351,8 @@ already_AddRefed<DOMRect> XULTreeElement::GetCoordsForCellItem(
   nsIntRect rect = GetCoordsForCellItem(aRow, &aCol, aElement, rv);
   aRv = rv;
 
-  RefPtr<DOMRect> domRect =
-      new DOMRect(this, rect.x, rect.y, rect.width, rect.height);
+  RefPtr<DOMRect> domRect = new DOMRect(ToSupports(OwnerDoc()), rect.x, rect.y,
+                                        rect.width, rect.height);
   return domRect.forget();
 }
 
