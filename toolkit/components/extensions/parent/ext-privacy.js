@@ -11,7 +11,7 @@ var { ExtensionPreferencesManager } = ChromeUtils.import(
 );
 
 var { ExtensionError } = ExtensionUtils;
-var { getSettingsAPI, getPrimedSettingsListener } = ExtensionPreferencesManager;
+var { getSettingsAPI } = ExtensionPreferencesManager;
 
 const cookieSvc = Ci.nsICookieService;
 
@@ -64,30 +64,16 @@ ExtensionPreferencesManager.addSetting("network.networkPredictionEnabled", {
       "network.prefetch-next": value,
     };
   },
-
-  getCallback() {
-    return (
-      getBoolPref("network.predictor.enabled") &&
-      getBoolPref("network.prefetch-next") &&
-      getIntPref("network.http.speculative-parallel-limit") > 0 &&
-      !getBoolPref("network.dns.disablePrefetch")
-    );
-  },
 });
 
 ExtensionPreferencesManager.addSetting("network.globalPrivacyControl", {
   permission: "privacy",
   prefNames: ["privacy.globalprivacycontrol.enabled"],
-  readOnly: true,
 
   setCallback(value) {
     return {
       "privacy.globalprivacycontrol.enabled": value,
     };
-  },
-
-  getCallback() {
-    return getBoolPref("privacy.globalprivacycontrol.enabled");
   },
 });
 
@@ -97,7 +83,6 @@ ExtensionPreferencesManager.addSetting("network.httpsOnlyMode", {
     "dom.security.https_only_mode",
     "dom.security.https_only_mode_pbm",
   ],
-  readOnly: true,
 
   setCallback(value) {
     let prefs = {
@@ -120,16 +105,6 @@ ExtensionPreferencesManager.addSetting("network.httpsOnlyMode", {
 
     return prefs;
   },
-
-  getCallback() {
-    if (getBoolPref("dom.security.https_only_mode")) {
-      return "always";
-    }
-    if (getBoolPref("dom.security.https_only_mode_pbm")) {
-      return "private_browsing";
-    }
-    return "never";
-  },
 });
 
 ExtensionPreferencesManager.addSetting("network.peerConnectionEnabled", {
@@ -138,10 +113,6 @@ ExtensionPreferencesManager.addSetting("network.peerConnectionEnabled", {
 
   setCallback(value) {
     return { [this.prefNames[0]]: value };
-  },
-
-  getCallback() {
-    return getBoolPref("media.peerconnection.enabled");
   },
 });
 
@@ -182,30 +153,6 @@ ExtensionPreferencesManager.addSetting("network.webRTCIPHandlingPolicy", {
     }
     return prefs;
   },
-
-  getCallback() {
-    if (getBoolPref("media.peerconnection.ice.proxy_only")) {
-      return "proxy_only";
-    }
-
-    let default_address_only = getBoolPref(
-      "media.peerconnection.ice.default_address_only"
-    );
-    if (default_address_only) {
-      let no_host = getBoolPref("media.peerconnection.ice.no_host");
-      if (no_host) {
-        if (
-          getBoolPref("media.peerconnection.ice.proxy_only_if_behind_proxy")
-        ) {
-          return "disable_non_proxied_udp";
-        }
-        return "default_public_interface_only";
-      }
-      return "default_public_and_private_interfaces";
-    }
-
-    return "default";
-  },
 });
 
 ExtensionPreferencesManager.addSetting("services.passwordSavingEnabled", {
@@ -214,10 +161,6 @@ ExtensionPreferencesManager.addSetting("services.passwordSavingEnabled", {
 
   setCallback(value) {
     return { [this.prefNames[0]]: value };
-  },
-
-  getCallback() {
-    return getBoolPref("signon.rememberSignons");
   },
 });
 
@@ -248,18 +191,6 @@ ExtensionPreferencesManager.addSetting("websites.cookieConfig", {
         : cookieSvc.ACCEPT_NORMALLY,
     };
   },
-
-  getCallback() {
-    let prefValue = getIntPref("network.cookie.cookieBehavior");
-    return {
-      behavior: Array.from(cookieBehaviorValues.entries()).find(
-        entry => entry[1] === prefValue
-      )[0],
-      nonPersistentCookies:
-        getIntPref("network.cookie.lifetimePolicy") ===
-        cookieSvc.ACCEPT_SESSION,
-    };
-  },
 });
 
 ExtensionPreferencesManager.addSetting("websites.firstPartyIsolate", {
@@ -287,10 +218,6 @@ ExtensionPreferencesManager.addSetting("websites.firstPartyIsolate", {
 
     return { [this.prefNames[0]]: value };
   },
-
-  getCallback() {
-    return getBoolPref("privacy.firstparty.isolate");
-  },
 });
 
 ExtensionPreferencesManager.addSetting("websites.hyperlinkAuditingEnabled", {
@@ -299,10 +226,6 @@ ExtensionPreferencesManager.addSetting("websites.hyperlinkAuditingEnabled", {
 
   setCallback(value) {
     return { [this.prefNames[0]]: value };
-  },
-
-  getCallback() {
-    return getBoolPref("browser.send_pings");
   },
 });
 
@@ -316,10 +239,6 @@ ExtensionPreferencesManager.addSetting("websites.referrersEnabled", {
   setCallback(value) {
     return { [this.prefNames[0]]: value ? 2 : 0 };
   },
-
-  getCallback() {
-    return getIntPref("network.http.sendRefererHeader") !== 0;
-  },
 });
 
 ExtensionPreferencesManager.addSetting("websites.resistFingerprinting", {
@@ -328,10 +247,6 @@ ExtensionPreferencesManager.addSetting("websites.resistFingerprinting", {
 
   setCallback(value) {
     return { [this.prefNames[0]]: value };
-  },
-
-  getCallback() {
-    return getBoolPref("privacy.resistFingerprinting");
   },
 });
 
@@ -363,15 +278,6 @@ ExtensionPreferencesManager.addSetting("websites.trackingProtectionMode", {
     }
 
     return prefs;
-  },
-
-  getCallback() {
-    if (getBoolPref("privacy.trackingprotection.enabled")) {
-      return "always";
-    } else if (getBoolPref("privacy.trackingprotection.pbmode.enabled")) {
-      return "private_browsing";
-    }
-    return "never";
   },
 });
 
@@ -423,88 +329,179 @@ ExtensionPreferencesManager.addSetting("network.tlsVersionRestriction", {
 
     return prefs;
   },
-
-  getCallback() {
-    function tlsVersionToString(pref) {
-      const value = getIntPref(pref);
-      const version = TLS_VERSIONS.find(a => a.version === value);
-      if (version) {
-        return version.name;
-      }
-      return "unknown";
-    }
-
-    return {
-      minimum: tlsVersionToString(TLS_MIN_PREF),
-      maximum: tlsVersionToString(TLS_MAX_PREF),
-    };
-  },
-
-  validate(extension) {
-    if (!extension.isPrivileged) {
-      throw new ExtensionError(
-        "tlsVersionRestriction can be set by privileged extensions only."
-      );
-    }
-  },
 });
 
 this.privacy = class extends ExtensionAPI {
-  primeListener(extension, event, fire) {
-    let listener = getPrimedSettingsListener({
-      extension,
-      name: event,
-    });
-    return listener(fire);
-  }
-
   getAPI(context) {
-    function makeSettingsAPI(name) {
-      return getSettingsAPI({
-        context,
-        module: "privacy",
-        name,
-      });
-    }
-
     return {
       privacy: {
         network: {
-          networkPredictionEnabled: makeSettingsAPI(
-            "network.networkPredictionEnabled"
-          ),
-          globalPrivacyControl: makeSettingsAPI("network.globalPrivacyControl"),
-          httpsOnlyMode: makeSettingsAPI("network.httpsOnlyMode"),
-          peerConnectionEnabled: makeSettingsAPI(
-            "network.peerConnectionEnabled"
-          ),
-          webRTCIPHandlingPolicy: makeSettingsAPI(
-            "network.webRTCIPHandlingPolicy"
-          ),
-          tlsVersionRestriction: makeSettingsAPI(
-            "network.tlsVersionRestriction"
-          ),
+          networkPredictionEnabled: getSettingsAPI({
+            context,
+            name: "network.networkPredictionEnabled",
+            callback() {
+              return (
+                getBoolPref("network.predictor.enabled") &&
+                getBoolPref("network.prefetch-next") &&
+                getIntPref("network.http.speculative-parallel-limit") > 0 &&
+                !getBoolPref("network.dns.disablePrefetch")
+              );
+            },
+          }),
+          globalPrivacyControl: getSettingsAPI({
+            context,
+            name: "network.globalPrivacyControl",
+            callback() {
+              return getBoolPref("privacy.globalprivacycontrol.enabled");
+            },
+            readOnly: true,
+          }),
+          httpsOnlyMode: getSettingsAPI({
+            context,
+            name: "network.httpsOnlyMode",
+            callback() {
+              if (getBoolPref("dom.security.https_only_mode")) {
+                return "always";
+              }
+              if (getBoolPref("dom.security.https_only_mode_pbm")) {
+                return "private_browsing";
+              }
+              return "never";
+            },
+            readOnly: true,
+          }),
+          peerConnectionEnabled: getSettingsAPI({
+            context,
+            name: "network.peerConnectionEnabled",
+            callback() {
+              return getBoolPref("media.peerconnection.enabled");
+            },
+          }),
+          webRTCIPHandlingPolicy: getSettingsAPI({
+            context,
+            name: "network.webRTCIPHandlingPolicy",
+            callback() {
+              if (getBoolPref("media.peerconnection.ice.proxy_only")) {
+                return "proxy_only";
+              }
+
+              let default_address_only = getBoolPref(
+                "media.peerconnection.ice.default_address_only"
+              );
+              if (default_address_only) {
+                let no_host = getBoolPref("media.peerconnection.ice.no_host");
+                if (no_host) {
+                  if (
+                    getBoolPref(
+                      "media.peerconnection.ice.proxy_only_if_behind_proxy"
+                    )
+                  ) {
+                    return "disable_non_proxied_udp";
+                  }
+                  return "default_public_interface_only";
+                }
+                return "default_public_and_private_interfaces";
+              }
+
+              return "default";
+            },
+          }),
+          tlsVersionRestriction: getSettingsAPI({
+            context,
+            name: "network.tlsVersionRestriction",
+            callback() {
+              function tlsVersionToString(pref) {
+                const value = getIntPref(pref);
+                const version = TLS_VERSIONS.find(a => a.version === value);
+                if (version) {
+                  return version.name;
+                }
+                return "unknown";
+              }
+
+              return {
+                minimum: tlsVersionToString(TLS_MIN_PREF),
+                maximum: tlsVersionToString(TLS_MAX_PREF),
+              };
+            },
+            validate() {
+              if (!context.extension.isPrivileged) {
+                throw new ExtensionError(
+                  "tlsVersionRestriction can be set by privileged extensions only."
+                );
+              }
+            },
+          }),
         },
 
         services: {
-          passwordSavingEnabled: makeSettingsAPI(
-            "services.passwordSavingEnabled"
-          ),
+          passwordSavingEnabled: getSettingsAPI({
+            context,
+            name: "services.passwordSavingEnabled",
+            callback() {
+              return getBoolPref("signon.rememberSignons");
+            },
+          }),
         },
 
         websites: {
-          cookieConfig: makeSettingsAPI("websites.cookieConfig"),
-          firstPartyIsolate: makeSettingsAPI("websites.firstPartyIsolate"),
-          hyperlinkAuditingEnabled: makeSettingsAPI(
-            "websites.hyperlinkAuditingEnabled"
-          ),
-          referrersEnabled: makeSettingsAPI("websites.referrersEnabled"),
-          resistFingerprinting: makeSettingsAPI(
-            "websites.resistFingerprinting"
-          ),
-          trackingProtectionMode: makeSettingsAPI(
-            "websites.trackingProtectionMode"
-          ),
+          cookieConfig: getSettingsAPI({
+            context,
+            name: "websites.cookieConfig",
+            callback() {
+              let prefValue = getIntPref("network.cookie.cookieBehavior");
+              return {
+                behavior: Array.from(cookieBehaviorValues.entries()).find(
+                  entry => entry[1] === prefValue
+                )[0],
+                nonPersistentCookies:
+                  getIntPref("network.cookie.lifetimePolicy") ===
+                  cookieSvc.ACCEPT_SESSION,
+              };
+            },
+          }),
+          firstPartyIsolate: getSettingsAPI({
+            context,
+            name: "websites.firstPartyIsolate",
+            callback() {
+              return getBoolPref("privacy.firstparty.isolate");
+            },
+          }),
+          hyperlinkAuditingEnabled: getSettingsAPI({
+            context,
+            name: "websites.hyperlinkAuditingEnabled",
+            callback() {
+              return getBoolPref("browser.send_pings");
+            },
+          }),
+          referrersEnabled: getSettingsAPI({
+            context,
+            name: "websites.referrersEnabled",
+            callback() {
+              return getIntPref("network.http.sendRefererHeader") !== 0;
+            },
+          }),
+          resistFingerprinting: getSettingsAPI({
+            context,
+            name: "websites.resistFingerprinting",
+            callback() {
+              return getBoolPref("privacy.resistFingerprinting");
+            },
+          }),
+          trackingProtectionMode: getSettingsAPI({
+            context,
+            name: "websites.trackingProtectionMode",
+            callback() {
+              if (getBoolPref("privacy.trackingprotection.enabled")) {
+                return "always";
+              } else if (
+                getBoolPref("privacy.trackingprotection.pbmode.enabled")
+              ) {
+                return "private_browsing";
+              }
+              return "never";
+            },
+          }),
         },
       },
     };
