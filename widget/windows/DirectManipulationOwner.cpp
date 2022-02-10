@@ -216,11 +216,8 @@ void DManipEventHandler::TransitionToState(State aNewState) {
   // End the previous sequence.
   switch (prevState) {
     case State::ePanning: {
-      // ePanning -> eNone, ePinching: PanEnd
-      // ePanning -> eInertia: we don't want to end the current scroll sequence.
-      if (aNewState != State::eInertia) {
-        SendPan(Phase::eEnd, 0.f, 0.f, false);
-      }
+      // ePanning -> *: PanEnd
+      SendPan(Phase::eEnd, 0.f, 0.f, false);
       break;
     }
     case State::eInertia: {
@@ -304,7 +301,7 @@ DManipEventHandler::OnContentUpdated(IDirectManipulationViewport* viewport,
 
   // Consider this is a Scroll when scale factor equals 1.0.
   if (FuzzyEqualsMultiplicative(scale, 1.f)) {
-    if (mState == State::eNone || mState == State::eInertia) {
+    if (mState == State::eNone) {
       TransitionToState(State::ePanning);
     }
   } else {
