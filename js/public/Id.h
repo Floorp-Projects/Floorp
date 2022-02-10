@@ -181,10 +181,6 @@ using jsid = JS::PropertyKey;
 
 #define JSID_BITS(id) (id.asBits)
 
-static MOZ_ALWAYS_INLINE bool JSID_IS_INT(jsid id) { return id.isInt(); }
-
-static MOZ_ALWAYS_INLINE int32_t JSID_TO_INT(jsid id) { return id.toInt(); }
-
 #define JSID_INT_MIN 0
 #define JSID_INT_MAX INT32_MAX
 

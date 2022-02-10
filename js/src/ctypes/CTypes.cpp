@@ -2954,10 +2954,10 @@ static bool jsidToBigInteger(JSContext* cx, jsid val, bool allowString,
                              IntegerType* result) {
   static_assert(numeric_limits<IntegerType>::is_exact);
 
-  if (JSID_IS_INT(val)) {
+  if (val.isInt()) {
     // Make sure the integer fits in the alotted precision, and has the right
     // sign.
-    int32_t i = JSID_TO_INT(val);
+    int32_t i = val.toInt();
     return ConvertExact(i, result);
   }
   if (allowString && val.isString()) {
