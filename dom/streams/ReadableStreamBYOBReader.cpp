@@ -11,6 +11,7 @@
 #include "mozilla/dom/ReadableStreamBYOBReaderBinding.h"
 #include "mozilla/dom/ReadableStreamGenericReader.h"
 #include "mozilla/dom/ReadIntoRequest.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
 
@@ -122,7 +123,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
     //
     // close steps, given chunk:
     // Resolve promise with «[ "value" → chunk, "done" → true ]».
-    ReadableStreamBYOBReadResult result;
+    RootedDictionary<ReadableStreamBYOBReadResult> result(aCx);
     if (aChunk.isObject()) {
       // We need to wrap this as the chunk could have come from
       // another compartment.
