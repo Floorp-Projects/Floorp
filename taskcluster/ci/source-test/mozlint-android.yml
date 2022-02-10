@@ -75,6 +75,7 @@ lints:
             --linter android-checkstyle
             --linter android-lint
             --linter android-test
+            *
         tooltool-downloads: internal  # For internal toolchains.
     fetches:
         toolchain:
