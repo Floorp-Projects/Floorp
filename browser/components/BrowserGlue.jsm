@@ -234,7 +234,7 @@ let JSWINDOWACTORS = {
     // about:home document dynamically if an attempt is made to load
     // about:home?jscache from the AboutHomeStartupCache as a top-level
     // load.
-    matches: ["about:home*","about:welcome", "about:newtab*" , "about:config*" , "about:config" , "moz-extension://*"],
+    matches: ["about:home*", "about:welcome", "about:newtab*"],
     remoteTypes: ["privilegedabout"],
   },
 

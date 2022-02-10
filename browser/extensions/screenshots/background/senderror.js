@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals startBackground, analytics, communication, makeUuid, Raven, catcher, auth, log, browser, getStrings */
+/* globals startBackground, analytics, communication, Raven, catcher, auth, log, browser, getStrings */
 
 "use strict";
 
@@ -60,7 +60,7 @@ this.senderror = (function() {
       return;
     }
     lastErrorTime = Date.now();
-    const id = makeUuid();
+    const id = crypto.randomUUID();
     let popupMessage = error.popupMessage || "generic";
     if (!messages[popupMessage]) {
       popupMessage = "generic";

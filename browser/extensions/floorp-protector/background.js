@@ -24,12 +24,18 @@ document.getElementById("UASelector").addEventListener("change", function (e) {
     } else if (selected == "2") {
         browser.aboutConfigPrefs.setCharPref("floorp.protection.protectlevel", "2");
         console.log("floorp.protection.protectlevel: " + selected);
+        FLOORP_PROT_DEFAULT();
+        FLOORP_PROT_LV2();
     } else if (selected == "3") {
         browser.aboutConfigPrefs.setCharPref("floorp.protection.protectlevel", "3");
         console.log("floorp.protection.protectlevel: " + selected);
+        FLOORP_PROT_DEFAULT();
+        FLOORP_PROT_LV3();
     } else if (selected == "4") {
         browser.aboutConfigPrefs.setCharPref("floorp.protection.protectlevel", "4");
         console.log("floorp.protection.protectlevel: " + selected);
+        FLOORP_PROT_DEFAULT();
+        FLOORP_PROT_LV4();
     }
  })
 
@@ -71,7 +77,7 @@ async function FLOORP_PROT_DEFAULT() {
     browser.aboutConfigPrefs.setBoolPref("media.getusermedia.audiocapture.enabled", true);
     browser.aboutConfigPrefs.setBoolPref("dom.battery.enabled", true);
     browser.aboutConfigPrefs.setBoolPref("browser.send_pings.require_same_host",		false);
-    browser.aboutConfigPrefs.setBoolPref("dom.maxHardwareConcurrency",	2);
+    browser.aboutConfigPrefs.setIntPref("dom.maxHardwareConcurrency",	2);
     browser.aboutConfigPrefs.setBoolPref("browser.search.geoSpecificDefaults", true);
     browser.aboutConfigPrefs.setBoolPref("keyword.enabled", true);
     browser.aboutConfigPrefs.setBoolPref("browser.urlbar.trimURLs", true);
@@ -92,16 +98,162 @@ async function FLOORP_PROT_DEFAULT() {
     browser.aboutConfigPrefs.setBoolPref("browser.chrome.site_icons", true);
     browser.aboutConfigPrefs.setBoolPref("dom.security.https_only_mode", false);
     browser.aboutConfigPrefs.setBoolPref("dom.security.https_only_mode_ever_enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("browser.privatebrowsing.autostart", false);
     console.log("Successfully reset the configuration." );
 }
 
 async function FLOORP_PROT_LV1() {
+    browser.aboutConfigPrefs.setBoolPref("extensions.blocklist.enabled",			true);
+    browser.aboutConfigPrefs.setBoolPref("services.blocklist.update_enabled",			true);
     browser.aboutConfigPrefs.setBoolPref("dom.security.https_only_mode", true);
     browser.aboutConfigPrefs.setBoolPref("dom.security.https_only_mode_ever_enabled", true);
-    browser.aboutConfigPrefs.setBoolPref("privacy.resistFingerprinting", true);
-    browser.aboutConfigPrefs.setBoolPref("media.peerconnection.enabled", false);
+    browser.aboutConfigPrefs.setCharPref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
+    browser.aboutConfigPrefs.setBoolPref("dom.enable_performance", false);
+    browser.aboutConfigPrefs.setCharPref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
+    browser.aboutConfigPrefs.setBoolPref("geo.wifi.logging.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("dom.mozTCPSocket.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("browser.search.geoSpecificDefaults", false);
+    browser.aboutConfigPrefs.setBoolPref("browser.urlbar.trimURLs", false);
+    browser.aboutConfigPrefs.setBoolPref("privacy.trackingprotection.enabled", true);
+    browser.aboutConfigPrefs.setBoolPref("browser.tabs.crashReporting.sendReport",		false);
+    browser.aboutConfigPrefs.setBoolPref("browser.crashReports.unsubmittedCheck.enabled",	false);
     console.log("Configuration successfully set to LV1." );
 }
+
+async function FLOORP_PROT_LV2() {
+    browser.aboutConfigPrefs.setBoolPref("extensions.blocklist.enabled",			true);
+    browser.aboutConfigPrefs.setBoolPref("services.blocklist.update_enabled",			true);
+    browser.aboutConfigPrefs.setBoolPref("dom.security.https_only_mode", true);
+    browser.aboutConfigPrefs.setBoolPref("dom.security.https_only_mode_ever_enabled", true);
+    browser.aboutConfigPrefs.setCharPref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
+    browser.aboutConfigPrefs.setBoolPref("dom.enable_performance", false);
+    browser.aboutConfigPrefs.setCharPref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
+    browser.aboutConfigPrefs.setBoolPref("geo.wifi.logging.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("dom.mozTCPSocket.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("browser.search.geoSpecificDefaults", false);
+    browser.aboutConfigPrefs.setBoolPref("browser.urlbar.trimURLs", false);
+    browser.aboutConfigPrefs.setBoolPref("privacy.trackingprotection.enabled", true);
+    browser.aboutConfigPrefs.setBoolPref("dom.enable_user_timing",	false);
+    browser.aboutConfigPrefs.setBoolPref("geo.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("dom.netinfo.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("dom.battery.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("privacy.trackingprotection.pbmode.enabled", true);
+    browser.aboutConfigPrefs.setBoolPref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr",	false);
+    browser.aboutConfigPrefs.setBoolPref("media.peerconnection.ice.default_address_only",	true);
+    browser.aboutConfigPrefs.setBoolPref("media.peerconnection.ice.no_host",			true);
+    browser.aboutConfigPrefs.setBoolPref("browser.send_pings.require_same_host",		true);
+    browser.aboutConfigPrefs.setBoolPref("security.fileuri.strict_origin_policy", true);
+    browser.aboutConfigPrefs.setBoolPref("media.video_stats.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("dom.ipc.plugins.reportCrashURL",			false);
+    browser.aboutConfigPrefs.setBoolPref("browser.tabs.crashReporting.sendReport",		false);
+    browser.aboutConfigPrefs.setBoolPref("browser.crashReports.unsubmittedCheck.enabled",	false);
+    console.log("Configuration successfully set to LV2." );
+}
+
+async function FLOORP_PROT_LV3() {
+    browser.aboutConfigPrefs.setBoolPref("extensions.blocklist.enabled",			true);
+    browser.aboutConfigPrefs.setBoolPref("services.blocklist.update_enabled",			true);
+    browser.aboutConfigPrefs.setBoolPref("dom.security.https_only_mode", true);
+    browser.aboutConfigPrefs.setBoolPref("dom.security.https_only_mode_ever_enabled", true);
+    browser.aboutConfigPrefs.setCharPref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
+    browser.aboutConfigPrefs.setBoolPref("dom.enable_performance", false);
+    browser.aboutConfigPrefs.setCharPref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
+    browser.aboutConfigPrefs.setBoolPref("geo.wifi.logging.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("dom.mozTCPSocket.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("browser.search.geoSpecificDefaults", false);
+    browser.aboutConfigPrefs.setBoolPref("browser.urlbar.trimURLs", false);
+    browser.aboutConfigPrefs.setBoolPref("privacy.trackingprotection.enabled", true);
+    browser.aboutConfigPrefs.setBoolPref("dom.enable_user_timing",	false);
+    browser.aboutConfigPrefs.setBoolPref("geo.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("dom.netinfo.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("dom.battery.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("privacy.trackingprotection.pbmode.enabled", true);
+    browser.aboutConfigPrefs.setBoolPref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr",	false);
+    browser.aboutConfigPrefs.setBoolPref("media.peerconnection.ice.default_address_only",	true);
+    browser.aboutConfigPrefs.setBoolPref("media.peerconnection.ice.no_host",			true);
+    browser.aboutConfigPrefs.setBoolPref("browser.send_pings.require_same_host",		true);
+    browser.aboutConfigPrefs.setBoolPref("keyword.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("security.fileuri.strict_origin_policy", true);
+    browser.aboutConfigPrefs.setBoolPref("media.video_stats.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("dom.ipc.plugins.reportCrashURL",			false);
+    browser.aboutConfigPrefs.setBoolPref("dom.network.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("media.navigator.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("media.navigator.video.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("media.getusermedia.screensharing.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("media.getusermedia.audiocapture.enabled", false);
+    browser.aboutConfigPrefs.setIntPref("dom.maxHardwareConcurrency",	2);
+    browser.aboutConfigPrefs.setBoolPref("privacy.userContext.enabled", true);
+    browser.aboutConfigPrefs.setBoolPref("browser.tabs.crashReporting.sendReport",		false);
+    browser.aboutConfigPrefs.setBoolPref("browser.crashReports.unsubmittedCheck.enabled",	false);
+    console.log("Configuration successfully set to LV3." );
+}
+
+async function FLOORP_PROT_LV4() {
+    browser.aboutConfigPrefs.setBoolPref("extensions.blocklist.enabled",			true);
+    browser.aboutConfigPrefs.setBoolPref("services.blocklist.update_enabled",			true);
+    browser.aboutConfigPrefs.setBoolPref("dom.security.https_only_mode", true);
+    browser.aboutConfigPrefs.setBoolPref("dom.security.https_only_mode_ever_enabled", true);
+    browser.aboutConfigPrefs.setCharPref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
+    browser.aboutConfigPrefs.setBoolPref("dom.enable_performance", false);
+    browser.aboutConfigPrefs.setCharPref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
+    browser.aboutConfigPrefs.setBoolPref("geo.wifi.logging.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("dom.mozTCPSocket.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("browser.search.geoSpecificDefaults", false);
+    browser.aboutConfigPrefs.setBoolPref("browser.urlbar.trimURLs", false);
+    browser.aboutConfigPrefs.setBoolPref("privacy.trackingprotection.enabled", true);
+    browser.aboutConfigPrefs.setBoolPref("dom.enable_user_timing",	false);
+    browser.aboutConfigPrefs.setBoolPref("geo.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("dom.netinfo.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("dom.battery.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("privacy.trackingprotection.pbmode.enabled", true);
+    browser.aboutConfigPrefs.setBoolPref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr",	false);
+    browser.aboutConfigPrefs.setBoolPref("media.peerconnection.ice.default_address_only",	true);
+    browser.aboutConfigPrefs.setBoolPref("media.peerconnection.ice.no_host",			true);
+    browser.aboutConfigPrefs.setBoolPref("browser.send_pings.require_same_host",		true);
+    browser.aboutConfigPrefs.setBoolPref("keyword.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("security.fileuri.strict_origin_policy", true);
+    browser.aboutConfigPrefs.setBoolPref("media.video_stats.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("dom.ipc.plugins.reportCrashURL",			false);
+    browser.aboutConfigPrefs.setBoolPref("privacy.resistFingerprinting", true);
+    browser.aboutConfigPrefs.setBoolPref("media.peerconnection.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("media.navigator.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("media.navigator.video.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("media.getusermedia.screensharing.enabled", false);
+    browser.aboutConfigPrefs.setBoolPref("media.getusermedia.audiocapture.enabled", false);
+    browser.aboutConfigPrefs.setIntPref("dom.maxHardwareConcurrency",	2);
+    browser.aboutConfigPrefs.setBoolPref("privacy.userContext.enabled", true);
+    browser.aboutConfigPrefs.setBoolPref("browser.tabs.crashReporting.sendReport",		false);
+    browser.aboutConfigPrefs.setBoolPref("browser.crashReports.unsubmittedCheck.enabled",	false);
+    browser.aboutConfigPrefs.setBoolPref("network.allow-experiments", false);
+    browser.aboutConfigPrefs.setBoolPref("privacy.resistFingerprinting", true);
+    browser.aboutConfigPrefs.setBoolPref("browser.chrome.site_icons", false);
+    browser.aboutConfigPrefs.setBoolPref("browser.privatebrowsing.autostart", true);
+    console.log("Configuration successfully set to LV4." );
+}
+
+(
+	function(){
+    var menu_elem_content_1 = document.querySelector("#exper")
+    var menu_elem_content_2 = document.querySelector("#header-main")
+    var menu_elem_content_3 = document.querySelector("#info")
+    var menu_elem_content_4_0 = document.querySelector("[id='0']")
+    var menu_elem_content_4_1 = document.querySelector("[id='1']")
+    var menu_elem_content_4_2 = document.querySelector("[id='2']")
+    var menu_elem_content_4_3 = document.querySelector("[id='3']")
+    var menu_elem_content_4_4 = document.querySelector("[id='4']")
+    var menu_elem_content_5 = document.querySelector("#Feedback")
+
+    menu_elem_content_1.innerText = browser.i18n.getMessage("exper")
+    menu_elem_content_2.innerText = browser.i18n.getMessage("header-main")
+    menu_elem_content_3.innerText = browser.i18n.getMessage("info")
+    menu_elem_content_4_0.innerText = browser.i18n.getMessage("0")
+    menu_elem_content_4_1.innerText = browser.i18n.getMessage("1")
+    menu_elem_content_4_2.innerText = browser.i18n.getMessage("2")
+    menu_elem_content_4_3.innerText = browser.i18n.getMessage("3") 
+    menu_elem_content_4_4.innerText = browser.i18n.getMessage("4")
+    menu_elem_content_5.innerText = browser.i18n.getMessage("Feedback") 
+    
+}())
 /*
         //パフォーマンス観測用のAPIを遮断
     browser.aboutConfigPrefs.setBoolPref("dom.enable_performance", false);

@@ -60,8 +60,8 @@ this.shot = (function() {
   function assertOrigin(url) {
     assertUrl(url);
     if (url.search(/^https?:/i) !== -1) {
-      const match = /^https?:\/\/[^/:]{1,4000}\/?$/i.exec(url);
-      if (!match) {
+      let newUrl = new URL(url);
+      if (newUrl.pathname != "/") {
         throw new Error("Bad origin, might include path");
       }
     }
@@ -75,11 +75,12 @@ this.shot = (function() {
       // Non-HTTP URLs don't have an origin
       return null;
     }
-    const match = /^https?:\/\/[^/:]{1,4000}/i.exec(url);
-    if (match) {
-      return match[0];
+    try {
+      let tryUrl = new URL(url);
+      return tryUrl.origin;
+    } catch {
+      return null;
     }
-    return null;
   }
 
   /** Check if the given object has all of the required attributes, and no extra

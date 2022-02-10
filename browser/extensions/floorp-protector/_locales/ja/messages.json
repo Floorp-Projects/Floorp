@@ -1,18 +1,27 @@
 {
   "header-main": {
-    "message": "試験運用機能　"
+    "message": "試験的運用機能 "
   },
     "exper": {
-      "message": "ユーザエージェントを変更 "
+      "message": "Floorpプロテクションレベル "
   },
     "info":{
-      "message":"Floorp のユーザエージェントに、Floorp/8.3.6 などのFloorpだとわかる文字列を追加します。既定では、Firefox と同じになっています。"
+      "message":"Floorp のトラッカー防止機能を有効化し、そのレベルを設定します。"
   },
-    "True":{
+    "0":{
       "message":"無効"
   },
-    "False":{
-      "message":"有効"
+    "1":{
+      "message":"弱"
+  },
+    "2":{
+    "message":"中(既定)"
+  },
+    "3":{
+      "message":"強"
+  },
+    "4":{
+      "message":"狂気"
   },
     "Feedback": {
       "message": "フィードバックを送信"

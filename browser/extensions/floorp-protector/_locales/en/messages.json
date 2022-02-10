@@ -1,18 +1,27 @@
 {
   "header-main": {
-    "message": "Experiments　"
+    "message": "Experiments "
   },
     "exper": {
-      "message": "Change Floorp User Agent "
+      "message": "Floorp protection level "
   },
     "info":{
-      "message":"Add a string to Floorp's user agent that identifies it as Floorp, such as Floorp/8.3.6. By default, this is the same as Firefox."
+      "message":"Activate Floorp's tracker prevention feature and set its level."
   },
-    "True":{
+    "0":{
       "message":"Disable"
   },
-    "False":{
-      "message":"Enable"
+    "1":{
+      "message":"Weak"
+  },
+    "2":{
+    "message":"Normal(default)"
+  },
+    "3":{
+      "message":"Strong"
+  },
+    "4":{
+      "message":"Madness"
   },
     "Feedback": {
       "message": "Send Feedback"

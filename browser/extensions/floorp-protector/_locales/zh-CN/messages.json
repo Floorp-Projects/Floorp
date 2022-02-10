@@ -1,18 +1,27 @@
 {
   "header-main": {
-    "message": "实验　"
+    "message": "实验 "
   },
     "exper": {
-      "message": "更改 Floorp 用户代理　"
+      "message": "Floorp 防护等级 "
   },
     "info":{
-      "message":"在 Floorp 的用户代理中添加一个字符串，表明其为 Floorp，例如 Floorp/8.3.6。默认情况下，这与 Firefox 相同。"
+      "message":"启用 Floorp 的跟踪器保护并设置其级别。"
   },
-    "True":{
-      "message":"禁用"
+    "0":{
+      "message":"无效的"
   },
-    "False":{
-      "message":"启用"
+    "1":{
+      "message":"虚弱的"
+  },
+    "2":{
+    "message":"正常（默认）"
+  },
+    "3":{
+      "message":"强的"
+  },
+    "4":{
+      "message":"疯狂"
   },
     "Feedback": {
       "message": "发送反馈"
