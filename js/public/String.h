@@ -204,8 +204,8 @@ extern JS_PUBLIC_API JSLinearString* JS_EnsureLinearString(JSContext* cx,
                                                            JSString* str);
 
 static MOZ_ALWAYS_INLINE JSLinearString* JSID_TO_LINEAR_STRING(jsid id) {
-  MOZ_ASSERT(JSID_IS_STRING(id));
-  return reinterpret_cast<JSLinearString*>(JSID_TO_STRING(id));
+  MOZ_ASSERT(id.isString());
+  return reinterpret_cast<JSLinearString*>(id.toString());
 }
 
 static MOZ_ALWAYS_INLINE JSLinearString* JS_ASSERT_STRING_IS_LINEAR(

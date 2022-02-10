@@ -691,9 +691,9 @@ bool nsOuterWindowProxy::getOwnPropertyDescriptor(
   }
 
   // Step 6 -- check for named subframes.
-  if (JSID_IS_STRING(id)) {
+  if (id.isString()) {
     nsAutoJSString name;
-    if (!name.init(cx, JSID_TO_STRING(id))) {
+    if (!name.init(cx, id.toString())) {
       return false;
     }
     nsGlobalWindowOuter* win = GetOuterWindow(proxy);
