@@ -402,9 +402,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">View</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Tap logo to change wallpaper</string>
+    <string name="wallpaper_tap_to_change_switch_label" moz:removedIn="99" tools:ignore="UnusedResources">Tap logo to change wallpaper</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Change wallpaper by tapping Firefox homepage logo</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Cycle through and update image without leaving the homepage.</string>
+    <string name="wallpaper_tap_to_change_switch_description" moz:removedIn="99" tools:ignore="UnusedResources">Cycle through and update image without leaving the homepage.</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string name="wallpaper_logo_content_description">Firefox logo - change the wallpaper, button</string>
