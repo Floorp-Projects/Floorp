@@ -80,7 +80,38 @@ async function testWorkerMessage(directConnectionToWorkerThread = false) {
     ok(symbolMessage, "Symbol logged from worker is visible in the console");
   }
 
-  const onMessagesCleared = hud.ui.once("messages-cleared");
-  await clearOutput(hud);
-  await onMessagesCleared;
+  info("Click on the clear button and wait for messages to be removed");
+  hud.ui.window.document.querySelector(".devtools-clear-icon").click();
+  await waitFor(
+    () =>
+      !findMessage(hud, "initial-message-from-worker") &&
+      !findMessage(hud, "log-from-worker")
+  );
+  ok(true, "Messages were removed");
+
+  info("Close and reopen the console to check messages were cleared properly");
+  await closeConsole();
+  const toolbox = await openToolboxForTab(gBrowser.selectedTab, "webconsole");
+  const newHud = toolbox.getCurrentPanel().hud;
+
+  info(
+    "Log a message and wait for it to appear so older messages would have been displayed"
+  );
+  const onSmokeMessage = waitForMessage(newHud, "smoke");
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.wrappedJSObject.console.log("smoke");
+  });
+  await onSmokeMessage;
+
+  is(
+    findMessage(newHud, "initial-message-from-worker"),
+    undefined,
+    "Message cache was cleared"
+  );
+  is(
+    findMessage(newHud, "log-from-worker"),
+    undefined,
+    "Live message were cleared as well"
+  );
+  await closeTabAndToolbox();
 }
