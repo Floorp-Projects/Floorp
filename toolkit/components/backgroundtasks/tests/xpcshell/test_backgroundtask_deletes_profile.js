@@ -11,7 +11,7 @@ add_task(async function test_backgroundtask_deletes_profile() {
   let stdoutLines = [];
   let exitCode = await do_backgroundtask("unique_profile", {
     extraArgs: [sentinel],
-    stdoutLines,
+    onStdoutLine: line => stdoutLines.push(line),
   });
   Assert.equal(0, exitCode);
 
