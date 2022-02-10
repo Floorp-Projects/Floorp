@@ -7,7 +7,6 @@
 # Floorp プロテクションは今回の試験的機能に含まれないので削除
 
 DIRS += [
-    "floorp-experimental",
     "doh-rollout",
     "formautofill",
     "screenshots",
