@@ -644,9 +644,8 @@ bool TextEventDispatcher::DispatchKeyboardEventInternal(
     keyEvent.mNativeKeyEvent = aKeyboardEvent.mNativeKeyEvent;
   } else {
     // If it's not a keyboard event for native key event, we should ensure that
-    // mNativeKeyEvent and mPluginEvent are null/empty.
+    // mNativeKeyEvent is null.
     keyEvent.mNativeKeyEvent = nullptr;
-    keyEvent.mPluginEvent.Clear();
   }
   // TODO: Manage mUniqueId here.
 

@@ -56,7 +56,6 @@ class nsIScreen;
 class nsIRunnable;
 
 namespace mozilla {
-class NativeEventData;
 class WidgetGUIEvent;
 class WidgetInputEvent;
 class WidgetKeyboardEvent;
