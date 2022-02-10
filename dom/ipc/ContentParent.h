@@ -443,7 +443,7 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvInitCrashReporter(
       const NativeThreadId& aThreadId);
 
-  PNeckoParent* AllocPNeckoParent();
+  already_AddRefed<PNeckoParent> AllocPNeckoParent();
 
   virtual mozilla::ipc::IPCResult RecvPNeckoConstructor(
       PNeckoParent* aActor) override {
@@ -965,8 +965,6 @@ class ContentParent final
                                               const bool& wantCacheData);
 
   bool DeallocPScriptCacheParent(PScriptCacheParent* shell);
-
-  bool DeallocPNeckoParent(PNeckoParent* necko);
 
   already_AddRefed<PExternalHelperAppParent> AllocPExternalHelperAppParent(
       nsIURI* aUri, const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,

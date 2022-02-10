@@ -19,12 +19,15 @@ class NeckoChild : public PNeckoChild {
   friend class PNeckoChild;
 
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NeckoChild, override)
+
   NeckoChild() = default;
-  virtual ~NeckoChild();
 
   static void InitNeckoChild();
 
  protected:
+  virtual ~NeckoChild();
+
   PStunAddrsRequestChild* AllocPStunAddrsRequestChild();
   bool DeallocPStunAddrsRequestChild(PStunAddrsRequestChild* aActor);
 

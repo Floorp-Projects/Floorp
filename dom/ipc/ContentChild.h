@@ -239,10 +239,6 @@ class ContentChild final : public PContentChild,
       PScriptCacheChild*, const FileDescOrError& cacheFile,
       const bool& wantCacheData) override;
 
-  PNeckoChild* AllocPNeckoChild();
-
-  bool DeallocPNeckoChild(PNeckoChild*);
-
   PPrintingChild* AllocPPrintingChild();
 
   bool DeallocPPrintingChild(PPrintingChild*);
