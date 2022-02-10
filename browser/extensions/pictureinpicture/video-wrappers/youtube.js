@@ -14,6 +14,40 @@ class PictureInPictureVideoWrapper {
       video.muted = shouldMute;
     }
   }
+  setCaptionContainerObserver(video, updateCaptionsFunction) {
+    let container = document.getElementById("ytp-caption-window-container");
+
+    if (container) {
+      updateCaptionsFunction("");
+      const callback = function(mutationsList, observer) {
+        // eslint-disable-next-line no-unused-vars
+        for (const mutation of mutationsList) {
+          let textNodeList = container
+            .querySelector(".ytp-caption-window-bottom")
+            ?.querySelectorAll(".caption-visual-line");
+          if (!textNodeList) {
+            updateCaptionsFunction("");
+            return;
+          }
+
+          updateCaptionsFunction(
+            Array.from(textNodeList, x => x.textContent).join("\n")
+          );
+        }
+      };
+
+      // immediately invoke the callback function to add subtitles to the PiP window
+      callback([1], null);
+
+      let captionsObserver = new MutationObserver(callback);
+
+      captionsObserver.observe(container, {
+        attributes: false,
+        childList: true,
+        subtree: true,
+      });
+    }
+  }
 }
 
 this.PictureInPictureVideoWrapper = PictureInPictureVideoWrapper;
