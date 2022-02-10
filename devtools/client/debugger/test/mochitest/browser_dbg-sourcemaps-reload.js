@@ -3,42 +3,45 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /*
- * Test reloading:
- * 1. reload the source
- * 2. re-sync breakpoints
+ * Assert hitting breakpoints when reloading a page using source maps,
+ * and whose all file content changes (source map, original and generated).
  */
 
-add_task(async function() {
-  const dbg = await initDebugger("doc-minified.html");
+const testServer = createVersionizedHttpTestServer("sourcemaps-reload");
+const TEST_URL = testServer.urlFor("index.html");
 
-  await navigate(dbg, "sourcemaps-reload/doc-sourcemaps-reload.html", "v1.js");
+add_task(async function() {
+  const dbg = await initDebuggerWithAbsoluteURL(TEST_URL, "original.js");
 
   info("Add initial breakpoint");
-  await selectSource(dbg, "v1.js");
-  await addBreakpoint(dbg, "v1.js", 6);
+  await selectSource(dbg, "original.js");
+  await addBreakpoint(dbg, "original.js", 6);
 
   let breakpoint = getBreakpoints(dbg)[0];
   is(breakpoint.location.line, 6);
+  is(breakpoint.generatedLocation.line, 82);
+  is(getBreakpointCount(dbg), 1, "Only one breakpoint exists");
 
   info("Reload with a new version of the file");
   const syncBp = waitForDispatch(dbg.store, "SET_BREAKPOINT");
-  await navigate(dbg, "sourcemaps-reload/doc-sourcemaps-reload2.html", "v1.js");
-
+  testServer.switchToNextVersion();
+  await reload(dbg);
   await syncBp;
   breakpoint = getBreakpoints(dbg)[0];
 
   is(breakpoint.location.line, 9);
-  is(breakpoint.generatedLocation.line, 79);
+  is(breakpoint.generatedLocation.line, 82);
 
   info("Add a second breakpoint");
-  await addBreakpoint(dbg, "v1.js", 13);
-  is(getBreakpointCount(dbg), 2, "No breakpoints");
+  await addBreakpoint(dbg, "original.js", 13);
+  is(getBreakpointCount(dbg), 2, "Two breakpoints exist");
 
   // NOTE: When we reload, the `foo` function and the
   // module is no longer 13 lines long
   info("Reload and observe no breakpoints");
-  await navigate(dbg, "sourcemaps-reload/doc-sourcemaps-reload3.html", "v1.js");
-  await waitForSource(dbg, "v1");
+  testServer.switchToNextVersion();
+  await reload(dbg);
+  await waitForSource(dbg, "original.js");
 
   // There will initially be zero breakpoints, but wait to make sure none are
   // installed while syncing.
