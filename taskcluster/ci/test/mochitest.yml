@@ -1129,6 +1129,8 @@ mochitest-webgpu:
                     android.*: []
                     .*mingw.*: ["release"]
                     .*shippable.*: ["mozilla-central"]
+                    .*ccov.*: ['mozilla-central']
+                    .*tsan.*: ['trunk']
                     linux1804-64-qr/debug: ['trunk']
                     .*(!-shippable)-qr.*: ["trunk"]
                     default: []
@@ -1140,9 +1142,6 @@ mochitest-webgpu:
                     default: []
             default:
                 by-test-platform:
-                    .*-tsan-qr/opt: []
-                    .*ccov.*: []
-                    linux.*/debug: []
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
