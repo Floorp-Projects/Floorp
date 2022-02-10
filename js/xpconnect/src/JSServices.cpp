@@ -69,8 +69,8 @@ static bool Services_NewEnumerate(JSContext* cx, HandleObject obj,
 }
 
 static JSLinearString* GetNameIfLatin1(jsid id) {
-  if (JSID_IS_STRING(id)) {
-    JSLinearString* name = JSID_TO_LINEAR_STRING(id);
+  if (id.isString()) {
+    JSLinearString* name = id.toLinearString();
     if (JS::LinearStringHasLatin1Chars(name)) {
       return name;
     }

@@ -24,6 +24,9 @@ template <>
 struct RefPtrTraits<GtkWidget> : public GObjectRefPtrTraits<GtkWidget> {};
 
 template <>
+struct RefPtrTraits<GDBusProxy> : public GObjectRefPtrTraits<GDBusProxy> {};
+
+template <>
 struct RefPtrTraits<GdkDragContext>
     : public GObjectRefPtrTraits<GdkDragContext> {};
 

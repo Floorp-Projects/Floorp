@@ -691,6 +691,12 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
       if (iter->configurable() ||
           (level == IntegrityLevel::Frozen && iter->isDataDescriptor() &&
            iter->writable())) {
+        // Private fields on objects don't participate in the frozen state, and
+        // so should be elided from checking for frozen state.
+        if (iter->key().isPrivateName()) {
+          continue;
+        }
+
         *result = false;
         return true;
       }
@@ -723,6 +729,9 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
       if (desc->configurable() ||
           (level == IntegrityLevel::Frozen && desc->isDataDescriptor() &&
            desc->writable())) {
+        // Since we don't request JSITER_PRIVATE in GetPropertyKeys above, we
+        // should never see a private name here.
+        MOZ_ASSERT(!id.isPrivateName());
         *result = false;
         return true;
       }

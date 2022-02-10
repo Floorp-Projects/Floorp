@@ -500,8 +500,8 @@ ArgumentsObject* ArgumentsObject::finishForIonPure(JSContext* cx,
 bool ArgumentsObject::obj_delProperty(JSContext* cx, HandleObject obj,
                                       HandleId id, ObjectOpResult& result) {
   ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
-  if (JSID_IS_INT(id)) {
-    unsigned arg = unsigned(JSID_TO_INT(id));
+  if (id.isInt()) {
+    unsigned arg = unsigned(id.toInt());
     if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg)) {
       if (!argsobj.markElementDeleted(cx, arg)) {
         return false;
@@ -532,12 +532,12 @@ bool ArgumentsObject::obj_mayResolve(const JSAtomState& names, jsid id,
 bool js::MappedArgGetter(JSContext* cx, HandleObject obj, HandleId id,
                          MutableHandleValue vp) {
   MappedArgumentsObject& argsobj = obj->as<MappedArgumentsObject>();
-  if (JSID_IS_INT(id)) {
+  if (id.isInt()) {
     /*
      * arg can exceed the number of arguments if a script changed the
      * prototype to point to another Arguments object with a bigger argc.
      */
-    unsigned arg = unsigned(JSID_TO_INT(id));
+    unsigned arg = unsigned(id.toInt());
     if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg)) {
       vp.set(argsobj.element(arg));
     }
@@ -671,8 +671,8 @@ bool MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
 
   PropertyFlags flags = {PropertyFlag::CustomDataProperty,
                          PropertyFlag::Configurable, PropertyFlag::Writable};
-  if (JSID_IS_INT(id)) {
-    uint32_t arg = uint32_t(JSID_TO_INT(id));
+  if (id.isInt()) {
+    uint32_t arg = uint32_t(id.toInt());
     if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg)) {
       return true;
     }
@@ -806,8 +806,8 @@ bool MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj,
 
   // Steps 2-3.
   bool isMapped = false;
-  if (JSID_IS_INT(id)) {
-    unsigned arg = unsigned(JSID_TO_INT(id));
+  if (id.isInt()) {
+    unsigned arg = unsigned(id.toInt());
     isMapped =
         arg < argsobj->initialLength() && !argsobj->isElementDeleted(arg);
   }
@@ -821,7 +821,7 @@ bool MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj,
     // Step 5.a.
     if (desc.hasWritable() && !desc.writable()) {
       if (!desc.hasValue()) {
-        RootedValue v(cx, argsobj->element(JSID_TO_INT(id)));
+        RootedValue v(cx, argsobj->element(id.toInt()));
         newArgDesc.setValue(v);
       }
     } else {
@@ -848,7 +848,7 @@ bool MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj,
 
   // Step 8.
   if (isMapped) {
-    unsigned arg = unsigned(JSID_TO_INT(id));
+    unsigned arg = unsigned(id.toInt());
     if (desc.isAccessorDescriptor()) {
       if (!argsobj->markElementDeleted(cx, arg)) {
         return false;
@@ -873,12 +873,12 @@ bool js::UnmappedArgGetter(JSContext* cx, HandleObject obj, HandleId id,
                            MutableHandleValue vp) {
   UnmappedArgumentsObject& argsobj = obj->as<UnmappedArgumentsObject>();
 
-  if (JSID_IS_INT(id)) {
+  if (id.isInt()) {
     /*
      * arg can exceed the number of arguments if a script changed the
      * prototype to point to another Arguments object with a bigger argc.
      */
-    unsigned arg = unsigned(JSID_TO_INT(id));
+    unsigned arg = unsigned(id.toInt());
     if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg)) {
       vp.set(argsobj.element(arg));
     }
@@ -963,8 +963,8 @@ bool UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
 
   PropertyFlags flags = {PropertyFlag::CustomDataProperty,
                          PropertyFlag::Configurable, PropertyFlag::Writable};
-  if (JSID_IS_INT(id)) {
-    uint32_t arg = uint32_t(JSID_TO_INT(id));
+  if (id.isInt()) {
+    uint32_t arg = uint32_t(id.toInt());
     if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg)) {
       return true;
     }

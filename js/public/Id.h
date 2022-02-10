@@ -168,7 +168,12 @@ struct PropertyKey {
     return isAtom() && toAtom() == atom;
   }
 
-  MOZ_ALWAYS_INLINE JSAtom* toAtom() const { return (JSAtom*)toString(); }
+  MOZ_ALWAYS_INLINE JSAtom* toAtom() const {
+    return reinterpret_cast<JSAtom*>(toString());
+  }
+  MOZ_ALWAYS_INLINE JSLinearString* toLinearString() const {
+    return reinterpret_cast<JSLinearString*>(toString());
+  }
 
  private:
   static bool isNonIntAtom(JSAtom* atom);
@@ -180,16 +185,6 @@ struct PropertyKey {
 using jsid = JS::PropertyKey;
 
 #define JSID_BITS(id) (id.asBits)
-
-static MOZ_ALWAYS_INLINE bool JSID_IS_STRING(jsid id) { return id.isString(); }
-
-static MOZ_ALWAYS_INLINE JSString* JSID_TO_STRING(jsid id) {
-  return id.toString();
-}
-
-static MOZ_ALWAYS_INLINE bool JSID_IS_INT(jsid id) { return id.isInt(); }
-
-static MOZ_ALWAYS_INLINE int32_t JSID_TO_INT(jsid id) { return id.toInt(); }
 
 #define JSID_INT_MIN 0
 #define JSID_INT_MAX INT32_MAX
@@ -211,10 +206,6 @@ static MOZ_ALWAYS_INLINE jsid SYMBOL_TO_JSID(JS::Symbol* sym) {
   MOZ_ASSERT(!js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell*>(sym)));
   JSID_BITS(id) = (size_t(sym) | JSID_TYPE_SYMBOL);
   return id;
-}
-
-static MOZ_ALWAYS_INLINE bool JSID_IS_VOID(const jsid id) {
-  return id.isVoid();
 }
 
 constexpr const jsid JSID_VOID;
@@ -264,8 +255,7 @@ struct BarrierMethods<jsid> {
     return nullptr;
   }
   static void postWriteBarrier(jsid* idp, jsid prev, jsid next) {
-    MOZ_ASSERT_IF(JSID_IS_STRING(next),
-                  !gc::IsInsideNursery(JSID_TO_STRING(next)));
+    MOZ_ASSERT_IF(next.isString(), !gc::IsInsideNursery(next.toString()));
   }
   static void exposeToJS(jsid id) {
     if (id.isGCThing()) {
@@ -333,6 +323,7 @@ class WrappedPtrOperations<JS::PropertyKey, Wrapper> {
   bool isAtom() const { return id().isAtom(); }
   bool isAtom(JSAtom* atom) const { return id().isAtom(atom); }
   JSAtom* toAtom() const { return id().toAtom(); }
+  JSLinearString* toLinearString() const { return id().toLinearString(); }
 };
 
 }  // namespace js

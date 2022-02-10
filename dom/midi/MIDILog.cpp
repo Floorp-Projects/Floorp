@@ -9,46 +9,38 @@
 
 mozilla::LazyLogModule gWebMIDILog("WebMIDI");
 
-void LogMIDIMessage(nsTArray<mozilla::dom::MIDIMessage>& aMessages,
+void LogMIDIMessage(const mozilla::dom::MIDIMessage& aMessage,
                     const nsAString& aPortId,
                     mozilla::dom::MIDIPortType aDirection) {
   if (MOZ_LOG_TEST(gWebMIDILog, mozilla::LogLevel::Debug)) {
     if (MOZ_LOG_TEST(gWebMIDILog, mozilla::LogLevel::Verbose)) {
-      for (auto& msg : aMessages) {
-        uint32_t byteCount = msg.data().Length();
-        nsAutoCString logMessage;
-        // Log long messages inline with the timestamp and the length, log
-        // longer messages a bit like xxd
-        logMessage.AppendPrintf(
-            "%s %s length=%u", NS_ConvertUTF16toUTF8(aPortId).get(),
-            aDirection == mozilla::dom::MIDIPortType::Input ? "->" : "<-",
-            byteCount);
-
-        if (byteCount <= 3) {
-          logMessage.AppendPrintf(" [");
-          // Regular messages
-          for (uint32_t i = 0; i < byteCount - 1; i++) {
-            logMessage.AppendPrintf("%x ", msg.data()[i]);
-          }
-          logMessage.AppendPrintf("%x]", msg.data()[byteCount - 1]);
-        } else {
-          // Longer messages
-          for (uint32_t i = 0; i < byteCount; i++) {
-            if (!(i % 8)) {
-              logMessage.AppendPrintf("\n%08u:\t", i);
-            }
-            logMessage.AppendPrintf("%x ", msg.data()[i]);
-          }
-        }
-        MOZ_LOG(gWebMIDILog, mozilla::LogLevel::Verbose,
-                ("%s", logMessage.get()));
-      }
-      return;
-    }
-    for (auto& msg : aMessages) {
-      LOG("%s %s %zu bytes", NS_ConvertUTF16toUTF8(aPortId).get(),
+      uint32_t byteCount = aMessage.data().Length();
+      nsAutoCString logMessage;
+      // Log long messages inline with the timestamp and the length, log
+      // longer messages a bit like xxd
+      logMessage.AppendPrintf(
+          "%s %s length=%u", NS_ConvertUTF16toUTF8(aPortId).get(),
           aDirection == mozilla::dom::MIDIPortType::Input ? "->" : "<-",
-          msg.data().Length());
+          byteCount);
+
+      if (byteCount <= 3) {
+        logMessage.AppendPrintf(" [");
+        // Regular messages
+        for (uint32_t i = 0; i < byteCount - 1; i++) {
+          logMessage.AppendPrintf("%x ", aMessage.data()[i]);
+        }
+        logMessage.AppendPrintf("%x]", aMessage.data()[byteCount - 1]);
+      } else {
+        // Longer messages
+        for (uint32_t i = 0; i < byteCount; i++) {
+          if (!(i % 8)) {
+            logMessage.AppendPrintf("\n%08u:\t", i);
+          }
+          logMessage.AppendPrintf("%x ", aMessage.data()[i]);
+        }
+      }
+      MOZ_LOG(gWebMIDILog, mozilla::LogLevel::Verbose,
+              ("%s", logMessage.get()));
     }
   }
 }

@@ -16537,7 +16537,7 @@ def initIdsClassMethod(identifiers, atomCacheName):
     idinit.reverse()
     body = fill(
         """
-        MOZ_ASSERT(JSID_IS_VOID(*reinterpret_cast<jsid*>(atomsCache)));
+        MOZ_ASSERT(reinterpret_cast<jsid*>(atomsCache)->isVoid());
 
         // Initialize these in reverse order so that any failure leaves the first one
         // uninitialized.
@@ -16638,7 +16638,7 @@ class CGDictionary(CGThing):
                 ${dictName}Atoms* atomsCache = nullptr;
                 if (cx) {
                   atomsCache = GetAtomCache<${dictName}Atoms>(cx);
-                  if (JSID_IS_VOID(*reinterpret_cast<jsid*>(atomsCache)) &&
+                  if (reinterpret_cast<jsid*>(atomsCache)->isVoid() &&
                       !InitIds(cx, atomsCache)) {
                     return false;
                   }
@@ -16863,7 +16863,7 @@ class CGDictionary(CGThing):
             body += fill(
                 """
                 ${dictName}Atoms* atomsCache = GetAtomCache<${dictName}Atoms>(cx);
-                if (JSID_IS_VOID(*reinterpret_cast<jsid*>(atomsCache)) &&
+                if (reinterpret_cast<jsid*>(atomsCache)->isVoid() &&
                     !InitIds(cx, atomsCache)) {
                   return false;
                 }
@@ -20987,7 +20987,7 @@ class CallbackOperationBase(CallbackMethod):
         getCallableFromProp = fill(
             """
             ${atomCacheName}* atomsCache = GetAtomCache<${atomCacheName}>(cx);
-            if ((JSID_IS_VOID(*reinterpret_cast<jsid*>(atomsCache)) &&
+            if ((reinterpret_cast<jsid*>(atomsCache)->isVoid() &&
                  !InitIds(cx, atomsCache)) ||
                 !GetCallableProperty(cx, atomsCache->${methodAtomName}, &callable)) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -21088,7 +21088,7 @@ class CallbackGetter(CallbackAccessor):
             """
             JS::Rooted<JSObject *> callback(cx, mCallback);
             ${atomCacheName}* atomsCache = GetAtomCache<${atomCacheName}>(cx);
-            if ((JSID_IS_VOID(*reinterpret_cast<jsid*>(atomsCache))
+            if ((reinterpret_cast<jsid*>(atomsCache)->isVoid()
                  && !InitIds(cx, atomsCache)) ||
                 !JS_GetPropertyById(cx, callback, atomsCache->${attrAtomName}, &rval)) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -21124,7 +21124,7 @@ class CallbackSetter(CallbackAccessor):
             MOZ_ASSERT(argv.length() == 1);
             JS::Rooted<JSObject*> callback(cx, CallbackKnownNotGray());
             ${atomCacheName}* atomsCache = GetAtomCache<${atomCacheName}>(cx);
-            if ((JSID_IS_VOID(*reinterpret_cast<jsid*>(atomsCache)) &&
+            if ((reinterpret_cast<jsid*>(atomsCache)->isVoid() &&
                  !InitIds(cx, atomsCache)) ||
                 !JS_SetPropertyById(cx, callback, atomsCache->${attrAtomName}, argv[0])) {
               aRv.Throw(NS_ERROR_UNEXPECTED);

@@ -192,7 +192,7 @@ NS_IMETHODIMP
 StatementJSHelper::Resolve(nsIXPConnectWrappedNative* aWrapper, JSContext* aCtx,
                            JSObject* aScopeObj, jsid aId, bool* aResolvedp,
                            bool* _retval) {
-  if (!JSID_IS_STRING(aId)) return NS_OK;
+  if (!aId.isString()) return NS_OK;
 
   JS::Rooted<JSObject*> scope(aCtx, aScopeObj);
   JS::Rooted<jsid> id(aCtx, aId);
@@ -208,7 +208,7 @@ StatementJSHelper::Resolve(nsIXPConnectWrappedNative* aWrapper, JSContext* aCtx,
   Statement* stmt = static_cast<Statement*>(
       static_cast<mozIStorageStatement*>(aWrapper->Native()));
 
-  JSLinearString* str = JSID_TO_LINEAR_STRING(id);
+  JSLinearString* str = id.toLinearString();
   if (::JS_LinearStringEqualsLiteral(str, "step")) {
     *_retval = ::JS_DefineFunction(aCtx, scope, "step", stepFunc, 0,
                                    JSPROP_RESOLVING) != nullptr;

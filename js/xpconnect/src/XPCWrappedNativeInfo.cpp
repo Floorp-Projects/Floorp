@@ -87,7 +87,7 @@ bool XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
   JS_MarkCrossZoneId(ccx, name);
 
   JSFunction* fun;
-  if (JSID_IS_STRING(name)) {
+  if (name.isString()) {
     fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, name);
   } else {
     fun = js::NewFunctionWithReserved(ccx, callback, argc, 0, nullptr);

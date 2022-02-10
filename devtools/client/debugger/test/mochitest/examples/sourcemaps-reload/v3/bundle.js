@@ -60,12 +60,18 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
-/******/ ({
+/******/ ([
+/* 0 */
+/***/ (function(module, exports, __webpack_require__) {
 
-/***/ 2:
+module.exports = __webpack_require__(1);
+
+
+/***/ }),
+/* 1 */
 /***/ (function(module, exports) {
 
 window.bar = function bar() {
@@ -73,6 +79,5 @@ window.bar = function bar() {
 };
 
 /***/ })
-
-/******/ });
-//# sourceMappingURL=v3.bundle.js.map
+/******/ ]);
+//# sourceMappingURL=bundle.js.map

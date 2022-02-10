@@ -1176,7 +1176,7 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
       (AddOrChange == IsAddOrChange::Add || existing->isDenseElement())) {
     MOZ_ASSERT(!desc.isAccessorDescriptor());
     MOZ_ASSERT(!obj->is<TypedArrayObject>());
-    uint32_t index = JSID_TO_INT(id);
+    uint32_t index = id.toInt();
     DenseElementResult edResult = obj->ensureDenseElements(cx, index, 1);
     if (edResult == DenseElementResult::Failure) {
       return false;
@@ -1232,8 +1232,8 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
 
   // Clear any existing dense index after adding a sparse indexed property,
   // and investigate converting the object to dense indexes.
-  if (JSID_IS_INT(id)) {
-    uint32_t index = JSID_TO_INT(id);
+  if (id.isInt()) {
+    uint32_t index = id.toInt();
     if constexpr (AddOrChange == IsAddOrChange::Add) {
       MOZ_ASSERT(!obj->containsDenseElement(index));
     } else {
@@ -1764,7 +1764,7 @@ static bool DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj,
                   obj->as<ArgumentsObject>().hasOverriddenIterator());
 
     // We still need to mark any element properties as overridden.
-    if (JSID_IS_INT(id)) {
+    if (id.isInt()) {
       obj->as<ArgumentsObject>().markElementOverridden();
     }
   }
@@ -2684,7 +2684,7 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
   RootedShape fromShape(cx, from->shape());
   for (ShapePropertyIter<NoGC> iter(fromShape); !iter.done(); iter++) {
     jsid id = iter->key();
-    MOZ_ASSERT(!JSID_IS_INT(id));
+    MOZ_ASSERT(!id.isInt());
 
     if (!iter->enumerable()) {
       continue;
@@ -2721,7 +2721,7 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
     MOZ_ASSERT(prop.enumerable());
 
     key = prop.key();
-    MOZ_ASSERT(!JSID_IS_INT(key));
+    MOZ_ASSERT(!key.isInt());
 
     MOZ_ASSERT(from->is<NativeObject>());
     MOZ_ASSERT(from->shape() == fromShape);

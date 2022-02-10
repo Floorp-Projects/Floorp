@@ -247,13 +247,14 @@ dom::Element* nsIContent::GetEditingHost() {
     return doc->GetBodyElement();
   }
 
-  nsIContent* content = this;
+  dom::Element* editableParentElement = nullptr;
   for (dom::Element* parent = GetParentElement();
        parent && parent->HasFlag(NODE_IS_EDITABLE);
-       parent = content->GetParentElement()) {
-    content = parent;
+       parent = editableParentElement->GetParentElement()) {
+    editableParentElement = parent;
   }
-  return content->AsElement();
+  return editableParentElement ? editableParentElement
+                               : dom::Element::FromNode(this);
 }
 
 nsresult nsIContent::LookupNamespaceURIInternal(

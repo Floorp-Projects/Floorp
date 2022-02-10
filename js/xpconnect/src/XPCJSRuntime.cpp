@@ -3076,7 +3076,7 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
 
 bool XPCJSRuntime::InitializeStrings(JSContext* cx) {
   // if it is our first context then we need to generate our string ids
-  if (JSID_IS_VOID(mStrIDs[0])) {
+  if (mStrIDs[0].isVoid()) {
     RootedString str(cx);
     for (unsigned i = 0; i < XPCJSContext::IDX_TOTAL_COUNT; i++) {
       str = JS_AtomizeAndPinString(cx, mStrings[i]);

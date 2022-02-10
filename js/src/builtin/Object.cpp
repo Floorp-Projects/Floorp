@@ -335,7 +335,7 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
        * If id is a string that's not an identifier, or if it's a
        * negative integer, then it must be quoted.
        */
-      if (id.isAtom() ? !IsIdentifier(id.toAtom()) : JSID_TO_INT(id) < 0) {
+      if (id.isAtom() ? !IsIdentifier(id.toAtom()) : id.toInt() < 0) {
         UniqueChars quotedId = QuoteString(cx, idstr, '\'');
         if (!quotedId) {
           return false;
@@ -1644,18 +1644,18 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
         if ((onlyEnumerable && !iter->enumerable()) || id.isSymbol()) {
           continue;
         }
-        MOZ_ASSERT(!JSID_IS_INT(id), "Unexpected indexed property");
+        MOZ_ASSERT(!id.isInt(), "Unexpected indexed property");
         MOZ_ASSERT_IF(kind == EnumerableOwnPropertiesKind::Values ||
                           kind == EnumerableOwnPropertiesKind::KeysAndValues,
                       iter->isDataProperty());
 
         if constexpr (kind == EnumerableOwnPropertiesKind::Keys ||
                       kind == EnumerableOwnPropertiesKind::Names) {
-          value.setString(JSID_TO_STRING(id));
+          value.setString(id.toString());
         } else if constexpr (kind == EnumerableOwnPropertiesKind::Values) {
           value.set(nobj->getSlot(iter->slot()));
         } else {
-          key.setString(JSID_TO_STRING(id));
+          key.setString(id.toString());
           value.set(nobj->getSlot(iter->slot()));
           if (!NewValuePair(cx, key, value, &value)) {
             return false;
@@ -1686,7 +1686,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
       if (iter->key().isSymbol()) {
         continue;
       }
-      MOZ_ASSERT(!JSID_IS_INT(iter->key()), "Unexpected indexed property");
+      MOZ_ASSERT(!iter->key().isInt(), "Unexpected indexed property");
 
       if (!props.append(*iter)) {
         return false;
@@ -1722,7 +1722,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
       }
 
       if (kind == EnumerableOwnPropertiesKind::KeysAndValues) {
-        key.setString(JSID_TO_STRING(id));
+        key.setString(id.toString());
         if (!NewValuePair(cx, key, value, &value)) {
           return false;
         }
@@ -1810,8 +1810,8 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
     // Step 4.a.i.
     if (obj->is<NativeObject>()) {
       HandleNativeObject nobj = obj.as<NativeObject>();
-      if (JSID_IS_INT(id) && nobj->containsDenseElement(JSID_TO_INT(id))) {
-        value.set(nobj->getDenseElement(JSID_TO_INT(id)));
+      if (id.isInt() && nobj->containsDenseElement(id.toInt())) {
+        value.set(nobj->getDenseElement(id.toInt()));
       } else {
         Maybe<PropertyInfo> prop = nobj->lookup(cx, id);
         if (prop.isNothing() || !prop->enumerable()) {
