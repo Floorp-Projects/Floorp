@@ -20,14 +20,6 @@ class ScreenshotsComponentParent extends JSWindowActorParent {
         ScreenshotsUtils.closePanel(browser);
     }
   }
-
-  didDestroy() {
-    // When restoring a crashed tab the browser is null
-    let browser = this.browsingContext.topFrameElement;
-    if (browser) {
-      ScreenshotsUtils.closePanel(browser, false);
-    }
-  }
 }
 
 var ScreenshotsUtils = {
@@ -131,21 +123,16 @@ var ScreenshotsUtils = {
   /**
    * Close the panel and call child actor to close the overlay
    * @param browser The current browser
-   * @param {bool} closeOverlay Whether or not to
-   * send a message to the child to close the overly.
-   * Defaults to true. Will be false when called from didDestroy.
    */
-  closePanel(browser, closeOverlay = true) {
+  closePanel(browser) {
     let buttonsPanel = browser.ownerDocument.querySelector(
       "#screenshotsPagePanel"
     );
     if (buttonsPanel && buttonsPanel.state !== "closed") {
       buttonsPanel.hidePopup();
     }
-    if (closeOverlay) {
-      let actor = this.getActor(browser);
-      actor.sendQuery("Screenshots:HideOverlay");
-    }
+    let actor = this.getActor(browser);
+    actor.sendQuery("Screenshots:HideOverlay");
   },
   /**
    * If the buttons panel exists and is open we will hide both the panel
