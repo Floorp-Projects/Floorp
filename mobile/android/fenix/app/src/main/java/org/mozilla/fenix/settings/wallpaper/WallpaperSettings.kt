@@ -33,10 +33,16 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
@@ -204,6 +210,10 @@ private fun WallpaperThumbnailItem(
     aspectRatio: Float = 1.1f,
     onSelect: (Wallpaper) -> Unit
 ) {
+    var bitmap by remember { mutableStateOf(loadWallpaperResource(wallpaper)) }
+    DisposableEffect(LocalConfiguration.current.orientation) {
+        onDispose { bitmap = loadWallpaperResource(wallpaper) }
+    }
     val thumbnailShape = RoundedCornerShape(8.dp)
     val border = if (isSelected) {
         Modifier.border(
@@ -214,9 +224,9 @@ private fun WallpaperThumbnailItem(
         Modifier
     }
 
-    val bitmap = loadWallpaperResource(wallpaper)
     // Completely avoid drawing the item if a bitmap cannot be loaded and is required
     if (bitmap == null && wallpaper != defaultWallpaper) return
+
     Surface(
         elevation = 4.dp,
         shape = thumbnailShape,
@@ -228,9 +238,9 @@ private fun WallpaperThumbnailItem(
             .then(border)
             .clickable { onSelect(wallpaper) }
     ) {
-        if (bitmap != null) {
+        bitmap?.let {
             Image(
-                bitmap = bitmap.asImageBitmap(),
+                bitmap = it.asImageBitmap(),
                 contentScale = ContentScale.FillBounds,
                 contentDescription = stringResource(
                     R.string.wallpapers_item_name_content_description, wallpaper.name
