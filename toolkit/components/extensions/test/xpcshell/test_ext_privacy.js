@@ -31,7 +31,6 @@ if (tlsMinPref != 1 && tlsMinPref != 3) {
   ok(false, "This test expects security.tls.version.min set to 1 or 3.");
 }
 const tlsMinVer = tlsMinPref === 3 ? "TLSv1.2" : "TLSv1";
-const READ_ONLY = true;
 
 add_task(async function test_privacy() {
   // Create an object to hold the values to which we will initialize the prefs.
@@ -52,10 +51,11 @@ add_task(async function test_privacy() {
   };
 
   async function background() {
-    browser.test.onMessage.addListener(async (msg, data, setting) => {
+    browser.test.onMessage.addListener(async (msg, ...args) => {
+      let data = args[0];
       // The second argument is the end of the api name,
       // e.g., "network.networkPredictionEnabled".
-      let apiObj = setting.split(".").reduce((o, i) => o[i], browser.privacy);
+      let apiObj = args[1].split(".").reduce((o, i) => o[i], browser.privacy);
       let settingData;
       switch (msg) {
         case "get":
@@ -347,34 +347,29 @@ add_task(async function test_privacy_other_prefs() {
   }
 
   async function background() {
-    let listeners = new Set([]);
-    browser.test.onMessage.addListener(async (msg, data, setting, readOnly) => {
+    browser.test.onMessage.addListener(async (msg, ...args) => {
+      let data = args[0];
       // The second argument is the end of the api name,
       // e.g., "network.webRTCIPHandlingPolicy".
-      let apiObj = setting.split(".").reduce((o, i) => o[i], browser.privacy);
-      if (msg == "get") {
-        browser.test.sendMessage("gettingData", await apiObj.get({}));
-        return;
-      }
-
-      // Don't add more than one listener per apiName.  We leave the
-      // listener to ensure we do not get more calls than we expect.
-      if (!listeners.has(setting)) {
-        apiObj.onChange.addListener(details => {
-          browser.test.sendMessage("settingData", details);
-        });
-        listeners.add(setting);
-      }
-      try {
-        await apiObj.set(data);
-      } catch (e) {
-        browser.test.sendMessage("settingThrowsException", {
-          message: e.message,
-        });
-      }
-      // Readonly settings will not trigger onChange, return the setting now.
-      if (readOnly) {
-        browser.test.sendMessage("settingData", await apiObj.get({}));
+      let apiObj = args[1].split(".").reduce((o, i) => o[i], browser.privacy);
+      let settingData;
+      switch (msg) {
+        case "set":
+          try {
+            await apiObj.set(data);
+          } catch (e) {
+            browser.test.sendMessage("settingThrowsException", {
+              message: e.message,
+            });
+            break;
+          }
+          settingData = await apiObj.get({});
+          browser.test.sendMessage("settingData", settingData);
+          break;
+        case "get":
+          settingData = await apiObj.get({});
+          browser.test.sendMessage("gettingData", settingData);
+          break;
       }
     });
   }
@@ -913,8 +908,7 @@ add_task(async function test_privacy_other_prefs() {
   extension.sendMessage(
     "set",
     { value: !Preferences.get(GLOBAL_PRIVACY_CONTROL_PREF_NAME) },
-    "network.globalPrivacyControl",
-    READ_ONLY
+    "network.globalPrivacyControl"
   );
   let readOnlyGPCData = await extension.awaitMessage("settingData");
   equal(
@@ -947,12 +941,7 @@ add_task(async function test_privacy_other_prefs() {
   await testGetting("network.httpsOnlyMode", {}, "always");
 
   // trying to "set" should have no effect when readonly!
-  extension.sendMessage(
-    "set",
-    { value: "never" },
-    "network.httpsOnlyMode",
-    READ_ONLY
-  );
+  extension.sendMessage("set", { value: "never" }, "network.httpsOnlyMode");
   let readOnlyData = await extension.awaitMessage("settingData");
   equal(readOnlyData.value, "always");
 
