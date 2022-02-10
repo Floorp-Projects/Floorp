@@ -72,7 +72,7 @@ async function selectNodeAndGetFlexSizingSections(
   inspector,
   doc
 ) {
-  const onUpdate = waitForDispatch(store, "UPDATE_FLEXBOX");
+  const onUpdate = waitUntilAction(store, "UPDATE_FLEXBOX");
   await selectNode(selector, inspector);
   await onUpdate;
 
