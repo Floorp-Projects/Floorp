@@ -45,7 +45,7 @@ html {
 
   /* hide pin */
   .icon.icon-pin-small {
-    display: none !important;
+    display:  inline flow-root list-item  !important;
   }
 
   /* unpinned sites have lower opacity title */
