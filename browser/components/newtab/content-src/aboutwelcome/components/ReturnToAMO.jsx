@@ -85,11 +85,16 @@ export class ReturnToAMO extends React.PureComponent {
         <MultiStageProtonScreen
           content={content}
           isRtamo={true}
+          isTheme={type.includes("theme")}
           id={this.props.messageId}
           order={this.props.order}
           totalNumberOfScreens={this.props.totalNumberOfScreens}
           autoClose={this.props.autoClose}
-          iconURL={this.props.iconURL}
+          iconURL={
+            type.includes("theme")
+              ? this.props.themeScreenshots[0]?.url
+              : this.props.iconURL
+          }
           addonName={this.props.name}
           handleAction={this.handleAction}
           addExtension={this.onClickAddExtension}

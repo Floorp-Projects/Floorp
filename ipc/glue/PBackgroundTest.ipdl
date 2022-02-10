@@ -8,6 +8,7 @@ namespace mozilla {
 namespace ipc {
 
 // This is a very simple testing protocol that is only used during mochitests.
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PBackgroundTest
 {
   manager PBackground;

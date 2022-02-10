@@ -64,8 +64,30 @@ typedef struct {
 
 #endif /* OPENSSL */
 
+#ifdef MBEDTLS
+#define MAX_AD_SIZE 2048
+#include <mbedtls/aes.h>
+#include <mbedtls/gcm.h>
+
+typedef struct {
+    int key_size;
+    int tag_len;
+    int aad_size;
+    int iv_len;
+    uint8_t iv[12];
+    uint8_t tag[16];
+    uint8_t aad[MAX_AD_SIZE];
+    mbedtls_gcm_context *ctx;
+    srtp_cipher_direction_t dir;
+} srtp_aes_gcm_ctx_t;
+
+#endif /* MBEDTLS */
+
 #ifdef NSS
 
+#define NSS_PKCS11_2_0_COMPAT 1
+
+#include <nss.h>
 #include <pk11pub.h>
 
 #define MAX_AD_SIZE 2048
@@ -74,6 +96,7 @@ typedef struct {
     int key_size;
     int tag_size;
     srtp_cipher_direction_t dir;
+    NSSInitContext *nss;
     PK11SymKey *key;
     uint8_t iv[12];
     uint8_t aad[MAX_AD_SIZE];

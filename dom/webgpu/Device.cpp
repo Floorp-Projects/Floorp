@@ -247,7 +247,7 @@ already_AddRefed<dom::Promise> Device::CreateComputePipelineAsync(
   context->mParentId = mId;
   mBridge->DeviceCreateComputePipelineAsync(context.get(), aDesc)
       ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr{this}, context, promise](RawId aId) {
             RefPtr<ComputePipeline> object = new ComputePipeline(
                 self, aId, context->mImplicitPipelineLayoutId,
@@ -274,7 +274,7 @@ already_AddRefed<dom::Promise> Device::CreateRenderPipelineAsync(
   context->mParentId = mId;
   mBridge->DeviceCreateRenderPipelineAsync(context.get(), aDesc)
       ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
+          GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr{this}, context, promise](RawId aId) {
             RefPtr<RenderPipeline> object = new RenderPipeline(
                 self, aId, context->mImplicitPipelineLayoutId,
@@ -351,7 +351,7 @@ already_AddRefed<dom::Promise> Device::PopErrorScope(ErrorResult& aRv) {
   auto errorPromise = mBridge->SendDevicePopErrorScope(mId);
 
   errorPromise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [self = RefPtr{this}, promise](const MaybeScopedError& aMaybeError) {
         if (aMaybeError) {
           if (aMaybeError->operationError) {

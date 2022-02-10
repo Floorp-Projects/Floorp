@@ -57,7 +57,8 @@ struct ScreenConfiguration {
 
 namespace hal_sandbox {
 
-[NestedUpTo=inside_cpow] sync protocol PHal {
+[ManualDealloc, NestedUpTo=inside_cpow, ChildImpl=virtual, ParentImpl=virtual]
+sync protocol PHal {
     manager PContent;
 
 child:

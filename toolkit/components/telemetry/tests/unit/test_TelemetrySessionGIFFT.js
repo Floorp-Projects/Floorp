@@ -8,6 +8,13 @@ const { TelemetrySession } = ChromeUtils.import(
   "resource://gre/modules/TelemetrySession.jsm"
 );
 
+// Enable the collection (during test) for all products so even products
+// that don't collect the data will be able to run the test without failure.
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
 add_task(function test_setup() {
   // FOG needs a profile dir and to be init'd in order to be tested.
   do_get_profile();

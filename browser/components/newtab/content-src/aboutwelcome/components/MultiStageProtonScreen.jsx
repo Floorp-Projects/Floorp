@@ -18,6 +18,7 @@ export class MultiStageProtonScreen extends React.PureComponent {
       autoClose,
       content,
       isRtamo,
+      isTheme,
       totalNumberOfScreens: total,
     } = this.props;
     const windowObj = this.props.windowObj || window;
@@ -92,7 +93,12 @@ export class MultiStageProtonScreen extends React.PureComponent {
           >
             <div className={`brand-logo ${content.hideLogo ? "hide" : ""}`} />
             <div className={`${isRtamo ? "rtamo-icon" : "hide-rtamo-icon"}`}>
-              <img src={this.props.iconURL} role="presentation" alt="" />
+              <img
+                className={`${isTheme ? "rtamo-theme-icon" : ""}`}
+                src={this.props.iconURL}
+                role="presentation"
+                alt=""
+              />
             </div>
             {isLastScreen && content.hasFancyTitle ? (
               <div className="confetti" />

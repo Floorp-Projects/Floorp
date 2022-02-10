@@ -16,6 +16,8 @@ include IPCStream;
 include "mozilla/net/NeckoMessageUtils.h";
 include "mozilla/net/DNS.h";
 include "prio.h";
+include "mozilla/dom/network/UDPSocketParent.h";
+include "mozilla/dom/network/UDPSocketChild.h";
 
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
@@ -39,6 +41,7 @@ namespace mozilla {
 namespace net {
 
 //-------------------------------------------------------------------
+[ManualDealloc, ChildImpl="mozilla::dom::UDPSocketChild", ParentImpl="mozilla::dom::UDPSocketParent"]
 protocol PUDPSocket
 {
   manager PNecko or PBackground;

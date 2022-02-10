@@ -29,6 +29,7 @@ union FileCreationResult
   FileCreationErrorResult;
 };
 
+[ManualDealloc]
 protocol PFileCreator
 {
   manager PBackground;

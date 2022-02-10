@@ -113,6 +113,7 @@ union RequestResponse
   ListOriginsResponse;
 };
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PQuotaRequest
 {
   manager PQuota;

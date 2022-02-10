@@ -133,6 +133,12 @@ body[lwt-newtab-brighttext] {
   padding: unset;
   margin-top: 50px;
 }
+.onboardingContainer .rtamo-theme-icon {
+  max-height: 30px;
+  border-radius: 2px;
+  margin-bottom: 10px;
+  margin-top: 24px;
+}
 .onboardingContainer .hide-rtamo-icon {
   display: none;
 }

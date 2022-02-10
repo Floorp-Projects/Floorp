@@ -20,6 +20,7 @@ include protocol PWebRenderBridge;
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/layers/WebRenderMessageUtils.h";
+include "mozilla/layers/CompositorBridgeParent.h";
 
 using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
 using struct mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
@@ -87,7 +88,8 @@ struct FrameStats {
  * protocol, which is per-browser. A lot of the functions in the protocol are
  * basically multiplexing/demultiplexing stuff in PLayerTransaction.
  */
-[RefCounted] sync protocol PCompositorBridge
+[ParentImpl="CompositorBridgeParentBase"]
+sync protocol PCompositorBridge
 {
   manager PCompositorManager;
 

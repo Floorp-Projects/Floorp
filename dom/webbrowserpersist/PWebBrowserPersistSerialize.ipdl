@@ -9,6 +9,7 @@ namespace mozilla {
 
 // This actor represents both an nsIWebBrowserPersistWriteCompletion
 // and the nsIOutputStream passed with it to the writeContent method.
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PWebBrowserPersistSerialize {
   manager PWebBrowserPersistDocument;
 

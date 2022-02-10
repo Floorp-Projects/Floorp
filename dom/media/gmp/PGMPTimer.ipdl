@@ -5,9 +5,13 @@
 
 include protocol PGMP;
 
+include "GMPTimerParent.h";
+include "GMPTimerChild.h";
+
 namespace mozilla {
 namespace gmp {
 
+[ManualDealloc, ChildImpl="GMPTimerChild", ParentImpl="GMPTimerParent"]
 async protocol PGMPTimer
 {
   manager PGMP;

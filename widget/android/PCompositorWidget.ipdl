@@ -9,6 +9,7 @@ include protocol PCompositorBridge;
 namespace mozilla {
 namespace widget {
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PCompositorWidget
 {
   manager PCompositorBridge;

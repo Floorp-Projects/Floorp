@@ -52,87 +52,11 @@
 #endif
 
 #include "err.h"
-#ifdef OPENSSL
-#include <openssl/evp.h>
-#include <stdint.h>
-#else
 #include "datatypes.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifdef OPENSSL
-
-/*
- * srtp_sha1_init(&ctx) initializes the SHA1 context ctx
- *
- * srtp_sha1_update(&ctx, msg, len) hashes the len octets starting at msg
- * into the SHA1 context
- *
- * srtp_sha1_final(&ctx, output) performs the final processing of the SHA1
- * context and writes the result to the 20 octets at output
- *
- * Return values are ignored on the EVP functions since all three
- * of these functions return void.
- *
- */
-
-/* OpenSSL 1.1.0 made EVP_MD_CTX an opaque structure, which must be allocated
-   using EVP_MD_CTX_new. But this function doesn't exist in OpenSSL 1.0.x. */
-#if OPENSSL_VERSION_NUMBER < 0x10100000L || LIBRESSL_VERSION_NUMBER
-
-typedef EVP_MD_CTX srtp_sha1_ctx_t;
-
-static inline void srtp_sha1_init(srtp_sha1_ctx_t *ctx)
-{
-    EVP_MD_CTX_init(ctx);
-    EVP_DigestInit(ctx, EVP_sha1());
-}
-
-static inline void srtp_sha1_update(srtp_sha1_ctx_t *ctx,
-                                    const uint8_t *M,
-                                    int octets_in_msg)
-{
-    EVP_DigestUpdate(ctx, M, octets_in_msg);
-}
-
-static inline void srtp_sha1_final(srtp_sha1_ctx_t *ctx, uint32_t *output)
-{
-    unsigned int len = 0;
-
-    EVP_DigestFinal(ctx, (unsigned char *)output, &len);
-    EVP_MD_CTX_cleanup(ctx);
-}
-
-#else
-
-typedef EVP_MD_CTX *srtp_sha1_ctx_t;
-
-static inline void srtp_sha1_init(srtp_sha1_ctx_t *ctx)
-{
-    *ctx = EVP_MD_CTX_new();
-    EVP_DigestInit(*ctx, EVP_sha1());
-}
-
-static inline void srtp_sha1_update(srtp_sha1_ctx_t *ctx,
-                                    const uint8_t *M,
-                                    int octets_in_msg)
-{
-    EVP_DigestUpdate(*ctx, M, octets_in_msg);
-}
-
-static inline void srtp_sha1_final(srtp_sha1_ctx_t *ctx, uint32_t *output)
-{
-    unsigned int len = 0;
-
-    EVP_DigestFinal(*ctx, (unsigned char *)output, &len);
-    EVP_MD_CTX_free(*ctx);
-}
-#endif
-
-#else
 
 typedef struct {
     uint32_t H[5];            /* state vector                    */
@@ -158,24 +82,6 @@ void srtp_sha1_update(srtp_sha1_ctx_t *ctx,
                       int octets_in_msg);
 
 void srtp_sha1_final(srtp_sha1_ctx_t *ctx, uint32_t output[5]);
-
-/*
- * The srtp_sha1_core function is INTERNAL to SHA-1, but it is declared
- * here because it is also used by the cipher SEAL 3.0 in its key
- * setup algorithm.
- */
-
-/*
- *  srtp_sha1_core(M, H) computes the core sha1 compression function, where M is
- *  the next part of the message and H is the intermediate state {H0,
- *  H1, ...}
- *
- *  this function does not do any of the padding required in the
- *  complete sha1 function
- */
-void srtp_sha1_core(const uint32_t M[16], uint32_t hash_value[5]);
-
-#endif /* else OPENSSL */
 
 #ifdef __cplusplus
 }

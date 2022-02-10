@@ -16,6 +16,7 @@ namespace mozilla {
 namespace dom {
 
 // This protocol is used for the BroadcastChannel API
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PBroadcastChannel
 {
   manager PBackground;

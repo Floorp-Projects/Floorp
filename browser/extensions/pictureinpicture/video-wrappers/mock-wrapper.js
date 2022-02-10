@@ -16,9 +16,13 @@ class PictureInPictureVideoWrapper {
     playPauseButton.click();
   }
 
-  setMuted(video, isMuted) {
+  setMuted(video, shouldMute) {
     let muteButton = document.querySelector("#player .mute-button");
-    muteButton.click();
+    if (video.muted !== shouldMute && muteButton) {
+      muteButton.click();
+    } else {
+      video.muted = shouldMute;
+    }
   }
 }
 

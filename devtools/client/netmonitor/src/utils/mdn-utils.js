@@ -111,6 +111,9 @@ const getGAParams = (panelId = "netmonitor") => {
   return `?utm_source=mozilla&utm_medium=devtools-${panelId}&utm_campaign=default`;
 };
 
+// Base URL to DevTools user docs
+const USER_DOC_URL = "https://firefox-source-docs.mozilla.org/devtools-user/";
+
 /**
  * Get the MDN URL for the specified header.
  *
@@ -144,33 +147,30 @@ function getHTTPStatusCodeURL(statusCode, panelId) {
 }
 
 /**
- * Get the MDN URL of the Timings tag for Network Monitor.
+ * Get the URL of the Timings tag for Network Monitor.
  *
- * @return {string} the MDN URL of the Timings tag for Network Monitor.
+ * @return {string} the URL of the Timings tag for Network Monitor.
  */
 function getNetMonitorTimingsURL() {
-  return `${MDN_URL}Tools/Network_Monitor/request_details${getGAParams()}#Timings`;
+  return `${USER_DOC_URL}network_monitor/request_details/#network-monitor-request-details-timings-tab`;
 }
 
 /**
- * Get the MDN URL for Performance Analysis
+ * Get the URL for Performance Analysis
  *
- * @return {string} The MDN URL for the documentation of Performance Analysis.
+ * @return {string} The URL for the documentation of Performance Analysis.
  */
 function getPerformanceAnalysisURL() {
-  return `${MDN_URL}Tools/Network_Monitor/Performance_analysis${getGAParams()}`;
+  return `${USER_DOC_URL}network_monitor/performance_analysis/`;
 }
 
 /**
- * Get the MDN URL for Filter box
+ * Get the URL for Filter box
  *
- * @return {string} The MDN URL for the documentation of Filter box.
+ * @return {string} The URL for the documentation of Filter box.
  */
 function getFilterBoxURL() {
-  return (
-    `${MDN_URL}Tools/Network_Monitor/request_list${getGAParams()}` +
-    `#Filtering_by_properties`
-  );
+  return `${USER_DOC_URL}network_monitor/request_list/#filtering-by-properties`;
 }
 
 /**

@@ -1,7 +1,10 @@
 
+include "mozilla/_ipdltest/TestHangs.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestHangsChild", ParentImpl="TestHangsParent"]
 intr protocol PTestHangs {
 both:
     [LegacyIntr] intr StackFrame();
