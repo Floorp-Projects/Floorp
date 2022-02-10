@@ -9,11 +9,14 @@ include protocol PNecko;
 include protocol PTCPSocket;
 
 include "mozilla/net/NeckoMessageUtils.h";
+include "mozilla/dom/network/TCPServerSocketParent.h";
+include "mozilla/dom/network/TCPServerSocketChild.h";
 
 namespace mozilla {
 namespace net {
 
 //-------------------------------------------------------------------
+[ManualDealloc, ChildImpl="mozilla::dom::TCPServerSocketChild", ParentImpl="mozilla::dom::TCPServerSocketParent"]
 protocol PTCPServerSocket
 {
   manager PNecko;

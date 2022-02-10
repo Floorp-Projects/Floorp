@@ -14,6 +14,7 @@ using WebrtcGlobalLog from "mozilla/media/webrtc/WebrtcGlobal.h";
 namespace mozilla {
 namespace dom {
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 async protocol PWebrtcGlobal {
   manager PContent;
 

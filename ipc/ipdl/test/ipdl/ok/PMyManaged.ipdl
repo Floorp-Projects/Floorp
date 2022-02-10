@@ -3,7 +3,7 @@ include protocol PMyManager;
 namespace mozilla {
 namespace myns {
 
-[RefCounted] protocol PMyManaged {
+protocol PMyManaged {
   manager PMyManager;
   child:
     async __delete__(Shmem aShmem);

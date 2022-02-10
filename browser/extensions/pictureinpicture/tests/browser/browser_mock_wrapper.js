@@ -91,6 +91,45 @@ add_task(async function test_mock_play_pause_button() {
   });
 });
 
+/**
+ * Tests the mock-wrapper.js video wrapper script does not toggle mute/umute
+ * state when increasing/decreasing the volume using the arrow keys.
+ */
+add_task(async function test_volume_change_with_keyboard() {
+  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+    await ensureVideosReady(browser);
+    await setupVideoListeners(browser);
+
+    // Open the video in PiP
+    let videoID = "mock-video-controls";
+    let pipWin = await triggerPictureInPicture(browser, videoID);
+    ok(pipWin, "Got Picture-in-Picture window.");
+
+    // Initially set video to be muted
+    await toggleMute(browser, pipWin);
+    ok(await isVideoMuted(browser, videoID), "The audio is not playing.");
+
+    // Decrease volume with arrow down
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, pipWin);
+    ok(!(await isVideoMuted(browser, videoID)), "The audio is playing.");
+
+    // Increase volume with arrow up
+    EventUtils.synthesizeKey("KEY_ArrowUp", {}, pipWin);
+    ok(!(await isVideoMuted(browser, videoID)), "The audio is still playing.");
+
+    await SpecialPowers.spawn(browser, [], async function() {
+      let video = content.document.querySelector("video");
+      ok(!video.muted, "Video should be unmuted.");
+    });
+
+    // Close PiP window
+    let pipClosed = BrowserTestUtils.domWindowClosed(pipWin);
+    let closeButton = pipWin.document.getElementById("close");
+    EventUtils.synthesizeMouseAtCenter(closeButton, {}, pipWin);
+    await pipClosed;
+  });
+});
+
 function waitForVideoEvent(browser, eventType) {
   return BrowserTestUtils.waitForContentEvent(browser, eventType, true);
 }

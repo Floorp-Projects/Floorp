@@ -1,8 +1,11 @@
 include protocol PTestJSON;
 
+include "mozilla/_ipdltest/TestJSON.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestHandleChild", ParentImpl="TestHandleParent"]
 protocol PTestHandle {
     manager PTestJSON;
 

@@ -7,7 +7,7 @@ include protocol PBackground;
 namespace mozilla {
 namespace ipc {
 
-[RefCounted, NeedsOtherPid]
+[NeedsOtherPid]
 async protocol PBackgroundStarter
 {
 parent:

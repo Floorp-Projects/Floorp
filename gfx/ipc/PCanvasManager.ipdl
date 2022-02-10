@@ -19,7 +19,7 @@ namespace gfx {
  * compositor process. This protocol should be used to create accelerated
  * canvas instances.
  */
-[RefCounted] sync protocol PCanvasManager
+sync protocol PCanvasManager
 {
   manages PWebGL;
   manages PWebGPU;

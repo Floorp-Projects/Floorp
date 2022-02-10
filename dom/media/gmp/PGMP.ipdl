@@ -9,13 +9,15 @@ include protocol PGMPStorage;
 include protocol PProfiler;
 
 include "mozilla/ipc/ByteBufUtils.h";
+include "GMPParent.h";
+include "GMPChild.h";
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 
 namespace mozilla {
 namespace gmp {
 
-[NeedsOtherPid, NestedUpTo=inside_sync]
+[ManualDealloc, NeedsOtherPid, NestedUpTo=inside_sync, ChildImpl="GMPChild", ParentImpl="GMPParent"]
 sync protocol PGMP
 {
   manages PGMPTimer;

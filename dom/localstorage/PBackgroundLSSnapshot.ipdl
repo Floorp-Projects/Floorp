@@ -63,6 +63,7 @@ union LSWriteAndNotifyInfo
   LSClearInfo;
 };
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PBackgroundLSSnapshot
 {
   manager PBackgroundLSDatabase;

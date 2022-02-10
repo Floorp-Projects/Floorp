@@ -8,11 +8,14 @@
 include LayersSurfaces;
 include protocol PVRManager;
 
+include "VRLayerChild.h";
+
 using mozilla::gfx::Rect from "mozilla/gfx/Rect.h";
 
 namespace mozilla {
 namespace gfx {
 
+[ManualDealloc, ChildImpl="VRLayerChild", ParentImpl=virtual]
 async protocol PVRLayer
 {
   manager PVRManager;

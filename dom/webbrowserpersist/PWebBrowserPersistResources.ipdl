@@ -11,6 +11,7 @@ using nsContentPolicyType from "nsIContentPolicy.h";
 namespace mozilla {
 
 // == nsIWebBrowserPersistResourceVisitor
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PWebBrowserPersistResources {
   manager PWebBrowserPersistDocument;
 

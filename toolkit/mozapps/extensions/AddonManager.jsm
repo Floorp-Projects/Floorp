@@ -3137,19 +3137,32 @@ var AddonManagerInternal = {
     createInstall(target, options) {
       // Throw an appropriate error if the given URL is not valid
       // as an installation source.  Return silently if it is okay.
-      function checkInstallUrl(url) {
-        let host = Services.io.newURI(options.url).host;
-        if (WEBAPI_INSTALL_HOSTS.includes(host)) {
-          return;
-        }
-        if (
-          Services.prefs.getBoolPref(PREF_WEBAPI_TESTING) &&
-          WEBAPI_TEST_INSTALL_HOSTS.includes(host)
-        ) {
-          return;
+      function checkInstallUri(uri) {
+        if (!Services.policies.allowedInstallSource(uri)) {
+          // eslint-disable-next-line no-throw-literal
+          return {
+            success: false,
+            code: "addon-install-webapi-blocked-policy",
+            message: `Install from ${uri.spec} not permitted by policy`,
+          };
         }
 
-        throw new Error(`Install from ${host} not permitted`);
+        if (WEBAPI_INSTALL_HOSTS.includes(uri.host)) {
+          return { success: true };
+        }
+        if (
+          Services.prefs.getBoolPref(PREF_WEBAPI_TESTING, false) &&
+          WEBAPI_TEST_INSTALL_HOSTS.includes(uri.host)
+        ) {
+          return { success: true };
+        }
+
+        // eslint-disable-next-line no-throw-literal
+        return {
+          success: false,
+          code: "addon-install-webapi-blocked",
+          message: `Install from ${uri.host} not permitted`,
+        };
       }
 
       const makeListener = (id, mm) => {
@@ -3208,10 +3221,30 @@ var AddonManagerInternal = {
         return { listener, installPromise };
       };
 
+      let uri;
       try {
-        checkInstallUrl(options.url);
+        uri = Services.io.newURI(options.url);
+        const { success, code, message } = checkInstallUri(uri);
+        if (!success) {
+          let info = {
+            wrappedJSObject: {
+              browser: target,
+              originatingURI: uri,
+              installs: [],
+            },
+          };
+          Cu.reportError(`${code}: ${message}`);
+          Services.obs.notifyObservers(info, code);
+          return Promise.reject({ code, message });
+        }
       } catch (err) {
-        return Promise.reject({ message: err.message });
+        // Reject Components.Exception errors (e.g. NS_ERROR_MALFORMED_URI) as is.
+        if (err instanceof Components.Exception) {
+          return Promise.reject({ message: err.message });
+        }
+        return Promise.reject({
+          message: "Install Failed on unexpected error",
+        });
       }
 
       return AddonManagerInternal.getInstallForURL(options.url, {

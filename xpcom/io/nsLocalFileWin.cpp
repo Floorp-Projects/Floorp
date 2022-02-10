@@ -296,6 +296,8 @@ static nsresult ConvertWinError(DWORD aWinErr) {
       rv = NS_ERROR_FILE_NOT_DIRECTORY;
       break;
     case ERROR_FILE_CORRUPT:
+      [[fallthrough]];  // to NS_ERROR_FILE_FS_CORRUPTED
+    case ERROR_DISK_CORRUPT:
       rv = NS_ERROR_FILE_FS_CORRUPTED;
       break;
     case ERROR_DEVICE_HARDWARE_ERROR:

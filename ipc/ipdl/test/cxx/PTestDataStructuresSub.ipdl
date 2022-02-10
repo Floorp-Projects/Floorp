@@ -1,9 +1,12 @@
 include PTestDataStructuresCommon;
 include protocol PTestDataStructures;
 
+include "mozilla/_ipdltest/TestDataStructures.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestDataStructuresSub", ParentImpl="TestDataStructuresSub"]
 sync protocol PTestDataStructuresSub {
     manager PTestDataStructures;
 

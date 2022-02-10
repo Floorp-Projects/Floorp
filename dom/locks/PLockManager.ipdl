@@ -21,7 +21,6 @@ struct IPCLockRequest {
   bool steal;
 };
 
-[RefCounted]
 protocol PLockManager {
   manager PBackground;
   manages PLockRequest;

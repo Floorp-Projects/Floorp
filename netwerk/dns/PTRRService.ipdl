@@ -12,7 +12,7 @@ include PSMIPCTypes;
 namespace mozilla {
 namespace net {
 
-[RefCounted] async protocol PTRRService
+async protocol PTRRService
 {
   manager PSocketProcess;
 

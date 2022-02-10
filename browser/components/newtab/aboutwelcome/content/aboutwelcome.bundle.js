@@ -180,6 +180,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
         name: props.name,
         url: props.url,
         iconURL: props.iconURL,
+        themeScreenshots: props.screenshots,
         metricsFlowUri: this.state.metricsFlowUri
       });
     }
@@ -198,7 +199,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
 
 
 function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
-  let messageId = welcomeContent.template === "return_to_amo" ? "RTAMO_DEFAULT_WELCOME" : "DEFAULT_ID";
+  let messageId = welcomeContent.template === "return_to_amo" ? `RTAMO_DEFAULT_WELCOME_${welcomeContent.type.toUpperCase()}` : "DEFAULT_ID";
   let UTMTerm = "default";
 
   if (welcomeContent.id) {
@@ -783,6 +784,7 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
       autoClose,
       content,
       isRtamo,
+      isTheme,
       totalNumberOfScreens: total
     } = this.props;
     const windowObj = this.props.windowObj || window;
@@ -850,6 +852,7 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: `${isRtamo ? "rtamo-icon" : "hide-rtamo-icon"}`
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
+      className: `${isTheme ? "rtamo-theme-icon" : ""}`,
       src: this.props.iconURL,
       role: "presentation",
       alt: ""
@@ -1273,6 +1276,8 @@ class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompo
   }
 
   render() {
+    var _this$props$themeScre;
+
     const {
       content,
       type
@@ -1296,11 +1301,12 @@ class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompo
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_2__["MultiStageProtonScreen"], {
       content: content,
       isRtamo: true,
+      isTheme: type.includes("theme"),
       id: this.props.messageId,
       order: this.props.order,
       totalNumberOfScreens: this.props.totalNumberOfScreens,
       autoClose: this.props.autoClose,
-      iconURL: this.props.iconURL,
+      iconURL: type.includes("theme") ? (_this$props$themeScre = this.props.themeScreenshots[0]) === null || _this$props$themeScre === void 0 ? void 0 : _this$props$themeScre.url : this.props.iconURL,
       addonName: this.props.name,
       handleAction: this.handleAction,
       addExtension: this.onClickAddExtension

@@ -6,9 +6,12 @@ include protocol PContent;
 
 include PBackgroundSharedTypes;
 
+include "mozilla/media/MediaChild.h";
+
 namespace mozilla {
 namespace media {
 
+[ManualDealloc, ChildImpl="Child", ParentImpl=virtual]
 protocol PMedia
 {
   manager PContent;

@@ -7,10 +7,6 @@ self.onmessage = async function(ev) {
       try {
         xhr.open("POST", "FOOBAR", false);
         xhr.send();
-        // We do not expect to ever get here. However, this would happen
-        // if the loadstart event would be queued and not directly
-        // executed on the same C++ stack of the xhr.send syncloop.
-        myself.postMessage("MissingError");
       } catch (err) {
         if (err instanceof DOMException) {
           // This is what we expect to happen.
@@ -18,7 +14,13 @@ self.onmessage = async function(ev) {
         } else {
           myself.postMessage("OtherError");
         }
+        // Let's ensure we still bail out from the processing.
+        throw err;
       }
+      // We do not expect to ever get here. However, this would happen
+      // if the loadstart event would be queued and not directly
+      // executed on the same C++ stack of the xhr.send syncloop.
+      myself.postMessage("MissingError");
     },
     true
   );
