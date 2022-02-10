@@ -18,7 +18,8 @@
   "browser_action":{
     "browser_style": true,
     "default_icon": "science_white_48dp.svg",
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_area" : "menupanel"
   },
   "icons": {
     "128": "science_white_48dp.svg"

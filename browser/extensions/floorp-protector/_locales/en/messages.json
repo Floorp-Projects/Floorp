@@ -6,7 +6,7 @@
       "message": "Floorp protection level "
   },
     "info":{
-      "message":"Activate Floorp's tracker prevention feature and set its level."
+      "message":"Activate Floorp's tracker prevention feature and set its level. We recommend that you use this feature only for advanced users. Also, if you are using Firefox Sync before using it, we recommend that you remove the sync settings."
   },
     "0":{
       "message":"Disable"

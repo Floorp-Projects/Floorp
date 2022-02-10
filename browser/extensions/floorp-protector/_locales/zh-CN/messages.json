@@ -6,7 +6,7 @@
       "message": "Floorp 防护等级 "
   },
     "info":{
-      "message":"启用 Floorp 的跟踪器保护并设置其级别。"
+      "message":"启用 Floorp 的跟踪器保护并设置其级别。我们建议您仅将此功能用于高级用户。 此外，如果您在使用 Firefox Sync 之前使用它，我们建议您删除同步设置。"
   },
     "0":{
       "message":"无效的"
