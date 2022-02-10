@@ -15,24 +15,27 @@
 
 using mozilla::DebugOnly;
 
+struct SigAltStack {
+  void* mem;
+  size_t size;
+};
+
 struct PthreadCreateParams {
   void* (*start_routine)(void*);
   void* arg;
 };
 
-const size_t kSigStackSize = std::max(size_t(16384), size_t(SIGSTKSZ));
-
 // Install the alternate signal stack, returns a pointer to the memory area we
 // mapped to store the stack only if it was installed successfully, otherwise
 // returns NULL.
-static void* install_sig_alt_stack() {
-  void* alt_stack_mem = mmap(nullptr, kSigStackSize, PROT_READ | PROT_WRITE,
+static void* install_sig_alt_stack(size_t size) {
+  void* alt_stack_mem = mmap(nullptr, size, PROT_READ | PROT_WRITE,
                              MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (alt_stack_mem) {
     stack_t alt_stack = {
         .ss_sp = alt_stack_mem,
         .ss_flags = 0,
-        .ss_size = kSigStackSize,
+        .ss_size = size,
     };
 
     int rv = sigaltstack(&alt_stack, nullptr);
@@ -40,7 +43,7 @@ static void* install_sig_alt_stack() {
       return alt_stack_mem;
     }
 
-    rv = munmap(alt_stack_mem, kSigStackSize);
+    rv = munmap(alt_stack_mem, size);
     MOZ_ASSERT(rv == 0);
   }
 
@@ -49,13 +52,14 @@ static void* install_sig_alt_stack() {
 
 // Uninstall the alternate signal handler and unmaps it. Does nothing if
 // alt_stack_mem is NULL.
-static void uninstall_sig_alt_stack(void* alt_stack_mem) {
-  if (alt_stack_mem) {
+static void uninstall_sig_alt_stack(void* alt_stack_ptr) {
+  SigAltStack* alt_stack = static_cast<SigAltStack*>(alt_stack_ptr);
+  if (alt_stack->mem) {
     stack_t disable_alt_stack = {};
     disable_alt_stack.ss_flags = SS_DISABLE;
     DebugOnly<int> rv = sigaltstack(&disable_alt_stack, nullptr);
     MOZ_ASSERT(rv == 0);
-    rv = munmap(alt_stack_mem, kSigStackSize);
+    rv = munmap(alt_stack->mem, alt_stack->size);
     MOZ_ASSERT(rv == 0);
   }
 }
@@ -69,8 +73,10 @@ void* set_alt_signal_stack_and_start(PthreadCreateParams* params) {
   free(params);
 
   void* thread_rv = nullptr;
-  void* alt_stack_mem = install_sig_alt_stack();
-  pthread_cleanup_push(uninstall_sig_alt_stack, alt_stack_mem);
+  static const size_t kSigStackSize = std::max(size_t(16384), size_t(SIGSTKSZ));
+  void* alt_stack_mem = install_sig_alt_stack(kSigStackSize);
+  SigAltStack alt_stack{alt_stack_mem, kSigStackSize};
+  pthread_cleanup_push(uninstall_sig_alt_stack, &alt_stack);
   thread_rv = start_routine(arg);
   pthread_cleanup_pop(1);
 
