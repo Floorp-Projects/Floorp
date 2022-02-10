@@ -88,10 +88,9 @@ impl PlatformHandle {
         }
     }
 
-    #[allow(clippy::missing_safety_doc)]
     #[cfg(windows)]
-    pub unsafe fn duplicate(h: PlatformHandleType) -> Result<PlatformHandle, std::io::Error> {
-        let dup = duplicate_platform_handle(h, None)?;
+    pub fn duplicate(h: PlatformHandleType) -> Result<PlatformHandle, std::io::Error> {
+        let dup = unsafe { duplicate_platform_handle(h, None) }?;
         Ok(PlatformHandle::new(dup))
     }
 }

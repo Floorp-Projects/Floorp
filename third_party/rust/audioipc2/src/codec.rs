@@ -65,8 +65,6 @@ enum State {
 }
 
 const MAX_MESSAGE_LEN: u32 = 1024 * 1024;
-const MAGIC: u64 = 0xa4d1_019c_c910_1d4a;
-const HEADER_LEN: usize = size_of::<u32>() + size_of::<u64>();
 
 impl<In, Out> Default for LengthDelimitedCodec<In, Out> {
     fn default() -> Self {
@@ -82,17 +80,14 @@ impl<In, Out> Default for LengthDelimitedCodec<In, Out> {
 impl<In, Out> LengthDelimitedCodec<In, Out> {
     // Lengths are encoded as little endian u32
     fn decode_length(buf: &mut BytesMut) -> Option<u32> {
-        if buf.len() < HEADER_LEN {
+        if buf.len() < size_of::<u32>() {
             // Not enough data
             return None;
         }
 
-        let magic = LittleEndian::read_u64(&buf[0..8]);
-        assert_eq!(magic, MAGIC);
-
         // Consume the length field
-        let n = LittleEndian::read_u32(&buf[8..12]);
-        buf.advance(HEADER_LEN);
+        let n = LittleEndian::read_u32(buf.as_ref());
+        buf.advance(size_of::<u32>());
         Some(n)
     }
 
@@ -136,12 +131,7 @@ where
             State::Length => {
                 match Self::decode_length(buf) {
                     Some(n) => {
-                        assert!(
-                            n <= MAX_MESSAGE_LEN,
-                            "assertion failed: {} <= {}",
-                            n,
-                            MAX_MESSAGE_LEN
-                        );
+                        assert!(n <= MAX_MESSAGE_LEN);
                         self.state = State::Data(n);
 
                         // Ensure that the buffer has enough space to read the
@@ -186,9 +176,7 @@ where
         }
 
         let encoded_len = self.encode_buf.len();
-        assert!(encoded_len <= MAX_MESSAGE_LEN as usize);
-        buf.reserve(encoded_len + HEADER_LEN);
-        buf.put_u64_le(MAGIC);
+        buf.reserve(encoded_len + size_of::<u32>());
         buf.put_u32_le(encoded_len.try_into().unwrap());
         buf.extend_from_slice(&self.encode_buf);
 
