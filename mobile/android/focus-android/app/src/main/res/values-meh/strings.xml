@@ -151,6 +151,9 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Jiee ya´a %1$s, chineí</string>
 
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Vitan jee vaji iin a kumi noo´o nkutada a sá´ánu</string>
+
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Tu´un Web</string>
 
@@ -159,6 +162,9 @@
 
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Ntaka</string>
+
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Ka̱a̱ kua vaji, tu´un</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Nastutu datos jii a ni´i</string>
@@ -200,6 +206,9 @@
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+Tee a sá´á vii URL</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Lista noo´o autocompletado:</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add2">Tee URL</string>
@@ -274,6 +283,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Nakasɨ 3 cookies daa inka kuvi kuntada noo´o</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Nakasɨ ntu xini cookies daa inka</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Kasɨ cookies jíí da sitios</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Kuvi</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
@@ -511,6 +521,10 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">NTUVI</string>
 
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Ya´a kune jíí iin a kumi nkutadaja a sá´ánu</string>
+
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
 
@@ -541,7 +555,12 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s kuvi ni´inuma jiee <a href="%2$s"> tutu xitu Mozilla </a> jíí da inka tutu código nune.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Sivɨ</string>
     <string name="gv_prompt_password_hint">Contraseña</string>
     <string name="gv_prompt_clear">Xinoo</string>
@@ -582,23 +601,56 @@
   <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">Síne ñama ya´a</string>
 
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Sitio de escritorio</string>
+
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">URL ntɨ</string>
 
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">Ka̱a̱ ñɨvɨ ke´i ya´a</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Síne enlaces jíí aplicaciones</string>
+
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">A biji</string>
+
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Permisos del sitio</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Reproducción automática</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Kuvi koo nasun ji tutu kana</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Kasɨ ntuxini nasun</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Recomendado</string>
 
     <!-- Preference for block autoplay audio and video-->
     <string name="preference_block_autoplay_audio_video">Kasɨ nasun ji tutu kana</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">Estudios</string>
+
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Kuni kue´eka</string>
 
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Aplicación nejika nakasɨ sa kuvi tuvi a jíía</string>
+
     <!-- Title of the remove studies button -->
     <string name="studies_remove">Xita</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Activo</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Completados</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Depuración remota jii USB/Wi-Fi</string>
@@ -614,6 +666,10 @@
      When pressed, the user's previous session is cleared, and authentication is not required. -->
     <string name="biometric_auth_new_session">Sesión jíía</string>
 
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Síne enlace nuu a jíía sesión</string>
+
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">Tutu huella digital</string>
 
@@ -624,6 +680,9 @@
     <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">Xinti nkana ñama. Tee ichika.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">¿Xituvi da sugerencias a nnánuku?</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Ntuvi</string>
@@ -663,6 +722,10 @@
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Xita tu´un chineí nánukunu nuu kajie´e</string>
 
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">¡Tuvi va´adani!\n Ka´vi kue´eka jiee ya´a jíí da inka actualizaciones nuu %1$s.</string>
+
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">A jíía pestaña nsine</string>
 
@@ -691,6 +754,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Xita kuaiyo daa sitios</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Kasɨ cookies</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">¿A kuvinu kasɨ da cookies?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Ntivu pestaña</string>
     <!-- Headline for the tab crash report screen -->
@@ -708,6 +777,24 @@
 
     <!-- Tracking protection bottom sheet -->
 
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Contenido</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Tutu xiko</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Social</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Analítica</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Vitan jee vaji iin a kumi noo´o nkutada a sá´ánu</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Conexión va´a</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Conexión ntu va´a</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Xniko</string>
+
     <!-- Top Sites -->
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Xita</string>
@@ -716,8 +803,26 @@
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Natee</string>
 
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Sivɨ acceso ñama</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Da tutu nátava a nchuva´a je nsajia&lt;b&gt;nná&lt;/b&gt; de xinanu da tu´un nnánukunu %1$s</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Tema</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Niji</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Teku tun</string>
+
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Ni´i tema ka̱a̱</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Sitio nnikanu ntu satiñu va´a jíí HTTPS</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
