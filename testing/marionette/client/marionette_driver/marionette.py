@@ -680,6 +680,8 @@ class Marionette(object):
             return HTMLElement._from_json(value, self)
         elif isinstance(value, dict) and ShadowRoot.identifiers in value.keys():
             return ShadowRoot._from_json(value, self)
+        elif isinstance(value, dict):
+            return {key: self._unwrap_response(val) for key, val in value.items()}
         elif isinstance(value, list):
             return list(self._unwrap_response(item) for item in value)
         else:
