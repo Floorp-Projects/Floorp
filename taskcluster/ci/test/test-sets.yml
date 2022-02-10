@@ -456,6 +456,7 @@ linux-tsan-tests:
     - mochitest-browser-chrome
     - mochitest-media
     - mochitest-plain
+    - mochitest-webgpu
     - reftest
     - web-platform-tests
     - web-platform-tests-reftest
