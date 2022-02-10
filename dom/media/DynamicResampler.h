@@ -357,7 +357,7 @@ class AudioChunkList {
 class AudioResampler final {
  public:
   AudioResampler(uint32_t aInRate, uint32_t aOutRate,
-                 uint32_t aPreBufferFrames = 0);
+                 uint32_t aPreBufferFrames);
 
   /**
    * Append input data into the resampler internal buffer. Copy/move of the
