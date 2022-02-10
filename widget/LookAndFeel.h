@@ -201,10 +201,6 @@ class LookAndFeel {
      */
     MenuBarDrag,
     /**
-     * Return an appropriate os version identifier.
-     */
-    OperatingSystemVersionIdentifier,
-    /**
      * 0: scrollbar button repeats to scroll only when cursor is on the button.
      * 1: scrollbar button repeats to scroll even if cursor is outside of it.
      */
@@ -338,16 +334,6 @@ class LookAndFeel {
   static bool UseOverlayScrollbars() {
     return GetInt(IntID::UseOverlayScrollbars);
   }
-
-  /**
-   * Operating system versions.
-   */
-  enum class OperatingSystemVersion {
-    Windows7 = 2,
-    Windows8,
-    Windows10,
-    Unknown
-  };
 
   enum {
     eScrollArrow_None = 0,
