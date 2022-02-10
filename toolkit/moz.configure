@@ -2608,8 +2608,8 @@ wine = check_prog(
 # DOM Streams
 # ==============================================================
 option(
-    "--enable-dom-streams",
-    help="Enable the DOM Streams prototype",
+    "--disable-dom-streams",
+    help="Disable DOM Streams (use JS Streams)",
 )
 
 set_config("MOZ_DOM_STREAMS", True, when="--enable-dom-streams")
