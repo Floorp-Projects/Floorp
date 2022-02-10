@@ -33,8 +33,8 @@ add_task(async function() {
   await waitUntilCensusState(store, s => s.treeMap, [treeMapState.SAVED]);
 
   const exportEvents = Promise.all([
-    waitUntilAction(store, actions.EXPORT_SNAPSHOT_START),
-    waitUntilAction(store, actions.EXPORT_SNAPSHOT_END),
+    waitForDispatch(store, actions.EXPORT_SNAPSHOT_START),
+    waitForDispatch(store, actions.EXPORT_SNAPSHOT_END),
   ]);
   dispatch(exportSnapshot(getState().snapshots[0], destPath));
   await exportEvents;
