@@ -939,8 +939,10 @@ void BrowserParent::InitRendering() {
 #if defined(MOZ_WIDGET_ANDROID)
   MOZ_ASSERT(widget);
 
-  Unused << SendDynamicToolbarMaxHeightChanged(
-      widget->GetDynamicToolbarMaxHeight());
+  if (GetBrowsingContext()->IsTopContent()) {
+    Unused << SendDynamicToolbarMaxHeightChanged(
+        widget->GetDynamicToolbarMaxHeight());
+  }
 #endif
 }
 
