@@ -1253,6 +1253,20 @@ void WorkerDebuggerGlobalScope::RetrieveConsoleEvents(
   console->RetrieveConsoleEvents(aCx, aEvents, aRv);
 }
 
+void WorkerDebuggerGlobalScope::ClearConsoleEvents(JSContext* aCx,
+                                                   ErrorResult& aRv) {
+  WorkerGlobalScope* scope = mWorkerPrivate->GetOrCreateGlobalScope(aCx);
+  if (!scope) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  RefPtr<Console> console = scope->GetConsoleIfExists();
+  if (console) {
+    console->ClearStorage();
+  }
+}
+
 void WorkerDebuggerGlobalScope::SetConsoleEventHandler(JSContext* aCx,
                                                        AnyCallback* aHandler,
                                                        ErrorResult& aRv) {
