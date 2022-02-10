@@ -4388,11 +4388,13 @@ bool AsyncPanZoomController::UpdateAnimation(
   TimeDuration sampleTimeDelta = aSampleTime - mLastSampleTime;
   mLastSampleTime = aSampleTime;
 
-  // Bump the scroll generation before we call RequestContentRepaint below
-  // so that the RequestContentRepaint call will surely use the new
-  // generation.
-  if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
-    mScrollGeneration = treeManagerLocal->NewAPZScrollGeneration();
+  if (needComposite || mAnimation) {
+    // Bump the scroll generation before we call RequestContentRepaint below
+    // so that the RequestContentRepaint call will surely use the new
+    // generation.
+    if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
+      mScrollGeneration = treeManagerLocal->NewAPZScrollGeneration();
+    }
   }
 
   if (mAnimation) {
