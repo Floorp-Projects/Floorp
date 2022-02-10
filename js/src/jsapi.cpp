@@ -2182,7 +2182,7 @@ JS_PUBLIC_API JSFunction* JS::NewFunctionFromSpec(JSContext* cx,
                id);
   } else {
     MOZ_ASSERT(id.isString() &&
-               StringEqualsAscii(JSID_TO_LINEAR_STRING(id), fs->name.string()));
+               StringEqualsAscii(id.toLinearString(), fs->name.string()));
   }
 #endif
 
