@@ -79,6 +79,15 @@ fission:
             extra-options:
                 - "--setpref=fission.autostart=true"
 
+no-fission:
+    description: "{description} without fission enabled"
+    contact: jmaher
+    suffix: "nofis"
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=fission.autostart=false"
+
 fission-xorigin:
     description: "{description} with cross-origin and fission enabled"
     contact: cpeterson
