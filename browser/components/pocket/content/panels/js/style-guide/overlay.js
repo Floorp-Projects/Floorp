@@ -21,6 +21,12 @@ StyleGuideOverlay.prototype = {
         <Button style="primary">Primary Button</Button>
         <br />
         <Button style="secondary">Secondary Button</Button>
+        <span className="stp_button_wide">
+          <Button style="primary">Primary Wide Button</Button>
+        </span>
+        <span className="stp_button_wide">
+          <Button style="secondary">Secondary Wide Button</Button>
+        </span>
         <h4 className="stp_styleguide_h4">Header</h4>
         <Header>
           <Button style="primary">View My List</Button>
@@ -65,6 +71,13 @@ StyleGuideOverlay.prototype = {
             },
           ]}
         />
+        <h3>Typography:</h3>
+        <h2 className="header_large">.header_large</h2>
+        <h3 className="header_medium">.header_medium</h3>
+        <p>paragraph</p>
+        <h3>Native Elements:</h3>
+        <h4 className="stp_styleguide_h4">Horizontal Rule</h4>
+        <hr />
       </div>,
       document.querySelector(`#stp_style_guide_components`)
     );
