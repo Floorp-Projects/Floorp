@@ -424,7 +424,7 @@ update-application-title = { -brand-short-name } Updates
 
 update-application-description = Keep { -brand-short-name } up to date for the best performance, stability, and security.
 
-update-application-version = Version 8.2.3 <a data-l10n-name="learn-more">What’s new</a>
+update-application-version = Version { $version } <a data-l10n-name="learn-more">What’s new</a>
 
 update-history =
     .label = Show Update History…
