@@ -18,6 +18,9 @@ function getFirefoxExecutableFilename() {
   if (AppConstants.platform === "win") {
     return AppConstants.MOZ_APP_NAME + ".exe";
   }
+  if (AppConstants.platform == "linux") {
+    return AppConstants.MOZ_APP_NAME + "-bin";
+  }
   return AppConstants.MOZ_APP_NAME;
 }
 
