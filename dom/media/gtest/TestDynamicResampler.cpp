@@ -1274,7 +1274,7 @@ TEST(TestAudioResampler, ChannelChange_QuadToStereo)
   uint32_t in_rate = 24000;
   uint32_t out_rate = 48000;
 
-  AudioResampler dr(in_rate, out_rate);
+  AudioResampler dr(in_rate, out_rate, 0);
 
   AudioChunk stereoChunk =
       CreateAudioChunk<float>(in_frames, 2, AUDIO_FORMAT_FLOAT32);
@@ -1314,7 +1314,7 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity)
 
   uint32_t in_frames = in_rate / 100;
   uint32_t out_frames = out_rate / 100;
-  AudioResampler dr(in_rate, out_rate);
+  AudioResampler dr(in_rate, out_rate, 0);
 
   AudioChunk monoChunk =
       CreateAudioChunk<float>(in_frames, 1, AUDIO_FORMAT_FLOAT32);
