@@ -17,15 +17,11 @@ class nsMimeType;
 class nsPluginElement;
 
 /**
- * Array class backing HTML's navigator.mimeTypes.  This always holds
- * references to the hard-coded set of PDF MIME types defined by HTML but it
- * only consults them if "pdfjs.disabled" is false.  There is never more
- * than one of these per DOM window.
+ * Array class backing HTML's navigator.mimeTypes.  This array is always empty.
  */
 class nsMimeTypeArray final : public nsISupports, public nsWrapperCache {
  public:
-  nsMimeTypeArray(nsPIDOMWindowInner* aWindow,
-                  const mozilla::Array<RefPtr<nsMimeType>, 2>& aMimeTypes);
+  explicit nsMimeTypeArray(nsPIDOMWindowInner* aWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsMimeTypeArray)
@@ -35,82 +31,69 @@ class nsMimeTypeArray final : public nsISupports, public nsWrapperCache {
                                JS::Handle<JSObject*> aGivenProto) override;
 
   // MimeTypeArray WebIDL methods
-  uint32_t Length() {
-    return PdfViewerDisabled() ? 0 : ArrayLength(mMimeTypes);
+  nsMimeType* Item(uint32_t index) { return nullptr; }
+
+  nsMimeType* NamedItem(const nsAString& name) { return nullptr; }
+
+  nsMimeType* IndexedGetter(uint32_t index, bool& found) { return nullptr; }
+
+  nsMimeType* NamedGetter(const nsAString& name, bool& found) {
+    return nullptr;
   }
 
-  nsMimeType* Item(uint32_t aIndex) {
-    bool unused;
-    return IndexedGetter(aIndex, unused);
-  }
+  uint32_t Length() { return 0; }
 
-  nsMimeType* NamedItem(const nsAString& aName) {
-    bool unused;
-    return NamedGetter(aName, unused);
-  }
-
-  nsMimeType* IndexedGetter(uint32_t index, bool& found);
-
-  nsMimeType* NamedGetter(const nsAString& name, bool& found);
-
-  void GetSupportedNames(nsTArray<nsString>& retval);
+  void GetSupportedNames(nsTArray<nsString>& retval) {}
 
  protected:
   virtual ~nsMimeTypeArray();
 
-  static bool PdfViewerDisabled();
-
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  mozilla::Array<RefPtr<nsMimeType>, 2> mMimeTypes;
 };
 
 /**
- * Mime type class backing entries in HTML's navigator.mimeTypes array.  There
- * is a fixed set of these, as defined by HTML.
+ * Mime type class backing entries in HTML's navigator.mimeTypes array.
+ * Currently, these cannot be constructed.
  */
 class nsMimeType final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsMimeType)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsMimeType)
 
-  nsMimeType(nsPluginElement* aPluginElement, const nsAString& aName);
+  // Never constructed.
+  nsMimeType() = delete;
 
-  nsPluginElement* GetParentObject() const { return mPluginElement; }
+  nsPIDOMWindowInner* GetParentObject() const {
+    MOZ_ASSERT_UNREACHABLE("nsMimeType can not exist");
+    return nullptr;
+  }
 
   virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+                               JS::Handle<JSObject*> aGivenProto) override {
+    MOZ_ASSERT_UNREACHABLE("nsMimeType can not exist");
+    return nullptr;
+  }
 
   // MimeType WebIDL methods
-  void GetDescription(mozilla::dom::DOMString& retval) const {
-    retval.SetKnownLiveString(kMimeDescription);
+  void GetDescription(nsString& retval) const {
+    MOZ_ASSERT_UNREACHABLE("nsMimeType can not exist");
   }
 
-  already_AddRefed<nsPluginElement> EnabledPlugin() const {
-    return do_AddRef(mPluginElement);
+  nsPluginElement* GetEnabledPlugin() const {
+    MOZ_ASSERT_UNREACHABLE("nsMimeType can not exist");
+    return nullptr;
   }
 
-  void GetSuffixes(mozilla::dom::DOMString& retval) const {
-    retval.SetKnownLiveString(kMimeSuffix);
+  void GetSuffixes(nsString& retval) const {
+    MOZ_ASSERT_UNREACHABLE("nsMimeType can not exist");
   }
 
-  void GetType(nsString& retval) const { retval = mName; }
-  const nsString& Name() const { return mName; }
+  void GetType(nsString& retval) const {
+    MOZ_ASSERT_UNREACHABLE("nsMimeType can not exist");
+  }
 
  protected:
-  virtual ~nsMimeType();
-
-  static constexpr nsLiteralString kMimeDescription =
-      u"Portable Document Format"_ns;
-  static constexpr nsLiteralString kMimeSuffix = u"pdf"_ns;
-
-  // Note that this creates an explicit reference cycle:
-  //
-  // nsMimeType -> nsPluginElement -> nsPluginArray ->
-  //    nsMimeTypeArray -> nsMimeType
-  //
-  // We rely on the cycle collector to break this cycle.
-  RefPtr<nsPluginElement> mPluginElement;
-  nsString mName;
+  virtual ~nsMimeType() = default;
 };
 
 #endif /* nsMimeTypeArray_h___ */
