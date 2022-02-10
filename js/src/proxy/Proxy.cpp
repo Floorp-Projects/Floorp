@@ -131,7 +131,7 @@ void js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext* cx,
     return;
   }
 
-  if (JSID_IS_VOID(id)) {
+  if (id.isVoid()) {
     ReportAccessDenied(cx);
   } else {
     Throw(cx, id, JSMSG_PROPERTY_ACCESS_DENIED);

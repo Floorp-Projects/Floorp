@@ -143,12 +143,12 @@ inline bool IndexToId(JSContext* cx, uint32_t index, MutableHandleId idp) {
 }
 
 static MOZ_ALWAYS_INLINE JSLinearString* IdToString(JSContext* cx, jsid id) {
-  if (JSID_IS_STRING(id)) {
+  if (id.isString()) {
     return id.toAtom();
   }
 
-  if (MOZ_LIKELY(JSID_IS_INT(id))) {
-    return Int32ToString<CanGC>(cx, JSID_TO_INT(id));
+  if (MOZ_LIKELY(id.isInt())) {
+    return Int32ToString<CanGC>(cx, id.toInt());
   }
 
   RootedValue idv(cx, IdToValue(id));

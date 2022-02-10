@@ -116,9 +116,9 @@ bool RemoteOuterWindowProxy::getOwnPropertyDescriptor(
   // that are same-origin with their original principal and won't reach this
   // code in the cases when "print" should be accessible.
 
-  if (JSID_IS_STRING(aId)) {
+  if (aId.isString()) {
     nsAutoJSString str;
-    if (!str.init(aCx, JSID_TO_STRING(aId))) {
+    if (!str.init(aCx, aId.toString())) {
       return false;
     }
 
