@@ -23,6 +23,8 @@ DIRS += [
     "superdrag",
     "tab-s",
     "notify",
+    "floorp-protector",
+    "gesturefy",
 ]
 
 if CONFIG["NIGHTLY_BUILD"]:
