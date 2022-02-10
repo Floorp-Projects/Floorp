@@ -1179,6 +1179,13 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
 // Subclass hook for style post processing
 /* virtual */
 void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
+#ifdef ACCESSIBILITY
+  if (nsAccessibilityService* accService = GetAccService()) {
+    // Notify for all frames, including those that will be reconstructed
+    accService->NotifyOfComputedStyleChange(PresShell(), mContent);
+  }
+#endif
+
   MaybeScheduleReflowSVGNonDisplayText(this);
 
   Document* doc = PresContext()->Document();

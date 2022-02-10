@@ -6,6 +6,7 @@
 #ifndef _LocalAccessible_H_
 #define _LocalAccessible_H_
 
+#include "mozilla/ComputedStyle.h"
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/AccTypes.h"
 #include "mozilla/a11y/RelationType.h"
@@ -790,6 +791,8 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   void SendCache(uint64_t aCacheDomain, CacheUpdateType aUpdate);
 
+  void MaybeQueueCacheUpdateForStyleChanges();
+
   virtual nsAtom* TagName() const override;
 
  protected:
@@ -987,6 +990,21 @@ class LocalAccessible : public nsISupports, public Accessible {
   nsTArray<LocalAccessible*> mChildren;
   int32_t mIndexInParent;
   Maybe<nsRect> mBounds;
+
+  /**
+   * Maintain a reference to the ComputedStyle of our frame so we can
+   * send cache updates when style changes are observed.
+   *
+   * This RefPtr is initialised in BundleFieldsForCache to the ComputedStyle
+   * for our initial frame.
+   * When a style change is observed in DidSetComputedStyle we call into
+   * MaybeQueueCacheUpdateForStyleChanges. There, we compare a11y-relevant
+   * properties in mOldComputedStyle with the current ComputedStyle fetched
+   * from GetFrame()->Style(). Finally, we send cache updates for attributes
+   * affected by the style change and update mOldComputedStyle to the style of
+   * our current frame.
+   */
+  RefPtr<const ComputedStyle> mOldComputedStyle;
 
   static const uint8_t kStateFlagsBits = 11;
   static const uint8_t kContextFlagsBits = 3;
