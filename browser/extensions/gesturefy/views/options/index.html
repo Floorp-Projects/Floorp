@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Gesturefy</title>
+  <link rel="icon" type="image/png" href="/resources/img/iconx32.png" sizes="16x16">
+  <link rel="stylesheet" href="/views/options/layout.css">
+  <link rel="stylesheet" id="Theme">
+
+  <script src="/views/options/components/command-select/main.mjs" type="module"></script>
+  <script src="/views/options/components/command-multi-select/main.mjs" type="module"></script>
+  <script src="/views/options/components/popup-box/main.mjs" type="module"></script>
+  <script src="/views/options/components/color-picker/main.mjs" type="module"></script>
+
+  <script src="/views/options/main.mjs" type="module"></script>
+  <script src="/views/options/gestures.mjs" type="module"></script>
+  <script src="/views/options/exclusions.mjs" type="module"></script>
+  <script src="/views/options/data-management.mjs" type="module"></script>
+</head>
+
+<body>
+  <div id ="Sidebar">
+    <img class="logo" src="/resources/img/iconx96.png">
+    <ul class="navigation">
+      <li class="nav-item">
+        <a href="#Gestures">
+          <span class="nav-item-symbol icon-arrows"></span>
+          <span class="nav-item-label" data-i18n="navigationGestures"></span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#Settings">
+          <span class="nav-item-symbol icon-gear"></span>
+          <span class="nav-item-label" data-i18n="navigationSettings"></span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#Extras">
+          <span class="nav-item-symbol icon-star"></span>
+          <span class="nav-item-label" data-i18n="navigationExtras"></span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#Exclusions">
+          <span class="nav-item-symbol icon-list"></span>
+          <span class="nav-item-label" data-i18n="navigationExclusions"></span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#About">
+          <span class="nav-item-symbol icon-info"></span>
+          <span class="nav-item-label" data-i18n="navigationAbout"></span>
+        </a>
+      </li>
+    </ul>
+
+    <form id="themeSwitch">
+      <input type="radio" class="theme-button theme-light" name="theme" value="light" data-config="Settings.General.theme">
+      <input type="radio" class="theme-button theme-dark" name="theme" value="dark" data-config="Settings.General.theme">
+      <input type="radio" class="theme-button theme-high-contrast" name="theme" value="highContrast" data-config="Settings.General.theme">
+    </form>
+  </div>
+
+  <div id="Content">
+    <div class="content" data-include="/views/options/fragments/gestures.inc" id="Gestures"></div>
+    <div class="content" data-include="/views/options/fragments/settings.inc" id="Settings"></div>
+    <div class="content" data-include="/views/options/fragments/extras.inc" id="Extras"></div>
+    <div class="content" data-include="/views/options/fragments/exclusions.inc" id="Exclusions"></div>
+    <div class="content" data-include="/views/options/fragments/about.inc" id="About"></div>
+  </div>
+</body>
+</html>

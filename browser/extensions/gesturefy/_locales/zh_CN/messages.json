@@ -1,0 +1,1612 @@
+{
+  "extensionDescription": {
+    "message": "具有大量自定义功能的鼠标手势扩展，令浏览和操作更加便捷迅速。",
+    "description": "Navigate, operate, and browse faster with mouse gestures! A customizable mouse gesture add-on with a variety of different commands."
+  },
+  "addonUpdateNotificationTitle": {
+    "message": "$NAME$ 已完成更新！",
+    "description": "Gesturefy add-on has been updated!",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Gesturefy"
+      }
+    }
+  },
+  "addonUpdateNotificationMessage": {
+    "message": "新版本号为 $VERSION$。点击此处查阅更新日志。",
+    "description": "The new version number is $VERSION$. Click here to view the changelog.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "1.0.1"
+      }
+    }
+  },
+  "navigationSettings": {
+    "message": "设置",
+    "description": "Settings"
+  },
+  "navigationGestures": {
+    "message": "手势",
+    "description": "Gestures"
+  },
+  "navigationExtras": {
+    "message": "其他",
+    "description": "Extras"
+  },
+  "navigationExclusions": {
+    "message": "排除项",
+    "description": "Exclusions"
+  },
+  "navigationAbout": {
+    "message": "关于",
+    "description": "About"
+  },
+  "settingLabelMouseButton": {
+    "message": "启动按键",
+    "description": "Activation button"
+  },
+  "settingLabelMouseButtonLeft": {
+    "message": "左键",
+    "description": "left"
+  },
+  "settingLabelMouseButtonRight": {
+    "message": "右键",
+    "description": "right"
+  },
+  "settingLabelMouseButtonMiddle": {
+    "message": "中键",
+    "description": "middle"
+  },
+  "settingLabelMatchingAlgorithm": {
+    "message": "匹配算法",
+    "description": "Matching algorithm"
+  },
+  "settingLabelMatchingAlgorithmCombined": {
+    "message": "合并",
+    "description": "Combined"
+  },
+  "settingLabelMatchingAlgorithmStrict": {
+    "message": "严格",
+    "description": "Strict"
+  },
+  "settingLabelMatchingAlgorithmShapeIndependent": {
+    "message": "不要求形状",
+    "description": "Shape-Independent"
+  },
+  "settingLabelTimeoutActive": {
+    "message": "停留取消",
+    "description": "Activate idle timeout"
+  },
+  "settingLabelTimeoutDuration": {
+    "message": "时长",
+    "description": "Duration"
+  },
+  "settingLabelSuppressionKey": {
+    "message": "取消按键",
+    "description": "Deactivation key"
+  },
+  "settingLabelNoneKey": {
+    "message": "无",
+    "description": "None"
+  },
+  "settingLabelAltKey": {
+    "message": "Alt",
+    "description": "Alt"
+  },
+  "settingLabelCtrlKey": {
+    "message": "Ctrl",
+    "description": "Ctrl"
+  },
+  "settingLabelShiftKey": {
+    "message": "Shift",
+    "description": "Shift"
+  },
+  "settingLabelAdvancedSettings": {
+    "message": "高级设置",
+    "description": "Advanced settings"
+  },
+  "settingLabelDistanceThreshold": {
+    "message": "触发长度",
+    "description": "Distance threshold"
+  },
+  "settingLabelDeviationTolerance": {
+    "message": "偏差宽容度",
+    "description": "Deviation tolerance"
+  },
+  "settingLabelDisplayTrace": {
+    "message": "显示手势路径",
+    "description": "Display gesture trace"
+  },
+  "settingLabelTraceColor": {
+    "message": "线条颜色",
+    "description": "Line color"
+  },
+  "settingLabelTraceWidth": {
+    "message": "线条宽度",
+    "description": "Line width"
+  },
+  "settingLabelTraceGrowth": {
+    "message": "线条增粗",
+    "description": "Line growth"
+  },
+  "settingLabelDisplayCommand": {
+    "message": "显示命令",
+    "description": "Display command"
+  },
+  "settingLabelCommandFontColor": {
+    "message": "字体颜色",
+    "description": "Font color"
+  },
+  "settingLabelCommandBackgroundColor": {
+    "message": "背景颜色",
+    "description": "Background color"
+  },
+  "settingLabelCommandFontSize": {
+    "message": "字体大小",
+    "description": "Font size"
+  },
+  "settingLabelCommandHorizontalPosition": {
+    "message": "水平位置",
+    "description": "Horizontal position"
+  },
+  "settingLabelCommandVerticalPosition": {
+    "message": "竖直位置",
+    "description": "Vertical position"
+  },
+  "settingLabelUpdateNotification": {
+    "message": "显示更新通知",
+    "description": "Display update notification"
+  },
+  "settingDescriptionMouseButton": {
+    "message": "按住该按键时，开始记录鼠标手势",
+    "description": "Captures a new mouse gesture while the button is held down."
+  },
+  "settingDescriptionMatchingAlgorithm": {
+    "message": "比较并匹配鼠标手势的方式。",
+    "description": "Determines how the gestures are compared to find the best matching gesture."
+  },
+  "settingDescriptionMatchingAlgorithmLink": {
+    "message": "点击了解差异",
+    "description": "Learn about the differences here"
+  },
+  "settingDescriptionTimeoutActive": {
+    "message": "鼠标停留不动一段时间后，取消手势",
+    "description": "Cancels the gesture after the mouse has not been moved for the specified time."
+  },
+  "settingDescriptionTimeoutDuration": {
+    "message": "取消手势需要停留的时间",
+    "description": "The duration in seconds until the gesture is cancelled."
+  },
+  "settingDescriptionSuppressionKey": {
+    "message": "当按下修改键时，阻止手势触发。",
+    "description": "Prevents a gesture from being triggered while the modifier key is pressed."
+  },
+  "settingDescriptionDistanceThreshold": {
+    "message": "至少需要划动该长度才会触发手势",
+    "description": "The minimum distance the mouse must be moved until the start of a gesture is recognized."
+  },
+  "settingDescriptionDeviationTolerance": {
+    "message": "识别手势时容许的偏差度",
+    "description": "The permissible gesture deviation that should still be recognized as a match."
+  },
+  "settingDescriptionDisplayTrace": {
+    "message": "显示鼠标移动的轨迹",
+    "description": "Displays a trace along the mouse movement."
+  },
+  "settingDescriptionTraceGrowth": {
+    "message": "开启时，轨迹线条由细到粗；关闭时，轨迹线条粗细不变",
+    "description": "Determines if the line thickness should grow."
+  },
+  "settingDescriptionDisplayCommand": {
+    "message": "如果识别到手势匹配的命令，显示在屏幕上",
+    "description": "Displays the command of the currently matching gesture if available."
+  },
+  "settingDescriptionCommandFontSize": {
+    "message": "可以使用所有 CSS 单位：em、px、pt、%、vh 等",
+    "description": "Accepts every CSS Unit like: em, px, pt, %, vh etc."
+  },
+  "settingDescriptionCommandHorizontalPosition": {
+    "message": "在屏幕上的水平位置，0 (左) 到 100 (右)",
+    "description": "Horizontal screen position from 0 (left) to 100 (right)."
+  },
+  "settingDescriptionCommandVerticalPosition": {
+    "message": "在屏幕上的竖直位置，0 (上) 到 100 (下)",
+    "description": "Vertical screen position from 0 (top) to 100 (bottom)."
+  },
+  "settingDescriptionUpdateNotification": {
+    "message": "Gesturefy 更新后显示通知",
+    "description": "Shows a notification when Gesturefy is updated."
+  },
+  "gestureCreateNewButton": {
+    "message": "新建手势",
+    "description": "New Gesture"
+  },
+  "gestureSearchPlaceholder": {
+    "message": "搜索手势",
+    "description": "Search gestures"
+  },
+  "gestureHintNoSearchResults": {
+    "message": "没有找到结果",
+    "description": "No search results found"
+  },
+  "extraLabelRockerActive": {
+    "message": "左右连按",
+    "description": "Rocker gesture"
+  },
+  "extraLabelRockerRightMouseClick": {
+    "message": "鼠标右键",
+    "description": "Right mouse click"
+  },
+  "extraLabelRockerLeftMouseClick": {
+    "message": "鼠标左键",
+    "description": "Left mouse click"
+  },
+  "extraDescriptionRockerActive": {
+    "message": "按住鼠标右键，然后按左键，或者按住左键，然后按右键",
+    "description": "This gesture is performed either by holding the right mouse button and clicking the left or vice versa."
+  },
+  "extraLabelWheelActive": {
+    "message": "滚轮手势",
+    "description": "Wheel gesture"
+  },
+  "extraLabelWheelMouseButton": {
+    "message": "滚轮手势鼠标按键",
+    "description": "Wheel gesture mouse button"
+  },
+  "extraLabelWheelSensitivity": {
+    "message": "鼠标滚轮灵敏度",
+    "description": "Mouse wheel sensitivity"
+  },
+  "extraLabelWheelUp": {
+    "message": "向上滚动",
+    "description": "Wheel up"
+  },
+  "extraLabelWheelDown": {
+    "message": "向下滚动",
+    "description": "Wheel down"
+  },
+  "extraDescriptionWheelActive": {
+    "message": "按住手势按键，然后滑动滚轮",
+    "description": "Scroll up or down while holding the wheel gesture trigger button."
+  },
+  "extraDescriptionWheelMouseButton": {
+    "message": "触发滚轮手势的鼠标按键",
+    "description": "The mouse button which triggers the wheel gesture."
+  },
+  "extraDescriptionWheelSensitivity": {
+    "message": "鼠标滚轮触发手势的最小滚动量",
+    "description": "The minimal amount the mouse wheel must be scrolled until the gesture is triggered."
+  },
+  "exclusionsLabelInformation": {
+    "message": "提示：",
+    "description": "Information:"
+  },
+  "exclusionsTextInformation": {
+    "message": "添加网址（URL）匹配模式以在特定网站禁用 Gesturefy。在匹配模式中可以使用 \"*\" 通配符，格式必须为 <协议>://<域名><路径>。",
+    "description": "Add URL match patterns to disable Gesturefy for certain websites. The match pattern allows \"*\" wildcards and must be in the form of <scheme>://<host><path>."
+  },
+  "exclusionsPlaceholderURL": {
+    "message": "输入 URL 匹配模式",
+    "description": "Enter URL match pattern"
+  },
+  "exclusionsAddButton": {
+    "message": "添加",
+    "description": "Add"
+  },
+  "exclusionsNotificationAlreadyExists": {
+    "message": "URL 匹配模式已存在。",
+    "description": "URL pattern already exists."
+  },
+  "exclusionsHintNoEntries": {
+    "message": "暂无条目",
+    "description": "No entries available"
+  },
+  "aboutBackup": {
+    "message": "备份",
+    "description": "Backup"
+  },
+  "aboutRestore": {
+    "message": "还原",
+    "description": "Restore"
+  },
+  "aboutReset": {
+    "message": "重置",
+    "description": "Reset"
+  },
+  "aboutLicense": {
+    "message": "许可协议:",
+    "description": "License:"
+  },
+  "aboutContributors": {
+    "message": "贡献者:",
+    "description": "Contributors:"
+  },
+  "aboutLinkBug": {
+    "message": "反馈 Bug",
+    "description": "Report a bug"
+  },
+  "aboutLinkCode": {
+    "message": "源代码",
+    "description": "Source code"
+  },
+  "aboutLinkAddon": {
+    "message": "扩展页面",
+    "description": "Add-on page"
+  },
+  "aboutRestoreNotificationNoConfigFile": {
+    "message": "所选的文件不是有效的 Gesturefy 配置文件",
+    "description": "The selected file is not a valid Gesturefy config file."
+  },
+  "aboutRestoreNotificationWrongFile": {
+    "message": "所选文件与所需的文件类型不匹配",
+    "description": "The selected file does not match the required file type."
+  },
+  "aboutRestoreNotificationConfirm": {
+    "message": "将用选择的配置文件覆盖所有设置项（包括手势）",
+    "description": "All settings including gestures will be replaced by the selected config file."
+  },
+  "aboutRestoreNotificationSuccess": {
+    "message": "配置还原成功",
+    "description": "The selected config has been successfully restored."
+  },
+  "aboutResetNotificationConfirm": {
+    "message": "将重置所有设置（包括手势），该操作无法撤销！",
+    "description": "All settings including gestures will be reset. This cannot be undone!"
+  },
+  "commandLabelToggleBookmark": {
+    "message": "创建/删除书签",
+    "description": "Toggle bookmark"
+  },
+  "commandLabelDuplicateTab": {
+    "message": "克隆标签页",
+    "description": "Duplicate tab"
+  },
+  "commandLabelNewTab": {
+    "message": "新建标签页",
+    "description": "New tab"
+  },
+  "commandLabelReloadTab": {
+    "message": "重新载入标签页",
+    "description": "Reload tab"
+  },
+  "commandLabelReloadFrame": {
+    "message": "重新载入框架",
+    "description": "Reload frame"
+  },
+  "commandLabelStopLoading": {
+    "message": "停止加载",
+    "description": "Stop loading"
+  },
+  "commandLabelCloseTab": {
+    "message": "关闭标签页",
+    "description": "Close tab"
+  },
+  "commandLabelRestoreTab": {
+    "message": "还原标签页",
+    "description": "Restore tab"
+  },
+  "commandLabelZoomIn": {
+    "message": "放大",
+    "description": "Zoom in"
+  },
+  "commandLabelZoomOut": {
+    "message": "缩小",
+    "description": "Zoom out"
+  },
+  "commandLabelZoomReset": {
+    "message": "重置缩放",
+    "description": "Zoom reset"
+  },
+  "commandLabelPageBack": {
+    "message": "后退",
+    "description": "Page back"
+  },
+  "commandLabelPageForth": {
+    "message": "前进",
+    "description": "Page forward"
+  },
+  "commandLabelTogglePin": {
+    "message": "固定/取消固定标签页",
+    "description": "Toggle pinned tab"
+  },
+  "commandLabelToggleMute": {
+    "message": "静音/取消静音标签页",
+    "description": "Toggle mute"
+  },
+  "commandLabelToggleReaderMode": {
+    "message": "打开/关闭阅读模式",
+    "description": "Toggle reader mode"
+  },
+  "commandLabelScrollTop": {
+    "message": "滚动到顶部",
+    "description": "Scroll to the top"
+  },
+  "commandLabelScrollBottom": {
+    "message": "滚动到底部",
+    "description": "Scroll to the bottom"
+  },
+  "commandLabelScrollPageDown": {
+    "message": "向下滚动页面",
+    "description": "Scroll page down"
+  },
+  "commandLabelScrollPageUp": {
+    "message": "向上滚动页面",
+    "description": "Scroll page up"
+  },
+  "commandLabelFocusRightTab": {
+    "message": "转至右侧标签页",
+    "description": "Focus right tab"
+  },
+  "commandLabelFocusLeftTab": {
+    "message": "转至左侧标签页",
+    "description": "Focus left tab"
+  },
+  "commandLabelFocusFirstTab": {
+    "message": "转至第一个标签页",
+    "description": "Focus first tab"
+  },
+  "commandLabelFocusLastTab": {
+    "message": "转至最后一个标签页",
+    "description": "Focus last tab"
+  },
+  "commandLabelFocusPreviousSelectedTab": {
+    "message": "转至上一个选中的标签页",
+    "description": "Focus previous selected tab"
+  },
+  "commandLabelMaximizeWindow": {
+    "message": "最大化窗口",
+    "description": "Maximize window"
+  },
+  "commandLabelMinimizeWindow": {
+    "message": "最小化窗口",
+    "description": "Minimize window"
+  },
+  "commandLabelToggleWindowSize": {
+    "message": "最大化/还原窗口",
+    "description": "Toggle window size"
+  },
+  "commandLabelToggleFullscreen": {
+    "message": "进入/退出全屏",
+    "description": "Toggle full screen"
+  },
+  "commandLabelNewWindow": {
+    "message": "新建窗口",
+    "description": "New window"
+  },
+  "commandLabelNewPrivateWindow": {
+    "message": "新建隐私浏览窗口",
+    "description": "New private window"
+  },
+  "commandLabelMoveTabToStart": {
+    "message": "移动标签页到开头",
+    "description": "Move tab to start"
+  },
+  "commandLabelMoveTabToEnd": {
+    "message": "移动标签页到末尾",
+    "description": "Move tab to end"
+  },
+  "commandLabelMoveTabToNewWindow": {
+    "message": "移动标签页到新窗口",
+    "description": "Move tab to new window"
+  },
+  "commandLabelMoveLeftTabsToNewWindow": {
+    "message": "移动左侧标签页到新窗口",
+    "description": "Move left tabs to new window"
+  },
+  "commandLabelMoveRightTabsToNewWindow": {
+    "message": "移动右侧标签页到新窗口",
+    "description": "Move right tabs to new window"
+  },
+  "commandLabelCloseWindow": {
+    "message": "关闭窗口",
+    "description": "Close window"
+  },
+  "commandLabelReloadAllTabs": {
+    "message": "全部重新载入",
+    "description": "Reload all"
+  },
+  "commandLabelToRootURL": {
+    "message": "转到根网址",
+    "description": "To root URL"
+  },
+  "commandLabelURLLevelUp": {
+    "message": "网址向上一层",
+    "description": "URL level up"
+  },
+  "commandLabelIncreaseURLNumber": {
+    "message": "增加 URL 数字",
+    "description": "Increase URL number"
+  },
+  "commandLabelDecreaseURLNumber": {
+    "message": "减少 URL 数字",
+    "description": "Decrease URL number"
+  },
+  "commandLabelOpenImageInNewTab": {
+    "message": "新建标签页打开图片",
+    "description": "Open image in new tab"
+  },
+  "commandLabelOpenLinkInNewTab": {
+    "message": "新建标签页打开链接",
+    "description": "Open link in new tab"
+  },
+  "commandLabelOpenLinkInNewWindow": {
+    "message": "新建窗口打开链接",
+    "description": "Open link in new window"
+  },
+  "commandLabelOpenLinkInNewPrivateWindow": {
+    "message": "新建隐私窗口打开链接",
+    "description": "Open link in new private window"
+  },
+  "commandLabelSearchTextSelection": {
+    "message": "搜索选中文本",
+    "description": "Search text selection"
+  },
+  "commandLabelSearchClipboard": {
+    "message": "搜索剪贴板",
+    "description": "Search clipboard"
+  },
+  "commandLabelSearchTextSelectionInNewTab": {
+    "message": "在新标签页中搜索选中文本",
+    "description": "Search text selection in new tab"
+  },
+  "commandLabelSearchClipboardInNewTab": {
+    "message": "在新标签页中搜索剪贴板内文本",
+    "description": "Search clipboard in new tab"
+  },
+  "commandLabelCloseRightTabs": {
+    "message": "关闭右侧标签页",
+    "description": "Close right tabs"
+  },
+  "commandLabelCloseLeftTabs": {
+    "message": "关闭左侧标签页",
+    "description": "Close left tabs"
+  },
+  "commandLabelCloseOtherTabs": {
+    "message": "关闭其他标签页",
+    "description": "Close other tabs"
+  },
+  "commandLabelSaveTabAsPDF": {
+    "message": "另存为 PDF",
+    "description": "Save as PDF"
+  },
+  "commandLabelSaveImage": {
+    "message": "保存图像",
+    "description": "Save image"
+  },
+  "commandLabelSaveLink": {
+    "message": "保存链接",
+    "description": "Save link"
+  },
+  "commandLabelPrintTab": {
+    "message": "打印",
+    "description": "Print"
+  },
+  "commandLabelOpenPrintPreview": {
+    "message": "打印预览",
+    "description": "Print preview"
+  },
+  "commandLabelOpenHomepage": {
+    "message": "打开主页",
+    "description": "Open homepage"
+  },
+  "commandLabelOpenCustomURLInNewTab": {
+    "message": "新建标签页打开自定义网址",
+    "description": "Open custom URL in new tab"
+  },
+  "commandLabelOpenCustomURL": {
+    "message": "打开自定义网址",
+    "description": "Open custom URL"
+  },
+  "commandLabelPasteClipboard": {
+    "message": "粘贴剪贴板",
+    "description": "Paste clipboard"
+  },
+  "commandLabelOpenURLFromClipboard": {
+    "message": "打开剪贴板中的网址",
+    "description": "Open URL from clipboard"
+  },
+  "commandLabelOpenURLFromClipboardInNewTab": {
+    "message": "新建标签页打开剪贴板中的网址",
+    "description": "Open URL from clipboard in new tab"
+  },
+  "commandLabelOpenURLFromClipboardInNewWindow": {
+    "message": "新建窗口打开剪贴板中的网址",
+    "description": "Open URL from clipboard in new window"
+  },
+  "commandLabelOpenURLFromClipboardInNewPrivateWindow": {
+    "message": "新建隐私窗口打开剪贴板中的网址",
+    "description": "Open URL from clipboard in new private window"
+  },
+  "commandLabelOpenAddonSettings": {
+    "message": "打开 Gesturefy 设置",
+    "description": "Open Gesturefy settings"
+  },
+  "commandLabelOpenLink": {
+    "message": "打开链接",
+    "description": "Open link"
+  },
+  "commandLabelViewImage": {
+    "message": "查看图像",
+    "description": "View image"
+  },
+  "commandLabelLinkToNewBookmark": {
+    "message": "链接至书签",
+    "description": "Link to bookmark"
+  },
+  "commandLabelSaveScreenshot": {
+    "message": "保存屏幕截图",
+    "description": "Save screenshot"
+  },
+  "commandLabelCopyTabURL": {
+    "message": "复制标签页网址",
+    "description": "Copy tab URL"
+  },
+  "commandLabelCopyLinkURL": {
+    "message": "复制链接网址",
+    "description": "Copy link URL"
+  },
+  "commandLabelCopyImageURL": {
+    "message": "复制图像地址",
+    "description": "Copy image URL"
+  },
+  "commandLabelCopyTextSelection": {
+    "message": "复制选中文本",
+    "description": "Copy text selection"
+  },
+  "commandLabelCopyImage": {
+    "message": "复制图像",
+    "description": "Copy image"
+  },
+  "commandLabelViewPageSourceCode": {
+    "message": "查看页面源代码",
+    "description": "View page source"
+  },
+  "commandLabelPopupAllTabs": {
+    "message": "[弹出菜单] 所有标签页",
+    "description": "[Popup] All tabs"
+  },
+  "commandLabelPopupRecentlyClosedTabs": {
+    "message": "[弹出菜单] 最近关闭的标签页",
+    "description": "[Popup] Recently closed tabs"
+  },
+  "commandLabelPopupSearchEngines": {
+    "message": "[弹出菜单] 搜索引擎",
+    "description": "[Popup] Search engines"
+  },
+  "commandLabelPopupCustomCommandList": {
+    "message": "[Popup] 自定义命令列表",
+    "description": "[Popup] Custom command list"
+  },
+  "commandLabelSendMessageToOtherAddon": {
+    "message": "发送消息到其他附加组件",
+    "description": "Send message to other add-on"
+  },
+  "commandLabelExecuteUserScript": {
+    "message": "执行用户脚本",
+    "description": "Execute user script"
+  },
+  "commandLabelClearBrowsingData": {
+    "message": "清理浏览数据",
+    "description": "Clear browsing data"
+  },
+  "commandLabelRunMultiPurposeCommand": {
+    "message": "运行多目的命令",
+    "description": "Run multi purpose command"
+  },
+  "commandDescriptionToggleBookmark": {
+    "message": "添加或移除一个书签。",
+    "description": "Adds or removes a bookmark."
+  },
+  "commandDescriptionDuplicateTab": {
+    "message": "克隆当前的标签页。",
+    "description": "Duplicates the current tab."
+  },
+  "commandDescriptionNewTab": {
+    "message": "新建一个标签页。",
+    "description": "Opens a new tab."
+  },
+  "commandDescriptionReloadTab": {
+    "message": "重新载入当前页面。",
+    "description": "Reloads the current page."
+  },
+  "commandDescriptionReloadFrame": {
+    "message": "重新载入手势起始点的框架。",
+    "description": "Reloads the frame on which the gesture started."
+  },
+  "commandDescriptionStopLoading": {
+    "message": "停止加载当前页面。",
+    "description": "Stops the current page from loading."
+  },
+  "commandDescriptionCloseTab": {
+    "message": "关闭当前标签页",
+    "description": "Closes the current tab."
+  },
+  "commandDescriptionRestoreTab": {
+    "message": "还原上一个被关闭的标签页。",
+    "description": "Restores the last closed tab."
+  },
+  "commandDescriptionZoomIn": {
+    "message": "放大当前标签页的内容。",
+    "description": "Zooms into the current tab."
+  },
+  "commandDescriptionZoomOut": {
+    "message": "缩小当前标签页的内容。",
+    "description": "Zooms out of the current tab."
+  },
+  "commandDescriptionZoomReset": {
+    "message": "重置当前标签页的缩放级别。",
+    "description": "Resets the current zoom level."
+  },
+  "commandDescriptionPageBack": {
+    "message": "返回历史记录中的上一个页面。",
+    "description": "Returns to the previous page of the history."
+  },
+  "commandDescriptionPageForth": {
+    "message": "返回历史记录中的下一个页面。",
+    "description": "Goes a page forward in the history."
+  },
+  "commandDescriptionTogglePin": {
+    "message": "固定或取消固定当前标签页。",
+    "description": "Pins or unpins the current Tab."
+  },
+  "commandDescriptionToggleMute": {
+    "message": "静音或取消静音当前标签页。",
+    "description": "Mutes or unmutes the current tab."
+  },
+  "commandDescriptionToggleReaderMode": {
+    "message": "打开或关闭阅读器（如果可用）",
+    "description": "Activates or deactivates the reader view if available."
+  },
+  "commandDescriptionScrollTop": {
+    "message": "跳至页面顶部。",
+    "description": "Scrolls to the top of the page."
+  },
+  "commandDescriptionScrollBottom": {
+    "message": "跳至页面底部。",
+    "description": "Scrolls to the bottom of the page."
+  },
+  "commandDescriptionScrollPageDown": {
+    "message": "向下滚动当前视窗的长度。",
+    "description": "Scrolls down by the length of the current view."
+  },
+  "commandDescriptionScrollPageUp": {
+    "message": "向上滚动当前视窗的长度",
+    "description": "Scrolls up by the length of the current view."
+  },
+  "commandDescriptionFocusRightTab": {
+    "message": "切换到当前标签页右侧的标签页。",
+    "description": "Switches to the right tab of the current tab."
+  },
+  "commandDescriptionFocusLeftTab": {
+    "message": "切换到当前标签页左侧的标签页。",
+    "description": "Switches to the left tab of the current tab."
+  },
+  "commandDescriptionFocusFirstTab": {
+    "message": "切换到最左侧的标签页。",
+    "description": "Switches to the far left tab."
+  },
+  "commandDescriptionFocusLastTab": {
+    "message": "切换到最右侧的标签页。",
+    "description": "Switches to the far right tab."
+  },
+  "commandDescriptionFocusPreviousSelectedTab": {
+    "message": "切换到上一个活动标签页。",
+    "description": "Switches to the last active tab."
+  },
+  "commandDescriptionMaximizeWindow": {
+    "message": "最大化当前窗口。",
+    "description": "Maximizes the current window."
+  },
+  "commandDescriptionMinimizeWindow": {
+    "message": "最小化当前窗口。",
+    "description": "Minimizes the current window."
+  },
+  "commandDescriptionToggleWindowSize": {
+    "message": "切换最大化与正常的窗口大小。",
+    "description": "Switches between maximized and normal window size."
+  },
+  "commandDescriptionToggleFullscreen": {
+    "message": "激活或停用全屏模式。",
+    "description": "Activates or deactivates full screen mode."
+  },
+  "commandDescriptionNewWindow": {
+    "message": "新建一个空的窗口。",
+    "description": "Opens a new empty window."
+  },
+  "commandDescriptionNewPrivateWindow": {
+    "message": "新建一个空的隐私浏览窗口。",
+    "description": "Opens a new empty private window."
+  },
+  "commandDescriptionMoveTabToStart": {
+    "message": "移动当前标签页到标签栏的开头。",
+    "description": "Moves the current tab to the start of the tab strip."
+  },
+  "commandDescriptionMoveTabToEnd": {
+    "message": "移动当前标签页到标签栏的末尾。",
+    "description": "Moves the current tab to the end of the tab strip."
+  },
+  "commandDescriptionMoveTabToNewWindow": {
+    "message": "移动当前标签页到一个新窗口。",
+    "description": "Moves the current tab to a new window."
+  },
+  "commandDescriptionMoveLeftTabsToNewWindow": {
+    "message": "移动当前标签页左侧的所有标签页到一个新窗口。",
+    "description": "Moves all tabs to the left of the current tab to a new window."
+  },
+  "commandDescriptionMoveRightTabsToNewWindow": {
+    "message": "移动当前标签页右侧的所有标签页到一个新窗口。",
+    "description": "Moves all tabs to the right of the current tab to a new window."
+  },
+  "commandDescriptionCloseWindow": {
+    "message": "关闭当前窗口。",
+    "description": "Closes the current window."
+  },
+  "commandDescriptionReloadAllTabs": {
+    "message": "重新载入所有标签页。",
+    "description": "Reloads all tabs."
+  },
+  "commandDescriptionToRootURL": {
+    "message": "转到网站的主页",
+    "description": "Goes to the main page of the website."
+  },
+  "commandDescriptionURLLevelUp": {
+    "message": "当前网址的层次结构向上一层",
+    "description": "Goes up the URL hierarchy for one level."
+  },
+  "commandDescriptionIncreaseURLNumber": {
+    "message": "增加网址（URL）中的数字。",
+    "description": "Increases a number in the URL."
+  },
+  "commandDescriptionDecreaseURLNumber": {
+    "message": "减少网址（URL）中的数字。",
+    "description": "Decreases a number in the URL."
+  },
+  "commandDescriptionOpenImageInNewTab": {
+    "message": "新建标签页来打开手势起始点的图像。",
+    "description": "Opens the image on which the gesture started in a new tab."
+  },
+  "commandDescriptionOpenLinkInNewTab": {
+    "message": "新建标签页来打开选定的网址或手势起始点的链接。",
+    "description": "Opens either a selected url or the link on which the gesture started in a new tab."
+  },
+  "commandDescriptionOpenLinkInNewWindow": {
+    "message": "新建窗口来打开选定的网址或手势起始点的链接。",
+    "description": "Opens either a selected url or the link on which the gesture started in a new window."
+  },
+  "commandDescriptionOpenLinkInNewPrivateWindow": {
+    "message": "新建隐私窗口来打开选定的网址或手势起始点的链接。",
+    "description": "Opens either a selected url or the link on which the gesture started in a new private window."
+  },
+  "commandDescriptionSearchTextSelection": {
+    "message": "在当前标签页中网络搜索选中文本。",
+    "description": "Starts a web search of the selected text in the current tab."
+  },
+  "commandDescriptionSearchClipboard": {
+    "message": "在当前标签页中网络搜索剪贴板内文本。",
+    "description": "Starts a web search of the clipboard text in the current tab."
+  },
+  "commandDescriptionSearchTextSelectionInNewTab": {
+    "message": "在新标签页中网络搜索选中文本。",
+    "description": "Starts a web search of the selected text in a new tab."
+  },
+  "commandDescriptionSearchClipboardInNewTab": {
+    "message": "在新标签页中网络搜索剪贴板内文本。",
+    "description": "Starts a web search of the clipboard text in a new tab."
+  },
+  "commandDescriptionCloseRightTabs": {
+    "message": "关闭当前标签页右侧的所有标签页。",
+    "description": "Closes all tabs on the right side of the current tab."
+  },
+  "commandDescriptionCloseLeftTabs": {
+    "message": "关闭当前标签页左侧的所有标签页，但已固定的标签页除外。",
+    "description": "Closes all tabs on the left side of the current tab except the pinned tabs."
+  },
+  "commandDescriptionCloseOtherTabs": {
+    "message": "关闭所有标签页，当前标签页和固定标签页除外。",
+    "description": "Closes all tabs except of the current tab and pinned tabs."
+  },
+  "commandDescriptionSaveTabAsPDF": {
+    "message": "将当前页面另存为一个 PDF 文件。",
+    "description": "Saves the current page as a pdf file."
+  },
+  "commandDescriptionSaveImage": {
+    "message": "下载手势起始点的图像。",
+    "description": "Downloads the image on which the gesture started."
+  },
+  "commandDescriptionSaveLink": {
+    "message": "下载所选的网址或手势起始点的链接中的文件。",
+    "description": "Downloads either a selected url or the link on which the gesture started."
+  },
+  "commandDescriptionPrintTab": {
+    "message": "弹出打印对话框以打印当前页面。",
+    "description": "Prints the current page by prompting the print dialog."
+  },
+  "commandDescriptionOpenPrintPreview": {
+    "message": "对当前页面打开打印预览。",
+    "description": "Opens the print preview of the current page."
+  },
+  "commandDescriptionOpenHomepage": {
+    "message": "同主页按钮。",
+    "description": "Works like the homepage button."
+  },
+  "commandDescriptionOpenCustomURLInNewTab": {
+    "message": "新建一个标签页来打开指定的网址。",
+    "description": "Opens the specified URL in a new tab."
+  },
+  "commandDescriptionOpenCustomURL": {
+    "message": "在当前标签页来打开指定的网址。",
+    "description": "Opens the specified URL in the current tab."
+  },
+  "commandDescriptionPasteClipboard": {
+    "message": "将当前的剪贴板文本插入到手势起始点的输入元素中。",
+    "description": "Inserts the current clipboard text at the caret position of the input element on which the gesture started."
+  },
+  "commandDescriptionOpenURLFromClipboard": {
+    "message": "如果剪贴板中含有一个网址（URL），将会在当前标签页打开。",
+    "description": "If the clipboard contains a URL, it will be opened in the current tab."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewTab": {
+    "message": "如果剪贴板中含有一个网址（URL），将会新建标签页打开。",
+    "description": "If the clipboard contains a URL, it will be opened in a new tab."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewWindow": {
+    "message": "如果剪贴板中含有一个网址（URL），将会新建窗口打开。",
+    "description": "If the clipboard contains a URL, it will be opened in a new window."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewPrivateWindow": {
+    "message": "如果剪贴板中含有一个网址（URL），将会新建隐私窗口打开。",
+    "description": "If the clipboard contains a URL, it will be opened in a new private window."
+  },
+  "commandDescriptionOpenAddonSettings": {
+    "message": "打开 Gesturefy 设置页面。",
+    "description": "Opens the Gesturefy settings page."
+  },
+  "commandDescriptionOpenLink": {
+    "message": "打开所选的网址或手势起始点的链接中的文件。",
+    "description": "Opens either a selected url or the link on which the gesture started."
+  },
+  "commandDescriptionViewImage": {
+    "message": "打开手势起始点的图像。",
+    "description": "Opens the image on which the gesture started."
+  },
+  "commandDescriptionLinkToNewBookmark": {
+    "message": "将已选定的网址或手势起始点的链接添加为书签。",
+    "description": "Saves either a selected url or the link on which the gesture started as a bookmark."
+  },
+  "commandDescriptionSaveScreenshot": {
+    "message": "将当前查看的网站内容保存为一个图像。",
+    "description": "Saves the current visible website area as an image."
+  },
+  "commandDescriptionCopyTabURL": {
+    "message": "复制当前标签页的网址到剪贴板。",
+    "description": "Copies the URL of the current tab to clipboard."
+  },
+  "commandDescriptionCopyLinkURL": {
+    "message": "复制已选定的网址或手势起始点的链接到剪贴板。",
+    "description": "Copies either a selected url or the link on which the gesture started to clipboard."
+  },
+  "commandDescriptionCopyImageURL": {
+    "message": "复制手势起始点的图像地址到剪贴板。",
+    "description": "Copies the URL of the image on which the gesture started to clipboard."
+  },
+  "commandDescriptionCopyTextSelection": {
+    "message": "复制当前选中的文本到剪贴板。",
+    "description": "Copies the current text selection to clipboard."
+  },
+  "commandDescriptionCopyImage": {
+    "message": "复制手势起始点的图像到剪贴板。",
+    "description": "Copies the image on which the gesture started to clipboard."
+  },
+  "commandDescriptionViewPageSourceCode": {
+    "message": "新建页面打开当前页面的源代码。",
+    "description": "Opens a new tab containing the source code of the page."
+  },
+  "commandDescriptionPopupAllTabs": {
+    "message": "打开一个弹出窗口，其中列出了当前打开的所有标签页，并可切换到其中一个标签页。",
+    "description": "Opens a popup containing a list of all currently open tabs and offers the possibility to switch to one of them."
+  },
+  "commandDescriptionPopupRecentlyClosedTabs": {
+    "message": "打开一个弹出窗口，其中列出了最近关闭的标签页，并可恢复其中一个。",
+    "description": "Opens a popup containing a list of all recently closed tabs and offers the possibility to restore one of them."
+  },
+  "commandDescriptionPopupSearchEngines": {
+    "message": "打开一个弹出窗口，其中列出了已安装的搜索引擎，并可用其中一个搜索引擎搜索选中文本。",
+    "description": "Opens a popup containing a list of all installed search engines and offers the possibility to search the selected text with one of them."
+  },
+  "commandDescriptionPopupCustomCommandList": {
+    "message": "打开一个弹出窗口，其中包含一个自定义的多命令列表，并可从其中选择一个运行。",
+    "description": "Opens a popup containing a custom list of multiple commands and offers the possibility to run one of them."
+  },
+  "commandDescriptionSendMessageToOtherAddon": {
+    "message": "向另一个附加组件发送一个自定义消息。这可以调用其他附加组件的功能。",
+    "description": "Sends a custom message to another add-on. This allows the use of other add-ons functionality."
+  },
+  "commandDescriptionExecuteUserScript": {
+    "message": "在当前网页执行自定义的 JavaScript 代码",
+    "description": "Executes custom JavaScript code in the current webpage."
+  },
+  "commandDescriptionClearBrowsingData": {
+    "message": "删除指定的浏览数据",
+    "description": "Removes the specified browsing data."
+  },
+  "commandDescriptionRunMultiPurposeCommand": {
+    "message": "合并多个命令，并运行第一个符合其运行条件的命令。",
+    "description": "Combines multiple commands into one and executes the first command which runs successfully under the given context/conditions."
+  },
+  "commandSettingLabelNewTabPosition": {
+    "message": "新建标签页的位置",
+    "description": "New tab position"
+  },
+  "commandSettingLabelNewTabPositionDefault": {
+    "message": "默认",
+    "description": "default"
+  },
+  "commandSettingLabelNewTabPositionBefore": {
+    "message": "左侧",
+    "description": "before"
+  },
+  "commandSettingLabelNewTabPositionAfter": {
+    "message": "右侧",
+    "description": "after"
+  },
+  "commandSettingLabelNewTabPositionStart": {
+    "message": "开头",
+    "description": "start"
+  },
+  "commandSettingLabelNewTabPositionEnd": {
+    "message": "末尾",
+    "description": "end"
+  },
+  "commandSettingLabelNewTabFocus": {
+    "message": "显示新的标签页",
+    "description": "Focus new tab"
+  },
+  "commandSettingLabelTabNextFocus": {
+    "message": "下一个标签页",
+    "description": "Next tab"
+  },
+  "commandSettingLabelTabNextFocusDefault": {
+    "message": "默认",
+    "description": "default"
+  },
+  "commandSettingLabelTabNextFocusPrevious": {
+    "message": "上一个",
+    "description": "previous"
+  },
+  "commandSettingLabelTabNextFocusNext": {
+    "message": "下一个",
+    "description": "next"
+  },
+  "commandSettingLabelTabNextFocusRecently": {
+    "message": "上次使用",
+    "description": "last focused"
+  },
+  "commandSettingLabelTabClosePinned": {
+    "message": "关闭固定的标签页",
+    "description": "Close pinned tabs"
+  },
+  "commandSettingLabelRestoreCurrentWindow": {
+    "message": "仅当前窗口",
+    "description": "Current window only"
+  },
+  "commandSettingLabelReloadCache": {
+    "message": "重新载入 (跳过缓存)",
+    "description": "Reload cache"
+  },
+  "commandSettingLabelZoomStep": {
+    "message": "缩放步进",
+    "description": "Zoom step"
+  },
+  "commandSettingLabelScrollDuration": {
+    "message": "滚动用时",
+    "description": "Scroll duration"
+  },
+  "commandSettingLabelScrollProportion": {
+    "message": "滚动比例",
+    "description": "Scroll proportion"
+  },
+  "commandSettingLabelFocusIncludePinned": {
+    "message": "包含固定选项卡",
+    "description": "Include pinned tabs"
+  },
+  "commandSettingLabelTabCycling": {
+    "message": "循环标签页",
+    "description": "Tab cycling"
+  },
+  "commandSettingLabelExcludeDiscarded": {
+    "message": "排除未加载的标签页",
+    "description": "Exclude discarded tabs"
+  },
+  "commandSettingLabelOpenEmptyTab": {
+    "message": "打开空标签页",
+    "description": "Open empty tab"
+  },
+  "commandSettingLabelOpenEmptySearch": {
+    "message": "打开空搜索页",
+    "description": "Open empty search"
+  },
+  "commandSettingLabelOpenEmptyWindow": {
+    "message": "打开空窗口",
+    "description": "Open empty window"
+  },
+  "commandSettingLabelSearchEngineURL": {
+    "message": "搜索引擎网址",
+    "description": "Search engine URL"
+  },
+  "commandSettingLabelSavePromptDialog": {
+    "message": "弹出对话框",
+    "description": "Prompt dialog"
+  },
+  "commandSettingLabelCustomURL": {
+    "message": "自定义 URL",
+    "description": "Custom URL"
+  },
+  "commandSettingLabelAddonId": {
+    "message": "附加组件 ID",
+    "description": "Add-on ID"
+  },
+  "commandSettingLabelAddonMessage": {
+    "message": "消息",
+    "description": "Message"
+  },
+  "commandSettingLabelParseMessage": {
+    "message": "解析消息",
+    "description": "Parse message"
+  },
+  "commandSettingLabelTabOrder": {
+    "message": "标签页顺序",
+    "description": "Tab order"
+  },
+  "commandSettingLabelTabOrderNone": {
+    "message": "无（默认）",
+    "description": "none (default)"
+  },
+  "commandSettingLabelTabOrderLastAccessedAsc": {
+    "message": "最后访问（升序）",
+    "description": "last accessed ascending"
+  },
+  "commandSettingLabelTabOrderLastAccessedDesc": {
+    "message": "最后访问（降序）",
+    "description": "last accessed descending"
+  },
+  "commandSettingLabelTabOrderAlphabeticallyAsc": {
+    "message": "按字母顺序（升序）",
+    "description": "alphabetically ascending"
+  },
+  "commandSettingLabelTabOrderAlphabeticallyDesc": {
+    "message": "按字母顺序（降序）",
+    "description": "alphabetically descending"
+  },
+  "commandSettingLabelTabIncludeCurrent": {
+    "message": "包含当前标签页",
+    "description": "Include current tab"
+  },
+  "commandSettingLabelNewWindowFocus": {
+    "message": "聚焦新窗口",
+    "description": "Focus new window"
+  },
+  "commandSettingLabelUserScriptWarning": {
+    "message": "小心！",
+    "description": "Careful!"
+  },
+  "commandSettingLabelUserScriptCode": {
+    "message": "用户脚本代码",
+    "description": "User script code"
+  },
+  "commandSettingLabelTargetFrame": {
+    "message": "目标框架",
+    "description": "Target frame"
+  },
+  "commandSettingLabelTargetFrameSourceFrame": {
+    "message": "源框架",
+    "description": "Source frame"
+  },
+  "commandSettingLabelTargetFrameAllFrames": {
+    "message": "所有框架",
+    "description": "All frames"
+  },
+  "commandSettingLabelTargetFrameTopFrame": {
+    "message": "顶层框架",
+    "description": "Top-level frame"
+  },
+  "commandSettingLabelCustomMatchPattern": {
+    "message": "自定义匹配模式",
+    "description": "Custom match pattern"
+  },
+  "commandSettingLabelCommandSelection": {
+    "message": "选择命令",
+    "description": "Command selection"
+  },
+  "commandSettingLabelBrowsingDataCache": {
+    "message": "缓存",
+    "description": "Cache"
+  },
+  "commandSettingLabelBrowsingDataCookies": {
+    "message": "Cookie",
+    "description": "Cookies"
+  },
+  "commandSettingLabelBrowsingDataDownloads": {
+    "message": "下载项",
+    "description": "Downloads"
+  },
+  "commandSettingLabelBrowsingDataFormData": {
+    "message": "表单数据",
+    "description": "Form data"
+  },
+  "commandSettingLabelBrowsingDataHistory": {
+    "message": "历史记录",
+    "description": "History"
+  },
+  "commandSettingLabelBrowsingDataIndexedDB": {
+    "message": "IndexedDB",
+    "description": "IndexedDB"
+  },
+  "commandSettingLabelBrowsingDataLocalStorage": {
+    "message": "本地存储",
+    "description": "Local Storage"
+  },
+  "commandSettingLabelBrowsingDataPasswords": {
+    "message": "密码",
+    "description": "Passwords"
+  },
+  "commandSettingLabelBrowsingDataPluginData": {
+    "message": "插件数据",
+    "description": "Plugin data"
+  },
+  "commandSettingLabelBrowsingDataServiceWorkers": {
+    "message": "Service Worker",
+    "description": "Service Workers"
+  },
+  "commandSettingDescriptionNewTabPosition": {
+    "message": "决定新标签页相对于当前标签页的位置。",
+    "description": "Determines the position of the new tab relative to the current tab."
+  },
+  "commandSettingDescriptionNewTabFocus": {
+    "message": "决定打开的标签页是否获得焦点。",
+    "description": "Determines if the opened tab should gain focus or not."
+  },
+  "commandSettingDescriptionTabNextFocus": {
+    "message": "决定下一个聚焦的标签页。",
+    "description": "Determines which tab should be focused next."
+  },
+  "commandSettingDescriptionTabClosePinned": {
+    "message": "决定是否关闭固定的标签页。",
+    "description": "Determines if pinned tabs can be closed or not."
+  },
+  "commandSettingDescriptionRestoreCurrentWindow": {
+    "message": "决定是否只恢复属于当前窗口的标签页。",
+    "description": "Determines if only tabs which belong to the current window should be restored."
+  },
+  "commandSettingDescriptionReloadCache": {
+    "message": "决定重新载入时是否重用缓存。",
+    "description": "Determines if the cache should be reloaded or not."
+  },
+  "commandSettingDescriptionZoomStep": {
+    "message": "请输入缩放步进的百分比，或者输入多个缩放等级百分比，用英文逗号分隔。如果留空则使用 Gesturefy 的默认设置。",
+    "description": "The zoom step or multiple comma separated levels in percentage. If omitted, Gesturefy's default zoom levels are used."
+  },
+  "commandSettingDescriptionScrollDuration": {
+    "message": "滚动动画的持续时间（毫秒）。",
+    "description": "The duration in milliseconds the scroll animation should take."
+  },
+  "commandSettingDescriptionScrollProportion": {
+    "message": "页面滚动量相较的可视区域高度的百分比。",
+    "description": "The percentage of the viewport height by which the page should be scrolled."
+  },
+  "commandSettingDescriptionFocusIncludePinned": {
+    "message": "决定是否将固定标签页视为最左侧的标签页。",
+    "description": "Determines if pinned tabs should be treated as the leftmost tabs."
+  },
+  "commandSettingDescriptionTabCycling": {
+    "message": "决定是否要循环切换标签页",
+    "description": "Determines if the tabs should be cycled through in a loop."
+  },
+  "commandSettingDescriptionExcludeDiscarded": {
+    "message": "决定是否要跳过未加载标签页",
+    "description": "Determines if tabs that are not loaded should be skipped."
+  },
+  "commandSettingDescriptionOpenEmptyTab": {
+    "message": "决定如果没有选择网址或链接，是否打开一个空标签页。",
+    "description": "Determines if an empty tab should be opened if no URL or link was selected."
+  },
+  "commandSettingDescriptionOpenEmptySearch": {
+    "message": "决定如果没有文本，是否进行搜索",
+    "description": "Determines whether a search should be performed even if no text is present"
+  },
+  "commandSettingDescriptionOpenEmptyWindow": {
+    "message": "决定如果没有选择网址或链接，是否打开一个空窗口。",
+    "description": "Determines if an empty window should be opened if no URL or link was selected."
+  },
+  "commandSettingDescriptionSearchEngineURL": {
+    "message": "要搜索的文本会替换提供的搜索引擎网址中的 %s 占位符（若有），否则将会附加到末尾。 如果省略，将使用浏览器默认的搜索引擎。",
+    "description": "A search engine URL where the search text is either inserted for the %s placeholder or appended to the end. If omitted, the default browser search engine is used."
+  },
+  "commandSettingDescriptionSavePromptDialog": {
+    "message": "决定是否应显示“另存为”对话框， 或将文件悄悄下载到用户默认的“下载”文件夹。",
+    "description": "Determines if the \"Save As\" dialog should appear or the file should be downloaded silently to the users default download folder."
+  },
+  "commandSettingDescriptionCustomURL": {
+    "message": "要打开的网址。",
+    "description": "The URL that should be opened."
+  },
+  "commandSettingDescriptionAddonId": {
+    "message": "消息发送的目标（附加组件的扩展 ID）。",
+    "description": "The extension ID of the add-on the message should be sent to."
+  },
+  "commandSettingDescriptionAddonMessage": {
+    "message": "发送到目标附加组件的消息字符串。",
+    "description": "The message string that should be sent to the add-on."
+  },
+  "commandSettingDescriptionParseMessage": {
+    "message": "决定消息是否应该序列化为一个 JavaScript 对象。",
+    "description": "Determines if the message should be serialized as a JavaScript object."
+  },
+  "commandSettingDescriptionTabOrder": {
+    "message": "按特定标准对显示的标签页排序。",
+    "description": "Orders the displayed tabs by a specific characteristic."
+  },
+  "commandSettingDescriptionTabIncludeCurrent": {
+    "message": "决定是否包含当前的活动标签页。",
+    "description": "Determines if the currently active tab should be included."
+  },
+  "commandSettingDescriptionNewWindowFocus": {
+    "message": "决定打开的窗口是否获得焦点。",
+    "description": "Determines if the opened window should gain focus or not."
+  },
+  "commandSettingDescriptionUserScriptWarning": {
+    "message": "用户脚本可能导致个人数据丢失。",
+    "description": "User scripts can lead to the loss of private data."
+  },
+  "commandSettingDescriptionUserScriptCode": {
+    "message": "要注入到网页区域内的代码",
+    "description": "The code that should be injected into the webpage's scope."
+  },
+  "commandSettingDescriptionTargetFrame": {
+    "message": "用户脚本要注入的框架",
+    "description": "The frame in which the user script should be injected."
+  },
+  "commandSettingDescriptionCustomMatchPattern": {
+    "message": "正则表达式形式的匹配模式用于匹配字符串中的特定部分。如果省略，则会使用内置的匹配模式。",
+    "description": "A pattern in the form of a regular expression to match a specific part of a string. If omitted an internal pattern is used."
+  },
+  "commandSettingDescriptionCommandSelection": {
+    "message": "自定义选择多个命令。",
+    "description": "A custom selection of multiple commands."
+  },
+  "commandErrorNotificationTitle": {
+    "message": "“$COMMAND$”命令失败。",
+    "description": "\"New tab\" command failed.",
+    "placeholders": {
+      "command": {
+        "content": "$1",
+        "example": "New tab"
+      }
+    }
+  },
+  "commandErrorNotificationMessageIllegalURL": {
+    "message": "无法打开目标网址。点击此处了解更多信息。",
+    "description": "The target URL cannot be opened. Click here for more information."
+  },
+  "commandErrorNotificationMessageNotSerializeable": {
+    "message": "无法将指定的消息字符串解析为一个 JavaScript 对象。点击此处了解更多信息。",
+    "description": "The specified message string could not be parsed to a JavaScript object. Click here for more information."
+  },
+  "commandErrorNotificationMessageMissingRecipient": {
+    "message": "指定的扩展 ID 不属于现有的附加组件，或者该附加组件不接收消息。点击此处了解更多信息。",
+    "description": "The specified extension ID either does not belong to an existing add-on or the add-on does not receive messages. Click here for more information."
+  },
+  "commandErrorNotificationMessageMissingIncognitoPermissions": {
+    "message": "Gesturefy 没有隐私模式的权限。点击此处了解更多信息。",
+    "description": "Gesturefy does not have permission for incognito mode. Click here for more information."
+  },
+  "commandBarTitle": {
+    "message": "命令栏",
+    "description": "Command bar"
+  },
+  "commandBarSearch": {
+    "message": "搜索",
+    "description": "Search"
+  },
+  "commandBarAdditionalPermissionsText": {
+    "message": "此命令需要额外的权限：",
+    "description": "This command requires additional permissions: "
+  },
+  "commandBarAdditionalSettingsText": {
+    "message": "此命令有额外的设置项。",
+    "description": "This command has additional settings."
+  },
+  "commandBarOpenSelectionText": {
+    "message": "打开命令选择。",
+    "description": "Open command selection."
+  },
+  "commandBarOpenSettingsText": {
+    "message": "打开命令设置。",
+    "description": "Open command settings."
+  },
+  "commandMultiSelectAddPlaceholder": {
+    "message": "添加",
+    "description": "Add"
+  },
+  "commandMultiSelectNoResultsPlaceholder": {
+    "message": "无结果",
+    "description": "No results"
+  },
+  "gesturePopupTitleNewGesture": {
+    "message": "新建手势",
+    "description": "New Gesture"
+  },
+  "gesturePopupTitleEditGesture": {
+    "message": "编辑手势",
+    "description": "Edit Gesture"
+  },
+  "gesturePopupRecordingAreaText": {
+    "message": "使用鼠标$MOUSEBUTTON$来录制一个新手势。",
+    "description": "Use the right mouse button to record a new gesture.",
+    "placeholders": {
+      "mousebutton": {
+        "content": "$1",
+        "example": "right"
+      }
+    }
+  },
+  "gesturePopupMouseButtonLeft": {
+    "message": "左键",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupMouseButtonRight": {
+    "message": "右键",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupMouseButtonMiddle": {
+    "message": "中键",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupLabelCommand": {
+    "message": "命令",
+    "description": "Command"
+  },
+  "gesturePopupLabelGestureDirections": {
+    "message": "手势方向",
+    "description": "Gesture directions"
+  },
+  "gesturePopupLabelOptionalLabel": {
+    "message": "文字标签（可选）",
+    "description": "Label (optional)"
+  },
+  "gesturePopupDescriptionCommand": {
+    "message": "选择分配到此手势的命令。",
+    "description": "Choose a command that should be assigned to this gesture."
+  },
+  "gesturePopupDescriptionGestureDirections": {
+    "message": "使用箭头按键输入方向，或者用右侧区域录制手势。",
+    "description": "Either use the arrow keys to enter the directions, or record them in the area next to it."
+  },
+  "gesturePopupDescriptionOptionalLabel": {
+    "message": "分配自定义的显示名称，代替命令名称。",
+    "description": "Assign a custom name that will be displayed instead of the command name."
+  },
+  "gesturePopupNotificationSimilarGesture": {
+    "message": "该手势与“$GESTURE_NAME$”手势相似。",
+    "description": "This gesture is similar to the \"$GESTURE_NAME$\" gesture.",
+    "placeholders": {
+      "gesture_name": {
+        "content": "$1",
+        "example": "New Tab"
+      }
+    }
+  },
+  "permissionLabelTabs": {
+    "message": "标签页",
+    "description": "Tabs"
+  },
+  "permissionLabelSessions": {
+    "message": "会话",
+    "description": "Sessions"
+  },
+  "permissionLabelBookmarks": {
+    "message": "书签",
+    "description": "Bookmarks"
+  },
+  "permissionLabelClipboardWrite": {
+    "message": "写入剪贴板",
+    "description": "Clipboard write"
+  },
+  "permissionLabelClipboardRead": {
+    "message": "读取剪贴板",
+    "description": "Clipboard read"
+  },
+  "permissionLabelDownloads": {
+    "message": "下载项",
+    "description": "Downloads"
+  },
+  "permissionLabelSearch": {
+    "message": "搜索",
+    "description": "Search"
+  },
+  "permissionLabelBrowsingData": {
+    "message": "浏览数据",
+    "description": "Browsing data"
+  },
+  "toggleButtonOn": {
+    "message": "开",
+    "description": "On - setting checked"
+  },
+  "toggleButtonOff": {
+    "message": "关",
+    "description": "Off - setting not checked"
+  },
+  "linkAdditionalInformation": {
+    "message": "更多信息",
+    "description": "Additional information"
+  },
+  "buttonSave": {
+    "message": "保存",
+    "description": "Save"
+  },
+  "buttonConfirm": {
+    "message": "确定",
+    "description": "OK"
+  },
+  "buttonCancel": {
+    "message": "取消",
+    "description": "Cancel"
+  },
+  "lightTheme": {
+    "message": "浅色主题",
+    "description": "Light theme"
+  },
+  "darkTheme": {
+    "message": "深色主题",
+    "description": "Dark theme"
+  },
+  "highContrastTheme": {
+    "message": "高对比度主题",
+    "description": "High contrast theme"
+  },
+  "welcomePageUpperSectionReference": {
+    "message": "Gestufy 安装成功",
+    "description": "Gesturefy has been successfully installed."
+  },
+  "welcomePageUpperSectionHeadline": {
+    "message": "还没用过鼠标手势？\n赶紧来试试吧！",
+    "description": "Never done a mouse gesture before?\r\n Try it out right now!"
+  },
+  "welcomePageUpperSectionTutorialStep01": {
+    "message": "按住鼠标右键",
+    "description": "Press and hold the right mouse button"
+  },
+  "welcomePageUpperSectionTutorialStep02": {
+    "message": "向下拖动鼠标",
+    "description": "Drag down your mouse"
+  },
+  "welcomePageUpperSectionTutorialStep03": {
+    "message": "放开鼠标右键",
+    "description": "Release the right mouse button"
+  },
+  "welcomePageLowerSectionReference": {
+    "message": "你跳到页面底部了",
+    "description": "You scrolled to the bottom of the page."
+  },
+  "welcomePageLowerSectionHeadline": {
+    "message": "恭喜！你完成了一次鼠标手势！",
+    "description": "Congratulations, you successfully accomplished your very first mouse gesture!"
+  },
+  "welcomePageLowerSectionGetStartedText": {
+    "message": "你可以根据个人的浏览习惯创建手势，让浏览网页更加便捷、迅速、有趣。赶紧来配置个性化的 Gesturefy 吧！",
+    "description": "Create as many gestures as you want to suit your individual browsing style and make your daily browsing easier, faster and a lot more fun. Get started now and personalize Gesturefy!"
+  },
+  "welcomePageLowerSectionGetStartedLink": {
+    "message": "设置手势",
+    "description": "Set Up Your Gestures"
+  },
+  "welcomePageLowerSectionLearnMoreText": {
+    "message": "如果还是没搞懂，可以点击下方链接查看快速引导。如果 Gesturefy 无法运行，也可以点击该链接查看故障排除指南。",
+    "description": "Still confused? Click the link below for a quick break-down and if you can't get Gesturefy up and running you can also find a troubleshooting guide there."
+  },
+  "welcomePageLowerSectionLearnMoreLink": {
+    "message": "了解更多",
+    "description": "Learn More"
+  }
+}

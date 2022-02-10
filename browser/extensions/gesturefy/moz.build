@@ -1,0 +1,295 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
+DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
+
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"] += [
+    "LICENSE",
+    "manifest.json",
+    "mozilla-recommendation.json",
+    "README.md",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["af_ZA"] += [
+    "_locales/af_ZA/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["ar_SA"] += [
+    "_locales/ar_SA/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["bg_BG"] += [
+    "_locales/bg_BG/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["ca_ES"] += [
+    "_locales/ca_ES/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["cs"] += [
+    "_locales/cs/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["da_DK"] += [
+    "_locales/da_DK/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["de"] += [
+    "_locales/de/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["en"] += [
+    "_locales/en/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["en_CA"] += [
+    "_locales/en_CA/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["en_GB"] += [
+    "_locales/en_GB/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["es_AR"] += [
+    "_locales/es_AR/messages.json",
+] 
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["es_ES"] += [
+    "_locales/es_ES/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["es_MX"] += [
+    "_locales/es_MX/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["fi_FI"] += [
+    "_locales/fi_FI/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["fr"] += [
+    "_locales/fr/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["he_IL"] += [
+    "_locales/he_IL/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["hu_HU"] += [
+    "_locales/hu_HU/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["ja_JP"] += [
+    "_locales/ja_JP/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["it_IT"] += [
+    "_locales/it_IT/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["ko_KR"] += [
+    "_locales/ko_KR/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["nl_NL"] += [
+    "_locales/nl_NL/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["no_NO"] += [
+    "_locales/no_NO/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["pl_PL"] += [
+    "_locales/pl_PL/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["pt_BR"] += [
+    "_locales/pt_BR/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["pt_PT"] += [
+    "_locales/pt_PT/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["ro_RO"] += [
+    "_locales/ro_RO/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["ru"] += [
+    "_locales/ru/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["si_LK"] += [
+    "_locales/si_LK/messages.json",
+]    
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["sk_SK"] += [
+    "_locales/sk_SK/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["sl_SI"] += [
+    "_locales/sl_SI/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["sr_SP"] += [
+    "_locales/sr_SP/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["sv_SE"] += [
+    "_locales/sv_SE/messages.json",
+] 
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["th_TH"] += [
+    "_locales/th_TH/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["tr_TR"] += [
+    "_locales/tr_TR/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["uk_UA"] += [
+    "_locales/uk_UA/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["vi_VN"] += [
+    "_locales/vi_VN/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["zh_CN"] += [
+    "_locales/zh_CN/messages.json",
+] 
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["_locales"]["zh_TW"] += [
+    "_locales/zh_TW/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["core"] += [
+    "core/background.mjs",
+    "core/commands.mjs",
+    "core/content.mjs",
+    "core/migration.mjs",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["core"]["bundle"] += [
+    "core/bundle/background.html",
+    "core/bundle/content.bundle.js",
+    "core/bundle/README.md",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["core"]["controllers"] += [
+    "core/controllers/mouse-gesture-controller.mjs",
+    "core/controllers/rocker-gesture-controller.mjs",
+    "core/controllers/wheel-gesture-controller.mjs",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["core"]["helpers"] += [
+    "core/helpers/config-manager.mjs",
+    "core/helpers/listener-detach-observer.mjs",
+    "core/helpers/message-router.mjs",
+    "core/helpers/user-script-runner.mjs",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["core"]["models"] += [
+    "core/models/command.mjs",
+    "core/models/gesture.mjs",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["core"]["utils"] += [
+    "core/utils/commons.mjs",
+    "core/utils/matching-algorithms.mjs",
+    "core/utils/pattern-constructor.mjs",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["core"]["views"]["mouse-gesture-view"] += [
+    "core/views/mouse-gesture-view/mouse-gesture-view.css",
+    "core/views/mouse-gesture-view/mouse-gesture-view.mjs",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["core"]["views"]["mouse-gesture-view"] += [
+    "core/views/popup-command-view/iframe-popup-command-view.mjs",
+    "core/views/popup-command-view/popup-command-view.css",
+    "core/views/popup-command-view/popup-command-view.html",
+    "core/views/popup-command-view/popup-command-view.mjs",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["META-INF"] += [
+    "META-INF/cose.manifest",
+    "META-INF/cose.sig",
+    "META-INF/manifest.mf",
+    "META-INF/mozilla.rsa",
+    "META-INF/mozilla.sf",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["resources"]["fonts"] += [
+    "resources/fonts/icons.woff",
+    "resources/fonts/NunitoSans-Regular.woff",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["resources"]["img"] += [
+    "resources/img/dashed_border_dark.png",
+    "resources/img/dashed_border_gray.png",
+    "resources/img/iconx32.png",
+    "resources/img/iconx48.png",
+    "resources/img/iconx96.png",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["resources"]["json"] += [
+    "resources/json/commands.json",
+    "resources/json/defaults.json",
+]  
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["views"]["installation"] += [
+    "views/installation/index.html",
+    "views/installation/layout.css",
+    "views/installation/main.mjs",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["views"]["options"] += [
+    "views/options/data-management.mjs",
+    "views/options/exclusions.mjs",
+    "views/options/gestures.mjs",
+    "views/options/index.html",
+    "views/options/layout.css",
+    "views/options/main.mjs",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["views"]["options"]["components"]["color-picker"] += [
+    "views/options/components/color-picker/layout.css",
+    "views/options/components/color-picker/main.mjs",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["views"]["options"]["components"]["command-multi-select"] += [
+    "views/options/components/command-multi-select/layout.css",
+    "views/options/components/command-multi-select/main.mjs",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["views"]["options"]["components"]["command-select"] += [
+    "views/options/components/command-select/layout.css",
+    "views/options/components/command-select/main.mjs",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["views"]["options"]["components"]["popup-box"] += [
+    "views/options/components/popup-box/layout.css",
+    "views/options/components/popup-box/main.mjs",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["views"]["options"]["components"]["sortable-multi-select"] += [
+    "views/options/components/sortable-multi-select/layout.css",
+    "views/options/components/sortable-multi-select/main.mjs",
+]
+
+FINAL_TARGET_FILES.features["{506e023c-7f2b-40a3-8066-bc5deb40aebe}"]["views"]["options"]["fragments"] += [
+    "views/options/fragments/about.inc",
+    "views/options/fragments/command-setting-templates.inc",
+    "views/options/fragments/exclusions.inc",
+    "views/options/fragments/extras.inc",
+    "views/options/fragments/gestures.inc",
+    "views/options/fragments/settings.inc",
+]
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "gesturefy")

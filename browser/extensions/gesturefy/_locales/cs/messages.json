@@ -1,0 +1,1612 @@
+{
+  "extensionDescription": {
+    "message": "Ovládejte Váš internetový prohlížeč efektivněji s gesty myší! Doplňek se širokou škálou příkazů spouštěných nastavitelnými gesty myší.",
+    "description": "Navigate, operate, and browse faster with mouse gestures! A customizable mouse gesture add-on with a variety of different commands."
+  },
+  "addonUpdateNotificationTitle": {
+    "message": "Doplněk $NAME$ byl aktualizován!",
+    "description": "Gesturefy add-on has been updated!",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Gesturefy"
+      }
+    }
+  },
+  "addonUpdateNotificationMessage": {
+    "message": "Číslo nové verze je $VERSION$. Klikněte zde pro zobrazení seznamu změn.",
+    "description": "The new version number is $VERSION$. Click here to view the changelog.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "1.0.1"
+      }
+    }
+  },
+  "navigationSettings": {
+    "message": "Nastavení",
+    "description": "Settings"
+  },
+  "navigationGestures": {
+    "message": "Gesta",
+    "description": "Gestures"
+  },
+  "navigationExtras": {
+    "message": "Extra",
+    "description": "Extras"
+  },
+  "navigationExclusions": {
+    "message": "Výjimky",
+    "description": "Exclusions"
+  },
+  "navigationAbout": {
+    "message": "O doplňku",
+    "description": "About"
+  },
+  "settingLabelMouseButton": {
+    "message": "Aktivační tlačítko",
+    "description": "Activation button"
+  },
+  "settingLabelMouseButtonLeft": {
+    "message": "levé",
+    "description": "left"
+  },
+  "settingLabelMouseButtonRight": {
+    "message": "pravé",
+    "description": "right"
+  },
+  "settingLabelMouseButtonMiddle": {
+    "message": "prostřední",
+    "description": "middle"
+  },
+  "settingLabelMatchingAlgorithm": {
+    "message": "Porovnávací algoritmus",
+    "description": "Matching algorithm"
+  },
+  "settingLabelMatchingAlgorithmCombined": {
+    "message": "Kombinovaný",
+    "description": "Combined"
+  },
+  "settingLabelMatchingAlgorithmStrict": {
+    "message": "Přísný",
+    "description": "Strict"
+  },
+  "settingLabelMatchingAlgorithmShapeIndependent": {
+    "message": "Nezávislý na tvaru",
+    "description": "Shape-Independent"
+  },
+  "settingLabelTimeoutActive": {
+    "message": "Časový limit aktivace nečinnosti",
+    "description": "Activate idle timeout"
+  },
+  "settingLabelTimeoutDuration": {
+    "message": "Trvání",
+    "description": "Duration"
+  },
+  "settingLabelSuppressionKey": {
+    "message": "Deaktivační klávesa",
+    "description": "Deactivation key"
+  },
+  "settingLabelNoneKey": {
+    "message": "Žádné",
+    "description": "None"
+  },
+  "settingLabelAltKey": {
+    "message": "Alt",
+    "description": "Alt"
+  },
+  "settingLabelCtrlKey": {
+    "message": "Ctrl",
+    "description": "Ctrl"
+  },
+  "settingLabelShiftKey": {
+    "message": "Shift",
+    "description": "Shift"
+  },
+  "settingLabelAdvancedSettings": {
+    "message": "Pokročilé nastavení",
+    "description": "Advanced settings"
+  },
+  "settingLabelDistanceThreshold": {
+    "message": "Práh vzdálenosti",
+    "description": "Distance threshold"
+  },
+  "settingLabelDeviationTolerance": {
+    "message": "Tolerance odchylky",
+    "description": "Deviation tolerance"
+  },
+  "settingLabelDisplayTrace": {
+    "message": "Zobrazit stopu gesta",
+    "description": "Display gesture trace"
+  },
+  "settingLabelTraceColor": {
+    "message": "Barva stopy",
+    "description": "Line color"
+  },
+  "settingLabelTraceWidth": {
+    "message": "Šířka stopy",
+    "description": "Line width"
+  },
+  "settingLabelTraceGrowth": {
+    "message": "Růst stopy",
+    "description": "Line growth"
+  },
+  "settingLabelDisplayCommand": {
+    "message": "Zobrazit příkaz",
+    "description": "Display command"
+  },
+  "settingLabelCommandFontColor": {
+    "message": "Barva písma",
+    "description": "Font color"
+  },
+  "settingLabelCommandBackgroundColor": {
+    "message": "Barva pozadí",
+    "description": "Background color"
+  },
+  "settingLabelCommandFontSize": {
+    "message": "Velikost písma",
+    "description": "Font size"
+  },
+  "settingLabelCommandHorizontalPosition": {
+    "message": "Vodorovná pozice",
+    "description": "Horizontal position"
+  },
+  "settingLabelCommandVerticalPosition": {
+    "message": "Svislá pozice",
+    "description": "Vertical position"
+  },
+  "settingLabelUpdateNotification": {
+    "message": "Zobrazit oznámení o aktualizaci",
+    "description": "Display update notification"
+  },
+  "settingDescriptionMouseButton": {
+    "message": "Zachytí nové gesto myši při držení stisknutého tlačítka.",
+    "description": "Captures a new mouse gesture while the button is held down."
+  },
+  "settingDescriptionMatchingAlgorithm": {
+    "message": "Určuje, jak jsou gesta porovnána, aby se našlo nejlepší odpovídající gesto.",
+    "description": "Determines how the gestures are compared to find the best matching gesture."
+  },
+  "settingDescriptionMatchingAlgorithmLink": {
+    "message": "Zde se dozvíte o rozdílech",
+    "description": "Learn about the differences here"
+  },
+  "settingDescriptionTimeoutActive": {
+    "message": "Zruší gesto, pokud nebyl po určenou dobu zaznamenán pohyb myši.",
+    "description": "Cancels the gesture after the mouse has not been moved for the specified time."
+  },
+  "settingDescriptionTimeoutDuration": {
+    "message": "Doba trvání v sekundách, po které je gesto zrušeno.",
+    "description": "The duration in seconds until the gesture is cancelled."
+  },
+  "settingDescriptionSuppressionKey": {
+    "message": "Zabraňuje spuštění gesta, pokud je stisknuta modifikační klávesa.",
+    "description": "Prevents a gesture from being triggered while the modifier key is pressed."
+  },
+  "settingDescriptionDistanceThreshold": {
+    "message": "Minimální vzdálenost o kterou se musí myš posunout aby byl rozpoznán začátek gesta.",
+    "description": "The minimum distance the mouse must be moved until the start of a gesture is recognized."
+  },
+  "settingDescriptionDeviationTolerance": {
+    "message": "Přípustná odchylka gesta, která by měla být stále uznána jako shoda.",
+    "description": "The permissible gesture deviation that should still be recognized as a match."
+  },
+  "settingDescriptionDisplayTrace": {
+    "message": "Zobrazuje stopu pohybu myši.",
+    "description": "Displays a trace along the mouse movement."
+  },
+  "settingDescriptionTraceGrowth": {
+    "message": "Určuje, zda má šířka stopy narůstat.",
+    "description": "Determines if the line thickness should grow."
+  },
+  "settingDescriptionDisplayCommand": {
+    "message": "Je-li k dispozici, zobrazí odpovídající příkaz aktuálního gesta.",
+    "description": "Displays the command of the currently matching gesture if available."
+  },
+  "settingDescriptionCommandFontSize": {
+    "message": "Můžete použít libovolné CSS jednotky jako: em, px, pt, %, vh atd.",
+    "description": "Accepts every CSS Unit like: em, px, pt, %, vh etc."
+  },
+  "settingDescriptionCommandHorizontalPosition": {
+    "message": "Vodorovná pozice na obrazovce od 0 (vlevo) do 100 (vpravo).",
+    "description": "Horizontal screen position from 0 (left) to 100 (right)."
+  },
+  "settingDescriptionCommandVerticalPosition": {
+    "message": "Svislá pozice na obrazovce od 0 (nahoře) do 100 (dole).",
+    "description": "Vertical screen position from 0 (top) to 100 (bottom)."
+  },
+  "settingDescriptionUpdateNotification": {
+    "message": "Zobrazí oznámení po aktualizaci Gesturefy.",
+    "description": "Shows a notification when Gesturefy is updated."
+  },
+  "gestureCreateNewButton": {
+    "message": "Nové Gesto",
+    "description": "New Gesture"
+  },
+  "gestureSearchPlaceholder": {
+    "message": "Hledat gesta",
+    "description": "Search gestures"
+  },
+  "gestureHintNoSearchResults": {
+    "message": "Nebyly nalezeny žádné výsledky",
+    "description": "No search results found"
+  },
+  "extraLabelRockerActive": {
+    "message": "Houpací gesta",
+    "description": "Rocker gesture"
+  },
+  "extraLabelRockerRightMouseClick": {
+    "message": "Klepnutí pravým tlačítkem myši",
+    "description": "Right mouse click"
+  },
+  "extraLabelRockerLeftMouseClick": {
+    "message": "Klepnutí levým tlačítkem myši",
+    "description": "Left mouse click"
+  },
+  "extraDescriptionRockerActive": {
+    "message": "Toto gesto spustíte podržením pravého tlačítka myši a následným stisknutím levého tlačítka myši a obráceně.",
+    "description": "This gesture is performed either by holding the right mouse button and clicking the left or vice versa."
+  },
+  "extraLabelWheelActive": {
+    "message": "Gesta kolečkem myši",
+    "description": "Wheel gesture"
+  },
+  "extraLabelWheelMouseButton": {
+    "message": "Tlačítko myši pro gesta kolečkem",
+    "description": "Wheel gesture mouse button"
+  },
+  "extraLabelWheelSensitivity": {
+    "message": "Citlivost kolečka myši",
+    "description": "Mouse wheel sensitivity"
+  },
+  "extraLabelWheelUp": {
+    "message": "Kolečkem nahoru",
+    "description": "Wheel up"
+  },
+  "extraLabelWheelDown": {
+    "message": "Kolečkem dolů",
+    "description": "Wheel down"
+  },
+  "extraDescriptionWheelActive": {
+    "message": "Posunout kolečkem nahoru nebo dolů při stisknutém tlačítku pro gesta kolečkem.",
+    "description": "Scroll up or down while holding the wheel gesture trigger button."
+  },
+  "extraDescriptionWheelMouseButton": {
+    "message": "Tlačítko myši, které spustí gesta kolečkem.",
+    "description": "The mouse button which triggers the wheel gesture."
+  },
+  "extraDescriptionWheelSensitivity": {
+    "message": "Minimální velikost posunu kolečkem pro aktivaci gesta.",
+    "description": "The minimal amount the mouse wheel must be scrolled until the gesture is triggered."
+  },
+  "exclusionsLabelInformation": {
+    "message": "Informace:",
+    "description": "Information:"
+  },
+  "exclusionsTextInformation": {
+    "message": "Přidat šablony URL pro zakázání Gesturefy na určitých webových stránkách. Šablona povoluje zástupné znaky \"*\" a musí být ve formátu <scheme>://<host><path>.",
+    "description": "Add URL match patterns to disable Gesturefy for certain websites. The match pattern allows \"*\" wildcards and must be in the form of <scheme>://<host><path>."
+  },
+  "exclusionsPlaceholderURL": {
+    "message": "Zadejte šablonu URL",
+    "description": "Enter URL match pattern"
+  },
+  "exclusionsAddButton": {
+    "message": "Přidat",
+    "description": "Add"
+  },
+  "exclusionsNotificationAlreadyExists": {
+    "message": "Šablona URL již existuje.",
+    "description": "URL pattern already exists."
+  },
+  "exclusionsHintNoEntries": {
+    "message": "Žádné položky k dispozici",
+    "description": "No entries available"
+  },
+  "aboutBackup": {
+    "message": "Zálohovat",
+    "description": "Backup"
+  },
+  "aboutRestore": {
+    "message": "Obnovit",
+    "description": "Restore"
+  },
+  "aboutReset": {
+    "message": "Výchozí nastavení",
+    "description": "Reset"
+  },
+  "aboutLicense": {
+    "message": "Licence:",
+    "description": "License:"
+  },
+  "aboutContributors": {
+    "message": "Přispěvatelé:",
+    "description": "Contributors:"
+  },
+  "aboutLinkBug": {
+    "message": "Nahlásit chybu",
+    "description": "Report a bug"
+  },
+  "aboutLinkCode": {
+    "message": "Zdrojový kód",
+    "description": "Source code"
+  },
+  "aboutLinkAddon": {
+    "message": "Stránka doplňku",
+    "description": "Add-on page"
+  },
+  "aboutRestoreNotificationNoConfigFile": {
+    "message": "Vybraný soubor není platný konfigurační soubor Gesturefy.",
+    "description": "The selected file is not a valid Gesturefy config file."
+  },
+  "aboutRestoreNotificationWrongFile": {
+    "message": "Vybraný soubor neodpovídá požadovanému typu souboru.",
+    "description": "The selected file does not match the required file type."
+  },
+  "aboutRestoreNotificationConfirm": {
+    "message": "Všechna nastavení včetně gest budou nahrazena vybraným konfiguračním souborem.",
+    "description": "All settings including gestures will be replaced by the selected config file."
+  },
+  "aboutRestoreNotificationSuccess": {
+    "message": "Vybraná konfigurace byla úspěšně obnovena.",
+    "description": "The selected config has been successfully restored."
+  },
+  "aboutResetNotificationConfirm": {
+    "message": "Všechna nastavení včetně gest budou obnovena do výchozího stavu. Tato akce nelze vzít zpět!",
+    "description": "All settings including gestures will be reset. This cannot be undone!"
+  },
+  "commandLabelToggleBookmark": {
+    "message": "Přidat/odebrat záložku",
+    "description": "Toggle bookmark"
+  },
+  "commandLabelDuplicateTab": {
+    "message": "Duplikovat panel",
+    "description": "Duplicate tab"
+  },
+  "commandLabelNewTab": {
+    "message": "Nový panel",
+    "description": "New tab"
+  },
+  "commandLabelReloadTab": {
+    "message": "Obnovit panel",
+    "description": "Reload tab"
+  },
+  "commandLabelReloadFrame": {
+    "message": "Obnovit tento rám",
+    "description": "Reload frame"
+  },
+  "commandLabelStopLoading": {
+    "message": "Zastavit načítání",
+    "description": "Stop loading"
+  },
+  "commandLabelCloseTab": {
+    "message": "Zavřít panel",
+    "description": "Close tab"
+  },
+  "commandLabelRestoreTab": {
+    "message": "Obnovit zavřený panel",
+    "description": "Restore tab"
+  },
+  "commandLabelZoomIn": {
+    "message": "Zvětšit",
+    "description": "Zoom in"
+  },
+  "commandLabelZoomOut": {
+    "message": "Zmenšit",
+    "description": "Zoom out"
+  },
+  "commandLabelZoomReset": {
+    "message": "Výchozí zvětšení",
+    "description": "Zoom reset"
+  },
+  "commandLabelPageBack": {
+    "message": "Zpět",
+    "description": "Page back"
+  },
+  "commandLabelPageForth": {
+    "message": "Vpřed",
+    "description": "Page forward"
+  },
+  "commandLabelTogglePin": {
+    "message": "Připnout/odepnout panel",
+    "description": "Toggle pinned tab"
+  },
+  "commandLabelToggleMute": {
+    "message": "Vypnout/zapnout zvuk",
+    "description": "Toggle mute"
+  },
+  "commandLabelToggleReaderMode": {
+    "message": "Přepnout režim čtení",
+    "description": "Toggle reader mode"
+  },
+  "commandLabelScrollTop": {
+    "message": "Posunout na začátek",
+    "description": "Scroll to the top"
+  },
+  "commandLabelScrollBottom": {
+    "message": "Posunout na konec",
+    "description": "Scroll to the bottom"
+  },
+  "commandLabelScrollPageDown": {
+    "message": "Posunout o stránku dolů",
+    "description": "Scroll page down"
+  },
+  "commandLabelScrollPageUp": {
+    "message": "Posunout o stránku nahoru",
+    "description": "Scroll page up"
+  },
+  "commandLabelFocusRightTab": {
+    "message": "Přepnout na pravý panel",
+    "description": "Focus right tab"
+  },
+  "commandLabelFocusLeftTab": {
+    "message": "Přepnout na levý panel",
+    "description": "Focus left tab"
+  },
+  "commandLabelFocusFirstTab": {
+    "message": "Přepnout na první panel",
+    "description": "Focus first tab"
+  },
+  "commandLabelFocusLastTab": {
+    "message": "Přepnout na poslední panel",
+    "description": "Focus last tab"
+  },
+  "commandLabelFocusPreviousSelectedTab": {
+    "message": "Přepnout na naposledy vybraný panel",
+    "description": "Focus previous selected tab"
+  },
+  "commandLabelMaximizeWindow": {
+    "message": "Maximalizovat okno",
+    "description": "Maximize window"
+  },
+  "commandLabelMinimizeWindow": {
+    "message": "Minimalizovat okno",
+    "description": "Minimize window"
+  },
+  "commandLabelToggleWindowSize": {
+    "message": "Přepnout velikost okna",
+    "description": "Toggle window size"
+  },
+  "commandLabelToggleFullscreen": {
+    "message": "Zapnout/vypnout režim celé obrazovky",
+    "description": "Toggle full screen"
+  },
+  "commandLabelNewWindow": {
+    "message": "Nové okno",
+    "description": "New window"
+  },
+  "commandLabelNewPrivateWindow": {
+    "message": "Nové anonymní okno",
+    "description": "New private window"
+  },
+  "commandLabelMoveTabToStart": {
+    "message": "Přesunout panel na začátek",
+    "description": "Move tab to start"
+  },
+  "commandLabelMoveTabToEnd": {
+    "message": "Přesunout panel na konec",
+    "description": "Move tab to end"
+  },
+  "commandLabelMoveTabToNewWindow": {
+    "message": "Přesunout panel do nového okna",
+    "description": "Move tab to new window"
+  },
+  "commandLabelMoveLeftTabsToNewWindow": {
+    "message": "Přesunout panely vlevo do nového okna",
+    "description": "Move left tabs to new window"
+  },
+  "commandLabelMoveRightTabsToNewWindow": {
+    "message": "Přesunout pravé panely do nového okna",
+    "description": "Move right tabs to new window"
+  },
+  "commandLabelCloseWindow": {
+    "message": "Zavřít okno",
+    "description": "Close window"
+  },
+  "commandLabelReloadAllTabs": {
+    "message": "Obnovit vše",
+    "description": "Reload all"
+  },
+  "commandLabelToRootURL": {
+    "message": "Na kořenovou URL adresu",
+    "description": "To root URL"
+  },
+  "commandLabelURLLevelUp": {
+    "message": "O úroveň v URL adrese výše",
+    "description": "URL level up"
+  },
+  "commandLabelIncreaseURLNumber": {
+    "message": "Zvýšit číslo v URL",
+    "description": "Increase URL number"
+  },
+  "commandLabelDecreaseURLNumber": {
+    "message": "Snížit číslo v URL",
+    "description": "Decrease URL number"
+  },
+  "commandLabelOpenImageInNewTab": {
+    "message": "Otevřít obrázek v novém panelu",
+    "description": "Open image in new tab"
+  },
+  "commandLabelOpenLinkInNewTab": {
+    "message": "Otevřít odkaz v novém panelu",
+    "description": "Open link in new tab"
+  },
+  "commandLabelOpenLinkInNewWindow": {
+    "message": "Otevřít odkaz v novém okně",
+    "description": "Open link in new window"
+  },
+  "commandLabelOpenLinkInNewPrivateWindow": {
+    "message": "Otevřít odkaz v novém anonymním okně",
+    "description": "Open link in new private window"
+  },
+  "commandLabelSearchTextSelection": {
+    "message": "Hledat vybraný text",
+    "description": "Search text selection"
+  },
+  "commandLabelSearchClipboard": {
+    "message": "Hledat ve schránce",
+    "description": "Search clipboard"
+  },
+  "commandLabelSearchTextSelectionInNewTab": {
+    "message": "Hledat výběr textu v nové kartě",
+    "description": "Search text selection in new tab"
+  },
+  "commandLabelSearchClipboardInNewTab": {
+    "message": "Hledat obsah schránky v nové kartě",
+    "description": "Search clipboard in new tab"
+  },
+  "commandLabelCloseRightTabs": {
+    "message": "Zavřít panely vpravo",
+    "description": "Close right tabs"
+  },
+  "commandLabelCloseLeftTabs": {
+    "message": "Zavřít panely vlevo",
+    "description": "Close left tabs"
+  },
+  "commandLabelCloseOtherTabs": {
+    "message": "Zavřít ostatní panely",
+    "description": "Close other tabs"
+  },
+  "commandLabelSaveTabAsPDF": {
+    "message": "Uložit jako PDF",
+    "description": "Save as PDF"
+  },
+  "commandLabelSaveImage": {
+    "message": "Uložit obrázek",
+    "description": "Save image"
+  },
+  "commandLabelSaveLink": {
+    "message": "Uložit odkaz",
+    "description": "Save link"
+  },
+  "commandLabelPrintTab": {
+    "message": "Vytisknout",
+    "description": "Print"
+  },
+  "commandLabelOpenPrintPreview": {
+    "message": "Náhled tisku",
+    "description": "Print preview"
+  },
+  "commandLabelOpenHomepage": {
+    "message": "Otevřít domovskou stránku",
+    "description": "Open homepage"
+  },
+  "commandLabelOpenCustomURLInNewTab": {
+    "message": "Otevřít vlastní URL do nového panelu",
+    "description": "Open custom URL in new tab"
+  },
+  "commandLabelOpenCustomURL": {
+    "message": "Otevřít vlastní URL",
+    "description": "Open custom URL"
+  },
+  "commandLabelPasteClipboard": {
+    "message": "Vložit ze schránky",
+    "description": "Paste clipboard"
+  },
+  "commandLabelOpenURLFromClipboard": {
+    "message": "Otevřít adresu URL ze schránky",
+    "description": "Open URL from clipboard"
+  },
+  "commandLabelOpenURLFromClipboardInNewTab": {
+    "message": "Otevřít adresu URL ze schránky v novém panelu",
+    "description": "Open URL from clipboard in new tab"
+  },
+  "commandLabelOpenURLFromClipboardInNewWindow": {
+    "message": "Otevřít URL ze schránky v novém okně",
+    "description": "Open URL from clipboard in new window"
+  },
+  "commandLabelOpenURLFromClipboardInNewPrivateWindow": {
+    "message": "Otevřít URL ze schránky v novém anonymním okně",
+    "description": "Open URL from clipboard in new private window"
+  },
+  "commandLabelOpenAddonSettings": {
+    "message": "Otevřít nastavení Gesturefy",
+    "description": "Open Gesturefy settings"
+  },
+  "commandLabelOpenLink": {
+    "message": "Otevřít odkaz",
+    "description": "Open link"
+  },
+  "commandLabelViewImage": {
+    "message": "Zobrazit obrázek",
+    "description": "View image"
+  },
+  "commandLabelLinkToNewBookmark": {
+    "message": "Přidat odkaz do záložek",
+    "description": "Link to bookmark"
+  },
+  "commandLabelSaveScreenshot": {
+    "message": "Uložit snímek obrazovky",
+    "description": "Save screenshot"
+  },
+  "commandLabelCopyTabURL": {
+    "message": "Kopírovat adresu panelu",
+    "description": "Copy tab URL"
+  },
+  "commandLabelCopyLinkURL": {
+    "message": "Kopírovat adresu odkazu",
+    "description": "Copy link URL"
+  },
+  "commandLabelCopyImageURL": {
+    "message": "Kopírovat URL obrázku",
+    "description": "Copy image URL"
+  },
+  "commandLabelCopyTextSelection": {
+    "message": "Kopírovat vybraný text",
+    "description": "Copy text selection"
+  },
+  "commandLabelCopyImage": {
+    "message": "Kopírovat obrázek",
+    "description": "Copy image"
+  },
+  "commandLabelViewPageSourceCode": {
+    "message": "Zobrazit zdrojový kód stránky",
+    "description": "View page source"
+  },
+  "commandLabelPopupAllTabs": {
+    "message": "[Popup] Všechny panely",
+    "description": "[Popup] All tabs"
+  },
+  "commandLabelPopupRecentlyClosedTabs": {
+    "message": "[Popup] Nedávno zavřené panely",
+    "description": "[Popup] Recently closed tabs"
+  },
+  "commandLabelPopupSearchEngines": {
+    "message": "[Popup] Vyhledávače",
+    "description": "[Popup] Search engines"
+  },
+  "commandLabelPopupCustomCommandList": {
+    "message": "[Popup] Seznam vlastních příkazů",
+    "description": "[Popup] Custom command list"
+  },
+  "commandLabelSendMessageToOtherAddon": {
+    "message": "Odeslat zprávu jinému doplňku",
+    "description": "Send message to other add-on"
+  },
+  "commandLabelExecuteUserScript": {
+    "message": "Spustit uživatelský skript",
+    "description": "Execute user script"
+  },
+  "commandLabelClearBrowsingData": {
+    "message": "Vymazat historii prohlížení",
+    "description": "Clear browsing data"
+  },
+  "commandLabelRunMultiPurposeCommand": {
+    "message": "Spustit víceúčelový příkaz",
+    "description": "Run multi purpose command"
+  },
+  "commandDescriptionToggleBookmark": {
+    "message": "Přidá nebo odebere záložku.",
+    "description": "Adds or removes a bookmark."
+  },
+  "commandDescriptionDuplicateTab": {
+    "message": "Znovu otevře aktuální panel.",
+    "description": "Duplicates the current tab."
+  },
+  "commandDescriptionNewTab": {
+    "message": "Otevře nový panel.",
+    "description": "Opens a new tab."
+  },
+  "commandDescriptionReloadTab": {
+    "message": "Obnoví aktuální stránku.",
+    "description": "Reloads the current page."
+  },
+  "commandDescriptionReloadFrame": {
+    "message": "Znovu načte rám, na kterém začalo gesto.",
+    "description": "Reloads the frame on which the gesture started."
+  },
+  "commandDescriptionStopLoading": {
+    "message": "Zastaví načítání aktuální stránky.",
+    "description": "Stops the current page from loading."
+  },
+  "commandDescriptionCloseTab": {
+    "message": "Zavře aktuální panel.",
+    "description": "Closes the current tab."
+  },
+  "commandDescriptionRestoreTab": {
+    "message": "Znovu otevře naposledy zavřený panel.",
+    "description": "Restores the last closed tab."
+  },
+  "commandDescriptionZoomIn": {
+    "message": "Zvětší obsah aktuálního panelu.",
+    "description": "Zooms into the current tab."
+  },
+  "commandDescriptionZoomOut": {
+    "message": "Zmenší obsah aktuálního panelu.",
+    "description": "Zooms out of the current tab."
+  },
+  "commandDescriptionZoomReset": {
+    "message": "Obnoví výchozí úroveň přiblížení.",
+    "description": "Resets the current zoom level."
+  },
+  "commandDescriptionPageBack": {
+    "message": "Přejde na předchozí stránku v historii.",
+    "description": "Returns to the previous page of the history."
+  },
+  "commandDescriptionPageForth": {
+    "message": "Přejde na následující stránku v historii.",
+    "description": "Goes a page forward in the history."
+  },
+  "commandDescriptionTogglePin": {
+    "message": "Připne nebo odepne aktuální panel.",
+    "description": "Pins or unpins the current Tab."
+  },
+  "commandDescriptionToggleMute": {
+    "message": "Vypne nebo zapne zvuk u aktuálního panelu.",
+    "description": "Mutes or unmutes the current tab."
+  },
+  "commandDescriptionToggleReaderMode": {
+    "message": "Aktivuje nebo deaktivuje čtecí zobrazení, pokud je k dispozici.",
+    "description": "Activates or deactivates the reader view if available."
+  },
+  "commandDescriptionScrollTop": {
+    "message": "Přejde na začátek stránky.",
+    "description": "Scrolls to the top of the page."
+  },
+  "commandDescriptionScrollBottom": {
+    "message": "Přejde na konec stránky.",
+    "description": "Scrolls to the bottom of the page."
+  },
+  "commandDescriptionScrollPageDown": {
+    "message": "Posune pohled dolů o výšku aktuálního zobrazení.",
+    "description": "Scrolls down by the length of the current view."
+  },
+  "commandDescriptionScrollPageUp": {
+    "message": "Posune pohled nahoru o výšku aktuálního zobrazení.",
+    "description": "Scrolls up by the length of the current view."
+  },
+  "commandDescriptionFocusRightTab": {
+    "message": "Přepne na panel vpravo od aktuálního panelu.",
+    "description": "Switches to the right tab of the current tab."
+  },
+  "commandDescriptionFocusLeftTab": {
+    "message": "Přepne na panel vlevo od aktuálního panelu.",
+    "description": "Switches to the left tab of the current tab."
+  },
+  "commandDescriptionFocusFirstTab": {
+    "message": "Přepne na první panel.",
+    "description": "Switches to the far left tab."
+  },
+  "commandDescriptionFocusLastTab": {
+    "message": "Přepne na poslední panel.",
+    "description": "Switches to the far right tab."
+  },
+  "commandDescriptionFocusPreviousSelectedTab": {
+    "message": "Přepne na poslední aktivní panel.",
+    "description": "Switches to the last active tab."
+  },
+  "commandDescriptionMaximizeWindow": {
+    "message": "Maximalizuje aktuální okno.",
+    "description": "Maximizes the current window."
+  },
+  "commandDescriptionMinimizeWindow": {
+    "message": "Minimalizuje aktuální okno.",
+    "description": "Minimizes the current window."
+  },
+  "commandDescriptionToggleWindowSize": {
+    "message": "Přepíná mezi normální velikostí okna a maximalizovaným oknem.",
+    "description": "Switches between maximized and normal window size."
+  },
+  "commandDescriptionToggleFullscreen": {
+    "message": "Zapne nebo vypne režim celé obrazovky.",
+    "description": "Activates or deactivates full screen mode."
+  },
+  "commandDescriptionNewWindow": {
+    "message": "Otevře nové prázdné okno.",
+    "description": "Opens a new empty window."
+  },
+  "commandDescriptionNewPrivateWindow": {
+    "message": "Otevře nové prázdné anonymní okno.",
+    "description": "Opens a new empty private window."
+  },
+  "commandDescriptionMoveTabToStart": {
+    "message": "Přesune aktuální panel na začátek pruhu panelů.",
+    "description": "Moves the current tab to the start of the tab strip."
+  },
+  "commandDescriptionMoveTabToEnd": {
+    "message": "Přesune aktuální panel na konec pruhu panelů.",
+    "description": "Moves the current tab to the end of the tab strip."
+  },
+  "commandDescriptionMoveTabToNewWindow": {
+    "message": "Přesune aktuální panel do nového okna.",
+    "description": "Moves the current tab to a new window."
+  },
+  "commandDescriptionMoveLeftTabsToNewWindow": {
+    "message": "Přesune všechny panely nalevo od aktuálního panelu do nového okna.",
+    "description": "Moves all tabs to the left of the current tab to a new window."
+  },
+  "commandDescriptionMoveRightTabsToNewWindow": {
+    "message": "Přesune všechny panely napravo od aktuálního panelu do nového okna.",
+    "description": "Moves all tabs to the right of the current tab to a new window."
+  },
+  "commandDescriptionCloseWindow": {
+    "message": "Zavře aktuální okno.",
+    "description": "Closes the current window."
+  },
+  "commandDescriptionReloadAllTabs": {
+    "message": "Obnoví všechny panely.",
+    "description": "Reloads all tabs."
+  },
+  "commandDescriptionToRootURL": {
+    "message": "Přejde na hlavní stránku webové stránky.",
+    "description": "Goes to the main page of the website."
+  },
+  "commandDescriptionURLLevelUp": {
+    "message": "Přejde v adrese URL o úroveň výš.",
+    "description": "Goes up the URL hierarchy for one level."
+  },
+  "commandDescriptionIncreaseURLNumber": {
+    "message": "Zvýší číslo v adrese URL.",
+    "description": "Increases a number in the URL."
+  },
+  "commandDescriptionDecreaseURLNumber": {
+    "message": "Sníží číslo v adrese URL.",
+    "description": "Decreases a number in the URL."
+  },
+  "commandDescriptionOpenImageInNewTab": {
+    "message": "Otevře obrázek, nad kterým začalo gesto, v novém panelu.",
+    "description": "Opens the image on which the gesture started in a new tab."
+  },
+  "commandDescriptionOpenLinkInNewTab": {
+    "message": "Otevře buď označený odkaz, nebo odkaz, na kterém začalo gesto, v novém panelu.",
+    "description": "Opens either a selected url or the link on which the gesture started in a new tab."
+  },
+  "commandDescriptionOpenLinkInNewWindow": {
+    "message": "Otevře označený odkaz, nebo odkaz, na kterém začalo gesto, v novém okně.",
+    "description": "Opens either a selected url or the link on which the gesture started in a new window."
+  },
+  "commandDescriptionOpenLinkInNewPrivateWindow": {
+    "message": "Otevře označený odkaz, nebo odkaz, na kterém začalo gesto, v novém anonymním okně.",
+    "description": "Opens either a selected url or the link on which the gesture started in a new private window."
+  },
+  "commandDescriptionSearchTextSelection": {
+    "message": "Spustí webové vyhledávání vybraného textu v aktuálním panelu.",
+    "description": "Starts a web search of the selected text in the current tab."
+  },
+  "commandDescriptionSearchClipboard": {
+    "message": "Spustí webové vyhledávání textu ve schránce v aktuálním panelu.",
+    "description": "Starts a web search of the clipboard text in the current tab."
+  },
+  "commandDescriptionSearchTextSelectionInNewTab": {
+    "message": "Spustí webové vyhledávání vybraného textu v novém panelu.",
+    "description": "Starts a web search of the selected text in a new tab."
+  },
+  "commandDescriptionSearchClipboardInNewTab": {
+    "message": "Spustí webové vyhledávání textu ve schránce v novém panelu.",
+    "description": "Starts a web search of the clipboard text in a new tab."
+  },
+  "commandDescriptionCloseRightTabs": {
+    "message": "Zavře všechny panely napravo od aktuálního panelu.",
+    "description": "Closes all tabs on the right side of the current tab."
+  },
+  "commandDescriptionCloseLeftTabs": {
+    "message": "Zavře všechny panely nalevo od aktuálního panelu kromě připnutých panelů.",
+    "description": "Closes all tabs on the left side of the current tab except the pinned tabs."
+  },
+  "commandDescriptionCloseOtherTabs": {
+    "message": "Zavře všechny panely kromě aktuálního a připnutých panelů.",
+    "description": "Closes all tabs except of the current tab and pinned tabs."
+  },
+  "commandDescriptionSaveTabAsPDF": {
+    "message": "Uloží aktuální stránku jako soubor formátu PDF.",
+    "description": "Saves the current page as a pdf file."
+  },
+  "commandDescriptionSaveImage": {
+    "message": "Stáhne obrázek, na kterém začalo gesto.",
+    "description": "Downloads the image on which the gesture started."
+  },
+  "commandDescriptionSaveLink": {
+    "message": "Stáhne buď označenou url, nebo odkaz, na kterém gesto začalo.",
+    "description": "Downloads either a selected url or the link on which the gesture started."
+  },
+  "commandDescriptionPrintTab": {
+    "message": "Vyvolá dialog tisku a vytiskne aktuální stránku.",
+    "description": "Prints the current page by prompting the print dialog."
+  },
+  "commandDescriptionOpenPrintPreview": {
+    "message": "Otevře náhled tisku aktuální stránky.",
+    "description": "Opens the print preview of the current page."
+  },
+  "commandDescriptionOpenHomepage": {
+    "message": "Funguje jako tlačítko Domů.",
+    "description": "Works like the homepage button."
+  },
+  "commandDescriptionOpenCustomURLInNewTab": {
+    "message": "Otevře zadanou URL v novém panelu.",
+    "description": "Opens the specified URL in a new tab."
+  },
+  "commandDescriptionOpenCustomURL": {
+    "message": "Otevře zadanou URL v aktuálním panelu.",
+    "description": "Opens the specified URL in the current tab."
+  },
+  "commandDescriptionPasteClipboard": {
+    "message": "Vloží aktuální text ve schránce na pozici kurzoru vstupního pole, na kterém začalo gesto.",
+    "description": "Inserts the current clipboard text at the caret position of the input element on which the gesture started."
+  },
+  "commandDescriptionOpenURLFromClipboard": {
+    "message": "Pokud schránka obsahuje URL, bude otevřena v aktuálním panelu.",
+    "description": "If the clipboard contains a URL, it will be opened in the current tab."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewTab": {
+    "message": "Pokud schránka obsahuje URL, bude otevřena v novém panelu.",
+    "description": "If the clipboard contains a URL, it will be opened in a new tab."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewWindow": {
+    "message": "Pokud schránka obsahuje URL, bude otevřena v novém okně.",
+    "description": "If the clipboard contains a URL, it will be opened in a new window."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewPrivateWindow": {
+    "message": "Pokud schránka obsahuje URL, bude otevřena v novém anonymním okně.",
+    "description": "If the clipboard contains a URL, it will be opened in a new private window."
+  },
+  "commandDescriptionOpenAddonSettings": {
+    "message": "Otevře stránku s nastavením Gesturefy.",
+    "description": "Opens the Gesturefy settings page."
+  },
+  "commandDescriptionOpenLink": {
+    "message": "Otevře vybranou url, nebo odkaz, na kterém začalo gesto.",
+    "description": "Opens either a selected url or the link on which the gesture started."
+  },
+  "commandDescriptionViewImage": {
+    "message": "Otevře obrázek, na kterém začalo gesto.",
+    "description": "Opens the image on which the gesture started."
+  },
+  "commandDescriptionLinkToNewBookmark": {
+    "message": "Uloží do záložek buď označený odkaz, nebo odkaz, na kterém gesto začalo.",
+    "description": "Saves either a selected url or the link on which the gesture started as a bookmark."
+  },
+  "commandDescriptionSaveScreenshot": {
+    "message": "Uloží viditelnou část stránky jako snímek obrazovky.",
+    "description": "Saves the current visible website area as an image."
+  },
+  "commandDescriptionCopyTabURL": {
+    "message": "Zkopíruje do schránky adresu aktuálního panelu.",
+    "description": "Copies the URL of the current tab to clipboard."
+  },
+  "commandDescriptionCopyLinkURL": {
+    "message": "Zkopíruje do schránky buď označený odkaz, nebo odkaz, na kterém začalo gesto.",
+    "description": "Copies either a selected url or the link on which the gesture started to clipboard."
+  },
+  "commandDescriptionCopyImageURL": {
+    "message": "Zkopíruje do schránky URL obrázku, na kterém gesto začalo.",
+    "description": "Copies the URL of the image on which the gesture started to clipboard."
+  },
+  "commandDescriptionCopyTextSelection": {
+    "message": "Zkopíruje do schránky vybraný text.",
+    "description": "Copies the current text selection to clipboard."
+  },
+  "commandDescriptionCopyImage": {
+    "message": "Zkopíruje do schránky obrázek, na kterém gesto začalo.",
+    "description": "Copies the image on which the gesture started to clipboard."
+  },
+  "commandDescriptionViewPageSourceCode": {
+    "message": "Otevře zdrojový kód stránky v novém panelu.",
+    "description": "Opens a new tab containing the source code of the page."
+  },
+  "commandDescriptionPopupAllTabs": {
+    "message": "Zobrazí nabídku se seznamem všech právě otevřených panelů a umožní přepnout na kterýkoliv z nich.",
+    "description": "Opens a popup containing a list of all currently open tabs and offers the possibility to switch to one of them."
+  },
+  "commandDescriptionPopupRecentlyClosedTabs": {
+    "message": "Otevře nabídku se seznamem všech nedávno zavřených panelů a umožní zvolený panel obnovit.",
+    "description": "Opens a popup containing a list of all recently closed tabs and offers the possibility to restore one of them."
+  },
+  "commandDescriptionPopupSearchEngines": {
+    "message": "Otevře nabídku obsahující seznam všech nainstalovaných vyhledávačů a nabídne možnost hledat vybraný text jedním z nich.",
+    "description": "Opens a popup containing a list of all installed search engines and offers the possibility to search the selected text with one of them."
+  },
+  "commandDescriptionPopupCustomCommandList": {
+    "message": "Otevře nabídku obsahující vlastní seznam příkazů a nabídne spuštění jednoho z nich.",
+    "description": "Opens a popup containing a custom list of multiple commands and offers the possibility to run one of them."
+  },
+  "commandDescriptionSendMessageToOtherAddon": {
+    "message": "Odešle volitelnou zprávu jinému doplňku. Umožňuje použít funkce ostatních doplňků.",
+    "description": "Sends a custom message to another add-on. This allows the use of other add-ons functionality."
+  },
+  "commandDescriptionExecuteUserScript": {
+    "message": "Spustí vlastní JavaScript kód na aktuální webové stránce.",
+    "description": "Executes custom JavaScript code in the current webpage."
+  },
+  "commandDescriptionClearBrowsingData": {
+    "message": "Odstraní vybraná data prohlížení.",
+    "description": "Removes the specified browsing data."
+  },
+  "commandDescriptionRunMultiPurposeCommand": {
+    "message": "Kombinuje více příkazů do jednoho a provede první příkaz, který proběhne úspěšně v daném kontextu/podmínkách.",
+    "description": "Combines multiple commands into one and executes the first command which runs successfully under the given context/conditions."
+  },
+  "commandSettingLabelNewTabPosition": {
+    "message": "Umístění nového panelu",
+    "description": "New tab position"
+  },
+  "commandSettingLabelNewTabPositionDefault": {
+    "message": "výchozí",
+    "description": "default"
+  },
+  "commandSettingLabelNewTabPositionBefore": {
+    "message": "před",
+    "description": "before"
+  },
+  "commandSettingLabelNewTabPositionAfter": {
+    "message": "za",
+    "description": "after"
+  },
+  "commandSettingLabelNewTabPositionStart": {
+    "message": "začátek",
+    "description": "start"
+  },
+  "commandSettingLabelNewTabPositionEnd": {
+    "message": "konec",
+    "description": "end"
+  },
+  "commandSettingLabelNewTabFocus": {
+    "message": "Přepnout na nový panel",
+    "description": "Focus new tab"
+  },
+  "commandSettingLabelTabNextFocus": {
+    "message": "Další panel",
+    "description": "Next tab"
+  },
+  "commandSettingLabelTabNextFocusDefault": {
+    "message": "výchozí",
+    "description": "default"
+  },
+  "commandSettingLabelTabNextFocusPrevious": {
+    "message": "předchozí",
+    "description": "previous"
+  },
+  "commandSettingLabelTabNextFocusNext": {
+    "message": "následující",
+    "description": "next"
+  },
+  "commandSettingLabelTabNextFocusRecently": {
+    "message": "poslední aktivní",
+    "description": "last focused"
+  },
+  "commandSettingLabelTabClosePinned": {
+    "message": "Zavřít připnuté panely",
+    "description": "Close pinned tabs"
+  },
+  "commandSettingLabelRestoreCurrentWindow": {
+    "message": "Pouze aktuální okno",
+    "description": "Current window only"
+  },
+  "commandSettingLabelReloadCache": {
+    "message": "Obnovit, přeskočit cache",
+    "description": "Reload cache"
+  },
+  "commandSettingLabelZoomStep": {
+    "message": "Krok přiblížení",
+    "description": "Zoom step"
+  },
+  "commandSettingLabelScrollDuration": {
+    "message": "Trvání posunutí",
+    "description": "Scroll duration"
+  },
+  "commandSettingLabelScrollProportion": {
+    "message": "Podíl posunutí",
+    "description": "Scroll proportion"
+  },
+  "commandSettingLabelFocusIncludePinned": {
+    "message": "Včetně připnutých panelů",
+    "description": "Include pinned tabs"
+  },
+  "commandSettingLabelTabCycling": {
+    "message": "Cyklické přepínání panelů",
+    "description": "Tab cycling"
+  },
+  "commandSettingLabelExcludeDiscarded": {
+    "message": "Vynechat vyřazené panely",
+    "description": "Exclude discarded tabs"
+  },
+  "commandSettingLabelOpenEmptyTab": {
+    "message": "Otevřít prázdný panel",
+    "description": "Open empty tab"
+  },
+  "commandSettingLabelOpenEmptySearch": {
+    "message": "Otevřít prázdné hledání",
+    "description": "Open empty search"
+  },
+  "commandSettingLabelOpenEmptyWindow": {
+    "message": "Otevřít prázdné okno",
+    "description": "Open empty window"
+  },
+  "commandSettingLabelSearchEngineURL": {
+    "message": "URL adresa vyhledávače",
+    "description": "Search engine URL"
+  },
+  "commandSettingLabelSavePromptDialog": {
+    "message": "Zobrazit okno \"Uložit jako\"",
+    "description": "Prompt dialog"
+  },
+  "commandSettingLabelCustomURL": {
+    "message": "Vlastní URL",
+    "description": "Custom URL"
+  },
+  "commandSettingLabelAddonId": {
+    "message": "ID doplňku",
+    "description": "Add-on ID"
+  },
+  "commandSettingLabelAddonMessage": {
+    "message": "Zpráva",
+    "description": "Message"
+  },
+  "commandSettingLabelParseMessage": {
+    "message": "Parsovat zprávu",
+    "description": "Parse message"
+  },
+  "commandSettingLabelTabOrder": {
+    "message": "Pořadí panelů",
+    "description": "Tab order"
+  },
+  "commandSettingLabelTabOrderNone": {
+    "message": "žádné (výchozí)",
+    "description": "none (default)"
+  },
+  "commandSettingLabelTabOrderLastAccessedAsc": {
+    "message": "poslední přístup vzestupně",
+    "description": "last accessed ascending"
+  },
+  "commandSettingLabelTabOrderLastAccessedDesc": {
+    "message": "poslední přístup sestupně",
+    "description": "last accessed descending"
+  },
+  "commandSettingLabelTabOrderAlphabeticallyAsc": {
+    "message": "abecedně vzestupně",
+    "description": "alphabetically ascending"
+  },
+  "commandSettingLabelTabOrderAlphabeticallyDesc": {
+    "message": "abecedně sestupně",
+    "description": "alphabetically descending"
+  },
+  "commandSettingLabelTabIncludeCurrent": {
+    "message": "Zahrnout aktuální panel",
+    "description": "Include current tab"
+  },
+  "commandSettingLabelNewWindowFocus": {
+    "message": "Převést nové okno do popředí",
+    "description": "Focus new window"
+  },
+  "commandSettingLabelUserScriptWarning": {
+    "message": "Opatrně!",
+    "description": "Careful!"
+  },
+  "commandSettingLabelUserScriptCode": {
+    "message": "Kód uživatelského skriptu",
+    "description": "User script code"
+  },
+  "commandSettingLabelTargetFrame": {
+    "message": "Cílový rám",
+    "description": "Target frame"
+  },
+  "commandSettingLabelTargetFrameSourceFrame": {
+    "message": "Zdrojový rám",
+    "description": "Source frame"
+  },
+  "commandSettingLabelTargetFrameAllFrames": {
+    "message": "Všechny rámy",
+    "description": "All frames"
+  },
+  "commandSettingLabelTargetFrameTopFrame": {
+    "message": "Horní rám",
+    "description": "Top-level frame"
+  },
+  "commandSettingLabelCustomMatchPattern": {
+    "message": "Vlastní šablona",
+    "description": "Custom match pattern"
+  },
+  "commandSettingLabelCommandSelection": {
+    "message": "Výběr příkazu",
+    "description": "Command selection"
+  },
+  "commandSettingLabelBrowsingDataCache": {
+    "message": "Mezipaměť",
+    "description": "Cache"
+  },
+  "commandSettingLabelBrowsingDataCookies": {
+    "message": "Cookies",
+    "description": "Cookies"
+  },
+  "commandSettingLabelBrowsingDataDownloads": {
+    "message": "Stažené položky",
+    "description": "Downloads"
+  },
+  "commandSettingLabelBrowsingDataFormData": {
+    "message": "Data formulářů",
+    "description": "Form data"
+  },
+  "commandSettingLabelBrowsingDataHistory": {
+    "message": "Historie",
+    "description": "History"
+  },
+  "commandSettingLabelBrowsingDataIndexedDB": {
+    "message": "IndexedDB",
+    "description": "IndexedDB"
+  },
+  "commandSettingLabelBrowsingDataLocalStorage": {
+    "message": "Lokální úložiště",
+    "description": "Local Storage"
+  },
+  "commandSettingLabelBrowsingDataPasswords": {
+    "message": "Hesla",
+    "description": "Passwords"
+  },
+  "commandSettingLabelBrowsingDataPluginData": {
+    "message": "Data pluginů",
+    "description": "Plugin data"
+  },
+  "commandSettingLabelBrowsingDataServiceWorkers": {
+    "message": "Service Workers",
+    "description": "Service Workers"
+  },
+  "commandSettingDescriptionNewTabPosition": {
+    "message": "Určuje pozici nového panelu vůči aktuálnímu panelu.",
+    "description": "Determines the position of the new tab relative to the current tab."
+  },
+  "commandSettingDescriptionNewTabFocus": {
+    "message": "Určuje, zda přepnout na na nově otevřený panel, či nikoliv.",
+    "description": "Determines if the opened tab should gain focus or not."
+  },
+  "commandSettingDescriptionTabNextFocus": {
+    "message": "Určuje, na který panel se následně přepnout.",
+    "description": "Determines which tab should be focused next."
+  },
+  "commandSettingDescriptionTabClosePinned": {
+    "message": "Určuje, jestli mohou být zavřeny i připnuté panely.",
+    "description": "Determines if pinned tabs can be closed or not."
+  },
+  "commandSettingDescriptionRestoreCurrentWindow": {
+    "message": "Určuje, zda mají být obnoveny pouze panely aktuálního okna.",
+    "description": "Determines if only tabs which belong to the current window should be restored."
+  },
+  "commandSettingDescriptionReloadCache": {
+    "message": "Určuje, zda má být obnovena vyrovnávací paměť.",
+    "description": "Determines if the cache should be reloaded or not."
+  },
+  "commandSettingDescriptionZoomStep": {
+    "message": "Krok přiblížení nebo více čárkami oddělených úrovní v procentech. Pokud je vynecháno, použijí se výchozí úrovně přiblížení Gesturefy.",
+    "description": "The zoom step or multiple comma separated levels in percentage. If omitted, Gesturefy's default zoom levels are used."
+  },
+  "commandSettingDescriptionScrollDuration": {
+    "message": "Doba trvání animace v milisekundách.",
+    "description": "The duration in milliseconds the scroll animation should take."
+  },
+  "commandSettingDescriptionScrollProportion": {
+    "message": "Procentuální podíl výšky okna, o který se má stránka posouvat.",
+    "description": "The percentage of the viewport height by which the page should be scrolled."
+  },
+  "commandSettingDescriptionFocusIncludePinned": {
+    "message": "Určuje, zda budou připnuté panely považovány za panely úplně nalevo (první).",
+    "description": "Determines if pinned tabs should be treated as the leftmost tabs."
+  },
+  "commandSettingDescriptionTabCycling": {
+    "message": "Určuje, zda mají panely kolovat ve smyčce.",
+    "description": "Determines if the tabs should be cycled through in a loop."
+  },
+  "commandSettingDescriptionExcludeDiscarded": {
+    "message": "Určuje, zda mají být přeskočeny panely, které nejsou načteny.",
+    "description": "Determines if tabs that are not loaded should be skipped."
+  },
+  "commandSettingDescriptionOpenEmptyTab": {
+    "message": "Určuje, zda otevřít prázdný panel, pokud není vybrána URL nebo odkaz.",
+    "description": "Determines if an empty tab should be opened if no URL or link was selected."
+  },
+  "commandSettingDescriptionOpenEmptySearch": {
+    "message": "Určuje, zda má být vyhledávání provedeno i bez přítomnosti textu",
+    "description": "Determines whether a search should be performed even if no text is present"
+  },
+  "commandSettingDescriptionOpenEmptyWindow": {
+    "message": "Určuje, zda otevřít prázdné onko pokud není vybrána URL nebo odkaz.",
+    "description": "Determines if an empty window should be opened if no URL or link was selected."
+  },
+  "commandSettingDescriptionSearchEngineURL": {
+    "message": "URL vyhledávače, do které bude hledaný text vložen místo zástupného znaku %s, nebo připojen na její konec. Pokud je vynecháno, použije se výchozí vyhledávač prohlížeče.",
+    "description": "A search engine URL where the search text is either inserted for the %s placeholder or appended to the end. If omitted, the default browser search engine is used."
+  },
+  "commandSettingDescriptionSavePromptDialog": {
+    "message": "Určuje, jestli se má zobrazit dialog \"Uložit jako\", nebo má být soubor rovnou stažen do výchozí složky pro stahování.",
+    "description": "Determines if the \"Save As\" dialog should appear or the file should be downloaded silently to the users default download folder."
+  },
+  "commandSettingDescriptionCustomURL": {
+    "message": "URL, která se má otevřít.",
+    "description": "The URL that should be opened."
+  },
+  "commandSettingDescriptionAddonId": {
+    "message": "Extension ID doplňku, kterému má být zpráva poslána.",
+    "description": "The extension ID of the add-on the message should be sent to."
+  },
+  "commandSettingDescriptionAddonMessage": {
+    "message": "Řetězec zprávy, který má být poslán doplňku.",
+    "description": "The message string that should be sent to the add-on."
+  },
+  "commandSettingDescriptionParseMessage": {
+    "message": "Určuje, zda má být zpráva serializovaná jako JavaScriptový objekt.",
+    "description": "Determines if the message should be serialized as a JavaScript object."
+  },
+  "commandSettingDescriptionTabOrder": {
+    "message": "Seřadí zobrazené panely podle určitých vlastností.",
+    "description": "Orders the displayed tabs by a specific characteristic."
+  },
+  "commandSettingDescriptionTabIncludeCurrent": {
+    "message": "Určuje, zda by měl být zahrnut aktivní panel.",
+    "description": "Determines if the currently active tab should be included."
+  },
+  "commandSettingDescriptionNewWindowFocus": {
+    "message": "Určuje, zda se má přepnout na nově otevřené okno, či nikoliv.",
+    "description": "Determines if the opened window should gain focus or not."
+  },
+  "commandSettingDescriptionUserScriptWarning": {
+    "message": "Uživatelské skripty mohou vést ke ztrátě soukromých dat.",
+    "description": "User scripts can lead to the loss of private data."
+  },
+  "commandSettingDescriptionUserScriptCode": {
+    "message": "Kód, který by měl být vložen do webové stránky.",
+    "description": "The code that should be injected into the webpage's scope."
+  },
+  "commandSettingDescriptionTargetFrame": {
+    "message": "Rám, do kterého by měl být uživatelský skript vložen.",
+    "description": "The frame in which the user script should be injected."
+  },
+  "commandSettingDescriptionCustomMatchPattern": {
+    "message": "Šablona ve formě regulárního výrazu, která odpovídá konkrétní části řetězce. Pokud je vynechán, použije se interní šablona.",
+    "description": "A pattern in the form of a regular expression to match a specific part of a string. If omitted an internal pattern is used."
+  },
+  "commandSettingDescriptionCommandSelection": {
+    "message": "Vlastní výběr více příkazů.",
+    "description": "A custom selection of multiple commands."
+  },
+  "commandErrorNotificationTitle": {
+    "message": "Příkaz \"$COMMAND$\" selhal.",
+    "description": "\"New tab\" command failed.",
+    "placeholders": {
+      "command": {
+        "content": "$1",
+        "example": "New tab"
+      }
+    }
+  },
+  "commandErrorNotificationMessageIllegalURL": {
+    "message": "Cílovou URL nelze otevřít. Pro více informací klikněte zde.",
+    "description": "The target URL cannot be opened. Click here for more information."
+  },
+  "commandErrorNotificationMessageNotSerializeable": {
+    "message": "Zadaný řetězec zprávy nemohl být zpracován jako JavaScriptový objekt. Pro více informací klikněte zde.",
+    "description": "The specified message string could not be parsed to a JavaScript object. Click here for more information."
+  },
+  "commandErrorNotificationMessageMissingRecipient": {
+    "message": "Dané extension ID buď nepatří žádnému doplňku nebo doplněk nepřijímá zprávy. Pro více informací klikněte zde.",
+    "description": "The specified extension ID either does not belong to an existing add-on or the add-on does not receive messages. Click here for more information."
+  },
+  "commandErrorNotificationMessageMissingIncognitoPermissions": {
+    "message": "Gesturefy nemá oprávnění pro anonymní režim. Pro více informací klikněte zde.",
+    "description": "Gesturefy does not have permission for incognito mode. Click here for more information."
+  },
+  "commandBarTitle": {
+    "message": "Panel příkazů",
+    "description": "Command bar"
+  },
+  "commandBarSearch": {
+    "message": "Hledat",
+    "description": "Search"
+  },
+  "commandBarAdditionalPermissionsText": {
+    "message": "Tento příkaz vyžaduje další oprávnění: ",
+    "description": "This command requires additional permissions: "
+  },
+  "commandBarAdditionalSettingsText": {
+    "message": "Tento příkaz má další nastavení.",
+    "description": "This command has additional settings."
+  },
+  "commandBarOpenSelectionText": {
+    "message": "Otevřít výběr příkazu.",
+    "description": "Open command selection."
+  },
+  "commandBarOpenSettingsText": {
+    "message": "Otevřít nastavení příkazu.",
+    "description": "Open command settings."
+  },
+  "commandMultiSelectAddPlaceholder": {
+    "message": "Přidat",
+    "description": "Add"
+  },
+  "commandMultiSelectNoResultsPlaceholder": {
+    "message": "Žádné výsledky",
+    "description": "No results"
+  },
+  "gesturePopupTitleNewGesture": {
+    "message": "Nové Gesto",
+    "description": "New Gesture"
+  },
+  "gesturePopupTitleEditGesture": {
+    "message": "Upravit Gesto",
+    "description": "Edit Gesture"
+  },
+  "gesturePopupRecordingAreaText": {
+    "message": "Použijte $MOUSEBUTTON$ tlačítko myši pro záznam nového gesta.",
+    "description": "Use the right mouse button to record a new gesture.",
+    "placeholders": {
+      "mousebutton": {
+        "content": "$1",
+        "example": "right"
+      }
+    }
+  },
+  "gesturePopupMouseButtonLeft": {
+    "message": "levé",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupMouseButtonRight": {
+    "message": "pravé",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupMouseButtonMiddle": {
+    "message": "prostřední",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupLabelCommand": {
+    "message": "Příkaz",
+    "description": "Command"
+  },
+  "gesturePopupLabelGestureDirections": {
+    "message": "Směr gesta",
+    "description": "Gesture directions"
+  },
+  "gesturePopupLabelOptionalLabel": {
+    "message": "Popis (volitelné)",
+    "description": "Label (optional)"
+  },
+  "gesturePopupDescriptionCommand": {
+    "message": "Vyberte příkaz, který má být přiřazen tomuto gestu.",
+    "description": "Choose a command that should be assigned to this gesture."
+  },
+  "gesturePopupDescriptionGestureDirections": {
+    "message": "Použijte buď klávesy šipek pro zadání směrů, nebo je zaznamenejte na ploše vedle.",
+    "description": "Either use the arrow keys to enter the directions, or record them in the area next to it."
+  },
+  "gesturePopupDescriptionOptionalLabel": {
+    "message": "Přiřaďte vlastní název, který bude zobrazen místo názvu příkazu.",
+    "description": "Assign a custom name that will be displayed instead of the command name."
+  },
+  "gesturePopupNotificationSimilarGesture": {
+    "message": "Toto gesto je podobné gestu \"$GESTURE_NAME$.",
+    "description": "This gesture is similar to the \"$GESTURE_NAME$\" gesture.",
+    "placeholders": {
+      "gesture_name": {
+        "content": "$1",
+        "example": "New Tab"
+      }
+    }
+  },
+  "permissionLabelTabs": {
+    "message": "Panely",
+    "description": "Tabs"
+  },
+  "permissionLabelSessions": {
+    "message": "Relace",
+    "description": "Sessions"
+  },
+  "permissionLabelBookmarks": {
+    "message": "Záložky",
+    "description": "Bookmarks"
+  },
+  "permissionLabelClipboardWrite": {
+    "message": "Zápis do schránky",
+    "description": "Clipboard write"
+  },
+  "permissionLabelClipboardRead": {
+    "message": "Čtení ze schránky",
+    "description": "Clipboard read"
+  },
+  "permissionLabelDownloads": {
+    "message": "Stažené položky",
+    "description": "Downloads"
+  },
+  "permissionLabelSearch": {
+    "message": "Hledat",
+    "description": "Search"
+  },
+  "permissionLabelBrowsingData": {
+    "message": "Data prohlížení",
+    "description": "Browsing data"
+  },
+  "toggleButtonOn": {
+    "message": "Ano",
+    "description": "On - setting checked"
+  },
+  "toggleButtonOff": {
+    "message": "Ne",
+    "description": "Off - setting not checked"
+  },
+  "linkAdditionalInformation": {
+    "message": "Další informace",
+    "description": "Additional information"
+  },
+  "buttonSave": {
+    "message": "Uložit",
+    "description": "Save"
+  },
+  "buttonConfirm": {
+    "message": "OK",
+    "description": "OK"
+  },
+  "buttonCancel": {
+    "message": "Zrušit",
+    "description": "Cancel"
+  },
+  "lightTheme": {
+    "message": "Světlý motiv",
+    "description": "Light theme"
+  },
+  "darkTheme": {
+    "message": "Tmavý motiv",
+    "description": "Dark theme"
+  },
+  "highContrastTheme": {
+    "message": "Vysoce kontrastní motiv",
+    "description": "High contrast theme"
+  },
+  "welcomePageUpperSectionReference": {
+    "message": "Gesturefy byl úspěšně nainstalován.",
+    "description": "Gesturefy has been successfully installed."
+  },
+  "welcomePageUpperSectionHeadline": {
+    "message": "Nikdy jste nedělali gesto myší?\nZkuste to právě teď!",
+    "description": "Never done a mouse gesture before?\r\n Try it out right now!"
+  },
+  "welcomePageUpperSectionTutorialStep01": {
+    "message": "Stiskněte a držte pravé tlačítko myši",
+    "description": "Press and hold the right mouse button"
+  },
+  "welcomePageUpperSectionTutorialStep02": {
+    "message": "Táhněte myší dolů",
+    "description": "Drag down your mouse"
+  },
+  "welcomePageUpperSectionTutorialStep03": {
+    "message": "Uvolněte pravé tlačítko myši",
+    "description": "Release the right mouse button"
+  },
+  "welcomePageLowerSectionReference": {
+    "message": "Posunuli jste se na konec stránky.",
+    "description": "You scrolled to the bottom of the page."
+  },
+  "welcomePageLowerSectionHeadline": {
+    "message": "Blahopřeji, úspěšně jste dokončil své první gesto myši!",
+    "description": "Congratulations, you successfully accomplished your very first mouse gesture!"
+  },
+  "welcomePageLowerSectionGetStartedText": {
+    "message": "Vytvořte si neomezené množství gest, která budou vyhovovat Vašemu způsobu prohlížení webu. Každodenní brouzdání bude snazší, rychlejší a mnohem zábavnější. Začněte nyní a přizpůsobte si Gesturefy!",
+    "description": "Create as many gestures as you want to suit your individual browsing style and make your daily browsing easier, faster and a lot more fun. Get started now and personalize Gesturefy!"
+  },
+  "welcomePageLowerSectionGetStartedLink": {
+    "message": "Nastavte si svá gesta",
+    "description": "Set Up Your Gestures"
+  },
+  "welcomePageLowerSectionLearnMoreText": {
+    "message": "Stále tápete? Klikněte na odkaz níže pro rychlý přehled. Pokud se Vám nepodaří rozjet Gesturefy, průvodce odstraňováním potíží naleznete tamtéž.",
+    "description": "Still confused? Click the link below for a quick break-down and if you can't get Gesturefy up and running you can also find a troubleshooting guide there."
+  },
+  "welcomePageLowerSectionLearnMoreLink": {
+    "message": "Zjistit více",
+    "description": "Learn More"
+  }
+}

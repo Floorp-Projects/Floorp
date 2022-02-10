@@ -1,0 +1,289 @@
+* {
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: none;
+}
+
+canvas {
+  display: block;
+}
+
+:host {
+  display: inline-block;
+  cursor: pointer;
+}
+
+/* reset inherited properties from outside the shadow dom */
+:host > * {
+  all: initial;
+  font-family: inherit;
+  color: inherit;
+}
+
+#content {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-repeat: repeat !important;
+  border: 1px solid var(--border-color);
+  box-sizing: border-box;
+}
+
+#content::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color);
+}
+
+/* color picker main */
+
+input {
+  padding: 5px;
+  border: 1px solid var(--border-color);
+  border-radius: 2px;
+  background: var(--base-color);
+  color: var(--text-color);
+  text-align: center;
+  transition: color 0.3s;
+  -moz-appearance: textfield;
+}
+
+.cp-main {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  /* prevent text selection on mousemove / slider use */
+  user-select: none;
+}
+
+.cp-panel + .cp-panel  {
+  margin-left: 1em;
+}
+
+#colorFieldPanel {
+  position: relative;
+}
+
+#colorFieldPanel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+#colorFieldCursor {
+  position: absolute;
+  display: block;
+  top: 0;
+  left: 0;
+  width: 15px;
+  height: 15px;
+  border: solid 3px #FFF;
+  border-radius: 50% 50%;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  background-color: rgb(var(--color));
+  z-index: 1;
+  transform: translate(calc(var(--colorFieldX) * 1px - 50%), calc(var(--colorFieldY) * 1px - 50%));
+}
+
+/*
+  When the cursor of the alpha or color scale is at the top or bottom of the slider its overlapping the slider
+  Because of that it partly shows the background of the outer div
+  To combat this the slider background is a little bit larger than the slider itself (set by the overlap variable)
+  But the extra height is clipped via clip-path and only shown when the slider reaches its position
+*/
+
+#colorScalePanel,
+#alphaScalePanel {
+  position: relative;
+
+  --overlap: 6; 
+  --max: 255;
+}
+
+#colorScalePanel {
+  --top: min( var(--colorScaleY), var(--overlap) );
+  --bottom: calc( var(--max) - max( var(--colorScaleY), calc( var(--max) - var(--overlap) ) ) );
+}
+
+#alphaScalePanel {
+  --top: min( var(--alphaScaleY), var(--overlap) );
+  --bottom: calc( var(--max) - max( var(--alphaScaleY), calc( var(--max) - var(--overlap) ) ) );
+}
+
+#colorScalePanel::before,
+#alphaScalePanel::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: calc(-1px * var(--overlap));
+  right: 0;
+  bottom: calc(-1px * var(--overlap));
+  left: 0;
+  pointer-events: none;
+  clip-path: inset( calc( 1px * var(--top) ) 0 calc( 1px * var(--bottom) ) 0);
+}
+
+#colorScalePanel::after,
+#alphaScalePanel::after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: calc( 1px * ( var(--top) - var(--overlap) ) );
+  right: 0;
+  bottom: calc( 1px * ( var(--bottom) - var(--overlap) ) );
+  left: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/*
+  Set extendable background to red because the color scale starts and ends with red
+*/
+
+#colorScalePanel::before {
+  background: #ff0000;
+}
+
+/*
+  Set extendable foreground to the alpha gradient
+  But do not start and end the gradient at 0% and 100% when the background is larger than the actual slider scale
+  Instead start and end the background at X% depending on the overlap
+*/
+#alphaScalePanel::after {
+  --totalGradientLength: calc( var(--max) + var(--overlap) - var(--top) + var(--overlap) - var(--bottom) );
+  --gradientStart: calc( 100% / var(--totalGradientLength) * ( var(--overlap) - var(--top) ) );
+  --gradientEnd: calc( 100% / var(--totalGradientLength) * ( var(--totalGradientLength) - ( var(--overlap) - var(--bottom) ) ) );
+
+  background: linear-gradient(rgba(var(--color), 1) var(--gradientStart), rgba(var(--color), 0) var(--gradientEnd));
+}
+
+#colorScale,
+#alphaScale {
+  z-index: 1;
+  position: relative;
+}
+
+#alphaScale {
+  width: 20px;
+  height: 256px;
+}
+
+#colorScaleCursor,
+#alphaScaleCursor {
+  position: absolute;
+  display: block;
+  top: 0;
+  left: 50%;
+  width: 100%;
+  height: 12px;
+  border: solid 3px #FFF;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+
+#colorScaleCursor  {
+  transform: translate(-50%, calc(var(--colorScaleY) * 1px - 50%));
+}
+
+#alphaScaleCursor {
+  transform: translate(-50%, calc(var(--alphaScaleY) * 1px - 50%));
+}
+
+#colorScaleCursor::after,
+#alphaScaleCursor::after {
+  content: "";
+  position: absolute;
+  display: block;
+  top: 50%;
+  right: 0;
+  transform: translate(0, -50%);
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-right: 3px solid #FFF;
+}
+
+#rgbaValueForm {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+#rgbaValueForm > label {
+  line-height: 1em;
+}
+
+#rgbaValueForm input {
+  width: 3em;
+  margin-left: 1em;
+}
+
+#colorPreview {
+  position: relative;
+}
+
+#colorPreview::before {
+  content: "";
+  display: block;
+  /* will expand the divs height to its width */
+  padding-top: 100%;
+  background-color: rgba(var(--color), var(--alpha));
+}
+
+/* color picker footer */
+
+.cp-footer {
+  margin-top: 1em;
+}
+
+#hexValueForm {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+#hexValueForm input {
+  width: 256px;
+  box-sizing: border-box;
+}
+
+#saveButton {
+  flex: 1;
+  margin-left: 1rem;
+  box-sizing: border-box;
+  padding: 8px 6px 6px 6px;
+  border-radius: 2px;
+  background: var(--highlighted-color);
+  color: var(--textSecond-color);
+  text-align: center;
+  cursor: pointer;
+  font-weight: normal;
+}
+
+#saveButton:hover {
+  box-shadow: 0 0 10px -4px var(--shadowSecond-color);
+}
+
+/* group styles */
+
+#content,
+#colorPreview,
+#alphaScalePanel::before {
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGklEQVQYlWO4du3af3TMgA0MBYWDzDkUKQQASNWvMwk8/ksAAAAASUVORK5CYII=);
+  background-repeat: round;
+}
+
+#colorFieldPanel::after,
+#colorScalePanel::after,
+#alphaScalePanel::after,
+#colorPreview::before {
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.12);
+}

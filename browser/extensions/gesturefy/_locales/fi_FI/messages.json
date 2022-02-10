@@ -1,0 +1,1612 @@
+{
+  "extensionDescription": {
+    "message": "Navigoi, käytä ja selaa nopeammin hiirieleillä! Muokattavissa oleva hiirielelaajennus useilla erilaisilla komennoilla.",
+    "description": "Navigate, operate, and browse faster with mouse gestures! A customizable mouse gesture add-on with a variety of different commands."
+  },
+  "addonUpdateNotificationTitle": {
+    "message": "$NAME$ laajennus on päivitetty!",
+    "description": "Gesturefy add-on has been updated!",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Gesturefy"
+      }
+    }
+  },
+  "addonUpdateNotificationMessage": {
+    "message": "Uusi versio on $VERSION$. Klikkaa tästä nähdäksesi muutokset.",
+    "description": "The new version number is $VERSION$. Click here to view the changelog.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "1.0.1"
+      }
+    }
+  },
+  "navigationSettings": {
+    "message": "Asetukset",
+    "description": "Settings"
+  },
+  "navigationGestures": {
+    "message": "Eleet",
+    "description": "Gestures"
+  },
+  "navigationExtras": {
+    "message": "Extrat",
+    "description": "Extras"
+  },
+  "navigationExclusions": {
+    "message": "Poikkeukset",
+    "description": "Exclusions"
+  },
+  "navigationAbout": {
+    "message": "Tietoja",
+    "description": "About"
+  },
+  "settingLabelMouseButton": {
+    "message": "Aktivointipainike",
+    "description": "Activation button"
+  },
+  "settingLabelMouseButtonLeft": {
+    "message": "vasen",
+    "description": "left"
+  },
+  "settingLabelMouseButtonRight": {
+    "message": "oikea",
+    "description": "right"
+  },
+  "settingLabelMouseButtonMiddle": {
+    "message": "keski",
+    "description": "middle"
+  },
+  "settingLabelMatchingAlgorithm": {
+    "message": "Tunnistusalgoritmi",
+    "description": "Matching algorithm"
+  },
+  "settingLabelMatchingAlgorithmCombined": {
+    "message": "Yhdistetty",
+    "description": "Combined"
+  },
+  "settingLabelMatchingAlgorithmStrict": {
+    "message": "Tiukka",
+    "description": "Strict"
+  },
+  "settingLabelMatchingAlgorithmShapeIndependent": {
+    "message": "Muotovapaa",
+    "description": "Shape-Independent"
+  },
+  "settingLabelTimeoutActive": {
+    "message": "Aktiivisen eleen aikakatkaisu",
+    "description": "Activate idle timeout"
+  },
+  "settingLabelTimeoutDuration": {
+    "message": "Katkaisuaika",
+    "description": "Duration"
+  },
+  "settingLabelSuppressionKey": {
+    "message": "Peruutuspainike",
+    "description": "Deactivation key"
+  },
+  "settingLabelNoneKey": {
+    "message": "Ei mitään",
+    "description": "None"
+  },
+  "settingLabelAltKey": {
+    "message": "Alt",
+    "description": "Alt"
+  },
+  "settingLabelCtrlKey": {
+    "message": "Ctrl",
+    "description": "Ctrl"
+  },
+  "settingLabelShiftKey": {
+    "message": "Vaihto",
+    "description": "Shift"
+  },
+  "settingLabelAdvancedSettings": {
+    "message": "Lisäasetukset",
+    "description": "Advanced settings"
+  },
+  "settingLabelDistanceThreshold": {
+    "message": "Etäisyyden kynnysarvo",
+    "description": "Distance threshold"
+  },
+  "settingLabelDeviationTolerance": {
+    "message": "Poikkeaman toleranssi",
+    "description": "Deviation tolerance"
+  },
+  "settingLabelDisplayTrace": {
+    "message": "Näytä eleen jälki",
+    "description": "Display gesture trace"
+  },
+  "settingLabelTraceColor": {
+    "message": "Viivan väri",
+    "description": "Line color"
+  },
+  "settingLabelTraceWidth": {
+    "message": "Viivan leveys",
+    "description": "Line width"
+  },
+  "settingLabelTraceGrowth": {
+    "message": "Viivan leveyden kasvu",
+    "description": "Line growth"
+  },
+  "settingLabelDisplayCommand": {
+    "message": "Näytä komento",
+    "description": "Display command"
+  },
+  "settingLabelCommandFontColor": {
+    "message": "Tekstin väri",
+    "description": "Font color"
+  },
+  "settingLabelCommandBackgroundColor": {
+    "message": "Taustan väri ja läpinäkyvyys",
+    "description": "Background color"
+  },
+  "settingLabelCommandFontSize": {
+    "message": "Tekstin koko",
+    "description": "Font size"
+  },
+  "settingLabelCommandHorizontalPosition": {
+    "message": "Vaakasuuntainen sijainti",
+    "description": "Horizontal position"
+  },
+  "settingLabelCommandVerticalPosition": {
+    "message": "Pystysuuntainen sijainti",
+    "description": "Vertical position"
+  },
+  "settingLabelUpdateNotification": {
+    "message": "Näytä päivitysilmoitukset",
+    "description": "Display update notification"
+  },
+  "settingDescriptionMouseButton": {
+    "message": "Kaappaa uuden eleen kun tämä painike pidetään painettuna.",
+    "description": "Captures a new mouse gesture while the button is held down."
+  },
+  "settingDescriptionMatchingAlgorithm": {
+    "message": "Määrittää miten eleitä verrataan, jotta löydetään parhaiten vastaava ele.",
+    "description": "Determines how the gestures are compared to find the best matching gesture."
+  },
+  "settingDescriptionMatchingAlgorithmLink": {
+    "message": "Tutustu vaihtoehtoihin täällä",
+    "description": "Learn about the differences here"
+  },
+  "settingDescriptionTimeoutActive": {
+    "message": "Peruuttaa aktiivisen eleen, kun hiirtä ei ole liikutettu tässä määritettynä aikaan.",
+    "description": "Cancels the gesture after the mouse has not been moved for the specified time."
+  },
+  "settingDescriptionTimeoutDuration": {
+    "message": "Aika sekunteina, jonka kuluttua ele perutaan.",
+    "description": "The duration in seconds until the gesture is cancelled."
+  },
+  "settingDescriptionSuppressionKey": {
+    "message": "Estää eleen suorituksen painettaessa muutosnäppäintä.",
+    "description": "Prevents a gesture from being triggered while the modifier key is pressed."
+  },
+  "settingDescriptionDistanceThreshold": {
+    "message": "Pienin hiiren siirtoetäisyys, joka hiirtä on liikutettava ennen kuin eleen tunnistus aloitetaan.",
+    "description": "The minimum distance the mouse must be moved until the start of a gesture is recognized."
+  },
+  "settingDescriptionDeviationTolerance": {
+    "message": "Eleen liikeradan poikkema, joka määrittää tunnistetaanko ele.",
+    "description": "The permissible gesture deviation that should still be recognized as a match."
+  },
+  "settingDescriptionDisplayTrace": {
+    "message": "Pirtää viivan, joka seuraa hiiren osoitinta. Viiva katoaa, kun ele päättyy.",
+    "description": "Displays a trace along the mouse movement."
+  },
+  "settingDescriptionTraceGrowth": {
+    "message": "Määrittää pitäisikö viivan leveyden kasvaa tasaisesti määritettyyn arvoon eleen edetessä.",
+    "description": "Determines if the line thickness should grow."
+  },
+  "settingDescriptionDisplayCommand": {
+    "message": "Näyttää eleeseen täsmäävän komennon, jos tunnistettu.",
+    "description": "Displays the command of the currently matching gesture if available."
+  },
+  "settingDescriptionCommandFontSize": {
+    "message": "Hyväksyy kaikki CSS-yksiköt, kuten: em, px, pt, %, vh jne.",
+    "description": "Accepts every CSS Unit like: em, px, pt, %, vh etc."
+  },
+  "settingDescriptionCommandHorizontalPosition": {
+    "message": "Vaakasuuntainen sijainti näytöllä, 0 (vasen) - 100 (oikea).",
+    "description": "Horizontal screen position from 0 (left) to 100 (right)."
+  },
+  "settingDescriptionCommandVerticalPosition": {
+    "message": "Pystysuuntainen sijainti näytöllä, 0 (ylä) - 100 (ala).",
+    "description": "Vertical screen position from 0 (top) to 100 (bottom)."
+  },
+  "settingDescriptionUpdateNotification": {
+    "message": "Näyttää ilmoituksen, kun Gesturefy on päivitetty.",
+    "description": "Shows a notification when Gesturefy is updated."
+  },
+  "gestureCreateNewButton": {
+    "message": "Uusi ele",
+    "description": "New Gesture"
+  },
+  "gestureSearchPlaceholder": {
+    "message": "Hae eleitä",
+    "description": "Search gestures"
+  },
+  "gestureHintNoSearchResults": {
+    "message": "Ei hakutuloksia",
+    "description": "No search results found"
+  },
+  "extraLabelRockerActive": {
+    "message": "Keinuele",
+    "description": "Rocker gesture"
+  },
+  "extraLabelRockerRightMouseClick": {
+    "message": "Hiiren napsautus oikealla",
+    "description": "Right mouse click"
+  },
+  "extraLabelRockerLeftMouseClick": {
+    "message": "Hiiren napsautus vasemmalla",
+    "description": "Left mouse click"
+  },
+  "extraDescriptionRockerActive": {
+    "message": "Tämä ele suoritetaan joko pitämällä hiiren oikeaa painiketta pohjassa ja napsauttamalla vasenta tai päinvastoin.",
+    "description": "This gesture is performed either by holding the right mouse button and clicking the left or vice versa."
+  },
+  "extraLabelWheelActive": {
+    "message": "Rullaele",
+    "description": "Wheel gesture"
+  },
+  "extraLabelWheelMouseButton": {
+    "message": "Hiiren painike rullaeleelle",
+    "description": "Wheel gesture mouse button"
+  },
+  "extraLabelWheelSensitivity": {
+    "message": "Rullan herkkyys",
+    "description": "Mouse wheel sensitivity"
+  },
+  "extraLabelWheelUp": {
+    "message": "Ylöspäin (eteen) rullaus",
+    "description": "Wheel up"
+  },
+  "extraLabelWheelDown": {
+    "message": "Alaspäin (taakse) rullaus",
+    "description": "Wheel down"
+  },
+  "extraDescriptionWheelActive": {
+    "message": "Rullaa ylös tai alas pitäen samalla rullaeleen painike painettuna.",
+    "description": "Scroll up or down while holding the wheel gesture trigger button."
+  },
+  "extraDescriptionWheelMouseButton": {
+    "message": "Hiiren painike, joka painettuna olleessaan aktivoi rullaeleen.",
+    "description": "The mouse button which triggers the wheel gesture."
+  },
+  "extraDescriptionWheelSensitivity": {
+    "message": "Vähimmäismäärä, jota rullaa on pyöritettävä eleen aktivoitumiseksi.",
+    "description": "The minimal amount the mouse wheel must be scrolled until the gesture is triggered."
+  },
+  "exclusionsLabelInformation": {
+    "message": "Tietoa:",
+    "description": "Information:"
+  },
+  "exclusionsTextInformation": {
+    "message": "Lisää tähän listaan URL-osoitteiden tunnistussääntöjä poistaaksesi Gesturefyn käytöstä tietyillä sivustoilla. Kaavassa sallitaan \"*\" -jokerimerkki ja kaavan täytyy olla muodossa <skeema>://<isäntä><polku> (esim. https://*.esimerkki.fi/polku/).",
+    "description": "Add URL match patterns to disable Gesturefy for certain websites. The match pattern allows \"*\" wildcards and must be in the form of <scheme>://<host><path>."
+  },
+  "exclusionsPlaceholderURL": {
+    "message": "Syötä URL-osoitteen tunnistussääntö",
+    "description": "Enter URL match pattern"
+  },
+  "exclusionsAddButton": {
+    "message": "Lisää",
+    "description": "Add"
+  },
+  "exclusionsNotificationAlreadyExists": {
+    "message": "URL-osoitteen tunnistussääntö on jo lisätty.",
+    "description": "URL pattern already exists."
+  },
+  "exclusionsHintNoEntries": {
+    "message": "Sääntöjä ei ole",
+    "description": "No entries available"
+  },
+  "aboutBackup": {
+    "message": "Varmuuskopioi",
+    "description": "Backup"
+  },
+  "aboutRestore": {
+    "message": "Palauta",
+    "description": "Restore"
+  },
+  "aboutReset": {
+    "message": "Palauta oletukset",
+    "description": "Reset"
+  },
+  "aboutLicense": {
+    "message": "Lisenssi:",
+    "description": "License:"
+  },
+  "aboutContributors": {
+    "message": "Avustukset:",
+    "description": "Contributors:"
+  },
+  "aboutLinkBug": {
+    "message": "Ilmoita virheestä",
+    "description": "Report a bug"
+  },
+  "aboutLinkCode": {
+    "message": "Lähdekoodi",
+    "description": "Source code"
+  },
+  "aboutLinkAddon": {
+    "message": "Laajennuksen sivu",
+    "description": "Add-on page"
+  },
+  "aboutRestoreNotificationNoConfigFile": {
+    "message": "Valittu tiedosto ei ole kelvollinen Gesturefyn asetustiedosto.",
+    "description": "The selected file is not a valid Gesturefy config file."
+  },
+  "aboutRestoreNotificationWrongFile": {
+    "message": "Valittu tiedosto ei vastaa vaadittua tiedostotyyppiä.",
+    "description": "The selected file does not match the required file type."
+  },
+  "aboutRestoreNotificationConfirm": {
+    "message": "Kaikki asetukset, mukaan lukien eleet, korvataan palautettavalla asetustiedostolla.",
+    "description": "All settings including gestures will be replaced by the selected config file."
+  },
+  "aboutRestoreNotificationSuccess": {
+    "message": "Asetustiedoston palautus onnistui.",
+    "description": "The selected config has been successfully restored."
+  },
+  "aboutResetNotificationConfirm": {
+    "message": "Kaikki asetukset, mukaan lukien eleet palautetaan oletusarvoihinsa. Tätä ei voi peruuttaa!",
+    "description": "All settings including gestures will be reset. This cannot be undone!"
+  },
+  "commandLabelToggleBookmark": {
+    "message": "Kytke kirjanmerkki",
+    "description": "Toggle bookmark"
+  },
+  "commandLabelDuplicateTab": {
+    "message": "Monista välilehti",
+    "description": "Duplicate tab"
+  },
+  "commandLabelNewTab": {
+    "message": "Uusi välilehti",
+    "description": "New tab"
+  },
+  "commandLabelReloadTab": {
+    "message": "Pävitä välilehti",
+    "description": "Reload tab"
+  },
+  "commandLabelReloadFrame": {
+    "message": "Päivitä kehys",
+    "description": "Reload frame"
+  },
+  "commandLabelStopLoading": {
+    "message": "Lopeta lataus",
+    "description": "Stop loading"
+  },
+  "commandLabelCloseTab": {
+    "message": "Sulje välilehti",
+    "description": "Close tab"
+  },
+  "commandLabelRestoreTab": {
+    "message": "Palauta suljettu välilehti",
+    "description": "Restore tab"
+  },
+  "commandLabelZoomIn": {
+    "message": "Lähennä",
+    "description": "Zoom in"
+  },
+  "commandLabelZoomOut": {
+    "message": "Loitonna",
+    "description": "Zoom out"
+  },
+  "commandLabelZoomReset": {
+    "message": "Palauta lähennys tai loitonnus",
+    "description": "Zoom reset"
+  },
+  "commandLabelPageBack": {
+    "message": "Sivu taaksepäin",
+    "description": "Page back"
+  },
+  "commandLabelPageForth": {
+    "message": "Sivu eteenpäin",
+    "description": "Page forward"
+  },
+  "commandLabelTogglePin": {
+    "message": "Kytke välilehden kiinnitys",
+    "description": "Toggle pinned tab"
+  },
+  "commandLabelToggleMute": {
+    "message": "Kytke vaimennus",
+    "description": "Toggle mute"
+  },
+  "commandLabelToggleReaderMode": {
+    "message": "Kytke lukunäkymä",
+    "description": "Toggle reader mode"
+  },
+  "commandLabelScrollTop": {
+    "message": "Vieritä sivun yläreunaan",
+    "description": "Scroll to the top"
+  },
+  "commandLabelScrollBottom": {
+    "message": "Vieritä sivun alareunaan",
+    "description": "Scroll to the bottom"
+  },
+  "commandLabelScrollPageDown": {
+    "message": "Vieritä sivu alas",
+    "description": "Scroll page down"
+  },
+  "commandLabelScrollPageUp": {
+    "message": "Vieritä sivu ylös",
+    "description": "Scroll page up"
+  },
+  "commandLabelFocusRightTab": {
+    "message": "Aktivoi oikeanpuoleinen välilehti",
+    "description": "Focus right tab"
+  },
+  "commandLabelFocusLeftTab": {
+    "message": "Aktivoi vasemmanpuoleinen välilehti",
+    "description": "Focus left tab"
+  },
+  "commandLabelFocusFirstTab": {
+    "message": "Aktivoi ensimmäinen välilehti",
+    "description": "Focus first tab"
+  },
+  "commandLabelFocusLastTab": {
+    "message": "Aktivoi viimeinen välilehti",
+    "description": "Focus last tab"
+  },
+  "commandLabelFocusPreviousSelectedTab": {
+    "message": "Aktivoi edellinen aktiivinen välilehti",
+    "description": "Focus previous selected tab"
+  },
+  "commandLabelMaximizeWindow": {
+    "message": "Suurenna ikkuna",
+    "description": "Maximize window"
+  },
+  "commandLabelMinimizeWindow": {
+    "message": "Pienennä ikkuna",
+    "description": "Minimize window"
+  },
+  "commandLabelToggleWindowSize": {
+    "message": "Kytke ikkunan koko",
+    "description": "Toggle window size"
+  },
+  "commandLabelToggleFullscreen": {
+    "message": "Kytke kokoruututila",
+    "description": "Toggle full screen"
+  },
+  "commandLabelNewWindow": {
+    "message": "Uusi ikkuna",
+    "description": "New window"
+  },
+  "commandLabelNewPrivateWindow": {
+    "message": "Uusi yksityinen ikkuna",
+    "description": "New private window"
+  },
+  "commandLabelMoveTabToStart": {
+    "message": "Siirrä välilehti palkin alkuun",
+    "description": "Move tab to start"
+  },
+  "commandLabelMoveTabToEnd": {
+    "message": "Siirrä välilehti palkin loppuun",
+    "description": "Move tab to end"
+  },
+  "commandLabelMoveTabToNewWindow": {
+    "message": "Siirrä välilehti uuteen ikkunaan",
+    "description": "Move tab to new window"
+  },
+  "commandLabelMoveLeftTabsToNewWindow": {
+    "message": "Siirrä vasemmanpuoleiset välilehdet uuteen ikkunaan",
+    "description": "Move left tabs to new window"
+  },
+  "commandLabelMoveRightTabsToNewWindow": {
+    "message": "Siirrä oikeanpuoleiset välilehdet uuteen ikkunaan",
+    "description": "Move right tabs to new window"
+  },
+  "commandLabelCloseWindow": {
+    "message": "Sulje ikkuna",
+    "description": "Close window"
+  },
+  "commandLabelReloadAllTabs": {
+    "message": "Pävitä kaikki",
+    "description": "Reload all"
+  },
+  "commandLabelToRootURL": {
+    "message": "Siirry URL-osoitteen juureen",
+    "description": "To root URL"
+  },
+  "commandLabelURLLevelUp": {
+    "message": "Siirry URL-osoitteen ylemmälle tasolle",
+    "description": "URL level up"
+  },
+  "commandLabelIncreaseURLNumber": {
+    "message": "Suurenna URL-osoitteen numeroa",
+    "description": "Increase URL number"
+  },
+  "commandLabelDecreaseURLNumber": {
+    "message": "Pienennä URL-osoitteen numeroa",
+    "description": "Decrease URL number"
+  },
+  "commandLabelOpenImageInNewTab": {
+    "message": "Avaa kuva uudessa välilehdessä",
+    "description": "Open image in new tab"
+  },
+  "commandLabelOpenLinkInNewTab": {
+    "message": "Avaa linkki uuteen välilehteen",
+    "description": "Open link in new tab"
+  },
+  "commandLabelOpenLinkInNewWindow": {
+    "message": "Avaa linkki uuteen ikkunaan",
+    "description": "Open link in new window"
+  },
+  "commandLabelOpenLinkInNewPrivateWindow": {
+    "message": "Avaa linkki uuteen yksityiseen ikkunaan",
+    "description": "Open link in new private window"
+  },
+  "commandLabelSearchTextSelection": {
+    "message": "Etsi valittua tekstiä",
+    "description": "Search text selection"
+  },
+  "commandLabelSearchClipboard": {
+    "message": "Etsi leikepöydältä",
+    "description": "Search clipboard"
+  },
+  "commandLabelSearchTextSelectionInNewTab": {
+    "message": "Etsi valittua tekstiä uudessa välilehdessä",
+    "description": "Search text selection in new tab"
+  },
+  "commandLabelSearchClipboardInNewTab": {
+    "message": "Etsi leikepöydän sisältöä uudessa välilehdessä",
+    "description": "Search clipboard in new tab"
+  },
+  "commandLabelCloseRightTabs": {
+    "message": "Sulje oikeanpuoleiset välilehdet",
+    "description": "Close right tabs"
+  },
+  "commandLabelCloseLeftTabs": {
+    "message": "Sulje vasemmanpuoleiset välilehdet",
+    "description": "Close left tabs"
+  },
+  "commandLabelCloseOtherTabs": {
+    "message": "Sulje muut välilehdet",
+    "description": "Close other tabs"
+  },
+  "commandLabelSaveTabAsPDF": {
+    "message": "Talenna PDF-tiedostona",
+    "description": "Save as PDF"
+  },
+  "commandLabelSaveImage": {
+    "message": "Tallenna kuva",
+    "description": "Save image"
+  },
+  "commandLabelSaveLink": {
+    "message": "Tallenna linkki",
+    "description": "Save link"
+  },
+  "commandLabelPrintTab": {
+    "message": "Tulosta",
+    "description": "Print"
+  },
+  "commandLabelOpenPrintPreview": {
+    "message": "Tulostuksen esikatselu",
+    "description": "Print preview"
+  },
+  "commandLabelOpenHomepage": {
+    "message": "Avaa kotisivu",
+    "description": "Open homepage"
+  },
+  "commandLabelOpenCustomURLInNewTab": {
+    "message": "Avaa itse määritetty URL-osoite uudessa välilehdessä",
+    "description": "Open custom URL in new tab"
+  },
+  "commandLabelOpenCustomURL": {
+    "message": "Avaa itse määritetty URL-osoite",
+    "description": "Open custom URL"
+  },
+  "commandLabelPasteClipboard": {
+    "message": "Liitä leikepöydältä",
+    "description": "Paste clipboard"
+  },
+  "commandLabelOpenURLFromClipboard": {
+    "message": "Avaa URL-osoite leikepöydältä",
+    "description": "Open URL from clipboard"
+  },
+  "commandLabelOpenURLFromClipboardInNewTab": {
+    "message": "Avaa URL-osoite leikepöydältä uudessa välilehdessä",
+    "description": "Open URL from clipboard in new tab"
+  },
+  "commandLabelOpenURLFromClipboardInNewWindow": {
+    "message": "Avaa URL-osoite leikepöydältä uudessa ikkunassa",
+    "description": "Open URL from clipboard in new window"
+  },
+  "commandLabelOpenURLFromClipboardInNewPrivateWindow": {
+    "message": "Avaa URL-osoite leikepöydältä uudessa yksityisessä ikkunassa",
+    "description": "Open URL from clipboard in new private window"
+  },
+  "commandLabelOpenAddonSettings": {
+    "message": "Avaa Gesturefyn asetukset",
+    "description": "Open Gesturefy settings"
+  },
+  "commandLabelOpenLink": {
+    "message": "Avaa linkki",
+    "description": "Open link"
+  },
+  "commandLabelViewImage": {
+    "message": "Näytä kuva",
+    "description": "View image"
+  },
+  "commandLabelLinkToNewBookmark": {
+    "message": "Lisää linkki kirjanmerkkeihin",
+    "description": "Link to bookmark"
+  },
+  "commandLabelSaveScreenshot": {
+    "message": "Tallenna kuvankaappaus",
+    "description": "Save screenshot"
+  },
+  "commandLabelCopyTabURL": {
+    "message": "Kopioi välilehden URL-osoite",
+    "description": "Copy tab URL"
+  },
+  "commandLabelCopyLinkURL": {
+    "message": "Kopioi linkin URL-osoite",
+    "description": "Copy link URL"
+  },
+  "commandLabelCopyImageURL": {
+    "message": "Kopioi kuvan URL",
+    "description": "Copy image URL"
+  },
+  "commandLabelCopyTextSelection": {
+    "message": "Kopioi valittu teksti",
+    "description": "Copy text selection"
+  },
+  "commandLabelCopyImage": {
+    "message": "Kopioi kuva",
+    "description": "Copy image"
+  },
+  "commandLabelViewPageSourceCode": {
+    "message": "Näytä sivun lähdekoodi",
+    "description": "View page source"
+  },
+  "commandLabelPopupAllTabs": {
+    "message": "[Valikko] Kaikki välilehdet",
+    "description": "[Popup] All tabs"
+  },
+  "commandLabelPopupRecentlyClosedTabs": {
+    "message": "[Valikko] Hiljattain suljetut välilehdet",
+    "description": "[Popup] Recently closed tabs"
+  },
+  "commandLabelPopupSearchEngines": {
+    "message": "[Valikko] Hakukoneet",
+    "description": "[Popup] Search engines"
+  },
+  "commandLabelPopupCustomCommandList": {
+    "message": "[Popup] Itse määritetyt komennot",
+    "description": "[Popup] Custom command list"
+  },
+  "commandLabelSendMessageToOtherAddon": {
+    "message": "Lähetä viesti toiselle laajennukselle",
+    "description": "Send message to other add-on"
+  },
+  "commandLabelExecuteUserScript": {
+    "message": "Suorita itse määritetty skripti",
+    "description": "Execute user script"
+  },
+  "commandLabelClearBrowsingData": {
+    "message": "Tyhjennä selaustietoja",
+    "description": "Clear browsing data"
+  },
+  "commandLabelRunMultiPurposeCommand": {
+    "message": "Suorita monikäyttökomento",
+    "description": "Run multi purpose command"
+  },
+  "commandDescriptionToggleBookmark": {
+    "message": "Lisää kirjanmerkin tai poistaa sen.",
+    "description": "Adds or removes a bookmark."
+  },
+  "commandDescriptionDuplicateTab": {
+    "message": "Monistaa nykyisen välilehden.",
+    "description": "Duplicates the current tab."
+  },
+  "commandDescriptionNewTab": {
+    "message": "Avaa uuden välilehden.",
+    "description": "Opens a new tab."
+  },
+  "commandDescriptionReloadTab": {
+    "message": "Päivittää nykyisen sivun.",
+    "description": "Reloads the current page."
+  },
+  "commandDescriptionReloadFrame": {
+    "message": "Päivittää kehyksen, josta ele alkoi.",
+    "description": "Reloads the frame on which the gesture started."
+  },
+  "commandDescriptionStopLoading": {
+    "message": "Pysäyttää nykyisen sivun latauksen.",
+    "description": "Stops the current page from loading."
+  },
+  "commandDescriptionCloseTab": {
+    "message": "Sulkee nykyisen välilehden.",
+    "description": "Closes the current tab."
+  },
+  "commandDescriptionRestoreTab": {
+    "message": "Palauttaa viimeiseksi suljetun välilehden.",
+    "description": "Restores the last closed tab."
+  },
+  "commandDescriptionZoomIn": {
+    "message": "Lähentää nykyistä välilehteä.",
+    "description": "Zooms into the current tab."
+  },
+  "commandDescriptionZoomOut": {
+    "message": "Loitontaa nykyistä välilehteä.",
+    "description": "Zooms out of the current tab."
+  },
+  "commandDescriptionZoomReset": {
+    "message": "Palauttaa lähennyksen tai loitonnuksen selaimen oletukseen.",
+    "description": "Resets the current zoom level."
+  },
+  "commandDescriptionPageBack": {
+    "message": "Palaa sivuhistorian edelliselle sivulle.",
+    "description": "Returns to the previous page of the history."
+  },
+  "commandDescriptionPageForth": {
+    "message": "Siirtyy sivuhistorian seuraavalle sivulle.",
+    "description": "Goes a page forward in the history."
+  },
+  "commandDescriptionTogglePin": {
+    "message": "Kiinnittää tai irrottaa nykyisen välilehden.",
+    "description": "Pins or unpins the current Tab."
+  },
+  "commandDescriptionToggleMute": {
+    "message": "Vaimentaa välilehden äänen tai palauttaa sen.",
+    "description": "Mutes or unmutes the current tab."
+  },
+  "commandDescriptionToggleReaderMode": {
+    "message": "Ottaa lukunäkymän käyttöön tai poistaa sen käytöstä, jos mahdollista avoimella sivulla.",
+    "description": "Activates or deactivates the reader view if available."
+  },
+  "commandDescriptionScrollTop": {
+    "message": "Vierittää näkymän sivun yläreunaan.",
+    "description": "Scrolls to the top of the page."
+  },
+  "commandDescriptionScrollBottom": {
+    "message": "Vierittää näkymän sivun alareunaan.",
+    "description": "Scrolls to the bottom of the page."
+  },
+  "commandDescriptionScrollPageDown": {
+    "message": "Vierittää näkymän alaspäin sen pituuden verran.",
+    "description": "Scrolls down by the length of the current view."
+  },
+  "commandDescriptionScrollPageUp": {
+    "message": "Vierittää näkymää ylöspäin sen pituuden verran.",
+    "description": "Scrolls up by the length of the current view."
+  },
+  "commandDescriptionFocusRightTab": {
+    "message": "Vaihtaa aktiiviseksi nykyisen välilehden oikealla puolella olevan välilehden.",
+    "description": "Switches to the right tab of the current tab."
+  },
+  "commandDescriptionFocusLeftTab": {
+    "message": "Vaihtaa aktiiviseksi nykyisen välilehden vasemmalla puolella olevan välilehden.",
+    "description": "Switches to the left tab of the current tab."
+  },
+  "commandDescriptionFocusFirstTab": {
+    "message": "Vaihtaa aktiiviseksi oikealla reunimmaisena olevan välilehden.",
+    "description": "Switches to the far left tab."
+  },
+  "commandDescriptionFocusLastTab": {
+    "message": "Vaihtaa aktiiviseksi vasemmalla reunimmaisena olevan välilehden.",
+    "description": "Switches to the far right tab."
+  },
+  "commandDescriptionFocusPreviousSelectedTab": {
+    "message": "Vaihtaa aktiiviseksi edellisen aktiivisena olleen välilehden.",
+    "description": "Switches to the last active tab."
+  },
+  "commandDescriptionMaximizeWindow": {
+    "message": "Suurentaa nykyisen ikkunan kattamaan koko työpöydän.",
+    "description": "Maximizes the current window."
+  },
+  "commandDescriptionMinimizeWindow": {
+    "message": "Pienentää nykyisen ikkunan tehtäväpalkkiin.",
+    "description": "Minimizes the current window."
+  },
+  "commandDescriptionToggleWindowSize": {
+    "message": "Vaihtaa ikkunan kokoa nykyisen normaalin ja koko työpöydän kattavan suurennetun koon välillä.",
+    "description": "Switches between maximized and normal window size."
+  },
+  "commandDescriptionToggleFullscreen": {
+    "message": "Ottaa kokoruututilan käyttöön tai poistaa sen käytöstä.",
+    "description": "Activates or deactivates full screen mode."
+  },
+  "commandDescriptionNewWindow": {
+    "message": "Avaa uuden tyhjän ikkunan.",
+    "description": "Opens a new empty window."
+  },
+  "commandDescriptionNewPrivateWindow": {
+    "message": "Avaa uuden tyhjän yksityisen ikkunan.",
+    "description": "Opens a new empty private window."
+  },
+  "commandDescriptionMoveTabToStart": {
+    "message": "Siirtää nykyisen välilehden välilehtipalkin vasempaan reunaan, kinnitettyjen välilehtien oikealle puolelle.",
+    "description": "Moves the current tab to the start of the tab strip."
+  },
+  "commandDescriptionMoveTabToEnd": {
+    "message": "Siirtää nykyisen välilehden välilehtipalkin oikeaan reunaan.",
+    "description": "Moves the current tab to the end of the tab strip."
+  },
+  "commandDescriptionMoveTabToNewWindow": {
+    "message": "Siirtää nykyisen välilehden uuteen ikkunaan.",
+    "description": "Moves the current tab to a new window."
+  },
+  "commandDescriptionMoveLeftTabsToNewWindow": {
+    "message": "Siirtää kaikki välilehdet nykyisen välilehden vasemmalta puolelta uuteen ikkunaan, poislukien kiinnitetyt välilehdet.",
+    "description": "Moves all tabs to the left of the current tab to a new window."
+  },
+  "commandDescriptionMoveRightTabsToNewWindow": {
+    "message": "Siirtää kaikki välilehdet nykyisen välilehden oikealta puolelta uuteen ikkunaan.",
+    "description": "Moves all tabs to the right of the current tab to a new window."
+  },
+  "commandDescriptionCloseWindow": {
+    "message": "Sulkee nykyisen ikkunan.",
+    "description": "Closes the current window."
+  },
+  "commandDescriptionReloadAllTabs": {
+    "message": "Päivittää kaikki välilehdet.",
+    "description": "Reloads all tabs."
+  },
+  "commandDescriptionToRootURL": {
+    "message": "Siirtyy avoimen sivuston pääsivulle (esim. \"www.esimerkki.fi/sivu/sivu/sivu.php\" siirtyy osoitteeseen \"www.esimerkki.fi\").",
+    "description": "Goes to the main page of the website."
+  },
+  "commandDescriptionURLLevelUp": {
+    "message": "Siirtyy yhden tason ylemmäs URL-osoitteen hierarkiassa (esim. \"www.esimerkki.fi/sivu/sivu/sivu/\" siirtyy osoitteeseen \"www.esimerkki.fi/sivu/sivu/\").",
+    "description": "Goes up the URL hierarchy for one level."
+  },
+  "commandDescriptionIncreaseURLNumber": {
+    "message": "Suurentaa URL-osoitteessa olevaa lukemaa (esim. erilaisissa listauksissa, kuten hakutuloksissa tämän avulla voi usein siirtyä seuraavalle sivulle, mutta toiminta riippuu täysin sivuston URL-osoitteen rakenteesta).",
+    "description": "Increases a number in the URL."
+  },
+  "commandDescriptionDecreaseURLNumber": {
+    "message": "Pienentää URL-osoitteessa olevaa lukemaa (esim. erilaisissa listauksissa, kuten hakutuloksissa tämän avulla usein siirtyä edelliselle sivulle, mutta toiminta riippuu täysin sivuston URL-osoitteen rakenteesta).",
+    "description": "Decreases a number in the URL."
+  },
+  "commandDescriptionOpenImageInNewTab": {
+    "message": "Avaa uudessa välilehdessä kuvan, josta ele alkoi.",
+    "description": "Opens the image on which the gesture started in a new tab."
+  },
+  "commandDescriptionOpenLinkInNewTab": {
+    "message": "Avaa uuteen välilehteen valitun URL-osoitteen tai linkin, josta ele alkoi.",
+    "description": "Opens either a selected url or the link on which the gesture started in a new tab."
+  },
+  "commandDescriptionOpenLinkInNewWindow": {
+    "message": "Avaa uuteen ikkunaan valitun URL-osoitteen tai linkin, josta ele alkoi.",
+    "description": "Opens either a selected url or the link on which the gesture started in a new window."
+  },
+  "commandDescriptionOpenLinkInNewPrivateWindow": {
+    "message": "Avaa uuteen yksityiseen ikkunaan valitun URL-osoitteen tai linkin, josta ele alkoi.",
+    "description": "Opens either a selected url or the link on which the gesture started in a new private window."
+  },
+  "commandDescriptionSearchTextSelection": {
+    "message": "Avaa valitun tekstin verkkohaun nykyisessä välilehdessä.",
+    "description": "Starts a web search of the selected text in the current tab."
+  },
+  "commandDescriptionSearchClipboard": {
+    "message": "Avaa leikepöydän tekstin verkkohaun nykyisessä välilehdessä.",
+    "description": "Starts a web search of the clipboard text in the current tab."
+  },
+  "commandDescriptionSearchTextSelectionInNewTab": {
+    "message": "Avaa valitun tekstin verkkohaun uudessa välilehdessä.",
+    "description": "Starts a web search of the selected text in a new tab."
+  },
+  "commandDescriptionSearchClipboardInNewTab": {
+    "message": "Avaa leikepöydän tekstin verkkohaun uudessa välilehdessä.",
+    "description": "Starts a web search of the clipboard text in a new tab."
+  },
+  "commandDescriptionCloseRightTabs": {
+    "message": "Sulkee kaikki nykyisen välilehden oikealla puolella olevat välilehdet.",
+    "description": "Closes all tabs on the right side of the current tab."
+  },
+  "commandDescriptionCloseLeftTabs": {
+    "message": "Sulkee kaikki nykyisen välilehden vasemmalla puolella olevat välilehdet poislukien kiinnitettyt välilehdet.",
+    "description": "Closes all tabs on the left side of the current tab except the pinned tabs."
+  },
+  "commandDescriptionCloseOtherTabs": {
+    "message": "Sulkee kaikki välilehdet poislukien nykyisen välilehden ja kiinnitetyt välilehdet.",
+    "description": "Closes all tabs except of the current tab and pinned tabs."
+  },
+  "commandDescriptionSaveTabAsPDF": {
+    "message": "Tallentaa nykyisen sivun PDF-tiedostona.",
+    "description": "Saves the current page as a pdf file."
+  },
+  "commandDescriptionSaveImage": {
+    "message": "Lataa kuvan, josta ele alkoi.",
+    "description": "Downloads the image on which the gesture started."
+  },
+  "commandDescriptionSaveLink": {
+    "message": "Lataa valitun URL-osoitteen tai linkin, josta ele alkoi.",
+    "description": "Downloads either a selected url or the link on which the gesture started."
+  },
+  "commandDescriptionPrintTab": {
+    "message": "Aloittaa nykyisen sivun tulostuksen, näyttäen kuitenkin ensin selaimen tulostusikkunan.",
+    "description": "Prints the current page by prompting the print dialog."
+  },
+  "commandDescriptionOpenPrintPreview": {
+    "message": "Avaa nykyisen sivun tulostuksen esikatselun.",
+    "description": "Opens the print preview of the current page."
+  },
+  "commandDescriptionOpenHomepage": {
+    "message": "Toimii kuten selaimen kotisivupainike.",
+    "description": "Works like the homepage button."
+  },
+  "commandDescriptionOpenCustomURLInNewTab": {
+    "message": "Avaa määritetyn URL-osoitteen uuteen välilehteen.",
+    "description": "Opens the specified URL in a new tab."
+  },
+  "commandDescriptionOpenCustomURL": {
+    "message": "Avaa määritetyn URL-osoitteen nykyiseen välilehteen.",
+    "description": "Opens the specified URL in the current tab."
+  },
+  "commandDescriptionPasteClipboard": {
+    "message": "Lisää leikepöydän tekstin tekstinsyötön kursorin kohdalle siihen syöttöelementtiin, josta ele alkoi.",
+    "description": "Inserts the current clipboard text at the caret position of the input element on which the gesture started."
+  },
+  "commandDescriptionOpenURLFromClipboard": {
+    "message": "Jos leikepöydällä on URL-osoite, se avataan nykyisessä välilehdessä.",
+    "description": "If the clipboard contains a URL, it will be opened in the current tab."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewTab": {
+    "message": "Jos leikepöydällä on URL-osoite, se avataan uudessa välilehdessä.",
+    "description": "If the clipboard contains a URL, it will be opened in a new tab."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewWindow": {
+    "message": "Jos leikepöydällä on URL-osoite, se avataan uudessa ikkunassa.",
+    "description": "If the clipboard contains a URL, it will be opened in a new window."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewPrivateWindow": {
+    "message": "Jos leikepöydällä on URL-osoite, se avataan uudessa yksityisessä ikkunassa.",
+    "description": "If the clipboard contains a URL, it will be opened in a new private window."
+  },
+  "commandDescriptionOpenAddonSettings": {
+    "message": "Avaa Gesturefyn asetussivun.",
+    "description": "Opens the Gesturefy settings page."
+  },
+  "commandDescriptionOpenLink": {
+    "message": "Avaa valitun URL-osoitteen tai linkin, josta ele alkoi.",
+    "description": "Opens either a selected url or the link on which the gesture started."
+  },
+  "commandDescriptionViewImage": {
+    "message": "Avaa kuvan, josta ele alkoi.",
+    "description": "Opens the image on which the gesture started."
+  },
+  "commandDescriptionLinkToNewBookmark": {
+    "message": "Tallentaa kirjanmerkkeihin valitun URL-osoitteen tai linkin, josta ele alkoi.",
+    "description": "Saves either a selected url or the link on which the gesture started as a bookmark."
+  },
+  "commandDescriptionSaveScreenshot": {
+    "message": "Tallentaa avoimen sivun näkyvän näkyvän alueen kuvana.",
+    "description": "Saves the current visible website area as an image."
+  },
+  "commandDescriptionCopyTabURL": {
+    "message": "Kopioi leikepöydälle nykyisen välilehden URL-osoitteen.",
+    "description": "Copies the URL of the current tab to clipboard."
+  },
+  "commandDescriptionCopyLinkURL": {
+    "message": "Kopioi leikepöydälle valitun URL-osoitteen tai linkin, josta ele alkoi.",
+    "description": "Copies either a selected url or the link on which the gesture started to clipboard."
+  },
+  "commandDescriptionCopyImageURL": {
+    "message": "Kopioi leikepöydälle kuvan URL-osoitteen, josta ele alkoi.",
+    "description": "Copies the URL of the image on which the gesture started to clipboard."
+  },
+  "commandDescriptionCopyTextSelection": {
+    "message": "Kopioi valitun tekstin leikepöydälle.",
+    "description": "Copies the current text selection to clipboard."
+  },
+  "commandDescriptionCopyImage": {
+    "message": "Kopioi leikepöydälle kuvan, josta ele alkoi.",
+    "description": "Copies the image on which the gesture started to clipboard."
+  },
+  "commandDescriptionViewPageSourceCode": {
+    "message": "Avaa sivun lähdekoodin uuteen välilehteen.",
+    "description": "Opens a new tab containing the source code of the page."
+  },
+  "commandDescriptionPopupAllTabs": {
+    "message": "Avaa ponnahdusvalikon, joka sisältää luettelon kaikista avoimista välilehdistä ja mahdollistaa siirtymisen jollekin niistä.",
+    "description": "Opens a popup containing a list of all currently open tabs and offers the possibility to switch to one of them."
+  },
+  "commandDescriptionPopupRecentlyClosedTabs": {
+    "message": "Avaa ponnahdusvalikon, joka sisältää luettelon kaikista hiljattain suljetuista välilehdistä ja mahdollistaa jonkin niistä palautuksen.",
+    "description": "Opens a popup containing a list of all recently closed tabs and offers the possibility to restore one of them."
+  },
+  "commandDescriptionPopupSearchEngines": {
+    "message": "Avaa ponnahdusvalikon, joka sisältää luettelon kaikista asennetuista hakukoneista ja mahdollistaa valitun tekstin haun jollakin niistä (haku avautuu uuteen välilehteen).",
+    "description": "Opens a popup containing a list of all installed search engines and offers the possibility to search the selected text with one of them."
+  },
+  "commandDescriptionPopupCustomCommandList": {
+    "message": "Avaa ponnahduksen, joka sisältää useita itse määritetyjä komentoja ja mahdollistaa niistä yhden suorittamisen.",
+    "description": "Opens a popup containing a custom list of multiple commands and offers the possibility to run one of them."
+  },
+  "commandDescriptionSendMessageToOtherAddon": {
+    "message": "Lähettää itse määritetyn viestin toiselle laajennukselle. Tämä mahdollistaa muiden laajennusten toimintojen ohjauksen.",
+    "description": "Sends a custom message to another add-on. This allows the use of other add-ons functionality."
+  },
+  "commandDescriptionExecuteUserScript": {
+    "message": "Suorittaa itse määritetyn JavaScript-koodin nykyisellä verkkosivulla.",
+    "description": "Executes custom JavaScript code in the current webpage."
+  },
+  "commandDescriptionClearBrowsingData": {
+    "message": "Poistaa määritellyt selaustiedot.",
+    "description": "Removes the specified browsing data."
+  },
+  "commandDescriptionRunMultiPurposeCommand": {
+    "message": "Yhdistää useita komentoja ja suorittaa niistä ensimmäisen, joka on käytettävissä annetussa kontekstissa/olosuhteissa.",
+    "description": "Combines multiple commands into one and executes the first command which runs successfully under the given context/conditions."
+  },
+  "commandSettingLabelNewTabPosition": {
+    "message": "Uuden välilehden sijoitus",
+    "description": "New tab position"
+  },
+  "commandSettingLabelNewTabPositionDefault": {
+    "message": "oletus",
+    "description": "default"
+  },
+  "commandSettingLabelNewTabPositionBefore": {
+    "message": "ennen",
+    "description": "before"
+  },
+  "commandSettingLabelNewTabPositionAfter": {
+    "message": "jälkeen",
+    "description": "after"
+  },
+  "commandSettingLabelNewTabPositionStart": {
+    "message": "alkuun",
+    "description": "start"
+  },
+  "commandSettingLabelNewTabPositionEnd": {
+    "message": "loppuun",
+    "description": "end"
+  },
+  "commandSettingLabelNewTabFocus": {
+    "message": "Aktivoi uusi välilehti",
+    "description": "Focus new tab"
+  },
+  "commandSettingLabelTabNextFocus": {
+    "message": "Seuraava välilehti",
+    "description": "Next tab"
+  },
+  "commandSettingLabelTabNextFocusDefault": {
+    "message": "oletus",
+    "description": "default"
+  },
+  "commandSettingLabelTabNextFocusPrevious": {
+    "message": "edellinen",
+    "description": "previous"
+  },
+  "commandSettingLabelTabNextFocusNext": {
+    "message": "seuraava",
+    "description": "next"
+  },
+  "commandSettingLabelTabNextFocusRecently": {
+    "message": "edellinen aktiivinen",
+    "description": "last focused"
+  },
+  "commandSettingLabelTabClosePinned": {
+    "message": "Sulje kiinnitetyt välilehdet",
+    "description": "Close pinned tabs"
+  },
+  "commandSettingLabelRestoreCurrentWindow": {
+    "message": "Vain nykyinen ikkuna",
+    "description": "Current window only"
+  },
+  "commandSettingLabelReloadCache": {
+    "message": "Päivitä välimuisti",
+    "description": "Reload cache"
+  },
+  "commandSettingLabelZoomStep": {
+    "message": "Askelkoko",
+    "description": "Zoom step"
+  },
+  "commandSettingLabelScrollDuration": {
+    "message": "Vierityksen kesto",
+    "description": "Scroll duration"
+  },
+  "commandSettingLabelScrollProportion": {
+    "message": "Vierityssuhde",
+    "description": "Scroll proportion"
+  },
+  "commandSettingLabelFocusIncludePinned": {
+    "message": "Sisällytä kiinnitetyt välilehdet",
+    "description": "Include pinned tabs"
+  },
+  "commandSettingLabelTabCycling": {
+    "message": "Välilehtien kierrätys",
+    "description": "Tab cycling"
+  },
+  "commandSettingLabelExcludeDiscarded": {
+    "message": "Älä huomioi hylättyjä välilehtiä",
+    "description": "Exclude discarded tabs"
+  },
+  "commandSettingLabelOpenEmptyTab": {
+    "message": "Avaa tyhjä välilehti",
+    "description": "Open empty tab"
+  },
+  "commandSettingLabelOpenEmptySearch": {
+    "message": "Avaa tyhjä haku",
+    "description": "Open empty search"
+  },
+  "commandSettingLabelOpenEmptyWindow": {
+    "message": "Avaa tyhjä ikkuna",
+    "description": "Open empty window"
+  },
+  "commandSettingLabelSearchEngineURL": {
+    "message": "Hakukoneen URL-osoite",
+    "description": "Search engine URL"
+  },
+  "commandSettingLabelSavePromptDialog": {
+    "message": "Valintaikkuna",
+    "description": "Prompt dialog"
+  },
+  "commandSettingLabelCustomURL": {
+    "message": "Itse määritetty URL-osoite",
+    "description": "Custom URL"
+  },
+  "commandSettingLabelAddonId": {
+    "message": "Laajennuksen ID",
+    "description": "Add-on ID"
+  },
+  "commandSettingLabelAddonMessage": {
+    "message": "Viesti",
+    "description": "Message"
+  },
+  "commandSettingLabelParseMessage": {
+    "message": "Jäsennä viesti",
+    "description": "Parse message"
+  },
+  "commandSettingLabelTabOrder": {
+    "message": "Välilehtien järjestys",
+    "description": "Tab order"
+  },
+  "commandSettingLabelTabOrderNone": {
+    "message": "ei mitään (oletus)",
+    "description": "none (default)"
+  },
+  "commandSettingLabelTabOrderLastAccessedAsc": {
+    "message": "viimeksi käytetty, nouseva",
+    "description": "last accessed ascending"
+  },
+  "commandSettingLabelTabOrderLastAccessedDesc": {
+    "message": "viimeksi käytetty, laskeva",
+    "description": "last accessed descending"
+  },
+  "commandSettingLabelTabOrderAlphabeticallyAsc": {
+    "message": "aakkosellinen, nouseva",
+    "description": "alphabetically ascending"
+  },
+  "commandSettingLabelTabOrderAlphabeticallyDesc": {
+    "message": "aakkosellinen, laskeva",
+    "description": "alphabetically descending"
+  },
+  "commandSettingLabelTabIncludeCurrent": {
+    "message": "Sisällytä nykyinen välilehti",
+    "description": "Include current tab"
+  },
+  "commandSettingLabelNewWindowFocus": {
+    "message": "Aktivoi uusi ikkuna",
+    "description": "Focus new window"
+  },
+  "commandSettingLabelUserScriptWarning": {
+    "message": "Ole varovainen!",
+    "description": "Careful!"
+  },
+  "commandSettingLabelUserScriptCode": {
+    "message": "Itse määritetty koodi",
+    "description": "User script code"
+  },
+  "commandSettingLabelTargetFrame": {
+    "message": "Kohdekehys",
+    "description": "Target frame"
+  },
+  "commandSettingLabelTargetFrameSourceFrame": {
+    "message": "Lähdekehys",
+    "description": "Source frame"
+  },
+  "commandSettingLabelTargetFrameAllFrames": {
+    "message": "Kaikki kehykset",
+    "description": "All frames"
+  },
+  "commandSettingLabelTargetFrameTopFrame": {
+    "message": "Ylätason kehys",
+    "description": "Top-level frame"
+  },
+  "commandSettingLabelCustomMatchPattern": {
+    "message": "Itse määritetty tunnistussääntö",
+    "description": "Custom match pattern"
+  },
+  "commandSettingLabelCommandSelection": {
+    "message": "Komennon valinta",
+    "description": "Command selection"
+  },
+  "commandSettingLabelBrowsingDataCache": {
+    "message": "Välimuisti",
+    "description": "Cache"
+  },
+  "commandSettingLabelBrowsingDataCookies": {
+    "message": "Evästeet",
+    "description": "Cookies"
+  },
+  "commandSettingLabelBrowsingDataDownloads": {
+    "message": "Lataukset",
+    "description": "Downloads"
+  },
+  "commandSettingLabelBrowsingDataFormData": {
+    "message": "Lomaketiedot",
+    "description": "Form data"
+  },
+  "commandSettingLabelBrowsingDataHistory": {
+    "message": "Historia",
+    "description": "History"
+  },
+  "commandSettingLabelBrowsingDataIndexedDB": {
+    "message": "IndexedDB",
+    "description": "IndexedDB"
+  },
+  "commandSettingLabelBrowsingDataLocalStorage": {
+    "message": "Paikallinen tietovarasto",
+    "description": "Local Storage"
+  },
+  "commandSettingLabelBrowsingDataPasswords": {
+    "message": "Salasanat",
+    "description": "Passwords"
+  },
+  "commandSettingLabelBrowsingDataPluginData": {
+    "message": "Laajennusten tiedot",
+    "description": "Plugin data"
+  },
+  "commandSettingLabelBrowsingDataServiceWorkers": {
+    "message": "Service Workers",
+    "description": "Service Workers"
+  },
+  "commandSettingDescriptionNewTabPosition": {
+    "message": "Määrittää uuden välilehden sijainnin suhteessa nykyiseen välilehteen.",
+    "description": "Determines the position of the new tab relative to the current tab."
+  },
+  "commandSettingDescriptionNewTabFocus": {
+    "message": "Määrittää aktivoidaanko avattu välilehti vai avataanko se taustalle.",
+    "description": "Determines if the opened tab should gain focus or not."
+  },
+  "commandSettingDescriptionTabNextFocus": {
+    "message": "Määrittää mikä välilehti aktivoidaan seuraavaksi.",
+    "description": "Determines which tab should be focused next."
+  },
+  "commandSettingDescriptionTabClosePinned": {
+    "message": "Määrittää suljetaanko myös kiinnitetyt välilehdet vai ei.",
+    "description": "Determines if pinned tabs can be closed or not."
+  },
+  "commandSettingDescriptionRestoreCurrentWindow": {
+    "message": "Määrittää palautetaanko vain nykyiseen ikkunaan kuuluneet välilehdet.",
+    "description": "Determines if only tabs which belong to the current window should be restored."
+  },
+  "commandSettingDescriptionReloadCache": {
+    "message": "Määrittää päivitetäänkö myös välimuisti.",
+    "description": "Determines if the cache should be reloaded or not."
+  },
+  "commandSettingDescriptionZoomStep": {
+    "message": "Lähennyksen ja loitonnuksen askelkoko tai useita prosenttiarvoja pilkulla eroteltuina. Jos tyhjä, käytetään Gesturefyn oletusta.",
+    "description": "The zoom step or multiple comma separated levels in percentage. If omitted, Gesturefy's default zoom levels are used."
+  },
+  "commandSettingDescriptionScrollDuration": {
+    "message": "Vierityksen animaation kestoaika millisekunteina.",
+    "description": "The duration in milliseconds the scroll animation should take."
+  },
+  "commandSettingDescriptionScrollProportion": {
+    "message": "Prosentuaalinen osuus näkymän korkeudesta, jonka verran sivua tulee vierittää.",
+    "description": "The percentage of the viewport height by which the page should be scrolled."
+  },
+  "commandSettingDescriptionFocusIncludePinned": {
+    "message": "Määrittää käsitelläänkö kiinnitettyjä välilehtiä kuten vasemmanpuoleisia normaaleja välilehtiä.",
+    "description": "Determines if pinned tabs should be treated as the leftmost tabs."
+  },
+  "commandSettingDescriptionTabCycling": {
+    "message": "Määrittää kierrätetäänkö välilehtipalkkia, eli siirrytäänkö palkin pään tullessa vastaan sen toiseen päähän vai ei.",
+    "description": "Determines if the tabs should be cycled through in a loop."
+  },
+  "commandSettingDescriptionExcludeDiscarded": {
+    "message": "Määrittää hypätäänkö yli käyttämättömistä (lataamattomista) välilehdistä.",
+    "description": "Determines if tabs that are not loaded should be skipped."
+  },
+  "commandSettingDescriptionOpenEmptyTab": {
+    "message": "Määrittää avataanko tyhjä välilehti, jos URL-osoitetta tai linkkiä ei ollut valittuna.",
+    "description": "Determines if an empty tab should be opened if no URL or link was selected."
+  },
+  "commandSettingDescriptionOpenEmptySearch": {
+    "message": "Määrittää, suoritetaanko haku vaikka tekstiä ei ole",
+    "description": "Determines whether a search should be performed even if no text is present"
+  },
+  "commandSettingDescriptionOpenEmptyWindow": {
+    "message": "Määrittää avataanko tyhjä ikkuna, jos URL-osoitetta tai linkkiä ei ollut valittuna.",
+    "description": "Determines if an empty window should be opened if no URL or link was selected."
+  },
+  "commandSettingDescriptionSearchEngineURL": {
+    "message": "Hakukoneen URL-osoite, jossa teksti lisätään joko %s-paikkamerkin tilalle tai osoitteen loppuun. Jos tyhjä, käytetään selaimen oletushakukonetta.",
+    "description": "A search engine URL where the search text is either inserted for the %s placeholder or appended to the end. If omitted, the default browser search engine is used."
+  },
+  "commandSettingDescriptionSavePromptDialog": {
+    "message": "Määrittää näytetäänkö \"Tallenna nimellä\" -ikkuna tai vai ladataanko tiedosto äänettömästi selaimen oletuslatauskansioon.",
+    "description": "Determines if the \"Save As\" dialog should appear or the file should be downloaded silently to the users default download folder."
+  },
+  "commandSettingDescriptionCustomURL": {
+    "message": "Avattava URL-osoite.",
+    "description": "The URL that should be opened."
+  },
+  "commandSettingDescriptionAddonId": {
+    "message": "Sen laajennuksen ID, jolle viesti tulee lähettää.",
+    "description": "The extension ID of the add-on the message should be sent to."
+  },
+  "commandSettingDescriptionAddonMessage": {
+    "message": "Merkkijono, joka laajennukselle lähetetään.",
+    "description": "The message string that should be sent to the add-on."
+  },
+  "commandSettingDescriptionParseMessage": {
+    "message": "Määrittää tulisiko viesti sarjoittaa JavaScript-objektina.",
+    "description": "Determines if the message should be serialized as a JavaScript object."
+  },
+  "commandSettingDescriptionTabOrder": {
+    "message": "Järjestää näytettävät välilehdet tiettyjen ehtojen mukaisesti.",
+    "description": "Orders the displayed tabs by a specific characteristic."
+  },
+  "commandSettingDescriptionTabIncludeCurrent": {
+    "message": "Määrittää otetaanko myös nykyinen välilehti mukaan.",
+    "description": "Determines if the currently active tab should be included."
+  },
+  "commandSettingDescriptionNewWindowFocus": {
+    "message": "Määrittää aktivoidaanko avattu ikkuna vai avataanko se taustalle.",
+    "description": "Determines if the opened window should gain focus or not."
+  },
+  "commandSettingDescriptionUserScriptWarning": {
+    "message": "Itse määritetyn koodin käyttö voi johtaa yksityisten tietojen menetykseen.",
+    "description": "User scripts can lead to the loss of private data."
+  },
+  "commandSettingDescriptionUserScriptCode": {
+    "message": "Verkkosivuun kohdistettava koodi.",
+    "description": "The code that should be injected into the webpage's scope."
+  },
+  "commandSettingDescriptionTargetFrame": {
+    "message": "Kehys, johon koodi tulee kohdistaa.",
+    "description": "The frame in which the user script should be injected."
+  },
+  "commandSettingDescriptionCustomMatchPattern": {
+    "message": "Säännöllisen lausekkeen muodossa oleva kaava, joka vastaa tiettyä merkkijonon osaa. Jos ei määritetty, käytetään sisäistä kaavaa.",
+    "description": "A pattern in the form of a regular expression to match a specific part of a string. If omitted an internal pattern is used."
+  },
+  "commandSettingDescriptionCommandSelection": {
+    "message": "Itse määritetty valikoima useita komentoja.",
+    "description": "A custom selection of multiple commands."
+  },
+  "commandErrorNotificationTitle": {
+    "message": "Komento \"$COMMAND$\" epäonnistui.",
+    "description": "\"New tab\" command failed.",
+    "placeholders": {
+      "command": {
+        "content": "$1",
+        "example": "New tab"
+      }
+    }
+  },
+  "commandErrorNotificationMessageIllegalURL": {
+    "message": "Kohteen URL-osoitetta ei voi avata. Klikkaa tästä saadaksesi lisätietoja.",
+    "description": "The target URL cannot be opened. Click here for more information."
+  },
+  "commandErrorNotificationMessageNotSerializeable": {
+    "message": "Määritettyä viestimerkkijonoa ei voitu jäsentää JavaScript-objektiksi. Klikkaa tästä saadaksesi lisätietoja.",
+    "description": "The specified message string could not be parsed to a JavaScript object. Click here for more information."
+  },
+  "commandErrorNotificationMessageMissingRecipient": {
+    "message": "Määritetty laajennus-ID ei kuulu olemassa olevalle laajennukselle tai laajennus ei vastaanota viestejä. Klikkaa tästä saadaksesi lisätietoja.",
+    "description": "The specified extension ID either does not belong to an existing add-on or the add-on does not receive messages. Click here for more information."
+  },
+  "commandErrorNotificationMessageMissingIncognitoPermissions": {
+    "message": "Gesturefylla ei ole lupaa yksityiseen tilaan. Klikkaa tästä saadaksesi lisätietoja.",
+    "description": "Gesturefy does not have permission for incognito mode. Click here for more information."
+  },
+  "commandBarTitle": {
+    "message": "Komentopalkki",
+    "description": "Command bar"
+  },
+  "commandBarSearch": {
+    "message": "Haku",
+    "description": "Search"
+  },
+  "commandBarAdditionalPermissionsText": {
+    "message": "Tämä komento vaatii lisää käyttöoikeuksia: ",
+    "description": "This command requires additional permissions: "
+  },
+  "commandBarAdditionalSettingsText": {
+    "message": "Tällä komennolla on lisäasetuksia.",
+    "description": "This command has additional settings."
+  },
+  "commandBarOpenSelectionText": {
+    "message": "Avaa komennon valinta.",
+    "description": "Open command selection."
+  },
+  "commandBarOpenSettingsText": {
+    "message": "Avaa komennon asetukset.",
+    "description": "Open command settings."
+  },
+  "commandMultiSelectAddPlaceholder": {
+    "message": "Lisää",
+    "description": "Add"
+  },
+  "commandMultiSelectNoResultsPlaceholder": {
+    "message": "Ei tuloksia",
+    "description": "No results"
+  },
+  "gesturePopupTitleNewGesture": {
+    "message": "Uusi ele",
+    "description": "New Gesture"
+  },
+  "gesturePopupTitleEditGesture": {
+    "message": "Muokkaa elettä",
+    "description": "Edit Gesture"
+  },
+  "gesturePopupRecordingAreaText": {
+    "message": "Käytä hiiren $MOUSEBUTTON$ painiketta nauhoittaaksesi uuden eleen.",
+    "description": "Use the right mouse button to record a new gesture.",
+    "placeholders": {
+      "mousebutton": {
+        "content": "$1",
+        "example": "right"
+      }
+    }
+  },
+  "gesturePopupMouseButtonLeft": {
+    "message": "vasenta",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupMouseButtonRight": {
+    "message": "oikeaa",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupMouseButtonMiddle": {
+    "message": "keskimmäistä",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupLabelCommand": {
+    "message": "Komento",
+    "description": "Command"
+  },
+  "gesturePopupLabelGestureDirections": {
+    "message": "Eleen suunnat",
+    "description": "Gesture directions"
+  },
+  "gesturePopupLabelOptionalLabel": {
+    "message": "Nimi (valinnainen)",
+    "description": "Label (optional)"
+  },
+  "gesturePopupDescriptionCommand": {
+    "message": "Valitse komento, jonka tämä ele suorittaa.",
+    "description": "Choose a command that should be assigned to this gesture."
+  },
+  "gesturePopupDescriptionGestureDirections": {
+    "message": "Syötä suunnat nuolinäppäimillä tai nauhoita ne viereisellä alueella.",
+    "description": "Either use the arrow keys to enter the directions, or record them in the area next to it."
+  },
+  "gesturePopupDescriptionOptionalLabel": {
+    "message": "Määritä omavalintainen nimi, joka näytetään komennon nimen sijaan.",
+    "description": "Assign a custom name that will be displayed instead of the command name."
+  },
+  "gesturePopupNotificationSimilarGesture": {
+    "message": "Tämä ele on samantapainen kuin \"$GESTURE_NAME$\" ele.",
+    "description": "This gesture is similar to the \"$GESTURE_NAME$\" gesture.",
+    "placeholders": {
+      "gesture_name": {
+        "content": "$1",
+        "example": "New Tab"
+      }
+    }
+  },
+  "permissionLabelTabs": {
+    "message": "Välilehdet",
+    "description": "Tabs"
+  },
+  "permissionLabelSessions": {
+    "message": "Istunto",
+    "description": "Sessions"
+  },
+  "permissionLabelBookmarks": {
+    "message": "Kirjanmerkit",
+    "description": "Bookmarks"
+  },
+  "permissionLabelClipboardWrite": {
+    "message": "Leikepöydälle kirjoitus",
+    "description": "Clipboard write"
+  },
+  "permissionLabelClipboardRead": {
+    "message": "Leikepöydältä luku",
+    "description": "Clipboard read"
+  },
+  "permissionLabelDownloads": {
+    "message": "Lataukset",
+    "description": "Downloads"
+  },
+  "permissionLabelSearch": {
+    "message": "Haku",
+    "description": "Search"
+  },
+  "permissionLabelBrowsingData": {
+    "message": "Selaustiedot",
+    "description": "Browsing data"
+  },
+  "toggleButtonOn": {
+    "message": "On",
+    "description": "On - setting checked"
+  },
+  "toggleButtonOff": {
+    "message": "Off",
+    "description": "Off - setting not checked"
+  },
+  "linkAdditionalInformation": {
+    "message": "Lisätietoja",
+    "description": "Additional information"
+  },
+  "buttonSave": {
+    "message": "Tallenna",
+    "description": "Save"
+  },
+  "buttonConfirm": {
+    "message": "OK",
+    "description": "OK"
+  },
+  "buttonCancel": {
+    "message": "Peruuta",
+    "description": "Cancel"
+  },
+  "lightTheme": {
+    "message": "Vaalea teema",
+    "description": "Light theme"
+  },
+  "darkTheme": {
+    "message": "Tumma teema",
+    "description": "Dark theme"
+  },
+  "highContrastTheme": {
+    "message": "Suurikontrastinen teema",
+    "description": "High contrast theme"
+  },
+  "welcomePageUpperSectionReference": {
+    "message": "Gesturefy on asennettu onnistuneesti.",
+    "description": "Gesturefy has been successfully installed."
+  },
+  "welcomePageUpperSectionHeadline": {
+    "message": "Etkö ole koskaan ennen tehnyt hiirielettä?\n Kokeile sitä nyt!",
+    "description": "Never done a mouse gesture before?\r\n Try it out right now!"
+  },
+  "welcomePageUpperSectionTutorialStep01": {
+    "message": "Paina hiiren oikeaa painiketta ja pidä se painettuna",
+    "description": "Press and hold the right mouse button"
+  },
+  "welcomePageUpperSectionTutorialStep02": {
+    "message": "Rahaa hiirtäsi alaspäin",
+    "description": "Drag down your mouse"
+  },
+  "welcomePageUpperSectionTutorialStep03": {
+    "message": "Vapauta hiiren oikea painike",
+    "description": "Release the right mouse button"
+  },
+  "welcomePageLowerSectionReference": {
+    "message": "Vieritit sivun alareunaan.",
+    "description": "You scrolled to the bottom of the page."
+  },
+  "welcomePageLowerSectionHeadline": {
+    "message": "Onnittelut, olet onnistuneesti suorittanut ensimmäisen hiirieleesi!",
+    "description": "Congratulations, you successfully accomplished your very first mouse gesture!"
+  },
+  "welcomePageLowerSectionGetStartedText": {
+    "message": "Luo niin monta omaan tyyliisi sopivaa elettä kuin haluat ja tee päivittäisestä selailusta helpompaa, nopeampaa ja hauskempaa. Aloita nyt ja personoi Gesturefy!",
+    "description": "Create as many gestures as you want to suit your individual browsing style and make your daily browsing easier, faster and a lot more fun. Get started now and personalize Gesturefy!"
+  },
+  "welcomePageLowerSectionGetStartedLink": {
+    "message": "Määritä eleesi",
+    "description": "Set Up Your Gestures"
+  },
+  "welcomePageLowerSectionLearnMoreText": {
+    "message": "Vielä hämmentynyt? Klikkaa alla olevaa linkkiä nopeaa yhteenvetoa varten ja jos et saa Gesturefya rullaamaan, löydät sieltä myös vianselvitysoppaan.",
+    "description": "Still confused? Click the link below for a quick break-down and if you can't get Gesturefy up and running you can also find a troubleshooting guide there."
+  },
+  "welcomePageLowerSectionLearnMoreLink": {
+    "message": "Lue lisää",
+    "description": "Learn More"
+  }
+}

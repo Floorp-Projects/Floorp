@@ -1,0 +1,1612 @@
+{
+  "extensionDescription": {
+    "message": "滑鼠手勢使你的導航、操作、等瀏覽網路體驗更加快速流暢! 不只可自訂滑鼠手勢，還支援執行多種指令",
+    "description": "Navigate, operate, and browse faster with mouse gestures! A customizable mouse gesture add-on with a variety of different commands."
+  },
+  "addonUpdateNotificationTitle": {
+    "message": "$NAME$ 已經完成更新！",
+    "description": "Gesturefy add-on has been updated!",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Gesturefy"
+      }
+    }
+  },
+  "addonUpdateNotificationMessage": {
+    "message": "新版本為 $VERSION$ 點擊此處以查看更新日誌",
+    "description": "The new version number is $VERSION$. Click here to view the changelog.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "1.0.1"
+      }
+    }
+  },
+  "navigationSettings": {
+    "message": "設定",
+    "description": "Settings"
+  },
+  "navigationGestures": {
+    "message": "手勢",
+    "description": "Gestures"
+  },
+  "navigationExtras": {
+    "message": "其他",
+    "description": "Extras"
+  },
+  "navigationExclusions": {
+    "message": "排除",
+    "description": "Exclusions"
+  },
+  "navigationAbout": {
+    "message": "關於",
+    "description": "About"
+  },
+  "settingLabelMouseButton": {
+    "message": "啟用按鈕",
+    "description": "Activation button"
+  },
+  "settingLabelMouseButtonLeft": {
+    "message": "左鍵",
+    "description": "left"
+  },
+  "settingLabelMouseButtonRight": {
+    "message": "右鍵",
+    "description": "right"
+  },
+  "settingLabelMouseButtonMiddle": {
+    "message": "中鍵",
+    "description": "middle"
+  },
+  "settingLabelMatchingAlgorithm": {
+    "message": "比對演算法",
+    "description": "Matching algorithm"
+  },
+  "settingLabelMatchingAlgorithmCombined": {
+    "message": "組合",
+    "description": "Combined"
+  },
+  "settingLabelMatchingAlgorithmStrict": {
+    "message": "嚴格",
+    "description": "Strict"
+  },
+  "settingLabelMatchingAlgorithmShapeIndependent": {
+    "message": "基於形狀",
+    "description": "Shape-Independent"
+  },
+  "settingLabelTimeoutActive": {
+    "message": "閒置超時",
+    "description": "Activate idle timeout"
+  },
+  "settingLabelTimeoutDuration": {
+    "message": "用時",
+    "description": "Duration"
+  },
+  "settingLabelSuppressionKey": {
+    "message": "停用按鍵",
+    "description": "Deactivation key"
+  },
+  "settingLabelNoneKey": {
+    "message": "無",
+    "description": "None"
+  },
+  "settingLabelAltKey": {
+    "message": "Alt",
+    "description": "Alt"
+  },
+  "settingLabelCtrlKey": {
+    "message": "Ctrl",
+    "description": "Ctrl"
+  },
+  "settingLabelShiftKey": {
+    "message": "Shift",
+    "description": "Shift"
+  },
+  "settingLabelAdvancedSettings": {
+    "message": "進階設定",
+    "description": "Advanced settings"
+  },
+  "settingLabelDistanceThreshold": {
+    "message": "距離門檻值",
+    "description": "Distance threshold"
+  },
+  "settingLabelDeviationTolerance": {
+    "message": "誤差寬容度",
+    "description": "Deviation tolerance"
+  },
+  "settingLabelDisplayTrace": {
+    "message": "顯示手勢軌跡",
+    "description": "Display gesture trace"
+  },
+  "settingLabelTraceColor": {
+    "message": "軌跡顏色",
+    "description": "Line color"
+  },
+  "settingLabelTraceWidth": {
+    "message": "軌跡寬度",
+    "description": "Line width"
+  },
+  "settingLabelTraceGrowth": {
+    "message": "軌跡寬度增長",
+    "description": "Line growth"
+  },
+  "settingLabelDisplayCommand": {
+    "message": "顯示指令",
+    "description": "Display command"
+  },
+  "settingLabelCommandFontColor": {
+    "message": "文字顏色",
+    "description": "Font color"
+  },
+  "settingLabelCommandBackgroundColor": {
+    "message": "背景色",
+    "description": "Background color"
+  },
+  "settingLabelCommandFontSize": {
+    "message": "字體大小",
+    "description": "Font size"
+  },
+  "settingLabelCommandHorizontalPosition": {
+    "message": "水平位置",
+    "description": "Horizontal position"
+  },
+  "settingLabelCommandVerticalPosition": {
+    "message": "垂直位置：",
+    "description": "Vertical position"
+  },
+  "settingLabelUpdateNotification": {
+    "message": "顯示更新通知",
+    "description": "Display update notification"
+  },
+  "settingDescriptionMouseButton": {
+    "message": "當按住按鈕時，錄製新手勢",
+    "description": "Captures a new mouse gesture while the button is held down."
+  },
+  "settingDescriptionMatchingAlgorithm": {
+    "message": "決定新畫入的手勢該如何被比對到對應的手勢",
+    "description": "Determines how the gestures are compared to find the best matching gesture."
+  },
+  "settingDescriptionMatchingAlgorithmLink": {
+    "message": "在此了解其中的差異",
+    "description": "Learn about the differences here"
+  },
+  "settingDescriptionTimeoutActive": {
+    "message": "在滑鼠於一段指定的時間長度不移動後，取消手勢",
+    "description": "Cancels the gesture after the mouse has not been moved for the specified time."
+  },
+  "settingDescriptionTimeoutDuration": {
+    "message": "超過時限將會取消手勢，單位為秒",
+    "description": "The duration in seconds until the gesture is cancelled."
+  },
+  "settingDescriptionSuppressionKey": {
+    "message": "當按住該按鍵時，能避免手勢被觸發",
+    "description": "Prevents a gesture from being triggered while the modifier key is pressed."
+  },
+  "settingDescriptionDistanceThreshold": {
+    "message": "啟動識別手勢所需的最小滑鼠移動距離",
+    "description": "The minimum distance the mouse must be moved until the start of a gesture is recognized."
+  },
+  "settingDescriptionDeviationTolerance": {
+    "message": "比對手勢時所能接受的誤差量",
+    "description": "The permissible gesture deviation that should still be recognized as a match."
+  },
+  "settingDescriptionDisplayTrace": {
+    "message": "顯示沿滑鼠移動所畫出的軌跡",
+    "description": "Displays a trace along the mouse movement."
+  },
+  "settingDescriptionTraceGrowth": {
+    "message": "決定軌跡寬度是否要逐漸變大",
+    "description": "Determines if the line thickness should grow."
+  },
+  "settingDescriptionDisplayCommand": {
+    "message": "顯示與目前手勢所對應的指令 (如果有)",
+    "description": "Displays the command of the currently matching gesture if available."
+  },
+  "settingDescriptionCommandFontSize": {
+    "message": "可以是任何的CSS可使用的單位 如: em, px, pt, %, vh 等",
+    "description": "Accepts every CSS Unit like: em, px, pt, %, vh etc."
+  },
+  "settingDescriptionCommandHorizontalPosition": {
+    "message": "螢幕的水平位置，從左(0)至右(100)",
+    "description": "Horizontal screen position from 0 (left) to 100 (right)."
+  },
+  "settingDescriptionCommandVerticalPosition": {
+    "message": "螢幕的垂直位置，從上(0)到下(100)",
+    "description": "Vertical screen position from 0 (top) to 100 (bottom)."
+  },
+  "settingDescriptionUpdateNotification": {
+    "message": "當 Gesturefy 更新後顯示一個通知",
+    "description": "Shows a notification when Gesturefy is updated."
+  },
+  "gestureCreateNewButton": {
+    "message": "新手勢",
+    "description": "New Gesture"
+  },
+  "gestureSearchPlaceholder": {
+    "message": "搜尋手勢",
+    "description": "Search gestures"
+  },
+  "gestureHintNoSearchResults": {
+    "message": "無搜尋結果",
+    "description": "No search results found"
+  },
+  "extraLabelRockerActive": {
+    "message": "搖擺手勢",
+    "description": "Rocker gesture"
+  },
+  "extraLabelRockerRightMouseClick": {
+    "message": "點擊滑鼠右鍵",
+    "description": "Right mouse click"
+  },
+  "extraLabelRockerLeftMouseClick": {
+    "message": "點擊滑鼠左鍵",
+    "description": "Left mouse click"
+  },
+  "extraDescriptionRockerActive": {
+    "message": "此手勢為按住滑鼠右鍵時點擊滑鼠左鍵，或者按住滑鼠左鍵時點擊滑鼠右鍵",
+    "description": "This gesture is performed either by holding the right mouse button and clicking the left or vice versa."
+  },
+  "extraLabelWheelActive": {
+    "message": "滾輪手勢",
+    "description": "Wheel gesture"
+  },
+  "extraLabelWheelMouseButton": {
+    "message": "滾輪手勢按鍵",
+    "description": "Wheel gesture mouse button"
+  },
+  "extraLabelWheelSensitivity": {
+    "message": "滑鼠滾輪敏感度",
+    "description": "Mouse wheel sensitivity"
+  },
+  "extraLabelWheelUp": {
+    "message": "向上滾動",
+    "description": "Wheel up"
+  },
+  "extraLabelWheelDown": {
+    "message": "向下滾動",
+    "description": "Wheel down"
+  },
+  "extraDescriptionWheelActive": {
+    "message": "按住滾輪手勢觸發按鍵，將滾輪向上或向下滾動",
+    "description": "Scroll up or down while holding the wheel gesture trigger button."
+  },
+  "extraDescriptionWheelMouseButton": {
+    "message": "觸發滾輪手勢的滑鼠按鍵",
+    "description": "The mouse button which triggers the wheel gesture."
+  },
+  "extraDescriptionWheelSensitivity": {
+    "message": "觸發手勢所需要的最小滾動量",
+    "description": "The minimal amount the mouse wheel must be scrolled until the gesture is triggered."
+  },
+  "exclusionsLabelInformation": {
+    "message": "資訊:",
+    "description": "Information:"
+  },
+  "exclusionsTextInformation": {
+    "message": "新增網址比對樣式使Gesturefy在符合條件的網站自動關閉。比對樣式允許使用 \"*\" 萬用字元，並且必須為 <scheme>://<host><path>的格式。",
+    "description": "Add URL match patterns to disable Gesturefy for certain websites. The match pattern allows \"*\" wildcards and must be in the form of <scheme>://<host><path>."
+  },
+  "exclusionsPlaceholderURL": {
+    "message": "輸入網址比對樣式",
+    "description": "Enter URL match pattern"
+  },
+  "exclusionsAddButton": {
+    "message": "新增",
+    "description": "Add"
+  },
+  "exclusionsNotificationAlreadyExists": {
+    "message": "已經有同樣的網址樣式",
+    "description": "URL pattern already exists."
+  },
+  "exclusionsHintNoEntries": {
+    "message": "無條目",
+    "description": "No entries available"
+  },
+  "aboutBackup": {
+    "message": "備份",
+    "description": "Backup"
+  },
+  "aboutRestore": {
+    "message": "還原",
+    "description": "Restore"
+  },
+  "aboutReset": {
+    "message": "重置",
+    "description": "Reset"
+  },
+  "aboutLicense": {
+    "message": "許可協議:",
+    "description": "License:"
+  },
+  "aboutContributors": {
+    "message": "貢獻者們:",
+    "description": "Contributors:"
+  },
+  "aboutLinkBug": {
+    "message": "回報bug",
+    "description": "Report a bug"
+  },
+  "aboutLinkCode": {
+    "message": "原始碼",
+    "description": "Source code"
+  },
+  "aboutLinkAddon": {
+    "message": "附加元件網頁",
+    "description": "Add-on page"
+  },
+  "aboutRestoreNotificationNoConfigFile": {
+    "message": "所選的檔案不是有效的 Gesturefy設定組態檔案",
+    "description": "The selected file is not a valid Gesturefy config file."
+  },
+  "aboutRestoreNotificationWrongFile": {
+    "message": "選取的檔案格式並不符合，無法進行還原",
+    "description": "The selected file does not match the required file type."
+  },
+  "aboutRestoreNotificationConfirm": {
+    "message": "包括手勢，所有的設定都將會被選擇的設定檔所覆蓋",
+    "description": "All settings including gestures will be replaced by the selected config file."
+  },
+  "aboutRestoreNotificationSuccess": {
+    "message": "所選的設定組態已成功還原",
+    "description": "The selected config has been successfully restored."
+  },
+  "aboutResetNotificationConfirm": {
+    "message": "所有設定包括手勢都將被重置，並且無法復原!",
+    "description": "All settings including gestures will be reset. This cannot be undone!"
+  },
+  "commandLabelToggleBookmark": {
+    "message": "切換書籤狀態",
+    "description": "Toggle bookmark"
+  },
+  "commandLabelDuplicateTab": {
+    "message": "複製分頁",
+    "description": "Duplicate tab"
+  },
+  "commandLabelNewTab": {
+    "message": "開啟新分頁",
+    "description": "New tab"
+  },
+  "commandLabelReloadTab": {
+    "message": "重新載入分頁",
+    "description": "Reload tab"
+  },
+  "commandLabelReloadFrame": {
+    "message": "重新載入框架",
+    "description": "Reload frame"
+  },
+  "commandLabelStopLoading": {
+    "message": "停止載入",
+    "description": "Stop loading"
+  },
+  "commandLabelCloseTab": {
+    "message": "關閉分頁",
+    "description": "Close tab"
+  },
+  "commandLabelRestoreTab": {
+    "message": "還原分頁",
+    "description": "Restore tab"
+  },
+  "commandLabelZoomIn": {
+    "message": "放大",
+    "description": "Zoom in"
+  },
+  "commandLabelZoomOut": {
+    "message": "縮小",
+    "description": "Zoom out"
+  },
+  "commandLabelZoomReset": {
+    "message": "重設縮放大小",
+    "description": "Zoom reset"
+  },
+  "commandLabelPageBack": {
+    "message": "回到上一頁",
+    "description": "Page back"
+  },
+  "commandLabelPageForth": {
+    "message": "前進下一頁",
+    "description": "Page forward"
+  },
+  "commandLabelTogglePin": {
+    "message": "切換釘選狀態",
+    "description": "Toggle pinned tab"
+  },
+  "commandLabelToggleMute": {
+    "message": "切換靜音狀態",
+    "description": "Toggle mute"
+  },
+  "commandLabelToggleReaderMode": {
+    "message": "切換閱讀模式",
+    "description": "Toggle reader mode"
+  },
+  "commandLabelScrollTop": {
+    "message": "滑動到頁面頂部",
+    "description": "Scroll to the top"
+  },
+  "commandLabelScrollBottom": {
+    "message": "滑動到頁面底部",
+    "description": "Scroll to the bottom"
+  },
+  "commandLabelScrollPageDown": {
+    "message": "向下滑動頁面",
+    "description": "Scroll page down"
+  },
+  "commandLabelScrollPageUp": {
+    "message": "向上滑動頁面",
+    "description": "Scroll page up"
+  },
+  "commandLabelFocusRightTab": {
+    "message": "切換至右側分頁",
+    "description": "Focus right tab"
+  },
+  "commandLabelFocusLeftTab": {
+    "message": "切換至左側分頁",
+    "description": "Focus left tab"
+  },
+  "commandLabelFocusFirstTab": {
+    "message": "切換至第一個分頁",
+    "description": "Focus first tab"
+  },
+  "commandLabelFocusLastTab": {
+    "message": "切換至最後一個分頁",
+    "description": "Focus last tab"
+  },
+  "commandLabelFocusPreviousSelectedTab": {
+    "message": "切換至上次使用的分頁",
+    "description": "Focus previous selected tab"
+  },
+  "commandLabelMaximizeWindow": {
+    "message": "視窗最大化",
+    "description": "Maximize window"
+  },
+  "commandLabelMinimizeWindow": {
+    "message": "視窗最小化",
+    "description": "Minimize window"
+  },
+  "commandLabelToggleWindowSize": {
+    "message": "切換視窗大小",
+    "description": "Toggle window size"
+  },
+  "commandLabelToggleFullscreen": {
+    "message": "切換全螢幕模式",
+    "description": "Toggle full screen"
+  },
+  "commandLabelNewWindow": {
+    "message": "開新視窗",
+    "description": "New window"
+  },
+  "commandLabelNewPrivateWindow": {
+    "message": "新增隱私視窗",
+    "description": "New private window"
+  },
+  "commandLabelMoveTabToStart": {
+    "message": "移動分頁至開端",
+    "description": "Move tab to start"
+  },
+  "commandLabelMoveTabToEnd": {
+    "message": "移動分頁至尾端",
+    "description": "Move tab to end"
+  },
+  "commandLabelMoveTabToNewWindow": {
+    "message": "移動分頁至新視窗",
+    "description": "Move tab to new window"
+  },
+  "commandLabelMoveLeftTabsToNewWindow": {
+    "message": "移動所有左側分頁至新視窗",
+    "description": "Move left tabs to new window"
+  },
+  "commandLabelMoveRightTabsToNewWindow": {
+    "message": "移動所有右側分頁至新視窗",
+    "description": "Move right tabs to new window"
+  },
+  "commandLabelCloseWindow": {
+    "message": "關閉視窗",
+    "description": "Close window"
+  },
+  "commandLabelReloadAllTabs": {
+    "message": "全部重新載入",
+    "description": "Reload all"
+  },
+  "commandLabelToRootURL": {
+    "message": "至根網址",
+    "description": "To root URL"
+  },
+  "commandLabelURLLevelUp": {
+    "message": "網址階數上升",
+    "description": "URL level up"
+  },
+  "commandLabelIncreaseURLNumber": {
+    "message": "增加網址頁碼",
+    "description": "Increase URL number"
+  },
+  "commandLabelDecreaseURLNumber": {
+    "message": "減少網址頁碼",
+    "description": "Decrease URL number"
+  },
+  "commandLabelOpenImageInNewTab": {
+    "message": "開啟圖片於新分頁",
+    "description": "Open image in new tab"
+  },
+  "commandLabelOpenLinkInNewTab": {
+    "message": "開啟鏈結於新分頁",
+    "description": "Open link in new tab"
+  },
+  "commandLabelOpenLinkInNewWindow": {
+    "message": "開啟鏈結於新視窗",
+    "description": "Open link in new window"
+  },
+  "commandLabelOpenLinkInNewPrivateWindow": {
+    "message": "開啟鏈結於新隱私視窗",
+    "description": "Open link in new private window"
+  },
+  "commandLabelSearchTextSelection": {
+    "message": "搜尋選取的文字",
+    "description": "Search text selection"
+  },
+  "commandLabelSearchClipboard": {
+    "message": "搜尋剪貼簿內容",
+    "description": "Search clipboard"
+  },
+  "commandLabelSearchTextSelectionInNewTab": {
+    "message": "於新分頁搜尋選擇的文字",
+    "description": "Search text selection in new tab"
+  },
+  "commandLabelSearchClipboardInNewTab": {
+    "message": "於新分頁搜尋剪貼簿中的文字",
+    "description": "Search clipboard in new tab"
+  },
+  "commandLabelCloseRightTabs": {
+    "message": "關閉右側分頁",
+    "description": "Close right tabs"
+  },
+  "commandLabelCloseLeftTabs": {
+    "message": "關閉左側分頁",
+    "description": "Close left tabs"
+  },
+  "commandLabelCloseOtherTabs": {
+    "message": "關閉其它分頁",
+    "description": "Close other tabs"
+  },
+  "commandLabelSaveTabAsPDF": {
+    "message": "儲存為 PDF",
+    "description": "Save as PDF"
+  },
+  "commandLabelSaveImage": {
+    "message": "儲存圖片",
+    "description": "Save image"
+  },
+  "commandLabelSaveLink": {
+    "message": "儲存連結",
+    "description": "Save link"
+  },
+  "commandLabelPrintTab": {
+    "message": "列印",
+    "description": "Print"
+  },
+  "commandLabelOpenPrintPreview": {
+    "message": "預覽列印",
+    "description": "Print preview"
+  },
+  "commandLabelOpenHomepage": {
+    "message": "開啟首頁",
+    "description": "Open homepage"
+  },
+  "commandLabelOpenCustomURLInNewTab": {
+    "message": "開啟自訂網址於新分頁",
+    "description": "Open custom URL in new tab"
+  },
+  "commandLabelOpenCustomURL": {
+    "message": "開啟自訂網址",
+    "description": "Open custom URL"
+  },
+  "commandLabelPasteClipboard": {
+    "message": "貼上剪貼簿內容",
+    "description": "Paste clipboard"
+  },
+  "commandLabelOpenURLFromClipboard": {
+    "message": "從剪貼簿開啟網址",
+    "description": "Open URL from clipboard"
+  },
+  "commandLabelOpenURLFromClipboardInNewTab": {
+    "message": "從剪貼簿開啟網址於新分頁",
+    "description": "Open URL from clipboard in new tab"
+  },
+  "commandLabelOpenURLFromClipboardInNewWindow": {
+    "message": "從剪貼簿開啟網址於新視窗",
+    "description": "Open URL from clipboard in new window"
+  },
+  "commandLabelOpenURLFromClipboardInNewPrivateWindow": {
+    "message": "從剪貼簿開啟網址於新隱私視窗",
+    "description": "Open URL from clipboard in new private window"
+  },
+  "commandLabelOpenAddonSettings": {
+    "message": "開啟 Gesturefy 設定頁",
+    "description": "Open Gesturefy settings"
+  },
+  "commandLabelOpenLink": {
+    "message": "開啟鏈結",
+    "description": "Open link"
+  },
+  "commandLabelViewImage": {
+    "message": "檢視圖片",
+    "description": "View image"
+  },
+  "commandLabelLinkToNewBookmark": {
+    "message": "將網址儲存為書籤",
+    "description": "Link to bookmark"
+  },
+  "commandLabelSaveScreenshot": {
+    "message": "儲存畫面截圖",
+    "description": "Save screenshot"
+  },
+  "commandLabelCopyTabURL": {
+    "message": "複製分頁網址",
+    "description": "Copy tab URL"
+  },
+  "commandLabelCopyLinkURL": {
+    "message": "複製鏈結網址",
+    "description": "Copy link URL"
+  },
+  "commandLabelCopyImageURL": {
+    "message": "複製圖片網址",
+    "description": "Copy image URL"
+  },
+  "commandLabelCopyTextSelection": {
+    "message": "複製選取的文字",
+    "description": "Copy text selection"
+  },
+  "commandLabelCopyImage": {
+    "message": "複製圖片",
+    "description": "Copy image"
+  },
+  "commandLabelViewPageSourceCode": {
+    "message": "檢視頁面原始碼",
+    "description": "View page source"
+  },
+  "commandLabelPopupAllTabs": {
+    "message": "[Popup] 所有分頁",
+    "description": "[Popup] All tabs"
+  },
+  "commandLabelPopupRecentlyClosedTabs": {
+    "message": "[Popup] 最近關閉的分頁",
+    "description": "[Popup] Recently closed tabs"
+  },
+  "commandLabelPopupSearchEngines": {
+    "message": "[Popup] 搜尋引擎",
+    "description": "[Popup] Search engines"
+  },
+  "commandLabelPopupCustomCommandList": {
+    "message": "[Popup] 自訂指令清單",
+    "description": "[Popup] Custom command list"
+  },
+  "commandLabelSendMessageToOtherAddon": {
+    "message": "發送訊息至其他附加元件",
+    "description": "Send message to other add-on"
+  },
+  "commandLabelExecuteUserScript": {
+    "message": "執行自訂腳本",
+    "description": "Execute user script"
+  },
+  "commandLabelClearBrowsingData": {
+    "message": "清除瀏覽資料",
+    "description": "Clear browsing data"
+  },
+  "commandLabelRunMultiPurposeCommand": {
+    "message": "執行多目的指定",
+    "description": "Run multi purpose command"
+  },
+  "commandDescriptionToggleBookmark": {
+    "message": "將目前的分頁 加入或刪除書籤",
+    "description": "Adds or removes a bookmark."
+  },
+  "commandDescriptionDuplicateTab": {
+    "message": "複製目前的分頁",
+    "description": "Duplicates the current tab."
+  },
+  "commandDescriptionNewTab": {
+    "message": "開啟一個新分頁",
+    "description": "Opens a new tab."
+  },
+  "commandDescriptionReloadTab": {
+    "message": "重新載入目前分頁的頁面",
+    "description": "Reloads the current page."
+  },
+  "commandDescriptionReloadFrame": {
+    "message": "重新載入手勢起點所位於的框架",
+    "description": "Reloads the frame on which the gesture started."
+  },
+  "commandDescriptionStopLoading": {
+    "message": "停止載入目前的頁面",
+    "description": "Stops the current page from loading."
+  },
+  "commandDescriptionCloseTab": {
+    "message": "關閉目前的分頁",
+    "description": "Closes the current tab."
+  },
+  "commandDescriptionRestoreTab": {
+    "message": "還原上一個被關閉的分頁",
+    "description": "Restores the last closed tab."
+  },
+  "commandDescriptionZoomIn": {
+    "message": "放大目前分頁的內容",
+    "description": "Zooms into the current tab."
+  },
+  "commandDescriptionZoomOut": {
+    "message": "縮小目前分頁的內容",
+    "description": "Zooms out of the current tab."
+  },
+  "commandDescriptionZoomReset": {
+    "message": "重設目前分頁的縮放大小",
+    "description": "Resets the current zoom level."
+  },
+  "commandDescriptionPageBack": {
+    "message": "回到歷史記錄中的上一個頁面",
+    "description": "Returns to the previous page of the history."
+  },
+  "commandDescriptionPageForth": {
+    "message": "前往歷史記錄中的下一個頁面",
+    "description": "Goes a page forward in the history."
+  },
+  "commandDescriptionTogglePin": {
+    "message": "將目前的分頁 釘選或取消釘選",
+    "description": "Pins or unpins the current Tab."
+  },
+  "commandDescriptionToggleMute": {
+    "message": "將目前的分頁 靜音或取消靜音",
+    "description": "Mutes or unmutes the current tab."
+  },
+  "commandDescriptionToggleReaderMode": {
+    "message": "如果瀏覽器允許，開啟或關閉閱讀模式",
+    "description": "Activates or deactivates the reader view if available."
+  },
+  "commandDescriptionScrollTop": {
+    "message": "捲動畫面至頁面的頂部",
+    "description": "Scrolls to the top of the page."
+  },
+  "commandDescriptionScrollBottom": {
+    "message": "滑動畫面至頁面的底部",
+    "description": "Scrolls to the bottom of the page."
+  },
+  "commandDescriptionScrollPageDown": {
+    "message": "向下滑動目前視窗的長度.",
+    "description": "Scrolls down by the length of the current view."
+  },
+  "commandDescriptionScrollPageUp": {
+    "message": "向上滑動目前視窗的長度.",
+    "description": "Scrolls up by the length of the current view."
+  },
+  "commandDescriptionFocusRightTab": {
+    "message": "切換到目前分頁右側的分頁",
+    "description": "Switches to the right tab of the current tab."
+  },
+  "commandDescriptionFocusLeftTab": {
+    "message": "切換到目前分頁左側的分頁",
+    "description": "Switches to the left tab of the current tab."
+  },
+  "commandDescriptionFocusFirstTab": {
+    "message": "切換至最左邊的分頁",
+    "description": "Switches to the far left tab."
+  },
+  "commandDescriptionFocusLastTab": {
+    "message": "切換至最右邊的分頁",
+    "description": "Switches to the far right tab."
+  },
+  "commandDescriptionFocusPreviousSelectedTab": {
+    "message": "切換至上一次所使用的分頁",
+    "description": "Switches to the last active tab."
+  },
+  "commandDescriptionMaximizeWindow": {
+    "message": "最大化目前的視窗",
+    "description": "Maximizes the current window."
+  },
+  "commandDescriptionMinimizeWindow": {
+    "message": "最小化目前的視窗",
+    "description": "Minimizes the current window."
+  },
+  "commandDescriptionToggleWindowSize": {
+    "message": "在最大化和正常視窗大小之間切換",
+    "description": "Switches between maximized and normal window size."
+  },
+  "commandDescriptionToggleFullscreen": {
+    "message": "開啟或離開全螢幕模式",
+    "description": "Activates or deactivates full screen mode."
+  },
+  "commandDescriptionNewWindow": {
+    "message": "開啟一個空的視窗",
+    "description": "Opens a new empty window."
+  },
+  "commandDescriptionNewPrivateWindow": {
+    "message": "開啟一個空的隱私瀏覽視窗",
+    "description": "Opens a new empty private window."
+  },
+  "commandDescriptionMoveTabToStart": {
+    "message": "將目前的分頁移動至分頁列的開端",
+    "description": "Moves the current tab to the start of the tab strip."
+  },
+  "commandDescriptionMoveTabToEnd": {
+    "message": "將目前的分頁移動至分頁列的尾端",
+    "description": "Moves the current tab to the end of the tab strip."
+  },
+  "commandDescriptionMoveTabToNewWindow": {
+    "message": "移動目前分頁到一個新視窗",
+    "description": "Moves the current tab to a new window."
+  },
+  "commandDescriptionMoveLeftTabsToNewWindow": {
+    "message": "將所有左側的分頁移動至新視窗",
+    "description": "Moves all tabs to the left of the current tab to a new window."
+  },
+  "commandDescriptionMoveRightTabsToNewWindow": {
+    "message": "將所有右側的分頁移動至新視窗",
+    "description": "Moves all tabs to the right of the current tab to a new window."
+  },
+  "commandDescriptionCloseWindow": {
+    "message": "關閉目前視窗",
+    "description": "Closes the current window."
+  },
+  "commandDescriptionReloadAllTabs": {
+    "message": "重新載入所有分頁",
+    "description": "Reloads all tabs."
+  },
+  "commandDescriptionToRootURL": {
+    "message": "前往網站的主頁面",
+    "description": "Goes to the main page of the website."
+  },
+  "commandDescriptionURLLevelUp": {
+    "message": "前往目前網址的層次結構的向上一層",
+    "description": "Goes up the URL hierarchy for one level."
+  },
+  "commandDescriptionIncreaseURLNumber": {
+    "message": "增加網址中的頁碼",
+    "description": "Increases a number in the URL."
+  },
+  "commandDescriptionDecreaseURLNumber": {
+    "message": "減少網址中的頁碼",
+    "description": "Decreases a number in the URL."
+  },
+  "commandDescriptionOpenImageInNewTab": {
+    "message": "在新的分頁開啟手勢軌跡起點的圖片",
+    "description": "Opens the image on which the gesture started in a new tab."
+  },
+  "commandDescriptionOpenLinkInNewTab": {
+    "message": "於新分頁開啟選取的或手勢起點上的鏈結",
+    "description": "Opens either a selected url or the link on which the gesture started in a new tab."
+  },
+  "commandDescriptionOpenLinkInNewWindow": {
+    "message": "於新視窗開啟選取的或手勢起點上的鏈結",
+    "description": "Opens either a selected url or the link on which the gesture started in a new window."
+  },
+  "commandDescriptionOpenLinkInNewPrivateWindow": {
+    "message": "於新隱私視窗開啟選取的或手勢起點上的鏈結",
+    "description": "Opens either a selected url or the link on which the gesture started in a new private window."
+  },
+  "commandDescriptionSearchTextSelection": {
+    "message": "於目前的分頁中開啟搜尋網站搜尋選擇的文字",
+    "description": "Starts a web search of the selected text in the current tab."
+  },
+  "commandDescriptionSearchClipboard": {
+    "message": "於目前的分頁中開啟搜尋網站搜尋剪貼簿中的文字",
+    "description": "Starts a web search of the clipboard text in the current tab."
+  },
+  "commandDescriptionSearchTextSelectionInNewTab": {
+    "message": "於新分頁中開啟搜尋網站搜尋選擇的文字",
+    "description": "Starts a web search of the selected text in a new tab."
+  },
+  "commandDescriptionSearchClipboardInNewTab": {
+    "message": "於新分頁中開啟搜尋網站搜尋剪貼簿中的文字",
+    "description": "Starts a web search of the clipboard text in a new tab."
+  },
+  "commandDescriptionCloseRightTabs": {
+    "message": "關閉所有右側分頁",
+    "description": "Closes all tabs on the right side of the current tab."
+  },
+  "commandDescriptionCloseLeftTabs": {
+    "message": "關閉釘選分頁以外的所有左側分頁",
+    "description": "Closes all tabs on the left side of the current tab except the pinned tabs."
+  },
+  "commandDescriptionCloseOtherTabs": {
+    "message": "關閉所有分頁，除了目前正在使用的以及被釘選的分頁",
+    "description": "Closes all tabs except of the current tab and pinned tabs."
+  },
+  "commandDescriptionSaveTabAsPDF": {
+    "message": "將目前的頁面儲存為pdf檔",
+    "description": "Saves the current page as a pdf file."
+  },
+  "commandDescriptionSaveImage": {
+    "message": "下載手勢起點上的圖片",
+    "description": "Downloads the image on which the gesture started."
+  },
+  "commandDescriptionSaveLink": {
+    "message": "下載選取的的或手勢起點上的鏈結",
+    "description": "Downloads either a selected url or the link on which the gesture started."
+  },
+  "commandDescriptionPrintTab": {
+    "message": "為目前的頁面開啟列印視窗",
+    "description": "Prints the current page by prompting the print dialog."
+  },
+  "commandDescriptionOpenPrintPreview": {
+    "message": "為目前的頁面開啟預覽列印",
+    "description": "Opens the print preview of the current page."
+  },
+  "commandDescriptionOpenHomepage": {
+    "message": "像首頁按鈕一樣運作",
+    "description": "Works like the homepage button."
+  },
+  "commandDescriptionOpenCustomURLInNewTab": {
+    "message": "開啟指定的網址於新分頁",
+    "description": "Opens the specified URL in a new tab."
+  },
+  "commandDescriptionOpenCustomURL": {
+    "message": "開啟指定的網址於目前的分頁",
+    "description": "Opens the specified URL in the current tab."
+  },
+  "commandDescriptionPasteClipboard": {
+    "message": "將剪貼簿的內容插入至滑鼠手勢開始區域的脫字符號位置",
+    "description": "Inserts the current clipboard text at the caret position of the input element on which the gesture started."
+  },
+  "commandDescriptionOpenURLFromClipboard": {
+    "message": "如果剪貼簿中含有網址, 將其開啟於目前的分頁",
+    "description": "If the clipboard contains a URL, it will be opened in the current tab."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewTab": {
+    "message": "如果剪貼簿中含有網址, 將其開啟於新分頁",
+    "description": "If the clipboard contains a URL, it will be opened in a new tab."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewWindow": {
+    "message": "如果剪貼簿中含有網址, 將其開啟於新視窗",
+    "description": "If the clipboard contains a URL, it will be opened in a new window."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewPrivateWindow": {
+    "message": "如果剪貼簿中含有網址, 將其開啟於新隱私視窗",
+    "description": "If the clipboard contains a URL, it will be opened in a new private window."
+  },
+  "commandDescriptionOpenAddonSettings": {
+    "message": "開啟 Gesturefy 的設定頁",
+    "description": "Opens the Gesturefy settings page."
+  },
+  "commandDescriptionOpenLink": {
+    "message": "開啟選取的的或手勢起點上的鏈結",
+    "description": "Opens either a selected url or the link on which the gesture started."
+  },
+  "commandDescriptionViewImage": {
+    "message": "開啟手勢起點上的圖片",
+    "description": "Opens the image on which the gesture started."
+  },
+  "commandDescriptionLinkToNewBookmark": {
+    "message": "將選取的或手勢起點上的鏈結儲存為書籤",
+    "description": "Saves either a selected url or the link on which the gesture started as a bookmark."
+  },
+  "commandDescriptionSaveScreenshot": {
+    "message": "儲存現在頁面的可視區域為圖片",
+    "description": "Saves the current visible website area as an image."
+  },
+  "commandDescriptionCopyTabURL": {
+    "message": "複製現在分頁的網址到剪貼板",
+    "description": "Copies the URL of the current tab to clipboard."
+  },
+  "commandDescriptionCopyLinkURL": {
+    "message": "將選取的或手勢起點的鏈結複製至剪貼簿",
+    "description": "Copies either a selected url or the link on which the gesture started to clipboard."
+  },
+  "commandDescriptionCopyImageURL": {
+    "message": "複製手勢起點上的圖片鏈結到剪貼板",
+    "description": "Copies the URL of the image on which the gesture started to clipboard."
+  },
+  "commandDescriptionCopyTextSelection": {
+    "message": "複製選取的文字到剪貼板",
+    "description": "Copies the current text selection to clipboard."
+  },
+  "commandDescriptionCopyImage": {
+    "message": "複製手勢起點上的圖片到剪貼板",
+    "description": "Copies the image on which the gesture started to clipboard."
+  },
+  "commandDescriptionViewPageSourceCode": {
+    "message": "開啟一個新分頁以檢視目前頁面的原始碼",
+    "description": "Opens a new tab containing the source code of the page."
+  },
+  "commandDescriptionPopupAllTabs": {
+    "message": "開啟一個彈出式功能表，顯示所有分頁，並讓你用以切換分頁",
+    "description": "Opens a popup containing a list of all currently open tabs and offers the possibility to switch to one of them."
+  },
+  "commandDescriptionPopupRecentlyClosedTabs": {
+    "message": "開啟一個彈出式功能表，顯示最近關閉的分頁，並讓你用以能還原其中之一的分頁",
+    "description": "Opens a popup containing a list of all recently closed tabs and offers the possibility to restore one of them."
+  },
+  "commandDescriptionPopupSearchEngines": {
+    "message": "開啟一個彈出式功能表，顯示已安裝的搜尋引擎，並讓你能選擇其中之一來搜尋你所選中的文字",
+    "description": "Opens a popup containing a list of all installed search engines and offers the possibility to search the selected text with one of them."
+  },
+  "commandDescriptionPopupCustomCommandList": {
+    "message": "開啟一個彈出式功能表，顯示多個指令，讓你能選擇及執行其中一個",
+    "description": "Opens a popup containing a custom list of multiple commands and offers the possibility to run one of them."
+  },
+  "commandDescriptionSendMessageToOtherAddon": {
+    "message": "發送自訂的訊息給其他附加元件，使利用其他附加元件的功能化為可能。",
+    "description": "Sends a custom message to another add-on. This allows the use of other add-ons functionality."
+  },
+  "commandDescriptionExecuteUserScript": {
+    "message": "於現網頁執行自訂腳本",
+    "description": "Executes custom JavaScript code in the current webpage."
+  },
+  "commandDescriptionClearBrowsingData": {
+    "message": "清除特定瀏覽資料",
+    "description": "Removes the specified browsing data."
+  },
+  "commandDescriptionRunMultiPurposeCommand": {
+    "message": "結合多項指令，並執行第一個符合給訂條件的指令",
+    "description": "Combines multiple commands into one and executes the first command which runs successfully under the given context/conditions."
+  },
+  "commandSettingLabelNewTabPosition": {
+    "message": "新分頁位置",
+    "description": "New tab position"
+  },
+  "commandSettingLabelNewTabPositionDefault": {
+    "message": "預設",
+    "description": "default"
+  },
+  "commandSettingLabelNewTabPositionBefore": {
+    "message": "之前",
+    "description": "before"
+  },
+  "commandSettingLabelNewTabPositionAfter": {
+    "message": "之後",
+    "description": "after"
+  },
+  "commandSettingLabelNewTabPositionStart": {
+    "message": "開始",
+    "description": "start"
+  },
+  "commandSettingLabelNewTabPositionEnd": {
+    "message": "結束",
+    "description": "end"
+  },
+  "commandSettingLabelNewTabFocus": {
+    "message": "切換至新分頁",
+    "description": "Focus new tab"
+  },
+  "commandSettingLabelTabNextFocus": {
+    "message": "下一個分頁",
+    "description": "Next tab"
+  },
+  "commandSettingLabelTabNextFocusDefault": {
+    "message": "預設",
+    "description": "default"
+  },
+  "commandSettingLabelTabNextFocusPrevious": {
+    "message": "上一個",
+    "description": "previous"
+  },
+  "commandSettingLabelTabNextFocusNext": {
+    "message": "下一個",
+    "description": "next"
+  },
+  "commandSettingLabelTabNextFocusRecently": {
+    "message": "上次使用的分頁",
+    "description": "last focused"
+  },
+  "commandSettingLabelTabClosePinned": {
+    "message": "關閉釘選的分頁",
+    "description": "Close pinned tabs"
+  },
+  "commandSettingLabelRestoreCurrentWindow": {
+    "message": "僅目前的視窗",
+    "description": "Current window only"
+  },
+  "commandSettingLabelReloadCache": {
+    "message": "重新載入目前頁面 (及快取)",
+    "description": "Reload cache"
+  },
+  "commandSettingLabelZoomStep": {
+    "message": "縮放步階",
+    "description": "Zoom step"
+  },
+  "commandSettingLabelScrollDuration": {
+    "message": "滑動用時",
+    "description": "Scroll duration"
+  },
+  "commandSettingLabelScrollProportion": {
+    "message": "滑動比率",
+    "description": "Scroll proportion"
+  },
+  "commandSettingLabelFocusIncludePinned": {
+    "message": "包括釘選的分頁",
+    "description": "Include pinned tabs"
+  },
+  "commandSettingLabelTabCycling": {
+    "message": "分頁循環",
+    "description": "Tab cycling"
+  },
+  "commandSettingLabelExcludeDiscarded": {
+    "message": "排除被卸載的分頁",
+    "description": "Exclude discarded tabs"
+  },
+  "commandSettingLabelOpenEmptyTab": {
+    "message": "開啟空分頁",
+    "description": "Open empty tab"
+  },
+  "commandSettingLabelOpenEmptySearch": {
+    "message": "開啟空搜尋",
+    "description": "Open empty search"
+  },
+  "commandSettingLabelOpenEmptyWindow": {
+    "message": "開啟空視窗",
+    "description": "Open empty window"
+  },
+  "commandSettingLabelSearchEngineURL": {
+    "message": "搜尋引擎網址",
+    "description": "Search engine URL"
+  },
+  "commandSettingLabelSavePromptDialog": {
+    "message": "跳出詢問視窗",
+    "description": "Prompt dialog"
+  },
+  "commandSettingLabelCustomURL": {
+    "message": "自訂網址",
+    "description": "Custom URL"
+  },
+  "commandSettingLabelAddonId": {
+    "message": "附加元件ID",
+    "description": "Add-on ID"
+  },
+  "commandSettingLabelAddonMessage": {
+    "message": "訊息",
+    "description": "Message"
+  },
+  "commandSettingLabelParseMessage": {
+    "message": "解析訊息",
+    "description": "Parse message"
+  },
+  "commandSettingLabelTabOrder": {
+    "message": "分頁順序",
+    "description": "Tab order"
+  },
+  "commandSettingLabelTabOrderNone": {
+    "message": "無 (預設)",
+    "description": "none (default)"
+  },
+  "commandSettingLabelTabOrderLastAccessedAsc": {
+    "message": "最近使用的 (昇冪)",
+    "description": "last accessed ascending"
+  },
+  "commandSettingLabelTabOrderLastAccessedDesc": {
+    "message": "最近使用的 (降冪)",
+    "description": "last accessed descending"
+  },
+  "commandSettingLabelTabOrderAlphabeticallyAsc": {
+    "message": "按名稱 (昇冪)",
+    "description": "alphabetically ascending"
+  },
+  "commandSettingLabelTabOrderAlphabeticallyDesc": {
+    "message": "按名稱 (降冪)",
+    "description": "alphabetically descending"
+  },
+  "commandSettingLabelTabIncludeCurrent": {
+    "message": "包含目前分頁",
+    "description": "Include current tab"
+  },
+  "commandSettingLabelNewWindowFocus": {
+    "message": "切換至新視窗",
+    "description": "Focus new window"
+  },
+  "commandSettingLabelUserScriptWarning": {
+    "message": "小心!",
+    "description": "Careful!"
+  },
+  "commandSettingLabelUserScriptCode": {
+    "message": "使用者自訂腳本程式碼",
+    "description": "User script code"
+  },
+  "commandSettingLabelTargetFrame": {
+    "message": "目標Frame",
+    "description": "Target frame"
+  },
+  "commandSettingLabelTargetFrameSourceFrame": {
+    "message": "來源框架",
+    "description": "Source frame"
+  },
+  "commandSettingLabelTargetFrameAllFrames": {
+    "message": "全框架",
+    "description": "All frames"
+  },
+  "commandSettingLabelTargetFrameTopFrame": {
+    "message": "頂級框架",
+    "description": "Top-level frame"
+  },
+  "commandSettingLabelCustomMatchPattern": {
+    "message": "自訂比對樣式",
+    "description": "Custom match pattern"
+  },
+  "commandSettingLabelCommandSelection": {
+    "message": "指令選擇",
+    "description": "Command selection"
+  },
+  "commandSettingLabelBrowsingDataCache": {
+    "message": "快取",
+    "description": "Cache"
+  },
+  "commandSettingLabelBrowsingDataCookies": {
+    "message": "Cookies",
+    "description": "Cookies"
+  },
+  "commandSettingLabelBrowsingDataDownloads": {
+    "message": "下載",
+    "description": "Downloads"
+  },
+  "commandSettingLabelBrowsingDataFormData": {
+    "message": "表單資料",
+    "description": "Form data"
+  },
+  "commandSettingLabelBrowsingDataHistory": {
+    "message": "歷史",
+    "description": "History"
+  },
+  "commandSettingLabelBrowsingDataIndexedDB": {
+    "message": "IndexedDB",
+    "description": "IndexedDB"
+  },
+  "commandSettingLabelBrowsingDataLocalStorage": {
+    "message": "Local Storage",
+    "description": "Local Storage"
+  },
+  "commandSettingLabelBrowsingDataPasswords": {
+    "message": "密碼",
+    "description": "Passwords"
+  },
+  "commandSettingLabelBrowsingDataPluginData": {
+    "message": "外掛程式資料",
+    "description": "Plugin data"
+  },
+  "commandSettingLabelBrowsingDataServiceWorkers": {
+    "message": "Service Workers",
+    "description": "Service Workers"
+  },
+  "commandSettingDescriptionNewTabPosition": {
+    "message": "決定新分頁要放置於目前分頁的哪一邊",
+    "description": "Determines the position of the new tab relative to the current tab."
+  },
+  "commandSettingDescriptionNewTabFocus": {
+    "message": "決定是否要切換至新開啟的分頁",
+    "description": "Determines if the opened tab should gain focus or not."
+  },
+  "commandSettingDescriptionTabNextFocus": {
+    "message": "決定接下來要切換至的分頁",
+    "description": "Determines which tab should be focused next."
+  },
+  "commandSettingDescriptionTabClosePinned": {
+    "message": "決定被釘選的分頁是否能被關閉",
+    "description": "Determines if pinned tabs can be closed or not."
+  },
+  "commandSettingDescriptionRestoreCurrentWindow": {
+    "message": "決定是否僅還原屬於目前視窗的分頁",
+    "description": "Determines if only tabs which belong to the current window should be restored."
+  },
+  "commandSettingDescriptionReloadCache": {
+    "message": "決定快取是否也重新載入",
+    "description": "Determines if the cache should be reloaded or not."
+  },
+  "commandSettingDescriptionZoomStep": {
+    "message": "縮放步階或多個以分號分隔的百分比。若為空，則Gesturefy將使用預設的縮放步階。",
+    "description": "The zoom step or multiple comma separated levels in percentage. If omitted, Gesturefy's default zoom levels are used."
+  },
+  "commandSettingDescriptionScrollDuration": {
+    "message": "使用多少時間滑動到頁面頂部/底部，時間單位為毫秒",
+    "description": "The duration in milliseconds the scroll animation should take."
+  },
+  "commandSettingDescriptionScrollProportion": {
+    "message": "該滑動頁面可見部分高度的百分比",
+    "description": "The percentage of the viewport height by which the page should be scrolled."
+  },
+  "commandSettingDescriptionFocusIncludePinned": {
+    "message": "決定是否要將釘選的分頁算為最左邊的分頁",
+    "description": "Determines if pinned tabs should be treated as the leftmost tabs."
+  },
+  "commandSettingDescriptionTabCycling": {
+    "message": "決定該分頁是否要被包含在循環迴圈中",
+    "description": "Determines if the tabs should be cycled through in a loop."
+  },
+  "commandSettingDescriptionExcludeDiscarded": {
+    "message": "決定是否該跳過尚未被載入的分頁",
+    "description": "Determines if tabs that are not loaded should be skipped."
+  },
+  "commandSettingDescriptionOpenEmptyTab": {
+    "message": "決定當沒有選取任何網址或鏈結時，是否要開啟空分頁",
+    "description": "Determines if an empty tab should be opened if no URL or link was selected."
+  },
+  "commandSettingDescriptionOpenEmptySearch": {
+    "message": "決定沒有文字時是否還要執行搜尋",
+    "description": "Determines whether a search should be performed even if no text is present"
+  },
+  "commandSettingDescriptionOpenEmptyWindow": {
+    "message": "決定當沒有選取任何網址或鏈結時，是否要開啟空視窗",
+    "description": "Determines if an empty window should be opened if no URL or link was selected."
+  },
+  "commandSettingDescriptionSearchEngineURL": {
+    "message": "一個將搜尋文字置於%s佔位符或尾端的搜尋引擎網址。如果省略，將使用預設的搜尋引擎。",
+    "description": "A search engine URL where the search text is either inserted for the %s placeholder or appended to the end. If omitted, the default browser search engine is used."
+  },
+  "commandSettingDescriptionSavePromptDialog": {
+    "message": "決定是否要顯示\"另存為...\"視窗，或直接下載到使用者的預設下載資料夾",
+    "description": "Determines if the \"Save As\" dialog should appear or the file should be downloaded silently to the users default download folder."
+  },
+  "commandSettingDescriptionCustomURL": {
+    "message": "要開啟的網址",
+    "description": "The URL that should be opened."
+  },
+  "commandSettingDescriptionAddonId": {
+    "message": "發送對象的附加元件ID",
+    "description": "The extension ID of the add-on the message should be sent to."
+  },
+  "commandSettingDescriptionAddonMessage": {
+    "message": "發送至該附加元件的訊息內容",
+    "description": "The message string that should be sent to the add-on."
+  },
+  "commandSettingDescriptionParseMessage": {
+    "message": "決定訊息是否要序列化為 JavaScript物件",
+    "description": "Determines if the message should be serialized as a JavaScript object."
+  },
+  "commandSettingDescriptionTabOrder": {
+    "message": "依規則對分頁進行排序",
+    "description": "Orders the displayed tabs by a specific characteristic."
+  },
+  "commandSettingDescriptionTabIncludeCurrent": {
+    "message": "決定是否要包含目前的分頁",
+    "description": "Determines if the currently active tab should be included."
+  },
+  "commandSettingDescriptionNewWindowFocus": {
+    "message": "決定是否要切換至新開啟的視窗",
+    "description": "Determines if the opened window should gain focus or not."
+  },
+  "commandSettingDescriptionUserScriptWarning": {
+    "message": "自訂腳本可能有導致隱私資料外流的風險",
+    "description": "User scripts can lead to the loss of private data."
+  },
+  "commandSettingDescriptionUserScriptCode": {
+    "message": "要注入並執行於網頁中的程式碼",
+    "description": "The code that should be injected into the webpage's scope."
+  },
+  "commandSettingDescriptionTargetFrame": {
+    "message": "自訂腳本所要注入的框架",
+    "description": "The frame in which the user script should be injected."
+  },
+  "commandSettingDescriptionCustomMatchPattern": {
+    "message": "一個由正規表示式組成的字串比對式。如果為空，將使用內建的預設方法",
+    "description": "A pattern in the form of a regular expression to match a specific part of a string. If omitted an internal pattern is used."
+  },
+  "commandSettingDescriptionCommandSelection": {
+    "message": "自訂的多個指令",
+    "description": "A custom selection of multiple commands."
+  },
+  "commandErrorNotificationTitle": {
+    "message": "$COMMAND$指令執行失敗",
+    "description": "\"New tab\" command failed.",
+    "placeholders": {
+      "command": {
+        "content": "$1",
+        "example": "New tab"
+      }
+    }
+  },
+  "commandErrorNotificationMessageIllegalURL": {
+    "message": "無法打開該網址。點擊此處以瞭解更多資訊。",
+    "description": "The target URL cannot be opened. Click here for more information."
+  },
+  "commandErrorNotificationMessageNotSerializeable": {
+    "message": "無法將該訊息解析為 JavaScript 物件。點擊此處以瞭解更多資訊。",
+    "description": "The specified message string could not be parsed to a JavaScript object. Click here for more information."
+  },
+  "commandErrorNotificationMessageMissingRecipient": {
+    "message": "該附加元件ID 無符合的對象，或其無接收訊息。點擊此處以瞭解更多資訊。",
+    "description": "The specified extension ID either does not belong to an existing add-on or the add-on does not receive messages. Click here for more information."
+  },
+  "commandErrorNotificationMessageMissingIncognitoPermissions": {
+    "message": "Gesturefy沒有匿名模式的權限，點擊此以獲得更多資訊。",
+    "description": "Gesturefy does not have permission for incognito mode. Click here for more information."
+  },
+  "commandBarTitle": {
+    "message": "指令清單",
+    "description": "Command bar"
+  },
+  "commandBarSearch": {
+    "message": "搜尋",
+    "description": "Search"
+  },
+  "commandBarAdditionalPermissionsText": {
+    "message": "這個指令需要額外的權限: ",
+    "description": "This command requires additional permissions: "
+  },
+  "commandBarAdditionalSettingsText": {
+    "message": "這個指令有附加的設定",
+    "description": "This command has additional settings."
+  },
+  "commandBarOpenSelectionText": {
+    "message": "開啟指令選擇",
+    "description": "Open command selection."
+  },
+  "commandBarOpenSettingsText": {
+    "message": "開啟指令設定",
+    "description": "Open command settings."
+  },
+  "commandMultiSelectAddPlaceholder": {
+    "message": "新增",
+    "description": "Add"
+  },
+  "commandMultiSelectNoResultsPlaceholder": {
+    "message": "無結果",
+    "description": "No results"
+  },
+  "gesturePopupTitleNewGesture": {
+    "message": "新手勢",
+    "description": "New Gesture"
+  },
+  "gesturePopupTitleEditGesture": {
+    "message": "編輯手勢",
+    "description": "Edit Gesture"
+  },
+  "gesturePopupRecordingAreaText": {
+    "message": "使用 滑鼠$MOUSEBUTTON$鍵 記錄新手勢",
+    "description": "Use the right mouse button to record a new gesture.",
+    "placeholders": {
+      "mousebutton": {
+        "content": "$1",
+        "example": "right"
+      }
+    }
+  },
+  "gesturePopupMouseButtonLeft": {
+    "message": "左",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupMouseButtonRight": {
+    "message": "右",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupMouseButtonMiddle": {
+    "message": "中",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupLabelCommand": {
+    "message": "指令",
+    "description": "Command"
+  },
+  "gesturePopupLabelGestureDirections": {
+    "message": "手勢方向",
+    "description": "Gesture directions"
+  },
+  "gesturePopupLabelOptionalLabel": {
+    "message": "標籤 (可選)",
+    "description": "Label (optional)"
+  },
+  "gesturePopupDescriptionCommand": {
+    "message": "選擇此手勢所對應的命令",
+    "description": "Choose a command that should be assigned to this gesture."
+  },
+  "gesturePopupDescriptionGestureDirections": {
+    "message": "使用方向鍵輸入方向, 或使用旁邊的區域進行錄製",
+    "description": "Either use the arrow keys to enter the directions, or record them in the area next to it."
+  },
+  "gesturePopupDescriptionOptionalLabel": {
+    "message": "指定要顯示的自訂名稱, 取代原本的指令名稱",
+    "description": "Assign a custom name that will be displayed instead of the command name."
+  },
+  "gesturePopupNotificationSimilarGesture": {
+    "message": "這個手勢與\"$GESTURE_NAME$\"手勢相似",
+    "description": "This gesture is similar to the \"$GESTURE_NAME$\" gesture.",
+    "placeholders": {
+      "gesture_name": {
+        "content": "$1",
+        "example": "New Tab"
+      }
+    }
+  },
+  "permissionLabelTabs": {
+    "message": "分頁",
+    "description": "Tabs"
+  },
+  "permissionLabelSessions": {
+    "message": "Sessions",
+    "description": "Sessions"
+  },
+  "permissionLabelBookmarks": {
+    "message": "書籤",
+    "description": "Bookmarks"
+  },
+  "permissionLabelClipboardWrite": {
+    "message": "寫入剪貼簿",
+    "description": "Clipboard write"
+  },
+  "permissionLabelClipboardRead": {
+    "message": "讀取剪貼簿",
+    "description": "Clipboard read"
+  },
+  "permissionLabelDownloads": {
+    "message": "下載",
+    "description": "Downloads"
+  },
+  "permissionLabelSearch": {
+    "message": "搜尋",
+    "description": "Search"
+  },
+  "permissionLabelBrowsingData": {
+    "message": "瀏覽資料",
+    "description": "Browsing data"
+  },
+  "toggleButtonOn": {
+    "message": "開啟",
+    "description": "On - setting checked"
+  },
+  "toggleButtonOff": {
+    "message": "關閉",
+    "description": "Off - setting not checked"
+  },
+  "linkAdditionalInformation": {
+    "message": "其他資訊",
+    "description": "Additional information"
+  },
+  "buttonSave": {
+    "message": "儲存",
+    "description": "Save"
+  },
+  "buttonConfirm": {
+    "message": "確定",
+    "description": "OK"
+  },
+  "buttonCancel": {
+    "message": "取消",
+    "description": "Cancel"
+  },
+  "lightTheme": {
+    "message": "亮色主題",
+    "description": "Light theme"
+  },
+  "darkTheme": {
+    "message": "暗色主題",
+    "description": "Dark theme"
+  },
+  "highContrastTheme": {
+    "message": "高對比主題",
+    "description": "High contrast theme"
+  },
+  "welcomePageUpperSectionReference": {
+    "message": "Gesturefy已成功安裝",
+    "description": "Gesturefy has been successfully installed."
+  },
+  "welcomePageUpperSectionHeadline": {
+    "message": "從來沒試過滑鼠手勢? \n 現在就來試試看!",
+    "description": "Never done a mouse gesture before?\r\n Try it out right now!"
+  },
+  "welcomePageUpperSectionTutorialStep01": {
+    "message": "按住滑鼠右鍵",
+    "description": "Press and hold the right mouse button"
+  },
+  "welcomePageUpperSectionTutorialStep02": {
+    "message": "向下滑動你的滑鼠",
+    "description": "Drag down your mouse"
+  },
+  "welcomePageUpperSectionTutorialStep03": {
+    "message": "放開滑鼠右鍵",
+    "description": "Release the right mouse button"
+  },
+  "welcomePageLowerSectionReference": {
+    "message": "你成功滑動到網頁底部",
+    "description": "You scrolled to the bottom of the page."
+  },
+  "welcomePageLowerSectionHeadline": {
+    "message": "恭喜你成功完成第一次的滑鼠手勢",
+    "description": "Congratulations, you successfully accomplished your very first mouse gesture!"
+  },
+  "welcomePageLowerSectionGetStartedText": {
+    "message": "配合你個人的瀏覽網路習慣，建立你所想要的手勢，使你的日常上網更加簡單、快速並且更充滿樂趣。 現在就來個人化你的Gesturefy!",
+    "description": "Create as many gestures as you want to suit your individual browsing style and make your daily browsing easier, faster and a lot more fun. Get started now and personalize Gesturefy!"
+  },
+  "welcomePageLowerSectionGetStartedLink": {
+    "message": "設定你的手勢",
+    "description": "Set Up Your Gestures"
+  },
+  "welcomePageLowerSectionLearnMoreText": {
+    "message": "還是覺得困惑? 點擊下方連結閱讀快速引導，如果有其他Gesturefy的問題，那裡也有故障排除指南",
+    "description": "Still confused? Click the link below for a quick break-down and if you can't get Gesturefy up and running you can also find a troubleshooting guide there."
+  },
+  "welcomePageLowerSectionLearnMoreLink": {
+    "message": "瞭解更多資訊",
+    "description": "Learn More"
+  }
+}

@@ -1,0 +1,1612 @@
+{
+  "extensionDescription": {
+    "message": "마우스 제스처를 사용하여 더 빠르게 찾고 탐색하고, 조작하세요! 다양한 명령으로 사용자 지정 가능한 마우스 제스처 애드온입니다.",
+    "description": "Navigate, operate, and browse faster with mouse gestures! A customizable mouse gesture add-on with a variety of different commands."
+  },
+  "addonUpdateNotificationTitle": {
+    "message": "$NAME$ 애드온이 업데이트되었습니다!",
+    "description": "Gesturefy add-on has been updated!",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Gesturefy"
+      }
+    }
+  },
+  "addonUpdateNotificationMessage": {
+    "message": "새 버전은 $VERSION$입니다. 변경사항을 확인하려면 여기를 클릭하십시오.",
+    "description": "The new version number is $VERSION$. Click here to view the changelog.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "1.0.1"
+      }
+    }
+  },
+  "navigationSettings": {
+    "message": "설정",
+    "description": "Settings"
+  },
+  "navigationGestures": {
+    "message": "제스처",
+    "description": "Gestures"
+  },
+  "navigationExtras": {
+    "message": "부가 기능",
+    "description": "Extras"
+  },
+  "navigationExclusions": {
+    "message": "제외",
+    "description": "Exclusions"
+  },
+  "navigationAbout": {
+    "message": "정보",
+    "description": "About"
+  },
+  "settingLabelMouseButton": {
+    "message": "활성화 버튼",
+    "description": "Activation button"
+  },
+  "settingLabelMouseButtonLeft": {
+    "message": "왼쪽",
+    "description": "left"
+  },
+  "settingLabelMouseButtonRight": {
+    "message": "오른쪽",
+    "description": "right"
+  },
+  "settingLabelMouseButtonMiddle": {
+    "message": "가운데",
+    "description": "middle"
+  },
+  "settingLabelMatchingAlgorithm": {
+    "message": "매칭 알고리즘",
+    "description": "Matching algorithm"
+  },
+  "settingLabelMatchingAlgorithmCombined": {
+    "message": "결합됨",
+    "description": "Combined"
+  },
+  "settingLabelMatchingAlgorithmStrict": {
+    "message": "완전한",
+    "description": "Strict"
+  },
+  "settingLabelMatchingAlgorithmShapeIndependent": {
+    "message": "독립적 모양",
+    "description": "Shape-Independent"
+  },
+  "settingLabelTimeoutActive": {
+    "message": "유휴 시간 초과 활성화",
+    "description": "Activate idle timeout"
+  },
+  "settingLabelTimeoutDuration": {
+    "message": "시간",
+    "description": "Duration"
+  },
+  "settingLabelSuppressionKey": {
+    "message": "비활성화 키",
+    "description": "Deactivation key"
+  },
+  "settingLabelNoneKey": {
+    "message": "없음",
+    "description": "None"
+  },
+  "settingLabelAltKey": {
+    "message": "Alt",
+    "description": "Alt"
+  },
+  "settingLabelCtrlKey": {
+    "message": "Ctrl",
+    "description": "Ctrl"
+  },
+  "settingLabelShiftKey": {
+    "message": "Shift",
+    "description": "Shift"
+  },
+  "settingLabelAdvancedSettings": {
+    "message": "고급 설정",
+    "description": "Advanced settings"
+  },
+  "settingLabelDistanceThreshold": {
+    "message": "거리 임계 값",
+    "description": "Distance threshold"
+  },
+  "settingLabelDeviationTolerance": {
+    "message": "허용 오차",
+    "description": "Deviation tolerance"
+  },
+  "settingLabelDisplayTrace": {
+    "message": "제스처 자취 보기",
+    "description": "Display gesture trace"
+  },
+  "settingLabelTraceColor": {
+    "message": "선 색",
+    "description": "Line color"
+  },
+  "settingLabelTraceWidth": {
+    "message": "선 두께",
+    "description": "Line width"
+  },
+  "settingLabelTraceGrowth": {
+    "message": "선 두께 증가",
+    "description": "Line growth"
+  },
+  "settingLabelDisplayCommand": {
+    "message": "명령 표시",
+    "description": "Display command"
+  },
+  "settingLabelCommandFontColor": {
+    "message": "글꼴 색",
+    "description": "Font color"
+  },
+  "settingLabelCommandBackgroundColor": {
+    "message": "배경 색상",
+    "description": "Background color"
+  },
+  "settingLabelCommandFontSize": {
+    "message": "글꼴 크기",
+    "description": "Font size"
+  },
+  "settingLabelCommandHorizontalPosition": {
+    "message": "좌우 위치",
+    "description": "Horizontal position"
+  },
+  "settingLabelCommandVerticalPosition": {
+    "message": "상하 위치",
+    "description": "Vertical position"
+  },
+  "settingLabelUpdateNotification": {
+    "message": "업데이트 알림 표시",
+    "description": "Display update notification"
+  },
+  "settingDescriptionMouseButton": {
+    "message": "버튼을 누르고있는 동안 새 마우스 제스처를 캡처합니다.",
+    "description": "Captures a new mouse gesture while the button is held down."
+  },
+  "settingDescriptionMatchingAlgorithm": {
+    "message": "가장 일치하는 제스처를 찾기 위해 제스처를 비교하는 방법을 결정합니다.",
+    "description": "Determines how the gestures are compared to find the best matching gesture."
+  },
+  "settingDescriptionMatchingAlgorithmLink": {
+    "message": "차이점에 대해 알아보세요.",
+    "description": "Learn about the differences here"
+  },
+  "settingDescriptionTimeoutActive": {
+    "message": "지정한 시간동안 마우스를 움직이지 않으면 제스처를 취소합니다.",
+    "description": "Cancels the gesture after the mouse has not been moved for the specified time."
+  },
+  "settingDescriptionTimeoutDuration": {
+    "message": "제스처가 취소될 때 까지의 시간을 지정하세요. (초)",
+    "description": "The duration in seconds until the gesture is cancelled."
+  },
+  "settingDescriptionSuppressionKey": {
+    "message": "수정자 키를 누르고 있는 동안에는 제스처가 트리거되는 것을 방지합니다.",
+    "description": "Prevents a gesture from being triggered while the modifier key is pressed."
+  },
+  "settingDescriptionDistanceThreshold": {
+    "message": "제스처 시작이 인식될 때까지 마우스를 움직여야하는 최소 거리입니다.",
+    "description": "The minimum distance the mouse must be moved until the start of a gesture is recognized."
+  },
+  "settingDescriptionDeviationTolerance": {
+    "message": "일치하는 것으로 인식할 허용 가능한 제스처 편차.",
+    "description": "The permissible gesture deviation that should still be recognized as a match."
+  },
+  "settingDescriptionDisplayTrace": {
+    "message": "마우스 움직임을 따라 추적을 표시합니다.",
+    "description": "Displays a trace along the mouse movement."
+  },
+  "settingDescriptionTraceGrowth": {
+    "message": "선 두께 증가 여부를 결정합니다.",
+    "description": "Determines if the line thickness should grow."
+  },
+  "settingDescriptionDisplayCommand": {
+    "message": "가능한 경우, 현재 일치하는 제스처의 명령을 표시합니다.",
+    "description": "Displays the command of the currently matching gesture if available."
+  },
+  "settingDescriptionCommandFontSize": {
+    "message": "다음과 같은 모든 CSS 단위를 허용합니다: em, px, pt, %, vh 등.",
+    "description": "Accepts every CSS Unit like: em, px, pt, %, vh etc."
+  },
+  "settingDescriptionCommandHorizontalPosition": {
+    "message": "좌우 화면 위치는 0 (왼쪽)에서 100 (오른쪽)입니다.",
+    "description": "Horizontal screen position from 0 (left) to 100 (right)."
+  },
+  "settingDescriptionCommandVerticalPosition": {
+    "message": "상하 화면 위치는 0 (위)에서 100 (아래)입니다.",
+    "description": "Vertical screen position from 0 (top) to 100 (bottom)."
+  },
+  "settingDescriptionUpdateNotification": {
+    "message": "Gesturefy가 업데이트되었을 때 알림을 표시합니다.",
+    "description": "Shows a notification when Gesturefy is updated."
+  },
+  "gestureCreateNewButton": {
+    "message": "새 제스처",
+    "description": "New Gesture"
+  },
+  "gestureSearchPlaceholder": {
+    "message": "제스처 검색",
+    "description": "Search gestures"
+  },
+  "gestureHintNoSearchResults": {
+    "message": "검색 결과가 없습니다.",
+    "description": "No search results found"
+  },
+  "extraLabelRockerActive": {
+    "message": "로커 제스처",
+    "description": "Rocker gesture"
+  },
+  "extraLabelRockerRightMouseClick": {
+    "message": "마우스 왼쪽 버튼을 누른 채 오른쪽 클릭",
+    "description": "Right mouse click"
+  },
+  "extraLabelRockerLeftMouseClick": {
+    "message": "마우스 오른쪽 버튼을 누른 채 왼쪽 클릭",
+    "description": "Left mouse click"
+  },
+  "extraDescriptionRockerActive": {
+    "message": "이 제스처는 마우스 오른쪽 버튼을 누른 채로 왼쪽 버튼을 클릭하거나 그 반대로 클릭하여 수행됩니다.",
+    "description": "This gesture is performed either by holding the right mouse button and clicking the left or vice versa."
+  },
+  "extraLabelWheelActive": {
+    "message": "휠 제스처",
+    "description": "Wheel gesture"
+  },
+  "extraLabelWheelMouseButton": {
+    "message": "휠 제스처 마우스 버튼",
+    "description": "Wheel gesture mouse button"
+  },
+  "extraLabelWheelSensitivity": {
+    "message": "마우스 휠 감도",
+    "description": "Mouse wheel sensitivity"
+  },
+  "extraLabelWheelUp": {
+    "message": "휠 위로",
+    "description": "Wheel up"
+  },
+  "extraLabelWheelDown": {
+    "message": "휠 아래로",
+    "description": "Wheel down"
+  },
+  "extraDescriptionWheelActive": {
+    "message": "휠 제스처 버튼을 누른 채로 위 또는 아래로 스크롤합니다.",
+    "description": "Scroll up or down while holding the wheel gesture trigger button."
+  },
+  "extraDescriptionWheelMouseButton": {
+    "message": "휠 제스처를 수행할 마우스 버튼",
+    "description": "The mouse button which triggers the wheel gesture."
+  },
+  "extraDescriptionWheelSensitivity": {
+    "message": "제스처가 트리거될 때까지 마우스 휠을 스크롤해야 하는 최소 양",
+    "description": "The minimal amount the mouse wheel must be scrolled until the gesture is triggered."
+  },
+  "exclusionsLabelInformation": {
+    "message": "정보:",
+    "description": "Information:"
+  },
+  "exclusionsTextInformation": {
+    "message": "URL 일치 패턴을 추가하여 특정 웹 사이트의 Gesturefy 사용을 중지합니다. 일치 패턴은 \"*\" 와일드 카드를 허용하며 <scheme>: // <host> <path> 형식이어야합니다.",
+    "description": "Add URL match patterns to disable Gesturefy for certain websites. The match pattern allows \"*\" wildcards and must be in the form of <scheme>://<host><path>."
+  },
+  "exclusionsPlaceholderURL": {
+    "message": "URL 일치 패턴 입력",
+    "description": "Enter URL match pattern"
+  },
+  "exclusionsAddButton": {
+    "message": "추가",
+    "description": "Add"
+  },
+  "exclusionsNotificationAlreadyExists": {
+    "message": "URL 패턴이 이미 존재합니다.",
+    "description": "URL pattern already exists."
+  },
+  "exclusionsHintNoEntries": {
+    "message": "사용 가능한 항목이 없습니다.",
+    "description": "No entries available"
+  },
+  "aboutBackup": {
+    "message": "백업",
+    "description": "Backup"
+  },
+  "aboutRestore": {
+    "message": "복원",
+    "description": "Restore"
+  },
+  "aboutReset": {
+    "message": "초기화",
+    "description": "Reset"
+  },
+  "aboutLicense": {
+    "message": "라이선스",
+    "description": "License:"
+  },
+  "aboutContributors": {
+    "message": "참여자:",
+    "description": "Contributors:"
+  },
+  "aboutLinkBug": {
+    "message": "버그 신고",
+    "description": "Report a bug"
+  },
+  "aboutLinkCode": {
+    "message": "소스 코드",
+    "description": "Source code"
+  },
+  "aboutLinkAddon": {
+    "message": "애드온 페이지",
+    "description": "Add-on page"
+  },
+  "aboutRestoreNotificationNoConfigFile": {
+    "message": "선택한 파일은 올바른 Gesturefy 구성 파일이 아닙니다.",
+    "description": "The selected file is not a valid Gesturefy config file."
+  },
+  "aboutRestoreNotificationWrongFile": {
+    "message": "선택한 파일이 필요한 파일 형식과 일치하지 않습니다.",
+    "description": "The selected file does not match the required file type."
+  },
+  "aboutRestoreNotificationConfirm": {
+    "message": "제스처를 포함한 모든 설정이 선택한 구성 파일로 대체됩니다.",
+    "description": "All settings including gestures will be replaced by the selected config file."
+  },
+  "aboutRestoreNotificationSuccess": {
+    "message": "선택한 항목이 복원되었습니다.",
+    "description": "The selected config has been successfully restored."
+  },
+  "aboutResetNotificationConfirm": {
+    "message": "제스처를 포함한 모든 설정이 초기화됩니다. 이것은 취소할 수 없습니다!",
+    "description": "All settings including gestures will be reset. This cannot be undone!"
+  },
+  "commandLabelToggleBookmark": {
+    "message": "북마크 사용/해제",
+    "description": "Toggle bookmark"
+  },
+  "commandLabelDuplicateTab": {
+    "message": "탭 복제",
+    "description": "Duplicate tab"
+  },
+  "commandLabelNewTab": {
+    "message": "새 탭",
+    "description": "New tab"
+  },
+  "commandLabelReloadTab": {
+    "message": "탭 새로고침",
+    "description": "Reload tab"
+  },
+  "commandLabelReloadFrame": {
+    "message": "프레임 새로고침",
+    "description": "Reload frame"
+  },
+  "commandLabelStopLoading": {
+    "message": "로딩 중지",
+    "description": "Stop loading"
+  },
+  "commandLabelCloseTab": {
+    "message": "탭 닫기",
+    "description": "Close tab"
+  },
+  "commandLabelRestoreTab": {
+    "message": "탭 복원",
+    "description": "Restore tab"
+  },
+  "commandLabelZoomIn": {
+    "message": "확대",
+    "description": "Zoom in"
+  },
+  "commandLabelZoomOut": {
+    "message": "축소",
+    "description": "Zoom out"
+  },
+  "commandLabelZoomReset": {
+    "message": "확대/축소 초기화",
+    "description": "Zoom reset"
+  },
+  "commandLabelPageBack": {
+    "message": "페이지 뒤로",
+    "description": "Page back"
+  },
+  "commandLabelPageForth": {
+    "message": "페이지 앞으로",
+    "description": "Page forward"
+  },
+  "commandLabelTogglePin": {
+    "message": "탭 고정/해제",
+    "description": "Toggle pinned tab"
+  },
+  "commandLabelToggleMute": {
+    "message": "음소거/해제",
+    "description": "Toggle mute"
+  },
+  "commandLabelToggleReaderMode": {
+    "message": "리더 모드 켜기/끄기",
+    "description": "Toggle reader mode"
+  },
+  "commandLabelScrollTop": {
+    "message": "맨 위로 스크롤",
+    "description": "Scroll to the top"
+  },
+  "commandLabelScrollBottom": {
+    "message": "맨 아래로 스크롤",
+    "description": "Scroll to the bottom"
+  },
+  "commandLabelScrollPageDown": {
+    "message": "페이지 아래로 스크롤",
+    "description": "Scroll page down"
+  },
+  "commandLabelScrollPageUp": {
+    "message": "페이지 위로 스크롤",
+    "description": "Scroll page up"
+  },
+  "commandLabelFocusRightTab": {
+    "message": "오른쪽 탭에 포커스",
+    "description": "Focus right tab"
+  },
+  "commandLabelFocusLeftTab": {
+    "message": "왼쪽 탭에 포커스",
+    "description": "Focus left tab"
+  },
+  "commandLabelFocusFirstTab": {
+    "message": "첫 째 탭에 포커스",
+    "description": "Focus first tab"
+  },
+  "commandLabelFocusLastTab": {
+    "message": "마지막 탭에 포커스",
+    "description": "Focus last tab"
+  },
+  "commandLabelFocusPreviousSelectedTab": {
+    "message": "이전 선택된 탭에 포커스",
+    "description": "Focus previous selected tab"
+  },
+  "commandLabelMaximizeWindow": {
+    "message": "창 최대화",
+    "description": "Maximize window"
+  },
+  "commandLabelMinimizeWindow": {
+    "message": "창 최소화",
+    "description": "Minimize window"
+  },
+  "commandLabelToggleWindowSize": {
+    "message": "창 크기 전환",
+    "description": "Toggle window size"
+  },
+  "commandLabelToggleFullscreen": {
+    "message": "전체화면 전환",
+    "description": "Toggle full screen"
+  },
+  "commandLabelNewWindow": {
+    "message": "새 창",
+    "description": "New window"
+  },
+  "commandLabelNewPrivateWindow": {
+    "message": "새 개인 창",
+    "description": "New private window"
+  },
+  "commandLabelMoveTabToStart": {
+    "message": "탭을 처음으로 이동",
+    "description": "Move tab to start"
+  },
+  "commandLabelMoveTabToEnd": {
+    "message": "탭을 끝으로 이동",
+    "description": "Move tab to end"
+  },
+  "commandLabelMoveTabToNewWindow": {
+    "message": "탭을 새 창으로 이동",
+    "description": "Move tab to new window"
+  },
+  "commandLabelMoveLeftTabsToNewWindow": {
+    "message": "왼쪽 탭을 새 창으로 이동",
+    "description": "Move left tabs to new window"
+  },
+  "commandLabelMoveRightTabsToNewWindow": {
+    "message": "오른쪽 탭을 새 창으로 이동",
+    "description": "Move right tabs to new window"
+  },
+  "commandLabelCloseWindow": {
+    "message": "창 닫기",
+    "description": "Close window"
+  },
+  "commandLabelReloadAllTabs": {
+    "message": "모두 새로고침",
+    "description": "Reload all"
+  },
+  "commandLabelToRootURL": {
+    "message": "루트 URL로",
+    "description": "To root URL"
+  },
+  "commandLabelURLLevelUp": {
+    "message": "URL 한 수준 위로",
+    "description": "URL level up"
+  },
+  "commandLabelIncreaseURLNumber": {
+    "message": "URL 수 증가",
+    "description": "Increase URL number"
+  },
+  "commandLabelDecreaseURLNumber": {
+    "message": "URL 수 감소",
+    "description": "Decrease URL number"
+  },
+  "commandLabelOpenImageInNewTab": {
+    "message": "새 탭에서 이미지 열기",
+    "description": "Open image in new tab"
+  },
+  "commandLabelOpenLinkInNewTab": {
+    "message": "새 탭에서 링크 열기",
+    "description": "Open link in new tab"
+  },
+  "commandLabelOpenLinkInNewWindow": {
+    "message": "새 창에서 링크 열기",
+    "description": "Open link in new window"
+  },
+  "commandLabelOpenLinkInNewPrivateWindow": {
+    "message": "새 비공개 창에서 링크 열기",
+    "description": "Open link in new private window"
+  },
+  "commandLabelSearchTextSelection": {
+    "message": "선택한 텍스트 검색",
+    "description": "Search text selection"
+  },
+  "commandLabelSearchClipboard": {
+    "message": "클립보드 검색",
+    "description": "Search clipboard"
+  },
+  "commandLabelSearchTextSelectionInNewTab": {
+    "message": "새 탭에서 선택한 텍스트 검색",
+    "description": "Search text selection in new tab"
+  },
+  "commandLabelSearchClipboardInNewTab": {
+    "message": "새 탭에서 클립보드 검색",
+    "description": "Search clipboard in new tab"
+  },
+  "commandLabelCloseRightTabs": {
+    "message": "오른쪽 탭 닫기",
+    "description": "Close right tabs"
+  },
+  "commandLabelCloseLeftTabs": {
+    "message": "왼쪽 탭 닫기",
+    "description": "Close left tabs"
+  },
+  "commandLabelCloseOtherTabs": {
+    "message": "다른 탭 닫기",
+    "description": "Close other tabs"
+  },
+  "commandLabelSaveTabAsPDF": {
+    "message": "PDF로 저장",
+    "description": "Save as PDF"
+  },
+  "commandLabelSaveImage": {
+    "message": "이미지 저장",
+    "description": "Save image"
+  },
+  "commandLabelSaveLink": {
+    "message": "링크 저장",
+    "description": "Save link"
+  },
+  "commandLabelPrintTab": {
+    "message": "인쇄",
+    "description": "Print"
+  },
+  "commandLabelOpenPrintPreview": {
+    "message": "인쇄 미리보기",
+    "description": "Print preview"
+  },
+  "commandLabelOpenHomepage": {
+    "message": "홈페이지 열기",
+    "description": "Open homepage"
+  },
+  "commandLabelOpenCustomURLInNewTab": {
+    "message": "새 탭에 사용자 지정 URL 열기",
+    "description": "Open custom URL in new tab"
+  },
+  "commandLabelOpenCustomURL": {
+    "message": "사용자 지정 URL 열기",
+    "description": "Open custom URL"
+  },
+  "commandLabelPasteClipboard": {
+    "message": "클립보드에서 붙여넣기",
+    "description": "Paste clipboard"
+  },
+  "commandLabelOpenURLFromClipboard": {
+    "message": "클립보드에서 URL 열기",
+    "description": "Open URL from clipboard"
+  },
+  "commandLabelOpenURLFromClipboardInNewTab": {
+    "message": "새 탭에 클립보드의 URL 열기",
+    "description": "Open URL from clipboard in new tab"
+  },
+  "commandLabelOpenURLFromClipboardInNewWindow": {
+    "message": "새 창에 클립보드의 URL 열기",
+    "description": "Open URL from clipboard in new window"
+  },
+  "commandLabelOpenURLFromClipboardInNewPrivateWindow": {
+    "message": "새 개인 창에서 클립보드의 URL 열기",
+    "description": "Open URL from clipboard in new private window"
+  },
+  "commandLabelOpenAddonSettings": {
+    "message": "Gesturefy 설정 열기",
+    "description": "Open Gesturefy settings"
+  },
+  "commandLabelOpenLink": {
+    "message": "링크 열기",
+    "description": "Open link"
+  },
+  "commandLabelViewImage": {
+    "message": "이미지 보기",
+    "description": "View image"
+  },
+  "commandLabelLinkToNewBookmark": {
+    "message": "북마크에 저장",
+    "description": "Link to bookmark"
+  },
+  "commandLabelSaveScreenshot": {
+    "message": "스크린샷 저장",
+    "description": "Save screenshot"
+  },
+  "commandLabelCopyTabURL": {
+    "message": "탭 URL 복사",
+    "description": "Copy tab URL"
+  },
+  "commandLabelCopyLinkURL": {
+    "message": "링크 URL 복사",
+    "description": "Copy link URL"
+  },
+  "commandLabelCopyImageURL": {
+    "message": "이미지 URL 복사",
+    "description": "Copy image URL"
+  },
+  "commandLabelCopyTextSelection": {
+    "message": "텍스트 선택 영역 복사",
+    "description": "Copy text selection"
+  },
+  "commandLabelCopyImage": {
+    "message": "이미지 복사",
+    "description": "Copy image"
+  },
+  "commandLabelViewPageSourceCode": {
+    "message": "페이지 소스 보기",
+    "description": "View page source"
+  },
+  "commandLabelPopupAllTabs": {
+    "message": "[Popup] 모든 탭",
+    "description": "[Popup] All tabs"
+  },
+  "commandLabelPopupRecentlyClosedTabs": {
+    "message": "[Popup] 최근 닫힌 탭",
+    "description": "[Popup] Recently closed tabs"
+  },
+  "commandLabelPopupSearchEngines": {
+    "message": "[Popup] 검색 엔진",
+    "description": "[Popup] Search engines"
+  },
+  "commandLabelPopupCustomCommandList": {
+    "message": "[팝업] 사용자 정의 명령 목록",
+    "description": "[Popup] Custom command list"
+  },
+  "commandLabelSendMessageToOtherAddon": {
+    "message": "다른 애드온으로 메시지 보내기",
+    "description": "Send message to other add-on"
+  },
+  "commandLabelExecuteUserScript": {
+    "message": "사용자 스크립트 실행",
+    "description": "Execute user script"
+  },
+  "commandLabelClearBrowsingData": {
+    "message": "인터넷 탐색 데이터 삭제",
+    "description": "Clear browsing data"
+  },
+  "commandLabelRunMultiPurposeCommand": {
+    "message": "다목적 명령 실행",
+    "description": "Run multi purpose command"
+  },
+  "commandDescriptionToggleBookmark": {
+    "message": "북마크 추가/제거",
+    "description": "Adds or removes a bookmark."
+  },
+  "commandDescriptionDuplicateTab": {
+    "message": "현재 탭을 복제합니다.",
+    "description": "Duplicates the current tab."
+  },
+  "commandDescriptionNewTab": {
+    "message": "새 탭 열기",
+    "description": "Opens a new tab."
+  },
+  "commandDescriptionReloadTab": {
+    "message": "현재 페이지 새로고침",
+    "description": "Reloads the current page."
+  },
+  "commandDescriptionReloadFrame": {
+    "message": "제스처가 시작된 곳의 프레임을 새로고침",
+    "description": "Reloads the frame on which the gesture started."
+  },
+  "commandDescriptionStopLoading": {
+    "message": "현재 페이지 로드를 중지합니다.",
+    "description": "Stops the current page from loading."
+  },
+  "commandDescriptionCloseTab": {
+    "message": "현재 탭 닫기",
+    "description": "Closes the current tab."
+  },
+  "commandDescriptionRestoreTab": {
+    "message": "최근 닫았던 탭 복원",
+    "description": "Restores the last closed tab."
+  },
+  "commandDescriptionZoomIn": {
+    "message": "현재 탭으로 확대",
+    "description": "Zooms into the current tab."
+  },
+  "commandDescriptionZoomOut": {
+    "message": "현재 탭으로 축소",
+    "description": "Zooms out of the current tab."
+  },
+  "commandDescriptionZoomReset": {
+    "message": "현재 확대/축소 수준 초기화",
+    "description": "Resets the current zoom level."
+  },
+  "commandDescriptionPageBack": {
+    "message": "히스토리의 이전 페이지로 돌아갑니다.",
+    "description": "Returns to the previous page of the history."
+  },
+  "commandDescriptionPageForth": {
+    "message": "히스토리의 다음 페이지로 이동합니다.",
+    "description": "Goes a page forward in the history."
+  },
+  "commandDescriptionTogglePin": {
+    "message": "현재 탭 고정/해제",
+    "description": "Pins or unpins the current Tab."
+  },
+  "commandDescriptionToggleMute": {
+    "message": "현재 탭 음소거/해제",
+    "description": "Mutes or unmutes the current tab."
+  },
+  "commandDescriptionToggleReaderMode": {
+    "message": "가능한 경우 리더 보기를 활성화하거나 비활성화합니다.",
+    "description": "Activates or deactivates the reader view if available."
+  },
+  "commandDescriptionScrollTop": {
+    "message": "페이지의 맨 위로 스크롤.",
+    "description": "Scrolls to the top of the page."
+  },
+  "commandDescriptionScrollBottom": {
+    "message": "페이지의 아래로 스크롤.",
+    "description": "Scrolls to the bottom of the page."
+  },
+  "commandDescriptionScrollPageDown": {
+    "message": "현재 보기의 길이만큼 아래쪽으로 스크롤.",
+    "description": "Scrolls down by the length of the current view."
+  },
+  "commandDescriptionScrollPageUp": {
+    "message": "현재 보기의 길이만큼 위로 스크롤.",
+    "description": "Scrolls up by the length of the current view."
+  },
+  "commandDescriptionFocusRightTab": {
+    "message": "현재 탭의 오른쪽 탭으로 전환",
+    "description": "Switches to the right tab of the current tab."
+  },
+  "commandDescriptionFocusLeftTab": {
+    "message": "현재 탭의 왼쪽 탭으로 전환",
+    "description": "Switches to the left tab of the current tab."
+  },
+  "commandDescriptionFocusFirstTab": {
+    "message": "맨 왼쪽 탭으로 전환",
+    "description": "Switches to the far left tab."
+  },
+  "commandDescriptionFocusLastTab": {
+    "message": "맨 오른쪽 탭으로 전환",
+    "description": "Switches to the far right tab."
+  },
+  "commandDescriptionFocusPreviousSelectedTab": {
+    "message": "마지막 활성 탭으로 전환",
+    "description": "Switches to the last active tab."
+  },
+  "commandDescriptionMaximizeWindow": {
+    "message": "현재 창을 최대화.",
+    "description": "Maximizes the current window."
+  },
+  "commandDescriptionMinimizeWindow": {
+    "message": "현재 창을 최소화.",
+    "description": "Minimizes the current window."
+  },
+  "commandDescriptionToggleWindowSize": {
+    "message": "창 크기를 최대화하거나 이전 크기로 전환합니다.",
+    "description": "Switches between maximized and normal window size."
+  },
+  "commandDescriptionToggleFullscreen": {
+    "message": "전체 화면 모드 활성/ 비활성",
+    "description": "Activates or deactivates full screen mode."
+  },
+  "commandDescriptionNewWindow": {
+    "message": "새 빈 창으로 열기",
+    "description": "Opens a new empty window."
+  },
+  "commandDescriptionNewPrivateWindow": {
+    "message": "새 빈 개인 창으로 열기",
+    "description": "Opens a new empty private window."
+  },
+  "commandDescriptionMoveTabToStart": {
+    "message": "현재 탭을 탭 열의 처음으로 이동",
+    "description": "Moves the current tab to the start of the tab strip."
+  },
+  "commandDescriptionMoveTabToEnd": {
+    "message": "현재 탭을 탭 열의 끝으로 이동",
+    "description": "Moves the current tab to the end of the tab strip."
+  },
+  "commandDescriptionMoveTabToNewWindow": {
+    "message": "현재 탭을 새 창으로 이동",
+    "description": "Moves the current tab to a new window."
+  },
+  "commandDescriptionMoveLeftTabsToNewWindow": {
+    "message": "현재 탭의 모든 왼쪽 탭을 새 창으로 이동",
+    "description": "Moves all tabs to the left of the current tab to a new window."
+  },
+  "commandDescriptionMoveRightTabsToNewWindow": {
+    "message": "현재 탭의 모든 오른쪽 탭을 새 창으로 이동",
+    "description": "Moves all tabs to the right of the current tab to a new window."
+  },
+  "commandDescriptionCloseWindow": {
+    "message": "현재 창 닫기",
+    "description": "Closes the current window."
+  },
+  "commandDescriptionReloadAllTabs": {
+    "message": "모든 탭 새로고침",
+    "description": "Reloads all tabs."
+  },
+  "commandDescriptionToRootURL": {
+    "message": "웹 사이트의 메인 페이지로 이동합니다.",
+    "description": "Goes to the main page of the website."
+  },
+  "commandDescriptionURLLevelUp": {
+    "message": "URL 을 한 수준 위로 이동합니다.",
+    "description": "Goes up the URL hierarchy for one level."
+  },
+  "commandDescriptionIncreaseURLNumber": {
+    "message": "URL에 번호를 증가합니다.",
+    "description": "Increases a number in the URL."
+  },
+  "commandDescriptionDecreaseURLNumber": {
+    "message": "URL에 번호를 감소합니다.",
+    "description": "Decreases a number in the URL."
+  },
+  "commandDescriptionOpenImageInNewTab": {
+    "message": "새 탭에 제스처를 시작하는 곳의 이미지 열기",
+    "description": "Opens the image on which the gesture started in a new tab."
+  },
+  "commandDescriptionOpenLinkInNewTab": {
+    "message": "새 탭에 선택한 링크나 제스처가 시작된 곳의 링크 열기",
+    "description": "Opens either a selected url or the link on which the gesture started in a new tab."
+  },
+  "commandDescriptionOpenLinkInNewWindow": {
+    "message": "새 창에 선택한 링크나 제스처가 시작된 곳의 링크 열기",
+    "description": "Opens either a selected url or the link on which the gesture started in a new window."
+  },
+  "commandDescriptionOpenLinkInNewPrivateWindow": {
+    "message": "새 개인 창에 선택한 Url이나 제스처가 시작된 곳의 링크 열기",
+    "description": "Opens either a selected url or the link on which the gesture started in a new private window."
+  },
+  "commandDescriptionSearchTextSelection": {
+    "message": "현재 탭에서 선택한 텍스트의 웹 검색을 시작합니다.",
+    "description": "Starts a web search of the selected text in the current tab."
+  },
+  "commandDescriptionSearchClipboard": {
+    "message": "현재 탭에서 클립보드의 웹 검색을 시작합니다.",
+    "description": "Starts a web search of the clipboard text in the current tab."
+  },
+  "commandDescriptionSearchTextSelectionInNewTab": {
+    "message": "새 탭에서 선택한 텍스트의 웹 검색을 시작합니다.",
+    "description": "Starts a web search of the selected text in a new tab."
+  },
+  "commandDescriptionSearchClipboardInNewTab": {
+    "message": "새 탭에서 클립보드의 웹 검색을 시작합니다.",
+    "description": "Starts a web search of the clipboard text in a new tab."
+  },
+  "commandDescriptionCloseRightTabs": {
+    "message": "현재 탭의 오른쪽에있는 모든 탭 닫기",
+    "description": "Closes all tabs on the right side of the current tab."
+  },
+  "commandDescriptionCloseLeftTabs": {
+    "message": "고정된 탭을 제외한 현재 탭의 왼쪽에있는 모든 탭 닫기",
+    "description": "Closes all tabs on the left side of the current tab except the pinned tabs."
+  },
+  "commandDescriptionCloseOtherTabs": {
+    "message": "현재 탭 및 고정된 탭을 제외한 모든 탭 닫기",
+    "description": "Closes all tabs except of the current tab and pinned tabs."
+  },
+  "commandDescriptionSaveTabAsPDF": {
+    "message": "현재 페이지를 pdf 파일로 저장합니다.",
+    "description": "Saves the current page as a pdf file."
+  },
+  "commandDescriptionSaveImage": {
+    "message": "제스처가 시작된 곳의 이미지를 다운로드합니다.",
+    "description": "Downloads the image on which the gesture started."
+  },
+  "commandDescriptionSaveLink": {
+    "message": "선택한 Url 또는 제스처가 시작된 링크를 다운로드합니다.",
+    "description": "Downloads either a selected url or the link on which the gesture started."
+  },
+  "commandDescriptionPrintTab": {
+    "message": "인쇄 대화 상자를 표시하여 현재 페이지를 인쇄합니다.",
+    "description": "Prints the current page by prompting the print dialog."
+  },
+  "commandDescriptionOpenPrintPreview": {
+    "message": "현재 페이지의 인쇄 미리 보기를 엽니다.",
+    "description": "Opens the print preview of the current page."
+  },
+  "commandDescriptionOpenHomepage": {
+    "message": "홈페이지 버튼처럼 동작합니다.",
+    "description": "Works like the homepage button."
+  },
+  "commandDescriptionOpenCustomURLInNewTab": {
+    "message": "새 탭에 지정된 URL 열기",
+    "description": "Opens the specified URL in a new tab."
+  },
+  "commandDescriptionOpenCustomURL": {
+    "message": "현재 탭에 지정된 URL 열기",
+    "description": "Opens the specified URL in the current tab."
+  },
+  "commandDescriptionPasteClipboard": {
+    "message": "제스처가 시작된 입력 요소의 캐럿 위치에 현재 클립보드 텍스트를 삽입합니다.",
+    "description": "Inserts the current clipboard text at the caret position of the input element on which the gesture started."
+  },
+  "commandDescriptionOpenURLFromClipboard": {
+    "message": "클립보드에 URL이 포함되어 있으면, 현재 탭에서 열기",
+    "description": "If the clipboard contains a URL, it will be opened in the current tab."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewTab": {
+    "message": "클립보드에 URL이 포함되어 있으면, 새 탭에서 열기",
+    "description": "If the clipboard contains a URL, it will be opened in a new tab."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewWindow": {
+    "message": "클립보드에 URL이 포함되어 있으면, 새 창에서 열기",
+    "description": "If the clipboard contains a URL, it will be opened in a new window."
+  },
+  "commandDescriptionOpenURLFromClipboardInNewPrivateWindow": {
+    "message": "클립보드에 URL이 포함되어 있으면, 새 개인 창에서 열기",
+    "description": "If the clipboard contains a URL, it will be opened in a new private window."
+  },
+  "commandDescriptionOpenAddonSettings": {
+    "message": "Gesturefy 설정 페이지를 엽니다.",
+    "description": "Opens the Gesturefy settings page."
+  },
+  "commandDescriptionOpenLink": {
+    "message": "선택한 Url 또는 제스처가 시작된 링크를 다운로드합니다.",
+    "description": "Opens either a selected url or the link on which the gesture started."
+  },
+  "commandDescriptionViewImage": {
+    "message": "제스처가 시작된 곳의 이미지 열기",
+    "description": "Opens the image on which the gesture started."
+  },
+  "commandDescriptionLinkToNewBookmark": {
+    "message": "선택한 Url 또는 제스처가 시작된 링크를 북마크로 저장합니다.",
+    "description": "Saves either a selected url or the link on which the gesture started as a bookmark."
+  },
+  "commandDescriptionSaveScreenshot": {
+    "message": "현재 보여지는 웹사이트 영역을 이미지로 저장합니다.",
+    "description": "Saves the current visible website area as an image."
+  },
+  "commandDescriptionCopyTabURL": {
+    "message": "현재 탭의 URL을 클립보드에 복사하기",
+    "description": "Copies the URL of the current tab to clipboard."
+  },
+  "commandDescriptionCopyLinkURL": {
+    "message": "선택한 url 또는 제스처가 시작된 링크를 클립보드에 복사합니다.",
+    "description": "Copies either a selected url or the link on which the gesture started to clipboard."
+  },
+  "commandDescriptionCopyImageURL": {
+    "message": "제스처가 시작된 곳의 이미지 Url을 클립보드에 복사합니다.",
+    "description": "Copies the URL of the image on which the gesture started to clipboard."
+  },
+  "commandDescriptionCopyTextSelection": {
+    "message": "현재 텍스트 선택 영역을 클립보드에 복사합니다.",
+    "description": "Copies the current text selection to clipboard."
+  },
+  "commandDescriptionCopyImage": {
+    "message": "제스처가 시작된 곳의 이미지를 클립보드에 복사합니다.",
+    "description": "Copies the image on which the gesture started to clipboard."
+  },
+  "commandDescriptionViewPageSourceCode": {
+    "message": "페이지의 소스 코드를 포함하는 새 탭 열기",
+    "description": "Opens a new tab containing the source code of the page."
+  },
+  "commandDescriptionPopupAllTabs": {
+    "message": "현재 열려 있는 모든 탭의 목록을 포함하는 팝업을 열고 그 중 하나로 전환합니다",
+    "description": "Opens a popup containing a list of all currently open tabs and offers the possibility to switch to one of them."
+  },
+  "commandDescriptionPopupRecentlyClosedTabs": {
+    "message": "최근에 닫힌 모든 탭의 목록을 포함하는 팝업을 열고 그 중 하나로 복원합니다",
+    "description": "Opens a popup containing a list of all recently closed tabs and offers the possibility to restore one of them."
+  },
+  "commandDescriptionPopupSearchEngines": {
+    "message": "설치된 모든 검색 엔진의 목록을 포함하는 팝업을 열고 선택한 텍스트를 그 중 하나와 함께 검색 할 수있는 가능성을 제공합니다.",
+    "description": "Opens a popup containing a list of all installed search engines and offers the possibility to search the selected text with one of them."
+  },
+  "commandDescriptionPopupCustomCommandList": {
+    "message": "여러 명령의 사용자 정의 목록이 포함된 팝업을 열고 그중 하나를 실행할 수있는 가능성을 제공합니다.",
+    "description": "Opens a popup containing a custom list of multiple commands and offers the possibility to run one of them."
+  },
+  "commandDescriptionSendMessageToOtherAddon": {
+    "message": "사용자 정의 메시지를 다른 애드온으로 보냅니다. 이것은 다른 애드온 기능의 사용이 허용됩니다.",
+    "description": "Sends a custom message to another add-on. This allows the use of other add-ons functionality."
+  },
+  "commandDescriptionExecuteUserScript": {
+    "message": "현재의 웹페이지에 사용자 JavaScript를 실행합니다",
+    "description": "Executes custom JavaScript code in the current webpage."
+  },
+  "commandDescriptionClearBrowsingData": {
+    "message": "지정된 탐색 데이터를 제거합니다.",
+    "description": "Removes the specified browsing data."
+  },
+  "commandDescriptionRunMultiPurposeCommand": {
+    "message": "여러 명령을 하나로 결합하고 주어진 컨텍스트/조건에서 성공적으로 실행되는 첫 번째 명령을 실행합니다.",
+    "description": "Combines multiple commands into one and executes the first command which runs successfully under the given context/conditions."
+  },
+  "commandSettingLabelNewTabPosition": {
+    "message": "새 탭 위치",
+    "description": "New tab position"
+  },
+  "commandSettingLabelNewTabPositionDefault": {
+    "message": "기본값",
+    "description": "default"
+  },
+  "commandSettingLabelNewTabPositionBefore": {
+    "message": "현재 탭 왼쪽",
+    "description": "before"
+  },
+  "commandSettingLabelNewTabPositionAfter": {
+    "message": "현재 탭 오른쪽",
+    "description": "after"
+  },
+  "commandSettingLabelNewTabPositionStart": {
+    "message": "시작",
+    "description": "start"
+  },
+  "commandSettingLabelNewTabPositionEnd": {
+    "message": "끝",
+    "description": "end"
+  },
+  "commandSettingLabelNewTabFocus": {
+    "message": "새 탭에 포커스",
+    "description": "Focus new tab"
+  },
+  "commandSettingLabelTabNextFocus": {
+    "message": "다음 탭",
+    "description": "Next tab"
+  },
+  "commandSettingLabelTabNextFocusDefault": {
+    "message": "기본값",
+    "description": "default"
+  },
+  "commandSettingLabelTabNextFocusPrevious": {
+    "message": "이전",
+    "description": "previous"
+  },
+  "commandSettingLabelTabNextFocusNext": {
+    "message": "다음",
+    "description": "next"
+  },
+  "commandSettingLabelTabNextFocusRecently": {
+    "message": "최근 포커스",
+    "description": "last focused"
+  },
+  "commandSettingLabelTabClosePinned": {
+    "message": "고정 탭 닫기",
+    "description": "Close pinned tabs"
+  },
+  "commandSettingLabelRestoreCurrentWindow": {
+    "message": "현재 창만",
+    "description": "Current window only"
+  },
+  "commandSettingLabelReloadCache": {
+    "message": "캐시 새로고침",
+    "description": "Reload cache"
+  },
+  "commandSettingLabelZoomStep": {
+    "message": "확대/축소 단계",
+    "description": "Zoom step"
+  },
+  "commandSettingLabelScrollDuration": {
+    "message": "스크롤 시간",
+    "description": "Scroll duration"
+  },
+  "commandSettingLabelScrollProportion": {
+    "message": "스크롤 비율",
+    "description": "Scroll proportion"
+  },
+  "commandSettingLabelFocusIncludePinned": {
+    "message": "고정된 탭 포함",
+    "description": "Include pinned tabs"
+  },
+  "commandSettingLabelTabCycling": {
+    "message": "탭 사이클링",
+    "description": "Tab cycling"
+  },
+  "commandSettingLabelExcludeDiscarded": {
+    "message": "폐기된 탭 제외",
+    "description": "Exclude discarded tabs"
+  },
+  "commandSettingLabelOpenEmptyTab": {
+    "message": "빈 탭 열기",
+    "description": "Open empty tab"
+  },
+  "commandSettingLabelOpenEmptySearch": {
+    "message": "빈 검색 열기",
+    "description": "Open empty search"
+  },
+  "commandSettingLabelOpenEmptyWindow": {
+    "message": "빈 창 열기",
+    "description": "Open empty window"
+  },
+  "commandSettingLabelSearchEngineURL": {
+    "message": "검색 엔진 URL",
+    "description": "Search engine URL"
+  },
+  "commandSettingLabelSavePromptDialog": {
+    "message": "묻기 대화 창",
+    "description": "Prompt dialog"
+  },
+  "commandSettingLabelCustomURL": {
+    "message": "사용자 정의 URL",
+    "description": "Custom URL"
+  },
+  "commandSettingLabelAddonId": {
+    "message": "애드온 ID",
+    "description": "Add-on ID"
+  },
+  "commandSettingLabelAddonMessage": {
+    "message": "메시지",
+    "description": "Message"
+  },
+  "commandSettingLabelParseMessage": {
+    "message": "메시지 구문",
+    "description": "Parse message"
+  },
+  "commandSettingLabelTabOrder": {
+    "message": "탭 순서",
+    "description": "Tab order"
+  },
+  "commandSettingLabelTabOrderNone": {
+    "message": "없음 (기본값)",
+    "description": "none (default)"
+  },
+  "commandSettingLabelTabOrderLastAccessedAsc": {
+    "message": "최근 오름차순으로 액세스",
+    "description": "last accessed ascending"
+  },
+  "commandSettingLabelTabOrderLastAccessedDesc": {
+    "message": "최근 내림차순으로 액세스",
+    "description": "last accessed descending"
+  },
+  "commandSettingLabelTabOrderAlphabeticallyAsc": {
+    "message": "가나다순 오름차순",
+    "description": "alphabetically ascending"
+  },
+  "commandSettingLabelTabOrderAlphabeticallyDesc": {
+    "message": "가나다순 내림차순",
+    "description": "alphabetically descending"
+  },
+  "commandSettingLabelTabIncludeCurrent": {
+    "message": "현재 탭 포함",
+    "description": "Include current tab"
+  },
+  "commandSettingLabelNewWindowFocus": {
+    "message": "새 창으로 포커스",
+    "description": "Focus new window"
+  },
+  "commandSettingLabelUserScriptWarning": {
+    "message": "주의",
+    "description": "Careful!"
+  },
+  "commandSettingLabelUserScriptCode": {
+    "message": "사용자 스크립트 코드",
+    "description": "User script code"
+  },
+  "commandSettingLabelTargetFrame": {
+    "message": "대상 프레임",
+    "description": "Target frame"
+  },
+  "commandSettingLabelTargetFrameSourceFrame": {
+    "message": "원본 프레임",
+    "description": "Source frame"
+  },
+  "commandSettingLabelTargetFrameAllFrames": {
+    "message": "ㅣ모든 프레임",
+    "description": "All frames"
+  },
+  "commandSettingLabelTargetFrameTopFrame": {
+    "message": "최상위 프레임",
+    "description": "Top-level frame"
+  },
+  "commandSettingLabelCustomMatchPattern": {
+    "message": "사용자 정의 일치 패턴",
+    "description": "Custom match pattern"
+  },
+  "commandSettingLabelCommandSelection": {
+    "message": "명령 선택",
+    "description": "Command selection"
+  },
+  "commandSettingLabelBrowsingDataCache": {
+    "message": "캐시",
+    "description": "Cache"
+  },
+  "commandSettingLabelBrowsingDataCookies": {
+    "message": "쿠키",
+    "description": "Cookies"
+  },
+  "commandSettingLabelBrowsingDataDownloads": {
+    "message": "다운로드",
+    "description": "Downloads"
+  },
+  "commandSettingLabelBrowsingDataFormData": {
+    "message": "양식 데이터",
+    "description": "Form data"
+  },
+  "commandSettingLabelBrowsingDataHistory": {
+    "message": "히스토리",
+    "description": "History"
+  },
+  "commandSettingLabelBrowsingDataIndexedDB": {
+    "message": "IndexedDB",
+    "description": "IndexedDB"
+  },
+  "commandSettingLabelBrowsingDataLocalStorage": {
+    "message": "로컬 저장소",
+    "description": "Local Storage"
+  },
+  "commandSettingLabelBrowsingDataPasswords": {
+    "message": "비밀번호",
+    "description": "Passwords"
+  },
+  "commandSettingLabelBrowsingDataPluginData": {
+    "message": "플러그인 데이터",
+    "description": "Plugin data"
+  },
+  "commandSettingLabelBrowsingDataServiceWorkers": {
+    "message": "Service Workers",
+    "description": "Service Workers"
+  },
+  "commandSettingDescriptionNewTabPosition": {
+    "message": "현재 탭에 새 탭과 관련된 위치를 결정합니다.",
+    "description": "Determines the position of the new tab relative to the current tab."
+  },
+  "commandSettingDescriptionNewTabFocus": {
+    "message": "열린 탭의 포커스 여부를 결정합니다.",
+    "description": "Determines if the opened tab should gain focus or not."
+  },
+  "commandSettingDescriptionTabNextFocus": {
+    "message": "다음에 포커스될 탭을 결정합니다.",
+    "description": "Determines which tab should be focused next."
+  },
+  "commandSettingDescriptionTabClosePinned": {
+    "message": "고정된 탭의 닫기 여부를 정의합니다.",
+    "description": "Determines if pinned tabs can be closed or not."
+  },
+  "commandSettingDescriptionRestoreCurrentWindow": {
+    "message": "현재 창에 속한 탭만 복원할지 여부를 결정합니다.",
+    "description": "Determines if only tabs which belong to the current window should be restored."
+  },
+  "commandSettingDescriptionReloadCache": {
+    "message": "캐시 새로고침 여부를 결정합니다.",
+    "description": "Determines if the cache should be reloaded or not."
+  },
+  "commandSettingDescriptionZoomStep": {
+    "message": "확대/축소 단계 또는 쉼표로 구분된 레벨(퍼센트)을 생략하면, Gesturefy의 기본 확대/축소 수준이 사용됩니다.",
+    "description": "The zoom step or multiple comma separated levels in percentage. If omitted, Gesturefy's default zoom levels are used."
+  },
+  "commandSettingDescriptionScrollDuration": {
+    "message": "스크롤 애니메이션에 걸리는 시간 (ms)",
+    "description": "The duration in milliseconds the scroll animation should take."
+  },
+  "commandSettingDescriptionScrollProportion": {
+    "message": "페이지를 스크롤해야 하는 화면 높이의 백분율입니다.",
+    "description": "The percentage of the viewport height by which the page should be scrolled."
+  },
+  "commandSettingDescriptionFocusIncludePinned": {
+    "message": "고정 탭을 가장 왼쪽 탭으로 처리할지 여부를 결정합니다.",
+    "description": "Determines if pinned tabs should be treated as the leftmost tabs."
+  },
+  "commandSettingDescriptionTabCycling": {
+    "message": "반복에서 탭을 순환해야하는지 여부를 결정합니다.",
+    "description": "Determines if the tabs should be cycled through in a loop."
+  },
+  "commandSettingDescriptionExcludeDiscarded": {
+    "message": "로드되지 않은 탭을 건너뛸지를 결정합니다.",
+    "description": "Determines if tabs that are not loaded should be skipped."
+  },
+  "commandSettingDescriptionOpenEmptyTab": {
+    "message": "선택된 URL 또는 링크가 없는 경우, 빈 탭을 열 것인지 여부를 결정합니다.",
+    "description": "Determines if an empty tab should be opened if no URL or link was selected."
+  },
+  "commandSettingDescriptionOpenEmptySearch": {
+    "message": "텍스트가 없어도 검색을 수행할지 여부를 결정합니다.",
+    "description": "Determines whether a search should be performed even if no text is present"
+  },
+  "commandSettingDescriptionOpenEmptyWindow": {
+    "message": "URL 또는 링크가 선택되지 않은 경우, 빈 창을 열어야 하는지를 결정합니다.",
+    "description": "Determines if an empty window should be opened if no URL or link was selected."
+  },
+  "commandSettingDescriptionSearchEngineURL": {
+    "message": "%s 위치 표시자에 검색 텍스트가 삽입되거나 끝에 추가되는 검색 엔진 URL입니다. 생략하면 기본 브라우저 검색 엔진이 사용됩니다.",
+    "description": "A search engine URL where the search text is either inserted for the %s placeholder or appended to the end. If omitted, the default browser search engine is used."
+  },
+  "commandSettingDescriptionSavePromptDialog": {
+    "message": "\"새 이름으로 저장\" 대화 상자를 보일지 또는 파일이 자동으로 사용자 기본 다운로드 폴더에 다운로드할지를 결정합니다.",
+    "description": "Determines if the \"Save As\" dialog should appear or the file should be downloaded silently to the users default download folder."
+  },
+  "commandSettingDescriptionCustomURL": {
+    "message": "열어야할 URL",
+    "description": "The URL that should be opened."
+  },
+  "commandSettingDescriptionAddonId": {
+    "message": "메시지를 보내야할 애드온의 확장 ID입니다.",
+    "description": "The extension ID of the add-on the message should be sent to."
+  },
+  "commandSettingDescriptionAddonMessage": {
+    "message": "애드온으로 보내야할 메시지 문자열입니다.",
+    "description": "The message string that should be sent to the add-on."
+  },
+  "commandSettingDescriptionParseMessage": {
+    "message": "메시지를 JavaScript 객체로 직렬화 해야할지 여부를 결정합니다.",
+    "description": "Determines if the message should be serialized as a JavaScript object."
+  },
+  "commandSettingDescriptionTabOrder": {
+    "message": "명확한 특성에 따라 표시된 탭을 정렬합니다.",
+    "description": "Orders the displayed tabs by a specific characteristic."
+  },
+  "commandSettingDescriptionTabIncludeCurrent": {
+    "message": "현재 활성 탭에 대하여 포함 여부를 결정합니다.",
+    "description": "Determines if the currently active tab should be included."
+  },
+  "commandSettingDescriptionNewWindowFocus": {
+    "message": "열려있는 창의 포커스가 확보되어야 하는지 여부를 결정합니다.",
+    "description": "Determines if the opened window should gain focus or not."
+  },
+  "commandSettingDescriptionUserScriptWarning": {
+    "message": "사용자 스크립트로 인해 개인 데이터가 손실될 수 있습니다.",
+    "description": "User scripts can lead to the loss of private data."
+  },
+  "commandSettingDescriptionUserScriptCode": {
+    "message": "웹 페이지 범위에 삽입해야할 코드입니다.",
+    "description": "The code that should be injected into the webpage's scope."
+  },
+  "commandSettingDescriptionTargetFrame": {
+    "message": "사용자 스크립트가 주입되어야하는 프레임.",
+    "description": "The frame in which the user script should be injected."
+  },
+  "commandSettingDescriptionCustomMatchPattern": {
+    "message": "문자열의 특정 부분과 일치하는 정규식 형식의 패턴입니다. 생략하면 내부 패턴이 사용됩니다.",
+    "description": "A pattern in the form of a regular expression to match a specific part of a string. If omitted an internal pattern is used."
+  },
+  "commandSettingDescriptionCommandSelection": {
+    "message": "다중 명령의 사용자 정의 선택",
+    "description": "A custom selection of multiple commands."
+  },
+  "commandErrorNotificationTitle": {
+    "message": "\"$COMMAND$\" 명령 실패.",
+    "description": "\"New tab\" command failed.",
+    "placeholders": {
+      "command": {
+        "content": "$1",
+        "example": "New tab"
+      }
+    }
+  },
+  "commandErrorNotificationMessageIllegalURL": {
+    "message": "대상 URL을 열 수 없습니다. 자세한 내용을 보려면 여기를 클릭하세요.",
+    "description": "The target URL cannot be opened. Click here for more information."
+  },
+  "commandErrorNotificationMessageNotSerializeable": {
+    "message": "지정된 메시지 문자열을 JavaScript 개체로 구문 분석할 수 없습니다. 자세한 내용을 보려면 여기를 클릭하세요.",
+    "description": "The specified message string could not be parsed to a JavaScript object. Click here for more information."
+  },
+  "commandErrorNotificationMessageMissingRecipient": {
+    "message": "지정한 확장 ID가 기존 애드온에 없거나 애드온에서 메시지를 받지 못합니다. 자세한 내용을 보려면 여기를 클릭하세요.",
+    "description": "The specified extension ID either does not belong to an existing add-on or the add-on does not receive messages. Click here for more information."
+  },
+  "commandErrorNotificationMessageMissingIncognitoPermissions": {
+    "message": "Gesturefy는 시크릿 모드에 대한 권한이 없습니다. 자세한 내용은 여기를 클릭하세요.",
+    "description": "Gesturefy does not have permission for incognito mode. Click here for more information."
+  },
+  "commandBarTitle": {
+    "message": "명령 도구",
+    "description": "Command bar"
+  },
+  "commandBarSearch": {
+    "message": "검색",
+    "description": "Search"
+  },
+  "commandBarAdditionalPermissionsText": {
+    "message": "이 명령은 추가 권한이 필요합니다:",
+    "description": "This command requires additional permissions: "
+  },
+  "commandBarAdditionalSettingsText": {
+    "message": "이 명령은 추가 설정이 있습니다.",
+    "description": "This command has additional settings."
+  },
+  "commandBarOpenSelectionText": {
+    "message": "명령 선택 열기",
+    "description": "Open command selection."
+  },
+  "commandBarOpenSettingsText": {
+    "message": "명령 설정 열기",
+    "description": "Open command settings."
+  },
+  "commandMultiSelectAddPlaceholder": {
+    "message": "추가",
+    "description": "Add"
+  },
+  "commandMultiSelectNoResultsPlaceholder": {
+    "message": "결과 없음",
+    "description": "No results"
+  },
+  "gesturePopupTitleNewGesture": {
+    "message": "새 제스처",
+    "description": "New Gesture"
+  },
+  "gesturePopupTitleEditGesture": {
+    "message": "제스처 편집",
+    "description": "Edit Gesture"
+  },
+  "gesturePopupRecordingAreaText": {
+    "message": "$MOUSEBUTTON$ 마우스 버튼을 사용하여 새 제스처 기록",
+    "description": "Use the right mouse button to record a new gesture.",
+    "placeholders": {
+      "mousebutton": {
+        "content": "$1",
+        "example": "right"
+      }
+    }
+  },
+  "gesturePopupMouseButtonLeft": {
+    "message": "왼쪽",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupMouseButtonRight": {
+    "message": "오른쪽",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupMouseButtonMiddle": {
+    "message": "가운데",
+    "description": "This will replace the placeholder in \"Use the $MOUSEBUTTON$ mouse button to record a new gesture.\""
+  },
+  "gesturePopupLabelCommand": {
+    "message": "명령",
+    "description": "Command"
+  },
+  "gesturePopupLabelGestureDirections": {
+    "message": "제스처 방향",
+    "description": "Gesture directions"
+  },
+  "gesturePopupLabelOptionalLabel": {
+    "message": "레이블 (옵션)",
+    "description": "Label (optional)"
+  },
+  "gesturePopupDescriptionCommand": {
+    "message": "이 제스처에 할당할 명령을 선택하세요.",
+    "description": "Choose a command that should be assigned to this gesture."
+  },
+  "gesturePopupDescriptionGestureDirections": {
+    "message": "화살표 키를 사용하여 방향을 입력하거나 옆의 영역에서 방향을 기록하세요.",
+    "description": "Either use the arrow keys to enter the directions, or record them in the area next to it."
+  },
+  "gesturePopupDescriptionOptionalLabel": {
+    "message": "명령어 대신 표시될 사용자 정의 이름을 지정하세요.",
+    "description": "Assign a custom name that will be displayed instead of the command name."
+  },
+  "gesturePopupNotificationSimilarGesture": {
+    "message": "이 제스처는 \"$GESTURE_NAME$\" 제스처와 유사합니다.",
+    "description": "This gesture is similar to the \"$GESTURE_NAME$\" gesture.",
+    "placeholders": {
+      "gesture_name": {
+        "content": "$1",
+        "example": "New Tab"
+      }
+    }
+  },
+  "permissionLabelTabs": {
+    "message": "탭",
+    "description": "Tabs"
+  },
+  "permissionLabelSessions": {
+    "message": "세션",
+    "description": "Sessions"
+  },
+  "permissionLabelBookmarks": {
+    "message": "북마크",
+    "description": "Bookmarks"
+  },
+  "permissionLabelClipboardWrite": {
+    "message": "클립보드 쓰기",
+    "description": "Clipboard write"
+  },
+  "permissionLabelClipboardRead": {
+    "message": "클립보드 읽기",
+    "description": "Clipboard read"
+  },
+  "permissionLabelDownloads": {
+    "message": "다운로드",
+    "description": "Downloads"
+  },
+  "permissionLabelSearch": {
+    "message": "검색",
+    "description": "Search"
+  },
+  "permissionLabelBrowsingData": {
+    "message": "탐색 데이터",
+    "description": "Browsing data"
+  },
+  "toggleButtonOn": {
+    "message": "켜기",
+    "description": "On - setting checked"
+  },
+  "toggleButtonOff": {
+    "message": "끄기",
+    "description": "Off - setting not checked"
+  },
+  "linkAdditionalInformation": {
+    "message": "추가 정보",
+    "description": "Additional information"
+  },
+  "buttonSave": {
+    "message": "저장",
+    "description": "Save"
+  },
+  "buttonConfirm": {
+    "message": "확인",
+    "description": "OK"
+  },
+  "buttonCancel": {
+    "message": "취소",
+    "description": "Cancel"
+  },
+  "lightTheme": {
+    "message": "밝은 테마",
+    "description": "Light theme"
+  },
+  "darkTheme": {
+    "message": "어두운 테마",
+    "description": "Dark theme"
+  },
+  "highContrastTheme": {
+    "message": "고대비 테마",
+    "description": "High contrast theme"
+  },
+  "welcomePageUpperSectionReference": {
+    "message": "Gesturefy 설치에 성공했습니다.",
+    "description": "Gesturefy has been successfully installed."
+  },
+  "welcomePageUpperSectionHeadline": {
+    "message": "마우스 제스처를 사용해본 적이 없습니까?\n지금 사용해 보세요!",
+    "description": "Never done a mouse gesture before?\r\n Try it out right now!"
+  },
+  "welcomePageUpperSectionTutorialStep01": {
+    "message": "마우스 오른쪽 버튼을 길게 누르세요",
+    "description": "Press and hold the right mouse button"
+  },
+  "welcomePageUpperSectionTutorialStep02": {
+    "message": "마우스를 아래로 끌어다 놓으세요.",
+    "description": "Drag down your mouse"
+  },
+  "welcomePageUpperSectionTutorialStep03": {
+    "message": "오른쪽 마우스 버튼을 놓으세요",
+    "description": "Release the right mouse button"
+  },
+  "welcomePageLowerSectionReference": {
+    "message": "페이지의 아래로 스크롤.",
+    "description": "You scrolled to the bottom of the page."
+  },
+  "welcomePageLowerSectionHeadline": {
+    "message": "축하합니다. 첫 마우스 제스처를 성공적으로 마쳤습니다!",
+    "description": "Congratulations, you successfully accomplished your very first mouse gesture!"
+  },
+  "welcomePageLowerSectionGetStartedText": {
+    "message": "개인 검색 스타일에 맞게 원하는대로 제스처를 만들고 일일 브라우징을보다 쉽고 빠르게 그리고 훨씬 더 재미있게 만드세요. Gesturefy를 지금 시작하고 개인화하세요!",
+    "description": "Create as many gestures as you want to suit your individual browsing style and make your daily browsing easier, faster and a lot more fun. Get started now and personalize Gesturefy!"
+  },
+  "welcomePageLowerSectionGetStartedLink": {
+    "message": "제스처 설정",
+    "description": "Set Up Your Gestures"
+  },
+  "welcomePageLowerSectionLearnMoreText": {
+    "message": "아직도 혼란스럽습니까? 빠른 분석을 위하여 아래의 링크를 클릭하고, 만약 Gesturefy를 실행하지 못했다면 그곳에서 문제 해결 가이드도 찾을 수 있습니다.",
+    "description": "Still confused? Click the link below for a quick break-down and if you can't get Gesturefy up and running you can also find a troubleshooting guide there."
+  },
+  "welcomePageLowerSectionLearnMoreLink": {
+    "message": "더 알아보기",
+    "description": "Learn More"
+  }
+}
