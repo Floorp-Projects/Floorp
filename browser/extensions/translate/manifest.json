@@ -7,7 +7,7 @@
     "version": "1",
     "applications": {
         "gecko": {
-          "id": "translate@mozilla.org"
+          "id": "{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"
         }
     },
     "commands": {
