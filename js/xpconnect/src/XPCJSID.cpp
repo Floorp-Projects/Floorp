@@ -520,7 +520,7 @@ static bool IID_Resolve(JSContext* cx, HandleObject obj, HandleId id,
     return true;
   }
 
-  JSLinearString* name = JSID_TO_LINEAR_STRING(id);
+  JSLinearString* name = id.toLinearString();
   const nsXPTInterfaceInfo* info = GetInterfaceInfo(obj);
   for (uint16_t i = 0; i < info->ConstantCount(); ++i) {
     if (JS_LinearStringEqualsAscii(name, info->Constant(i).Name())) {
@@ -547,7 +547,7 @@ static bool IID_MayResolve(const JSAtomState& names, jsid id,
     return true;
   }
 
-  JSLinearString* name = JSID_TO_LINEAR_STRING(id);
+  JSLinearString* name = id.toLinearString();
   const nsXPTInterfaceInfo* info = GetInterfaceInfo(maybeObj);
   for (uint16_t i = 0; i < info->ConstantCount(); ++i) {
     if (JS_LinearStringEqualsAscii(name, info->Constant(i).Name())) {

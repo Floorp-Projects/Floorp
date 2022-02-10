@@ -168,7 +168,12 @@ struct PropertyKey {
     return isAtom() && toAtom() == atom;
   }
 
-  MOZ_ALWAYS_INLINE JSAtom* toAtom() const { return (JSAtom*)toString(); }
+  MOZ_ALWAYS_INLINE JSAtom* toAtom() const {
+    return reinterpret_cast<JSAtom*>(toString());
+  }
+  MOZ_ALWAYS_INLINE JSLinearString* toLinearString() const {
+    return reinterpret_cast<JSLinearString*>(toString());
+  }
 
  private:
   static bool isNonIntAtom(JSAtom* atom);
@@ -318,6 +323,7 @@ class WrappedPtrOperations<JS::PropertyKey, Wrapper> {
   bool isAtom() const { return id().isAtom(); }
   bool isAtom(JSAtom* atom) const { return id().isAtom(atom); }
   JSAtom* toAtom() const { return id().toAtom(); }
+  JSLinearString* toLinearString() const { return id().toLinearString(); }
 };
 
 }  // namespace js

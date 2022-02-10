@@ -208,7 +208,7 @@ StatementJSHelper::Resolve(nsIXPConnectWrappedNative* aWrapper, JSContext* aCtx,
   Statement* stmt = static_cast<Statement*>(
       static_cast<mozIStorageStatement*>(aWrapper->Native()));
 
-  JSLinearString* str = JSID_TO_LINEAR_STRING(id);
+  JSLinearString* str = id.toLinearString();
   if (::JS_LinearStringEqualsLiteral(str, "step")) {
     *_retval = ::JS_DefineFunction(aCtx, scope, "step", stepFunc, 0,
                                    JSPROP_RESOLVING) != nullptr;

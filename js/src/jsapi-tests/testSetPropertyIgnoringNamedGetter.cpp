@@ -20,7 +20,7 @@ class CustomProxyHandler : public Wrapper {
       JSContext* cx, HandleObject proxy, HandleId id,
       MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) const override {
     if (id.isString() &&
-        JS_LinearStringEqualsLiteral(JSID_TO_LINEAR_STRING(id), "phantom")) {
+        JS_LinearStringEqualsLiteral(id.toLinearString(), "phantom")) {
       desc.set(mozilla::Some(PropertyDescriptor::Data(
           Int32Value(42),
           {PropertyAttribute::Configurable, PropertyAttribute::Enumerable,
