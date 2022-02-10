@@ -182,7 +182,12 @@ var gPermissionManager = {
       capability == Ci.nsIPermissionManager.ALLOW_ACTION ||
       capability == Ci.nsIPermissionManager.DENY_ACTION ||
       capability == Ci.nsICookiePermission.ACCESS_SESSION ||
-      capability == Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW_SESSION
+      // Bug 1753600 there are still a few legacy cookies around that have the capability 9,
+      // _getCapabilityL10nId will throw if it receives a capability of 9
+      // that is not in combination with the type https-only-load-insecure
+      (capability ==
+        Ci.nsIHttpsOnlyModePermission.LOAD_INSECURE_ALLOW_SESSION &&
+        this._type == "https-only-load-insecure")
     );
   },
 
