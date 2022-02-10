@@ -1010,50 +1010,6 @@ class WidgetEvent : public WidgetEventTime {
 };
 
 /******************************************************************************
- * mozilla::NativeEventData
- *
- * WidgetGUIEvent's mPluginEvent member used to be a void* pointer,
- * used to reference external, OS-specific data structures.
- *
- * That void* pointer wasn't serializable by itself, causing
- * certain plugin events not to function in e10s. See bug 586656.
- *
- * To make this serializable, we changed this void* pointer into
- * a proper buffer, and copy these external data structures into this
- * buffer.
- *
- * That buffer is NativeEventData::mBuffer below.
- *
- * We wrap this in that NativeEventData class providing operators to
- * be compatible with existing code that was written around
- * the old void* field.
- ******************************************************************************/
-
-class NativeEventData final {
-  CopyableTArray<uint8_t> mBuffer;
-
-  friend struct IPC::ParamTraits<mozilla::NativeEventData>;
-
- public:
-  explicit operator bool() const { return !mBuffer.IsEmpty(); }
-
-  template <typename T>
-  explicit operator const T*() const {
-    return mBuffer.IsEmpty() ? nullptr
-                             : reinterpret_cast<const T*>(mBuffer.Elements());
-  }
-
-  template <typename T>
-  void Copy(const T& other) {
-    static_assert(!std::is_pointer_v<T>, "Don't want a pointer!");
-    mBuffer.SetLength(sizeof(T));
-    memcpy(mBuffer.Elements(), &other, mBuffer.Length());
-  }
-
-  void Clear() { mBuffer.Clear(); }
-};
-
-/******************************************************************************
  * mozilla::WidgetGUIEvent
  ******************************************************************************/
 
@@ -1084,25 +1040,9 @@ class WidgetGUIEvent : public WidgetEvent {
   // Originator of the event
   nsCOMPtr<nsIWidget> mWidget;
 
-  /*
-   * Ideally though, we wouldn't allow arbitrary reinterpret_cast'ing here;
-   * instead, we would at least store type information here so that
-   * this class can't be used to reinterpret one structure type into another.
-   * We can also wonder if it would be possible to properly extend
-   * WidgetGUIEvent and other Event classes to remove the need for this
-   * mPluginEvent field.
-   */
-  typedef NativeEventData PluginEvent;
-
-  // Event for NPAPI plugin
-  PluginEvent mPluginEvent;
-
   void AssignGUIEventData(const WidgetGUIEvent& aEvent, bool aCopyTargets) {
     AssignEventData(aEvent, aCopyTargets);
-
     // widget should be initialized with the constructor.
-
-    mPluginEvent = aEvent.mPluginEvent;
   }
 };
 
