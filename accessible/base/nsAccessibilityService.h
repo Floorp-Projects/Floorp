@@ -236,6 +236,9 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   void NotifyOfPossibleBoundsChange(mozilla::PresShell* aPresShell,
                                     nsIContent* aContent);
 
+  void NotifyOfComputedStyleChange(mozilla::PresShell* aPresShell,
+                                   nsIContent* aContent);
+
   void NotifyOfResolutionChange(mozilla::PresShell* aPresShell,
                                 float aResolution);
 
