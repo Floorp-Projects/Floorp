@@ -214,7 +214,6 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   last_pending_fd_id_ = 0;
   other_task_ = nullptr;
 #endif
-  output_queue_length_ = 0;
 }
 
 bool Channel::ChannelImpl::CreatePipe(Mode mode) {
@@ -840,7 +839,6 @@ void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
   MOZ_DIAGNOSTIC_ASSERT(!closed_);
   msg->AssertAsLargeAsHeader();
   output_queue_.Push(std::move(msg));
-  output_queue_length_++;
 }
 
 void Channel::ChannelImpl::OutputQueuePop() {
@@ -848,7 +846,6 @@ void Channel::ChannelImpl::OutputQueuePop() {
   partial_write_iter_.reset();
 
   mozilla::UniquePtr<Message> message = output_queue_.Pop();
-  output_queue_length_--;
 }
 
 // Called by libevent when we can write to the pipe without blocking.
@@ -1164,11 +1161,7 @@ bool Channel::ChannelImpl::TransferMachPorts(Message& msg) {
 }
 #endif
 
-bool Channel::ChannelImpl::Unsound_IsClosed() const { return closed_; }
-
-uint32_t Channel::ChannelImpl::Unsound_NumQueuedMessages() const {
-  return output_queue_length_;
-}
+bool Channel::ChannelImpl::IsClosed() const { return closed_; }
 
 //------------------------------------------------------------------------------
 // Channel's methods simply call through to ChannelImpl.
@@ -1213,13 +1206,7 @@ void Channel::CloseClientFileDescriptor() {
 
 int32_t Channel::OtherPid() const { return channel_impl_->OtherPid(); }
 
-bool Channel::Unsound_IsClosed() const {
-  return channel_impl_->Unsound_IsClosed();
-}
-
-uint32_t Channel::Unsound_NumQueuedMessages() const {
-  return channel_impl_->Unsound_NumQueuedMessages();
-}
+bool Channel::IsClosed() const { return channel_impl_->IsClosed(); }
 
 #if defined(OS_MACOSX)
 void Channel::SetOtherMachTask(task_t task) {
