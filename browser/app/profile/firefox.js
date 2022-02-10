@@ -121,7 +121,7 @@ pref("webgl.enable-debug-renderer-info", false);
 //参考：https://www.torproject.org/projects/torbrowser/design/#fingerprinting-defenses
 pref("dom.network.enabled", false);
 
-// webRTCは完全に無効化しません。Brave・Safari では、既定で無効化されています。Floorp はこれによって、IP アドレスの漏洩を防ぎます。
+// webRTCは完全に無効化しません。Brave・Safari では、既定で無効化されています。
 pref("media.peerconnection.enabled", true);
 
 //WebRTC が有効な場合、Floorp はできるだけ、IPアドレスを秘匿するよう動作します。
@@ -136,6 +136,23 @@ pref("privacy.trackingprotection.origin_telemetry.enabled", false, locked);
 pref("privacy.userContext.enabled", true);
 pref("privacy.userContext.ui.enabled", true);
 pref("trailhead.firstrun.branches", "", locked);
+pref("browser.contentblocking.category", "strict");
+pref("extensions.webcompat-reporter.enabled", false);
+
+//同期システムの一部無効化
+pref("services.sync.prefs.sync.browser.contentblocking.category", false);
+
+// Dragpad gesture
+pref("browser.gesture.swipe.left", "");
+pref("browser.gesture.swipe.right", "");
+
+pref("browser.startup.page", 3);//自動復元
+pref("browser.tabs.closeWindowWithLastTab", false);//最後のタブを閉じてもブラウザが閉じないように
+/*-----------------------------------------------------------------------------------all.js の設定-----------------------------------------------------------------------------------*/
+
+//pref("extensions.htmlaboutaddons.recommendations.enabled", false, locked);
+//pref("datareporting.policy.dataSubmissionEnable", false);
+//pref("datareporting.healthreport.uploadEnabled", false);
 
 /*-----------------------------------------------------------------------------以下、Firefox の既定の設定-----------------------------------------------------------------------------*/
 
@@ -389,7 +406,7 @@ pref("browser.shell.setDefaultPDFHandler", false);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last visited page, 3 = resume previous browser session
 // The behavior of option 3 is detailed at: http://wiki.mozilla.org/Session_Restore
-pref("browser.startup.page",                1);
+//pref("browser.startup.page",                1);
 pref("browser.startup.homepage",            "about:home");
 #ifdef NIGHTLY_BUILD
 pref("browser.startup.homepage.abouthome_cache.enabled", true);
@@ -1415,7 +1432,7 @@ pref("services.sync.prefs.sync.app.shield.optoutstudies.enabled", true);
 // could weaken the pref locally, install an add-on from an untrusted
 // source, and this would propagate automatically to other,
 // uncompromised Sync-connected devices.
-pref("services.sync.prefs.sync.browser.contentblocking.category", true);
+//pref("services.sync.prefs.sync.browser.contentblocking.category", false);
 pref("services.sync.prefs.sync.browser.contentblocking.features.strict", true);
 pref("services.sync.prefs.sync.browser.crashReports.unsubmittedCheck.autoSubmit2", true);
 pref("services.sync.prefs.sync.browser.ctrlTab.sortByRecentlyUsed", true);
