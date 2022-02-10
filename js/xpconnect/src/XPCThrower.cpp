@@ -169,7 +169,7 @@ void XPCThrower::Verbosify(XPCCallContext& ccx, char** psz, bool own) {
     jsid id = ccx.GetMember()->GetName();
     const char* name;
     JS::UniqueChars bytes;
-    if (!JSID_IS_VOID(id)) {
+    if (!id.isVoid()) {
       bytes = JS_EncodeStringToLatin1(ccx, id.toString());
       name = bytes ? bytes.get() : "";
     } else {
