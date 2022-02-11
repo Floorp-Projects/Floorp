@@ -499,7 +499,11 @@ To see more help for a specific command, run:
         self.log_manager.register_structured_logger(logging.getLogger("mach"))
 
         write_times = True
-        if args.log_no_times or "MACH_NO_WRITE_TIMES" in os.environ:
+        if (
+            args.log_no_times
+            or "MACH_NO_WRITE_TIMES" in os.environ
+            or "MOZ_AUTOMATION" in os.environ
+        ):
             write_times = False
 
         # Always enable terminal logging. The log manager figures out if we are
