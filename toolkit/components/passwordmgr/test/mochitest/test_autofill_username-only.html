@@ -18,12 +18,6 @@ addLoginsInParent(
   [DEFAULT_ORIGIN, "https://autofill", null, "user1", "pass1"]);
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    "set": [
-      ["signon.usernameOnlyForm.lookupThreshold", 100], // ignore threshold in test
-    ]
-  });
-
   ok(readyPromise, "check promise is available");
   await readyPromise;
 });
