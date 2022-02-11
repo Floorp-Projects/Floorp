@@ -432,8 +432,8 @@ class nsWSAdmissionManager {
     {
       MutexAutoLock lock(aChannel->mMutex);
       MOZ_ASSERT(
-        NS_FAILED(aReason) || aChannel->mScriptCloseCode == CLOSE_GOING_AWAY,
-        "websocket closed while connecting w/o failing?");
+          NS_FAILED(aReason) || aChannel->mScriptCloseCode == CLOSE_GOING_AWAY,
+          "websocket closed while connecting w/o failing?");
     }
 #endif
     Unused << aReason;
@@ -2247,7 +2247,7 @@ class RemoveObserverRunnable : public Runnable {
 void WebSocketChannel::CleanupConnection() {
   // normally this should be called on socket thread, but it may be called
   // on MainThread
-  
+
   LOG(("WebSocketChannel::CleanupConnection() %p", this));
   // This needs to run on the IOThread so we don't need to lock a bunch of these
   if (!mIOThread->IsOnCurrentThread()) {
@@ -2348,7 +2348,8 @@ void WebSocketChannel::DoStopSession(nsresult reason) {
     MutexAutoLock lock(mMutex);
     if (mReconnectDelayTimer) {
       mReconnectDelayTimer->Cancel();
-      NS_ReleaseOnMainThread("WebSocketChannel::mMutex", mReconnectDelayTimer.forget());
+      NS_ReleaseOnMainThread("WebSocketChannel::mMutex",
+                             mReconnectDelayTimer.forget());
     }
   }
 
@@ -3262,7 +3263,7 @@ WebSocketChannel::Notify(nsITimer* timer) {
     }
 
     AbortSession(NS_ERROR_NET_TIMEOUT);
-  // mReconnectDelayTimer is only modified on MainThread
+    // mReconnectDelayTimer is only modified on MainThread
   } else if (timer == mReconnectDelayTimer) {
     MOZ_RELEASE_ASSERT(mConnecting == CONNECTING_DELAYED,
                        "woke up from delay w/o being delayed?");
