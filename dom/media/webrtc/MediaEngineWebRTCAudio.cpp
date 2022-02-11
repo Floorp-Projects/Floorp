@@ -244,14 +244,14 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
             mInputProcessing->ApplyConfig(mTrack->GraphImpl(),
                                           mAudioProcessingConfig);
             {
-              TRACE("SetPassThrough")
-              mInputProcessing->SetPassThrough(mTrack->GraphImpl(),
-                                               mPassThrough);
-            }
-            {
               TRACE("SetRequestedInputChannelCount");
               mInputProcessing->SetRequestedInputChannelCount(
                   mTrack->GraphImpl(), mRequestedInputChannelCount);
+            }
+            {
+              TRACE("SetPassThrough")
+              mInputProcessing->SetPassThrough(mTrack->GraphImpl(),
+                                               mPassThrough);
             }
           }
         };
