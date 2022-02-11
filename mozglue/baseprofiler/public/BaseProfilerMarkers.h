@@ -98,7 +98,7 @@ ProfileBufferBlockIndex AddMarker(
     return {};
   }
   return ::mozilla::baseprofiler::AddMarkerToBuffer(
-      base_profiler_markers_detail::CachedBaseCoreBuffer(), aName, aCategory,
+      ::mozilla::baseprofiler::profiler_get_core_buffer(), aName, aCategory,
       std::move(aOptions), aMarkerType, aPayloadArguments...);
 #endif
 }
