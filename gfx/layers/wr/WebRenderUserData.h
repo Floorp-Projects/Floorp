@@ -318,7 +318,7 @@ class WebRenderLocalCanvasData : public WebRenderUserData {
   static UserDataType Type() { return UserDataType::eLocalCanvas; }
 
   void RequestFrameReadback();
-  void RefreshExternalImage();
+  void RefreshExternalImage(const wr::ExternalImageId& aExternalImageId);
 
   // TODO: introduce a CanvasRenderer derivative to store here?
 
@@ -328,7 +328,6 @@ class WebRenderLocalCanvasData : public WebRenderUserData {
   wr::ImageKey mImageKey = {};
   wr::ImageDescriptor mDescriptor;
   gfx::SurfaceFormat mFormat = gfx::SurfaceFormat::UNKNOWN;
-  bool mDirty = false;
 };
 
 class WebRenderRemoteData : public WebRenderUserData {
