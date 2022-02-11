@@ -425,6 +425,12 @@ bool TextLeafPoint::IsEmptyLastLine() const {
   return text.CharAt(0) == '\n';
 }
 
+char16_t TextLeafPoint::GetChar() const {
+  nsAutoString text;
+  mAcc->AppendTextTo(text, mOffset, 1);
+  return text.CharAt(0);
+}
+
 TextLeafPoint TextLeafPoint::FindPrevLineStartSameLocalAcc(
     bool aIncludeOrigin) const {
   LocalAccessible* acc = mAcc->AsLocal();
@@ -744,6 +750,9 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
     return ActualizeCaret().FindBoundary(aBoundaryType, aDirection,
                                          aIncludeOrigin);
   }
+  if (aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_END) {
+    return FindLineEnd(aDirection, aIncludeOrigin);
+  }
   if (aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_START &&
       aIncludeOrigin && aDirection == eDirPrevious && IsEmptyLastLine()) {
     // If we're at an empty line at the end of an Accessible,  we don't want to
@@ -817,6 +826,46 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
   }
   MOZ_ASSERT_UNREACHABLE();
   return TextLeafPoint();
+}
+
+TextLeafPoint TextLeafPoint::FindLineEnd(nsDirection aDirection,
+                                         bool aIncludeOrigin) const {
+  if (aDirection == eDirPrevious && IsEmptyLastLine()) {
+    // If we're at an empty line at the end of an Accessible,  we don't want to
+    // walk into the previous line. For example, this can happen if the caret
+    // is positioned on an empty line at the end of a textarea.
+    // Because we want the line end, we must walk back to the line feed
+    // character.
+    return FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
+  }
+  if (aIncludeOrigin && IsLineFeedChar()) {
+    return *this;
+  }
+  if (aDirection == eDirPrevious && !aIncludeOrigin) {
+    // If there is a line feed immediately before us, return that.
+    TextLeafPoint prevChar =
+        FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
+    if (prevChar.IsLineFeedChar()) {
+      return prevChar;
+    }
+  }
+  TextLeafPoint searchFrom = *this;
+  if (aDirection == eDirNext && (IsLineFeedChar() || IsEmptyLastLine())) {
+    // If we search for the next line start from a line feed, we'll get the
+    // character immediately following the line feed. We actually want the
+    // next line start after that. Skip the line feed.
+    searchFrom = FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirNext);
+  }
+  TextLeafPoint lineStart = searchFrom.FindBoundary(
+      nsIAccessibleText::BOUNDARY_LINE_START, aDirection, aIncludeOrigin);
+  // If there is a line feed before this line start (at the end of the previous
+  // line), we must return that.
+  TextLeafPoint prevChar = lineStart.FindBoundary(
+      nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious, false);
+  if (prevChar && prevChar.IsLineFeedChar()) {
+    return prevChar;
+  }
+  return lineStart;
 }
 
 already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributesLocalAcc(
