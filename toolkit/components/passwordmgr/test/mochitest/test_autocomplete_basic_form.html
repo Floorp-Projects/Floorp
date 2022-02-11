@@ -16,7 +16,12 @@ Login Manager test: multiple login autocomplete
 var chromeScript = runChecksAfterCommonInit();
 
 // Temporarily allow use of eval() in this test.
-SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
+SpecialPowers.pushPrefEnv({
+  "set": [
+    ["security.allow_eval_with_system_principal", true],
+    ["signon.usernameOnlyForm.lookupThreshold", 100], // ignore the threshold in test
+  ]
+});
 
 function addLoginsInParent(...aLogins) {
   let script = runInParent(function addLoginsInParentInner() {

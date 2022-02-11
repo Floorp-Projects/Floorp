@@ -477,6 +477,9 @@ this.LoginHelper = {
     this.usernameOnlyFormEnabled = Services.prefs.getBoolPref(
       "signon.usernameOnlyForm.enabled"
     );
+    this.usernameOnlyFormLookupThreshold = Services.prefs.getIntPref(
+      "signon.usernameOnlyForm.lookupThreshold"
+    );
     this.remoteRecipesEnabled = Services.prefs.getBoolPref(
       "signon.recipes.remoteRecipes.enabled"
     );
