@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test - KeyHandler</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <video id="video" controls preload="auto">
+    <track
+      id="track1"
+      kind="subtitles"
+      label="[test] en"
+      srclang="en"
+      src="test-webvtt-1.vtt"
+    />
+    <track
+      id="track2"
+      kind="subtitles"
+      label="[test] fr"
+      srclang="fr"
+      src="test-webvtt-2.vtt"
+    />
+  </video>
+</div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  const video = document.getElementById("video");
+  const closedCaptionButton = getElementWithinVideo(video, "closedCaptionButton");
+  const fullscreenButton = getElementWithinVideo(video, "fullscreenButton");
+  const textTrackList = getElementWithinVideo(video, "textTrackList");
+  const textTrackListContainer = getElementWithinVideo(video, "textTrackListContainer");
+
+  function isClosedCaptionVisible() {
+    return !textTrackListContainer.hidden;
+  }
+
+  // Setup video
+  tests.push(done => {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["media.cache_size", 40000],
+      ["media.videocontrols.keyboard-tab-to-all-controls", true],
+    ]}, done);
+  }, done => {
+    video.src = "seek_with_sound.ogg";
+    video.addEventListener("loadedmetadata", done);
+  }, cleanup);
+
+  tests.push(done => {
+    info("Opening the CC menu should focus the first item in the menu");
+    info("Focusing and clicking the closed caption button");
+    closedCaptionButton.focus();
+    synthesizeKey(" ");
+    ok(isClosedCaptionVisible(), "The CC menu is visible");
+    ok(textTrackList.firstChild.matches(":focus"), "The first item in CC menu should be in focus");
+    done();
+  });
+
+  tests.push(done => {
+    info("aria-expanded should be reflected whether the CC menu is open or not");
+    ok(closedCaptionButton.getAttribute("aria-expanded") === "false", "Closed CC menu has aria-expanded set to false");
+    info("Focusing and clicking the closed caption button");
+    closedCaptionButton.focus();
+    synthesizeKey(" ");
+    ok(isClosedCaptionVisible(), "The CC menu is visible");
+    ok(closedCaptionButton.getAttribute("aria-expanded") === "true", "Open CC menu has aria-expanded set to true");
+    done();
+  });
+
+  tests.push(done => {
+    info("If CC menu is open, then arrow keys should navigate menu");
+    info("Opening the CC menu");
+    closedCaptionButton.focus();
+    synthesizeKey(" ");
+    ok(textTrackList.firstChild.matches(":focus"), "The first item in CC menu should be in focus first");
+    info("Pressing down arrow");
+    synthesizeKey("KEY_ArrowDown");
+    ok(textTrackList.children[1].matches(":focus"), "The second item in CC menu should now be in focus");
+    info("Pressing up arrow");
+    synthesizeKey("KEY_ArrowUp");
+    ok(textTrackList.firstChild.matches(":focus"), "The first item in CC menu should be back in focus again");
+    done();
+  });
+
+  tests.push(done => {
+    info("Escape should close the CC menu");
+    info("Opening the CC menu");
+    closedCaptionButton.focus();
+    synthesizeKey(" ");
+    info("Pressing Escape key");
+    synthesizeKey("KEY_Escape");
+    ok(closedCaptionButton.matches(":focus"), "The CC button should be in focus");
+    ok(!isClosedCaptionVisible(), "The CC menu should be closed");
+    done();
+  });
+
+  tests.push(done => {
+    info("Tabbing away should close the CC menu");
+    info("Opening the CC menu");
+    closedCaptionButton.focus();
+    synthesizeKey(" ");
+    info("Pressing Tab key 3x");
+    synthesizeKey("KEY_Tab");
+    synthesizeKey("KEY_Tab");
+    synthesizeKey("KEY_Tab");
+    ok(fullscreenButton.matches(":focus"), "The fullscreen button should be in focus");
+    ok(!isClosedCaptionVisible(), "The CC menu should be closed");
+    done();
+  });
+
+  tests.push(done => {
+    info("Shift + Tabbing away should close the CC menu");
+    info("Opening the CC menu");
+    closedCaptionButton.focus();
+    synthesizeKey(" ");
+    info("Pressing Shift + Tab key");
+    synthesizeKey("KEY_Tab", { shiftKey: true });
+    ok(closedCaptionButton.matches(":focus"), "The CC button should be in focus");
+    ok(!isClosedCaptionVisible(), "The CC menu should be closed");
+    done();
+  });
+
+  function cleanup(done) {
+    if (isClosedCaptionVisible()) {
+      closedCaptionButton.click();
+    }
+    done();
+  }
+  // add cleanup after every test
+  tests = tests.reduce((a, v) => a.concat([v, cleanup]), []);
+
+  tests.push(SimpleTest.finish);
+  window.addEventListener("load", executeTests);
+</script>
+</pre>
+</body>
+</html>
