@@ -6,6 +6,7 @@
 
 #include "TextLeafRange.h"
 
+#include "HyperTextAccessible-inl.h"
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/DocAccessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
@@ -735,8 +736,10 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
                                           bool aIncludeOrigin) const {
   if (IsCaret()) {
     if (aBoundaryType == nsIAccessibleText::BOUNDARY_CHAR) {
-      // The caret is at the end of the line. Return no character.
-      return ActualizeCaret(/* aAdjustAtEndOfLine */ false);
+      if (IsCaretAtEndOfLine()) {
+        // The caret is at the end of the line. Return no character.
+        return ActualizeCaret(/* aAdjustAtEndOfLine */ false);
+      }
     }
     return ActualizeCaret().FindBoundary(aBoundaryType, aDirection,
                                          aIncludeOrigin);
@@ -766,7 +769,7 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
             // We've moved to the next leaf. That means we've set the offset
             // to 0, so we're already at the next character.
             boundary = searchFrom;
-          } else if (searchFrom.mOffset <
+          } else if (searchFrom.mOffset + 1 <
                      static_cast<int32_t>(
                          nsAccUtils::TextLength(searchFrom.mAcc))) {
             boundary.mAcc = searchFrom.mAcc;
