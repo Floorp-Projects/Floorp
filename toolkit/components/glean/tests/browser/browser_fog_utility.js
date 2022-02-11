@@ -32,4 +32,6 @@ add_task(async () => {
     .catch(async () => {
       ok(false, "Cannot start Utility process?");
     });
+
+  await utilityProcessTest.stopProcess();
 });
