@@ -94,6 +94,40 @@ ef gh</pre>
         [6, 8, "gh", 9, 11],
         [9, 11, "", 11, 11],
       ]);
+      if (isWinNoCache) {
+        todo(
+          false,
+          "Cache disabled, so RemoteAccessible doesn't support BOUNDARY_WORD_END on Windows"
+        );
+      } else {
+        testTextAtOffset(acc, BOUNDARY_WORD_END, [
+          [0, 1, "ab", 0, 2],
+          [2, 4, " cd", 2, 5],
+          [5, 7, "\nef", 5, 8],
+          [8, 11, " gh", 8, 11],
+        ]);
+        testTextBeforeOffset(acc, BOUNDARY_WORD_END, [
+          [0, 2, "", 0, 0],
+          [3, 5, "ab", 0, 2],
+          // See below for offset 6.
+          [7, 8, " cd", 2, 5],
+          [9, 11, "\nef", 5, 8],
+        ]);
+        if (id == "br" && !isCacheEnabled) {
+          todo(
+            false,
+            "Cache disabled, so TextBeforeOffset BOUNDARY_WORD_END returns incorrect result after br"
+          );
+        } else {
+          testTextBeforeOffset(acc, BOUNDARY_WORD_END, [[6, 6, " cd", 2, 5]]);
+        }
+        testTextAfterOffset(acc, BOUNDARY_WORD_END, [
+          [0, 2, " cd", 2, 5],
+          [3, 5, "\nef", 5, 8],
+          [6, 8, " gh", 8, 11],
+          [9, 11, "", 11, 11],
+        ]);
+      }
     }
     const linksStartEnd = findAccessibleChildByID(docAcc, "linksStartEnd");
     testTextAtOffset(linksStartEnd, BOUNDARY_LINE_START, [
