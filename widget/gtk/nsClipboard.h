@@ -41,6 +41,13 @@ class ClipboardTargets {
   ClipboardTargets(mozilla::GUniquePtr<GdkAtom> aTargets, uint32_t aCount)
       : mTargets(std::move(aTargets)), mCount(aCount) {}
 
+  void Set(ClipboardTargets);
+  ClipboardTargets Clone();
+  void Clear() {
+    mTargets = nullptr;
+    mCount = 0;
+  };
+
   mozilla::Span<GdkAtom> AsSpan() const { return {mTargets.get(), mCount}; }
   explicit operator bool() const { return bool(mTargets); }
 };
@@ -80,12 +87,23 @@ class nsRetrievalContext {
   virtual mozilla::GUniquePtr<char> GetClipboardText(
       int32_t aWhichClipboard) = 0;
 
-  // Get data mime types which can be obtained from clipboard. The returned
-  // array has to be released by g_free().
-  virtual ClipboardTargets GetTargets(int32_t aWhichClipboard) = 0;
+  // Get data mime types which can be obtained from clipboard.
+  ClipboardTargets GetTargets(int32_t aWhichClipboard);
+
+  // Clipboard/Primary selection owner changed. Clear internal cached data.
+  static void ClearCachedTargetsClipboard(GtkClipboard* aClipboard,
+                                          GdkEvent* aEvent, gpointer data);
+  static void ClearCachedTargetsPrimary(GtkClipboard* aClipboard,
+                                        GdkEvent* aEvent, gpointer data);
+
+  nsRetrievalContext();
 
  protected:
-  virtual ~nsRetrievalContext() = default;
+  virtual ClipboardTargets GetTargetsImpl(int32_t aWhichClipboard) = 0;
+  virtual ~nsRetrievalContext();
+
+  static ClipboardTargets sClipboardTargets;
+  static ClipboardTargets sPrimaryTargets;
 };
 
 class nsClipboard : public nsIClipboard, public nsIObserver {
@@ -118,6 +136,7 @@ class nsClipboard : public nsIClipboard, public nsIObserver {
                            uint32_t aClipboardDataLength);
 
   void ClearTransferable(int32_t aWhichClipboard);
+  void ClearCachedTargets(int32_t aWhichClipboard);
 
   bool FilterImportedFlavors(int32_t aWhichClipboard,
                              nsTArray<nsCString>& aFlavors);
