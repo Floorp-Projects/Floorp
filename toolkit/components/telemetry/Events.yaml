@@ -119,14 +119,13 @@ activity_stream:
 
 aboutprivatebrowsing:
   click:
-    objects: ["info_link", "promo_link"]
+    objects: ["info_link", "promo_link", "dismiss_button"]
     release_channel_collection: opt-out
     record_in_processes: ["content"]
     description: >
       This is recorded when a user clicks a link on the private browsing newtab.
     bug_numbers: [1709344]
-    notification_emails:
-      - "khudson@mozilla.com"
+    notification_emails: ["dmosedale@mozilla.com", "omc@mozilla.com"]
     expiry_version: "100"
     products:
       - "firefox"

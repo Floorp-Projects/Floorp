@@ -125,6 +125,7 @@ async function renderPromo({
       type: "BLOCK_MESSAGE_BY_ID",
       data: { id: messageId },
     });
+    window.PrivateBrowsingRecordClick("dismiss_button");
     container.remove();
   };
 
@@ -190,6 +191,8 @@ function recordOnceVisible(message) {
         type: "IMPRESSION",
         data: message,
       });
+      // Similar telemetry, but for Nimbus experiments
+      window.PrivateBrowsingExposureTelemetry();
       document.removeEventListener("visibilitychange", recordImpression);
     }
   };
@@ -199,6 +202,8 @@ function recordOnceVisible(message) {
       type: "IMPRESSION",
       data: message,
     });
+    // Similar telemetry, but for Nimbus experiments
+    window.PrivateBrowsingExposureTelemetry();
   } else {
     document.addEventListener("visibilitychange", recordImpression);
   }
@@ -236,8 +241,6 @@ async function setupFeatureConfig() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  setupFeatureConfig();
-
   if (!RPMIsWindowPrivate()) {
     document.documentElement.classList.remove("private");
     document.documentElement.classList.add("normal");
@@ -248,6 +251,10 @@ document.addEventListener("DOMContentLoaded", function() {
       });
     return;
   }
+
+  // We don't do this setup until now, because we don't want to record any impressions until we're
+  // sure we're actually running a private window, not just about:privatebrowsing in a normal window.
+  setupFeatureConfig();
 
   // Set up the private search banner.
   const privateSearchBanner = document.getElementById("search-banner");
