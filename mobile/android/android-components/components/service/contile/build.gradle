@@ -24,6 +24,7 @@ android {
 dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
+    implementation Dependencies.androidx_work_runtime
 
     implementation project(':concept-fetch')
     implementation project(':support-ktx')
@@ -32,6 +33,7 @@ dependencies {
 
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit
+    testImplementation Dependencies.androidx_work_testing
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
 
