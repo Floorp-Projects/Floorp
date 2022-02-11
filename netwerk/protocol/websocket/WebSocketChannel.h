@@ -237,7 +237,8 @@ class WebSocketChannel : public BaseWebSocketChannel,
   nsCString mHost;
   nsString mEffectiveURL;
 
-  // Set on MainThread before multithread use, used on IO thread, cleared on IOThread
+  // Set on MainThread before multithread use, used on IO thread, cleared on
+  // IOThread
   nsCOMPtr<nsISocketTransport> mTransport;
   nsCOMPtr<nsIAsyncInputStream> mSocketIn;
   nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
@@ -304,8 +305,10 @@ class WebSocketChannel : public BaseWebSocketChannel,
   Atomic<bool> mIncrementedSessionCount;
   Atomic<bool> mDecrementedSessionCount;
 
-  int32_t mMaxMessageSize;  // set on MainThread in AsyncOpenNative, read on IO thread
-  // Set on IOThread, or on MainThread before mDataStarted.  Used on IO Thread (after mDataStarted)
+  int32_t mMaxMessageSize;  // set on MainThread in AsyncOpenNative, read on IO
+                            // thread
+  // Set on IOThread, or on MainThread before mDataStarted.  Used on IO Thread
+  // (after mDataStarted)
   nsresult mStopOnClose;
   uint16_t mServerCloseCode;     // only used on IO thread
   nsCString mServerCloseReason;  // only used on IO thread
@@ -339,7 +342,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
   uint32_t mHdrOutToSend;
   uint8_t* mHdrOut;
   uint8_t mOutHeader[kCopyBreak + 16]{0};
-  
+
   // Set on MainThread in OnStartRequest (before mDataStarted), used on IO
   // Thread (after mDataStarted), cleared in DoStopSession on IOThread or
   // on MainThread (if mDataStarted == false)
