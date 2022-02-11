@@ -153,15 +153,14 @@ webgl-ipc:
             extra-options:
                 - "--setpref=webgl.out-of-process=true"
 
-devtools-no-eft-no-fission:
-    description: "{description} with DevTools EFT disabled and Fission disabled"
+devtools-no-eft:
+    description: "{description} with DevTools EFT disabled"
     contact: nchevobbe
-    suffix: "dt-no-eft-no-fis"
+    suffix: "dt-no-eft"
     merge:
         mozharness:
             extra-options:
                 - "--setpref=devtools.every-frame-target.enabled=false"
-                - "--setpref=fission.autostart=false"
 
 dynamic-first-party-isolation:
     description: "{description} with dFPI enabled"
