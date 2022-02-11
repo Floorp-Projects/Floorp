@@ -159,7 +159,7 @@ impl MidirWrapper {
 
     fn send(self: &mut MidirWrapper, id: &str, data: &[u8]) -> Result<(), ()> {
         let connections = &mut self.connections;
-        let index = connections.iter().position(|e| e.id.eq(id)).unwrap();
+        let index = connections.iter().position(|e| e.id.eq(id)).ok_or(())?;
         let connection_wrapper = connections.get_mut(index).unwrap();
 
         match &mut connection_wrapper.connection {
