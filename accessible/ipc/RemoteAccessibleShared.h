@@ -139,8 +139,6 @@ LayoutDeviceIntPoint ImagePosition(uint32_t aCoordType);
 
 LayoutDeviceIntSize ImageSize();
 
-uint32_t EndOffset(bool* aOk);
-
 bool IsLinkValid();
 
 uint32_t AnchorCount(bool* aOk);

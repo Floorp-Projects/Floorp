@@ -42,6 +42,7 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
   virtual already_AddRefed<AccAttributes> DefaultTextAttributes() override;
 
   virtual uint32_t StartOffset() override;
+  virtual uint32_t EndOffset() override;
 
   virtual int32_t LinkIndexAtOffset(uint32_t aOffset) override;
 
