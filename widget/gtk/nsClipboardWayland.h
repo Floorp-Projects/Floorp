@@ -15,15 +15,10 @@ class nsRetrievalContextWayland final : public nsRetrievalContext {
  public:
   nsRetrievalContextWayland();
 
-  // Successful call of GetClipboardData()/GetClipboardText() needs to be paired
-  // with ReleaseClipboardData().
   ClipboardData GetClipboardData(const char* aMimeType,
                                  int32_t aWhichClipboard) override;
   mozilla::GUniquePtr<char> GetClipboardText(int32_t aWhichClipboard) override;
-
-  // GetTargets() uses clipboard data internally so it can't be used between
-  // GetClipboardData()/GetClipboardText() and ReleaseClipboardData() calls.
-  ClipboardTargets GetTargets(int32_t aWhichClipboard) override;
+  ClipboardTargets GetTargetsImpl(int32_t aWhichClipboard) override;
 
  private:
   ClipboardData WaitForClipboardData(ClipboardDataType, int32_t aWhichClipboard,
