@@ -43,7 +43,6 @@
 
 #include "nsISocketTransportService.h"
 #include "nsDNSService2.h"
-#include "nsNetUtil.h"  // NS_CheckPortSafety
 
 #include <string>
 #include <vector>

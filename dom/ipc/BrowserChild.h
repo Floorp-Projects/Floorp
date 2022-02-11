@@ -38,7 +38,6 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/GeckoContentControllerTypes.h"
-#include "nsIWebBrowserChrome.h"
 #include "nsITopLevelNavigationDelegate.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "AudioChannelService.h"

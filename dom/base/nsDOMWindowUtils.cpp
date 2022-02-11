@@ -43,7 +43,6 @@
 
 #include "nsContentUtils.h"
 
-#include "nsIFrame.h"
 #include "nsIWidget.h"
 #include "nsCharsetSource.h"
 #include "nsJSEnvironment.h"

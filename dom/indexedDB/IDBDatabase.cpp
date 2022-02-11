@@ -13,7 +13,6 @@
 #include "IDBObjectStore.h"
 #include "IDBRequest.h"
 #include "IDBTransaction.h"
-#include "IDBFactory.h"
 #include "IndexedDatabaseInlines.h"
 #include "IndexedDatabaseManager.h"
 #include "IndexedDBCommon.h"

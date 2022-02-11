@@ -45,7 +45,6 @@
 #include "mozilla/dom/WindowBinding.h"
 #include "Units.h"
 #include "nsComponentManagerUtils.h"
-#include "nsSize.h"
 #include "nsCheapSets.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/UniquePtr.h"

@@ -54,7 +54,6 @@
 #include "mozilla/glean/bindings/GleanPings.h"
 #include "Units.h"
 #include "nsComponentManagerUtils.h"
-#include "nsSize.h"
 #include "nsCheapSets.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageBitmapSource.h"

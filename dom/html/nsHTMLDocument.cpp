@@ -52,7 +52,6 @@
 #include "nsJSUtils.h"
 #include "DocumentInlines.h"
 #include "nsICachingChannel.h"
-#include "nsIContentViewer.h"
 #include "nsIScriptElement.h"
 #include "nsArrayUtils.h"
 

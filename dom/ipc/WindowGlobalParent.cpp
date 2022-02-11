@@ -45,7 +45,6 @@
 #include "nsFrameLoaderOwner.h"
 #include "nsGlobalWindowInner.h"
 #include "nsQueryObject.h"
-#include "nsFrameLoaderOwner.h"
 #include "nsNetUtil.h"
 #include "nsSandboxFlags.h"
 #include "nsSerializationHelper.h"
@@ -57,7 +56,6 @@
 #include "nsITransportSecurityInfo.h"
 #include "nsISharePicker.h"
 #include "nsIURIMutator.h"
-#include "mozilla/Telemetry.h"
 
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"

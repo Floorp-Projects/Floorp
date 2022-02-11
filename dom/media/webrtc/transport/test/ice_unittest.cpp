@@ -47,7 +47,6 @@ extern "C" {
 #include "stunserver.h"
 #include "nr_socket_prsock.h"
 #include "test_nr_socket.h"
-#include "ice_ctx.h"
 #include "stun_socket_filter.h"
 #include "mozilla/net/DNS.h"
 
