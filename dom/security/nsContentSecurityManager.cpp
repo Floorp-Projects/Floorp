@@ -20,7 +20,6 @@
 #include "nsContentUtils.h"
 #include "nsCORSListenerProxy.h"
 #include "nsIParentChannel.h"
-#include "nsIStreamListener.h"
 #include "nsIRedirectHistoryEntry.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"

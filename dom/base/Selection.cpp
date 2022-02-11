@@ -58,7 +58,6 @@
 #include "nsBidiPresUtils.h"
 #include "nsTextFrame.h"
 
-#include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 
 #include "nsPresContext.h"

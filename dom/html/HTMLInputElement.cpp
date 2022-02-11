@@ -108,7 +108,6 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/TextUtils.h"
 
 #include <limits>
 
@@ -117,7 +116,6 @@
 #include "HTMLSplitOnSpacesTokenizer.h"
 #include "nsIMIMEInfo.h"
 #include "nsFrameSelection.h"
-#include "nsBaseCommandController.h"
 #include "nsXULControllers.h"
 
 // input type=date

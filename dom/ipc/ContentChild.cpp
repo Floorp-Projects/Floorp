@@ -168,7 +168,6 @@
 #include "SandboxHal.h"
 #include "mozInlineSpellChecker.h"
 #include "mozilla/GlobalStyleSheetCache.h"
-#include "mozilla/Unused.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsClipboardProxy.h"
 #include "nsContentPermissionHelper.h"
@@ -180,7 +179,6 @@
 #include "nsDocShellLoadState.h"
 #include "nsHashPropertyBag.h"
 #include "nsIConsoleListener.h"
-#include "nsIConsoleService.h"
 #include "nsIContentViewer.h"
 #include "nsICycleCollectorListener.h"
 #include "nsIDocShellTreeOwner.h"
@@ -212,7 +210,6 @@
 #include "mozilla/dom/PerformanceStorage.h"
 #include "nsChromeRegistryContent.h"
 #include "nsFrameMessageManager.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
 #include "nsWindowMemoryReporter.h"
 
@@ -266,7 +263,6 @@
 
 #include "ClearOnShutdown.h"
 #include "DomainPolicy.h"
-#include "GMPServiceChild.h"
 #include "GfxInfoBase.h"
 #include "MMPrinter.h"
 #include "mozilla/ipc/ProcessUtils.h"

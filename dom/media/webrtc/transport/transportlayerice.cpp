@@ -47,7 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nsComponentManagerUtils.h"
 #include "nsError.h"
 #include "nsNetCID.h"
-#include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 
 // nICEr includes

@@ -75,7 +75,6 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/ElementBinding.h"
-#include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/Flex.h"
 #include "mozilla/dom/FromParser.h"
 #include "mozilla/dom/Grid.h"

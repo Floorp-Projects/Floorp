@@ -21,7 +21,6 @@
 #include "nsICacheInfoChannel.h"
 #include "nsIClassOfService.h"
 #include "nsISupportsPriority.h"
-#include "ScriptLoadRequest.h"
 #include "ScriptSettings.h"
 
 using JS::SourceText;
