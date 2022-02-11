@@ -1020,6 +1020,15 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       .getHistogramById("PWMGR_NUM_FORM_HAS_POSSIBLE_USERNAME_EVENT_PER_DOC")
       .add(++docState.numFormHasPossibleUsernameEvent);
 
+    // Infer whether a form is a username-only form is expensive, so we restrict the
+    // number of form looked up per document.
+    if (
+      docState.numFormHasPossibleUsernameEvent >
+      LoginHelper.usernameOnlyFormLookupThreshold
+    ) {
+      return;
+    }
+
     if (document.visibilityState == "visible" || isMasterPasswordSet) {
       this._processDOMFormHasPossibleUsernameEvent(event);
     } else {
@@ -3131,11 +3140,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
 
     let candidate = null;
     for (let element of formElement.elements) {
-      // Only care input fields in the form.
-      if (ChromeUtils.getClassName(element) !== "HTMLInputElement") {
-        continue;
-      }
-
       // We are looking for a username-only form, so if there is a password
       // field in the form, this is NOT a username-only form.
       if (element.hasBeenTypePassword) {
