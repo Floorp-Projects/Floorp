@@ -728,6 +728,14 @@ function replaceURL(text, replacementText = "") {
  * @returns {String|null} null if the message can't be part of a warningGroup.
  */
 function getWarningGroupType(message) {
+  if (
+    message.level !== MESSAGE_LEVEL.WARN &&
+    // CookieSameSite messages are not warnings but infos
+    message.level !== MESSAGE_LEVEL.INFO
+  ) {
+    return null;
+  }
+
   if (isContentBlockingMessage(message)) {
     return MESSAGE_TYPE.CONTENT_BLOCKING_GROUP;
   }
