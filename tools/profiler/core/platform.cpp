@@ -106,6 +106,22 @@
 #  include "nsCocoaFeatures.h"
 #endif
 
+#if defined(GP_PLAT_amd64_darwin)
+#  include <cpuid.h>
+#endif
+
+#if defined(GP_OS_windows)
+#  include <processthreadsapi.h>
+
+// GetThreadInformation is not available on Windows 7.
+WINBASEAPI
+BOOL WINAPI GetThreadInformation(
+    _In_ HANDLE hThread, _In_ THREAD_INFORMATION_CLASS ThreadInformationClass,
+    _Out_writes_bytes_(ThreadInformationSize) LPVOID ThreadInformation,
+    _In_ DWORD ThreadInformationSize);
+
+#endif
+
 // Win32 builds always have frame pointers, so FramePointerStackWalk() always
 // works.
 #if defined(GP_PLAT_x86_windows)
@@ -5030,6 +5046,10 @@ void profiler_init(void* aStackTop) {
                           filters.length(), activeTabID, duration);
   }
 
+  // The GeckoMain thread registration happened too early to record a marker,
+  // so let's record it again now.
+  profiler_mark_thread_awake();
+
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
   // Start counting memory allocations (outside of lock because this may call
   // profiler_add_sampled_counter which would attempt to take the lock.)
@@ -6191,14 +6211,143 @@ Maybe<uint64_t> profiler_get_inner_window_id_from_docshell(
 
 }  // namespace geckoprofiler::markers::detail
 
+namespace geckoprofiler::markers {
+
+struct CPUAwakeMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("Awake");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   int64_t aCPUId
+#ifdef GP_OS_darwin
+                                   ,
+                                   uint32_t aQoS
+#endif
+#ifdef GP_OS_windows
+                                   ,
+                                   int32_t aAbsolutePriority,
+                                   int32_t aRelativePriority
+#endif
+  ) {
+#ifndef GP_PLAT_arm64_darwin
+    aWriter.IntProperty("CPU Id", aCPUId);
+#endif
+#ifdef GP_OS_windows
+    if (aAbsolutePriority) {
+      aWriter.IntProperty("absPriority", aAbsolutePriority);
+    }
+    aWriter.IntProperty("priority", aRelativePriority);
+#endif
+#ifdef GP_OS_darwin
+    const char* QoS = "";
+    switch (aQoS) {
+      case QOS_CLASS_USER_INTERACTIVE:
+        QoS = "User Interactive";
+        break;
+      case QOS_CLASS_USER_INITIATED:
+        QoS = "User Initiated";
+        break;
+      case QOS_CLASS_DEFAULT:
+        QoS = "Default";
+        break;
+      case QOS_CLASS_UTILITY:
+        QoS = "Utility";
+        break;
+      case QOS_CLASS_BACKGROUND:
+        QoS = "Background";
+        break;
+      default:
+        QoS = "Unspecified";
+    }
+
+    aWriter.StringProperty("QoS",
+                           ProfilerString8View::WrapNullTerminatedString(QoS));
+#endif
+  }
+
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+#ifndef GP_PLAT_arm64_darwin
+    schema.AddKeyFormat("CPU Id", MS::Format::Integer);
+    schema.SetTableLabel("Awake - CPU Id = {marker.data.CPU Id}");
+#endif
+#ifdef GP_OS_windows
+    schema.AddKeyLabelFormat("priority", "Relative Thread Priority",
+                             MS::Format::Integer);
+    schema.AddKeyLabelFormat("absPriority", "Absolute Thread Priority",
+                             MS::Format::Integer);
+#endif
+#ifdef GP_OS_darwin
+    schema.AddKeyLabelFormat("QoS", "Quality of Service", MS::Format::String);
+#endif
+    return schema;
+  }
+};
+
+}  // namespace geckoprofiler::markers
+
+void profiler_mark_thread_asleep() {
+  PROFILER_MARKER_UNTYPED("Awake", OTHER, MarkerTiming::IntervalEnd());
+}
+
 void profiler_thread_sleep() {
+  profiler_mark_thread_asleep();
   ThreadRegistration::WithOnThreadRef(
       [](ThreadRegistration::OnThreadRef aOnThreadRef) {
         aOnThreadRef.UnlockedConstReaderAndAtomicRWRef().SetSleeping();
       });
 }
 
+void profiler_mark_thread_awake() {
+  if (!profiler_thread_is_being_profiled_for_markers()) {
+    return;
+  }
+
+  int64_t cpuId = 0;
+#if defined(GP_OS_windows)
+  cpuId = GetCurrentProcessorNumber();
+#elif defined(GP_OS_darwin)
+#  ifdef GP_PLAT_amd64_darwin
+  unsigned int eax, ebx, ecx, edx;
+  __cpuid_count(1, 0, eax, ebx, ecx, edx);
+  // Check if we have an APIC.
+  if ((edx & (1 << 9))) {
+    // APIC ID is bits 24-31 of EBX
+    cpuId = ebx >> 24;
+  }
+#  endif
+#else
+  cpuId = sched_getcpu();
+#endif
+
+#if defined(GP_OS_windows)
+  LONG priority;
+  static const auto get_thread_information_fn =
+      reinterpret_cast<decltype(&::GetThreadInformation)>(::GetProcAddress(
+          ::GetModuleHandle(L"Kernel32.dll"), "GetThreadInformation"));
+
+  if (!get_thread_information_fn ||
+      !get_thread_information_fn(GetCurrentThread(), ThreadAbsoluteCpuPriority,
+                                 &priority, sizeof(priority))) {
+    priority = 0;
+  }
+#endif
+  PROFILER_MARKER("Awake", OTHER, MarkerTiming::IntervalStart(), CPUAwakeMarker,
+                  cpuId
+#if defined(GP_OS_darwin)
+                  ,
+                  qos_class_self()
+#endif
+#if defined(GP_OS_windows)
+                      ,
+                  priority, GetThreadPriority(GetCurrentThread())
+#endif
+  );
+}
+
 void profiler_thread_wake() {
+  profiler_mark_thread_awake();
   ThreadRegistration::WithOnThreadRef(
       [](ThreadRegistration::OnThreadRef aOnThreadRef) {
         aOnThreadRef.UnlockedConstReaderAndAtomicRWRef().SetAwake();

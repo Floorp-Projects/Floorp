@@ -92,6 +92,11 @@ uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
                                       uint32_t aFeatureCount,
                                       bool aIsStartup = false);
 
+// Add the begin/end 'Awake' markers for the thread.
+void profiler_mark_thread_awake();
+
+void profiler_mark_thread_asleep();
+
 bool profiler_get_profile_json(
     SpliceableChunkedJSONWriter& aSpliceableChunkedJSONWriter,
     double aSinceTime, bool aIsShuttingDown,
