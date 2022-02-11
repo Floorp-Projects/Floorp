@@ -31,6 +31,7 @@ class AutoLockGC;
 class AutoLockGCBgAlloc;
 class AutoLockHelperThreadState;
 class FinalizationRegistryObject;
+class FinalizationRecordObject;
 class FinalizationQueueObject;
 class VerifyPreTracer;
 class WeakRefObject;
@@ -486,6 +487,8 @@ class GCRuntime {
   bool registerWithFinalizationRegistry(JSContext* cx, HandleObject target,
                                         HandleObject record);
   void queueFinalizationRegistryForCleanup(FinalizationQueueObject* queue);
+  void nukeFinalizationRecordWrapper(JSObject* wrapper,
+                                     FinalizationRecordObject* record);
 
   void setFullCompartmentChecks(bool enable);
 

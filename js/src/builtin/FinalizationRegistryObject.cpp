@@ -43,6 +43,7 @@ FinalizationRecordObject* FinalizationRecordObject::create(
 
   record->initReservedSlot(QueueSlot, ObjectValue(*queue));
   record->initReservedSlot(HeldValueSlot, heldValue);
+  record->initReservedSlot(InMapSlot, BooleanValue(false));
 
   return record;
 }
@@ -59,15 +60,25 @@ Value FinalizationRecordObject::heldValue() const {
   return getReservedSlot(HeldValueSlot);
 }
 
-bool FinalizationRecordObject::isActive() const {
+bool FinalizationRecordObject::isRegistered() const {
   MOZ_ASSERT_IF(!queue(), heldValue().isUndefined());
   return queue();
+}
+
+bool FinalizationRecordObject::isInRecordMap() const {
+  return getReservedSlot(InMapSlot).toBoolean();
+}
+
+void FinalizationRecordObject::setInRecordMap(bool newValue) {
+  MOZ_ASSERT(newValue != isInRecordMap());
+  setReservedSlot(InMapSlot, BooleanValue(newValue));
 }
 
 void FinalizationRecordObject::clear() {
   MOZ_ASSERT(queue());
   setReservedSlot(QueueSlot, UndefinedValue());
   setReservedSlot(HeldValueSlot, UndefinedValue());
+  MOZ_ASSERT(!isRegistered());
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -570,7 +581,7 @@ bool FinalizationRegistryObject::unregister(JSContext* cx, unsigned argc,
 /* static */
 bool FinalizationRegistryObject::unregisterRecord(
     FinalizationRecordObject* record) {
-  if (!record->isActive()) {
+  if (!record->isRegistered()) {
     return false;
   }
 
@@ -823,7 +834,7 @@ bool FinalizationQueueObject::cleanupQueuedRecords(
     FinalizationRecordObject* record = records->popCopy();
 
     // Skip over records that have been unregistered.
-    if (!record->isActive()) {
+    if (!record->isRegistered()) {
       continue;
     }
 
