@@ -69,8 +69,8 @@ class WebGPUParent final : public PWebGPUParent {
                                            const nsTArray<RawId>& aBufferIds,
                                            ExternalImageId aExternalId);
   ipc::IPCResult RecvSwapChainPresent(wr::ExternalImageId aExternalId,
-                                      RawId aTextureId,
-                                      RawId aCommandEncoderId);
+                                      RawId aTextureId, RawId aCommandEncoderId,
+                                      SwapChainPresentResolver&& aResolver);
   ipc::IPCResult RecvSwapChainDestroy(wr::ExternalImageId aExternalId);
 
   ipc::IPCResult RecvDeviceAction(RawId aSelf, const ipc::ByteBuf& aByteBuf);

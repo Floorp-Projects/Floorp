@@ -82,6 +82,14 @@ uint32_t Accessible::StartOffset() {
   return hyperText ? hyperText->GetChildOffset(this) : 0;
 }
 
+uint32_t Accessible::EndOffset() {
+  MOZ_ASSERT(IsLink(), "EndOffset is called on not hyper link!");
+  Accessible* parent = Parent();
+  HyperTextAccessibleBase* hyperText =
+      parent ? parent->AsHyperTextBase() : nullptr;
+  return hyperText ? (hyperText->GetChildOffset(this) + 1) : 0;
+}
+
 GroupPos Accessible::GroupPosition() {
   GroupPos groupPos;
 
