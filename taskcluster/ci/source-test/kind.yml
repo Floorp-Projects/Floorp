@@ -31,7 +31,6 @@ jobs-from:
     - shadow-scheduler.yml
     - taskgraph.yml
     - webidl.yml
-    - webcompat.yml
     - wpt-manifest.yml
     - wpt-metadata.yml
 

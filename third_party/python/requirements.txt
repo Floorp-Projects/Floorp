@@ -447,11 +447,10 @@ typing-extensions==3.10.0.0 \
     #   aiohttp
     #   importlib-metadata
     #   yarl
-urllib3==1.26.0 \
-    --hash=sha256:4849f132941d68144df0a3785ccc4fe423430ba5db0108d045c8cadbc90f517a \
-    --hash=sha256:bad31cb622ceee0ab46c4c884cf61957def0ff2e644de0a7a093678844c9ccac
+urllib3==1.25.9 \
+    --hash=sha256:3018294ebefce6572a474f0604c2021e33b3fd8006ecd11d62107a5d2a963527 \
+    --hash=sha256:88206b0eb87e6d677d424843ac5209e3fb9d0190d0ee169599165ec25e9d9115
     # via
-    #   -r requirements-mach-vendor-python.in
     #   requests
     #   requests-unixsocket
     #   sentry-sdk
