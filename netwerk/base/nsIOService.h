@@ -261,7 +261,9 @@ class nsIOService final : public nsIIOService,
   nsTHashSet<nsCString> mObserverTopicForSocketProcess;
   // Some noticications (e.g., NS_XPCOM_SHUTDOWN_OBSERVER_ID) are triggered in
   // socket process, so we should not send the notifications again.
-  nsTHashSet<nsCString> mSocketProcessTopicBlackList;
+  nsTHashSet<nsCString> mSocketProcessTopicBlockedList;
+  // Used to store the topics that are already observed by IOService.
+  nsTHashSet<nsCString> mIOServiceTopicList;
 
   nsCOMPtr<nsIObserverService> mObserverService;
 
