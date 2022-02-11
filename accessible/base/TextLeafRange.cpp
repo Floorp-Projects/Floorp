@@ -204,6 +204,47 @@ static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
  */
 enum WordBreakClass { eWbcSpace = 0, eWbcPunct, eWbcOther };
 
+static WordBreakClass GetWordBreakClass(char16_t aChar) {
+  // Based on IsSelectionInlineWhitespace and IsSelectionNewline in
+  // layout/generic/nsTextFrame.cpp.
+  const char16_t kCharNbsp = 0xA0;
+  switch (aChar) {
+    case ' ':
+    case kCharNbsp:
+    case '\t':
+    case '\f':
+    case '\n':
+    case '\r':
+      return eWbcSpace;
+    default:
+      break;
+  }
+  // Based on ClusterIterator::IsPunctuation in
+  // layout/generic/nsTextFrame.cpp.
+  uint8_t cat = unicode::GetGeneralCategory(aChar);
+  switch (cat) {
+    case HB_UNICODE_GENERAL_CATEGORY_CONNECT_PUNCTUATION: /* Pc */
+      if (aChar == '_' &&
+          !StaticPrefs::layout_word_select_stop_at_underscore()) {
+        return eWbcOther;
+      }
+      [[fallthrough]];
+    case HB_UNICODE_GENERAL_CATEGORY_DASH_PUNCTUATION:    /* Pd */
+    case HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION:   /* Pe */
+    case HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION:   /* Pf */
+    case HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION: /* Pi */
+    case HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION:   /* Po */
+    case HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION:    /* Ps */
+    case HB_UNICODE_GENERAL_CATEGORY_CURRENCY_SYMBOL:     /* Sc */
+    case HB_UNICODE_GENERAL_CATEGORY_MATH_SYMBOL:         /* Sm */
+    case HB_UNICODE_GENERAL_CATEGORY_OTHER_SYMBOL:        /* So */
+      return eWbcPunct;
+    default:
+      break;
+  }
+  return eWbcOther;
+}
+
 /**
  * Words can cross Accessibles. To work out whether we're at the start of a
  * word, we might have to check the previous leaf. This class handles querying
@@ -214,7 +255,7 @@ class PrevWordBreakClassWalker {
   PrevWordBreakClassWalker(Accessible* aAcc, const nsAString& aText,
                            int32_t aOffset)
       : mAcc(aAcc), mText(aText), mOffset(aOffset) {
-    mClass = GetClass(mText.CharAt(mOffset));
+    mClass = GetWordBreakClass(mText.CharAt(mOffset));
   }
 
   WordBreakClass CurClass() { return mClass; }
@@ -224,7 +265,7 @@ class PrevWordBreakClassWalker {
       if (!PrevChar()) {
         return Nothing();
       }
-      WordBreakClass curClass = GetClass(mText.CharAt(mOffset));
+      WordBreakClass curClass = GetWordBreakClass(mText.CharAt(mOffset));
       if (curClass != mClass) {
         mClass = curClass;
         return Some(curClass);
@@ -239,7 +280,7 @@ class PrevWordBreakClassWalker {
       // There are no characters before us.
       return true;
     }
-    WordBreakClass curClass = GetClass(mText.CharAt(mOffset));
+    WordBreakClass curClass = GetWordBreakClass(mText.CharAt(mOffset));
     // We wanted to peek at the previous character, not really move to it.
     ++mOffset;
     return curClass != mClass;
@@ -263,47 +304,6 @@ class PrevWordBreakClassWalker {
     mAcc->AppendTextTo(mText);
     mOffset = static_cast<int32_t>(mText.Length()) - 1;
     return true;
-  }
-
-  WordBreakClass GetClass(char16_t aChar) {
-    // Based on IsSelectionInlineWhitespace and IsSelectionNewline in
-    // layout/generic/nsTextFrame.cpp.
-    const char16_t kCharNbsp = 0xA0;
-    switch (aChar) {
-      case ' ':
-      case kCharNbsp:
-      case '\t':
-      case '\f':
-      case '\n':
-      case '\r':
-        return eWbcSpace;
-      default:
-        break;
-    }
-    // Based on ClusterIterator::IsPunctuation in
-    // layout/generic/nsTextFrame.cpp.
-    uint8_t cat = unicode::GetGeneralCategory(aChar);
-    switch (cat) {
-      case HB_UNICODE_GENERAL_CATEGORY_CONNECT_PUNCTUATION: /* Pc */
-        if (aChar == '_' &&
-            !StaticPrefs::layout_word_select_stop_at_underscore()) {
-          return eWbcOther;
-        }
-        [[fallthrough]];
-      case HB_UNICODE_GENERAL_CATEGORY_DASH_PUNCTUATION:    /* Pd */
-      case HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION:   /* Pe */
-      case HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION:   /* Pf */
-      case HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION: /* Pi */
-      case HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION:   /* Po */
-      case HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION:    /* Ps */
-      case HB_UNICODE_GENERAL_CATEGORY_CURRENCY_SYMBOL:     /* Sc */
-      case HB_UNICODE_GENERAL_CATEGORY_MATH_SYMBOL:         /* Sm */
-      case HB_UNICODE_GENERAL_CATEGORY_OTHER_SYMBOL:        /* So */
-        return eWbcPunct;
-      default:
-        break;
-    }
-    return eWbcOther;
   }
 
   Accessible* mAcc;
