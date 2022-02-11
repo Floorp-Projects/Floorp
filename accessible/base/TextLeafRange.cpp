@@ -752,6 +752,9 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
   if (aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_END) {
     return FindLineEnd(aDirection, aIncludeOrigin);
   }
+  if (aBoundaryType == nsIAccessibleText::BOUNDARY_WORD_END) {
+    return FindWordEnd(aDirection, aIncludeOrigin);
+  }
   if (aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_START &&
       aIncludeOrigin && aDirection == eDirPrevious && IsEmptyLastLine()) {
     // If we're at an empty line at the end of an Accessible,  we don't want to
@@ -865,6 +868,68 @@ TextLeafPoint TextLeafPoint::FindLineEnd(nsDirection aDirection,
     return prevChar;
   }
   return lineStart;
+}
+
+bool TextLeafPoint::IsSpace() const {
+  return GetWordBreakClass(GetChar()) == eWbcSpace;
+}
+
+TextLeafPoint TextLeafPoint::FindWordEnd(nsDirection aDirection,
+                                         bool aIncludeOrigin) const {
+  char16_t origChar = GetChar();
+  const bool origIsSpace = GetWordBreakClass(origChar) == eWbcSpace;
+  bool prevIsSpace = false;
+  if (aDirection == eDirPrevious || (aIncludeOrigin && origIsSpace) ||
+      !origChar) {
+    TextLeafPoint prev =
+        FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious, false);
+    if (aDirection == eDirPrevious && prev == *this) {
+      return *this;  // Can't go any further.
+    }
+    prevIsSpace = prev.IsSpace();
+    if (aIncludeOrigin && origIsSpace && !prevIsSpace) {
+      // The origin is space, but the previous character is not. This means
+      // we're at the end of a word.
+      return *this;
+    }
+  }
+  TextLeafPoint boundary = *this;
+  if (aDirection == eDirPrevious && !prevIsSpace) {
+    // If there isn't space immediately before us, first find the start of the
+    // previous word.
+    boundary = FindBoundary(nsIAccessibleText::BOUNDARY_WORD_START,
+                            eDirPrevious, aIncludeOrigin);
+  } else if (aDirection == eDirNext &&
+             (origIsSpace || (!origChar && prevIsSpace))) {
+    // We're within the space at the end of the word. Skip over the space. We
+    // can do that by searching for the next word start.
+    boundary =
+        FindBoundary(nsIAccessibleText::BOUNDARY_WORD_START, eDirNext, false);
+    if (boundary.IsSpace()) {
+      // The next word starts with a space. This can happen if there is a space
+      // after or at the start of a block element.
+      return boundary;
+    }
+  }
+  if (aDirection == eDirNext) {
+    boundary = boundary.FindBoundary(nsIAccessibleText::BOUNDARY_WORD_START,
+                                     eDirNext, aIncludeOrigin);
+  }
+  // At this point, boundary is either the start of a word or at a space. A
+  // word ends at the beginning of consecutive space. Therefore, skip back to
+  // the start of any space before us.
+  TextLeafPoint prev = boundary;
+  for (;;) {
+    prev = prev.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
+    if (prev == boundary) {
+      break;  // Can't go any further.
+    }
+    if (!prev.IsSpace()) {
+      break;
+    }
+    boundary = prev;
+  }
+  return boundary;
 }
 
 already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributesLocalAcc(
