@@ -103,6 +103,7 @@ SOURCES += [
     "ImageUtils.cpp",
     "OffscreenCanvasDisplayHelper.cpp",  # See bug 1745384
     "OffscreenCanvasRenderingContext2D.cpp",  # See bug 1745384
+    "SourceSurfaceWebgl.cpp",
 ]
 
 # WebGL Sources
