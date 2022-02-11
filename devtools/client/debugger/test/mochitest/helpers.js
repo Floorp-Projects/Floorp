@@ -826,9 +826,25 @@ async function reload(dbg, ...sources) {
  * @static
  */
 async function navigate(dbg, url, ...sources) {
-  await navigateTo(EXAMPLE_URL + url);
+  return navigateToAbsoluteURL(dbg, EXAMPLE_URL + url, ...sources);
+}
+
+/**
+ * Navigates the debuggee to another absolute url.
+ *
+ * @memberof mochitest/actions
+ * @param {Object} dbg
+ * @param {String} url
+ * @param {Array} sources
+ * @return {Promise}
+ * @static
+ */
+async function navigateToAbsoluteURL(dbg, url, ...sources) {
+  await navigateTo(url);
   return waitForSources(dbg, ...sources);
 }
+
+
 
 function getFirstBreakpointColumn(dbg, { line, sourceId }) {
   const { getSource, getFirstBreakpointPosition } = dbg.selectors;

@@ -178,6 +178,17 @@ class HyperTextAccessibleBase {
   std::pair<bool, int32_t> TransformOffset(Accessible* aDescendant,
                                            int32_t aOffset,
                                            bool aIsEndOffset) const;
+
+  /**
+   * Helper method for TextBefore/At/AfterOffset.
+   * If BOUNDARY_LINE_END was requested and the origin is itself a line end
+   * boundary, we must use the line which ends at the origin. We must do
+   * similarly for BOUNDARY_WORD_END. This method adjusts the origin
+   * accordingly.
+   */
+  void AdjustOriginIfEndBoundary(TextLeafPoint& aOrigin,
+                                 AccessibleTextBoundary aBoundaryType,
+                                 bool aAtOffset = false) const;
 };
 
 }  // namespace mozilla::a11y
