@@ -916,9 +916,8 @@ void MediaTrackGraphImpl::ReevaluateInputDevice() {
   MOZ_ASSERT(OnGraphThread());
   bool needToSwitch = false;
 
-  if (CurrentDriver()->AsAudioCallbackDriver()) {
-    AudioCallbackDriver* audioCallbackDriver =
-        CurrentDriver()->AsAudioCallbackDriver();
+  if (AudioCallbackDriver* audioCallbackDriver =
+          CurrentDriver()->AsAudioCallbackDriver()) {
     if (audioCallbackDriver->InputChannelCount() != AudioInputChannelCount()) {
       LOG(LogLevel::Debug,
           ("%p: ReevaluateInputDevice: %u-channel AudioCallbackDriver %p is "
