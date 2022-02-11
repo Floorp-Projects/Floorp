@@ -38,13 +38,13 @@ async function testRemoveValue(ruleView, store, doc, prop) {
   info("Test removing disabled declaration by clearing its property value.");
   let onTrackChange;
 
-  onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   info("Disable the declaration");
   await togglePropStatus(ruleView, prop);
   info("Wait for change to be tracked");
   await onTrackChange;
 
-  onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   info("Remove the disabled declaration by clearing its value");
   await setProperty(ruleView, prop, null);
   await onTrackChange;
@@ -59,12 +59,12 @@ async function testToggle(ruleView, store, doc, prop) {
   );
   let onTrackChange;
 
-  onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   info("Disable the declaration");
   await togglePropStatus(ruleView, prop);
   await onTrackChange;
 
-  onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   info("Re-enable the declaration");
   await togglePropStatus(ruleView, prop);
   await onTrackChange;
@@ -79,12 +79,12 @@ async function testRemoveName(ruleView, store, doc, prop) {
   info("Test removing disabled declaration by clearing its property name.");
   let onTrackChange;
 
-  onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   info("Disable the declaration");
   await togglePropStatus(ruleView, prop);
   await onTrackChange;
 
-  onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   info("Remove the disabled declaration by clearing its name");
   await removeProperty(ruleView, prop);
   await onTrackChange;
