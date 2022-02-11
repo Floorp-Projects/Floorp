@@ -8,6 +8,18 @@
  */
 
 add_task(async function() {
+  if (
+    Services.prefs.getBoolPref(
+      "devtools.netmonitor.features.newEditAndResend",
+      true
+    )
+  ) {
+    ok(
+      true,
+      "Skip this test when pref is true, because this panel won't be default when that is the case."
+    );
+    return;
+  }
   const { tab, monitor } = await initNetMonitor(POST_RAW_URL, {
     requestCount: 1,
   });
@@ -42,5 +54,5 @@ add_task(async function() {
   // Compares if the requests are the same.
   ok(originalRequest.url === selectedRequest.url, "Both requests are the same");
 
-  return teardown(monitor);
+  await teardown(monitor);
 });
