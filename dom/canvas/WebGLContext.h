@@ -479,7 +479,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   // Present to compositor
  private:
-  bool PresentInto(gl::SwapChain& swapChain, WebGLFramebuffer* srcFb = nullptr);
+  bool PresentInto(gl::SwapChain& swapChain);
   bool PresentIntoXR(gl::SwapChain& swapChain, const gl::MozFramebuffer& xrFb);
 
  public:
@@ -1213,8 +1213,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
       GLenum incompleteFbError = LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION);
   void DoColorMask(uint8_t bitmask) const;
   void BlitBackbufferToCurDriverFB(
-      WebGLFramebuffer* const srcAsWebglFb = nullptr,
-      const gl::MozFramebuffer* const srcAsMozFb = nullptr) const;
+      const gl::MozFramebuffer* const source = nullptr) const;
   bool BindDefaultFBForRead();
 
   // --
