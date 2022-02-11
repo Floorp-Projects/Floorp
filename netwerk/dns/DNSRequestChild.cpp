@@ -54,6 +54,7 @@ class ChildDNSRecord : public nsIDNSAddrRecord {
   double mTrrFetchDuration = 0;
   double mTrrFetchDurationNetworkOnly = 0;
   bool mIsTRR = false;
+  bool mResolvedInSocketProcess = false;
   uint32_t mEffectiveTRRMode = 0;
   uint32_t mTTL = 0;
 };
@@ -66,6 +67,9 @@ ChildDNSRecord::ChildDNSRecord(const DNSRecord& reply, uint16_t flags)
   mTrrFetchDuration = reply.trrFetchDuration();
   mTrrFetchDurationNetworkOnly = reply.trrFetchDurationNetworkOnly();
   mIsTRR = reply.isTRR();
+  // When ChildDNSRecord is created in parent process, we know this is case that
+  // DNS resolution is done in socket process.
+  mResolvedInSocketProcess = XRE_IsParentProcess();
   mEffectiveTRRMode = reply.effectiveTRRMode();
 
   // A shame IPDL gives us no way to grab ownership of array: so copy it.
@@ -91,6 +95,12 @@ ChildDNSRecord::GetCanonicalName(nsACString& result) {
 NS_IMETHODIMP
 ChildDNSRecord::IsTRR(bool* retval) {
   *retval = mIsTRR;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ChildDNSRecord::ResolvedInSocketProcess(bool* retval) {
+  *retval = mResolvedInSocketProcess;
   return NS_OK;
 }
 
