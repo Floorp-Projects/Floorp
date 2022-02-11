@@ -2353,8 +2353,6 @@ var gBrowserInit = {
       NewTabPagePreloading.maybeCreatePreloadedBrowser(window);
     });
 
-    scheduleIdleTask(reportRemoteSubframesEnabledTelemetry);
-
     scheduleIdleTask(() => {
       gGfxUtils.init();
     });
@@ -9921,16 +9919,3 @@ var ConfirmationHint = {
     }
   },
 };
-
-function reportRemoteSubframesEnabledTelemetry() {
-  let categoryLabel = gFissionBrowser ? "Enabled" : "Disabled";
-  if (gFissionBrowser == Services.appinfo.fissionAutostart) {
-    categoryLabel += "ByAutostart";
-  } else {
-    categoryLabel += "ByUser";
-  }
-
-  Services.telemetry
-    .getHistogramById("WINDOW_REMOTE_SUBFRAMES_ENABLED_STATUS")
-    .add(categoryLabel);
-}
