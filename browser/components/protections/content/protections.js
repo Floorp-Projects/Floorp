@@ -482,7 +482,10 @@ document.addEventListener("DOMContentLoaded", e => {
   const proxyUI = document.querySelector(".proxy-card");
   proxyUI.dataset.enabled = proxyEnabled;
 
-  const VPNEnabled = RPMGetBoolPref("browser.vpn_promo.enabled", true);
+  const VPNEnabled = RPMGetBoolPref(
+    "browser.contentblocking.report.vpn.enabled",
+    true
+  );
   if (VPNEnabled) {
     const vpnCard = new VPNCard(document);
     vpnCard.init();
