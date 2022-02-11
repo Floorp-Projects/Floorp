@@ -364,7 +364,7 @@ class VendorManifest(MozbuildObject):
                 path = mozpath.join(
                     self.manifest["vendoring"]["vendor-directory"], path
                 )
-            return path
+            return os.path.abspath(path)
 
         if "update-actions" not in self.manifest["vendoring"]:
             return
