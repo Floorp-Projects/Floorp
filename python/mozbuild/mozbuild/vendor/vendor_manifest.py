@@ -348,7 +348,7 @@ class VendorManifest(MozbuildObject):
         assert len(replacements) == replaced
 
         with open(yaml_file, "wb") as f:
-            f.write(("".join(yaml) + "\n").encode("utf-8"))
+            f.write(("".join(yaml)).encode("utf-8"))
 
     def update_files(self, revision, yaml_file):
         def get_full_path(path, support_cwd=False):
