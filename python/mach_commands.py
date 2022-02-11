@@ -318,7 +318,12 @@ def _run_python_test(command_context, test, jobs, verbose):
     env["PYTHONDONTWRITEBYTECODE"] = "1"
 
     result = subprocess.run(
-        cmd, env=env, stdout=subprocess.PIPE, universal_newlines=True, encoding="UTF-8"
+        cmd,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
+        encoding="UTF-8",
     )
 
     return_code = result.returncode
@@ -338,6 +343,7 @@ def _run_python_test(command_context, test, jobs, verbose):
         _log(line)
 
     if not file_displayed_test:
+        return_code = 1
         _log(
             "TEST-UNEXPECTED-FAIL | No test output (missing mozunit.main() "
             "call?): {}".format(test["path"])
