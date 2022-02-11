@@ -20,9 +20,28 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const browserUniqueIds = new WeakMap();
 
 var TabManager = {
-  get gBrowser() {
-    const window = Services.wm.getMostRecentWindow("navigator:browser");
-    return this.getTabBrowser(window);
+  /**
+   * Retrieve all the browser elements from tabs as contained in open windows.
+   *
+   * @return {Array<xul:browser>}
+   *     All the found <xul:browser>s. Will return an empty array if
+   *     no windows and tabs can be found.
+   */
+  browsers() {
+    const browsers = [];
+
+    for (const win of this.windows) {
+      const tabBrowser = this.getTabBrowser(win);
+
+      if (tabBrowser && tabBrowser.tabs) {
+        const contentBrowsers = tabBrowser.tabs.map(tab => {
+          return this.getBrowserForTab(tab);
+        });
+        browsers.push(...contentBrowsers);
+      }
+    }
+
+    return browsers;
   },
 
   get windows() {
@@ -103,7 +122,10 @@ var TabManager = {
   },
 
   addTab({ userContextId }) {
-    const tab = this.gBrowser.addTab("about:blank", {
+    const window = Services.wm.getMostRecentWindow(null);
+    const tabBrowser = this.getTabBrowser(window);
+
+    const tab = tabBrowser.addTab("about:blank", {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       userContextId,
     });
@@ -191,10 +213,12 @@ var TabManager = {
   },
 
   removeTab(tab) {
-    this.gBrowser.removeTab(tab);
+    const tabBrowser = this.getTabBrowser(tab.ownerGlobal);
+    tabBrowser.removeTab(tab);
   },
 
   selectTab(tab) {
-    this.gBrowser.selectedTab = tab;
+    const tabBrowser = this.getTabBrowser(tab.ownerGlobal);
+    tabBrowser.selectedTab = tab;
   },
 };
