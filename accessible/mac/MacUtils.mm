@@ -65,6 +65,10 @@ NSString* GetAccAttr(mozAccessible* aNativeAccessible, nsAtom* aAttrName) {
   Accessible* acc = [aNativeAccessible geckoAccessible];
   RefPtr<AccAttributes> attributes = acc->Attributes();
 
+  if (!attributes) {
+    return nil;
+  }
+
   attributes->GetAttribute(aAttrName, result);
 
   if (!result.IsEmpty()) {
