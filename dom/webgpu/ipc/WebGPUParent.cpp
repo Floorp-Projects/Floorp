@@ -551,6 +551,7 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
 struct PresentRequest {
   const ffi::WGPUGlobal* mContext;
   RefPtr<PresentationData> mData;
+  WebGPUParent::SwapChainPresentResolver mResolver;
 };
 
 static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
@@ -580,25 +581,29 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
         dst += data->mTargetPitch;
         ptr += data->mSourcePitch;
       }
+      req->mResolver(true);
     } else {
       NS_WARNING("WebGPU present skipped: the swapchain is resized!");
+      req->mResolver(false);
     }
     wgpu_server_buffer_unmap(req->mContext, bufferId);
   } else {
     // TODO: better handle errors
     NS_WARNING("WebGPU frame mapping failed!");
+    req->mResolver(false);
   }
   // free yourself
   delete req;
 }
 
 ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
-    wr::ExternalImageId aExternalId, RawId aTextureId,
-    RawId aCommandEncoderId) {
+    wr::ExternalImageId aExternalId, RawId aTextureId, RawId aCommandEncoderId,
+    SwapChainPresentResolver&& aResolver) {
   // step 0: get the data associated with the swapchain
   const auto& lookup = mCanvasMap.find(AsUint64(aExternalId));
   if (lookup == mCanvasMap.end()) {
     NS_WARNING("WebGPU presenting on a destroyed swap chain!");
+    aResolver(false);
     return IPC_OK();
   }
   RefPtr<PresentationData> data = lookup->second.get();
@@ -626,6 +631,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
       ffi::wgpu_server_device_create_buffer(mContext, data->mDeviceId, &desc,
                                             bufferId, error.ToFFI());
       if (ForwardError(data->mDeviceId, error)) {
+        aResolver(false);
         return IPC_OK();
       }
     } else {
@@ -641,6 +647,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
           ("RecvSwapChainPresent with buffer %" PRIu64 "\n", bufferId));
   if (!bufferId) {
     // TODO: add a warning - no buffer are available!
+    aResolver(false);
     return IPC_OK();
   }
 
@@ -652,6 +659,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
                                            &encoderDesc, aCommandEncoderId,
                                            error.ToFFI());
     if (ForwardError(data->mDeviceId, error)) {
+      aResolver(false);
       return IPC_OK();
     }
   }
@@ -681,6 +689,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
     ffi::wgpu_server_encoder_finish(mContext, aCommandEncoderId, &commandDesc,
                                     error.ToFFI());
     if (ForwardError(data->mDeviceId, error)) {
+      aResolver(false);
       return IPC_OK();
     }
   }
@@ -690,6 +699,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
     ffi::wgpu_server_queue_submit(mContext, data->mQueueId, &aCommandEncoderId,
                                   1, error.ToFFI());
     if (ForwardError(data->mDeviceId, error)) {
+      aResolver(false);
       return IPC_OK();
     }
   }
@@ -702,6 +712,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
   auto* const presentRequest = new PresentRequest{
       mContext,
       data,
+      std::move(aResolver),
   };
 
   ffi::WGPUBufferMapOperation mapOperation = {

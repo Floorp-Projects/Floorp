@@ -221,8 +221,8 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
           imageKey = imageKeyMaybe.value();
         } else {
           imageKey = canvasContext->CreateImageKey(aManager);
-          aResources.AddPrivateExternalImage(canvasContext->mExternalImageId,
-                                             imageKey, imageDesc);
+          aResources.AddPrivateExternalImage(
+              canvasContext->mExternalImageId.ref(), imageKey, imageDesc);
         }
 
         {
@@ -244,6 +244,11 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
 
         canvasData->mDescriptor = imageDesc;
         canvasData->mImageKey = imageKey;
+
+        // When the caller calls webgpu::Queue::Submit, we request a frame
+        // readback to update the external image, but when we create the
+        // WebRenderLocalCanvasData for the first time, it hasn't had a chance
+        // to yet, so we need to explicitly do so here.
         canvasData->RequestFrameReadback();
         break;
       }
