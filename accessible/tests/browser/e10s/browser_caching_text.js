@@ -57,6 +57,25 @@ ef gh</pre>
         [0, 5, "ef gh", 6, 11],
         [6, 11, "", 11, 11],
       ]);
+      if (isWinNoCache) {
+        todo(
+          false,
+          "Cache disabled, so RemoteAccessible doesn't support BOUNDARY_LINE_END on Windows"
+        );
+      } else {
+        testTextAtOffset(acc, BOUNDARY_LINE_END, [
+          [0, 5, "ab cd", 0, 5],
+          [6, 11, "\nef gh", 5, 11],
+        ]);
+        testTextBeforeOffset(acc, BOUNDARY_LINE_END, [
+          [0, 5, "", 0, 0],
+          [6, 11, "ab cd", 0, 5],
+        ]);
+        testTextAfterOffset(acc, BOUNDARY_LINE_END, [
+          [0, 5, "\nef gh", 5, 11],
+          [6, 11, "", 11, 11],
+        ]);
+      }
       testTextAtOffset(acc, BOUNDARY_WORD_START, [
         [0, 2, "ab ", 0, 3],
         [3, 5, "cd\n", 3, 6],
