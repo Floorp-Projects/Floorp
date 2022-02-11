@@ -18,6 +18,7 @@
 #include "nsXPCOM.h"
 #include "nsIProxiedProtocolHandler.h"
 #include "nsIProxyInfo.h"
+#include "nsDNSService2.h"
 #include "nsEscape.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
@@ -195,6 +196,8 @@ static const char kProfileDoChange[] = "profile-do-change";
 // Necko buffer defaults
 uint32_t nsIOService::gDefaultSegmentSize = 4096;
 uint32_t nsIOService::gDefaultSegmentCount = 24;
+
+uint32_t nsIOService::sSocketProcessCrashedCount = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -509,6 +512,12 @@ class SocketProcessListenerProxy : public SocketProcessHost::Listener {
   }
 };
 
+// static
+bool nsIOService::TooManySocketProcessCrash() {
+  return sSocketProcessCrashedCount >=
+         StaticPrefs::network_max_socket_process_failed_count();
+}
+
 nsresult nsIOService::LaunchSocketProcess() {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -585,6 +594,11 @@ bool nsIOService::UseSocketProcess(bool aCheckAgain) {
   sUseSocketProcess = false;
 
   if (PR_GetEnv("MOZ_DISABLE_SOCKET_PROCESS")) {
+    return sUseSocketProcess;
+  }
+
+  if (TooManySocketProcessCrash()) {
+    LOG(("TooManySocketProcessCrash"));
     return sUseSocketProcess;
   }
 
@@ -677,6 +691,11 @@ void nsIOService::OnProcessUnexpectedShutdown(SocketProcessHost* aHost) {
 
   LOG(("nsIOService::OnProcessUnexpectedShutdown\n"));
   DestroySocketProcess();
+  sSocketProcessCrashedCount++;
+  if (TooManySocketProcessCrash()) {
+    sUseSocketProcessChecked = false;
+    DNSServiceWrapper::SwitchToBackupDNSService();
+  }
 
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
@@ -2043,6 +2062,22 @@ nsIOService::GetSocketProcessLaunched(bool* aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
 
   *aResult = SocketProcessReady();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIOService::GetSocketProcessId(uint64_t* aPid) {
+  NS_ENSURE_ARG_POINTER(aPid);
+
+  *aPid = 0;
+  if (!mSocketProcess) {
+    return NS_OK;
+  }
+
+  if (SocketProcessParent* actor = mSocketProcess->GetActor()) {
+    *aPid = (uint64_t)actor->OtherPid();
+  }
+
   return NS_OK;
 }
 
