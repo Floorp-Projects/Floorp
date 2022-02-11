@@ -150,3 +150,184 @@ add_task(async function test_window_scrollTo() {
     ]);
   });
 });
+
+add_task(async function test_scroll_pushState() {
+  await Interactions.reset();
+  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+    await SpecialPowers.spawn(browser, [], function() {
+      const heading = content.document.getElementById("heading");
+      heading.focus();
+    });
+
+    await EventUtils.synthesizeKey("KEY_ArrowDown");
+
+    await waitForScrollEvent(browser);
+
+    await ContentTask.spawn(browser, TEST_URL2, url => {
+      content.history.pushState(null, "", url);
+    });
+
+    await EventUtils.synthesizeKey("KEY_ArrowDown");
+
+    await waitForScrollEvent(browser);
+
+    BrowserTestUtils.loadURI(browser, "about:blank");
+    await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
+
+    await assertDatabaseValues([
+      {
+        url: TEST_URL,
+        scrollingDistanceIsGreaterThan: 0,
+        scrollingTimeIsGreaterThan: 0,
+      },
+      {
+        url: TEST_URL2,
+        scrollingDistanceIsGreaterThan: 0,
+        scrollingTimeIsGreaterThan: 0,
+      },
+    ]);
+  });
+});
+
+add_task(async function test_scroll_pushState_sameUrl() {
+  await Interactions.reset();
+  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+    await SpecialPowers.spawn(browser, [], function() {
+      const heading = content.document.getElementById("heading");
+      heading.focus();
+    });
+
+    await EventUtils.synthesizeKey("KEY_ArrowDown");
+
+    await waitForScrollEvent(browser);
+
+    await ContentTask.spawn(browser, TEST_URL, url => {
+      content.history.pushState(null, "", url);
+    });
+
+    // As the page hasn't changed there will be no interactions saved yet.
+    await assertDatabaseValues([]);
+
+    await EventUtils.synthesizeKey("KEY_ArrowDown");
+
+    await waitForScrollEvent(browser);
+
+    BrowserTestUtils.loadURI(browser, "about:blank");
+    await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
+
+    await assertDatabaseValues([
+      {
+        url: TEST_URL,
+        scrollingDistanceIsGreaterThan: 0,
+        scrollingTimeIsGreaterThan: 0,
+      },
+    ]);
+  });
+});
+
+add_task(async function test_scroll_replaceState() {
+  await Interactions.reset();
+  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+    await SpecialPowers.spawn(browser, [], function() {
+      const heading = content.document.getElementById("heading");
+      heading.focus();
+    });
+
+    await EventUtils.synthesizeKey("KEY_ArrowDown");
+
+    await waitForScrollEvent(browser);
+
+    await ContentTask.spawn(browser, TEST_URL2, url => {
+      content.history.replaceState(null, "", url);
+    });
+
+    await EventUtils.synthesizeKey("KEY_ArrowDown");
+
+    await waitForScrollEvent(browser);
+
+    BrowserTestUtils.loadURI(browser, "about:blank");
+    await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
+
+    await assertDatabaseValues([
+      {
+        url: TEST_URL,
+        scrollingDistanceIsGreaterThan: 0,
+        scrollingTimeIsGreaterThan: 0,
+      },
+      {
+        url: TEST_URL2,
+        scrollingDistanceIsGreaterThan: 0,
+        scrollingTimeIsGreaterThan: 0,
+      },
+    ]);
+  });
+});
+
+add_task(async function test_scroll_replaceState_sameUrl() {
+  await Interactions.reset();
+  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+    await SpecialPowers.spawn(browser, [], function() {
+      const heading = content.document.getElementById("heading");
+      heading.focus();
+    });
+
+    await EventUtils.synthesizeKey("KEY_ArrowDown");
+
+    await waitForScrollEvent(browser);
+
+    await ContentTask.spawn(browser, TEST_URL, url => {
+      content.history.replaceState(null, "", url);
+    });
+
+    // As the page hasn't changed there will be no interactions saved yet.
+    await assertDatabaseValues([]);
+
+    await EventUtils.synthesizeKey("KEY_ArrowDown");
+
+    await waitForScrollEvent(browser);
+
+    BrowserTestUtils.loadURI(browser, "about:blank");
+    await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
+
+    await assertDatabaseValues([
+      {
+        url: TEST_URL,
+        scrollingDistanceIsGreaterThan: 0,
+        scrollingTimeIsGreaterThan: 0,
+      },
+    ]);
+  });
+});
+
+add_task(async function test_scroll_hashchange() {
+  await Interactions.reset();
+  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+    await SpecialPowers.spawn(browser, [], function() {
+      const heading = content.document.getElementById("heading");
+      heading.focus();
+    });
+
+    await EventUtils.synthesizeKey("KEY_ArrowDown");
+
+    await waitForScrollEvent(browser);
+
+    await ContentTask.spawn(browser, TEST_URL + "#foo", url => {
+      content.history.replaceState(null, "", url);
+    });
+
+    await EventUtils.synthesizeKey("KEY_ArrowDown");
+
+    await waitForScrollEvent(browser);
+
+    BrowserTestUtils.loadURI(browser, "about:blank");
+    await BrowserTestUtils.browserLoaded(browser, false, "about:blank");
+
+    await assertDatabaseValues([
+      {
+        url: TEST_URL,
+        scrollingDistanceIsGreaterThan: 0,
+        scrollingTimeIsGreaterThan: 0,
+      },
+    ]);
+  });
+});
