@@ -58,6 +58,10 @@ class PlainObject;
 class PropertyIteratorObject;
 class RegExpStatics;
 
+namespace gc {
+class FinalizationRegistryGlobalData;
+}  // namespace gc
+
 // Fixed slot capacities for PlainObjects. The global has a cached Shape for
 // PlainObject with default prototype for each of these values.
 enum class PlainObjectSlotsKind {
@@ -215,10 +219,12 @@ class GlobalObjectData {
   // self-hosting stencil.
   HeapPtr<ScriptSourceObject*> selfHostingScriptSource;
 
+  UniquePtr<gc::FinalizationRegistryGlobalData> finalizationRegistryData;
+
   // Whether the |globalThis| property has been resolved on the global object.
   bool globalThisResolved = false;
 
-  void trace(JSTracer* trc);
+  void trace(JSTracer* trc, GlobalObject* global);
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               JS::ClassInfo* info) const;
 
@@ -283,7 +289,9 @@ class GlobalObject : public NativeObject {
   }
   GlobalScope& emptyGlobalScope() const;
 
-  void traceData(JSTracer* trc) { data().trace(trc); }
+  void traceData(JSTracer* trc, GlobalObject* global) {
+    data().trace(trc, global);
+  }
   void releaseData(JSFreeOp* fop);
 
   void addSizeOfData(mozilla::MallocSizeOf mallocSizeOf,
@@ -1115,6 +1123,11 @@ class GlobalObject : public NativeObject {
   // Returns an object that represents the realm, used by embedder.
   static JSObject* getOrCreateRealmKeyObject(JSContext* cx,
                                              Handle<GlobalObject*> global);
+
+  gc::FinalizationRegistryGlobalData* getOrCreateFinalizationRegistryData();
+  gc::FinalizationRegistryGlobalData* maybeFinalizationRegistryData() const {
+    return data().finalizationRegistryData.get();
+  }
 
   static size_t offsetOfGlobalDataSlot() {
     return getFixedSlotOffset(GLOBAL_DATA_SLOT);
