@@ -32,6 +32,10 @@ add_task(async function test_http() {
     true
   );
   await checkBlockedPage(SUPPORT_FILES_PATH + EXCEPTION_PAGE, false);
+
+  await checkBlockedPage(SUPPORT_FILES_PATH + "301.sjs", true);
+
+  await checkBlockedPage(SUPPORT_FILES_PATH + "302.sjs", true);
 });
 
 add_task(async function test_http_mixed_case() {
