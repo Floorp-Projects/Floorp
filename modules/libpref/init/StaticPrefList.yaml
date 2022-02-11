@@ -9487,6 +9487,14 @@
   value: 8
   mirror: always
 
+# The duration, in milliseconds, of decoded audio to keep around in the
+# AudioSink ring-buffer. New decoding operations are started when this limit is
+# reached. The total size of the ring-buffer is slightly bigger than this.
+- name: media.audio.audiosink.threshold_ms
+  type: AtomicFloat
+  value: 1000.0
+  mirror: always
+
 
 #---------------------------------------------------------------------------
 # Prefs starting with "midi."
