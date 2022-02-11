@@ -587,6 +587,10 @@ class MacroAssemblerX86Shared : public Assembler {
     moveSimd128Int(src, dest);
     return dest;
   }
+  FloatRegister selectDestIfAVX(FloatRegister src, FloatRegister dest) {
+    MOZ_ASSERT(src.isSimd128() && dest.isSimd128());
+    return HasAVX() ? dest : src;
+  }
   void loadUnalignedSimd128Int(const Address& src, FloatRegister dest) {
     vmovdqu(Operand(src), dest);
   }

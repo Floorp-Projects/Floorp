@@ -578,6 +578,11 @@ class BaseAssembler : public GenericAssembler {
     threeByteOpSimd("vpmaddubsw", VEX_PD, OP3_PMADDUBSW_VdqWdq, ESCAPE_38, src1,
                     src0, dst);
   }
+  void vpmaddubsw_mr(const void* address, XMMRegisterID src0,
+                     XMMRegisterID dst) {
+    threeByteOpSimd("vpmaddubsw", VEX_PD, OP3_PMADDUBSW_VdqWdq, ESCAPE_38,
+                    address, src0, dst);
+  }
 
   void vpaddb_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
     twoByteOpSimd("vpaddb", VEX_PD, OP2_PADDB_VdqWdq, src1, src0, dst);
@@ -5328,7 +5333,8 @@ class BaseAssembler : public GenericAssembler {
 
     spew("%-11s$%d, %s, %s", name, int32_t(imm), XMMRegName(src),
          XMMRegName(dst));
-    m_formatter.twoByteOpVex(VEX_PD, opcode, (RegisterID)dst, src,
+    // For shift instructions, destination is stored in vvvv field.
+    m_formatter.twoByteOpVex(VEX_PD, opcode, (RegisterID)src, dst,
                              (int)shiftKind);
     m_formatter.immediate8u(imm);
   }
