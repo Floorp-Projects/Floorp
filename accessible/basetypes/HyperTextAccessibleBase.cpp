@@ -217,7 +217,8 @@ std::pair<bool, int32_t> HyperTextAccessibleBase::TransformOffset(
 }
 
 void HyperTextAccessibleBase::AdjustOriginIfEndBoundary(
-    TextLeafPoint& aOrigin, AccessibleTextBoundary aBoundaryType) const {
+    TextLeafPoint& aOrigin, AccessibleTextBoundary aBoundaryType,
+    bool aAtOffset) const {
   if (aBoundaryType != nsIAccessibleText::BOUNDARY_LINE_END &&
       aBoundaryType != nsIAccessibleText::BOUNDARY_WORD_END) {
     return;
@@ -231,6 +232,26 @@ void HyperTextAccessibleBase::AdjustOriginIfEndBoundary(
     }
     aOrigin =
         actualOrig.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
+  } else {  // BOUNDARY_WORD_END
+    if (aAtOffset) {
+      // For TextAtOffset with BOUNDARY_WORD_END, we follow WebKitGtk here and
+      // return the word which ends after the origin if the origin is a word end
+      // boundary. Also, if the caret is at the end of a line, our tests expect
+      // the word after the caret, not the word before. The reason for that
+      // is a mystery lost to history. We can do that by explicitly using the
+      // actualized caret without adjusting for end of line.
+      aOrigin = actualOrig;
+      return;
+    }
+    if (!actualOrig.IsSpace()) {
+      return;
+    }
+    TextLeafPoint prevChar =
+        actualOrig.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
+    if (prevChar != actualOrig && !prevChar.IsSpace()) {
+      // aOrigin is a word end boundary.
+      aOrigin = prevChar;
+    }
   }
 }
 
@@ -255,6 +276,7 @@ void HyperTextAccessibleBase::TextBeforeOffset(
       }
       break;
     case nsIAccessibleText::BOUNDARY_WORD_START:
+    case nsIAccessibleText::BOUNDARY_WORD_END:
     case nsIAccessibleText::BOUNDARY_LINE_START:
     case nsIAccessibleText::BOUNDARY_LINE_END:
       TextLeafPoint orig;
@@ -312,12 +334,13 @@ void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
       CharAt(adjustedOffset, aText, aStartOffset, aEndOffset);
       break;
     case nsIAccessibleText::BOUNDARY_WORD_START:
+    case nsIAccessibleText::BOUNDARY_WORD_END:
     case nsIAccessibleText::BOUNDARY_LINE_START:
     case nsIAccessibleText::BOUNDARY_LINE_END:
       TextLeafPoint start, end;
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
         start = TextLeafPoint::GetCaret(Acc());
-        AdjustOriginIfEndBoundary(start, aBoundaryType);
+        AdjustOriginIfEndBoundary(start, aBoundaryType, /* aAtOffset */ true);
         end = start;
       } else {
         start = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset));
@@ -333,7 +356,8 @@ void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
           end = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset),
                                 /* aDescendToEnd */ true);
         } else {
-          AdjustOriginIfEndBoundary(start, aBoundaryType);
+          AdjustOriginIfEndBoundary(start, aBoundaryType,
+                                    /* aAtOffset */ true);
           end = start;
         }
       }
@@ -375,6 +399,7 @@ void HyperTextAccessibleBase::TextAfterOffset(
       break;
     }
     case nsIAccessibleText::BOUNDARY_WORD_START:
+    case nsIAccessibleText::BOUNDARY_WORD_END:
     case nsIAccessibleText::BOUNDARY_LINE_START:
     case nsIAccessibleText::BOUNDARY_LINE_END:
       TextLeafPoint orig;
