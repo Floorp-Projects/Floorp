@@ -41,13 +41,13 @@ add_task(async function() {
 
   ok(getState().diffing, "We should be in diffing view");
 
-  await waitUntilAction(store, actions.TAKE_CENSUS_DIFF_END);
+  await waitForDispatch(store, actions.TAKE_CENSUS_DIFF_END);
   ok(true, "Received TAKE_CENSUS_DIFF_END action");
 
   ok(true, "Dispatch clearSnapshots action");
   const deleteEvents = Promise.all([
-    waitUntilAction(store, actions.DELETE_SNAPSHOTS_START),
-    waitUntilAction(store, actions.DELETE_SNAPSHOTS_END),
+    waitForDispatch(store, actions.DELETE_SNAPSHOTS_START),
+    waitForDispatch(store, actions.DELETE_SNAPSHOTS_END),
   ]);
   dispatch(clearSnapshots(heapWorker));
   await deleteEvents;

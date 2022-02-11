@@ -30,7 +30,7 @@ add_task(async function() {
   editor.input.value = ".test";
 
   // Expect two "TRACK_CHANGE" actions: one for removal, one for addition.
-  const onTrackChange = waitUntilAction(store, "TRACK_CHANGE", 2);
+  const onTrackChange = waitForDispatch(store, "TRACK_CHANGE", 2);
   const onRuleViewChanged = once(ruleView, "ruleview-changed");
   info("Pressing Enter key to commit the change");
   EventUtils.synthesizeKey("KEY_Enter");
