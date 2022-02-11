@@ -16,6 +16,7 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsPrintfCString.h"
+#include "Tracing.h"
 
 namespace mozilla {
 
@@ -216,6 +217,11 @@ uint32_t AudioSink::PopFrames(AudioDataValue* aBuffer, uint32_t aFrames,
   if (aAudioThreadChanged) {
     mProcessedSPSCQueue->ResetThreadIds();
   }
+
+  TRACE_COMMENT("AudioSink::PopFrames", "%u frames (ringbuffer: %u/%u)",
+                aFrames, SampleToFrame(mProcessedSPSCQueue->AvailableRead()),
+                SampleToFrame(mProcessedSPSCQueue->Capacity()));
+
   const int samplesToPop = static_cast<int>(aFrames * mOutputChannels);
   const int samplesRead = mProcessedSPSCQueue->Dequeue(aBuffer, samplesToPop);
   MOZ_ASSERT(samplesRead % mOutputChannels == 0);
@@ -225,6 +231,8 @@ uint32_t AudioSink::PopFrames(AudioDataValue* aBuffer, uint32_t aFrames,
       SINK_LOG("Last PopFrames -- Source ended.");
     } else {
       NS_WARNING("Underrun when popping samples from audiosink ring buffer.");
+      TRACE_COMMENT("AudioSink::PopFrames", "Underrun %u frames missing",
+                    SampleToFrame(samplesToPop - samplesRead));
     }
     // silence the rest
     PodZero(aBuffer + samplesRead, samplesToPop - samplesRead);
@@ -392,6 +400,7 @@ void AudioSink::NotifyAudioNeeded() {
       } else {
         silenceData = CreateAudioFromBuffer(std::move(silenceBuffer), data);
       }
+      TRACE("Pushing silence");
       PushProcessedAudio(silenceData);
     }
 
@@ -421,6 +430,10 @@ uint32_t AudioSink::PushProcessedAudio(AudioData* aData) {
     return 0;
   }
   int framesToEnqueue = static_cast<int>(aData->Frames() * aData->mChannels);
+  TRACE_COMMENT("AudioSink::PushProcessedAudio", "%u frames (%u/%u)",
+                framesToEnqueue,
+                SampleToFrame(mProcessedSPSCQueue->AvailableWrite()),
+                SampleToFrame(mProcessedSPSCQueue->Capacity()));
   DebugOnly<int> rv =
       mProcessedSPSCQueue->Enqueue(aData->Data().Elements(), framesToEnqueue);
   NS_WARNING_ASSERTION(
