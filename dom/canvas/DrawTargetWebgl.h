@@ -34,6 +34,7 @@ class DrawTargetSkia;
 class DrawTargetWebgl;
 class PathSkia;
 class SourceSurfaceSkia;
+class SourceSurfaceWebgl;
 
 class TextureHandle;
 class SharedTexture;
@@ -55,6 +56,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   friend class SharedTextureHandle;
   friend class StandaloneTexture;
   friend class TextureHandle;
+  friend class SourceSurfaceWebgl;
 
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetWebgl, override)
@@ -117,6 +119,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     RefPtr<WebGLUniformLocationJS> mImageProgramSwizzle;
     RefPtr<WebGLUniformLocationJS> mImageProgramSampler;
 
+    // Scratch framebuffer used to wrap textures for miscellaneous utility ops.
+    RefPtr<WebGLFramebufferJS> mScratchFramebuffer;
+
     uint32_t mMaxTextureSize = 0;
 
     CompositionOp mLastCompositionOp = CompositionOp::OP_SOURCE;
@@ -159,10 +164,26 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     }
     bool SetTarget(DrawTargetWebgl* aDT);
 
+    // Reset the current target.
     void ClearTarget() { mCurrentTarget = nullptr; }
-    void ClearLastTexture() { mLastTexture = nullptr; }
+    // Reset the last used texture to force binding next use.
+    void ClearLastTexture();
 
     bool SupportsPattern(const Pattern& aPattern);
+
+    void InitTexParameters(WebGLTextureJS* aTex);
+
+    bool ReadInto(uint8_t* aDstData, int32_t aDstStride, SurfaceFormat aFormat,
+                  const IntRect& aBounds, TextureHandle* aHandle = nullptr);
+    already_AddRefed<DataSourceSurface> ReadSnapshot(
+        TextureHandle* aHandle = nullptr);
+    already_AddRefed<TextureHandle> WrapSnapshot(const IntSize& aSize,
+                                                 SurfaceFormat aFormat,
+                                                 RefPtr<WebGLTextureJS> aTex);
+    already_AddRefed<TextureHandle> CopySnapshot();
+
+    already_AddRefed<WebGLTextureJS> GetCompatibleSnapshot(
+        SourceSurface* aSurface);
 
     bool DrawRectAccel(const Rect& aRect, const Pattern& aPattern,
                        const DrawOptions& aOptions,
@@ -357,6 +378,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   void MarkSkiaChanged(const DrawOptions& aOptions);
 
   bool ReadInto(uint8_t* aDstData, int32_t aDstStride);
+  already_AddRefed<DataSourceSurface> ReadSnapshot();
+  already_AddRefed<TextureHandle> CopySnapshot();
+  already_AddRefed<SourceSurfaceWebgl> ClearSnapshot();
 
   bool CreateFramebuffer();
 };
