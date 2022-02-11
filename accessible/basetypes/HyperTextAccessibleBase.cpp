@@ -216,6 +216,24 @@ std::pair<bool, int32_t> HyperTextAccessibleBase::TransformOffset(
   return {false, aIsEndOffset ? static_cast<int32_t>(CharacterCount()) : 0};
 }
 
+void HyperTextAccessibleBase::AdjustOriginIfEndBoundary(
+    TextLeafPoint& aOrigin, AccessibleTextBoundary aBoundaryType) const {
+  if (aBoundaryType != nsIAccessibleText::BOUNDARY_LINE_END &&
+      aBoundaryType != nsIAccessibleText::BOUNDARY_WORD_END) {
+    return;
+  }
+  TextLeafPoint actualOrig =
+      aOrigin.IsCaret() ? aOrigin.ActualizeCaret(/* aAdjustAtEndOfLine */ false)
+                        : aOrigin;
+  if (aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_END) {
+    if (!actualOrig.IsLineFeedChar()) {
+      return;
+    }
+    aOrigin =
+        actualOrig.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
+  }
+}
+
 void HyperTextAccessibleBase::TextBeforeOffset(
     int32_t aOffset, AccessibleTextBoundary aBoundaryType,
     int32_t* aStartOffset, int32_t* aEndOffset, nsAString& aText) {
@@ -238,12 +256,14 @@ void HyperTextAccessibleBase::TextBeforeOffset(
       break;
     case nsIAccessibleText::BOUNDARY_WORD_START:
     case nsIAccessibleText::BOUNDARY_LINE_START:
+    case nsIAccessibleText::BOUNDARY_LINE_END:
       TextLeafPoint orig;
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
         orig = TextLeafPoint::GetCaret(Acc());
       } else {
         orig = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset));
       }
+      AdjustOriginIfEndBoundary(orig, aBoundaryType);
       TextLeafPoint end = orig.FindBoundary(aBoundaryType, eDirPrevious,
                                             /* aIncludeOrigin */ true);
       bool ok;
@@ -293,11 +313,14 @@ void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
       break;
     case nsIAccessibleText::BOUNDARY_WORD_START:
     case nsIAccessibleText::BOUNDARY_LINE_START:
-      TextLeafPoint origStart, end;
+    case nsIAccessibleText::BOUNDARY_LINE_END:
+      TextLeafPoint start, end;
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
-        origStart = end = TextLeafPoint::GetCaret(Acc());
+        start = TextLeafPoint::GetCaret(Acc());
+        AdjustOriginIfEndBoundary(start, aBoundaryType);
+        end = start;
       } else {
-        origStart = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset));
+        start = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset));
         Accessible* childAcc = GetChildAtOffset(adjustedOffset);
         if (childAcc && childAcc->IsHyperText()) {
           // We're searching for boundaries enclosing an embedded object.
@@ -310,11 +333,12 @@ void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
           end = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset),
                                 /* aDescendToEnd */ true);
         } else {
-          end = origStart;
+          AdjustOriginIfEndBoundary(start, aBoundaryType);
+          end = start;
         }
       }
-      TextLeafPoint start = origStart.FindBoundary(aBoundaryType, eDirPrevious,
-                                                   /* aIncludeOrigin */ true);
+      start = start.FindBoundary(aBoundaryType, eDirPrevious,
+                                 /* aIncludeOrigin */ true);
       bool ok;
       std::tie(ok, *aStartOffset) = TransformOffset(start.mAcc, start.mOffset,
                                                     /* aIsEndOffset */ false);
@@ -352,6 +376,7 @@ void HyperTextAccessibleBase::TextAfterOffset(
     }
     case nsIAccessibleText::BOUNDARY_WORD_START:
     case nsIAccessibleText::BOUNDARY_LINE_START:
+    case nsIAccessibleText::BOUNDARY_LINE_END:
       TextLeafPoint orig;
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
         orig = TextLeafPoint::GetCaret(Acc());
@@ -359,6 +384,7 @@ void HyperTextAccessibleBase::TextAfterOffset(
         orig = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset),
                                /* aDescendToEnd */ true);
       }
+      AdjustOriginIfEndBoundary(orig, aBoundaryType);
       TextLeafPoint start = orig.FindBoundary(aBoundaryType, eDirNext);
       bool ok;
       std::tie(ok, *aStartOffset) = TransformOffset(start.mAcc, start.mOffset,
