@@ -939,14 +939,14 @@ void MediaTrackGraphImpl::ReevaluateInputDevice() {
            GetAudioInputTypeString(AudioInputDevicePreference())));
       needToSwitch = true;
     }
-  } else {
+  } else if (Switching() && NextDriver()->AsAudioCallbackDriver()) {
     // We're already in the process of switching to a audio callback driver,
     // which will happen at the next iteration.
     // However, maybe it's not the correct number of channels. Re-query the
     // correct channel amount at this time.
-    MOZ_ASSERT(Switching());
     needToSwitch = true;
   }
+
   if (needToSwitch) {
     AudioCallbackDriver* newDriver = new AudioCallbackDriver(
         this, CurrentDriver(), mSampleRate, AudioOutputChannelCount(),
