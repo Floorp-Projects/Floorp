@@ -31,9 +31,6 @@ extern LazyLogModule gMediaDecoderLog;
 // The amount of audio frames that is used to fuzz rounding errors.
 static const int64_t AUDIO_FUZZ_FRAMES = 1;
 
-// Amount of audio frames we will be processing ahead of use
-static const int32_t LOW_AUDIO_USECS = 300000;
-
 using media::TimeUnit;
 
 AudioSink::AudioSink(AbstractThread* aThread,
@@ -55,9 +52,11 @@ AudioSink::AudioSink(AbstractThread* aThread,
           StaticPrefs::dom_media_silence_duration_for_audibility()),
       mIsAudioDataAudible(false),
       mProcessedQueueFinished(false),
-      mAudioQueue(aAudioQueue) {
+      mAudioQueue(aAudioQueue),
+      mProcessedQueueThresholdMS(
+          StaticPrefs::media_audio_audiosink_threshold_ms()) {
   // Twice the limit that trigger a refill.
-  float capacitySeconds = LOW_AUDIO_USECS / 1000. / 1000. * 2;
+  float capacitySeconds = mProcessedQueueThresholdMS / 1000.f * 2;
   mProcessedSPSCQueue =
       MakeUnique<SPSCQueue<AudioDataValue>>(static_cast<uint32_t>(
           capacitySeconds * static_cast<float>(mOutputChannels * mOutputRate)));
@@ -276,10 +275,9 @@ void AudioSink::OnAudioPushed(const RefPtr<AudioData>& aSample) {
   NotifyAudioNeeded();
 }
 
-uint32_t AudioSink::AudioQueuedInRingBufferUs() const {
+uint32_t AudioSink::AudioQueuedInRingBufferMS() const {
   return static_cast<uint32_t>(
-      1000. * 1000 * SampleToFrame(mProcessedSPSCQueue->AvailableRead()) /
-      mOutputRate);
+      1000 * SampleToFrame(mProcessedSPSCQueue->AvailableRead()) / mOutputRate);
 }
 
 uint32_t AudioSink::SampleToFrame(uint32_t aSamples) const {
@@ -291,7 +289,7 @@ void AudioSink::NotifyAudioNeeded() {
              "Not called from the owner's thread");
 
   while (mAudioQueue.GetSize() &&
-         AudioQueuedInRingBufferUs() < LOW_AUDIO_USECS) {
+         AudioQueuedInRingBufferMS() < mProcessedQueueThresholdMS) {
     // Check if there's room in our ring buffer.
     if (mAudioQueue.PeekFront()->Frames() >
         SampleToFrame(mProcessedSPSCQueue->AvailableWrite())) {
