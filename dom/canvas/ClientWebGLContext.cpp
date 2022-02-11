@@ -368,13 +368,7 @@ void ClientWebGLContext::Run(Args&&... args) const {
 
 // ------------------------- Composition, etc -------------------------
 
-void ClientWebGLContext::OnBeforePaintTransaction() {
-  const RefPtr<layers::ImageBridgeChild> imageBridge =
-      layers::ImageBridgeChild::GetSingleton();
-
-  const auto texType = layers::TexTypeForWebgl(imageBridge);
-  Present(nullptr, texType);
-}
+void ClientWebGLContext::OnBeforePaintTransaction() { Present(nullptr); }
 
 void ClientWebGLContext::EndComposition() {
   // Mark ourselves as no longer invalidated.
@@ -382,6 +376,15 @@ void ClientWebGLContext::EndComposition() {
 }
 
 // -
+
+void ClientWebGLContext::Present(WebGLFramebufferJS* const xrFb,
+                                 const bool webvr) {
+  const RefPtr<layers::ImageBridgeChild> imageBridge =
+      layers::ImageBridgeChild::GetSingleton();
+
+  const auto texType = layers::TexTypeForWebgl(imageBridge);
+  Present(xrFb, texType, webvr);
+}
 
 void ClientWebGLContext::Present(WebGLFramebufferJS* const xrFb,
                                  const layers::TextureType type,
