@@ -1508,6 +1508,14 @@ bool CanvasRenderingContext2D::TryBasicTarget(
   return true;
 }
 
+Maybe<SurfaceDescriptor> CanvasRenderingContext2D::GetFrontBuffer(
+    WebGLFramebufferJS*, const bool webvr) {
+  if (mBufferProvider) {
+    return mBufferProvider->GetFrontBuffer();
+  }
+  return Nothing();
+}
+
 PresShell* CanvasRenderingContext2D::GetPresShell() {
   if (mCanvasElement) {
     return mCanvasElement->OwnerDoc()->GetPresShell();
