@@ -353,9 +353,11 @@ bool DrawTargetWebgl::SharedContext::SetTarget(DrawTargetWebgl* aDT) {
   }
   if (aDT != mCurrentTarget) {
     mCurrentTarget = aDT;
-    mWebgl->BindFramebuffer(LOCAL_GL_FRAMEBUFFER, aDT->mFramebuffer);
-    mViewportSize = aDT->GetSize();
-    mWebgl->Viewport(0, 0, mViewportSize.width, mViewportSize.height);
+    if (aDT) {
+      mWebgl->BindFramebuffer(LOCAL_GL_FRAMEBUFFER, aDT->mFramebuffer);
+      mViewportSize = aDT->GetSize();
+      mWebgl->Viewport(0, 0, mViewportSize.width, mViewportSize.height);
+    }
   }
   return true;
 }
@@ -646,6 +648,34 @@ already_AddRefed<DataSourceSurface> DrawTargetWebgl::ReadSnapshot() {
 
 already_AddRefed<SourceSurface> DrawTargetWebgl::GetBackingSurface() {
   return Snapshot();
+}
+
+bool DrawTargetWebgl::CopySnapshotTo(DrawTarget* aDT) {
+  if (mSkiaValid ||
+      (mSnapshot &&
+       (mSnapshot->GetType() != SurfaceType::WEBGL ||
+        static_cast<SourceSurfaceWebgl*>(mSnapshot.get())->HasReadData()))) {
+    // There's already a snapshot that is mapped, so just use that.
+    return false;
+  }
+  // Otherwise, attempt to read the data directly into the DT pixels to avoid an
+  // intermediate copy.
+  if (!PrepareContext(false)) {
+    return false;
+  }
+  uint8_t* data = nullptr;
+  IntSize size;
+  int32_t stride = 0;
+  SurfaceFormat format = SurfaceFormat::UNKNOWN;
+  if (!aDT->LockBits(&data, &size, &stride, &format)) {
+    return false;
+  }
+  bool result =
+      mSharedContext->ReadInto(data, stride, format,
+                               {0, 0, std::min(size.width, mSize.width),
+                                std::min(size.height, mSize.height)});
+  aDT->ReleaseBits(data);
+  return result;
 }
 
 void DrawTargetWebgl::MarkChanged() {
@@ -1476,7 +1506,7 @@ void StandaloneTexture::Cleanup(DrawTargetWebgl::SharedContext& aContext) {
 
 // Prune a given texture handle and release its associated resources.
 void DrawTargetWebgl::SharedContext::PruneTextureHandle(
-    RefPtr<TextureHandle> aHandle) {
+    const RefPtr<TextureHandle>& aHandle) {
   // Invalidate the handle so nothing will subsequently use its contents.
   aHandle->Invalidate();
   // If the handle has an associated SourceSurface, unlink it.
@@ -2383,10 +2413,26 @@ void DrawTargetWebgl::Flush() {
   if (!mWebglValid) {
     FlushFromSkia();
   }
-  // Present the WebGL context.
-  mSharedContext->mWebgl->OnBeforePaintTransaction();
+  // Present the current WebGL framebuffer.
+  mSharedContext->mWebgl->Present(mFramebuffer);
+  // Ensure WebGL state gets reset properly next draw.
+  mSharedContext->ClearTarget();
+  mSharedContext->ClearLastTexture();
   //  Ensure we're not somehow using more than the allowed texture memory.
   mSharedContext->PruneTextureMemory();
+}
+
+Maybe<layers::SurfaceDescriptor> DrawTargetWebgl::GetFrontBuffer() {
+  if (mSkiaValid && !mSkiaLayer) {
+    // If there is a valid Skia snapshot that doesn't depend on WebGL state,
+    // then don't try to upload it back to WebGL, as that may incur further
+    // readbacks during compositing.
+    return Nothing();
+  }
+  if (!mWebglValid) {
+    FlushFromSkia();
+  }
+  return mSharedContext->mWebgl->GetFrontBuffer(mFramebuffer);
 }
 
 already_AddRefed<DrawTarget> DrawTargetWebgl::CreateSimilarDrawTarget(

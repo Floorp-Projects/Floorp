@@ -10,8 +10,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/WeakPtr.h"
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
 class DrawTargetWebgl;
 class TextureHandle;
@@ -38,6 +37,8 @@ class SourceSurfaceWebgl : public DataSourceSurface {
   bool Map(MapType aType, MappedSurface* aMappedSurface) override;
   void Unmap() override;
 
+  bool HasReadData() const { return !!mData; }
+
  private:
   friend class DrawTargetWebgl;
 
@@ -63,7 +64,6 @@ class SourceSurfaceWebgl : public DataSourceSurface {
   RefPtr<TextureHandle> mHandle;
 };
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx
 
 #endif /* MOZILLA_GFX_SOURCESURFACEWEBGL_H_ */
