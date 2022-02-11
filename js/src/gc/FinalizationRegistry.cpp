@@ -8,6 +8,8 @@
  * Finalization registry GC implementation.
  */
 
+#include "gc/FinalizationRegistry.h"
+
 #include "builtin/FinalizationRegistryObject.h"
 #include "gc/GCRuntime.h"
 #include "gc/Zone.h"
@@ -19,14 +21,23 @@
 using namespace js;
 using namespace js::gc;
 
-bool GCRuntime::addFinalizationRegistry(JSContext* cx,
-                                        FinalizationRegistryObject* registry) {
-  if (!cx->zone()->finalizationRegistries().put(registry)) {
+FinalizationRegistryZone::FinalizationRegistryZone(Zone* zone)
+    : zone(zone), registries(zone), recordMap(zone) {}
+
+bool GCRuntime::addFinalizationRegistry(
+    JSContext* cx, Handle<FinalizationRegistryObject*> registry) {
+  if (!cx->zone()->ensureFinalizationRegistryZone() ||
+      !cx->zone()->finalizationRegistryZone()->addRegistry(registry)) {
     ReportOutOfMemory(cx);
     return false;
   }
 
   return true;
+}
+
+bool FinalizationRegistryZone::addRegistry(
+    Handle<FinalizationRegistryObject*> registry) {
+  return registries.put(registry);
 }
 
 bool GCRuntime::registerWithFinalizationRegistry(JSContext* cx,
@@ -37,30 +48,44 @@ bool GCRuntime::registerWithFinalizationRegistry(JSContext* cx,
       UncheckedUnwrapWithoutExpose(record)->is<FinalizationRecordObject>());
   MOZ_ASSERT(target->compartment() == record->compartment());
 
-  auto& map = target->zone()->finalizationRecordMap();
-  auto ptr = map.lookupForAdd(target);
-  if (!ptr) {
-    if (!map.add(ptr, target, FinalizationRecordVector(target->zone()))) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-  }
-  if (!ptr->value().append(record)) {
+  Zone* zone = cx->zone();
+  if (!zone->ensureFinalizationRegistryZone() ||
+      !zone->finalizationRegistryZone()->addRecord(target, record)) {
     ReportOutOfMemory(cx);
     return false;
   }
+
   return true;
 }
 
+bool FinalizationRegistryZone::addRecord(HandleObject target,
+                                         HandleObject record) {
+  MOZ_ASSERT(target->zone() == zone);
+
+  auto ptr = recordMap.lookupForAdd(target);
+  if (!ptr && !recordMap.add(ptr, target, RecordVector(zone))) {
+    return false;
+  }
+  return ptr->value().append(record);
+}
+
+void FinalizationRegistryZone::clearRecords() { recordMap.clear(); }
+
 void GCRuntime::markFinalizationRegistryRoots(JSTracer* trc) {
+  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
+    FinalizationRegistryZone* frzone = zone->finalizationRegistryZone();
+    if (frzone) {
+      frzone->markRoots(trc);
+    }
+  }
+}
+
+void FinalizationRegistryZone::markRoots(JSTracer* trc) {
   // All finalization records stored in the zone maps are marked as roots.
   // Records can be removed from these maps during sweeping in which case they
   // die in the next collection.
-  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
-    Zone::FinalizationRecordMap& map = zone->finalizationRecordMap();
-    for (Zone::FinalizationRecordMap::Enum e(map); !e.empty(); e.popFront()) {
-      e.front().value().trace(trc);
-    }
+  for (RecordMap::Enum e(recordMap); !e.empty(); e.popFront()) {
+    e.front().value().trace(trc);
   }
 }
 
@@ -76,11 +101,19 @@ static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
 }
 
 void GCRuntime::traceWeakFinalizationRegistryEdges(JSTracer* trc, Zone* zone) {
+  FinalizationRegistryZone* frzone = zone->finalizationRegistryZone();
+  if (frzone) {
+    frzone->traceWeakEdges(trc);
+  }
+}
+
+void FinalizationRegistryZone::traceWeakEdges(JSTracer* trc) {
   // Sweep finalization registry data and queue finalization records for cleanup
   // for any entries whose target is dying and remove them from the map.
 
-  Zone::FinalizationRegistrySet& set = zone->finalizationRegistries();
-  for (Zone::FinalizationRegistrySet::Enum e(set); !e.empty(); e.popFront()) {
+  GCRuntime* gc = &trc->runtime()->gc;
+
+  for (RegistrySet::Enum e(registries); !e.empty(); e.popFront()) {
     auto result = TraceWeakEdge(trc, &e.mutableFront(), "FinalizationRegistry");
     if (result.isDead()) {
       auto* registry =
@@ -92,9 +125,8 @@ void GCRuntime::traceWeakFinalizationRegistryEdges(JSTracer* trc, Zone* zone) {
     }
   }
 
-  Zone::FinalizationRecordMap& map = zone->finalizationRecordMap();
-  for (Zone::FinalizationRecordMap::Enum e(map); !e.empty(); e.popFront()) {
-    FinalizationRecordVector& records = e.front().value();
+  for (RecordMap::Enum e(recordMap); !e.empty(); e.popFront()) {
+    RecordVector& records = e.front().value();
 
     // Update any pointers moved by the GC.
     records.traceWeak(trc);
@@ -114,7 +146,7 @@ void GCRuntime::traceWeakFinalizationRegistryEdges(JSTracer* trc, Zone* zone) {
         FinalizationRecordObject* record = UnwrapFinalizationRecord(obj);
         FinalizationQueueObject* queue = record->queue();
         queue->queueRecordToBeCleanedUp(record);
-        queueFinalizationRegistryForCleanup(queue);
+        gc->queueFinalizationRegistryForCleanup(queue);
       }
       e.removeFront();
     }
