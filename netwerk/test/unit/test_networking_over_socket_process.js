@@ -6,6 +6,9 @@
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 var { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
 let h2Port;
 let trrServer;
@@ -15,6 +18,7 @@ const certOverrideService = Cc[
 ].getService(Ci.nsICertOverrideService);
 
 function setup() {
+  Services.prefs.setIntPref("network.max_socket_process_failed_count", 2);
   trr_test_setup();
 
   let env = Cc["@mozilla.org/process/environment;1"].getService(
@@ -29,6 +33,7 @@ function setup() {
 
 setup();
 registerCleanupFunction(async () => {
+  Services.prefs.clearUserPref("network.max_socket_process_failed_count");
   trr_clear_prefs();
   if (trrServer) {
     await trrServer.stop();
@@ -104,10 +109,10 @@ add_task(async function setupTRRServer() {
   });
 });
 
-async function doTestSimpleRequest() {
+async function doTestSimpleRequest(fromSocketProcess) {
   let { inRecord } = await new TRRDNSListener("test.example.com", "127.0.0.1");
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
-  Assert.ok(inRecord.resolvedInSocketProcess());
+  Assert.equal(inRecord.resolvedInSocketProcess(), fromSocketProcess);
 
   let chan = makeChan(`https://test.example.com/server-timing`);
   let [req] = await channelOpenPromise(chan);
@@ -115,35 +120,49 @@ async function doTestSimpleRequest() {
   Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
 
   let internal = chan.QueryInterface(Ci.nsIHttpChannelInternal);
-  Assert.ok(internal.isLoadedBySocketProcess);
+  Assert.equal(internal.isLoadedBySocketProcess, fromSocketProcess);
 }
 
 // Test if the data is loaded from socket process.
 add_task(async function testSimpleRequest() {
-  await doTestSimpleRequest();
+  await doTestSimpleRequest(true);
 });
 
-add_task(async function testSimpleRequestAfterCrash() {
-  let main = await ChromeUtils.requestProcInfo();
-  let socketProcessId = 0;
-  for (let child of main.children) {
-    info(`child.type=${child.type}, child.pid=${child.pid}`);
-    if (child.type == "socket") {
-      socketProcessId = child.pid;
-    }
-  }
-
-  Assert.ok(socketProcessId != 0);
-
+function killSocketProcess(pid) {
   const ProcessTools = Cc["@mozilla.org/processtools-service;1"].getService(
     Ci.nsIProcessToolsService
   );
+  ProcessTools.kill(pid);
+}
 
-  ProcessTools.kill(socketProcessId);
+// Test if socket process is restarted.
+add_task(async function testSimpleRequestAfterCrash() {
+  let socketProcessId = Services.io.socketProcessId;
+  info(`socket process pid is ${socketProcessId}`);
+  Assert.ok(socketProcessId != 0);
+
+  killSocketProcess(socketProcessId);
+
   info("wait socket process restart...");
   await new Promise(resolve => setTimeout(resolve, 1000));
+  await TestUtils.waitForCondition(() => Services.io.socketProcessLaunched);
 
-  Assert.ok(Services.io.socketProcessLaunched);
+  await doTestSimpleRequest(true);
+});
 
-  await doTestSimpleRequest();
+// Test if data is loaded from parent process.
+add_task(async function testTooManyCrashes() {
+  let socketProcessId = Services.io.socketProcessId;
+  info(`socket process pid is ${socketProcessId}`);
+  Assert.ok(socketProcessId != 0);
+
+  let socketProcessCrashed = false;
+  Services.obs.addObserver(function observe(subject, topic, data) {
+    Services.obs.removeObserver(observe, topic);
+    socketProcessCrashed = true;
+  }, "network:socket-process-crashed");
+
+  killSocketProcess(socketProcessId);
+  await TestUtils.waitForCondition(() => socketProcessCrashed);
+  await doTestSimpleRequest(false);
 });
