@@ -26,6 +26,8 @@ import org.mozilla.fenix.ui.robots.searchScreen
 class CustomTabsTest {
     private lateinit var mockWebServer: MockWebServer
     private val customMenuItem = "TestMenuItem"
+    private val externalLinksPWAPage = "https://mozilla-mobile.github.io/testapp/externalLinks.html"
+    private val loginPage = "https://mozilla-mobile.github.io/testapp/loginForm"
 
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule()
@@ -51,6 +53,59 @@ class CustomTabsTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+    }
+
+    @SmokeTest
+    @Test
+    fun customTabsOpenExternalLinkTest() {
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                externalLinksPWAPage.toUri().toString(),
+                customMenuItem
+            )
+        )
+
+        customTabScreen {
+            waitForPageToLoad()
+            clickLinkMatchingText("External link")
+            waitForPageToLoad()
+            verifyCustomTabToolbarTitle("Google")
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun customTabsSaveLoginTest() {
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                loginPage.toUri().toString(),
+                customMenuItem
+            )
+        )
+
+        customTabScreen {
+            waitForPageToLoad()
+            fillAndSubmitLoginCredentials("mozilla", "firefox")
+        }
+
+        browserScreen {
+            verifySaveLoginPromptIsDisplayed()
+            saveLoginFromPrompt("Save")
+        }
+
+        openAppFromExternalLink(loginPage)
+
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.openSavedLogins {
+            verifySecurityPromptForLogins()
+            tapSetupLater()
+            verifySavedLoginFromPrompt("mozilla")
+        }
     }
 
     @SmokeTest

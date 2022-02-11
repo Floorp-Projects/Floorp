@@ -11,6 +11,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiSelector
 import junit.framework.TestCase.assertTrue
 import org.mozilla.fenix.R
@@ -84,6 +85,48 @@ class CustomTabRobot {
         copyText.click()
     }
 
+    fun fillAndSubmitLoginCredentials(userName: String, password: String) {
+        var currentTries = 0
+        while (currentTries++ < 3) {
+            try {
+                mDevice.waitForIdle(waitingTime)
+                userNameTextBox.setText(userName)
+                passwordTextBox.setText(password)
+                submitLoginButton.click()
+                mDevice.waitForObjects(mDevice.findObject(UiSelector().resourceId("$packageName:id/save_confirm")))
+                break
+            } catch (e: UiObjectNotFoundException) {
+                customTabScreen {
+                }.openMainMenu {
+                    refreshButton().click()
+                    waitForPageToLoad()
+                }
+            }
+        }
+    }
+
+    fun clickLinkMatchingText(expectedText: String) {
+        var currentTries = 0
+        while (currentTries++ < 3) {
+            try {
+                mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
+                    .waitForExists(waitingTime)
+                mDevice.findObject(UiSelector().textContains(expectedText))
+                    .waitForExists(waitingTime)
+
+                val element = mDevice.findObject(UiSelector().textContains(expectedText))
+                element.click()
+                break
+            } catch (e: UiObjectNotFoundException) {
+                customTabScreen {
+                }.openMainMenu {
+                    refreshButton().click()
+                    waitForPageToLoad()
+                }
+            }
+        }
+    }
+
     fun waitForPageToLoad() = progressBar.waitUntilGone(waitingTime)
 
     class Transition {
@@ -130,4 +173,14 @@ private fun customTabToolbar() = mDevice.findObject(By.res("$packageName:id/tool
 private val progressBar =
     mDevice.findObject(
         UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_progress")
+    )
+
+private val submitLoginButton =
+    mDevice.findObject(
+        UiSelector()
+            .index(2)
+            .resourceId("submit")
+            .textContains("Submit Query")
+            .className("android.widget.Button")
+            .packageName("$packageName")
     )
