@@ -1601,8 +1601,6 @@ class _ASRouter {
       }
     });
 
-    NimbusFeatures.pbNewtab.recordExposureEvent({ once: true });
-
     return { message };
   }
 
