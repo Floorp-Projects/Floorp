@@ -7,9 +7,6 @@
 var EXPORTED_SYMBOLS = ["AboutPrivateBrowsingParent"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { BrowserUtils } = ChromeUtils.import(
-  "resource://gre/modules/BrowserUtils.jsm"
-);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -30,6 +27,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Region: "resource://gre/modules/Region.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
 });
 
@@ -163,7 +161,13 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
         break;
       }
       case "ShouldShowVPNPromo": {
-        return BrowserUtils.shouldShowVPNPromo();
+        const homeRegion = Region.home || "";
+        const currentRegion = Region.current || "";
+        return (
+          homeRegion.toLowerCase() !== "cn" &&
+          currentRegion.toLowerCase() !== "cn" &&
+          Services.policies.status !== Services.policies.ACTIVE
+        );
       }
     }
 

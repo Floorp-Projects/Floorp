@@ -62,6 +62,21 @@ export default class VPNCard {
         return;
       }
       const vpnCard = this.doc.querySelector(".vpn-card");
+      let availablePlatforms = RPMGetStringPref(
+        "browser.contentblocking.report.vpn_platforms"
+      );
+
+      let hasSupportedPlatform = false;
+      for (let platform of availablePlatforms.split(",")) {
+        if (navigator.platform.toLowerCase().includes(platform)) {
+          hasSupportedPlatform = true;
+          break;
+        }
+      }
+
+      if (!hasSupportedPlatform) {
+        return;
+      }
 
       // add 'subscribed' class if user is subscribed to vpn
       RPMSendQuery("FetchVPNSubStatus", {}).then(async hasVPN => {
@@ -87,7 +102,7 @@ export default class VPNCard {
   showVPNBanner() {
     if (
       RPMGetBoolPref("browser.contentblocking.report.hide_vpn_banner", false) ||
-      !RPMGetBoolPref("browser.vpn_promo.enabled", false)
+      !RPMGetBoolPref("browser.contentblocking.report.vpn.enabled", false)
     ) {
       return;
     }

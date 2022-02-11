@@ -3,14 +3,10 @@
 
 "use strict";
 
-const { EnterprisePolicyTesting } = ChromeUtils.import(
-  "resource://testing-common/EnterprisePolicyTesting.jsm"
-);
-
 let { Region } = ChromeUtils.import("resource://gre/modules/Region.jsm");
 
 const initialHomeRegion = Region._home;
-const initialCurrentRegion = Region._current;
+const intialCurrentRegion = Region._current;
 
 // Helper to run tests for specific regions
 async function setupRegions(home, current) {
@@ -23,30 +19,7 @@ function setLocale(language) {
   Services.locale.requestedLocales = [language];
 }
 
-async function clearPolicies() {
-  // Ensure no active policies are set
-  await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
-}
-
-async function getPromoCards() {
-  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
-    leaveOpen: true,
-  });
-
-  let doc = gBrowser.contentDocument;
-  let vpnPromoCard = doc.getElementById("mozilla-vpn");
-  let mobileCard = doc.getElementById("firefox-mobile");
-  let rallyPromoCard = doc.getElementById("mozilla-rally");
-
-  return {
-    vpnPromoCard,
-    mobileCard,
-    rallyPromoCard,
-  };
-}
-
 add_task(async function test_VPN_promo_enabled() {
-  await clearPolicies();
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.preferences.moreFromMozilla", true],
@@ -54,8 +27,13 @@ add_task(async function test_VPN_promo_enabled() {
     ],
   });
 
-  let { vpnPromoCard, mobileCard } = await getPromoCards();
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
 
+  let doc = gBrowser.contentDocument;
+  let vpnPromoCard = doc.getElementById("mozilla-vpn");
+  let mobileCard = doc.getElementById("firefox-mobile");
   ok(vpnPromoCard, "The VPN promo is visible");
   ok(mobileCard, "The Mobile promo is visible");
 
@@ -63,13 +41,17 @@ add_task(async function test_VPN_promo_enabled() {
 });
 
 add_task(async function test_VPN_promo_disabled() {
-  await clearPolicies();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.vpn_promo.enabled", false]],
   });
 
-  let { vpnPromoCard, mobileCard } = await getPromoCards();
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
 
+  let doc = gBrowser.contentDocument;
+  let vpnPromoCard = doc.getElementById("mozilla-vpn");
+  let mobileCard = doc.getElementById("firefox-mobile");
   ok(!vpnPromoCard, "The VPN promo is not visible");
   ok(mobileCard, "The Mobile promo is visible");
 
@@ -78,7 +60,6 @@ add_task(async function test_VPN_promo_disabled() {
 });
 
 add_task(async function test_VPN_promo_in_disallowed_home_region() {
-  await clearPolicies();
   const disallowedRegion = "SY";
 
   setupRegions(disallowedRegion);
@@ -88,17 +69,21 @@ add_task(async function test_VPN_promo_in_disallowed_home_region() {
     set: [["browser.vpn_promo.enabled", true]],
   });
 
-  let { vpnPromoCard, mobileCard } = await getPromoCards();
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
 
+  let doc = gBrowser.contentDocument;
+  let vpnPromoCard = doc.getElementById("mozilla-vpn");
+  let mobileCard = doc.getElementById("firefox-mobile");
   ok(!vpnPromoCard, "The VPN promo is not visible");
   ok(mobileCard, "The Mobile promo is visible");
 
-  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function test_VPN_promo_in_illegal_home_region() {
-  await clearPolicies();
   const illegalRegion = "CN";
 
   setupRegions(illegalRegion);
@@ -108,17 +93,21 @@ add_task(async function test_VPN_promo_in_illegal_home_region() {
     set: [["browser.vpn_promo.disallowedRegions", "SY, CU"]],
   });
 
-  let { vpnPromoCard, mobileCard } = await getPromoCards();
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
 
+  let doc = gBrowser.contentDocument;
+  let vpnPromoCard = doc.getElementById("mozilla-vpn");
+  let mobileCard = doc.getElementById("firefox-mobile");
   ok(!vpnPromoCard, "The VPN promo is not visible");
   ok(mobileCard, "The Mobile promo is visible");
 
-  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function test_VPN_promo_in_disallowed_current_region() {
-  await clearPolicies();
   const allowedRegion = "US";
   const disallowedRegion = "SY";
 
@@ -129,17 +118,21 @@ add_task(async function test_VPN_promo_in_disallowed_current_region() {
     set: [["browser.vpn_promo.enabled", true]],
   });
 
-  let { vpnPromoCard, mobileCard } = await getPromoCards();
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
 
+  let doc = gBrowser.contentDocument;
+  let vpnPromoCard = doc.getElementById("mozilla-vpn");
+  let mobileCard = doc.getElementById("firefox-mobile");
   ok(!vpnPromoCard, "The VPN promo is not visible");
   ok(mobileCard, "The Mobile promo is visible");
 
-  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function test_VPN_promo_in_illegal_current_region() {
-  await clearPolicies();
   const allowedRegion = "US";
   const illegalRegion = "CN";
 
@@ -150,12 +143,17 @@ add_task(async function test_VPN_promo_in_illegal_current_region() {
     set: [["browser.vpn_promo.disallowedRegions", "SY, CU"]],
   });
 
-  let { vpnPromoCard, mobileCard } = await getPromoCards();
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
 
+  let doc = gBrowser.contentDocument;
+  let vpnPromoCard = doc.getElementById("mozilla-vpn");
+  let mobileCard = doc.getElementById("firefox-mobile");
   ok(!vpnPromoCard, "The VPN promo is not visible");
   ok(mobileCard, "The Mobile promo is visible");
 
-  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -164,12 +162,17 @@ add_task(
     // Only show the Rally promo when US is the region and English is the langauge
     setupRegions("US");
 
-    let { rallyPromoCard, mobileCard } = await getPromoCards();
+    await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+      leaveOpen: true,
+    });
 
+    let doc = gBrowser.contentDocument;
+    let rallyPromoCard = doc.getElementById("mozilla-rally");
+    let mobileCard = doc.getElementById("firefox-mobile");
     ok(rallyPromoCard, "The Rally promo is visible");
     ok(mobileCard, "The Mobile promo is visible");
 
-    setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+    setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 );
@@ -177,24 +180,34 @@ add_task(
 add_task(async function test_rally_promo_with_unapproved_home_region() {
   setupRegions("IS");
 
-  let { rallyPromoCard, mobileCard } = await getPromoCards();
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
 
+  let doc = gBrowser.contentDocument;
+  let rallyPromoCard = doc.getElementById("mozilla-rally");
+  let mobileCard = doc.getElementById("firefox-mobile");
   ok(!rallyPromoCard, "The Rally promo is not visible");
   ok(mobileCard, "The Mobile promo is visible");
 
-  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function test_rally_promo_with_unapproved_current_region() {
   setupRegions("US", "IS");
 
-  let { rallyPromoCard, mobileCard } = await getPromoCards();
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
 
+  let doc = gBrowser.contentDocument;
+  let rallyPromoCard = doc.getElementById("mozilla-rally");
+  let mobileCard = doc.getElementById("firefox-mobile");
   ok(!rallyPromoCard, "The Rally promo is not visible");
   ok(mobileCard, "The Mobile promo is visible");
 
-  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -204,12 +217,17 @@ add_task(async function test_rally_promo_with_unapproved_language() {
   const initialLanguage = Services.locale.appLocaleAsBCP47;
   setLocale("ko-KR");
 
-  let { rallyPromoCard, mobileCard } = await getPromoCards();
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
 
+  let doc = gBrowser.contentDocument;
+  let rallyPromoCard = doc.getElementById("mozilla-rally");
+  let mobileCard = doc.getElementById("firefox-mobile");
   ok(!rallyPromoCard, "The Rally promo is not visible");
   ok(mobileCard, "The Mobile promo is visible");
 
-  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
   // revert changes to language
   setLocale(initialLanguage);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -293,58 +311,3 @@ add_task(
     setLocale(initialLocale); // revert changes to language
   }
 );
-
-add_task(
-  async function test_VPN_promo_in_unsupported_current_region_with_supported_home_region() {
-    await clearPolicies();
-    const supportedRegion = "US";
-    const unsupportedRegion = "LY";
-
-    setupRegions(supportedRegion, unsupportedRegion);
-
-    let { vpnPromoCard, mobileCard } = await getPromoCards();
-
-    ok(vpnPromoCard, "The VPN promo is visible");
-    ok(mobileCard, "The Mobile promo is visible");
-
-    setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
-    BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  }
-);
-
-add_task(
-  async function test_VPN_promo_in_supported_current_region_with_unsupported_home_region() {
-    await clearPolicies();
-    const supportedRegion = "US";
-    const unsupportedRegion = "LY";
-
-    setupRegions(unsupportedRegion, supportedRegion);
-
-    let { vpnPromoCard, mobileCard } = await getPromoCards();
-
-    ok(vpnPromoCard, "The VPN promo is visible");
-    ok(mobileCard, "The Mobile promo is visible");
-
-    setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
-    BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  }
-);
-
-add_task(async function test_VPN_promo_with_active_enterprise_policy() {
-  // set up an arbitrary enterprise policy
-  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
-    policies: {
-      EnableTrackingProtection: {
-        Value: true,
-      },
-    },
-  });
-
-  let { vpnPromoCard, mobileCard } = await getPromoCards();
-  ok(!vpnPromoCard, "The VPN promo is not visible");
-  ok(mobileCard, "The Mobile promo is visible");
-
-  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
-  await clearPolicies();
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
