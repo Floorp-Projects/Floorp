@@ -1014,7 +1014,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   }
   void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
 
-  void Present(WebGLFramebufferJS*, const bool webvr = false);
   void Present(WebGLFramebufferJS*, layers::TextureType,
                const bool webvr = false);
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(

@@ -694,9 +694,6 @@ class Log final {
         case SurfaceType::DATA_MAPPED:
           mMessage << "SurfaceType::DATA_MAPPED";
           break;
-        case SurfaceType::WEBGL:
-          mMessage << "SurfaceType::WEBGL";
-          break;
         default:
           mMessage << "Invalid SurfaceType (" << (int)aType << ")";
           break;
