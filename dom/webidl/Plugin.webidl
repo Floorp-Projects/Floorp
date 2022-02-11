@@ -9,7 +9,6 @@
 interface Plugin {
   readonly attribute DOMString description;
   readonly attribute DOMString filename;
-  readonly attribute DOMString version;
   readonly attribute DOMString name;
 
   readonly attribute unsigned long length;
