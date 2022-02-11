@@ -1253,8 +1253,9 @@ nsresult nsHttpChannel::SetupTransaction() {
 
   // create the transaction object
   if (nsIOService::UseSocketProcess()) {
-    MOZ_ASSERT(gIOService->SocketProcessReady(),
-               "Socket process should be ready.");
+    if (NS_WARN_IF(!gIOService->SocketProcessReady())) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
 
     nsCOMPtr<nsIParentChannel> parentChannel;
     NS_QueryNotificationCallbacks(this, parentChannel);

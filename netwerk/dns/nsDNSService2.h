@@ -23,6 +23,27 @@
 
 class nsAuthSSPI;
 
+class DNSServiceWrapper final : public nsPIDNSService {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_FORWARD_NSPIDNSSERVICE(PIDNSService()->)
+  NS_FORWARD_NSIDNSSERVICE(DNSService()->)
+
+  DNSServiceWrapper() = default;
+
+  static already_AddRefed<nsIDNSService> GetSingleton();
+  static void SwitchToBackupDNSService();
+
+ private:
+  ~DNSServiceWrapper() = default;
+  nsIDNSService* DNSService();
+  nsPIDNSService* PIDNSService();
+
+  mozilla::Mutex mLock{"DNSServiceWrapper.mLock"};
+  nsCOMPtr<nsIDNSService> mDNSServiceInUse;
+  nsCOMPtr<nsIDNSService> mBackupDNSService;
+};
+
 class nsDNSService final : public mozilla::net::DNSServiceBase,
                            public nsPIDNSService,
                            public nsIMemoryReporter {
@@ -43,6 +64,7 @@ class nsDNSService final : public mozilla::net::DNSServiceBase,
 
  protected:
   friend class nsAuthSSPI;
+  friend class DNSServiceWrapper;
 
   nsresult DeprecatedSyncResolve(
       const nsACString& aHostname, uint32_t flags,
