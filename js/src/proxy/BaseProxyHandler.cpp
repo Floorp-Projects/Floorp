@@ -417,7 +417,7 @@ JS_PUBLIC_API void js::NukeRemovedCrossCompartmentWrapper(JSContext* cx,
                                                           JSObject* wrapper) {
   MOZ_ASSERT(wrapper->is<CrossCompartmentWrapperObject>());
 
-  NotifyGCNukeWrapper(wrapper);
+  NotifyGCNukeWrapper(cx, wrapper);
 
   // We don't need to call finalize here because the CCW finalizer doesn't do
   // anything. Skipping finalize means that |wrapper| doesn't need to be rooted

@@ -15,6 +15,7 @@
 namespace js {
 
 class FinalizationRegistryObject;
+class FinalizationRecordObject;
 
 namespace gc {
 
@@ -40,8 +41,15 @@ class FinalizationRegistryZone {
                 ZoneAllocPolicy>;
   RecordMap recordMap;
 
+  // A map containing the number of targets in this zone whose finalization
+  // registry is in a different zone.
+  using ZoneCountMap =
+      HashMap<Zone*, size_t, DefaultHasher<Zone*>, ZoneAllocPolicy>;
+  ZoneCountMap crossZoneCount;
+
  public:
   explicit FinalizationRegistryZone(Zone* zone);
+  ~FinalizationRegistryZone();
 
   bool addRegistry(Handle<FinalizationRegistryObject*> registry);
   bool addRecord(HandleObject target, HandleObject record);
@@ -50,6 +58,15 @@ class FinalizationRegistryZone {
 
   void markRoots(JSTracer* trc);
   void traceWeakEdges(JSTracer* trc);
+  bool findSweepGroupEdges();
+
+  void updateForRemovedRecord(FinalizationRecordObject* record);
+
+ private:
+  bool incCrossZoneCount(Zone* otherZone);
+  void decCrossZoneCount(Zone* otherZone);
+
+  static bool shouldRemoveRecord(FinalizationRecordObject* record);
 };
 
 }  // namespace gc

@@ -47,7 +47,7 @@ extern void PrepareForDebugGC(JSRuntime* rt);
 
 /* Functions for managing cross compartment gray pointers. */
 
-extern void NotifyGCNukeWrapper(JSObject* o);
+extern void NotifyGCNukeWrapper(JSContext* cx, JSObject* wrapper);
 
 extern unsigned NotifyGCPreSwap(JSObject* a, JSObject* b);
 
