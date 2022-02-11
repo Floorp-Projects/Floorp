@@ -104,6 +104,7 @@ EXPORTS.mozilla += [
     "public/ProfileBufferEntrySerialization.h",
     "public/ProfileBufferIndex.h",
     "public/ProfileChunkedBuffer.h",
+    "public/ProfileChunkedBufferDetail.h",
     "public/ProgressLogger.h",
     "public/ProportionValue.h",
 ]
