@@ -1997,6 +1997,9 @@
         // process so the browser can no longer be considered to be
         // crashed.
         tab.removeAttribute("crashed");
+        // we call updatetabIndicatorAttr here, rather than _tabAttrModified, so as
+        // to be consistent with how "crashed" attribute changes are handled elsewhere
+        this.tabContainer.updateTabIndicatorAttr(tab);
       } else {
         aBrowser.sendMessageToActor(
           "Browser:AppTab",
@@ -6208,6 +6211,7 @@
             // process so the browser can no longer be considered to be
             // crashed.
             tab.removeAttribute("crashed");
+            gBrowser.tabContainer.updateTabIndicatorAttr(tab);
           } else {
             browser.sendMessageToActor(
               "Browser:AppTab",
@@ -6491,6 +6495,7 @@
           delete this.mBrowser.initialPageLoadedFromUserAction;
           // If the browser is loading it must not be crashed anymore
           this.mTab.removeAttribute("crashed");
+          gBrowser.tabContainer.updateTabIndicatorAttr(this.mTab);
         }
 
         if (this._shouldShowProgress(aRequest)) {
