@@ -1486,6 +1486,12 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
   // This must happen before sweeping realm globals.
   sweepDebuggerOnMainThread(fop);
 
+  // FinalizationRegistry sweeping touches weak maps and so must not run in
+  // parallel with that. This triggers a read barrier and can add marking work
+  // for zones that are still marking. Must happen before sweeping realm
+  // globals.
+  sweepFinalizationRegistriesOnMainThread();
+
   // This must happen before updating embedding weak pointers.
   sweepRealmGlobals();
 
@@ -1537,11 +1543,6 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
   if (sweepingAtoms) {
     startSweepingAtomsTable();
   }
-
-  // FinalizationRegistry sweeping touches weak maps and so must not run in
-  // parallel with that. This triggers a read barrier and can add marking work
-  // for zones that are still marking.
-  sweepFinalizationRegistriesOnMainThread();
 
   // Queue all GC things in all zones for sweeping, either on the foreground
   // or on the background thread.
