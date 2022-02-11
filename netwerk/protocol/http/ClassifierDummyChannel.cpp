@@ -519,6 +519,11 @@ ClassifierDummyChannel::GetIsResolvedByTRR(bool* aResolvedByTRR) {
 }
 
 NS_IMETHODIMP
+ClassifierDummyChannel::GetIsLoadedBySocketProcess(bool*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 ClassifierDummyChannel::GetIsOCSP(bool* value) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
