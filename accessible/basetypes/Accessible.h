@@ -188,6 +188,12 @@ class Accessible {
   virtual uint32_t StartOffset();
 
   /**
+   * Return the end offset of the link within the parent
+   * HyperTextAccessibleBase.
+   */
+  virtual uint32_t EndOffset();
+
+  /**
    * Return object attributes for the accessible.
    */
   virtual already_AddRefed<AccAttributes> Attributes() = 0;
