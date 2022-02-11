@@ -399,9 +399,13 @@ uint32_t RemoteAccessible::StartOffset() {
   return retVal;
 }
 
-uint32_t RemoteAccessible::EndOffset(bool* aOk) {
+uint32_t RemoteAccessible::EndOffset() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::EndOffset();
+  }
+  bool ok;
   uint32_t retVal = 0;
-  Unused << mDoc->SendEndOffset(mID, &retVal, aOk);
+  Unused << mDoc->SendEndOffset(mID, &retVal, &ok);
   return retVal;
 }
 

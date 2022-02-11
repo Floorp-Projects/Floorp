@@ -972,12 +972,12 @@ void WebGPUChild::DeviceCreateSwapChain(RawId aSelfId,
                             aExternalImageId);
 }
 
-void WebGPUChild::SwapChainPresent(wr::ExternalImageId aExternalImageId,
-                                   RawId aTextureId) {
+RefPtr<SwapChainPromise> WebGPUChild::SwapChainPresent(
+    wr::ExternalImageId aExternalImageId, RawId aTextureId) {
   // Hack: the function expects `DeviceId`, but it only uses it for `backend()`
   // selection.
   RawId encoderId = ffi::wgpu_client_make_encoder_id(mClient, aTextureId);
-  SendSwapChainPresent(aExternalImageId, aTextureId, encoderId);
+  return SendSwapChainPresent(aExternalImageId, aTextureId, encoderId);
 }
 
 void WebGPUChild::RegisterDevice(Device* const aDevice) {

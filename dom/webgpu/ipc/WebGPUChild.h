@@ -28,6 +28,7 @@ using AdapterPromise =
     MozPromise<ipc::ByteBuf, Maybe<ipc::ResponseRejectReason>, true>;
 using PipelinePromise = MozPromise<RawId, ipc::ResponseRejectReason, true>;
 using DevicePromise = MozPromise<bool, ipc::ResponseRejectReason, true>;
+using SwapChainPromise = MozPromise<bool, ipc::ResponseRejectReason, true>;
 
 struct PipelineCreationContext {
   RawId mParentId = 0;
@@ -101,7 +102,8 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   void DeviceCreateSwapChain(RawId aSelfId, const RGBDescriptor& aRgbDesc,
                              size_t maxBufferCount,
                              wr::ExternalImageId aExternalImageId);
-  void SwapChainPresent(wr::ExternalImageId aExternalImageId, RawId aTextureId);
+  RefPtr<SwapChainPromise> SwapChainPresent(
+      wr::ExternalImageId aExternalImageId, RawId aTextureId);
 
   void RegisterDevice(Device* const aDevice);
   void UnregisterDevice(RawId aId);

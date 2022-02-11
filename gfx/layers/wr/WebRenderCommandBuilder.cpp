@@ -1517,7 +1517,6 @@ WebRenderCommandBuilder::WebRenderCommandBuilder(
 
 void WebRenderCommandBuilder::Destroy() {
   mLastCanvasDatas.Clear();
-  mLastLocalCanvasDatas.Clear();
   ClearCachedResources();
 }
 
@@ -1529,14 +1528,10 @@ void WebRenderCommandBuilder::EmptyTransaction() {
       canvas->UpdateCompositableClientForEmptyTransaction();
     }
   }
-  for (RefPtr<WebRenderLocalCanvasData> canvasData : mLastLocalCanvasDatas) {
-    canvasData->RefreshExternalImage();
-    canvasData->RequestFrameReadback();
-  }
 }
 
 bool WebRenderCommandBuilder::NeedsEmptyTransaction() {
-  return !mLastCanvasDatas.IsEmpty() || !mLastLocalCanvasDatas.IsEmpty();
+  return !mLastCanvasDatas.IsEmpty();
 }
 
 void WebRenderCommandBuilder::BuildWebRenderCommands(
@@ -1554,7 +1549,6 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
 
   mBuilderDumpIndex = 0;
   mLastCanvasDatas.Clear();
-  mLastLocalCanvasDatas.Clear();
   mLastAsr = nullptr;
   mContainsSVGGroup = false;
   MOZ_ASSERT(mDumpIndent == 0);
@@ -2676,9 +2670,6 @@ void WebRenderCommandBuilder::RemoveUnusedAndResetWebRenderUserData() {
       switch (data->GetType()) {
         case WebRenderUserData::UserDataType::eCanvas:
           mLastCanvasDatas.Remove(data->AsCanvasData());
-          break;
-        case WebRenderUserData::UserDataType::eLocalCanvas:
-          mLastLocalCanvasDatas.Remove(data->AsLocalCanvasData());
           break;
         case WebRenderUserData::UserDataType::eAnimation:
           EffectCompositor::ClearIsRunningOnCompositor(

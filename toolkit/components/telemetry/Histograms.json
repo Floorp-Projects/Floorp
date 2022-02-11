@@ -16406,21 +16406,6 @@
     "n_buckets": 50,
     "description": "Time in milliseconds spent in the layout system per Refresh Driver tick."
   },
-  "WINDOW_REMOTE_SUBFRAMES_ENABLED_STATUS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["nika@mozilla.com"],
-    "expires_in_version": "100",
-    "kind": "categorical",
-    "labels": [
-      "EnabledByAutostart",
-      "EnabledByUser",
-      "DisabledByAutostart",
-      "DisabledByUser"
-    ],
-    "bug_numbers": [1602903, 1656132, 1690329, 1730263],
-    "description": "Fission enabled status of individual windows in fission.autostart and non-fission.autostart profiles"
-  },
   "COOKIE_PURGING_ORIGINS_PURGED": {
     "expires_in_version": "never",
     "record_in_processes": ["main"],

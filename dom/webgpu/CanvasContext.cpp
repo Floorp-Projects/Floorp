@@ -31,9 +31,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CanvasContext)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-CanvasContext::CanvasContext()
-    : mExternalImageId(layers::CompositorManagerChild::GetInstance()
-                           ->GetNextExternalImageId()) {}
+CanvasContext::CanvasContext() = default;
 
 CanvasContext::~CanvasContext() {
   Cleanup();
@@ -78,8 +76,10 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aDesc) {
   }
 
   gfx::IntSize actualSize(mWidth, mHeight);
-  mTexture = aDesc.mDevice->InitSwapChain(aDesc, mExternalImageId, mGfxFormat,
-                                          &actualSize);
+  mExternalImageId.emplace(
+      layers::CompositorManagerChild::GetInstance()->GetNextExternalImageId());
+  mTexture = aDesc.mDevice->InitSwapChain(aDesc, mExternalImageId.ref(),
+                                          mGfxFormat, &actualSize);
   mTexture->mTargetCanvasElement = mCanvasElement;
   mBridge = aDesc.mDevice->GetBridge();
   mGfxSize = actualSize;
@@ -101,9 +101,10 @@ wr::ImageKey CanvasContext::CreateImageKey(
 }
 
 void CanvasContext::Unconfigure() {
-  if (mBridge && mBridge->IsOpen()) {
-    mBridge->SendSwapChainDestroy(mExternalImageId);
+  if (mBridge && mBridge->IsOpen() && mExternalImageId) {
+    mBridge->SendSwapChainDestroy(mExternalImageId.ref());
   }
+  mExternalImageId.reset();
   mBridge = nullptr;
   mTexture = nullptr;
   mGfxFormat = gfx::SurfaceFormat::UNKNOWN;
@@ -129,7 +130,7 @@ bool CanvasContext::UpdateWebRenderLocalCanvasData(
 
   aCanvasData->mGpuBridge = mBridge.get();
   aCanvasData->mGpuTextureId = mTexture->mId;
-  aCanvasData->mExternalImageId = mExternalImageId;
+  aCanvasData->mExternalImageId = mExternalImageId.ref();
   aCanvasData->mFormat = mGfxFormat;
   return true;
 }
