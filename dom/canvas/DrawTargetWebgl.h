@@ -95,6 +95,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     SharedContext();
     ~SharedContext();
 
+    int32_t mNumTargets = 0;
     WeakPtr<DrawTargetWebgl> mCurrentTarget;
     IntSize mViewportSize;
     IntRect mClipRect;
@@ -205,7 +206,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     bool FillGlyphsAccel(ScaledFont* aFont, const GlyphBuffer& aBuffer,
                          const Pattern& aPattern, const DrawOptions& aOptions);
 
-    void PruneTextureHandle(RefPtr<TextureHandle> aHandle);
+    void PruneTextureHandle(const RefPtr<TextureHandle>& aHandle);
     bool PruneTextureMemory(size_t aMargin = 0, bool aPruneUnused = true);
 
     bool RemoveSharedTexture(const RefPtr<SharedTexture>& aTexture);
@@ -218,7 +219,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   RefPtr<SharedContext> mSharedContext;
 
-  static WeakPtr<SharedContext> sSharedContext;
+  static RefPtr<SharedContext> sSharedContext;
 
  public:
   DrawTargetWebgl();
@@ -331,6 +332,10 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   already_AddRefed<FilterNode> CreateFilter(FilterType aType) override;
   void SetTransform(const Matrix& aTransform) override;
   void* GetNativeSurface(NativeSurfaceType aType) override;
+
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer();
+
+  bool CopySnapshotTo(DrawTarget* aDT);
 
   operator std::string() const {
     std::stringstream stream;

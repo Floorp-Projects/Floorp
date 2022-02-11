@@ -792,7 +792,8 @@ void WebGLContext::OnEndOfFrame() {
 }
 
 void WebGLContext::BlitBackbufferToCurDriverFB(
-    const gl::MozFramebuffer* const source) const {
+    WebGLFramebuffer* const srcAsWebglFb,
+    const gl::MozFramebuffer* const srcAsMozFb) const {
   DoColorMask(0x0f);
 
   if (mScissorTestEnabled) {
@@ -800,25 +801,47 @@ void WebGLContext::BlitBackbufferToCurDriverFB(
   }
 
   [&]() {
-    const auto fb = source ? source : mDefaultFB.get();
+    // If a MozFramebuffer is supplied, ensure that a WebGLFramebuffer is not
+    // used since it might not have completeness info, while the MozFramebuffer
+    // can still supply the needed information.
+    MOZ_ASSERT(!(srcAsMozFb && srcAsWebglFb));
+    const auto* mozFb = srcAsMozFb ? srcAsMozFb : mDefaultFB.get();
+    GLuint fbo = 0;
+    gfx::IntSize size;
+    if (srcAsWebglFb) {
+      fbo = srcAsWebglFb->mGLName;
+      const auto* info = srcAsWebglFb->GetCompletenessInfo();
+      MOZ_ASSERT(info);
+      size = gfx::IntSize(info->width, info->height);
+    } else {
+      fbo = mozFb->mFB;
+      size = mozFb->mSize;
+    }
 
     if (gl->IsSupported(gl::GLFeature::framebuffer_blit)) {
-      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fb->mFB);
-      gl->fBlitFramebuffer(0, 0, fb->mSize.width, fb->mSize.height, 0, 0,
-                           fb->mSize.width, fb->mSize.height,
-                           LOCAL_GL_COLOR_BUFFER_BIT, LOCAL_GL_NEAREST);
+      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
+      gl->fBlitFramebuffer(0, 0, size.width, size.height, 0, 0, size.width,
+                           size.height, LOCAL_GL_COLOR_BUFFER_BIT,
+                           LOCAL_GL_NEAREST);
       return;
     }
     if (mDefaultFB->mSamples &&
         gl->IsExtensionSupported(
             gl::GLContext::APPLE_framebuffer_multisample)) {
-      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fb->mFB);
+      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
       gl->fResolveMultisampleFramebufferAPPLE();
       return;
     }
 
-    gl->BlitHelper()->DrawBlitTextureToFramebuffer(fb->ColorTex(), fb->mSize,
-                                                   fb->mSize);
+    GLuint colorTex = 0;
+    if (srcAsWebglFb) {
+      const auto& attach = srcAsWebglFb->ColorAttachment0();
+      MOZ_ASSERT(attach.Texture());
+      colorTex = attach.Texture()->mGLName;
+    } else {
+      colorTex = mozFb->ColorTex();
+    }
+    gl->BlitHelper()->DrawBlitTextureToFramebuffer(colorTex, size, size);
   }();
 
   if (mScissorTestEnabled) {
@@ -837,13 +860,26 @@ constexpr auto MakeArray(Args... args) -> std::array<T, sizeof...(Args)> {
 
 // For an overview of how WebGL compositing works, see:
 // https://wiki.mozilla.org/Platform/GFX/WebGL/Compositing
-bool WebGLContext::PresentInto(gl::SwapChain& swapChain) {
+bool WebGLContext::PresentInto(gl::SwapChain& swapChain,
+                               WebGLFramebuffer* const srcFb) {
   OnEndOfFrame();
 
-  if (!ValidateAndInitFB(nullptr)) return false;
+  if (!ValidateAndInitFB(srcFb)) return false;
 
   {
-    auto presenter = swapChain.Acquire(mDefaultFB->mSize);
+    GLuint fbo = 0;
+    gfx::IntSize size;
+    if (srcFb) {
+      fbo = srcFb->mGLName;
+      const auto* info = srcFb->GetCompletenessInfo();
+      MOZ_ASSERT(info);
+      size = gfx::IntSize(info->width, info->height);
+    } else {
+      fbo = mDefaultFB->mFB;
+      size = mDefaultFB->mSize;
+    }
+
+    auto presenter = swapChain.Acquire(size);
     if (!presenter) {
       GenerateWarning("Swap chain surface creation failed.");
       LoseContext();
@@ -853,17 +889,19 @@ bool WebGLContext::PresentInto(gl::SwapChain& swapChain) {
     const auto destFb = presenter->Fb();
     gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, destFb);
 
-    BlitBackbufferToCurDriverFB();
+    BlitBackbufferToCurDriverFB(srcFb);
 
     if (!mOptions.preserveDrawingBuffer) {
       if (gl->IsSupported(gl::GLFeature::invalidate_framebuffer)) {
-        gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, mDefaultFB->mFB);
+        gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
         constexpr auto attachments = MakeArray<GLenum>(
             LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
         gl->fInvalidateFramebuffer(LOCAL_GL_READ_FRAMEBUFFER,
                                    attachments.size(), attachments.data());
       }
-      mDefaultFB_IsInvalid = true;
+      if (!srcFb) {
+        mDefaultFB_IsInvalid = true;
+      }
     }
 
 #ifdef DEBUG
@@ -894,7 +932,7 @@ bool WebGLContext::PresentIntoXR(gl::SwapChain& swapChain,
   const auto destFb = presenter->Fb();
   gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, destFb);
 
-  BlitBackbufferToCurDriverFB(&fb);
+  BlitBackbufferToCurDriverFB(nullptr, &fb);
 
   // https://immersive-web.github.io/webxr/#opaque-framebuffer
   // Opaque framebuffers will always be cleared regardless of the
@@ -918,11 +956,11 @@ void WebGLContext::Present(WebGLFramebuffer* const xrFb,
 
   auto swapChain = webvr ? &mWebVRSwapChain : &mSwapChain;
   if (xrFb) {
-    swapChain = &xrFb->mOpaqueSwapChain;
+    swapChain = &xrFb->mSwapChain;
   }
   const gl::MozFramebuffer* maybeFB = nullptr;
   if (xrFb) {
-    swapChain = &xrFb->mOpaqueSwapChain;
+    swapChain = &xrFb->mSwapChain;
     maybeFB = xrFb->mOpaque.get();
   } else {
     mResolvedDefaultFB = nullptr;
@@ -943,7 +981,7 @@ void WebGLContext::Present(WebGLFramebuffer* const xrFb,
   if (maybeFB) {
     (void)PresentIntoXR(*swapChain, *maybeFB);
   } else {
-    (void)PresentInto(*swapChain);
+    (void)PresentInto(*swapChain, xrFb);
   }
 }
 
@@ -951,7 +989,7 @@ Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
     WebGLFramebuffer* const xrFb, const bool webvr) {
   auto swapChain = webvr ? &mWebVRSwapChain : &mSwapChain;
   if (xrFb) {
-    swapChain = &xrFb->mOpaqueSwapChain;
+    swapChain = &xrFb->mSwapChain;
   }
   const auto& front = swapChain->FrontBuffer();
   if (!front) return {};
