@@ -1296,15 +1296,9 @@ class PictureInPictureChild extends JSWindowActorChild {
       return;
     }
 
-    const allCuesArray = [...textTrackCues];
-    let lineNumberUsed = allCuesArray.find(cue => cue.line !== "auto");
-
-    // If VTTCue.line is not set to "auto", simplying reading textTrackCues does
-    // not guarantee that text tracks are displayed in their intended order. In this case,
-    // sort the cues according to line number.
-    if (lineNumberUsed) {
-      allCuesArray.sort((cue1, cue2) => cue1.line - cue2.line);
-    }
+    let allCuesArray = [...textTrackCues];
+    // Re-order cues
+    this.getOrderedWebVTTCues(allCuesArray);
     // Parse through WebVTT cue using vtt.js to ensure
     // semantic markup like <b> and <i> tags are rendered.
     allCuesArray.forEach(cue => {
@@ -1317,6 +1311,41 @@ class PictureInPictureChild extends JSWindowActorChild {
       cueDiv.style = "white-space: pre;";
       pipWindowTracksContainer.appendChild(cueDiv);
     });
+  }
+
+  /**
+   * Re-orders list of multiple active cues to ensure cues are rendered in the correct order.
+   * How cues are ordered depends on the VTTCue.line value of the cue.
+   *
+   * If line is string "auto", we want to reverse the order of cues.
+   * Cues are read from top to bottom in a vtt file, but are inserted into a video from bottom to top.
+   * Ensure this order is followed.
+   *
+   * If line is an integer or percentage, we want to order cues according to numeric value.
+   * Assumptions:
+   *  1) all active cues are numeric
+   *  2) all active cues are in range 0..100
+   *  3) all actives cue are horizontal (no VTTCue.vertical)
+   *  4) all active cues with VTTCue.line integer have VTTCue.snapToLines = true
+   *  5) all active cues with VTTCue.line percentage have VTTCue.snapToLines = false
+   *
+   * vtt.jsm currently sets snapToLines to false if line is a percentage value, but
+   * cues are still ordered by line. In most cases, snapToLines is set to true by default,
+   * unless intentionally overridden.
+   * @param allCuesArray {Array<VTTCue>} array of active cues
+   */
+  getOrderedWebVTTCues(allCuesArray) {
+    if (!allCuesArray || allCuesArray.length <= 1) {
+      return;
+    }
+
+    let allCuesHaveNumericLines = allCuesArray.find(cue => cue.line !== "auto");
+
+    if (allCuesHaveNumericLines) {
+      allCuesArray.sort((cue1, cue2) => cue1.line - cue2.line);
+    } else if (allCuesArray.length >= 2) {
+      allCuesArray.reverse();
+    }
   }
 
   /**

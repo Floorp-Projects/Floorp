@@ -4,45 +4,6 @@
 "use strict";
 
 /**
- * Initializes videos and text tracks for the current test case.
- * First track is the default track to be loaded onto the video.
- * Once initialization is done, play then pause the requested video.
- * so that text tracks are loaded.
- * @param {Element} browser The <xul:browser> hosting the <video>
- * @param {String} videoID The ID of the video being checked
- * @param {Integer} defaultTrackIndex The index of the track to be loaded, or none if -1
- */
-async function prepareVideosAndTracks(browser, videoID, defaultTrackIndex = 0) {
-  info("Preparing video and initial text tracks");
-  await ensureVideosReady(browser);
-  await SpecialPowers.spawn(
-    browser,
-    [{ videoID, defaultTrackIndex }],
-    async args => {
-      let video = content.document.getElementById(args.videoID);
-      let tracks = video.textTracks;
-
-      is(tracks.length, 3, "Number of tracks loaded should be 3");
-
-      // Enable track for originating video
-      if (args.defaultTrackIndex >= 0) {
-        info(`Loading track ${args.defaultTrackIndex + 1}`);
-        let track = tracks[args.defaultTrackIndex];
-        tracks.mode = "showing";
-        track.mode = "showing";
-      }
-
-      // Briefly play the video to load text tracks onto the pip window.
-      info("Playing video to load text tracks");
-      video.play();
-      info("Pausing video");
-      video.pause();
-      ok(video.paused, "Video should be paused before proceeding with test");
-    }
-  );
-}
-
-/**
  * This test ensures that text tracks shown on the source video
  * do not appear on a newly created pip window if the pref
  * is disabled.
@@ -65,7 +26,7 @@ add_task(async function test_text_tracks_new_window_pref_disabled() {
       gBrowser,
     },
     async browser => {
-      await prepareVideosAndTracks(browser, videoID);
+      await prepareVideosAndWebVTTTracks(browser, videoID);
 
       let pipWin = await triggerPictureInPicture(browser, videoID);
       ok(pipWin, "Got Picture-in-Picture window.");
@@ -107,7 +68,7 @@ add_task(async function test_text_tracks_new_window_pref_enabled() {
       gBrowser,
     },
     async browser => {
-      await prepareVideosAndTracks(browser, videoID);
+      await prepareVideosAndWebVTTTracks(browser, videoID);
 
       let pipWin = await triggerPictureInPicture(browser, videoID);
       ok(pipWin, "Got Picture-in-Picture window.");
@@ -147,7 +108,7 @@ add_task(async function test_text_tracks_new_window_no_track() {
       gBrowser,
     },
     async browser => {
-      await prepareVideosAndTracks(browser, videoID, -1);
+      await prepareVideosAndWebVTTTracks(browser, videoID, -1);
 
       let pipWin = await triggerPictureInPicture(browser, videoID);
       ok(pipWin, "Got Picture-in-Picture window.");
