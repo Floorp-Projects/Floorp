@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+
+<script>
+function addTextToLastDiv() {
+	let alldivs = document.getElementsByTagName('div');
+	let lastdiv = alldivs[alldivs.length-1];
+	for (let i = 0; i < 225; i++) {
+		lastdiv.appendChild(document.createTextNode("Text text text text text text text text text text text text text text text text "));
+	}
+}
+
+function doload() {
+    window.scrollBy(0,10000);
+    document.documentElement.offsetLeft;
+}
+</script>
+<body onload="doload()">
+<div>
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<!-- We use display none and then toggle to regular display in an inline script
+	 at the end of our content to try to make sure we generate some reflows
+	 which will generate some ScrollToImpl calls with origin restore which are
+	 necessary to reproduce the bug. -->
+<div style="display: none;">
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div>
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div style="display: none;">
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div>
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div style="display: none;">
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div>
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div style="display: none;">
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div>
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div style="display: none;">
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div>
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div style="display: none;">
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div>
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div style="display: none;">
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div>
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div style="display: none;">
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div>
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div style="display: none;">
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div>
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div style="display: none;">
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div>
+</div>
+<script>
+addTextToLastDiv();
+</script>
+<div style="display: none;">
+</div>
+<script>
+addTextToLastDiv();
+</script>
+
+
+<script>
+let alldivs = document.getElementsByTagName('div');
+for (let i = 0 ; i < alldivs.length; i++) {
+    alldivs[i].style.display = "";
+    document.documentElement.offsetLeft;
+}
+</script>
+</body>
+</html>
