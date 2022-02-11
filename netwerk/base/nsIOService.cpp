@@ -280,6 +280,7 @@ nsresult nsIOService::Init() {
       nsLiteralCString(NS_XPCOM_SHUTDOWN_OBSERVER_ID));
   mSocketProcessTopicBlackList.Insert("xpcom-shutdown-threads"_ns);
   mSocketProcessTopicBlackList.Insert("profile-do-change"_ns);
+  mSocketProcessTopicBlackList.Insert("network:socket-process-crashed"_ns);
 
   // Register for profile change notifications
   mObserverService = services::GetObserverService();
@@ -676,6 +677,17 @@ void nsIOService::OnProcessUnexpectedShutdown(SocketProcessHost* aHost) {
 
   LOG(("nsIOService::OnProcessUnexpectedShutdown\n"));
   DestroySocketProcess();
+
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+  if (observerService) {
+    (void)observerService->NotifyObservers(
+        nullptr, "network:socket-process-crashed", nullptr);
+  }
+  if (UseSocketProcess()) {
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(
+        NewRunnableMethod("nsIOService::LaunchSocketProcess", this,
+                          &nsIOService::LaunchSocketProcess)));
+  }
 }
 
 RefPtr<MemoryReportingProcess> nsIOService::GetSocketProcessMemoryReporter() {

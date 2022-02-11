@@ -279,6 +279,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetIsTRRServiceChannel(bool* aTRR) override;
   NS_IMETHOD SetIsTRRServiceChannel(bool aTRR) override;
   NS_IMETHOD GetIsResolvedByTRR(bool* aResolvedByTRR) override;
+  NS_IMETHOD GetIsLoadedBySocketProcess(bool* aResult) override;
   NS_IMETHOD GetIsOCSP(bool* value) override;
   NS_IMETHOD SetIsOCSP(bool value) override;
   NS_IMETHOD GetTlsFlags(uint32_t* aTlsFlags) override;
@@ -857,7 +858,11 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
     // Used by system requests such as remote settings and updates to
     // retry requests without proxies.
-    (uint32_t, BypassProxy, 1)
+    (uint32_t, BypassProxy, 1),
+
+    // Indicate whether the response of this channel is coming from
+    // socket process.
+    (uint32_t, LoadedBySocketProcess, 1)
   ))
   // clang-format on
 
