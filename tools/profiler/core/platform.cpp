@@ -674,11 +674,13 @@ class ActivePS {
         mFeatures(AdjustFeatures(aFeatures, aFilterCount)),
         mActiveTabID(aActiveTabID),
         mProfileBufferChunkManager(
-            size_t(ClampToAllowedEntries(aCapacity.Value())) * scBytesPerEntry,
-            ChunkSizeForEntries(aCapacity.Value())),
+            MakeUnique<ProfileBufferChunkManagerWithLocalLimit>(
+                size_t(ClampToAllowedEntries(aCapacity.Value())) *
+                    scBytesPerEntry,
+                ChunkSizeForEntries(aCapacity.Value()))),
         mProfileBuffer([this]() -> ProfileChunkedBuffer& {
           ProfileChunkedBuffer& coreBuffer = profiler_get_core_buffer();
-          coreBuffer.SetChunkManager(mProfileBufferChunkManager);
+          coreBuffer.SetChunkManager(*mProfileBufferChunkManager);
           return coreBuffer;
         }()),
         mMaybeProcessCPUCounter(ProfilerFeature::HasProcessCPU(aFeatures)
@@ -747,7 +749,10 @@ class ActivePS {
       }
     }
 #endif
-    profiler_get_core_buffer().ResetChunkManager();
+    if (mProfileBufferChunkManager) {
+      // We still control the chunk manager, remove it from the core buffer.
+      profiler_get_core_buffer().ResetChunkManager();
+    }
   }
 
   bool ThreadSelected(const char* aThreadName) {
@@ -963,12 +968,15 @@ class ActivePS {
   static ProfileBufferChunkManagerWithLocalLimit& ControlledChunkManager(
       PSLockRef) {
     MOZ_ASSERT(sInstance);
-    return sInstance->mProfileBufferChunkManager;
+    MOZ_ASSERT(sInstance->mProfileBufferChunkManager);
+    return *sInstance->mProfileBufferChunkManager;
   }
 
   static void FulfillChunkRequests(PSLockRef) {
     MOZ_ASSERT(sInstance);
-    sInstance->mProfileBufferChunkManager.FulfillChunkRequests();
+    if (sInstance->mProfileBufferChunkManager) {
+      sInstance->mProfileBufferChunkManager->FulfillChunkRequests();
+    }
   }
 
   static ProfileBuffer& Buffer(PSLockRef) {
@@ -1300,7 +1308,8 @@ class ActivePS {
   const uint64_t mActiveTabID;
 
   // The chunk manager used by `mProfileBuffer` below.
-  ProfileBufferChunkManagerWithLocalLimit mProfileBufferChunkManager;
+  // May become null if it gets transferred ouf of the Gecko Profiler.
+  UniquePtr<ProfileBufferChunkManagerWithLocalLimit> mProfileBufferChunkManager;
 
   // The buffer into which all samples are recorded.
   ProfileBuffer mProfileBuffer;
