@@ -336,9 +336,11 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
       bufferPtrs.SetLength(channels);
       uint32_t inFrames = c.mDuration;
       // Round up to allocate; the last frame may not be used.
-      NS_ASSERTION((UINT32_MAX - aInRate + 1) / c.mDuration >= aOutRate,
+      NS_ASSERTION((UINT64_MAX - aInRate + 1) / c.mDuration >= aOutRate,
                    "Dropping samples");
-      uint32_t outSize = (c.mDuration * aOutRate + aInRate - 1) / aInRate;
+      uint32_t outSize =
+          (static_cast<uint64_t>(c.mDuration) * aOutRate + aInRate - 1) /
+          aInRate;
       for (uint32_t i = 0; i < channels; i++) {
         T* out = output[i].AppendElements(outSize);
         uint32_t outFrames = outSize;
