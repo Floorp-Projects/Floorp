@@ -8,7 +8,6 @@ import android.content.Context
 import android.util.AttributeSet
 import mozilla.components.concept.engine.Engine
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.SupportUtils
 
 /**
@@ -23,10 +22,6 @@ class HttpsOnlyModePreference(
         SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.HTTPS_ONLY)
 
     init {
-        if (!Features.HTTPS_ONLY_MODE) {
-            isVisible = false
-        }
-
         setOnPreferenceChangeListener { _, newValue ->
             val enableHttpsOnly = newValue as Boolean
             context.components.engine.settings.httpsOnlyMode = if (enableHttpsOnly) {
