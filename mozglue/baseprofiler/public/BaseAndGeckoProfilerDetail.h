@@ -15,26 +15,9 @@
 
 #include "mozilla/BaseProfilerUtils.h"
 #include "mozilla/Span.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/Types.h"
-#include "mozilla/UniquePtr.h"
 
-namespace mozilla {
-
-class ProfileBufferChunkManagerWithLocalLimit;
-
-namespace baseprofiler::detail {
-
-[[nodiscard]] MFBT_API UniquePtr<ProfileBufferChunkManagerWithLocalLimit>
-ExtractBaseProfilerChunkManager();
-
-// If the current thread is registered, returns its registration time, otherwise
-// a null timestamp.
-[[nodiscard]] MFBT_API TimeStamp GetThreadRegistrationTime();
-
-}  // namespace baseprofiler::detail
-
-namespace profiler::detail {
+namespace mozilla::profiler::detail {
 
 // True if the filter is exactly "pid:<aPid>".
 [[nodiscard]] MFBT_API bool FilterHasPid(
@@ -55,8 +38,6 @@ namespace profiler::detail {
     baseprofiler::BaseProfilerProcessId aPid =
         baseprofiler::profiler_current_process_id());
 
-}  // namespace profiler::detail
-
-}  // namespace mozilla
+}  // namespace mozilla::profiler::detail
 
 #endif  // BaseAndGeckoProfilerDetail_h

@@ -4076,7 +4076,7 @@ TEST(GeckoProfiler, BaseProfilerHandOff)
       for (const Json::Value& thread : threads) {
         ASSERT_TRUE(thread.isObject());
         GET_JSON(name, thread["name"], String);
-        if (name.asString() == "GeckoMain") {
+        if (name.asString() == "GeckoMain (pre-xul)") {
           found = true;
           EXPECT_JSON_ARRAY_CONTAINS(thread["stringTable"], String,
                                      "Marker from base profiler");
