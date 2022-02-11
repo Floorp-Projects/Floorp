@@ -35,10 +35,10 @@ add_task(async function() {
 
   ok(true, "dispatch clearSnapshots action");
   const deleteEvents = Promise.all([
-    waitUntilAction(store, actions.DELETE_SNAPSHOTS_START),
-    waitUntilAction(store, actions.DELETE_SNAPSHOTS_END),
-    waitUntilAction(store, actions.SNAPSHOT_ERROR),
-    waitUntilAction(store, actions.SNAPSHOT_ERROR),
+    waitForDispatch(store, actions.DELETE_SNAPSHOTS_START),
+    waitForDispatch(store, actions.DELETE_SNAPSHOTS_END),
+    waitForDispatch(store, actions.SNAPSHOT_ERROR),
+    waitForDispatch(store, actions.SNAPSHOT_ERROR),
   ]);
   dispatch(clearSnapshots(errorHeapWorker));
   await deleteEvents;
