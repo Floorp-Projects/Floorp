@@ -40,6 +40,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         public String getPackageName() {
             return info.packageName;
         }
+
+        public String getActivityName() {
+            return info.name;
+        }
+
     }
 
     interface OnAppSelectedListener {

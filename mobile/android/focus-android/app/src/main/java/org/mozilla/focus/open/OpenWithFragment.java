@@ -139,7 +139,7 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
     @Override
     public void onAppSelected(AppAdapter.App app) {
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getArguments().getString(ARGUMENT_URL)));
-        intent.setPackage(app.getPackageName());
+        intent.setClassName(app.getPackageName(), app.getActivityName());
         startActivity(intent);
 
         OpenWith.INSTANCE.listItemTapped().record(new OpenWith.ListItemTappedExtra(app.getPackageName().contains("mozilla")));
