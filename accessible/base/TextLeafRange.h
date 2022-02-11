@@ -148,6 +148,8 @@ class TextLeafPoint final {
 
   bool IsLineFeedChar() const { return GetChar() == '\n'; }
 
+  bool IsSpace() const;
+
  private:
   bool IsEmptyLastLine() const;
 
@@ -164,6 +166,7 @@ class TextLeafPoint final {
                                      bool aIncludeOrigin) const;
 
   TextLeafPoint FindLineEnd(nsDirection aDirection, bool aIncludeOrigin) const;
+  TextLeafPoint FindWordEnd(nsDirection aDirection, bool aIncludeOrigin) const;
 };
 
 /**
