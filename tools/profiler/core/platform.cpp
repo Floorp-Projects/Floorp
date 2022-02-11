@@ -5457,6 +5457,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   mozilla::base_profiler_markers_detail::EnsureBufferForMainThreadAddMarker();
 
   UniquePtr<ProfileBufferChunkManagerWithLocalLimit> baseChunkManager;
+  bool profilersHandOver = false;
   if (baseprofiler::profiler_is_active()) {
     // Note that we still hold the lock, so the sampler cannot run yet and
     // interact negatively with the still-active BaseProfiler sampler.
@@ -5466,6 +5467,13 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
     // lifetime during the new Gecko Profiler session. Since we're using the
     // same core buffer, all the base profiler data remains.
     baseChunkManager = baseprofiler::detail::ExtractBaseProfilerChunkManager();
+
+    if (baseChunkManager) {
+      profilersHandOver = true;
+      BASE_PROFILER_MARKER_TEXT(
+          "Profilers handover", PROFILER, MarkerTiming::IntervalStart(),
+          "Transition from Base to Gecko Profiler, some data may be missing");
+    }
 
     // Now stop Base Profiler (BP), as further recording will be ignored anyway,
     // and so that it won't clash with Gecko Profiler (GP) sampling starting
@@ -5590,6 +5598,11 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 
   // At the very end, set up RacyFeatures.
   RacyFeatures::SetActive(ActivePS::Features(aLock));
+
+  if (profilersHandOver) {
+    PROFILER_MARKER_UNTYPED("Profilers handover", PROFILER,
+                            MarkerTiming::IntervalEnd());
+  }
 }
 
 void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
