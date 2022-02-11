@@ -260,6 +260,8 @@ class VendorManifest(MozbuildObject):
                 tar.extractall(tmpextractdir)
 
                 prefix = self.manifest["origin"]["name"] + "-" + revision
+                prefix = prefix.replace("@", "-")
+                prefix = prefix.replace("/", "-")
                 has_prefix = all(
                     map(lambda name: name.startswith(prefix), tar.getnames())
                 )
