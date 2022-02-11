@@ -197,12 +197,10 @@ using ThreadRegistry = mozilla::profiler::ThreadRegistry;
 LazyLogModule gProfilerLog("prof");
 
 ProfileChunkedBuffer& profiler_get_core_buffer() {
-  // This needs its own mutex, because it is used concurrently from functions
-  // guarded by gPSMutex as well as others without safety (e.g.,
-  // profiler_add_marker). It is *not* used inside the critical section of the
-  // sampler, because mutexes cannot be used there.
-  static ProfileChunkedBuffer sProfileChunkedBuffer{
-      ProfileChunkedBuffer::ThreadSafety::WithMutex};
+  // Defer to the Base Profiler in mozglue to create the core buffer if needed,
+  // and keep a reference here, for quick access in xul.
+  static ProfileChunkedBuffer& sProfileChunkedBuffer =
+      baseprofiler::profiler_get_core_buffer();
   return sProfileChunkedBuffer;
 }
 
@@ -664,9 +662,11 @@ class ActivePS {
     return aFeatures;
   }
 
-  ActivePS(PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
-           uint32_t aFeatures, const char** aFilters, uint32_t aFilterCount,
-           uint64_t aActiveTabID, const Maybe<double>& aDuration)
+  ActivePS(
+      PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
+      uint32_t aFeatures, const char** aFilters, uint32_t aFilterCount,
+      uint64_t aActiveTabID, const Maybe<double>& aDuration,
+      UniquePtr<ProfileBufferChunkManagerWithLocalLimit> aChunkManagerOrNull)
       : mGeneration(sNextGeneration++),
         mCapacity(aCapacity),
         mDuration(aDuration),
@@ -674,13 +674,15 @@ class ActivePS {
         mFeatures(AdjustFeatures(aFeatures, aFilterCount)),
         mActiveTabID(aActiveTabID),
         mProfileBufferChunkManager(
-            MakeUnique<ProfileBufferChunkManagerWithLocalLimit>(
-                size_t(ClampToAllowedEntries(aCapacity.Value())) *
-                    scBytesPerEntry,
-                ChunkSizeForEntries(aCapacity.Value()))),
+            aChunkManagerOrNull
+                ? std::move(aChunkManagerOrNull)
+                : MakeUnique<ProfileBufferChunkManagerWithLocalLimit>(
+                      size_t(ClampToAllowedEntries(aCapacity.Value())) *
+                          scBytesPerEntry,
+                      ChunkSizeForEntries(aCapacity.Value()))),
         mProfileBuffer([this]() -> ProfileChunkedBuffer& {
           ProfileChunkedBuffer& coreBuffer = profiler_get_core_buffer();
-          coreBuffer.SetChunkManager(*mProfileBufferChunkManager);
+          coreBuffer.SetChunkManagerIfDifferent(*mProfileBufferChunkManager);
           return coreBuffer;
         }()),
         mMaybeProcessCPUCounter(ProfilerFeature::HasProcessCPU(aFeatures)
@@ -783,13 +785,15 @@ class ActivePS {
   }
 
  public:
-  static void Create(PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
-                     uint32_t aFeatures, const char** aFilters,
-                     uint32_t aFilterCount, uint64_t aActiveTabID,
-                     const Maybe<double>& aDuration) {
+  static void Create(
+      PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
+      uint32_t aFeatures, const char** aFilters, uint32_t aFilterCount,
+      uint64_t aActiveTabID, const Maybe<double>& aDuration,
+      UniquePtr<ProfileBufferChunkManagerWithLocalLimit> aChunkManagerOrNull) {
     MOZ_ASSERT(!sInstance);
     sInstance = new ActivePS(aLock, aCapacity, aInterval, aFeatures, aFilters,
-                             aFilterCount, aActiveTabID, aDuration);
+                             aFilterCount, aActiveTabID, aDuration,
+                             std::move(aChunkManagerOrNull));
   }
 
   [[nodiscard]] static SamplerThread* Destroy(PSLockRef aLock) {
@@ -5420,18 +5424,6 @@ static void TriggerPollJSSamplingOnMainThread() {
   }
 }
 
-static bool HasMinimumLength(const char* aString, size_t aMinimumLength) {
-  if (!aString) {
-    return false;
-  }
-  for (size_t i = 0; i < aMinimumLength; ++i) {
-    if (aString[i] == '\0') {
-      return false;
-    }
-  }
-  return true;
-}
-
 static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
                                   double aInterval, uint32_t aFeatures,
                                   const char** aFilters, uint32_t aFilterCount,
@@ -5464,15 +5456,16 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   // (if any) alive for our use.
   mozilla::base_profiler_markers_detail::EnsureBufferForMainThreadAddMarker();
 
-  UniquePtr<char[]> baseprofile;
+  UniquePtr<ProfileBufferChunkManagerWithLocalLimit> baseChunkManager;
   if (baseprofiler::profiler_is_active()) {
     // Note that we still hold the lock, so the sampler cannot run yet and
     // interact negatively with the still-active BaseProfiler sampler.
     // Assume that Base Profiler is active because of MOZ_PROFILER_STARTUP.
-    // Capture the Base Profiler startup profile threads (if any).
-    baseprofile = baseprofiler::profiler_get_profile(
-        /* aSinceTime */ 0, /* aIsShuttingDown */ false,
-        /* aOnlyThreads */ true);
+
+    // Take ownership of the chunk manager from the Base Profiler, to extend its
+    // lifetime during the new Gecko Profiler session. Since we're using the
+    // same core buffer, all the base profiler data remains.
+    baseChunkManager = baseprofiler::detail::ExtractBaseProfilerChunkManager();
 
     // Now stop Base Profiler (BP), as further recording will be ignored anyway,
     // and so that it won't clash with Gecko Profiler (GP) sampling starting
@@ -5509,19 +5502,10 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   double interval = aInterval > 0 ? aInterval : PROFILER_DEFAULT_INTERVAL;
 
   ActivePS::Create(aLock, capacity, interval, aFeatures, aFilters, aFilterCount,
-                   aActiveTabID, duration);
+                   aActiveTabID, duration, std::move(baseChunkManager));
 
   // ActivePS::Create can only succeed or crash.
   MOZ_ASSERT(ActivePS::Exists(aLock));
-
-  // An "empty" profile string may in fact contain 1 character (a newline), so
-  // we want at least 2 characters to register a profile.
-  if (HasMinimumLength(baseprofile.get(), 2)) {
-    // The BaseProfiler startup profile will be stored as a separate "process"
-    // in the Gecko Profiler profile, and shown as a new track under the
-    // corresponding Gecko Profiler thread.
-    ActivePS::AddBaseProfileThreads(aLock, std::move(baseprofile));
-  }
 
   // Set up profiling for each registered thread, if appropriate.
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
