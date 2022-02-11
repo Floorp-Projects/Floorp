@@ -326,6 +326,12 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.HistorySearchTermGroupRemoveAll -> EventWrapper<NoExtraKeys>(
             { History.searchTermGroupRemoveAll.record(it) }
         )
+        is Event.HistorySearchIconTapped -> EventWrapper<NoExtraKeys>(
+            { History.searchIconTapped.record(it) }
+        )
+        is Event.HistorySearchResultTapped -> EventWrapper<NoExtraKeys>(
+            { History.searchResultTapped.record(it) }
+        )
         is Event.RecentlyClosedTabsOpened -> EventWrapper<NoExtraKeys>(
             { RecentlyClosedTabs.opened.record(it) }
         )

@@ -37,6 +37,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentHistorySearchDialogBinding
 import org.mozilla.fenix.databinding.SearchSuggestionsHintBinding
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.library.history.awesomebar.AwesomeBarView
 import org.mozilla.fenix.library.history.toolbar.ToolbarView
@@ -82,6 +83,7 @@ class HistorySearchDialogFragment : AppCompatDialogFragment(), UserInteractionHa
         interactor = HistorySearchDialogInteractor(
             HistorySearchDialogController(
                 activity = activity,
+                metrics = activity.components.analytics.metrics,
                 fragmentStore = store,
                 clearToolbarFocus = {
                     dialogHandledAction = true

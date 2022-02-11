@@ -3124,6 +3124,32 @@ history:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+  search_icon_tapped:
+    type: event
+    description: |
+      A user tapped on the search icon in history.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23694
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23695
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-03-31"
+  search_result_tapped:
+    type: event
+    description: |
+      A user tapped on the search result in history.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23694
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23695
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-03-31"
 
 recently_closed_tabs:
   opened:

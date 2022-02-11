@@ -14,11 +14,14 @@ import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 
 class HistorySearchControllerTest {
 
     @MockK(relaxed = true) private lateinit var activity: HomeActivity
     @MockK(relaxed = true) private lateinit var store: HistorySearchFragmentStore
+    @MockK(relaxed = true) private lateinit var metrics: MetricController
 
     @Before
     fun setUp() {
@@ -64,6 +67,7 @@ class HistorySearchControllerTest {
         createController().handleUrlTapped(url)
 
         verify {
+            metrics.track(Event.HistorySearchResultTapped)
             activity.openToBrowserAndLoad(
                 searchTermOrURL = url,
                 newTab = true,
@@ -78,6 +82,7 @@ class HistorySearchControllerTest {
     ): HistorySearchDialogController {
         return HistorySearchDialogController(
             activity = activity,
+            metrics = metrics,
             fragmentStore = store,
             clearToolbarFocus = clearToolbarFocus,
         )

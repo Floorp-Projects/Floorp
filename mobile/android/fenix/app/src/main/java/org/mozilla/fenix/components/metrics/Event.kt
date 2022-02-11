@@ -90,6 +90,8 @@ sealed class Event {
     object HistorySearchTermGroupOpenTab : Event()
     object HistorySearchTermGroupRemoveTab : Event()
     object HistorySearchTermGroupRemoveAll : Event()
+    object HistorySearchIconTapped : Event()
+    object HistorySearchResultTapped : Event()
     object RecentlyClosedTabsOpened : Event()
     object RecentlyClosedTabsClosed : Event()
     object RecentlyClosedTabsShowFullHistory : Event()

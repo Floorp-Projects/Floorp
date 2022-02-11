@@ -244,6 +244,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             true
         }
         R.id.history_search -> {
+            requireComponents.analytics.metrics.track(Event.HistorySearchIconTapped)
             historyInteractor.onSearch()
             true
         }
