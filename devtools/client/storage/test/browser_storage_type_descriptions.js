@@ -8,7 +8,7 @@
 
 "use strict";
 
-const getStorageTypeURL = require("devtools/client/storage/utils/mdn-utils");
+const getStorageTypeURL = require("devtools/client/storage/utils/doc-utils");
 
 const storeItems = [
   "Cache",
