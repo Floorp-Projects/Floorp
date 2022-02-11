@@ -69,8 +69,9 @@ object TestAssetHelper {
 
     fun getEnhancedTrackingProtectionAsset(server: MockWebServer): TestAsset {
         val url = server.url("pages/trackingPage.html").toString().toUri()!!
+        val content = "Level 1 (Basic) List"
 
-        return TestAsset(url, "", "")
+        return TestAsset(url, content, "")
     }
 
     fun getImageAsset(server: MockWebServer): TestAsset {

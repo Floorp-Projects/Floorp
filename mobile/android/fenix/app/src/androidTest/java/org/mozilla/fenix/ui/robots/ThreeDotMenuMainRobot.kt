@@ -114,6 +114,17 @@ class ThreeDotMenuMainRobot {
         onView(withId(R.id.share_tab_url)).check(matches(isDisplayed()))
     }
 
+    fun openAddonsSubList() {
+        // when there are add-ons installed, there is an overflow Add-ons sub-menu
+        // in that case we use this method instead or before openAddonsManagerMenu()
+        clickAddonsManagerButton()
+    }
+
+    fun verifyAddonAvailableInMainMenu(addonName: String) {
+        onView(withText(addonName))
+            .check(matches(isDisplayed()))
+    }
+
     class Transition {
 
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -329,9 +340,6 @@ class ThreeDotMenuMainRobot {
 
         fun openAddonsManagerMenu(interact: SettingsSubMenuAddonsManagerRobot.() -> Unit): SettingsSubMenuAddonsManagerRobot.Transition {
             clickAddonsManagerButton()
-            mDevice.findObject(
-                UiSelector().text("Recommended")
-            ).waitForExists(waitingTime)
 
             SettingsSubMenuAddonsManagerRobot().interact()
             return SettingsSubMenuAddonsManagerRobot.Transition()

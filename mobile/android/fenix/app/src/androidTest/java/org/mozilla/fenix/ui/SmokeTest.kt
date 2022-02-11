@@ -24,7 +24,6 @@ import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
@@ -259,6 +258,26 @@ class SmokeTest {
         }.openThreeDotMenu {
         }.openBookmarks {
             verifyBookmarksMenuView()
+        }
+    }
+
+    @Test
+    // Verifies the Add-ons menu opens from a tab's 3 dot menu
+    fun openMainMenuAddonsTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openThreeDotMenu {
+        }.openAddonsManagerMenu {
+            addonsListIdlingResource =
+                RecyclerViewIdlingResource(
+                    activityTestRule.activity.findViewById(R.id.add_ons_list),
+                    1
+                )
+            IdlingRegistry.getInstance().register(addonsListIdlingResource!!)
+            verifyAddonsItems()
+            IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
         }
     }
 
@@ -562,36 +581,6 @@ class SmokeTest {
         }.goBack {
         }.openCamera {
             verifyUnblockedByAndroid()
-        }
-    }
-
-    @Test
-    // Installs uBlock add-on and checks that the app doesn't crash while loading pages with trackers
-    fun noCrashWithAddonInstalledTest() {
-        // setting ETP to Strict mode to test it works with add-ons
-        activityTestRule.activity.settings().setStrictETP()
-
-        val addonName = "uBlock Origin"
-        val trackingProtectionPage =
-            TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openAddonsManagerMenu {
-            addonsListIdlingResource =
-                RecyclerViewIdlingResource(
-                    activityTestRule.activity.findViewById(R.id.add_ons_list),
-                    1
-                )
-            IdlingRegistry.getInstance().register(addonsListIdlingResource!!)
-            clickInstallAddon(addonName)
-            acceptInstallAddon()
-            verifyDownloadAddonPrompt(addonName, activityTestRule.activityRule)
-            IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
-        }.goBack {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingProtectionPage.url) {
-            verifyPageContent(trackingProtectionPage.content)
         }
     }
 
