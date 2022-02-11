@@ -47,7 +47,6 @@
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
-#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ScopeExit.h"

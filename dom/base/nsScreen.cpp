@@ -8,7 +8,6 @@
 #include "nsScreen.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDocShell.h"
-#include "mozilla/dom/Document.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsIDocShellTreeItem.h"

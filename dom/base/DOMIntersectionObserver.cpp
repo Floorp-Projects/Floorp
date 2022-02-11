@@ -15,7 +15,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/DocumentInlines.h"

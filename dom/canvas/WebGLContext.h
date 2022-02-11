@@ -30,7 +30,6 @@
 #include "SurfaceTypes.h"
 #include "ScopedGLHelpers.h"
 #include "TexUnpackBlob.h"
-#include "mozilla/WeakPtr.h"
 
 // Local
 #include "CacheInvalidator.h"
@@ -41,8 +40,6 @@
 #include "WebGLTypes.h"
 
 // Generated
-#include "nsICanvasRenderingContextInternal.h"
-#include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 

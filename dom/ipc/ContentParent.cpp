@@ -37,7 +37,6 @@
 #include <map>
 #include <utility>
 
-#include "BrowserParent.h"
 #include "ContentProcessManager.h"
 #include "GeckoProfiler.h"
 #include "Geolocation.h"
@@ -163,7 +162,6 @@
 #include "mozilla/net/NeckoMessageUtils.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/PCookieServiceParent.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryComms.h"
 #include "mozilla/TelemetryEventEnums.h"
 #include "mozilla/RemoteLazyInputStreamParent.h"

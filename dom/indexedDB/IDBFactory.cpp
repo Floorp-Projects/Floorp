@@ -43,10 +43,6 @@
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"
 
-#ifdef DEBUG
-#  include "nsContentUtils.h"  // For assertions.
-#endif
-
 namespace mozilla::dom {
 
 using namespace mozilla::dom::indexedDB;

@@ -13,7 +13,6 @@
 #include "prlink.h"
 #ifdef MOZ_WAYLAND
 #  include "mozilla/widget/DMABufLibWrapper.h"
-#  include "mozilla/StaticPrefs_media.h"
 #endif
 
 #define AV_LOG_DEBUG 48

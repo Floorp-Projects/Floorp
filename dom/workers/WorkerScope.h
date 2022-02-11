@@ -26,7 +26,6 @@
 #include "nsIGlobalObject.h"
 #include "nsISupports.h"
 #include "nsWeakReference.h"
-#include "mozilla/dom/ImageBitmapBinding.h"
 
 #ifdef XP_WIN
 #  undef PostMessage
