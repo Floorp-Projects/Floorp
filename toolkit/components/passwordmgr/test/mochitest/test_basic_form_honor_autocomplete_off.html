@@ -66,10 +66,11 @@ addLoginsInParent(
 let {ContentTaskUtils} = SpecialPowers.Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
 
 // Set the pref before the document loads.
-SpecialPowers.setBoolPref("signon.autofillForms.autocompleteOff", false);
-
-SimpleTest.registerCleanupFunction(() => {
-  SpecialPowers.clearUserPref("signon.autofillForms.autocompleteOff");
+SpecialPowers.pushPrefEnv({
+  "set": [
+    ["signon.autofillForms.autocompleteOff", false],
+    ["signon.usernameOnlyForm.lookupThreshold", 100], // ignore the threshold in test
+  ]
 });
 
 // Check for expected username/password in form.
