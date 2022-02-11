@@ -168,6 +168,13 @@ class MessagePumpLibevent : public MessagePump {
   // ... libevent wrapper for read end
   event* wakeup_event_;
 
+  // Set to false when calling event_base_loop and to true when either of the
+  // OnWakeup, OnLibeventNotification or OnLibeventSignalNotification callbacks
+  // is called.
+  // Used to ensure our calls to profiler_thread_sleep and profiler_thread_wake
+  // are paired correctly.
+  static bool awake_;
+
   DISALLOW_COPY_AND_ASSIGN(MessagePumpLibevent);
 };
 
