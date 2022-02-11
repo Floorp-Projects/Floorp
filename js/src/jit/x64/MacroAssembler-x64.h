@@ -1100,6 +1100,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
                        FloatRegister dest);
   void vcmplepdSimd128(const SimdConstant& v, FloatRegister lhs,
                        FloatRegister dest);
+  void vpmaddubswSimd128(const SimdConstant& v, FloatRegister lhs,
+                         FloatRegister dest);
 
   void loadWasmPinnedRegsFromTls() {
     loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);

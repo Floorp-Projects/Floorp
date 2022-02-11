@@ -2984,9 +2984,7 @@ void CodeGenerator::visitWasmConstantShiftSimd128(
   int32_t shift = ins->shift();
 
   if (shift == 0) {
-    if (src != dest) {
-      masm.moveSimd128(src, dest);
-    }
+    masm.moveSimd128(src, dest);
     return;
   }
 
