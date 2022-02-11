@@ -187,7 +187,7 @@ class VendorManifest(MozbuildObject):
                 paths.extend(glob.iglob(pattern_full_path, recursive=True))
         # Remove folder names from list of paths in order to avoid prematurely
         # truncating directories elsewhere
-        return [path for path in paths if not os.path.isdir(path)]
+        return [mozpath.normsep(path) for path in paths if not os.path.isdir(path)]
 
     def fetch_and_unpack(self, revision):
         """Fetch and unpack upstream source"""
@@ -214,7 +214,9 @@ class VendorManifest(MozbuildObject):
                             "Tar archive contains non-local paths, e.g. '%s'" % name
                         )
 
-                vendor_dir = self.manifest["vendoring"]["vendor-directory"]
+                vendor_dir = mozpath.normsep(
+                    self.manifest["vendoring"]["vendor-directory"]
+                )
                 if self.should_perform_step("keep"):
                     self.log(
                         logging.INFO,
@@ -245,6 +247,7 @@ class VendorManifest(MozbuildObject):
                 )
                 # We use double asterisk wildcard here to get complete list of recursive contents
                 for file in self.convert_patterns_to_paths(vendor_dir, "**"):
+                    file = mozpath.normsep(file)
                     if file not in to_keep:
                         mozfile.remove(file)
 
