@@ -140,5 +140,5 @@ gifft.validation:
       - technical
     notification_emails:
       - chutten@mozilla.com
-    expires: '102'
+    expires: 102
     telemetry_mirror: GIFFT_VALIDATION_MIRROR_FOR_MAIN_PING_ASSEMBLING
