@@ -311,7 +311,7 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(lessDebugCode, false);
 
   // Whether the MegamorphicCache is enabled.
-  SET_DEFAULT(enableWatchtowerMegamorphic, false);
+  SET_DEFAULT(enableWatchtowerMegamorphic, true);
 
   SET_DEFAULT(enableWasmJitExit, true);
   SET_DEFAULT(enableWasmJitEntry, true);
