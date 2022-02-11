@@ -15,9 +15,6 @@ menubar {
   font: menu;
 }
 
-menuitem {
-  padding: 4px 6px;
-}
 
 menu,
 menuitem,
@@ -25,6 +22,7 @@ menucaption {
   appearance: auto;
   -moz-default-appearance: menuitem;
   -moz-box-align: center;
+  padding: 4px 6px;
   max-width: 42em;
   list-style-image: none;
   -moz-image-region: auto;
@@ -84,10 +82,7 @@ menulist > menupopup {
   font: inherit;
 }
 
-menulist > menupopup > menuitem,
-menulist > menupopup > menucaption,
-menulist > menupopup > menu {
-  padding: 1px 5px;
+menulist > menupopup > :is(menuitem, menucaption, menu) {
   max-width: none;
 }
 
@@ -155,9 +150,7 @@ menulist > menupopup > menu {
 }
 
 
-menulist > menupopup > menuitem > .menu-iconic-left,
-menulist > menupopup > menucaption > .menu-iconic-left,
-menulist > menupopup > menu > .menu-iconic-left {
+menulist > menupopup > :is(menuitem, menucaption, menu) > .menu-iconic-left {
   display: none;
 }
 
