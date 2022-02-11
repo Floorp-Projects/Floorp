@@ -1,5 +1,5 @@
 const BROWSER_VERSION = "8.4.7"
-const APP_ID = "floorp"
+const APP_ID = "floorp-global"
 const API_END_POINT = "https://repo.ablaze.one/api/"
 
 const Notify = (url, now, latest) =>{
