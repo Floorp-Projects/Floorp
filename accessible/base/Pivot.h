@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace a11y {
 
+class LocalAccessible;
+class HyperTextAccessible;
 class DocAccessible;
 class Accessible;
 
@@ -54,12 +56,12 @@ class Pivot final {
   Accessible* Last(PivotRule& aRule);
 
   // Return the next range of text according to the boundary type.
-  Accessible* NextText(Accessible* aAnchor, int32_t* aStartOffset,
-                       int32_t* aEndOffset, int32_t aBoundaryType);
+  LocalAccessible* NextText(LocalAccessible* aAnchor, int32_t* aStartOffset,
+                            int32_t* aEndOffset, int32_t aBoundaryType);
 
   // Return the previous range of text according to the boundary type.
-  Accessible* PrevText(Accessible* aAnchor, int32_t* aStartOffset,
-                       int32_t* aEndOffset, int32_t aBoundaryType);
+  LocalAccessible* PrevText(LocalAccessible* aAnchor, int32_t* aStartOffset,
+                            int32_t* aEndOffset, int32_t aBoundaryType);
 
   // Return the accessible at the given screen coordinate if it matches the
   // pivot rule.
@@ -78,7 +80,7 @@ class Pivot final {
                              bool aSearchCurrent);
 
   // Search in preorder for the first text accessible.
-  Accessible* SearchForText(Accessible* aAnchor, bool aBackward);
+  HyperTextAccessible* SearchForText(LocalAccessible* aAnchor, bool aBackward);
 
   Accessible* mRoot;
 };
