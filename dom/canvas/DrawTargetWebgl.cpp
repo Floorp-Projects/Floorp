@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DrawTargetWebglInternal.h"
+#include "SourceSurfaceWebgl.h"
 
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/gfx/Blur.h"
@@ -180,7 +181,32 @@ StandaloneTexture::StandaloneTexture(const IntSize& aSize,
 
 DrawTargetWebgl::DrawTargetWebgl() = default;
 
-DrawTargetWebgl::~DrawTargetWebgl() = default;
+inline void DrawTargetWebgl::SharedContext::ClearLastTexture() {
+  mLastTexture = nullptr;
+}
+
+// Attempts to clear the snapshot state. If the snapshot is only referenced by
+// this target, then it should simply be destroyed. If it is a WebGL surface in
+// use by something else, then special cleanup such as reusing the texture or
+// copy-on-write may be possible, so return it in that case.
+inline already_AddRefed<SourceSurfaceWebgl> DrawTargetWebgl::ClearSnapshot() {
+  if (mSnapshot) {
+    mSharedContext->ClearLastTexture();
+    if (!mSnapshot->hasOneRef() && mSnapshot->GetType() == SurfaceType::WEBGL) {
+      return mSnapshot.forget().downcast<SourceSurfaceWebgl>();
+    }
+    mSnapshot = nullptr;
+  }
+  return nullptr;
+}
+
+DrawTargetWebgl::~DrawTargetWebgl() {
+  if (RefPtr<SourceSurfaceWebgl> snapshot = ClearSnapshot()) {
+    // Just give the backing texture to the surface.
+    snapshot->GiveTexture(
+        mSharedContext->WrapSnapshot(GetSize(), GetFormat(), mTex.forget()));
+  }
+}
 
 DrawTargetWebgl::SharedContext::SharedContext() = default;
 
@@ -197,6 +223,10 @@ DrawTargetWebgl::SharedContext::~SharedContext() {
 inline void DrawTargetWebgl::SharedContext::UnlinkSurfaceTexture(
     const RefPtr<TextureHandle>& aHandle) {
   if (SourceSurface* surface = aHandle->GetSurface()) {
+    // Ensure any WebGL snapshot textures get unlinked.
+    if (surface->GetType() == SurfaceType::WEBGL) {
+      static_cast<SourceSurfaceWebgl*>(surface)->OnUnlinkTexture(this);
+    }
     surface->RemoveUserData(aHandle->IsShadow() ? &mShadowTextureKey
                                                 : &mTextureHandleKey);
   }
@@ -227,6 +257,9 @@ WeakPtr<DrawTargetWebgl::SharedContext> DrawTargetWebgl::sSharedContext;
 // Try to initialize a new WebGL context. Verifies that the requested size does
 // not exceed the available texture limits and that shader creation succeeded.
 bool DrawTargetWebgl::Init(const IntSize& size, const SurfaceFormat format) {
+  MOZ_ASSERT(format == SurfaceFormat::B8G8R8A8 ||
+             format == SurfaceFormat::B8G8R8X8);
+
   mSize = size;
   mFormat = format;
 
@@ -251,7 +284,7 @@ bool DrawTargetWebgl::Init(const IntSize& size, const SurfaceFormat format) {
   }
 
   mSkia = new DrawTargetSkia;
-  if (!mSkia->Init(size, SurfaceFormat::B8G8R8A8)) {
+  if (!mSkia->Init(size, format)) {
     return false;
   }
 
@@ -439,6 +472,70 @@ void* DrawTargetWebgl::GetNativeSurface(NativeSurfaceType aType) {
   }
 }
 
+// Wrap a WebGL texture holding a snapshot with a texture handle. Note that
+// while the texture is still in use as the backing texture of a framebuffer,
+// it's texture memory is not currently tracked with other texture handles.
+// Once it is finally orphaned and used as a texture handle, it must be added
+// to the resource usage totals.
+already_AddRefed<TextureHandle> DrawTargetWebgl::SharedContext::WrapSnapshot(
+    const IntSize& aSize, SurfaceFormat aFormat, RefPtr<WebGLTextureJS> aTex) {
+  // Ensure there is enough space for the texture.
+  size_t usedBytes = TextureHandle::UsedBytes(aFormat, aSize);
+  PruneTextureMemory(usedBytes, false);
+  // Allocate a handle for the texture
+  RefPtr<StandaloneTexture> handle =
+      new StandaloneTexture(aSize, aFormat, aTex.forget());
+  mStandaloneTextures.push_back(handle);
+  mTextureHandles.insertFront(handle);
+  mTotalTextureMemory += usedBytes;
+  mUsedTextureMemory += usedBytes;
+  ++mNumTextureHandles;
+  return handle.forget();
+}
+
+void DrawTargetWebgl::SharedContext::InitTexParameters(WebGLTextureJS* aTex) {
+  mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S,
+                        LOCAL_GL_CLAMP_TO_EDGE);
+  mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T,
+                        LOCAL_GL_CLAMP_TO_EDGE);
+  mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER,
+                        LOCAL_GL_LINEAR);
+  mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER,
+                        LOCAL_GL_LINEAR);
+}
+
+// Copy the contents of the WebGL framebuffer into a WebGL texture.
+already_AddRefed<TextureHandle> DrawTargetWebgl::SharedContext::CopySnapshot() {
+  // If the target is going away, then we can just directly reuse the
+  // framebuffer texture since it will never change.
+  RefPtr<WebGLTextureJS> tex = mWebgl->CreateTexture();
+  if (!tex) {
+    return nullptr;
+  }
+
+  SurfaceFormat format = mCurrentTarget->GetFormat();
+  IntSize size = mCurrentTarget->GetSize();
+  // Create a texture to hold the copy
+  mWebgl->BindTexture(LOCAL_GL_TEXTURE_2D, tex);
+  mWebgl->TexStorage2D(LOCAL_GL_TEXTURE_2D, 1, LOCAL_GL_RGBA8, size.width,
+                       size.height);
+  InitTexParameters(tex);
+  // Copy the framebuffer into the texture
+  mWebgl->CopyTexSubImage2D(LOCAL_GL_TEXTURE_2D, 0, 0, 0, 0, 0, size.width,
+                            size.height);
+  ClearLastTexture();
+
+  return WrapSnapshot(size, format, tex.forget());
+}
+
+// Utility method to install the target before copying a snapshot.
+already_AddRefed<TextureHandle> DrawTargetWebgl::CopySnapshot() {
+  if (!PrepareContext(false)) {
+    return nullptr;
+  }
+  return mSharedContext->CopySnapshot();
+}
+
 already_AddRefed<SourceSurface> DrawTargetWebgl::Snapshot() {
   // If already using the Skia fallback, then just snapshot that.
   if (mSkiaValid) {
@@ -448,67 +545,103 @@ already_AddRefed<SourceSurface> DrawTargetWebgl::Snapshot() {
     return mSkia->Snapshot();
   }
 
-  // Check if there's already a snapshot.
-  RefPtr<SourceSurface> snapshot = mSnapshot;
-  if (snapshot) {
-    return snapshot.forget();
-  }
-
-  // If there's no valid Skia and the WebGL context is lost, there is nothing to
-  // snapshot.
-  if (mSharedContext->IsContextLost()) {
-    return nullptr;
-  }
-
-  // If no snapshot, then allocate one, map it, and read from the WebGL context
-  // into the surface.
-  mSnapshot = Factory::CreateDataSourceSurface(mSize, mFormat);
+  // There's no valid Skia snapshot, so we need to get one from the WebGL
+  // context.
   if (!mSnapshot) {
-    return nullptr;
+    // First just try to create a copy-on-write reference to this target.
+    RefPtr<SourceSurfaceWebgl> snapshot = new SourceSurfaceWebgl;
+    if (snapshot->Init(this)) {
+      mSnapshot = snapshot;
+    } else {
+      // Otherwse, we have to just read back the framebuffer contents. This may
+      // fail if the WebGL context is lost.
+      mSnapshot = ReadSnapshot();
+    }
   }
-  DataSourceSurface::ScopedMap dstMap(mSnapshot, DataSourceSurface::WRITE);
-  if (!dstMap.IsMapped() || !ReadInto(dstMap.GetData(), dstMap.GetStride())) {
-    mSnapshot = nullptr;
-    return nullptr;
-  }
-
-  snapshot = mSnapshot;
-  return snapshot.forget();
+  return do_AddRef(mSnapshot);
 }
 
 // Read from the WebGL context into a buffer. This handles both swizzling BGRA
 // to RGBA and flipping the image.
+bool DrawTargetWebgl::SharedContext::ReadInto(uint8_t* aDstData,
+                                              int32_t aDstStride,
+                                              SurfaceFormat aFormat,
+                                              const IntRect& aBounds,
+                                              TextureHandle* aHandle) {
+  MOZ_ASSERT(aFormat == SurfaceFormat::B8G8R8A8 ||
+             aFormat == SurfaceFormat::B8G8R8X8);
+
+  // If reading into a new texture, we have to bind it to a scratch framebuffer
+  // for reading.
+  if (aHandle) {
+    if (!mScratchFramebuffer) {
+      mScratchFramebuffer = mWebgl->CreateFramebuffer();
+    }
+    mWebgl->BindFramebuffer(LOCAL_GL_FRAMEBUFFER, mScratchFramebuffer);
+    mWebgl->FramebufferTexture2D(
+        LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D,
+        aHandle->GetWebGLTexture(), 0);
+  }
+
+  webgl::ReadPixelsDesc desc;
+  desc.srcOffset = *ivec2::From(aBounds);
+  desc.size = *uvec2::FromSize(aBounds);
+  desc.packState.rowLength = aDstStride / 4;
+  Range<uint8_t> range = {aDstData, size_t(aDstStride) * aBounds.height};
+  mWebgl->DoReadPixels(desc, range);
+
+  // Restore the actual framebuffer after reading is done.
+  if (aHandle && mCurrentTarget) {
+    mWebgl->BindFramebuffer(LOCAL_GL_FRAMEBUFFER, mCurrentTarget->mFramebuffer);
+  }
+
+  SwizzleData(aDstData, aDstStride, SurfaceFormat::R8G8B8A8, aDstData,
+              aDstStride, aFormat, aBounds.Size());
+  return true;
+}
+
+already_AddRefed<DataSourceSurface>
+DrawTargetWebgl::SharedContext::ReadSnapshot(TextureHandle* aHandle) {
+  // Allocate a data surface, map it, and read from the WebGL context into the
+  // surface.
+  SurfaceFormat format = SurfaceFormat::UNKNOWN;
+  IntRect bounds;
+  if (aHandle) {
+    format = aHandle->GetFormat();
+    bounds = aHandle->GetBounds();
+  } else {
+    format = mCurrentTarget->GetFormat();
+    bounds = mCurrentTarget->GetRect();
+  }
+  RefPtr<DataSourceSurface> surface =
+      Factory::CreateDataSourceSurface(bounds.Size(), format);
+  if (!surface) {
+    return nullptr;
+  }
+  DataSourceSurface::ScopedMap dstMap(surface, DataSourceSurface::WRITE);
+  if (!dstMap.IsMapped() || !ReadInto(dstMap.GetData(), dstMap.GetStride(),
+                                      format, bounds, aHandle)) {
+    return nullptr;
+  }
+  return surface.forget();
+}
+
+// Utility method to install the target before reading a snapshot.
 bool DrawTargetWebgl::ReadInto(uint8_t* aDstData, int32_t aDstStride) {
   if (!PrepareContext(false)) {
     return false;
   }
 
-  RefPtr<DataSourceSurface> temp =
-      Factory::CreateDataSourceSurface(mSize, mFormat);
-  if (!temp) {
-    return false;
-  }
-  DataSourceSurface::ScopedMap srcMap(temp, DataSourceSurface::READ_WRITE);
-  if (!srcMap.IsMapped()) {
-    return false;
+  return mSharedContext->ReadInto(aDstData, aDstStride, GetFormat(), GetRect());
+}
+
+// Utility method to install the target before reading a snapshot.
+already_AddRefed<DataSourceSurface> DrawTargetWebgl::ReadSnapshot() {
+  if (!PrepareContext(false)) {
+    return nullptr;
   }
 
-  int32_t srcStride = srcMap.GetStride();
-  webgl::ReadPixelsDesc desc;
-  desc.srcOffset = {0, 0};
-  desc.size = *uvec2::FromSize(mSize);
-  desc.packState.rowLength = srcStride / 4;
-  Range<uint8_t> range = {srcMap.GetData(), size_t(srcStride) * mSize.height};
-  mSharedContext->mWebgl->DoReadPixels(desc, range);
-  const uint8_t* srcRow = srcMap.GetData();
-  uint8_t* dstRow = aDstData + size_t(aDstStride) * mSize.height;
-  for (int y = 0; y < mSize.height; y++) {
-    dstRow -= aDstStride;
-    SwizzleData(srcRow, srcMap.GetStride(), SurfaceFormat::B8G8R8A8, dstRow,
-                aDstStride, SurfaceFormat::R8G8B8A8, IntSize(mSize.width, 1));
-    srcRow += srcStride;
-  }
-  return true;
+  return mSharedContext->ReadSnapshot();
 }
 
 already_AddRefed<SourceSurface> DrawTargetWebgl::GetBackingSurface() {
@@ -517,7 +650,11 @@ already_AddRefed<SourceSurface> DrawTargetWebgl::GetBackingSurface() {
 
 void DrawTargetWebgl::MarkChanged() {
   mSkiaValid = false;
-  mSnapshot = nullptr;
+  if (RefPtr<SourceSurfaceWebgl> snapshot = ClearSnapshot()) {
+    // WebGL snapshots must be notified that the framebuffer contents will be
+    // changing so that it can copy the data.
+    snapshot->DrawTargetWillChange();
+  }
 }
 
 bool DrawTargetWebgl::LockBits(uint8_t** aData, IntSize* aSize,
@@ -625,7 +762,9 @@ bool DrawTargetWebgl::SharedContext::CreateShaders() {
         "void main() {\n"
         "   vec2 tc = clamp(v_texcoord, u_texbounds.xy, u_texbounds.zw);\n"
         "   vec4 image = texture2D(u_sampler, tc);\n"
-        "   gl_FragColor = u_color * mix(image.bgra, image.rrrr, u_swizzle);\n"
+        "   image = u_swizzle > 0.0 ? image.rrrr\n"
+        "                           : (u_swizzle < 0.0 ? image : image.bgra);\n"
+        "   gl_FragColor = u_color * image;\n"
         "}\n"_ns;
     RefPtr<WebGLShaderJS> vsId = mWebgl->CreateShader(LOCAL_GL_VERTEX_SHADER);
     mWebgl->ShaderSource(*vsId, vsSource);
@@ -690,14 +829,7 @@ bool DrawTargetWebgl::CreateFramebuffer() {
     webgl->BindTexture(LOCAL_GL_TEXTURE_2D, mTex);
     webgl->TexStorage2D(LOCAL_GL_TEXTURE_2D, 1, LOCAL_GL_RGBA8, mSize.width,
                         mSize.height);
-    webgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S,
-                         LOCAL_GL_CLAMP_TO_EDGE);
-    webgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T,
-                         LOCAL_GL_CLAMP_TO_EDGE);
-    webgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER,
-                         LOCAL_GL_LINEAR);
-    webgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER,
-                         LOCAL_GL_LINEAR);
+    mSharedContext->InitTexParameters(mTex);
     webgl->BindFramebuffer(LOCAL_GL_FRAMEBUFFER, mFramebuffer);
     webgl->FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
                                 LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D,
@@ -891,6 +1023,30 @@ void DrawTargetWebgl::DrawRectFallback(const Rect& aRect,
   }
 }
 
+inline already_AddRefed<WebGLTextureJS>
+DrawTargetWebgl::SharedContext::GetCompatibleSnapshot(SourceSurface* aSurface) {
+  if (aSurface->GetType() == SurfaceType::WEBGL) {
+    RefPtr<SourceSurfaceWebgl> webglSurf =
+        static_cast<SourceSurfaceWebgl*>(aSurface);
+    if (this == webglSurf->mSharedContext) {
+      // If there is a snapshot copy in a texture handle, use that.
+      if (webglSurf->mHandle) {
+        return do_AddRef(webglSurf->mHandle->GetWebGLTexture());
+      }
+      if (RefPtr<DrawTargetWebgl> webglDT = webglSurf->GetTarget()) {
+        // If there is a copy-on-write reference to a target, use its backing
+        // texture directly. This is only safe if the targets don't match, but
+        // MarkChanged should ensure that any snapshots were copied into a
+        // texture handle before we ever get here.
+        if (!IsCurrentTarget(webglDT)) {
+          return do_AddRef(webglDT->mTex);
+        }
+      }
+    }
+  }
+  return nullptr;
+}
+
 // Common rectangle and pattern drawing function shared by many DrawTarget
 // commands. If aMaskColor is specified, the provided surface pattern will be
 // treated as a mask. If aHandle is specified, then the surface pattern's
@@ -930,9 +1086,8 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
   if (!mClipRect.Contains(IntRect(IntPoint(), mViewportSize))) {
     scissor = true;
     mWebgl->Enable(LOCAL_GL_SCISSOR_TEST);
-    mWebgl->Scissor(mClipRect.x,
-                    mViewportSize.height - (mClipRect.y + mClipRect.height),
-                    mClipRect.width, mClipRect.height);
+    mWebgl->Scissor(mClipRect.x, mClipRect.y, mClipRect.width,
+                    mClipRect.height);
   }
 
   const Matrix& currentTransform = GetTransform();
@@ -941,24 +1096,26 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
   // Now try to actually draw the pattern...
   switch (aPattern.GetType()) {
     case PatternType::COLOR: {
+      mCurrentTarget->MarkChanged();
       auto color = static_cast<const ColorPattern&>(aPattern).mColor;
       if (((color.a * aOptions.mAlpha == 1.0f &&
             aOptions.mCompositionOp == CompositionOp::OP_OVER) ||
            aOptions.mCompositionOp == CompositionOp::OP_SOURCE) &&
-          currentTransform.HasOnlyIntegerTranslation()) {
+          (!aTransformed || currentTransform.HasOnlyIntegerTranslation())) {
         // Certain color patterns can be mapped to scissored cleared. The
         // composition op must effectively overwrite the destination, and the
         // transform must map to an axis-aligned integer rectangle.
         auto intRect = RoundedToInt(aRect);
         if (aRect.WithinEpsilonOf(Rect(intRect), 1.0e-3f)) {
-          intRect += RoundedToInt(currentTransform.GetTranslation());
+          if (aTransformed) {
+            intRect += RoundedToInt(currentTransform.GetTranslation());
+          }
           if (!intRect.Contains(mClipRect)) {
             scissor = true;
             mWebgl->Enable(LOCAL_GL_SCISSOR_TEST);
             intRect = intRect.Intersect(mClipRect);
-            mWebgl->Scissor(intRect.x,
-                            mViewportSize.height - (intRect.y + intRect.height),
-                            intRect.width, intRect.height);
+            mWebgl->Scissor(intRect.x, intRect.y, intRect.width,
+                            intRect.height);
           }
           float a = color.a * aOptions.mAlpha;
           mWebgl->ClearColor(color.r * a, color.g * a, color.b * a, a);
@@ -980,7 +1137,7 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
         xform *= currentTransform;
       }
       xform *= Matrix(2.0f / float(mViewportSize.width), 0.0f, 0.0f,
-                      -2.0f / float(mViewportSize.height), -1, 1);
+                      2.0f / float(mViewportSize.height), -1, -1);
       float xformData[6] = {xform._11, xform._12, xform._21,
                             xform._22, xform._31, xform._32};
       mWebgl->UniformData(LOCAL_GL_FLOAT_VEC2, mSolidProgramTransform, false,
@@ -1032,6 +1189,7 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
           offset = surfacePattern.mSamplingRect.TopLeft();
         }
       }
+      mCurrentTarget->MarkChanged();
 
       // Switch to the image shader and set up relevant transforms.
       if (mLastProgram != mImageProgram) {
@@ -1047,15 +1205,13 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
         xform *= currentTransform;
       }
       xform *= Matrix(2.0f / float(mViewportSize.width), 0.0f, 0.0f,
-                      -2.0f / float(mViewportSize.height), -1, 1);
+                      2.0f / float(mViewportSize.height), -1, -1);
       float xformData[6] = {xform._11, xform._12, xform._21,
                             xform._22, xform._31, xform._32};
       mWebgl->UniformData(LOCAL_GL_FLOAT_VEC2, mImageProgramTransform, false,
                           {(const uint8_t*)xformData, sizeof(xformData)});
       mWebgl->UniformData(LOCAL_GL_FLOAT_VEC4, mImageProgramColor, false,
                           {(const uint8_t*)colorData, sizeof(colorData)});
-      mWebgl->UniformData(LOCAL_GL_FLOAT, mImageProgramSwizzle, false,
-                          {(const uint8_t*)&swizzleData, sizeof(swizzleData)});
 
       RefPtr<WebGLTextureJS> tex;
       IntRect bounds;
@@ -1073,6 +1229,11 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
           mUsedTextureMemory += handle->UsedBytes();
           handle->SetSamplingOffset(surfacePattern.mSamplingRect.TopLeft());
         }
+      } else if ((tex = GetCompatibleSnapshot(surfacePattern.mSurface))) {
+        backingSize = surfacePattern.mSurface->GetSize();
+        bounds = IntRect(offset, texSize);
+        // The WebGL framebuffer texture requires no swizzling to RGBA.
+        swizzleData = -1.0f;
       } else {
         // There is no existing handle. Calculate the bytes that would be used
         // by this texture, and prune enough other textures to ensure we have
@@ -1152,11 +1313,13 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
       }
 
       // Start binding the WebGL state for the texture.
-      if (!tex) {
-        tex = handle->GetWebGLTexture();
+      if (handle) {
+        if (!tex) {
+          tex = handle->GetWebGLTexture();
+        }
+        bounds = handle->GetBounds();
+        backingSize = handle->GetBackingSize();
       }
-      bounds = handle->GetBounds();
-      backingSize = handle->GetBackingSize();
       if (mLastTexture != tex) {
         mWebgl->BindTexture(LOCAL_GL_TEXTURE_2D, tex);
         mLastTexture = tex;
@@ -1165,14 +1328,7 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
       if (init) {
         // If this is the first time the texture is used, we need to initialize
         // the clamping and filtering state.
-        mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S,
-                              LOCAL_GL_CLAMP_TO_EDGE);
-        mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T,
-                              LOCAL_GL_CLAMP_TO_EDGE);
-        mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER,
-                              LOCAL_GL_LINEAR);
-        mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER,
-                              LOCAL_GL_LINEAR);
+        InitTexParameters(tex);
         if (texSize != backingSize) {
           // If this is a shared texture handle whose actual backing texture is
           // larger than it, then we need to allocate the texture page to the
@@ -1231,15 +1387,18 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
                             texDesc);
       }
 
+      mWebgl->UniformData(LOCAL_GL_FLOAT, mImageProgramSwizzle, false,
+                          {(const uint8_t*)&swizzleData, sizeof(swizzleData)});
+
       // Set up the texture coordinate matrix to map from the input rectangle to
       // the backing texture subrect.
       Size backingSizeF(backingSize);
       Matrix uvMatrix(aRect.width, 0.0f, 0.0f, aRect.height, aRect.x, aRect.y);
       uvMatrix *= surfacePattern.mMatrix.Inverse();
-      uvMatrix *=
-          Matrix(1.0f / backingSizeF.width, 0, 0, 1.0f / backingSizeF.height,
-                 float(bounds.x - offset.x) / backingSizeF.width,
-                 float(bounds.y - offset.y) / backingSizeF.height);
+      uvMatrix *= Matrix(1.0f / backingSizeF.width, 0.0f, 0.0f,
+                         1.0f / backingSizeF.height,
+                         float(bounds.x - offset.x) / backingSizeF.width,
+                         float(bounds.y - offset.y) / backingSizeF.height);
       float uvData[6] = {uvMatrix._11, uvMatrix._12, uvMatrix._21,
                          uvMatrix._22, uvMatrix._31, uvMatrix._32};
       mWebgl->UniformData(LOCAL_GL_FLOAT_VEC2, mImageProgramTexMatrix, false,
@@ -1271,11 +1430,6 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
   // Clean up any scissor state if there was clipping.
   if (scissor) {
     mWebgl->Disable(LOCAL_GL_SCISSOR_TEST);
-  }
-  if (success) {
-    // Drawing succeeded, so signal to the current target that the framebuffer
-    // contents was modified.
-    mCurrentTarget->MarkChanged();
   }
   return success;
 }
@@ -2176,15 +2330,9 @@ void DrawTargetWebgl::FlattenSkia() {
   if (!mSkiaValid || !mSkiaLayer) {
     return;
   }
-  RefPtr<DataSourceSurface> base =
-      Factory::CreateDataSourceSurface(mSize, mFormat);
-  if (base) {
-    DataSourceSurface::ScopedMap baseMap(base, DataSourceSurface::WRITE);
-    if (baseMap.IsMapped() &&
-        ReadInto(baseMap.GetData(), baseMap.GetStride())) {
-      mSkia->BlendSurface(base, GetRect(), IntPoint(),
-                          CompositionOp::OP_DEST_OVER);
-    }
+  if (RefPtr<DataSourceSurface> base = ReadSnapshot()) {
+    mSkia->BlendSurface(base, GetRect(), IntPoint(),
+                        CompositionOp::OP_DEST_OVER);
   }
   mSkiaLayer = false;
 }
@@ -2270,6 +2418,9 @@ DrawTargetWebgl::CreateSourceSurfaceFromNativeSurface(
 
 already_AddRefed<SourceSurface> DrawTargetWebgl::OptimizeSourceSurface(
     SourceSurface* aSurface) const {
+  if (aSurface->GetType() == SurfaceType::WEBGL) {
+    return do_AddRef(aSurface);
+  }
   return mSkia->OptimizeSourceSurface(aSurface);
 }
 
