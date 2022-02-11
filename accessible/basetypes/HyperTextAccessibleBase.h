@@ -187,7 +187,8 @@ class HyperTextAccessibleBase {
    * accordingly.
    */
   void AdjustOriginIfEndBoundary(TextLeafPoint& aOrigin,
-                                 AccessibleTextBoundary aBoundaryType) const;
+                                 AccessibleTextBoundary aBoundaryType,
+                                 bool aAtOffset = false) const;
 };
 
 }  // namespace mozilla::a11y
