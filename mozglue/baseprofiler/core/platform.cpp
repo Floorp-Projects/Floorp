@@ -730,6 +730,12 @@ class ActivePS {
     return n;
   }
 
+  static UniquePtr<ProfileBufferChunkManagerWithLocalLimit>
+  ExtractBaseProfilerChunkManager(PSLockRef) {
+    MOZ_ASSERT(sInstance);
+    return std::move(sInstance->mProfileBufferChunkManager);
+  }
+
   static bool ShouldProfileThread(PSLockRef aLock, ThreadInfo* aInfo) {
     MOZ_ASSERT(sInstance);
     return sInstance->ThreadSelected(aInfo->Name());
@@ -1056,6 +1062,19 @@ uint32_t ActivePS::sNextGeneration = 0;
 #undef PS_GET
 #undef PS_GET_LOCKLESS
 #undef PS_GET_AND_SET
+
+namespace detail {
+
+[[nodiscard]] MFBT_API UniquePtr<ProfileBufferChunkManagerWithLocalLimit>
+ExtractBaseProfilerChunkManager() {
+  PSAutoLock lock;
+  if (MOZ_UNLIKELY(!ActivePS::Exists(lock))) {
+    return nullptr;
+  }
+  return ActivePS::ExtractBaseProfilerChunkManager(lock);
+}
+
+}  // namespace detail
 
 Atomic<uint32_t, MemoryOrdering::Relaxed> RacyFeatures::sActiveAndFeatures(0);
 
