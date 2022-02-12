@@ -514,14 +514,14 @@ this.ExtensionPreferencesManager = {
     callback,
     storeType,
     readOnly = false,
-    validate = () => {}
+    validate
   ) {
     if (arguments.length > 1) {
       Services.console.logStringMessage(
         `ExtensionPreferencesManager.getSettingsAPI for ${name} should be updated to use a single paramater object.`
       );
     }
-    return ExtensionPreferencesManager._getSettingsAPI(
+    return ExtensionPreferencesManager._getInternalSettingsAPI(
       arguments.length === 1
         ? extensionId
         : {
@@ -532,17 +532,56 @@ this.ExtensionPreferencesManager = {
             readOnly,
             validate,
           }
-    );
+    ).api;
   },
 
   /**
-   * Returns an API object with get/set/clear used for a setting.
+   * getPrimedSettingsListener returns a function used to create
+   * a primed event listener.
+   *
+   * If a module overrides onChange then it must provide it's own
+   * persistent listener logic.  See homepage_override in browserSettings
+   * for an example.
+   *
+   * addSetting must be called prior to priming listeners.
+   *
+   * @param {object} config see getSettingsAPI
+   *        {Extension} extension, passed through to validate and used for extensionId
+   *        {string} name
+   *          The unique id of the settings api in the module, e.g. "settings"
+   * @returns {object} prime listener object
+   */
+  getPrimedSettingsListener(config) {
+    let { name, extension } = config;
+    if (!name || !extension) {
+      throw new Error(
+        `name and extension are required for getPrimedSettingListener`
+      );
+    }
+    if (!settingsMap.get(name)) {
+      throw new Error(
+        `addSetting must be called prior to getPrimedSettingListener`
+      );
+    }
+    return ExtensionPreferencesManager._getInternalSettingsAPI({
+      name,
+      extension,
+    }).registerEvent;
+  },
+
+  /**
+   * Returns an object with a public API containing get/set/clear used for a setting,
+   * and a registerEvent function used for registering the event listener.
    *
    * @param {object} params The params object contains the following:
    *        {BaseContext} context
+   *        {Extension} extension, optional, passed through to validate and used for extensionId
    *        {string} extensionId, optional to support old API
+   *        {string} module
+   *          The name of the api module, e.g. "proxy"
    *        {string} name
-   *          The unique id of the setting.
+   *          The unique id of the settings api in the module, e.g. "settings"
+   *          "name" should match the name given in the addSetting call.
    *        {Function} callback
    *          The function that retreives the current setting from prefs.
    *        {string} storeType
@@ -553,21 +592,30 @@ this.ExtensionPreferencesManager = {
    *          Utility function for any specific validation, such as checking
    *          for supported platform.  Function should throw an error if necessary.
    *
-   * @returns {object} API object with get/set/clear methods
+   * @returns {object} internal API object with
+   *          {object} api
+   *            the public api available to extensions
+   *          {Function} registerEvent
+   *            the registration function used for priming events
    */
-  _getSettingsAPI(params) {
+  _getInternalSettingsAPI(params) {
     let {
       extensionId,
       context,
+      extension,
+      module,
       name,
       callback,
       storeType,
       readOnly = false,
       onChange,
-      validate = () => {},
+      validate,
     } = params;
-    if (!extensionId) {
-      extensionId = context.extension.id;
+    if (context) {
+      extension = context.extension;
+    }
+    if (!extensionId && extension) {
+      extensionId = extension.id;
     }
 
     const checkScope = details => {
@@ -579,9 +627,18 @@ this.ExtensionPreferencesManager = {
       }
     };
 
+    // Check the setting for anything we may need.
+    let setting = settingsMap.get(name);
+    readOnly = readOnly || !!setting?.readOnly;
+    validate = validate || setting?.validate || (() => {});
+    let getValue = callback || setting?.getCallback;
+    if (!getValue || typeof getValue !== "function") {
+      throw new Error(`Invalid get callback for setting ${name} in ${module}`);
+    }
+
     let settingsAPI = {
       async get(details) {
-        validate();
+        validate(extension);
         let levelOfControl = details.incognito
           ? "not_controllable"
           : await ExtensionPreferencesManager.getLevelOfControl(
@@ -595,11 +652,11 @@ this.ExtensionPreferencesManager = {
             : levelOfControl;
         return {
           levelOfControl,
-          value: await callback(),
+          value: await getValue(),
         };
       },
       set(details) {
-        validate();
+        validate(extension);
         checkScope(details);
         if (!readOnly) {
           return ExtensionPreferencesManager.setSetting(
@@ -611,7 +668,7 @@ this.ExtensionPreferencesManager = {
         return false;
       },
       clear(details) {
-        validate();
+        validate(extension);
         checkScope(details);
         if (!readOnly) {
           return ExtensionPreferencesManager.removeSetting(extensionId, name);
@@ -620,34 +677,43 @@ this.ExtensionPreferencesManager = {
       },
       onChange,
     };
+    let registerEvent = fire => {
+      let listener = async () => {
+        fire.async(await settingsAPI.get({}));
+      };
+      Management.on(`extension-setting-changed:${name}`, listener);
+      return {
+        unregister: () => {
+          Management.off(`extension-setting-changed:${name}`, listener);
+        },
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    };
+
     // Any caller using the old call signature will not have passed
     // context to us.  This should only be experimental addons in the
     // wild.
     if (onChange === undefined && context) {
       // Some settings that are read-only may not have called addSetting, in
       // which case we have no way to listen on the pref changes.
-      let setting = settingsMap.get(name);
-      if (!setting) {
+      if (setting) {
+        settingsAPI.onChange = new ExtensionCommon.EventManager({
+          context,
+          module,
+          event: name,
+          name: `${name}.onChange`,
+          register: fire => {
+            return registerEvent(fire).unregister;
+          },
+        }).api();
+      } else {
         Services.console.logStringMessage(
           `ExtensionPreferencesManager API ${name} created but addSetting was not called.`
         );
-        return settingsAPI;
       }
-
-      settingsAPI.onChange = new ExtensionCommon.EventManager({
-        context,
-        name: `${name}.onChange`,
-        register: fire => {
-          let listener = async () => {
-            fire.async(await settingsAPI.get({}));
-          };
-          Management.on(`extension-setting-changed:${name}`, listener);
-          return () => {
-            Management.off(`extension-setting-changed:${name}`, listener);
-          };
-        },
-      }).api();
     }
-    return settingsAPI;
+    return { api: settingsAPI, registerEvent };
   },
 };

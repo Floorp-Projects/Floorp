@@ -6,7 +6,6 @@
 
 DevToolsModules(
     "debounce.js",
-    "history.js",
     "ignore.js",
     "log.js",
     "performance-marker.js",

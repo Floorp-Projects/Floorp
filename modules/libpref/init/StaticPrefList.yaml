@@ -5061,12 +5061,12 @@
 
 - name: gfx.canvas.accelerated.cache-items
   type: RelaxedAtomicUint32
-  value: 1024
+  value: 2048
   mirror: always
 
 - name: gfx.canvas.accelerated.cache-size
   type: RelaxedAtomicUint32
-  value: 128
+  value: 256
   mirror: always
 
 - name: gfx.canvas.accelerated.max-size
@@ -9515,6 +9515,14 @@
 - name: media.audio.playbackrate.soundtouch_overlap_ms
   type: RelaxedAtomicInt32
   value: 8
+  mirror: always
+
+# The duration, in milliseconds, of decoded audio to keep around in the
+# AudioSink ring-buffer. New decoding operations are started when this limit is
+# reached. The total size of the ring-buffer is slightly bigger than this.
+- name: media.audio.audiosink.threshold_ms
+  type: AtomicFloat
+  value: 1000.0
   mirror: always
 
 

@@ -849,3 +849,80 @@ async function isVideoMuted(browser, videoID) {
     return content.document.getElementById(videoID).muted;
   });
 }
+
+/**
+ * Initializes videos and text tracks for the current test case.
+ * First track is the default track to be loaded onto the video.
+ * Once initialization is done, play then pause the requested video.
+ * so that text tracks are loaded.
+ * @param {Element} browser The <xul:browser> hosting the <video>
+ * @param {String} videoID The ID of the video being checked
+ * @param {Integer} defaultTrackIndex The index of the track to be loaded, or none if -1
+ */
+async function prepareVideosAndWebVTTTracks(
+  browser,
+  videoID,
+  defaultTrackIndex = 0
+) {
+  info("Preparing video and initial text tracks");
+  await ensureVideosReady(browser);
+  await SpecialPowers.spawn(
+    browser,
+    [{ videoID, defaultTrackIndex }],
+    async args => {
+      let video = content.document.getElementById(args.videoID);
+      let tracks = video.textTracks;
+
+      is(tracks.length, 5, "Number of tracks loaded should be 5");
+
+      // Enable track for originating video
+      if (args.defaultTrackIndex >= 0) {
+        info(`Loading track ${args.defaultTrackIndex + 1}`);
+        let track = tracks[args.defaultTrackIndex];
+        tracks.mode = "showing";
+        track.mode = "showing";
+      }
+
+      // Briefly play the video to load text tracks onto the pip window.
+      info("Playing video to load text tracks");
+      video.play();
+      info("Pausing video");
+      video.pause();
+      ok(video.paused, "Video should be paused before proceeding with test");
+    }
+  );
+}
+
+/**
+ * Plays originating video until the next cue is loaded.
+ * Once the next cue is loaded, pause the video.
+ * @param {Element} browser The <xul:browser> hosting the <video>
+ * @param {String} videoID The ID of the video being checked
+ * @param {Integer} textTrackIndex The index of the track to be loaded, or none if -1
+ */
+async function waitForNextCue(browser, videoID, textTrackIndex = 0) {
+  if (textTrackIndex < 0) {
+    ok(false, "Cannot wait for next cue with invalid track index");
+  }
+
+  await SpecialPowers.spawn(
+    browser,
+    [{ videoID, textTrackIndex }],
+    async args => {
+      let video = content.document.getElementById(args.videoID);
+      info("Playing video to activate next cue");
+      video.play();
+      ok(!video.paused, "Video is playing");
+
+      info("Waiting until cuechange is called");
+      await ContentTaskUtils.waitForEvent(
+        video.textTracks[args.textTrackIndex],
+        "cuechange"
+      );
+
+      info("Pausing video to read text track");
+      video.pause();
+      ok(video.paused, "Video is paused");
+    }
+  );
+}

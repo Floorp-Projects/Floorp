@@ -587,86 +587,92 @@ const FormatInfo* FormatInfo::GetCopyDecayFormat(UnsizedFormat uf) const {
   return FindOrNull(this->copyDecayFormats, uf);
 }
 
-bool GetBytesPerPixel(const PackingInfo& packing, uint8_t* const out_bytes) {
-  uint8_t bytesPerChannel;
+Maybe<PackingInfoInfo> PackingInfoInfo::For(const PackingInfo& pi) {
+  PackingInfoInfo ret{};
 
-  switch (packing.type) {
+  switch (pi.type) {
     case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
     case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
     case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-      *out_bytes = 2;
-      return true;
+      ret = {2, 1, true};
+      break;
 
     case LOCAL_GL_UNSIGNED_INT_10F_11F_11F_REV:
     case LOCAL_GL_UNSIGNED_INT_2_10_10_10_REV:
     case LOCAL_GL_UNSIGNED_INT_24_8:
     case LOCAL_GL_UNSIGNED_INT_5_9_9_9_REV:
-      *out_bytes = 4;
-      return true;
+      ret = {4, 1, true};
+      break;
 
     case LOCAL_GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
-      *out_bytes = 8;
-      return true;
+      ret = {8, 1, true};
+      break;
 
       // Alright, that's all the fixed-size unpackTypes.
 
     case LOCAL_GL_BYTE:
     case LOCAL_GL_UNSIGNED_BYTE:
-      bytesPerChannel = 1;
+      ret = {1, 0, false};
       break;
 
     case LOCAL_GL_SHORT:
     case LOCAL_GL_UNSIGNED_SHORT:
     case LOCAL_GL_HALF_FLOAT:
     case LOCAL_GL_HALF_FLOAT_OES:
-      bytesPerChannel = 2;
+      ret = {2, 0, false};
       break;
 
     case LOCAL_GL_INT:
     case LOCAL_GL_UNSIGNED_INT:
     case LOCAL_GL_FLOAT:
-      bytesPerChannel = 4;
+      ret = {4, 0, false};
       break;
 
     default:
-      return false;
+      return {};
   }
 
-  uint8_t channels;
+  if (!ret.isPacked) {
+    switch (pi.format) {
+      case LOCAL_GL_RED:
+      case LOCAL_GL_RED_INTEGER:
+      case LOCAL_GL_LUMINANCE:
+      case LOCAL_GL_ALPHA:
+      case LOCAL_GL_DEPTH_COMPONENT:
+        ret.elementsPerPixel = 1;
+        break;
 
-  switch (packing.format) {
-    case LOCAL_GL_RED:
-    case LOCAL_GL_RED_INTEGER:
-    case LOCAL_GL_LUMINANCE:
-    case LOCAL_GL_ALPHA:
-    case LOCAL_GL_DEPTH_COMPONENT:
-      channels = 1;
-      break;
+      case LOCAL_GL_RG:
+      case LOCAL_GL_RG_INTEGER:
+      case LOCAL_GL_LUMINANCE_ALPHA:
+        ret.elementsPerPixel = 2;
+        break;
 
-    case LOCAL_GL_RG:
-    case LOCAL_GL_RG_INTEGER:
-    case LOCAL_GL_LUMINANCE_ALPHA:
-      channels = 2;
-      break;
+      case LOCAL_GL_RGB:
+      case LOCAL_GL_RGB_INTEGER:
+      case LOCAL_GL_SRGB:
+        ret.elementsPerPixel = 3;
+        break;
 
-    case LOCAL_GL_RGB:
-    case LOCAL_GL_RGB_INTEGER:
-    case LOCAL_GL_SRGB:
-      channels = 3;
-      break;
+      case LOCAL_GL_BGRA:
+      case LOCAL_GL_RGBA:
+      case LOCAL_GL_RGBA_INTEGER:
+      case LOCAL_GL_SRGB_ALPHA:
+        ret.elementsPerPixel = 4;
+        break;
 
-    case LOCAL_GL_BGRA:
-    case LOCAL_GL_RGBA:
-    case LOCAL_GL_RGBA_INTEGER:
-    case LOCAL_GL_SRGB_ALPHA:
-      channels = 4;
-      break;
-
-    default:
-      return false;
+      default:
+        return {};
+    }
   }
 
-  *out_bytes = bytesPerChannel * channels;
+  return Some(ret);
+}
+
+bool GetBytesPerPixel(const PackingInfo& packing, uint8_t* const out_bytes) {
+  const auto pii = PackingInfoInfo::For(packing);
+  if (!pii) return false;
+  *out_bytes = pii->BytesPerPixel();
   return true;
 }
 

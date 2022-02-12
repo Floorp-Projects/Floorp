@@ -13,7 +13,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   getNetMonitorTimingsURL,
-} = require("devtools/client/netmonitor/src/utils/mdn-utils");
+} = require("devtools/client/netmonitor/src/utils/doc-utils");
 const {
   fetchNetworkUpdatePacket,
 } = require("devtools/client/netmonitor/src/utils/request-utils");

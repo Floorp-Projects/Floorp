@@ -10,6 +10,7 @@
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/DrawTargetWebgl.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_layers.h"
@@ -100,15 +101,20 @@ PersistentBufferProviderAccelerated::PersistentBufferProviderAccelerated(
     DrawTarget* aDt)
     : PersistentBufferProviderBasic(aDt) {
   MOZ_COUNT_CTOR(PersistentBufferProviderAccelerated);
+  MOZ_ASSERT(aDt->GetBackendType() == BackendType::WEBGL);
 }
 
 PersistentBufferProviderAccelerated::~PersistentBufferProviderAccelerated() {
   MOZ_COUNT_DTOR(PersistentBufferProviderAccelerated);
 }
 
-ClientWebGLContext* PersistentBufferProviderAccelerated::AsWebgl() {
-  return (ClientWebGLContext*)mDrawTarget->GetNativeSurface(
-      NativeSurfaceType::WEBGL_CONTEXT);
+Maybe<layers::SurfaceDescriptor>
+PersistentBufferProviderAccelerated::GetFrontBuffer() {
+  return static_cast<DrawTargetWebgl*>(mDrawTarget.get())->GetFrontBuffer();
+}
+
+bool PersistentBufferProviderAccelerated::CopySnapshotTo(gfx::DrawTarget* aDT) {
+  return static_cast<DrawTargetWebgl*>(mDrawTarget.get())->CopySnapshotTo(aDT);
 }
 
 static already_AddRefed<TextureClient> CreateTexture(

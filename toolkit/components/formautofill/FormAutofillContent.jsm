@@ -893,12 +893,14 @@ var FormAutofillContent = {
       formFillController.passwordPopupAutomaticallyOpened
     );
 
-    Services.telemetry.recordEvent(
-      "creditcard",
-      "popup_shown",
-      "cc_form",
-      this.activeSection.flowId
-    );
+    if (this.activeSection?.flowId) {
+      Services.telemetry.recordEvent(
+        "creditcard",
+        "popup_shown",
+        "cc_form",
+        this.activeSection.flowId
+      );
+    }
   },
 
   _markAsAutofillField(field) {

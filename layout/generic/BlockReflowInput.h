@@ -97,7 +97,8 @@ class BlockReflowInput {
   BlockReflowInput(const ReflowInput& aReflowInput, nsPresContext* aPresContext,
                    nsBlockFrame* aFrame, bool aBStartMarginRoot,
                    bool aBEndMarginRoot, bool aBlockNeedsFloatManager,
-                   nscoord aConsumedBSize = NS_UNCONSTRAINEDSIZE);
+                   const nscoord aConsumedBSize,
+                   const nscoord aEffectiveContentBoxBSize);
 
   /**
    * Get the available reflow space (the area not occupied by floats)
@@ -204,11 +205,12 @@ class BlockReflowInput {
       nsIFrame* aFrame, const mozilla::LogicalRect& aFloatAvailableSpace,
       nscoord& aIStartResult, nscoord& aIEndResult) const;
 
-  // Caller must have called GetFloatAvailableSpace for the current mBCoord
-  void ComputeBlockAvailSpace(nsIFrame* aFrame,
-                              const nsFlowAreaRect& aFloatAvailableSpace,
-                              bool aBlockAvoidsFloats,
-                              mozilla::LogicalRect& aResult);
+  // Compute the amount of available space for reflowing a block frame at the
+  // current block-direction coordinate mBCoord. Caller must have called
+  // GetFloatAvailableSpace for the current mBCoord.
+  mozilla::LogicalRect ComputeBlockAvailSpace(
+      nsIFrame* aFrame, const nsFlowAreaRect& aFloatAvailableSpace,
+      bool aBlockAvoidsFloats);
 
   void RecoverStateFrom(nsLineList::iterator aLine, nscoord aDeltaBCoord);
 
