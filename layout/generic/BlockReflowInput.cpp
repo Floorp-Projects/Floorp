@@ -32,7 +32,8 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
                                    nsBlockFrame* aFrame, bool aBStartMarginRoot,
                                    bool aBEndMarginRoot,
                                    bool aBlockNeedsFloatManager,
-                                   nscoord aConsumedBSize)
+                                   const nscoord aConsumedBSize,
+                                   const nscoord aEffectiveContentBoxBSize)
     : mBlock(aFrame),
       mPresContext(aPresContext),
       mReflowInput(aReflowInput),
@@ -115,15 +116,23 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
   // the "overflow" property. When we don't have a specified style block-size,
   // then we may end up limiting our block-size if the available block-size is
   // constrained (this situation occurs when we are paginated).
-  if (NS_UNCONSTRAINEDSIZE != aReflowInput.AvailableBSize()) {
-    // We are in a paginated situation. The block-end edge is just inside the
-    // block-end border and padding. The content area block-size doesn't include
-    // either border or padding edge.
-    auto bp = aFrame->StyleBorder()->mBoxDecorationBreak ==
-                      StyleBoxDecorationBreak::Clone
-                  ? mBorderPadding.BStartEnd(wm)
-                  : mBorderPadding.BStart(wm);
-    mContentArea.BSize(wm) = std::max(0, aReflowInput.AvailableBSize() - bp);
+  if (const nscoord availableBSize = aReflowInput.AvailableBSize();
+      availableBSize != NS_UNCONSTRAINEDSIZE) {
+    // We are in a paginated situation. The block-end edge of the available
+    // space to reflow the children is within our block-end border and padding.
+    // If we're cloning our border and padding, and we're going to request
+    // additional continuations because of our excessive content-box block-size,
+    // then reserve some of our available space for our (cloned) block-end
+    // border and padding.
+    const bool reserveSpaceForBlockEndBP =
+        mReflowInput.mStyleBorder->mBoxDecorationBreak ==
+            StyleBoxDecorationBreak::Clone &&
+        (aEffectiveContentBoxBSize == NS_UNCONSTRAINEDSIZE ||
+         aEffectiveContentBoxBSize + mBorderPadding.BStartEnd(wm) >
+             availableBSize);
+    const nscoord bp = reserveSpaceForBlockEndBP ? mBorderPadding.BStartEnd(wm)
+                                                 : mBorderPadding.BStart(wm);
+    mContentArea.BSize(wm) = std::max(0, availableBSize - bp);
   } else {
     // When we are not in a paginated situation, then we always use a
     // unconstrained block-size.
@@ -185,10 +194,13 @@ LogicalRect BlockReflowInput::ComputeBlockAvailSpace(
 #endif
   WritingMode wm = mReflowInput.GetWritingMode();
   LogicalRect result(wm);
-  const nscoord availBSize = mReflowInput.AvailableBSize();
   result.BStart(wm) = mBCoord;
-  result.BSize(wm) = availBSize == NS_UNCONSTRAINEDSIZE ? NS_UNCONSTRAINEDSIZE
-                                                        : availBSize - mBCoord;
+  // Note: ContentBSize() and ContentBEnd() are not our content-box size and its
+  // block-end edge. They really mean "the available block-size for children",
+  // and "the block-end edge of the available space for children".
+  result.BSize(wm) = ContentBSize() == NS_UNCONSTRAINEDSIZE
+                         ? NS_UNCONSTRAINEDSIZE
+                         : ContentBEnd() - mBCoord;
   // mBCoord might be greater than ContentBEnd() if the block's top margin
   // pushes it off the page/column. Negative available block-size can confuse
   // other code and is nonsense in principle.
