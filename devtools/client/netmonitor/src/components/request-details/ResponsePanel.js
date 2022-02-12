@@ -18,7 +18,7 @@ const {
 } = require("devtools/client/netmonitor/src/utils/request-utils");
 const {
   getCORSErrorURL,
-} = require("devtools/client/netmonitor/src/utils/mdn-utils");
+} = require("devtools/client/netmonitor/src/utils/doc-utils");
 const {
   Filters,
 } = require("devtools/client/netmonitor/src/utils/filter-predicates");

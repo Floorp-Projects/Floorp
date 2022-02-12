@@ -22,7 +22,7 @@ add_task(async function() {
 });
 
 async function testTrackAddNewRule(store, inspector, ruleView, panel) {
-  const onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  const onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   info("Adding a new CSS rule in the Rule view");
   await addNewRule(inspector, ruleView);
   info("Pressing escape to leave the editor");
@@ -45,7 +45,7 @@ async function testTrackRenameNewRule(store, inspector, ruleView, panel) {
   editor.input.value = ".test";
 
   // Expect two "TRACK_CHANGE" actions: one for removal, one for addition.
-  const onTrackChange = waitUntilAction(store, "TRACK_CHANGE", 2);
+  const onTrackChange = waitForDispatch(store, "TRACK_CHANGE", 2);
   const onRuleViewChanged = once(ruleView, "ruleview-changed");
   EventUtils.synthesizeKey("KEY_Enter");
   await onRuleViewChanged;

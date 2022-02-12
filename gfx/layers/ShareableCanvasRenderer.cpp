@@ -174,10 +174,9 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
       const RefPtr<DrawTarget> dt = tc->BorrowDrawTarget();
 
       const bool requireAlphaPremult = false;
-      const auto borrowed = BorrowSnapshot(requireAlphaPremult);
-      if (!borrowed) return nullptr;
-
-      dt->CopySurface(borrowed->mSurf, {{0, 0}, size}, {0, 0});
+      if (!CopySnapshotTo(dt, requireAlphaPremult)) {
+        return nullptr;
+      }
     }
 
     return tc;

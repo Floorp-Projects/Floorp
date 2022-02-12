@@ -30,10 +30,12 @@
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
 #include "nsContentSecurityUtils.h"
+#include "nsContentSecurityManager.h"
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsDOMNavigationTiming.h"
+#include "nsDSURIContentListener.h"
 #include "nsObjectLoadingContent.h"
 #include "nsExternalHelperAppService.h"
 #include "nsHttpChannel.h"
@@ -2189,6 +2191,28 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   if (!loadingContext || loadingContext->IsDiscarded()) {
     DisconnectListeners(NS_ERROR_UNEXPECTED, NS_ERROR_UNEXPECTED);
     return NS_ERROR_UNEXPECTED;
+  }
+
+  // Block top-level data URI navigations if triggered by the web. Logging is
+  // performed in AllowTopLevelNavigationToDataURI.
+  if (!nsContentSecurityManager::AllowTopLevelNavigationToDataURI(mChannel)) {
+    mChannel->Cancel(NS_ERROR_DOM_BAD_URI);
+    if (loadingContext) {
+      RefPtr<MaybeCloseWindowHelper> maybeCloseWindowHelper =
+          new MaybeCloseWindowHelper(loadingContext);
+      // If a new window was opened specifically for this request, close it
+      // after blocking the navigation.
+      if (nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(mChannel)) {
+        bool tmp = false;
+        if (NS_SUCCEEDED(props->GetPropertyAsBool(
+                u"docshell.newWindowTarget"_ns, &tmp))) {
+          maybeCloseWindowHelper->SetShouldCloseWindow(tmp);
+        }
+      }
+      Unused << maybeCloseWindowHelper->MaybeCloseWindow();
+    }
+    DisconnectListeners(NS_ERROR_DOM_BAD_URI, NS_ERROR_DOM_BAD_URI);
+    return NS_OK;
   }
 
   // Generally we want to switch to a real channel even if the request failed,

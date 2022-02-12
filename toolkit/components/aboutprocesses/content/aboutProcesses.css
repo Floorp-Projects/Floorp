@@ -175,30 +175,19 @@ tr[selected] > td {
 .clickable:dir(rtl) {
   background-position-x: left 4px;
 }
-.asc,
-.desc {
+
+.arrow-up,
+.arrow-down {
   -moz-context-properties: fill;
   fill: currentColor;
 }
-/*
-  Linux has conventions opposite to Windows, macOS on the direction of arrows
-  when sorting.
-*/
-%ifdef XP_LINUX
-.asc {
-  background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
+
+.arrow-up {
+  background-image: url("chrome://global/skin/icons/arrow-up-12.svg");
 }
-.desc {
-  background-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+.arrow-down {
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
 }
-%else
-.asc {
-  background-image: url(chrome://global/skin/icons/arrow-down-12.svg);
-}
-.desc {
-  background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
-}
-%endif
 
 th.clickable:hover {
   background-color: var(--in-content-button-background-hover);

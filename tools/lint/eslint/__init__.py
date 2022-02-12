@@ -101,7 +101,10 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
 def run(cmd_args, config):
 
     shell = False
-    if os.environ.get("MSYSTEM") in ("MINGW32", "MINGW64"):
+    if (
+        os.environ.get("MSYSTEM") in ("MINGW32", "MINGW64")
+        or "MOZILLABUILD" in os.environ
+    ):
         # The eslint binary needs to be run from a shell with msys
         shell = True
     encoding = "utf-8"

@@ -1,0 +1,12 @@
+WEBVTT
+
+Test file with multiple active cues and VTTCue.line as a percentage value
+
+00:00:00.000 --> 00:00:01.000 line:90%
+track 5 - cue 1 - percent line
+
+00:00:00.000 --> 00:00:01.000 line:10%
+track 5 - cue 2 - percent line
+
+00:00:00.000 --> 00:00:01.000 line:50%
+track 5 - cue 3 - percent line

@@ -6,10 +6,11 @@
 var utilityPid = undefined;
 var utilityReports = [];
 
+const utilityProcessTest = Cc[
+  "@mozilla.org/utility-process-test;1"
+].createInstance(Ci.nsIUtilityProcessTest);
+
 add_task(async () => {
-  const utilityProcessTest = Cc[
-    "@mozilla.org/utility-process-test;1"
-  ].createInstance(Ci.nsIUtilityProcessTest);
   await utilityProcessTest
     .startProcess()
     .then(async pid => {
@@ -77,4 +78,6 @@ add_task(async () => {
     ).length,
     "Collected some explicit/ report"
   );
+
+  await utilityProcessTest.stopProcess();
 });

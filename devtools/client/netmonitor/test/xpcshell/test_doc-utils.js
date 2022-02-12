@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test for mdn-utils
+// Test for doc-utils
 
 "use strict";
 
@@ -24,7 +24,7 @@ function run_test() {
     getNetMonitorTimingsURL,
     getPerformanceAnalysisURL,
     getFilterBoxURL,
-  } = require("devtools/client/netmonitor/src/utils/mdn-utils");
+  } = require("devtools/client/netmonitor/src/utils/doc-utils");
 
   info("Checking for supported headers");
   equal(

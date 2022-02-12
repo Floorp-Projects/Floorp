@@ -129,7 +129,7 @@ class AudioSink : private AudioStream::DataSource {
       AlignedAudioBuffer&& aBuffer, AudioData* aReference);
   // Add data to the processsed queue return the number of frames added.
   uint32_t PushProcessedAudio(AudioData* aData);
-  uint32_t AudioQueuedInRingBufferUs() const;
+  uint32_t AudioQueuedInRingBufferMS() const;
   uint32_t SampleToFrame(uint32_t aSamples) const;
   UniquePtr<AudioConverter> mConverter;
   UniquePtr<SPSCQueue<AudioDataValue>> mProcessedSPSCQueue;
@@ -153,6 +153,7 @@ class AudioSink : private AudioStream::DataSource {
 
   Atomic<bool> mProcessedQueueFinished;
   MediaQueue<AudioData>& mAudioQueue;
+  const float mProcessedQueueThresholdMS;
 };
 
 }  // namespace mozilla

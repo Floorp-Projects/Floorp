@@ -1,0 +1,10 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:02.000
+This is a one line text track
+
+2
+00:00:05.000 --> 00:00:07.000
+- <b>This is a new text track but bolded</b>
+- <i>This line should be italicized<i>
