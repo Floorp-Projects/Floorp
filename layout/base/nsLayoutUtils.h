@@ -732,26 +732,13 @@ class nsLayoutUtils {
 
   /**
    * Get the popup frame of a given native mouse event.
-   * @param aRootPresContext only check popups within aRootPresContext or a
-   * descendant
+   * @param aPresContext only check popups within aPresContext or a descendant
    * @param aEvent  the event.
    * @return        Null, if there is no popup frame at the point, otherwise,
    *                returns top-most popup frame at the point.
    */
   static nsIFrame* GetPopupFrameForEventCoordinates(
-      nsPresContext* aRootPresContext, const mozilla::WidgetEvent* aEvent);
-
-  /**
-   * Get the popup frame of a given point relative to a widget.
-   * @param aRootPresContext only check popups within aRootPresContext or a
-   * descendant
-   * @param aEvent  the event.
-   * @return        Null, if there is no popup frame at the point, otherwise,
-   *                returns top-most popup frame at the point.
-   */
-  static nsIFrame* GetPopupFrameForPoint(
-      nsPresContext* aRootPresContext, nsIWidget* aWidget,
-      const mozilla::LayoutDeviceIntPoint& aPoint);
+      nsPresContext* aPresContext, const mozilla::WidgetEvent* aEvent);
 
   /**
    * Get container and offset if aEvent collapses Selection.
