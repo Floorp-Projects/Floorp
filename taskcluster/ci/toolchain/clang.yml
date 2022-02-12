@@ -138,10 +138,12 @@ linux64-clang-13:
             - 'build/build-clang/linux64.json'
             - 'build/build-clang/clang-13.json'
             - 'build/build-clang/skip-stage-1.json'
+            - 'build/build-clang/4stages-pgo.json'
         resources:
             - 'build/build-clang/linux64.json'
             - 'build/build-clang/clang-13.json'
             - 'build/build-clang/skip-stage-1.json'
+            - 'build/build-clang/4stages-pgo.json'
         toolchain-alias:
             - linux64-clang
         toolchain-artifact: public/build/clang.tar.zst
@@ -268,9 +270,11 @@ macosx64-clang-13-raw:
         arguments:
             - 'build/build-clang/macosx64.json'
             - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/1stage.json'
         resources:
             - 'build/build-clang/macosx64.json'
             - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/1stage.json'
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -326,9 +330,11 @@ macosx64-aarch64-clang-13-raw:
         arguments:
             - 'build/build-clang/macosx64.json'
             - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/1stage.json'
         resources:
             - 'build/build-clang/macosx64.json'
             - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/1stage.json'
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -383,10 +389,12 @@ win64-clang-13-raw:
             - 'build/build-clang/win64.json'
             - 'build/build-clang/clang-13.json'
             - 'build/build-clang/skip-stage-1-win64.json'
+            - 'build/build-clang/4stages-pgo.json'
         resources:
             - 'build/build-clang/win64.json'
             - 'build/build-clang/clang-13.json'
             - 'build/build-clang/skip-stage-1-win64.json'
+            - 'build/build-clang/4stages-pgo.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
