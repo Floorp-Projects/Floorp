@@ -1620,18 +1620,26 @@ nsPoint nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(Event* aDOMEvent,
   return GetEventCoordinatesRelativeTo(event, RelativeTo{aFrame});
 }
 
+static bool IsValidCoordinateTypeEvent(const WidgetEvent* aEvent) {
+  if (!aEvent) {
+    return false;
+  }
+  return aEvent->mClass == eMouseEventClass ||
+         aEvent->mClass == eMouseScrollEventClass ||
+         aEvent->mClass == eWheelEventClass ||
+         aEvent->mClass == eDragEventClass ||
+         aEvent->mClass == eSimpleGestureEventClass ||
+         aEvent->mClass == ePointerEventClass ||
+         aEvent->mClass == eGestureNotifyEventClass ||
+         aEvent->mClass == eTouchEventClass ||
+         aEvent->mClass == eQueryContentEventClass;
+}
+
 nsPoint nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
                                                      RelativeTo aFrame) {
-  if (!aEvent || (aEvent->mClass != eMouseEventClass &&
-                  aEvent->mClass != eMouseScrollEventClass &&
-                  aEvent->mClass != eWheelEventClass &&
-                  aEvent->mClass != eDragEventClass &&
-                  aEvent->mClass != eSimpleGestureEventClass &&
-                  aEvent->mClass != ePointerEventClass &&
-                  aEvent->mClass != eGestureNotifyEventClass &&
-                  aEvent->mClass != eTouchEventClass &&
-                  aEvent->mClass != eQueryContentEventClass))
+  if (!IsValidCoordinateTypeEvent(aEvent)) {
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  }
 
   return GetEventCoordinatesRelativeTo(aEvent, aEvent->AsGUIEvent()->mRefPoint,
                                        aFrame);
@@ -1733,20 +1741,30 @@ nsPoint nsLayoutUtils::GetEventCoordinatesRelativeTo(
 }
 
 nsIFrame* nsLayoutUtils::GetPopupFrameForEventCoordinates(
-    nsPresContext* aPresContext, const WidgetEvent* aEvent) {
+    nsPresContext* aRootPresContext, const WidgetEvent* aEvent) {
+  if (!IsValidCoordinateTypeEvent(aEvent)) {
+    return nullptr;
+  }
+
+  const auto* guiEvent = aEvent->AsGUIEvent();
+  return GetPopupFrameForPoint(aRootPresContext, guiEvent->mWidget,
+                               guiEvent->mRefPoint);
+}
+
+nsIFrame* nsLayoutUtils::GetPopupFrameForPoint(
+    nsPresContext* aRootPresContext, nsIWidget* aWidget,
+    const mozilla::LayoutDeviceIntPoint& aPoint) {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (!pm) {
     return nullptr;
   }
   nsTArray<nsIFrame*> popups;
   pm->GetVisiblePopups(popups);
-  uint32_t i;
   // Search from top to bottom
-  for (i = 0; i < popups.Length(); i++) {
-    nsIFrame* popup = popups[i];
-    if (popup->PresContext()->GetRootPresContext() == aPresContext &&
-        popup->ScrollableOverflowRect().Contains(
-            GetEventCoordinatesRelativeTo(aEvent, RelativeTo{popup}))) {
+  for (nsIFrame* popup : popups) {
+    if (popup->PresContext()->GetRootPresContext() == aRootPresContext &&
+        popup->ScrollableOverflowRect().Contains(GetEventCoordinatesRelativeTo(
+            aWidget, aPoint, RelativeTo{popup}))) {
       return popup;
     }
   }
