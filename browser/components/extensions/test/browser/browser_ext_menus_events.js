@@ -804,10 +804,16 @@ add_task(async function test_show_hide_video() {
       targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
-        let video = content.document.getElementById("videocontrol");
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [VIDEO_URL], function(
+        VIDEO_URL
+      ) {
+        let video = content.document.createElement("video");
+        video.controls = true;
+        video.src = VIDEO_URL;
+        content.document.body.appendChild(video);
         video.focus();
       });
+
       await openContextMenu("video");
     },
     async doCloseMenu() {
@@ -841,8 +847,13 @@ add_task(async function test_show_hide_audio() {
       targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
-        let audio = content.document.getElementById("audiocontrol");
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [AUDIO_URL], function(
+        AUDIO_URL
+      ) {
+        let audio = content.document.createElement("audio");
+        audio.controls = true;
+        audio.src = AUDIO_URL;
+        content.document.body.appendChild(audio);
         audio.focus();
       });
 
