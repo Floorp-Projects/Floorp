@@ -176,21 +176,19 @@ void BlockReflowInput::ComputeReplacedBlockOffsetsForFloats(
   aIEndResult = iEndOffset;
 }
 
-// Compute the amount of available space for reflowing a block frame
-// at the current block-direction coordinate. This method assumes that
-// GetFloatAvailableSpace has already been called.
-void BlockReflowInput::ComputeBlockAvailSpace(
+LogicalRect BlockReflowInput::ComputeBlockAvailSpace(
     nsIFrame* aFrame, const nsFlowAreaRect& aFloatAvailableSpace,
-    bool aBlockAvoidsFloats, LogicalRect& aResult) {
+    bool aBlockAvoidsFloats) {
 #ifdef REALLY_NOISY_REFLOW
   printf("CBAS frame=%p has floats %d\n", aFrame,
          aFloatAvailableSpace.HasFloats());
 #endif
   WritingMode wm = mReflowInput.GetWritingMode();
+  LogicalRect result(wm);
   const nscoord availBSize = mReflowInput.AvailableBSize();
-  aResult.BStart(wm) = mBCoord;
-  aResult.BSize(wm) = availBSize == NS_UNCONSTRAINEDSIZE ? NS_UNCONSTRAINEDSIZE
-                                                         : availBSize - mBCoord;
+  result.BStart(wm) = mBCoord;
+  result.BSize(wm) = availBSize == NS_UNCONSTRAINEDSIZE ? NS_UNCONSTRAINEDSIZE
+                                                        : availBSize - mBCoord;
   // mBCoord might be greater than ContentBEnd() if the block's top margin
   // pushes it off the page/column. Negative available block-size can confuse
   // other code and is nonsense in principle.
@@ -221,35 +219,37 @@ void BlockReflowInput::ComputeBlockAvailSpace(
                                           // runaround of floats
           // The child block will flow around the float. Therefore
           // give it all of the available space.
-          aResult.IStart(wm) = mContentArea.IStart(wm);
-          aResult.ISize(wm) = mContentArea.ISize(wm);
+          result.IStart(wm) = mContentArea.IStart(wm);
+          result.ISize(wm) = mContentArea.ISize(wm);
           break;
         case StyleFloatEdge::MarginBox: {
           // The child block's margins should be placed adjacent to,
           // but not overlap the float.
-          aResult.IStart(wm) = aFloatAvailableSpace.mRect.IStart(wm);
-          aResult.ISize(wm) = aFloatAvailableSpace.mRect.ISize(wm);
+          result.IStart(wm) = aFloatAvailableSpace.mRect.IStart(wm);
+          result.ISize(wm) = aFloatAvailableSpace.mRect.ISize(wm);
         } break;
       }
     } else {
       // Since there are no floats present the float-edge property
       // doesn't matter therefore give the block element all of the
       // available space since it will flow around the float itself.
-      aResult.IStart(wm) = mContentArea.IStart(wm);
-      aResult.ISize(wm) = mContentArea.ISize(wm);
+      result.IStart(wm) = mContentArea.IStart(wm);
+      result.ISize(wm) = mContentArea.ISize(wm);
     }
   } else {
     nscoord iStartOffset, iEndOffset;
     ComputeReplacedBlockOffsetsForFloats(aFrame, aFloatAvailableSpace.mRect,
                                          iStartOffset, iEndOffset);
-    aResult.IStart(wm) = mContentArea.IStart(wm) + iStartOffset;
-    aResult.ISize(wm) = mContentArea.ISize(wm) - iStartOffset - iEndOffset;
+    result.IStart(wm) = mContentArea.IStart(wm) + iStartOffset;
+    result.ISize(wm) = mContentArea.ISize(wm) - iStartOffset - iEndOffset;
   }
 
 #ifdef REALLY_NOISY_REFLOW
-  printf("  CBAS: result %d %d %d %d\n", aResult.IStart(wm), aResult.BStart(wm),
-         aResult.ISize(wm), aResult.BSize(wm));
+  printf("  CBAS: result %d %d %d %d\n", result.IStart(wm), result.BStart(wm),
+         result.ISize(wm), result.BSize(wm));
 #endif
+
+  return result;
 }
 
 bool BlockReflowInput::ReplacedBlockFitsInAvailSpace(
