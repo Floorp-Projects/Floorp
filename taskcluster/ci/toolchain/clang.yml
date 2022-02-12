@@ -296,11 +296,13 @@ macosx64-clang-13-raw:
         arguments:
             - 'build/build-clang/macosx64.json'
             - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/1stage.json'
+            - 'build/build-clang/skip-3-stages.json'
+            - 'build/build-clang/4stages-pgo.json'
         resources:
             - 'build/build-clang/macosx64.json'
             - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/1stage.json'
+            - 'build/build-clang/skip-3-stages.json'
+            - 'build/build-clang/4stages-pgo.json'
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -308,6 +310,7 @@ macosx64-clang-13-raw:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-13-macosx-cross
+            - linux64-clang-13-profile
             - macosx64-sdk-11.0
             - wasm32-wasi-compiler-rt-13
 
@@ -356,11 +359,13 @@ macosx64-aarch64-clang-13-raw:
         arguments:
             - 'build/build-clang/macosx64.json'
             - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/1stage.json'
+            - 'build/build-clang/skip-3-stages.json'
+            - 'build/build-clang/4stages-pgo.json'
         resources:
             - 'build/build-clang/macosx64.json'
             - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/1stage.json'
+            - 'build/build-clang/skip-3-stages.json'
+            - 'build/build-clang/4stages-pgo.json'
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -368,6 +373,7 @@ macosx64-aarch64-clang-13-raw:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-13-macosx-cross
+            - linux64-clang-13-profile
             - macosx64-sdk-11.0
             - wasm32-wasi-compiler-rt-13
 
