@@ -2378,8 +2378,11 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType, int64_t aOffset,
 
   if (message == eQueryCharacterAtPoint) {
     // Looking for the widget at the point.
-    nsIFrame* popupFrame = nsLayoutUtils::GetPopupFrameForPoint(
-        presContext->GetRootPresContext(), widget, pt);
+    WidgetQueryContentEvent dummyEvent(true, eQueryContentState, widget);
+    dummyEvent.Init(options);
+    InitEvent(dummyEvent, &pt);
+    nsIFrame* popupFrame = nsLayoutUtils::GetPopupFrameForEventCoordinates(
+        presContext->GetRootPresContext(), &dummyEvent);
 
     LayoutDeviceIntRect widgetBounds = widget->GetClientBounds();
     widgetBounds.MoveTo(0, 0);
