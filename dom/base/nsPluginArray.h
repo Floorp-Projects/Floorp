@@ -15,14 +15,14 @@
 
 class nsPIDOMWindowInner;
 class nsPluginElement;
-class nsMimeTypeArray;
 class nsMimeType;
 
+namespace mozilla::dom {
+enum class CallerType : uint32_t;
+}  // namespace mozilla::dom
+
 /**
- * Array class backing HTML's navigator.plugins.  This always holds references
- * to the hard-coded set of PDF plugins defined by HTML but it only consults
- * them if "pdfjs.disabled" is false.  There is never more than one of these
- * per DOM window.
+ * Array class backing HTML's navigator.plugins.  This array is always empty.
  */
 class nsPluginArray final : public nsSupportsWeakReference,
                             public nsWrapperCache {
@@ -35,99 +35,108 @@ class nsPluginArray final : public nsSupportsWeakReference,
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  nsMimeTypeArray* MimeTypeArray() { return mMimeTypeArray; }
-
   // PluginArray WebIDL methods
-  uint32_t Length() { return ForceNoPlugins() ? 0 : ArrayLength(mPlugins); }
+  void Refresh(bool aReloadDocuments) {}
 
-  nsPluginElement* Item(uint32_t aIndex) {
-    bool unused;
-    return IndexedGetter(aIndex, unused);
+  nsPluginElement* Item(uint32_t aIndex, mozilla::dom::CallerType aCallerType) {
+    return nullptr;
   }
 
-  nsPluginElement* NamedItem(const nsAString& aName) {
-    bool unused;
-    return NamedGetter(aName, unused);
+  nsPluginElement* NamedItem(const nsAString& aName,
+                             mozilla::dom::CallerType aCallerType) {
+    return nullptr;
   }
 
-  nsPluginElement* IndexedGetter(uint32_t aIndex, bool& aFound);
+  uint32_t Length(mozilla::dom::CallerType aCallerType) { return 0; }
 
-  nsPluginElement* NamedGetter(const nsAString& aName, bool& aFound);
+  nsPluginElement* IndexedGetter(uint32_t aIndex, bool& aFound,
+                                 mozilla::dom::CallerType aCallerType) {
+    return nullptr;
+  }
 
-  void GetSupportedNames(nsTArray<nsString>& aRetval);
+  nsPluginElement* NamedGetter(const nsAString& aName, bool& aFound,
+                               mozilla::dom::CallerType aCallerType) {
+    return nullptr;
+  }
 
-  void Refresh() {}
+  void GetSupportedNames(nsTArray<nsString>& aRetval,
+                         mozilla::dom::CallerType aCallerType) {}
 
  private:
   virtual ~nsPluginArray();
 
-  static bool ForceNoPlugins();
-
-  RefPtr<nsMimeTypeArray> mMimeTypeArray;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  mozilla::Array<RefPtr<nsPluginElement>, 5> mPlugins;
 };
 
 /**
- * Plugin class backing entries in HTML's navigator.plugins array.  There is
- * a fixed set of these, as defined by HTML.
+ * Plugin class backing entries in HTML's navigator.plugins array.
+ * Currently, these cannot be constructed.
  */
 class nsPluginElement final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPluginElement)
 
-  explicit nsPluginElement(nsPluginArray* aPluginArray,
-                           nsPIDOMWindowInner* aWindow, const nsAString& aName);
+  nsPluginElement() = delete;
 
-  nsPluginArray* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const {
+    MOZ_ASSERT_UNREACHABLE("nsMimeType can not exist");
+    return nullptr;
+  }
 
   virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+                               JS::Handle<JSObject*> aGivenProto) override {
+    MOZ_ASSERT_UNREACHABLE("nsPluginElement can not exist");
+    return nullptr;
+  }
 
   // Plugin WebIDL methods
-  void GetDescription(nsString& retval) const { retval = kDescription; }
+  void GetDescription(nsString& retval) const {
+    MOZ_ASSERT_UNREACHABLE("nsPluginElement can not exist");
+  }
 
-  void GetFilename(nsString& retval) const { retval = kFilename; }
+  void GetFilename(nsString& retval) const {
+    MOZ_ASSERT_UNREACHABLE("nsPluginElement can not exist");
+  }
 
-  void GetName(nsString& retval) const { retval = mName; }
-  const nsString& Name() const { return mName; }
+  void GetVersion(nsString& retval) const {
+    MOZ_ASSERT_UNREACHABLE("nsPluginElement can not exist");
+  }
+
+  void GetName(nsString& retval) const {
+    MOZ_ASSERT_UNREACHABLE("nsPluginElement can not exist");
+  }
 
   nsMimeType* Item(uint32_t index) {
-    bool unused;
-    return IndexedGetter(index, unused);
+    MOZ_ASSERT_UNREACHABLE("nsPluginElement can not exist");
+    return nullptr;
   }
 
   nsMimeType* NamedItem(const nsAString& name) {
-    bool unused;
-    return NamedGetter(name, unused);
+    MOZ_ASSERT_UNREACHABLE("nsPluginElement can not exist");
+    return nullptr;
+  }
+  uint32_t Length() {
+    MOZ_ASSERT_UNREACHABLE("nsPluginElement can not exist");
+    return 0;
   }
 
-  uint32_t Length();
+  nsMimeType* IndexedGetter(uint32_t index, bool& found) {
+    MOZ_ASSERT_UNREACHABLE("nsPluginElement can not exist");
+    return nullptr;
+  }
 
-  nsMimeType* IndexedGetter(uint32_t index, bool& found);
+  nsMimeType* NamedGetter(const nsAString& name, bool& found) {
+    MOZ_ASSERT_UNREACHABLE("nsPluginElement can not exist");
+    return nullptr;
+  }
 
-  nsMimeType* NamedGetter(const nsAString& name, bool& found);
-
-  void GetSupportedNames(nsTArray<nsString>& retval);
+  void GetSupportedNames(nsTArray<nsString>& retval) {
+    MOZ_ASSERT_UNREACHABLE("nsPluginElement can not exist");
+  }
 
  protected:
   virtual ~nsPluginElement() = default;
-
-  nsMimeTypeArray* MimeTypeArray() { return mPluginArray->MimeTypeArray(); }
-
-  static constexpr nsLiteralString kDescription =
-      u"Portable Document Format"_ns;
-  static constexpr nsLiteralString kFilename = u"internal-pdf-viewer"_ns;
-
-  // Note that this creates an explicit reference cycle:
-  //
-  // nsPluginElement -> nsPluginArray -> nsPluginElement
-  //
-  // We rely on the cycle collector to break this cycle.
-  RefPtr<nsPluginArray> mPluginArray;
-  nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  nsString mName;
 };
 
 #endif /* nsPluginArray_h___ */
