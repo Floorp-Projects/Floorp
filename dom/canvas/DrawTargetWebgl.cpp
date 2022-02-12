@@ -1406,9 +1406,9 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
         // If the stride happens to be 4 byte aligned, assume that is the
         // desired alignment regardless of format (even A8). Otherwise, we
         // default to byte alignment.
-        texDesc.unpacking.mUnpackAlignment = stride % 4 ? 1 : 4;
-        texDesc.unpacking.mUnpackRowLength = stride / bpp;
-        texDesc.unpacking.mUnpackImageHeight = texSize.height;
+        texDesc.unpacking.alignmentInTypeElems = stride % 4 ? 1 : 4;
+        texDesc.unpacking.rowLength = stride / bpp;
+        texDesc.unpacking.imageHeight = texSize.height;
         // Upload as RGBA8 to avoid swizzling during upload. Surfaces provide
         // data as BGRA, but we manually swizzle that in the shader. An A8
         // surface will be stored as an R8 texture that will also be swizzled
