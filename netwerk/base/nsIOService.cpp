@@ -18,7 +18,6 @@
 #include "nsXPCOM.h"
 #include "nsIProxiedProtocolHandler.h"
 #include "nsIProxyInfo.h"
-#include "nsDNSService2.h"
 #include "nsEscape.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
@@ -197,8 +196,6 @@ static const char kProfileDoChange[] = "profile-do-change";
 uint32_t nsIOService::gDefaultSegmentSize = 4096;
 uint32_t nsIOService::gDefaultSegmentCount = 24;
 
-uint32_t nsIOService::sSocketProcessCrashedCount = 0;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 nsIOService::nsIOService()
@@ -277,13 +274,12 @@ nsresult nsIOService::Init() {
                                        gCallbackPrefs, this);
   PrefsChanged();
 
-  mSocketProcessTopicBlockedList.Insert(
+  mSocketProcessTopicBlackList.Insert(
       nsLiteralCString(NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID));
-  mSocketProcessTopicBlockedList.Insert(
+  mSocketProcessTopicBlackList.Insert(
       nsLiteralCString(NS_XPCOM_SHUTDOWN_OBSERVER_ID));
-  mSocketProcessTopicBlockedList.Insert("xpcom-shutdown-threads"_ns);
-  mSocketProcessTopicBlockedList.Insert("profile-do-change"_ns);
-  mSocketProcessTopicBlockedList.Insert("network:socket-process-crashed"_ns);
+  mSocketProcessTopicBlackList.Insert("xpcom-shutdown-threads"_ns);
+  mSocketProcessTopicBlackList.Insert("profile-do-change"_ns);
 
   // Register for profile change notifications
   mObserverService = services::GetObserverService();
@@ -333,19 +329,12 @@ nsIOService::AddObserver(nsIObserver* aObserver, const char* aTopic,
     return NS_OK;
   }
 
-  nsAutoCString topic(aTopic);
-  // This happens when AddObserver() is called by nsIOService::Init(). We don't
-  // want to add nsIOService again.
-  if (SameCOMIdentity(aObserver, static_cast<nsIObserver*>(this))) {
-    mIOServiceTopicList.Insert(topic);
-    return NS_OK;
-  }
-
   if (!UseSocketProcess()) {
     return NS_OK;
   }
 
-  if (mSocketProcessTopicBlockedList.Contains(topic)) {
+  nsAutoCString topic(aTopic);
+  if (mSocketProcessTopicBlackList.Contains(topic)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -356,9 +345,10 @@ nsIOService::AddObserver(nsIObserver* aObserver, const char* aTopic,
 
   mObserverTopicForSocketProcess.Insert(topic);
 
-  // Avoid registering duplicate topics.
-  if (mIOServiceTopicList.Contains(topic)) {
-    return NS_ERROR_FAILURE;
+  // This happens when AddObserver() is called by nsIOService::Init(). We don't
+  // want to add nsIOService again.
+  if (SameCOMIdentity(aObserver, static_cast<nsIObserver*>(this))) {
+    return NS_OK;
   }
 
   return mObserverService->AddObserver(this, aTopic, true);
@@ -518,18 +508,6 @@ class SocketProcessListenerProxy : public SocketProcessHost::Listener {
   }
 };
 
-// static
-bool nsIOService::TooManySocketProcessCrash() {
-  return sSocketProcessCrashedCount >=
-         StaticPrefs::network_max_socket_process_failed_count();
-}
-
-// static
-void nsIOService::IncreaseSocketProcessCrashCount() {
-  MOZ_ASSERT(IsNeckoChild());
-  sSocketProcessCrashedCount++;
-}
-
 nsresult nsIOService::LaunchSocketProcess() {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -606,11 +584,6 @@ bool nsIOService::UseSocketProcess(bool aCheckAgain) {
   sUseSocketProcess = false;
 
   if (PR_GetEnv("MOZ_DISABLE_SOCKET_PROCESS")) {
-    return sUseSocketProcess;
-  }
-
-  if (TooManySocketProcessCrash()) {
-    LOG(("TooManySocketProcessCrash"));
     return sUseSocketProcess;
   }
 
@@ -703,22 +676,6 @@ void nsIOService::OnProcessUnexpectedShutdown(SocketProcessHost* aHost) {
 
   LOG(("nsIOService::OnProcessUnexpectedShutdown\n"));
   DestroySocketProcess();
-  sSocketProcessCrashedCount++;
-  if (TooManySocketProcessCrash()) {
-    sUseSocketProcessChecked = false;
-    DNSServiceWrapper::SwitchToBackupDNSService();
-  }
-
-  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
-  if (observerService) {
-    (void)observerService->NotifyObservers(
-        nullptr, "network:socket-process-crashed", nullptr);
-  }
-  if (UseSocketProcess()) {
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(
-        NewRunnableMethod("nsIOService::LaunchSocketProcess", this,
-                          &nsIOService::LaunchSocketProcess)));
-  }
 }
 
 RefPtr<MemoryReportingProcess> nsIOService::GetSocketProcessMemoryReporter() {
@@ -2074,22 +2031,6 @@ nsIOService::GetSocketProcessLaunched(bool* aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
 
   *aResult = SocketProcessReady();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIOService::GetSocketProcessId(uint64_t* aPid) {
-  NS_ENSURE_ARG_POINTER(aPid);
-
-  *aPid = 0;
-  if (!mSocketProcess) {
-    return NS_OK;
-  }
-
-  if (SocketProcessParent* actor = mSocketProcess->GetActor()) {
-    *aPid = (uint64_t)actor->OtherPid();
-  }
-
   return NS_OK;
 }
 

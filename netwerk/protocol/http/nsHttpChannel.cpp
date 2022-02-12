@@ -1253,9 +1253,8 @@ nsresult nsHttpChannel::SetupTransaction() {
 
   // create the transaction object
   if (nsIOService::UseSocketProcess()) {
-    if (NS_WARN_IF(!gIOService->SocketProcessReady())) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
+    MOZ_ASSERT(gIOService->SocketProcessReady(),
+               "Socket process should be ready.");
 
     nsCOMPtr<nsIParentChannel> parentChannel;
     NS_QueryNotificationCallbacks(this, parentChannel);
@@ -6872,9 +6871,6 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
           NS_SUCCEEDED(mStatus));
       StoreHasHTTPSRR(true);
     }
-
-    StoreLoadedBySocketProcess(mTransaction->AsHttpTransactionParent() !=
-                               nullptr);
   }
 
   // don't enter this block if we're reading from the cache...
