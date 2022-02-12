@@ -648,7 +648,6 @@ static const char* sObserverTopics[] = {
     "cookie-changed",
     "private-cookie-changed",
     NS_NETWORK_LINK_TYPE_TOPIC,
-    "network:socket-process-crashed",
 };
 
 // PreallocateProcess is called by the PreallocatedProcessManager.
@@ -3672,8 +3671,6 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
     }
   } else if (!strcmp(aTopic, NS_NETWORK_LINK_TYPE_TOPIC)) {
     UpdateNetworkLinkType();
-  } else if (!strcmp(aTopic, "network:socket-process-crashed")) {
-    Unused << SendSocketProcessCrashed();
   }
 
   return NS_OK;
