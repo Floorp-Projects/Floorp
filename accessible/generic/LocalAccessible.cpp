@@ -511,10 +511,13 @@ LocalAccessible* LocalAccessible::LocalChildAtPoint(
 
   LayoutDeviceIntRect rootRect = rootWidget->GetScreenBounds();
 
-  auto point = LayoutDeviceIntPoint(aX - rootRect.X(), aY - rootRect.Y());
+  WidgetMouseEvent dummyEvent(true, eMouseMove, rootWidget,
+                              WidgetMouseEvent::eSynthesized);
+  dummyEvent.mRefPoint =
+      LayoutDeviceIntPoint(aX - rootRect.X(), aY - rootRect.Y());
 
-  nsIFrame* popupFrame = nsLayoutUtils::GetPopupFrameForPoint(
-      accDocument->PresContext()->GetRootPresContext(), rootWidget, point);
+  nsIFrame* popupFrame = nsLayoutUtils::GetPopupFrameForEventCoordinates(
+      accDocument->PresContext()->GetRootPresContext(), &dummyEvent);
   if (popupFrame) {
     // If 'this' accessible is not inside the popup then ignore the popup when
     // searching an accessible at point.
