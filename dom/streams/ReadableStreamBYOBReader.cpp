@@ -108,7 +108,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
       return;
     }
 
-    ReadableStreamBYOBReadResult result;
+    RootedDictionary<ReadableStreamBYOBReadResult> result(aCx);
     result.mValue.Construct();
     result.mValue.Value().Init(chunk);
     result.mDone.Construct(false);

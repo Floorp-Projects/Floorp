@@ -8,33 +8,9 @@
 test2: data: URI in iframe tries to window.open(data:, _blank);<br/>
 <iframe id="testFrame" src=""></iframe>
 <script>
-  // GeckoView displays an error page for invalid navigations,
-  // so catch the security error trying to access the cross-origin error
-  // document and treat that as blocked.
   let DATA_URI = `data:text/html,<body><script>
     var win = window.open("data:text/html,<body>toplevel data: URI navigations should be blocked</body>", "_blank");
-    setTimeout(function () {
-      let result = "navigated";
-      try {
-        result = win.document.body.innerHTML === "" ? "blocked" : "navigated";
-      } catch (e) {
-        if (e instanceof DOMException && e.name === "SecurityError") {
-          result = "blocked";
-        } else {
-          throw e;
-        }
-      }
-      parent.postMessage(result, "*");
-      win.close();
-    }, 1000);
     <\/script></body>`;
-
-  window.addEventListener("message", receiveMessage);
-  function receiveMessage(event) {
-    window.removeEventListener("message", receiveMessage);
-    // propagate the information back to the caller
-    window.opener.postMessage(event.data, "*");
-  }
   document.getElementById('testFrame').src = DATA_URI;
 </script>
 </body>

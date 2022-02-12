@@ -31,9 +31,6 @@ template <>
 struct IsTriviallySerializable<WebGLContextOptions> : std::true_type {};
 
 template <>
-struct IsTriviallySerializable<WebGLPixelStore> : std::true_type {};
-
-template <>
 struct IsTriviallySerializable<WebGLTexImageData> : std::true_type {};
 
 template <>
@@ -46,6 +43,12 @@ struct IsTriviallySerializable<webgl::GetUniformData> : std::true_type {};
 
 template <>
 struct IsTriviallySerializable<mozilla::webgl::PackingInfo> : std::true_type {};
+template <>
+struct IsTriviallySerializable<mozilla::webgl::PixelPackingState>
+    : std::true_type {};
+template <>
+struct IsTriviallySerializable<mozilla::webgl::PixelUnpackStateWebgl>
+    : std::true_type {};
 
 template <>
 struct IsTriviallySerializable<ICRData> : std::true_type {};

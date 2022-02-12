@@ -1098,6 +1098,11 @@ LayoutDeviceIntMargin nsNativeThemeGTK::GetWidgetBorder(
       // gtk's 'toolbar' for purposes of painting the widget background,
       // we don't use the toolbar border for toolbox.
       break;
+    case StyleAppearance::Menuitem:
+    case StyleAppearance::Checkmenuitem:
+    case StyleAppearance::Radiomenuitem:
+      // We use GetWidgetPadding for these.
+      break;
     case StyleAppearance::Dualbutton:
       // TOOLBAR_DUAL_BUTTON is an interesting case.  We want a border to draw
       // around the entire button + dropdown, and also an inner border if you're
@@ -1118,14 +1123,6 @@ LayoutDeviceIntMargin nsNativeThemeGTK::GetWidgetBorder(
                              &result.bottom, direction, (GtkTabFlags)flags,
                              gtkWidgetType);
     } break;
-    case StyleAppearance::Menuitem:
-    case StyleAppearance::Checkmenuitem:
-    case StyleAppearance::Radiomenuitem:
-      // For regular menuitems, we will be using GetWidgetPadding instead of
-      // GetWidgetBorder to pad up the widget's internals; other menuitems
-      // will need to fall through and use the default case as before.
-      if (IsRegularMenuItem(aFrame)) break;
-      [[fallthrough]];
     default: {
       GetCachedWidgetBorder(aFrame, aAppearance, direction, &result);
     }
@@ -1171,13 +1168,10 @@ bool nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem:
     case StyleAppearance::Radiomenuitem: {
-      // Menubar and menulist have their padding specified in CSS.
-      if (!IsRegularMenuItem(aFrame)) return false;
-
       GetCachedWidgetBorder(aFrame, aAppearance, GetTextDirection(aFrame),
                             aResult);
 
-      gint horizontal_padding;
+      gint horizontal_padding = 0;
       if (aAppearance == StyleAppearance::Menuitem)
         moz_gtk_menuitem_get_horizontal_padding(&horizontal_padding);
       else

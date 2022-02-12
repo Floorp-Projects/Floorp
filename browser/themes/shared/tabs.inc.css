@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%filter substitution
-%define tabIndicatorReplacesIcon :not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked])
-
 :root {
   --tab-min-height: 36px;
   --inline-tab-padding: 8px;
@@ -333,10 +330,10 @@
   padding: 2px;
 }
 
-:root[uidensity=compact] .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay),
-#tabbrowser-tabs[secondarytext-unsupported] .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay),
-:root:not([uidensity=compact]) #tabbrowser-tabs:not([secondarytext-unsupported]) .tabbrowser-tab:not(:hover) .tab-icon-overlay@tabIndicatorReplacesIcon@,
-:root:not([uidensity=compact]) #tabbrowser-tabs:not([secondarytext-unsupported]) .tabbrowser-tab:hover .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay) {
+:root[uidensity=compact] .tab-icon-stack[indicator-replaces-favicon] > :not(.tab-icon-overlay),
+#tabbrowser-tabs[secondarytext-unsupported] .tab-icon-stack[indicator-replaces-favicon] > :not(.tab-icon-overlay),
+:root:not([uidensity=compact]) #tabbrowser-tabs:not([secondarytext-unsupported]) .tabbrowser-tab:not(:hover) .tab-icon-overlay[indicator-replaces-favicon],
+:root:not([uidensity=compact]) #tabbrowser-tabs:not([secondarytext-unsupported]) .tabbrowser-tab:hover .tab-icon-stack[indicator-replaces-favicon] > :not(.tab-icon-overlay) {
   opacity: 0;
 }
 
@@ -371,16 +368,16 @@
   background-color: var(--tab-icon-overlay-stroke, black);
 }
 
-.tab-icon-overlay@tabIndicatorReplacesIcon@ {
+.tab-icon-overlay[indicator-replaces-favicon] {
   border-radius: 2px;
   fill-opacity: 0.75;
   padding: 2px;
 }
-.tab-icon-overlay@tabIndicatorReplacesIcon@:hover {
+.tab-icon-overlay[indicator-replaces-favicon]:hover {
   background-color: color-mix(in srgb, currentColor 15%, transparent);
   fill-opacity: 0.95;
 }
-.tab-icon-overlay@tabIndicatorReplacesIcon@:hover:active {
+.tab-icon-overlay[indicator-replaces-favicon]:hover:active {
   background-color: color-mix(in srgb, currentColor 30%, transparent);
 }
 

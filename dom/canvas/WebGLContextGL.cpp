@@ -779,30 +779,30 @@ void WebGLContext::LinkProgram(WebGLProgram& prog) {
   }
 }
 
-Maybe<webgl::ErrorInfo> SetPixelUnpack(const bool isWebgl2,
-                                       WebGLPixelStore* const unpacking,
-                                       const GLenum pname, const GLint param) {
+Maybe<webgl::ErrorInfo> SetPixelUnpack(
+    const bool isWebgl2, webgl::PixelUnpackStateWebgl* const unpacking,
+    const GLenum pname, const GLint param) {
   if (isWebgl2) {
     uint32_t* pValueSlot = nullptr;
     switch (pname) {
       case LOCAL_GL_UNPACK_IMAGE_HEIGHT:
-        pValueSlot = &unpacking->mUnpackImageHeight;
+        pValueSlot = &unpacking->imageHeight;
         break;
 
       case LOCAL_GL_UNPACK_SKIP_IMAGES:
-        pValueSlot = &unpacking->mUnpackSkipImages;
+        pValueSlot = &unpacking->skipImages;
         break;
 
       case LOCAL_GL_UNPACK_ROW_LENGTH:
-        pValueSlot = &unpacking->mUnpackRowLength;
+        pValueSlot = &unpacking->rowLength;
         break;
 
       case LOCAL_GL_UNPACK_SKIP_ROWS:
-        pValueSlot = &unpacking->mUnpackSkipRows;
+        pValueSlot = &unpacking->skipRows;
         break;
 
       case LOCAL_GL_UNPACK_SKIP_PIXELS:
-        pValueSlot = &unpacking->mUnpackSkipPixels;
+        pValueSlot = &unpacking->skipPixels;
         break;
     }
 
@@ -814,11 +814,11 @@ Maybe<webgl::ErrorInfo> SetPixelUnpack(const bool isWebgl2,
 
   switch (pname) {
     case dom::WebGLRenderingContext_Binding::UNPACK_FLIP_Y_WEBGL:
-      unpacking->mFlipY = bool(param);
+      unpacking->flipY = bool(param);
       return {};
 
     case dom::WebGLRenderingContext_Binding::UNPACK_PREMULTIPLY_ALPHA_WEBGL:
-      unpacking->mPremultiplyAlpha = bool(param);
+      unpacking->premultiplyAlpha = bool(param);
       return {};
 
     case dom::WebGLRenderingContext_Binding::UNPACK_COLORSPACE_CONVERSION_WEBGL:
@@ -833,11 +833,11 @@ Maybe<webgl::ErrorInfo> SetPixelUnpack(const bool isWebgl2,
           return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_VALUE, ToString(text)});
         }
       }
-      unpacking->mColorspaceConversion = param;
+      unpacking->colorspaceConversion = param;
       return {};
 
     case dom::MOZ_debug_Binding::UNPACK_REQUIRE_FASTPATH:
-      unpacking->mRequireFastPath = bool(param);
+      unpacking->requireFastPath = bool(param);
       return {};
 
     case LOCAL_GL_UNPACK_ALIGNMENT:
@@ -854,7 +854,7 @@ Maybe<webgl::ErrorInfo> SetPixelUnpack(const bool isWebgl2,
           return Some(webgl::ErrorInfo{LOCAL_GL_INVALID_VALUE, ToString(text)});
         }
       }
-      unpacking->mUnpackAlignment = param;
+      unpacking->alignmentInTypeElems = param;
       return {};
 
     default:
@@ -903,61 +903,6 @@ bool WebGLContext::DoReadPixelsAndConvert(
   gl->fReadPixels(x, y + bodyHeight, size.x, 1, pi.format, pi.type,
                   tailRowOffset);
 
-  return true;
-}
-
-static bool ValidatePackSize(const WebGLContext& webgl,
-                             const webgl::PixelPackState& packing,
-                             const uvec2& size, uint8_t bytesPerPixel,
-                             uint32_t* const out_rowStride,
-                             uint32_t* const out_endOffset) {
-  const auto alignment = packing.alignment;
-  switch (alignment) {
-    case 1:
-    case 2:
-    case 4:
-    case 8:
-      break;
-    default:
-      MOZ_ASSERT(false);
-      webgl.ErrorImplementationBug("Invalid PACK_ALIGNMENT.");
-      return false;
-  }
-
-  if (!size.x || !size.y) {
-    *out_rowStride = 0;
-    *out_endOffset = 0;
-    return true;
-  }
-
-  // GLES 3.0.4, p116 (PACK_ functions like UNPACK_)
-
-  const auto rowLength = (packing.rowLength ? packing.rowLength : size.x);
-  const auto skipPixels = packing.skipPixels;
-  const auto skipRows = packing.skipRows;
-
-  const auto usedPixelsPerRow = CheckedUint32(skipPixels) + size.x;
-  const auto usedRowsPerImage = CheckedUint32(skipRows) + size.y;
-
-  if (!usedPixelsPerRow.isValid() || usedPixelsPerRow.value() > rowLength) {
-    webgl.ErrorInvalidOperation("SKIP_PIXELS + width > ROW_LENGTH.");
-    return false;
-  }
-
-  const auto rowLengthBytes = CheckedUint32(rowLength) * bytesPerPixel;
-  const auto rowStride = RoundUpToMultipleOf(rowLengthBytes, alignment);
-
-  const auto usedBytesPerRow = usedPixelsPerRow * bytesPerPixel;
-  const auto usedBytesPerImage =
-      (usedRowsPerImage - 1) * rowStride + usedBytesPerRow;
-
-  if (!rowStride.isValid() || !usedBytesPerImage.isValid()) {
-    webgl.ErrorInvalidOperation("Invalid UNPACK_ params.");
-    return false;
-  }
-
-  *out_rowStride = rowStride.value();
-  *out_endOffset = usedBytesPerImage.value();
   return true;
 }
 
@@ -1143,12 +1088,6 @@ webgl::ReadPixelsResult WebGLContext::ReadPixelsImpl(
 
   if (!ValidateReadPixelsFormatAndType(srcFormat, desc.pi, gl, this)) return {};
 
-  uint8_t bytesPerPixel;
-  if (!webgl::GetBytesPerPixel(desc.pi, &bytesPerPixel)) {
-    ErrorInvalidOperation("Unsupported format and type.");
-    return {};
-  }
-
   //////
 
   const auto& srcOffset = desc.srcOffset;
@@ -1160,12 +1099,15 @@ webgl::ReadPixelsResult WebGLContext::ReadPixelsImpl(
   }
 
   const auto& packing = desc.packState;
-  uint32_t rowStride;
-  uint32_t bytesNeeded;
-  if (!ValidatePackSize(*this, packing, size, bytesPerPixel, &rowStride,
-                        &bytesNeeded))
+  const auto explicitPackingRes = webgl::ExplicitPixelPackingState::ForUseWith(
+      packing, LOCAL_GL_TEXTURE_2D, {size.x, size.y, 1}, desc.pi, {});
+  if (!explicitPackingRes.isOk()) {
+    ErrorInvalidOperation("%s", explicitPackingRes.inspectErr().c_str());
     return {};
-
+  }
+  const auto& explicitPacking = explicitPackingRes.inspect();
+  const auto& rowStride = explicitPacking.metrics.bytesPerRowStride;
+  const auto& bytesNeeded = explicitPacking.metrics.totalBytesUsed;
   if (bytesNeeded > availBytes) {
     ErrorInvalidOperation("buffer too small");
     return {};
@@ -1185,7 +1127,7 @@ webgl::ReadPixelsResult WebGLContext::ReadPixelsImpl(
   ////////////////
   // Now that the errors are out of the way, on to actually reading!
 
-  gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, packing.alignment);
+  gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, packing.alignmentInTypeElems);
   if (IsWebGL2()) {
     gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, packing.rowLength);
     gl->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, packing.skipPixels);
@@ -1243,7 +1185,7 @@ webgl::ReadPixelsResult WebGLContext::ReadPixelsImpl(
     desc2.srcOffset = {readX, readY};
     desc2.size = {rwSize.x, 1};
 
-    auto row = dest + writeX * bytesPerPixel;
+    auto row = dest + writeX * explicitPacking.metrics.bytesPerPixel;
     row += writeY * rowStride;
     for (const auto j : IntegerRange(size.y)) {
       desc2.srcOffset.y = readY + j;

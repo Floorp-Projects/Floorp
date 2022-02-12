@@ -1287,7 +1287,8 @@ async function getEditorLineEl(dbg, line) {
 }
 
 /*
- * Assert that no breakpoint is set on a given line.
+ * Assert that no breakpoint is set on a given line of
+ * the currently selected source in the editor.
  *
  * @memberof mochitest/helpers
  * @param {Object} dbg
@@ -1302,7 +1303,8 @@ async function assertNoBreakpoint(dbg, line) {
 }
 
 /*
- * Assert that a regular breakpoint is set. (no conditional, nor log breakpoint)
+ * Assert that a regular breakpoint is set in the currently
+ * selected source in the editor. (no conditional, nor log breakpoint)
  *
  * @memberof mochitest/helpers
  * @param {Object} dbg

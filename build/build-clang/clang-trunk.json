@@ -2,13 +2,12 @@
   "patches": [
     "static-llvm-symbolizer_clang_15.patch",
     "compiler-rt-cross-compile.patch",
-    "find_symbolizer_linux_clang_10.patch",
+    "find_symbolizer_linux_clang_15.patch",
     "android-mangling-error_clang_12.patch",
     "unpoison-thread-stacks_clang_10.patch",
     "downgrade-mangling-error_clang_12.patch",
     "bug47258-extract-symbols-mbcs.patch",
     "Remove-FlushViewOfFile-when-unmaping-gcda-files.patch",
-    "loosen-msvc-detection.patch",
     "fuzzing_ccov_build_clang_12.patch",
     "compiler-rt-13-no-codesign.patch"
   ]

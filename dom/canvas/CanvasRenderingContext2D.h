@@ -99,6 +99,9 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     return mBufferProvider;
   }
 
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(
+      WebGLFramebufferJS*, const bool webvr = false) override;
+
   void Save() override;
   void Restore() override;
   void Scale(double aX, double aY, mozilla::ErrorResult& aError) override;
