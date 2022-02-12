@@ -32,7 +32,6 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_network.h"
-#include "mozilla/StaticPrefs_pdfjs.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/Telemetry.h"
@@ -141,6 +140,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Navigator)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMimeTypes)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlugins)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPermissions)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGeolocation)
@@ -172,7 +172,11 @@ void Navigator::Invalidate() {
   // Don't clear mWindow here so we know we've got a non-null mWindow
   // until we're unlinked.
 
-  mPlugins = nullptr;
+  mMimeTypes = nullptr;
+
+  if (mPlugins) {
+    mPlugins = nullptr;
+  }
 
   mPermissions = nullptr;
 
@@ -468,12 +472,15 @@ void Navigator::GetProductSub(nsAString& aProductSub) {
 }
 
 nsMimeTypeArray* Navigator::GetMimeTypes(ErrorResult& aRv) {
-  auto* plugins = GetPlugins(aRv);
-  if (!plugins) {
-    return nullptr;
+  if (!mMimeTypes) {
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+    mMimeTypes = new nsMimeTypeArray(mWindow);
   }
 
-  return plugins->MimeTypeArray();
+  return mMimeTypes;
 }
 
 nsPluginArray* Navigator::GetPlugins(ErrorResult& aRv) {
@@ -482,13 +489,11 @@ nsPluginArray* Navigator::GetPlugins(ErrorResult& aRv) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
-    mPlugins = MakeRefPtr<nsPluginArray>(mWindow);
+    mPlugins = new nsPluginArray(mWindow);
   }
 
   return mPlugins;
 }
-
-bool Navigator::PdfViewerEnabled() { return !StaticPrefs::pdfjs_disabled(); }
 
 Permissions* Navigator::GetPermissions(ErrorResult& aRv) {
   if (!mWindow) {
