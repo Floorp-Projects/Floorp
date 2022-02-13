@@ -147,13 +147,6 @@ class PropertyKey {
     return PropertyKey::fromRawBits(uintptr_t(sym) | SymbolTypeTag);
   }
 
-  // This API can be used by embedders to convert pinned (aka interned) strings,
-  // as created by JS_AtomizeAndPinString, into PropertyKeys. This means the
-  // string does not have to be explicitly rooted.
-  //
-  // Only use this API when absolutely necessary, otherwise use JS_StringToId.
-  static PropertyKey fromPinnedString(JSString* str);
-
   // Must not be used on atoms that are representable as integer PropertyKey.
   // Prefer NameToId or AtomToId over this function:
   //
@@ -175,18 +168,25 @@ class PropertyKey {
   // Thus, it is only the rare third case which needs this function, which
   // handles any JSAtom* that is known not to be representable with an int
   // PropertyKey.
-  static PropertyKey fromNonIntAtom(JSAtom* atom) {
+  static PropertyKey NonIntAtom(JSAtom* atom) {
     MOZ_ASSERT((uintptr_t(atom) & TypeMask) == 0);
     MOZ_ASSERT(PropertyKey::isNonIntAtom(atom));
     return PropertyKey::fromRawBits(uintptr_t(atom) | StringTypeTag);
   }
 
   // The JSAtom/JSString type exposed to embedders is opaque.
-  static PropertyKey fromNonIntAtom(JSString* str) {
+  static PropertyKey NonIntAtom(JSString* str) {
     MOZ_ASSERT((uintptr_t(str) & TypeMask) == 0);
     MOZ_ASSERT(PropertyKey::isNonIntAtom(str));
     return PropertyKey::fromRawBits(uintptr_t(str) | StringTypeTag);
   }
+
+  // This API can be used by embedders to convert pinned (aka interned) strings,
+  // as created by JS_AtomizeAndPinString, into PropertyKeys. This means the
+  // string does not have to be explicitly rooted.
+  //
+  // Only use this API when absolutely necessary, otherwise use JS_StringToId.
+  static PropertyKey fromPinnedString(JSString* str);
 
   // Internal API!
   // All string PropertyKeys are actually atomized.
