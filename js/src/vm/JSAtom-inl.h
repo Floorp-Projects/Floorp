@@ -25,7 +25,7 @@ MOZ_ALWAYS_INLINE jsid AtomToId(JSAtom* atom) {
 
   uint32_t index;
   if (atom->isIndex(&index) && index <= JSID_INT_MAX) {
-    return INT_TO_JSID(int32_t(index));
+    return JS::PropertyKey::Int(int32_t(index));
   }
 
   return JS::PropertyKey::fromNonIntAtom(atom);
@@ -42,11 +42,11 @@ MOZ_ALWAYS_INLINE bool ValueToIntId(const Value& v, jsid* id) {
     return false;
   }
 
-  if (!INT_FITS_IN_JSID(i)) {
+  if (!PropertyKey::fitsInInt(i)) {
     return false;
   }
 
-  *id = INT_TO_JSID(i);
+  *id = PropertyKey::Int(i);
   return true;
 }
 
@@ -135,7 +135,7 @@ bool IndexToIdSlow(JSContext* cx, uint32_t index, MutableHandleId idp);
 
 inline bool IndexToId(JSContext* cx, uint32_t index, MutableHandleId idp) {
   if (index <= JSID_INT_MAX) {
-    idp.set(INT_TO_JSID(index));
+    idp.set(PropertyKey::Int(index));
     return true;
   }
 

@@ -15064,7 +15064,7 @@ class CGDOMJSProxyHandler_ownPropNames(ClassMethod):
                 uint32_t length = UnwrapProxy(proxy)->Length(${callerType});
                 MOZ_ASSERT(int32_t(length) >= 0);
                 for (int32_t i = 0; i < int32_t(length); ++i) {
-                  if (!props.append(INT_TO_JSID(i))) {
+                  if (!props.append(JS::PropertyKey::Int(i))) {
                     return false;
                   }
                 }

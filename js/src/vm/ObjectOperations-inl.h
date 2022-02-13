@@ -207,7 +207,7 @@ inline bool GetElementNoGC(JSContext* cx, JSObject* obj,
     return false;
   }
 
-  return GetPropertyNoGC(cx, obj, receiver, INT_TO_JSID(index), vp);
+  return GetPropertyNoGC(cx, obj, receiver, PropertyKey::Int(index), vp);
 }
 
 static MOZ_ALWAYS_INLINE bool ClassMayResolveId(const JSAtomState& names,

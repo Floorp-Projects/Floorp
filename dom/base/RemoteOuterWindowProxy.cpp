@@ -141,7 +141,7 @@ bool AppendIndexedPropertyNames(JSContext* aCx, BrowsingContext* aContext,
   }
 
   for (int32_t i = 0; i < length; ++i) {
-    aIndexedProps.infallibleAppend(INT_TO_JSID(i));
+    aIndexedProps.infallibleAppend(JS::PropertyKey::Int(i));
   }
   return true;
 }

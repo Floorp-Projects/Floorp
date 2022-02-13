@@ -894,7 +894,7 @@ static inline bool ObjectMayHaveExtraIndexedOwnProperties(JSObject* obj) {
   }
 
   return ClassMayResolveId(*obj->runtimeFromAnyThread()->commonNames,
-                           obj->getClass(), INT_TO_JSID(0), obj);
+                           obj->getClass(), PropertyKey::Int(0), obj);
 }
 
 /*
@@ -1529,7 +1529,7 @@ static DenseElementResult ArrayReverseDenseKernel(JSContext* cx,
     }
 
     obj->setDenseElementHole(index);
-    return SuppressDeletedProperty(cx, obj, INT_TO_JSID(index));
+    return SuppressDeletedProperty(cx, obj, PropertyKey::Int(index));
   };
 
   RootedValue origlo(cx), orighi(cx);
