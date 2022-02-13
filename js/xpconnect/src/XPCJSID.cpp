@@ -116,8 +116,8 @@ static JSObject* GetIDPrototype(JSContext* aCx, const JSClass* aClass) {
                           JS_NewObjectWithGivenProto(aCx, nullptr, idProto));
     RootedObject cidProto(aCx,
                           JS_NewObjectWithGivenProto(aCx, nullptr, idProto));
-    RootedId hasInstance(
-        aCx, SYMBOL_TO_JSID(GetWellKnownSymbol(aCx, SymbolCode::hasInstance)));
+    RootedId hasInstance(aCx,
+                         GetWellKnownSymbolKey(aCx, SymbolCode::hasInstance));
 
     const uint32_t kFlags =
         JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT;
