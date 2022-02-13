@@ -89,10 +89,6 @@ body[lwt-newtab-brighttext] {
   flex-direction: column;
   justify-content: center;
 }
-.onboardingContainer .section-main.with-noodles {
-  height: 503px;
-  width: 504px;
-}
 .onboardingContainer .main-content {
   background-color: var(--in-content-page-background);
   border-radius: 20px;
@@ -763,6 +759,8 @@ body[lwt-newtab-brighttext] {
 }
 .onboardingContainer .screen-1 .section-main {
   z-index: 1;
+  width: 504px;
+  height: 503px;
   margin: auto;
 }
 .onboardingContainer .screen-1 .section-main .main-content-inner {
@@ -858,6 +856,8 @@ body[lwt-newtab-brighttext] {
 }
 .onboardingContainer .screen-2 .section-main {
   z-index: 1;
+  width: 504px;
+  height: 503px;
   margin: auto;
 }
 .onboardingContainer .screen-2 .section-main .main-content-inner {

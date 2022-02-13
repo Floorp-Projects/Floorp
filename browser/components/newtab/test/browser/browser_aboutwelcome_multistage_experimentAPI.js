@@ -35,7 +35,6 @@ const TEST_PROTON_CONTENT = [
       help_text: {
         text: "Here's some sample help text",
       },
-      has_noodles: true,
     },
   },
   {
@@ -52,7 +51,6 @@ const TEST_PROTON_CONTENT = [
       secondary_button: {
         label: "link",
       },
-      has_noodles: true,
     },
   },
   {
@@ -90,7 +88,6 @@ const TEST_PROTON_CONTENT = [
           data: { source: "chrome" },
         },
       },
-      has_noodles: true,
     },
   },
   {
@@ -107,7 +104,6 @@ const TEST_PROTON_CONTENT = [
       secondary_button: {
         label: "link",
       },
-      has_noodles: true,
     },
   },
 ];
@@ -190,7 +186,6 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
             data: { entrypoint: "test" },
           },
         },
-        has_noodles: true,
       },
     },
     {
@@ -208,7 +203,6 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
         secondary_button: {
           label: "link",
         },
-        has_noodles: true,
       },
     },
     {
@@ -229,7 +223,6 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
             data: { source: "chrome" },
           },
         },
-        has_noodles: true,
       },
     },
   ];

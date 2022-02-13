@@ -77,11 +77,6 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-
-    &.with-noodles {
-      height: 503px;
-      width: 504px;
-    }
   }
 
   .main-content {
@@ -901,6 +896,8 @@ body {
 
     .section-main {
       z-index: 1;
+      width: 504px;
+      height: 503px;
       margin: auto;
 
       .main-content-inner {
@@ -1011,6 +1008,8 @@ body {
 
     .section-main {
       z-index: 1;
+      width: 504px;
+      height: 503px;
       margin: auto;
 
       .main-content-inner {

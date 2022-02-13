@@ -84,7 +84,7 @@ export const MultiStageAboutWelcome = props => {
         if (index < props.screens.length - 1) {
           setTransition(props.transitions ? "in" : "");
           setScreenIndex(prevState => prevState + 1);
-        } else if (window.location.href === "about:welcome") {
+        } else {
           AboutWelcomeUtils.handleUserAction({
             type: "OPEN_ABOUT_PAGE",
             data: { args: "home", where: "current" },
@@ -143,13 +143,9 @@ export const MultiStageAboutWelcome = props => {
     <React.Fragment>
       <div
         className={`outer-wrapper onboardingContainer proton transition-${transition}`}
-        style={
-          props.background_url
-            ? {
-                backgroundImage: `url(${props.background_url})`,
-              }
-            : {}
-        }
+        style={{
+          backgroundImage: `url(${props.background_url})`,
+        }}
       >
         {props.screens.map((screen, order) => {
           return index === order ? (
