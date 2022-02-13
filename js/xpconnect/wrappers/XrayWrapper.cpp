@@ -946,7 +946,7 @@ bool JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper,
         return false;
       }
       for (int32_t i = 0; i < int32_t(length); ++i) {
-        props.infallibleAppend(INT_TO_JSID(i));
+        props.infallibleAppend(PropertyKey::Int(i));
       }
     } else if (key == JSProto_Function) {
       if (!props.append(GetJSIDByIndex(cx, XPCJSContext::IDX_LENGTH))) {

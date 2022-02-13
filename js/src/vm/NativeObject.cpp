@@ -1071,7 +1071,7 @@ static MOZ_ALWAYS_INLINE bool CallAddPropertyHookDense(JSContext* cx,
   if (MOZ_UNLIKELY(addProperty)) {
     MOZ_ASSERT(!cx->isHelperThreadContext());
 
-    RootedId id(cx, INT_TO_JSID(index));
+    RootedId id(cx, PropertyKey::Int(index));
     if (!CallJSAddPropertyOp(cx, addProperty, obj, id, value)) {
       obj->setDenseElementHole(index);
       return false;
@@ -1807,8 +1807,8 @@ static bool DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj,
 bool js::AddOrUpdateSparseElementHelper(JSContext* cx, HandleArrayObject obj,
                                         int32_t int_id, HandleValue v,
                                         bool strict) {
-  MOZ_ASSERT(INT_FITS_IN_JSID(int_id));
-  RootedId id(cx, INT_TO_JSID(int_id));
+  MOZ_ASSERT(PropertyKey::fitsInInt(int_id));
+  RootedId id(cx, PropertyKey::Int(int_id));
 
   // This helper doesn't handle the case where the index may be in the dense
   // elements
@@ -2095,8 +2095,8 @@ bool js::GetSparseElementHelper(JSContext* cx, HandleArrayObject obj,
   MOZ_ASSERT_IF(obj->staticPrototype() != nullptr,
                 !ObjectMayHaveExtraIndexedProperties(obj->staticPrototype()));
 
-  MOZ_ASSERT(INT_FITS_IN_JSID(int_id));
-  RootedId id(cx, INT_TO_JSID(int_id));
+  MOZ_ASSERT(PropertyKey::fitsInInt(int_id));
+  RootedId id(cx, PropertyKey::Int(int_id));
 
   uint32_t index;
   PropMap* map = obj->shape()->lookup(cx, id, &index);

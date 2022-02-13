@@ -719,7 +719,7 @@ bool MappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj) {
   }
 
   for (unsigned i = 0; i < argsobj->initialLength(); i++) {
-    id = INT_TO_JSID(i);
+    id = PropertyKey::Int(i);
     if (!HasOwnProperty(cx, argsobj, id, &found)) {
       return false;
     }
@@ -1006,7 +1006,7 @@ bool UnmappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj) {
   }
 
   for (unsigned i = 0; i < argsobj->initialLength(); i++) {
-    id = INT_TO_JSID(i);
+    id = PropertyKey::Int(i);
     if (!HasOwnProperty(cx, argsobj, id, &found)) {
       return false;
     }

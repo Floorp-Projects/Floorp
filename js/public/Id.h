@@ -118,6 +118,14 @@ struct PropertyKey {
 
   bool isWellKnownSymbol(JS::SymbolCode code) const;
 
+  static constexpr bool fitsInInt(int32_t i) { return i >= 0; }
+
+  static constexpr PropertyKey Int(int32_t i) {
+    MOZ_ASSERT(fitsInInt(i));
+    uint32_t bits = (static_cast<uint32_t>(i) << 1) | JSID_TYPE_INT_BIT;
+    return PropertyKey::fromRawBits(bits);
+  }
+
   // This API can be used by embedders to convert pinned (aka interned) strings,
   // as created by JS_AtomizeAndPinString, into PropertyKeys. This means the
   // string does not have to be explicitly rooted.
@@ -188,16 +196,6 @@ using jsid = JS::PropertyKey;
 
 #define JSID_INT_MIN 0
 #define JSID_INT_MAX INT32_MAX
-
-static MOZ_ALWAYS_INLINE bool INT_FITS_IN_JSID(int32_t i) { return i >= 0; }
-
-static MOZ_ALWAYS_INLINE jsid INT_TO_JSID(int32_t i) {
-  jsid id;
-  MOZ_ASSERT(INT_FITS_IN_JSID(i));
-  uint32_t bits = (static_cast<uint32_t>(i) << 1) | JSID_TYPE_INT_BIT;
-  JSID_BITS(id) = static_cast<size_t>(bits);
-  return id;
-}
 
 static MOZ_ALWAYS_INLINE jsid SYMBOL_TO_JSID(JS::Symbol* sym) {
   jsid id;
