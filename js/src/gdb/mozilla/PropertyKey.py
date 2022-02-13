@@ -19,12 +19,11 @@ class PropertyKey(object):
     # think of any way to avoid copying these values here, short of using
     # inferior calls for every operation (which, I hear, is broken from
     # pretty-printers in some recent GDBs).
-    TYPE_STRING = 0x0
-    TYPE_INT = 0x1
-    TYPE_VOID = 0x2
-    TYPE_SYMBOL = 0x4
-    TYPE_EMPTY = 0x6
-    TYPE_MASK = 0x7
+    StringTypeTag = 0x0
+    IntTagBit = 0x1
+    VoidTypeTag = 0x2
+    SymbolTypeTag = 0x4
+    TypeMask = 0x7
 
     def __init__(self, value, cache):
         self.value = value
@@ -32,18 +31,16 @@ class PropertyKey(object):
         self.concrete_type = self.value.type.strip_typedefs()
 
     def to_string(self):
-        bits = self.value["asBits"]
-        tag = bits & PropertyKey.TYPE_MASK
-        if tag == PropertyKey.TYPE_STRING:
+        bits = self.value["asBits_"]
+        tag = bits & PropertyKey.TypeMask
+        if tag == PropertyKey.StringTypeTag:
             body = bits.cast(self.cache.JSString_ptr_t)
-        elif tag & PropertyKey.TYPE_INT:
+        elif tag & PropertyKey.IntTagBit:
             body = bits >> 1
-        elif tag == PropertyKey.TYPE_VOID:
-            return "JSID_VOID"
-        elif tag == PropertyKey.TYPE_SYMBOL:
-            body = (bits & ~PropertyKey.TYPE_MASK).cast(self.cache.JSSymbol_ptr_t)
-        elif tag == PropertyKey.TYPE_EMPTY:
-            return "JSID_EMPTY"
+        elif tag == PropertyKey.VoidTypeTag:
+            return "JS::VoidPropertyKey"
+        elif tag == PropertyKey.SymbolTypeTag:
+            body = (bits & ~PropertyKey.TypeMask).cast(self.cache.JSSymbol_ptr_t)
         else:
             body = "<unrecognized>"
         return "$jsid(%s)" % (body,)

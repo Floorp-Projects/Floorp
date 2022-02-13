@@ -656,7 +656,7 @@ static bool JA(JSContext* cx, HandleObject obj, StringifyContext* scx) {
         MOZ_ASSERT(obj->is<ArrayObject>());
         MOZ_ASSERT(obj->is<NativeObject>());
         RootedNativeObject nativeObj(cx, &obj->as<NativeObject>());
-        if (i <= JSID_INT_MAX) {
+        if (i <= PropertyKey::IntMax) {
           MOZ_ASSERT(
               nativeObj->containsDenseElement(i) != nativeObj->isIndexed(),
               "the array must either be small enough to remain "
@@ -1199,7 +1199,7 @@ bool BuildImmutableProperty(JSContext* cx, HandleValue value, HandleId name,
       // Step 1.b.iv
       for (uint32_t i = 0; i < len; i++) {
         // Step 1.b.iv.1
-        childName.set(INT_TO_JSID(i));
+        childName.set(PropertyKey::Int(i));
 
         // Step 1.b.iv.2
         if (!GetProperty(cx, arr, value, childName, &childValue)) {

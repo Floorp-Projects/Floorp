@@ -767,8 +767,8 @@ bool js::DefinePropertiesAndFunctions(JSContext* cx, HandleObject obj,
 }
 
 bool js::DefineToStringTag(JSContext* cx, HandleObject obj, JSAtom* tag) {
-  RootedId toStringTagId(cx,
-                         SYMBOL_TO_JSID(cx->wellKnownSymbols().toStringTag));
+  RootedId toStringTagId(
+      cx, PropertyKey::Symbol(cx->wellKnownSymbols().toStringTag));
   RootedValue tagString(cx, StringValue(tag));
   return DefineDataProperty(cx, obj, toStringTagId, tagString, JSPROP_READONLY);
 }

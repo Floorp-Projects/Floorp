@@ -4108,7 +4108,7 @@ static bool ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
 
-      idx = INT_TO_JSID(inlineFrameNo);
+      idx = PropertyKey::Int(inlineFrameNo);
       if (!JS_DefinePropertyById(cx, inlineStack, idx, inlineFrameInfo, 0)) {
         return false;
       }
@@ -4117,7 +4117,7 @@ static bool ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     // Push inline array into main array.
-    idx = INT_TO_JSID(physicalFrameNo);
+    idx = PropertyKey::Int(physicalFrameNo);
     if (!JS_DefinePropertyById(cx, stack, idx, inlineStack, 0)) {
       return false;
     }
@@ -4210,7 +4210,7 @@ JSObject* ShellAllocationMetadataBuilder::build(
   RootedValue callee(cx);
   for (NonBuiltinScriptFrameIter iter(cx); !iter.done(); ++iter) {
     if (iter.isFunctionFrame() && iter.compartment() == cx->compartment()) {
-      id = INT_TO_JSID(stackIndex);
+      id = PropertyKey::Int(stackIndex);
       RootedObject callee(cx, iter.callee(cx));
       if (!JS_DefinePropertyById(cx, stack, id, callee, JSPROP_ENUMERATE)) {
         oomUnsafe.crash("ShellAllocationMetadataBuilder::build");

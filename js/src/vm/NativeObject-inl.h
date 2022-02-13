@@ -60,7 +60,7 @@ inline void NativeObject::setDenseElementHole(uint32_t index) {
 }
 
 inline void NativeObject::removeDenseElementForSparseIndex(uint32_t index) {
-  MOZ_ASSERT(containsPure(INT_TO_JSID(index)));
+  MOZ_ASSERT(containsPure(PropertyKey::Int(index)));
   if (containsDenseElement(index)) {
     setDenseElementHole(index);
   }
