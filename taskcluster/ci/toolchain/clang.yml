@@ -124,31 +124,6 @@ linux64-clang-13-stage1:
         fetch:
             - clang-13
 
-linux64-clang-13-profile:
-    description: "Clang 13 toolchain build"
-    treeherder:
-        symbol: TL(clang13-profile)
-    run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/linux64.json'
-            - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/skip-stage-1.json'
-            - 'build/build-clang/profile.json'
-        resources:
-            - 'build/build-clang/linux64.json'
-            - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/skip-stage-1.json'
-            - 'build/build-clang/profile.json'
-        toolchain-artifact: public/build/merged.profdata
-    fetches:
-        fetch:
-            - clang-13
-        toolchain:
-            - linux64-clang-13-stage1
-            - linux64-toolchain-sysroot
-
 linux64-clang-13:
     description: "Clang 13 toolchain build"
     attributes:
@@ -162,13 +137,11 @@ linux64-clang-13:
         arguments:
             - 'build/build-clang/linux64.json'
             - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/skip-3-stages.json'
-            - 'build/build-clang/4stages-pgo.json'
+            - 'build/build-clang/skip-stage-1.json'
         resources:
             - 'build/build-clang/linux64.json'
             - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/skip-3-stages.json'
-            - 'build/build-clang/4stages-pgo.json'
+            - 'build/build-clang/skip-stage-1.json'
         toolchain-alias:
             - linux64-clang
         toolchain-artifact: public/build/clang.tar.zst
@@ -177,7 +150,6 @@ linux64-clang-13:
             - clang-13
         toolchain:
             - linux64-clang-13-stage1
-            - linux64-clang-13-profile
             - linux64-toolchain-sysroot
             - wasm32-wasi-compiler-rt-13
 
@@ -296,13 +268,9 @@ macosx64-clang-13-raw:
         arguments:
             - 'build/build-clang/macosx64.json'
             - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/skip-3-stages.json'
-            - 'build/build-clang/4stages-pgo.json'
         resources:
             - 'build/build-clang/macosx64.json'
             - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/skip-3-stages.json'
-            - 'build/build-clang/4stages-pgo.json'
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -310,7 +278,6 @@ macosx64-clang-13-raw:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-13-macosx-cross
-            - linux64-clang-13-profile
             - macosx64-sdk-11.0
             - wasm32-wasi-compiler-rt-13
 
@@ -359,13 +326,9 @@ macosx64-aarch64-clang-13-raw:
         arguments:
             - 'build/build-clang/macosx64.json'
             - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/skip-3-stages.json'
-            - 'build/build-clang/4stages-pgo.json'
         resources:
             - 'build/build-clang/macosx64.json'
             - 'build/build-clang/clang-13.json'
-            - 'build/build-clang/skip-3-stages.json'
-            - 'build/build-clang/4stages-pgo.json'
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -373,7 +336,6 @@ macosx64-aarch64-clang-13-raw:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-13-macosx-cross
-            - linux64-clang-13-profile
             - macosx64-sdk-11.0
             - wasm32-wasi-compiler-rt-13
 
@@ -421,12 +383,10 @@ win64-clang-13-raw:
             - 'build/build-clang/win64.json'
             - 'build/build-clang/clang-13.json'
             - 'build/build-clang/skip-stage-1-win64.json'
-            - 'build/build-clang/4stages-pgo.json'
         resources:
             - 'build/build-clang/win64.json'
             - 'build/build-clang/clang-13.json'
             - 'build/build-clang/skip-stage-1-win64.json'
-            - 'build/build-clang/4stages-pgo.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
