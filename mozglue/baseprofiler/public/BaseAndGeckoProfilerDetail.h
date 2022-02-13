@@ -15,9 +15,20 @@
 
 #include "mozilla/BaseProfilerUtils.h"
 #include "mozilla/Span.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/Types.h"
 
-namespace mozilla::profiler::detail {
+namespace mozilla {
+
+namespace baseprofiler::detail {
+
+// If the current thread is registered, returns its registration time, otherwise
+// a null timestamp.
+[[nodiscard]] MFBT_API TimeStamp GetThreadRegistrationTime();
+
+}  // namespace baseprofiler::detail
+
+namespace profiler::detail {
 
 // True if the filter is exactly "pid:<aPid>".
 [[nodiscard]] MFBT_API bool FilterHasPid(
@@ -38,6 +49,8 @@ namespace mozilla::profiler::detail {
     baseprofiler::BaseProfilerProcessId aPid =
         baseprofiler::profiler_current_process_id());
 
-}  // namespace mozilla::profiler::detail
+}  // namespace profiler::detail
+
+}  // namespace mozilla
 
 #endif  // BaseAndGeckoProfilerDetail_h

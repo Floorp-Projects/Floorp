@@ -139,7 +139,13 @@ TEST(GeckoProfiler, ThreadRegistrationInfo)
     EXPECT_STREQ(trInfoHere.Name(), "Here");
     EXPECT_NE(trInfoHere.Name(), "Here")
         << "ThreadRegistrationInfo should keep its own copy of the name";
-    EXPECT_GT(trInfoHere.RegisterTime(), ts);
+    TimeStamp baseRegistrationTime =
+        baseprofiler::detail::GetThreadRegistrationTime();
+    if (baseRegistrationTime) {
+      EXPECT_EQ(trInfoHere.RegisterTime(), baseRegistrationTime);
+    } else {
+      EXPECT_GT(trInfoHere.RegisterTime(), ts);
+    }
     EXPECT_EQ(trInfoHere.ThreadId(), profiler_current_thread_id());
     EXPECT_EQ(trInfoHere.ThreadId(), profiler_main_thread_id())
         << "Gtests are assumed to run on the main thread";
