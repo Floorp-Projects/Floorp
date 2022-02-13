@@ -1469,7 +1469,7 @@ static bool TryAppendNativeProperties(JSContext* cx, HandleObject obj,
       continue;
     }
 
-    if (!entries.append(INT_TO_JSID(i - 1))) {
+    if (!entries.append(PropertyKey::Int(i - 1))) {
       return false;
     }
 

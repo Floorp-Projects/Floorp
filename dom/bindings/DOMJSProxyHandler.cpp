@@ -21,7 +21,7 @@ using namespace JS;
 
 namespace mozilla::dom {
 
-jsid s_length_id = JSID_VOID;
+jsid s_length_id = JS::PropertyKey::Void();
 
 bool DefineStaticJSVals(JSContext* cx) {
   return AtomizeAndPinJSString(cx, s_length_id, "length");

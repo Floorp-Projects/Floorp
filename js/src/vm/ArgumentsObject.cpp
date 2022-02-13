@@ -624,7 +624,7 @@ bool ArgumentsObject::reifyIterator(JSContext* cx,
     return true;
   }
 
-  RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
+  RootedId iteratorId(cx, PropertyKey::Symbol(cx->wellKnownSymbols().iterator));
   RootedValue val(cx);
   if (!ArgumentsObject::getArgumentsIterator(cx, &val)) {
     return false;
@@ -713,13 +713,13 @@ bool MappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj) {
     return false;
   }
 
-  id = SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator);
+  id = PropertyKey::Symbol(cx->wellKnownSymbols().iterator);
   if (!HasOwnProperty(cx, argsobj, id, &found)) {
     return false;
   }
 
   for (unsigned i = 0; i < argsobj->initialLength(); i++) {
-    id = INT_TO_JSID(i);
+    id = PropertyKey::Int(i);
     if (!HasOwnProperty(cx, argsobj, id, &found)) {
       return false;
     }
@@ -1000,13 +1000,13 @@ bool UnmappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj) {
     return false;
   }
 
-  id = SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator);
+  id = PropertyKey::Symbol(cx->wellKnownSymbols().iterator);
   if (!HasOwnProperty(cx, argsobj, id, &found)) {
     return false;
   }
 
   for (unsigned i = 0; i < argsobj->initialLength(); i++) {
-    id = INT_TO_JSID(i);
+    id = PropertyKey::Int(i);
     if (!HasOwnProperty(cx, argsobj, id, &found)) {
       return false;
     }

@@ -134,7 +134,7 @@ bool InterpretObjLiteralObj(JSContext* cx, HandlePlainObject obj,
                   !insn.getKey().isArrayIndex());
 
     if (kind == PropertySetKind::Normal && insn.getKey().isArrayIndex()) {
-      propId = INT_TO_JSID(insn.getKey().getArrayIndex());
+      propId = PropertyKey::Int(insn.getKey().getArrayIndex());
     } else {
       JSAtom* jsatom =
           atomCache.getExistingAtomAt(cx, insn.getKey().getAtomIndex());

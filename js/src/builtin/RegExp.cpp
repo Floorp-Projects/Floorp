@@ -469,7 +469,7 @@ bool js::IsRegExp(JSContext* cx, HandleValue value, bool* result) {
 
   /* Steps 2-3. */
   RootedValue isRegExp(cx);
-  RootedId matchId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().match));
+  RootedId matchId(cx, PropertyKey::Symbol(cx->wellKnownSymbols().match));
   if (!GetProperty(cx, obj, obj, matchId, &isRegExp)) {
     return false;
   }
@@ -1988,7 +1988,7 @@ bool js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto) {
   // those values should be tested in selfhosted JS.
   bool has = false;
   if (!HasOwnDataPropertyPure(
-          cx, proto, SYMBOL_TO_JSID(cx->wellKnownSymbols().match), &has)) {
+          cx, proto, PropertyKey::Symbol(cx->wellKnownSymbols().match), &has)) {
     return false;
   }
   if (!has) {
@@ -1996,7 +1996,8 @@ bool js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto) {
   }
 
   if (!HasOwnDataPropertyPure(
-          cx, proto, SYMBOL_TO_JSID(cx->wellKnownSymbols().search), &has)) {
+          cx, proto, PropertyKey::Symbol(cx->wellKnownSymbols().search),
+          &has)) {
     return false;
   }
   if (!has) {

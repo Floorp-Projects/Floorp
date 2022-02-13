@@ -935,8 +935,8 @@ bool JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper,
 
       // Fail early if the typed array is enormous, because this will be very
       // slow and will likely report OOM. This also means we don't need to
-      // handle indices greater than JSID_INT_MAX in the loop below.
-      static_assert(JSID_INT_MAX >= INT32_MAX);
+      // handle indices greater than PropertyKey::IntMax in the loop below.
+      static_assert(PropertyKey::IntMax >= INT32_MAX);
       if (length > INT32_MAX) {
         JS_ReportOutOfMemory(cx);
         return false;
@@ -946,7 +946,7 @@ bool JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper,
         return false;
       }
       for (int32_t i = 0; i < int32_t(length); ++i) {
-        props.infallibleAppend(INT_TO_JSID(i));
+        props.infallibleAppend(PropertyKey::Int(i));
       }
     } else if (key == JSProto_Function) {
       if (!props.append(GetJSIDByIndex(cx, XPCJSContext::IDX_LENGTH))) {
@@ -2004,7 +2004,8 @@ bool XrayWrapper<Base, Traits>::defineProperty(JSContext* cx,
 template <typename Base, typename Traits>
 bool XrayWrapper<Base, Traits>::ownPropertyKeys(
     JSContext* cx, HandleObject wrapper, MutableHandleIdVector props) const {
-  assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
+  assertEnteredPolicy(cx, wrapper, JS::PropertyKey::Void(),
+                      BaseProxyHandler::ENUMERATE);
   return getPropertyKeys(
       cx, wrapper, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
 }
@@ -2112,7 +2113,8 @@ bool XrayWrapper<Base, Traits>::enumerate(
 template <typename Base, typename Traits>
 bool XrayWrapper<Base, Traits>::call(JSContext* cx, HandleObject wrapper,
                                      const JS::CallArgs& args) const {
-  assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::CALL);
+  assertEnteredPolicy(cx, wrapper, JS::PropertyKey::Void(),
+                      BaseProxyHandler::CALL);
   // Hard cast the singleton since SecurityWrapper doesn't have one.
   return Traits::call(cx, wrapper, args, Base::singleton);
 }
@@ -2120,7 +2122,8 @@ bool XrayWrapper<Base, Traits>::call(JSContext* cx, HandleObject wrapper,
 template <typename Base, typename Traits>
 bool XrayWrapper<Base, Traits>::construct(JSContext* cx, HandleObject wrapper,
                                           const JS::CallArgs& args) const {
-  assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::CALL);
+  assertEnteredPolicy(cx, wrapper, JS::PropertyKey::Void(),
+                      BaseProxyHandler::CALL);
   // Hard cast the singleton since SecurityWrapper doesn't have one.
   return Traits::construct(cx, wrapper, args, Base::singleton);
 }
@@ -2137,7 +2140,8 @@ bool XrayWrapper<Base, Traits>::hasInstance(JSContext* cx,
                                             JS::HandleObject wrapper,
                                             JS::MutableHandleValue v,
                                             bool* bp) const {
-  assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::GET);
+  assertEnteredPolicy(cx, wrapper, JS::PropertyKey::Void(),
+                      BaseProxyHandler::GET);
 
   // CrossCompartmentWrapper::hasInstance unwraps |wrapper|'s Xrays and enters
   // its compartment. Any present XrayWrappers should be preserved, so the
@@ -2265,7 +2269,8 @@ template <typename Base, typename Traits>
 bool XrayWrapper<Base, Traits>::getPropertyKeys(
     JSContext* cx, HandleObject wrapper, unsigned flags,
     MutableHandleIdVector props) const {
-  assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
+  assertEnteredPolicy(cx, wrapper, JS::PropertyKey::Void(),
+                      BaseProxyHandler::ENUMERATE);
 
   // Enumerate expando properties first. Note that the expando object lives
   // in the target compartment.

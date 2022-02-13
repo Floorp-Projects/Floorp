@@ -87,7 +87,7 @@ class MOZ_STACK_CLASS StackScopedCloneData : public StructuredCloneHolderBase {
       }
 
       FunctionForwarderOptions forwarderOptions;
-      if (!xpc::NewFunctionForwarder(aCx, JSID_VOIDHANDLE, obj,
+      if (!xpc::NewFunctionForwarder(aCx, JS::VoidHandlePropertyKey, obj,
                                      forwarderOptions, &functionValue)) {
         return nullptr;
       }
@@ -398,7 +398,7 @@ bool NewFunctionForwarder(JSContext* cx, HandleId idArg, HandleObject callable,
                           FunctionForwarderOptions& options,
                           MutableHandleValue vp) {
   RootedId id(cx, idArg);
-  if (id == JSID_VOIDHANDLE) {
+  if (id.isVoid()) {
     id = GetJSIDByIndex(cx, XPCJSContext::IDX_EMPTYSTRING);
   }
 

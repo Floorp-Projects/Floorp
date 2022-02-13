@@ -1871,8 +1871,8 @@ static bool DefineToStringTag(JSContext* cx, HandleObject obj,
     return false;
   }
 
-  RootedId toStringTagId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
-                                 cx, JS::SymbolCode::toStringTag)));
+  RootedId toStringTagId(
+      cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::toStringTag));
   return JS_DefinePropertyById(cx, obj, toStringTagId, toStringTagStr,
                                JSPROP_READONLY);
 }
