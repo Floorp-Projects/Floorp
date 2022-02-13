@@ -209,8 +209,6 @@ struct PropertyKey {
 
 using jsid = JS::PropertyKey;
 
-#define JSID_BITS(id) (id.asBits)
-
 #define JSID_INT_MIN 0
 #define JSID_INT_MAX INT32_MAX
 
