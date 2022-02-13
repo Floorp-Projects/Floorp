@@ -2730,7 +2730,7 @@ static bool CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin,
   // Use dense storage for new indexed properties where possible.
   {
     uint32_t index = 0;
-    uint32_t limit = std::min<uint32_t>(count, JSID_INT_MAX);
+    uint32_t limit = std::min<uint32_t>(count, PropertyKey::IntMax);
     for (; index < limit; index++) {
       bool hole;
       if (!CheckForInterrupt(cx) ||

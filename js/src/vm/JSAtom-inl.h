@@ -21,10 +21,10 @@
 namespace js {
 
 MOZ_ALWAYS_INLINE jsid AtomToId(JSAtom* atom) {
-  static_assert(JSID_INT_MIN == 0);
+  static_assert(JS::PropertyKey::IntMin == 0);
 
   uint32_t index;
-  if (atom->isIndex(&index) && index <= JSID_INT_MAX) {
+  if (atom->isIndex(&index) && index <= JS::PropertyKey::IntMax) {
     return JS::PropertyKey::Int(int32_t(index));
   }
 
@@ -134,7 +134,7 @@ inline mozilla::RangedPtr<T> BackfillIndexInCharBuffer(
 bool IndexToIdSlow(JSContext* cx, uint32_t index, MutableHandleId idp);
 
 inline bool IndexToId(JSContext* cx, uint32_t index, MutableHandleId idp) {
-  if (index <= JSID_INT_MAX) {
+  if (index <= PropertyKey::IntMax) {
     idp.set(PropertyKey::Int(index));
     return true;
   }

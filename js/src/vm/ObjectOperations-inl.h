@@ -203,7 +203,7 @@ inline bool GetElementNoGC(JSContext* cx, JSObject* obj,
     return false;
   }
 
-  if (index > JSID_INT_MAX) {
+  if (index > PropertyKey::IntMax) {
     return false;
   }
 
