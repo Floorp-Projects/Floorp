@@ -919,7 +919,7 @@ class DictionaryPropMap final : public PropMap {
     clearHeaderFlagBits(HasPrevFlag);
   }
 
-  void clearProperty(uint32_t index) { keys_[index] = JSID_VOID; }
+  void clearProperty(uint32_t index) { keys_[index] = PropertyKey::Void(); }
 
   static void skipTrailingHoles(MutableHandle<DictionaryPropMap*> map,
                                 uint32_t* mapLength);

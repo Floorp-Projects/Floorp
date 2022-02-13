@@ -15,7 +15,7 @@ FRAGMENT(jsid, simple) {
       cx, JS::PropertyKey::Symbol(JS::GetSymbolFor(cx, interned)));
   JS::Rooted<jsid> well_known_symbol_id(
       cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::iterator));
-  jsid void_id = JSID_VOID;
+  jsid void_id = JS::PropertyKey::Void();
 
   breakpoint();
 

@@ -14,9 +14,10 @@
 
 using namespace js;
 
-static const jsid voidIdValue = JSID_VOID;
-const JS::HandleId JSID_VOIDHANDLE =
-    JS::HandleId::fromMarkedLocation(&voidIdValue);
+static const JS::PropertyKey voidKeyValue = JS::PropertyKey::Void();
+
+const JS::HandleId JS::VoidHandlePropertyKey =
+    JS::HandleId::fromMarkedLocation(&voidKeyValue);
 
 bool JS::PropertyKey::isPrivateName() const {
   return isSymbol() && toSymbol()->isPrivateName();
