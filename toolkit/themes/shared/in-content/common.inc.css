@@ -43,7 +43,7 @@
   --in-content-button-border-color-active: var(--in-content-button-border-color-hover);
   --in-content-primary-button-text-color: rgb(251,251,254);
   --in-content-primary-button-text-color-hover: var(--in-content-primary-button-text-color);
-  --in-content-primary-button-background: #009fff;
+  --in-content-primary-button-background: #58c1ff;
   --in-content-primary-button-background-hover: #0250bb;
   --in-content-primary-button-background-active: #053e94;
   --in-content-primary-button-border-color: transparent;
@@ -147,7 +147,7 @@
     --in-content-icon-color: rgb(251,251,254);
 
     --in-content-primary-button-text-color: rgb(43,42,51);
-    --in-content-primary-button-background: #4387b0;
+    --in-content-primary-button-background: #58c1ff;
     --in-content-primary-button-background-hover: rgb(128,235,255);
     --in-content-primary-button-background-active: rgb(170,242,255);
 
