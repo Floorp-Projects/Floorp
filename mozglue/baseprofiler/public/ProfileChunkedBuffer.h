@@ -138,12 +138,6 @@ class ProfileChunkedBuffer {
     }
   }
 
-  // Stop using the current chunk manager, and return it if owned here.
-  [[nodiscard]] UniquePtr<ProfileBufferChunkManager> ExtractChunkManager() {
-    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
-    return ResetChunkManager(lock);
-  }
-
   // Clear the contents of this buffer, ready to receive new chunks.
   // Note that memory is not freed: No chunks are destroyed, they are all
   // receycled.
