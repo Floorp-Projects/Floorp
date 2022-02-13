@@ -14,7 +14,6 @@
 #include "mozilla/ProfileBufferChunkManagerSingle.h"
 #include "mozilla/ProfileBufferEntrySerialization.h"
 #include "mozilla/ProfileChunkedBufferDetail.h"
-#include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
@@ -1200,11 +1199,8 @@ class ProfileChunkedBuffer {
   // asynchronously, and either side may be destroyed during the request.
   // It cannot use the `ProfileChunkedBuffer` mutex, because that buffer and its
   // mutex could be destroyed during the request.
-  class RequestedChunkRefCountedHolder
-      : public external::AtomicRefCounted<RequestedChunkRefCountedHolder> {
+  class RequestedChunkRefCountedHolder {
    public:
-    MOZ_DECLARE_REFCOUNTED_TYPENAME(RequestedChunkRefCountedHolder)
-
     enum class State { Unused, Requested, Fulfilled };
 
     // Get the current state. Note that it may change after the function
@@ -1250,9 +1246,32 @@ class ProfileChunkedBuffer {
       return maybeChunk;
     }
 
+    // Ref-counting implementation. Hand-rolled, because mozilla::RefCounted
+    // logs AddRefs and Releases in xpcom, but this object could be AddRef'd
+    // by the Base Profiler before xpcom starts, then Release'd by the Gecko
+    // Profiler in xpcom, leading to apparent negative leaks.
+
+    void AddRef() {
+      baseprofiler::detail::BaseProfilerAutoLock lock(mRequestMutex);
+      ++mRefCount;
+    }
+
+    void Release() {
+      {
+        baseprofiler::detail::BaseProfilerAutoLock lock(mRequestMutex);
+        if (--mRefCount > 0) {
+          return;
+        }
+      }
+      delete this;
+    }
+
    private:
+    ~RequestedChunkRefCountedHolder() = default;
+
     // Mutex guarding the following members.
     mutable baseprofiler::detail::BaseProfilerMutex mRequestMutex;
+    int mRefCount = 0;
     State mState = State::Unused;
     UniquePtr<ProfileBufferChunk> mRequestedChunk;
   };
