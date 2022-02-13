@@ -86,6 +86,8 @@ struct PropertyKey {
 
   MOZ_ALWAYS_INLINE bool isGCThing() const { return isString() || isSymbol(); }
 
+  constexpr uintptr_t asRawBits() const { return asBits; }
+
   MOZ_ALWAYS_INLINE int32_t toInt() const {
     MOZ_ASSERT(isInt());
     uint32_t bits = static_cast<uint32_t>(asBits) >> 1;
@@ -330,6 +332,8 @@ class WrappedPtrOperations<JS::PropertyKey, Wrapper> {
   bool isWellKnownSymbol(JS::SymbolCode code) const {
     return id().isWellKnownSymbol(code);
   }
+
+  uintptr_t asRawBits() const { return id().asRawBits(); }
 
   // Internal API
   bool isAtom() const { return id().isAtom(); }
