@@ -4686,7 +4686,10 @@ popupnotificationcontent {
 	background-image: url("chrome://devtools/skin/images/tool-accessibility.svg");
   }
   #context-inspect {
-	background-image: url("chrome://devtools/skin/images/command-pick.svg");
+	background-image: url("chrome://browser/skin/developer.svg");
+  }
+  #context-viewsource{
+	background-image: url("");
   }
   #context-media-play {
 	background-image: url("chrome://global/skin/media/play-fill.svg");
