@@ -32,3 +32,34 @@
 @import "chrome://devtools/content/aboutdebugging/src/components/sidebar/SidebarFixedItem.css";
 @import "chrome://devtools/content/aboutdebugging/src/components/sidebar/SidebarItem.css";
 @import "chrome://devtools/content/aboutdebugging/src/components/sidebar/SidebarRuntimeItem.css";
+
+
+@media (prefers-color-scheme: dark) {
+    #mount{
+        background-color: #353535 !important;
+    }
+    :root{
+    --card-background-color: rgb(68, 68, 68) !important;
+    --button-background-color: rgb(97, 97, 97) !important;
+    --box-background: rgb(55,55,55) !important;
+    --primary-button-background-color: #cfcfcf !important;
+    }
+}
+
+.runtime-info{
+    margin-top: -1.4em !important;
+    border-bottom: solid gray 0.1px !important;
+    padding-bottom: 26px !important;
+    font-size: 2.3em;
+    }
+
+:root{
+    --link-color: #0093ff;
+}
+.sidebar{
+border-right: solid 0.1px gray;
+}
+
+ul{
+    margin-right: 10px;
+}
