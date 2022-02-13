@@ -42,7 +42,7 @@ class JS_PUBLIC_API TempAllocPolicy;
 
 namespace JS {
 
-struct JS_PUBLIC_API PropertyKey;
+class JS_PUBLIC_API PropertyKey;
 
 typedef unsigned char Latin1Char;
 

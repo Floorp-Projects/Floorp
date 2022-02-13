@@ -27,7 +27,7 @@ static MOZ_ALWAYS_INLINE HashNumber HashPropertyKey(PropertyKey key) {
   if (key.isSymbol()) {
     return key.toSymbol()->hash();
   }
-  return mozilla::HashGeneric(key.asBits);
+  return mozilla::HashGeneric(key.asRawBits());
 }
 
 // Like HashPropertyKey but optimized for callers that only use atom or symbol
