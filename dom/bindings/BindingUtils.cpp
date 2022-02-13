@@ -848,8 +848,8 @@ static JSObject* CreateInterfaceObject(
           ->wantsInterfaceHasInstance) {
     if (isChrome ||
         StaticPrefs::dom_webidl_crosscontext_hasinstance_enabled()) {
-      JS::Rooted<jsid> hasInstanceId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
-                                             cx, JS::SymbolCode::hasInstance)));
+      JS::Rooted<jsid> hasInstanceId(
+          cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::hasInstance));
       if (!JS_DefineFunctionById(
               cx, constructor, hasInstanceId, InterfaceHasInstance, 1,
               // Flags match those of Function[Symbol.hasInstance]
@@ -974,8 +974,8 @@ static JSObject* CreateInterfacePrototypeObject(
       }
     }
 
-    JS::Rooted<jsid> unscopableId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
-                                          cx, JS::SymbolCode::unscopables)));
+    JS::Rooted<jsid> unscopableId(
+        cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::unscopables));
     // Readonly and non-enumerable to match Array.prototype.
     if (!JS_DefinePropertyById(cx, ourProto, unscopableId, unscopableObj,
                                JSPROP_READONLY)) {
@@ -983,8 +983,8 @@ static JSObject* CreateInterfacePrototypeObject(
     }
   }
 
-  JS::Rooted<jsid> toStringTagId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
-                                         cx, JS::SymbolCode::toStringTag)));
+  JS::Rooted<jsid> toStringTagId(
+      cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::toStringTag));
   if (!JS_DefinePropertyById(cx, ourProto, toStringTagId, name,
                              JSPROP_READONLY)) {
     return nullptr;

@@ -240,6 +240,15 @@ MOZ_ALWAYS_INLINE void AssertIdIsNotGray(jsid id) {
 }
 #endif
 
+/**
+ * Get one of the well-known symbols defined by ES6 as PropertyKey. This is
+ * equivalent to calling JS::GetWellKnownSymbol and then creating a PropertyKey.
+ *
+ * `which` must be in the range [0, WellKnownSymbolLimit).
+ */
+extern JS_PUBLIC_API PropertyKey GetWellKnownSymbolKey(JSContext* cx,
+                                                       SymbolCode which);
+
 }  // namespace JS
 
 namespace js {
