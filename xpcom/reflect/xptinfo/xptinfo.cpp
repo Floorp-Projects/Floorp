@@ -100,6 +100,6 @@ bool nsXPTMethodInfo::GetId(JSContext* aCx, jsid& aId) const {
   if (!str) {
     return false;
   }
-  aId = JS::PropertyKey::fromNonIntAtom(str);
+  aId = JS::PropertyKey::NonIntAtom(str);
   return true;
 }

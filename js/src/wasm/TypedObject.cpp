@@ -603,8 +603,7 @@ bool TypedObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
   }
 
   if (typeDef.kind() == wasm::TypeDefKind::Array) {
-    properties.infallibleAppend(
-        JS::PropertyKey::fromNonIntAtom(cx->runtime()->commonNames->length));
+    properties.infallibleAppend(NameToId(cx->runtime()->commonNames->length));
   }
 
   return true;
