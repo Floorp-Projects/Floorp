@@ -2829,7 +2829,7 @@ JS_PUBLIC_API void js::DumpValue(const Value& val, js::GenericPrinter& out) {
 }
 
 JS_PUBLIC_API void js::DumpId(jsid id, js::GenericPrinter& out) {
-  out.printf("jsid %p = ", (void*)JSID_BITS(id));
+  out.printf("jsid %p = ", (void*)id.asRawBits());
   dumpValue(IdToValue(id), out);
   out.putChar('\n');
 }
@@ -2845,7 +2845,7 @@ static void DumpProperty(const NativeObject* obj, PropMap* map, uint32_t index,
   } else if (id.isSymbol()) {
     id.toSymbol()->dump(out);
   } else {
-    out.printf("id %p", reinterpret_cast<void*>(JSID_BITS(id)));
+    out.printf("id %p", reinterpret_cast<void*>(id.asRawBits()));
   }
 
   if (prop.isDataProperty()) {
