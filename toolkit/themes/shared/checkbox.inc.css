@@ -71,8 +71,8 @@ checkbox:not([disabled="true"]):hover:active > .checkbox-check[checked] {
 }
 
 checkbox:not([native]):focus-visible > .checkbox-check {
-  outline: var(--focus-outline, 2px solid -moz-accent-color);
-  outline-offset: var(--focus-outline-offset, 2px);
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
 }
 
 @media (prefers-contrast) {

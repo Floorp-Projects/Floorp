@@ -15,6 +15,11 @@
   --default-focusring-width: 2px;
   --default-focusring: var(--default-focusring-width) dotted;
 
+  --focus-outline-width: 2px;
+  --focus-outline-color: -moz-accent-color;
+  --focus-outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  --focus-outline-offset: 2px;
+
   --arrowpanel-background: Field;
   --arrowpanel-color: FieldText;
   --arrowpanel-border-color: ThreeDShadow;
