@@ -13,6 +13,7 @@
 menupopup,
 menubar {
   font: menu;
+  --dark-menu-background-color: #4c4c4c;
 }
 
 menu,

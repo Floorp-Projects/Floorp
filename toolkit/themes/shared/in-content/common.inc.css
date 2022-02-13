@@ -43,7 +43,7 @@
   --in-content-button-border-color-active: var(--in-content-button-border-color-hover);
   --in-content-primary-button-text-color: rgb(251,251,254);
   --in-content-primary-button-text-color-hover: var(--in-content-primary-button-text-color);
-  --in-content-primary-button-background: #0061e0;
+  --in-content-primary-button-background: #009fff;
   --in-content-primary-button-background-hover: #0250bb;
   --in-content-primary-button-background-active: #053e94;
   --in-content-primary-button-border-color: transparent;
@@ -127,11 +127,11 @@
      * just replace most of these for system colors and remove all this
      * duplication (assuming we honor the preferred color scheme for
      * in-content privileged pages and plain-text documents). */
-    --in-content-page-background: rgb(28,27,34);
+    --in-content-page-background: rgb(50,50,50) ;
     --in-content-page-color: rgb(251,251,254);
     --in-content-deemphasized-text: rgb(191,191,201);
 
-    --in-content-box-background: rgb(35, 34, 43);
+    --in-content-box-background: rgb(53, 53, 53);
     --in-content-box-background-odd: rgba(249,249,250,0.05);
     --in-content-box-info-background: rgba(249,249,250,0.15);
 
@@ -141,13 +141,13 @@
 
     --in-content-error-text-color: #FF9AA2;
 
-    --in-content-button-background: rgb(43,42,51);
+    --in-content-button-background: rgb(77, 77, 77);
     --in-content-button-background-hover: rgb(82,82,94);
     --in-content-button-background-active: rgb(91,91,102);
     --in-content-icon-color: rgb(251,251,254);
 
     --in-content-primary-button-text-color: rgb(43,42,51);
-    --in-content-primary-button-background: rgb(0,221,255);
+    --in-content-primary-button-background: #4387b0;
     --in-content-primary-button-background-hover: rgb(128,235,255);
     --in-content-primary-button-background-active: rgb(170,242,255);
 
@@ -155,7 +155,7 @@
     --in-content-danger-button-background-hover: #ffbdc5;
     --in-content-danger-button-background-active: #ffdfe7;
 
-    --in-content-table-background: rgb(35, 34, 43);
+    --in-content-table-background: rgb(45,45,45);
 
     --in-content-accent-color: var(--in-content-primary-button-background);
     --in-content-accent-color-active: var(--in-content-primary-button-background-hover);
