@@ -30,7 +30,7 @@ project('dav1d', ['c'],
                       'b_ndebug=if-release'],
     meson_version: '>= 0.49.0')
 
-dav1d_soname_version       = '6.3.0'
+dav1d_soname_version       = '6.4.0'
 dav1d_api_version_array    = dav1d_soname_version.split('.')
 dav1d_api_version_major    = dav1d_api_version_array[0]
 dav1d_api_version_minor    = dav1d_api_version_array[1]
@@ -107,10 +107,6 @@ if host_machine.system() == 'windows'
     else
         cdata.set('fseeko', '_fseeki64')
         cdata.set('ftello', '_ftelli64')
-    endif
-
-    if (host_machine.cpu_family() == 'x86_64' and cc.get_id() == 'gcc')
-        optional_arguments += '-mcmodel=small'
     endif
 
     # On Windows, we use a compatibility layer to emulate pthread

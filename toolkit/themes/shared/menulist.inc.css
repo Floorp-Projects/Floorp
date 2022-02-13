@@ -33,8 +33,8 @@
 }
 
 :host(:not([native]):focus-visible) {
-  outline: var(--focus-outline, 2px solid -moz-accent-color);
-  outline-offset: var(--focus-outline-offset, 2px);
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
 }
 
 #label-box:not([native]) {

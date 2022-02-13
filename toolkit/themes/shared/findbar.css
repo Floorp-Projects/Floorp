@@ -75,7 +75,7 @@ html|input.findbar-textbox:-moz-lwtheme {
 
 html|input.findbar-textbox:focus {
   border-color: transparent;
-  outline: 2px solid color-mix(in srgb, var(--focus-outline-color, -moz-accent-color) 50%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--focus-outline-color) 50%, transparent);
   outline-offset: -2px;
 }
 

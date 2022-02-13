@@ -9,6 +9,8 @@
   --panel-description-color: hsl(0,0%,50%);
 
   --focus-ring-box-shadow: 0 0 0 1px -moz-mac-focusring inset, 0 0 0 1px -moz-mac-focusring;
+  --focus-outline-color: -moz-mac-focusring;
+
   /* ::::: Styles ::::: */
   appearance: auto;
   -moz-default-appearance: dialog;
