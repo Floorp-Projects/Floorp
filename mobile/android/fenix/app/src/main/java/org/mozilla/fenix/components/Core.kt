@@ -55,6 +55,7 @@ import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.service.contile.ContileTopSitesProvider
+import mozilla.components.service.contile.ContileTopSitesUpdater
 import mozilla.components.service.digitalassetlinks.RelationChecker
 import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
@@ -345,6 +346,15 @@ class Core(
             context = context,
             client = client,
             maxCacheAgeInMinutes = CONTILE_MAX_CACHE_AGE
+        )
+    }
+
+    @Suppress("MagicNumber")
+    val contileTopSitesUpdater by lazyMonitored {
+        ContileTopSitesUpdater(
+            context = context,
+            provider = contileTopSitesProvider,
+            frequency = Frequency(3, TimeUnit.HOURS)
         )
     }
 

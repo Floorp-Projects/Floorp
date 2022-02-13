@@ -57,6 +57,7 @@ import mozilla.components.feature.search.BrowserStoreSearchAdapter
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import mozilla.components.support.ktx.android.content.call
 import mozilla.components.support.ktx.android.content.email
@@ -86,8 +87,8 @@ import org.mozilla.fenix.ext.setNavigationIcon
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
-import org.mozilla.fenix.home.intent.HomeDeepLinkIntentProcessor
 import org.mozilla.fenix.home.intent.DefaultBrowserIntentProcessor
+import org.mozilla.fenix.home.intent.HomeDeepLinkIntentProcessor
 import org.mozilla.fenix.home.intent.OpenBrowserIntentProcessor
 import org.mozilla.fenix.home.intent.OpenSpecificTabIntentProcessor
 import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
@@ -279,6 +280,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         components.core.requestInterceptor.setNavigationController(navHost.navController)
 
+        if (settings().showContileFeature) {
+            components.core.contileTopSitesUpdater.startPeriodicWork()
+        }
+
         if (settings().showPocketRecommendationsFeature) {
             components.core.pocketStoriesService.startPeriodicStoriesRefresh()
         }
@@ -309,6 +314,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     }
 
     @CallSuper
+    @Suppress("TooGenericExceptionCaught")
     override fun onResume() {
         super.onResume()
 
@@ -332,7 +338,19 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             }
         }
 
-        isFenixTheDefaultBrowser()
+        lifecycleScope.launch(IO) {
+            try {
+                components.core.contileTopSitesProvider.refreshTopSitesIfCacheExpired()
+            } catch (e: Exception) {
+                Logger.error("Failed to refresh contile top sites", e)
+            }
+
+            if (settings().checkIfFenixIsDefaultBrowserOnAppResume()) {
+                metrics.track(Event.ChangedToDefaultBrowser)
+            }
+
+            DefaultBrowserNotificationWorker.setDefaultBrowserNotificationIfNeeded(applicationContext)
+        }
     }
 
     override fun onStart() {
@@ -435,6 +453,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             )
         )
 
+        components.core.contileTopSitesUpdater.stopPeriodicWork()
         components.core.pocketStoriesService.stopPeriodicStoriesRefresh()
         privateNotificationObserver?.stop()
     }
@@ -972,19 +991,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             // it's important that this metric is only set once per application's lifetime.
             // Otherwise, we're going to over-count.
             Metrics.recentlyUsedPwaCount.add(recentlyUsedPwaCount)
-        }
-    }
-
-    private fun isFenixTheDefaultBrowser() {
-        // Launch this on a background thread so as not to affect startup performance
-        lifecycleScope.launch(IO) {
-            if (
-                settings().checkIfFenixIsDefaultBrowserOnAppResume()
-            ) {
-                metrics.track(Event.ChangedToDefaultBrowser)
-            }
-
-            DefaultBrowserNotificationWorker.setDefaultBrowserNotificationIfNeeded(applicationContext)
         }
     }
 
