@@ -468,10 +468,24 @@ struct SortComparatorIds {
       return true;
     }
 
-    size_t ta = JSID_BITS(a.get()) & JSID_TYPE_MASK;
-    size_t tb = JSID_BITS(b.get()) & JSID_TYPE_MASK;
-    if (ta != tb) {
-      *lessOrEqualp = (ta <= tb);
+    enum class KeyType { Void, Int, String, Symbol };
+
+    auto keyType = [](PropertyKey key) {
+      if (key.isString()) {
+        return KeyType::String;
+      }
+      if (key.isInt()) {
+        return KeyType::Int;
+      }
+      if (key.isSymbol()) {
+        return KeyType::Symbol;
+      }
+      MOZ_ASSERT(key.isVoid());
+      return KeyType::Void;
+    };
+
+    if (keyType(a) != keyType(b)) {
+      *lessOrEqualp = (keyType(a) <= keyType(b));
       return true;
     }
 
