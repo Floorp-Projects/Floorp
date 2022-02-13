@@ -41,8 +41,8 @@ bool JS::PropertyKey::isWellKnownSymbol(JS::SymbolCode code) const {
   if (!atom->isIndex(&index)) {
     return true;
   }
-  static_assert(JSID_INT_MIN == 0);
-  return index > JSID_INT_MAX;
+  static_assert(PropertyKey::IntMin == 0);
+  return index > PropertyKey::IntMax;
 }
 
 /* static */ bool JS::PropertyKey::isNonIntAtom(JSString* str) {

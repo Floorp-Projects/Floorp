@@ -1489,8 +1489,9 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
 
     JSString* str;
     if (kind != EnumerableOwnPropertiesKind::Values) {
-      static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT <= JSID_INT_MAX,
-                    "dense elements don't exceed JSID_INT_MAX");
+      static_assert(
+          NativeObject::MAX_DENSE_ELEMENTS_COUNT <= PropertyKey::IntMax,
+          "dense elements don't exceed PropertyKey::IntMax");
       str = Int32ToString<CanGC>(cx, i);
       if (!str) {
         return false;
@@ -1533,8 +1534,9 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
     for (uint32_t i = 0; i < len; i++) {
       JSString* str;
       if (kind != EnumerableOwnPropertiesKind::Values) {
-        static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT <= JSID_INT_MAX,
-                      "dense elements don't exceed JSID_INT_MAX");
+        static_assert(
+            NativeObject::MAX_DENSE_ELEMENTS_COUNT <= PropertyKey::IntMax,
+            "dense elements don't exceed PropertyKey::IntMax");
         str = Int32ToString<CanGC>(cx, i);
         if (!str) {
           return false;

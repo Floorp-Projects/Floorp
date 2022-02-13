@@ -55,6 +55,9 @@ class PropertyKey {
   // (0x6 is unused)
   static constexpr uintptr_t TypeMask = 0x7;
 
+  static constexpr uint32_t IntMin = 0;
+  static constexpr uint32_t IntMax = INT32_MAX;
+
   constexpr PropertyKey() : asBits_(VoidTypeTag) {}
 
   static constexpr MOZ_ALWAYS_INLINE PropertyKey fromRawBits(uintptr_t bits) {
@@ -156,8 +159,8 @@ class PropertyKey {
   //
   // A PropertyName is an atom that does not contain an integer in the range
   // [0, UINT32_MAX]. However, PropertyKey can only hold an integer in the range
-  // [0, JSID_INT_MAX] (where JSID_INT_MAX == 2^31-1).  Thus, for the range of
-  // integers (JSID_INT_MAX, UINT32_MAX], to represent as a 'id', it must be
+  // [0, IntMax] (where IntMax == 2^31-1).  Thus, for the range of integers
+  // (IntMax, UINT32_MAX], to represent as a 'id', it must be
   // the case id.isString() and id.toString()->isIndex(). In most
   // cases when creating a PropertyKey, code does not have to care about
   // this corner case because:
@@ -209,9 +212,6 @@ class PropertyKey {
 }  // namespace JS
 
 using jsid = JS::PropertyKey;
-
-#define JSID_INT_MIN 0
-#define JSID_INT_MAX INT32_MAX
 
 namespace JS {
 
