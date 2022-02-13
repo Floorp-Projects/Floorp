@@ -51,10 +51,8 @@ python3 $GECKO_PATH/build/build-clang/build-clang.py $CONFIGS
 
 set -x
 
-if [ -f clang.tar.zst ]; then
-    # Put a tarball in the artifacts dir
-    mkdir -p $UPLOAD_DIR
-    cp clang.tar.zst $UPLOAD_DIR
-fi
+# Put a tarball in the artifacts dir
+mkdir -p $UPLOAD_DIR
+cp clang*.tar.* $UPLOAD_DIR
 
 . $GECKO_PATH/taskcluster/scripts/misc/vs-cleanup.sh
