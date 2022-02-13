@@ -1670,7 +1670,7 @@ DebuggerArguments* DebuggerArguments::create(JSContext* cx, HandleObject proto,
     if (!getobj) {
       return nullptr;
     }
-    id = INT_TO_JSID(i);
+    id = PropertyKey::Int(i);
     if (!NativeDefineAccessorProperty(cx, obj, id, getobj, nullptr,
                                       JSPROP_ENUMERATE)) {
       return nullptr;

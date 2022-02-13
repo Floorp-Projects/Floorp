@@ -221,7 +221,7 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
       } else {
         // Dense arrays never get so large that i would not fit into an
         // integer id.
-        if (!Enumerate<CheckForDuplicates>(cx, pobj, INT_TO_JSID(i),
+        if (!Enumerate<CheckForDuplicates>(cx, pobj, PropertyKey::Int(i),
                                            /* enumerable = */ true, flags,
                                            visited, props)) {
           return false;
@@ -244,7 +244,7 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
       }
 
       for (size_t i = 0; i < len; i++) {
-        if (!Enumerate<CheckForDuplicates>(cx, pobj, INT_TO_JSID(i),
+        if (!Enumerate<CheckForDuplicates>(cx, pobj, PropertyKey::Int(i),
                                            /* enumerable = */ true, flags,
                                            visited, props)) {
           return false;

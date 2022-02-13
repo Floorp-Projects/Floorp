@@ -8,7 +8,7 @@ FRAGMENT(jsid, simple) {
   JS::Rooted<JSString*> string(cx, JS_NewStringCopyZ(cx, chars));
   JS::Rooted<JSString*> interned(cx, JS_AtomizeAndPinString(cx, chars));
   JS::Rooted<jsid> string_id(cx, JS::PropertyKey::fromPinnedString(interned));
-  JS::Rooted<jsid> int_id(cx, INT_TO_JSID(1729));
+  JS::Rooted<jsid> int_id(cx, JS::PropertyKey::Int(1729));
   JS::Rooted<jsid> unique_symbol_id(
       cx, SYMBOL_TO_JSID(JS::NewSymbol(cx, interned)));
   JS::Rooted<jsid> registry_symbol_id(
