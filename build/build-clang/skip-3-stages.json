@@ -1,6 +1,0 @@
-{
-    "skip_stages": "3",
-    "cc": "{MOZ_FETCHES_DIR}/clang/bin/clang",
-    "cxx": "{MOZ_FETCHES_DIR}/clang/bin/clang++",
-    "as": "{MOZ_FETCHES_DIR}/clang/bin/clang"
-}

@@ -1,4 +1,5 @@
 {
+    "stages": "1",
     "build_wasm": true,
     "osx_cross_compile": true,
     "cc": "{MOZ_FETCHES_DIR}/clang/bin/clang",
