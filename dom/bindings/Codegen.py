@@ -3733,8 +3733,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                     name = alias[2:]
 
                     symbolJSID = (
-                        "SYMBOL_TO_JSID(JS::GetWellKnownSymbol(aCx, JS::SymbolCode::%s))"
-                        % name
+                        "JS::GetWellKnownSymbolKey(aCx, JS::SymbolCode::%s)" % name
                     )
                     prop = "%sId" % name
                     getSymbolJSID = CGGeneric(
@@ -4391,7 +4390,7 @@ def InitUnforgeablePropertiesOnHolder(
                 fill(
                     """
             JS::RootedId toPrimitive(aCx,
-              SYMBOL_TO_JSID(JS::GetWellKnownSymbol(aCx, JS::SymbolCode::toPrimitive)));
+              JS::GetWellKnownSymbolKey(aCx, JS::SymbolCode::toPrimitive));
             if (!JS_DefinePropertyById(aCx, ${holderName}, toPrimitive,
                                        JS::UndefinedHandleValue,
                                        JSPROP_READONLY | JSPROP_PERMANENT)) {

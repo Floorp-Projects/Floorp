@@ -3364,6 +3364,11 @@ JS_PUBLIC_API JS::Symbol* JS::GetWellKnownSymbol(JSContext* cx,
   return cx->wellKnownSymbols().get(which);
 }
 
+JS_PUBLIC_API JS::PropertyKey JS::GetWellKnownSymbolKey(JSContext* cx,
+                                                        JS::SymbolCode which) {
+  return SYMBOL_TO_JSID(cx->wellKnownSymbols().get(which));
+}
+
 #ifdef DEBUG
 static bool PropertySpecNameIsDigits(JSPropertySpec::Name name) {
   if (name.isSymbol()) {
