@@ -612,11 +612,13 @@ class ActivePS {
         mInterval(aInterval),
         mFeatures(AdjustFeatures(aFeatures, aFilterCount)),
         mProfileBufferChunkManager(
-            size_t(ClampToAllowedEntries(aCapacity.Value())) * scBytesPerEntry,
-            ChunkSizeForEntries(aCapacity.Value())),
+            MakeUnique<ProfileBufferChunkManagerWithLocalLimit>(
+                size_t(ClampToAllowedEntries(aCapacity.Value())) *
+                    scBytesPerEntry,
+                ChunkSizeForEntries(aCapacity.Value()))),
         mProfileBuffer([this]() -> ProfileChunkedBuffer& {
           ProfileChunkedBuffer& buffer = profiler_get_core_buffer();
-          buffer.SetChunkManager(mProfileBufferChunkManager);
+          buffer.SetChunkManager(*mProfileBufferChunkManager);
           return buffer;
         }()),
         // The new sampler thread doesn't start sampling immediately because the
@@ -637,7 +639,12 @@ class ActivePS {
     }
   }
 
-  ~ActivePS() { profiler_get_core_buffer().ResetChunkManager(); }
+  ~ActivePS() {
+    if (mProfileBufferChunkManager) {
+      // We still control the chunk manager, remove it from the core buffer.
+      profiler_get_core_buffer().ResetChunkManager();
+    }
+  }
 
   bool ThreadSelected(const char* aThreadName) {
     if (mFiltersLowered.empty()) {
@@ -753,7 +760,9 @@ class ActivePS {
 
   static void FulfillChunkRequests(PSLockRef) {
     MOZ_ASSERT(sInstance);
-    sInstance->mProfileBufferChunkManager.FulfillChunkRequests();
+    if (sInstance->mProfileBufferChunkManager) {
+      sInstance->mProfileBufferChunkManager->FulfillChunkRequests();
+    }
   }
 
   static ProfileBuffer& Buffer(PSLockRef) {
@@ -1003,7 +1012,8 @@ class ActivePS {
   Vector<std::string> mFiltersLowered;
 
   // The chunk manager used by `mProfileBuffer` below.
-  ProfileBufferChunkManagerWithLocalLimit mProfileBufferChunkManager;
+  // May become null if it gets transferred to the Gecko Profiler.
+  UniquePtr<ProfileBufferChunkManagerWithLocalLimit> mProfileBufferChunkManager;
 
   // The buffer into which all samples are recorded.
   ProfileBuffer mProfileBuffer;
