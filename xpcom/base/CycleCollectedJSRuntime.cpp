@@ -1480,7 +1480,7 @@ struct ClearJSHolder : public TraceCallbacks {
   }
 
   virtual void Trace(JS::Heap<jsid>* aPtr, const char*, void*) const override {
-    *aPtr = JSID_VOID;
+    *aPtr = JS::PropertyKey::Void();
   }
 
   virtual void Trace(JS::Heap<JSObject*>* aPtr, const char*,

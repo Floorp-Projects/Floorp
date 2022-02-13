@@ -7,20 +7,24 @@
 #ifndef js_Id_h
 #define js_Id_h
 
-// [SMDOC] Property Key / JSID
+// [SMDOC] PropertyKey / jsid
 //
-// A jsid is an identifier for a property or method of an object which is
-// either a 31-bit unsigned integer, interned string or symbol.
+// A PropertyKey is an identifier for a property of an object which is either a
+// 31-bit unsigned integer, interned string or symbol.
 //
-// Also, there is an additional jsid value, JSID_VOID, which does not occur in
-// JS scripts but may be used to indicate the absence of a valid jsid.  A void
-// jsid is not a valid id and only arises as an exceptional API return value,
-// such as in JS_NextProperty. Embeddings must not pass JSID_VOID into JSAPI
-// entry points expecting a jsid and do not need to handle JSID_VOID in hooks
-// receiving a jsid except when explicitly noted in the API contract.
+// Also, there is an additional PropertyKey value, PropertyKey::Void(), which
+// does not occur in JS scripts but may be used to indicate the absence of a
+// valid key. A void PropertyKey is not a valid key and only arises as an
+// exceptional API return value. Embeddings must not pass a void PropertyKey
+// into JSAPI entry points expecting a PropertyKey and do not need to handle
+// void keys in hooks receiving a PropertyKey except when explicitly noted in
+// the API contract.
 //
-// A jsid is not implicitly convertible to or from a Value; JS_ValueToId or
-// JS_IdToValue must be used instead.
+// A PropertyKey is not implicitly convertible to or from a Value; JS_ValueToId
+// or JS_IdToValue must be used instead.
+//
+// jsid is an alias for JS::PropertyKey. New code should use PropertyKey instead
+// of jsid.
 
 #include "mozilla/Maybe.h"
 
@@ -118,6 +122,10 @@ struct PropertyKey {
 
   bool isWellKnownSymbol(JS::SymbolCode code) const;
 
+  // A void PropertyKey. This is equivalent to a PropertyKey created by the
+  // default constructor.
+  static constexpr PropertyKey Void() { return PropertyKey(); }
+
   static constexpr bool fitsInInt(int32_t i) { return i >= 0; }
 
   static constexpr PropertyKey Int(int32_t i) {
@@ -204,11 +212,10 @@ using jsid = JS::PropertyKey;
 #define JSID_INT_MIN 0
 #define JSID_INT_MAX INT32_MAX
 
-constexpr const jsid JSID_VOID;
-
-extern JS_PUBLIC_DATA const JS::HandleId JSID_VOIDHANDLE;
-
 namespace JS {
+
+// Handle<PropertyKey> version of PropertyKey::Void().
+extern JS_PUBLIC_DATA const JS::HandleId VoidHandlePropertyKey;
 
 template <>
 struct GCPolicy<jsid> {
