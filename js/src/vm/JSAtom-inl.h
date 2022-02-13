@@ -64,7 +64,7 @@ inline bool ValueToIdPure(const Value& v, jsid* id) {
   }
 
   if (v.isSymbol()) {
-    *id = SYMBOL_TO_JSID(v.toSymbol());
+    *id = PropertyKey::Symbol(v.toSymbol());
     return true;
   }
 
@@ -89,7 +89,7 @@ inline bool PrimitiveValueToId(
     }
 
     if (v.isSymbol()) {
-      idp.set(SYMBOL_TO_JSID(v.toSymbol()));
+      idp.set(PropertyKey::Symbol(v.toSymbol()));
       return true;
     }
   }

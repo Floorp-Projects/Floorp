@@ -1997,7 +1997,7 @@ JS_PUBLIC_API bool JSPropertySpec::getValue(JSContext* cx,
 bool PropertySpecNameToId(JSContext* cx, JSPropertySpec::Name name,
                           MutableHandleId id) {
   if (name.isSymbol()) {
-    id.set(SYMBOL_TO_JSID(cx->wellKnownSymbols().get(name.symbol())));
+    id.set(PropertyKey::Symbol(cx->wellKnownSymbols().get(name.symbol())));
   } else {
     JSAtom* atom = Atomize(cx, name.string(), strlen(name.string()));
     if (!atom) {
@@ -2178,8 +2178,8 @@ JS_PUBLIC_API JSFunction* JS::NewFunctionFromSpec(JSContext* cx,
 
 #ifdef DEBUG
   if (fs->name.isSymbol()) {
-    MOZ_ASSERT(SYMBOL_TO_JSID(cx->wellKnownSymbols().get(fs->name.symbol())) ==
-               id);
+    JS::Symbol* sym = cx->wellKnownSymbols().get(fs->name.symbol());
+    MOZ_ASSERT(PropertyKey::Symbol(sym) == id);
   } else {
     MOZ_ASSERT(id.isString() &&
                StringEqualsAscii(id.toLinearString(), fs->name.string()));
@@ -3366,7 +3366,7 @@ JS_PUBLIC_API JS::Symbol* JS::GetWellKnownSymbol(JSContext* cx,
 
 JS_PUBLIC_API JS::PropertyKey JS::GetWellKnownSymbolKey(JSContext* cx,
                                                         JS::SymbolCode which) {
-  return SYMBOL_TO_JSID(cx->wellKnownSymbols().get(which));
+  return PropertyKey::Symbol(cx->wellKnownSymbols().get(which));
 }
 
 #ifdef DEBUG

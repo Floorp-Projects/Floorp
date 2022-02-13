@@ -3431,7 +3431,7 @@ void JSObject::traceChildren(JSTracer* trc) {
   bool ctorGetSucceeded = GetPropertyPure(
       cx, obj, NameToId(cx->names().constructor), ctor.address());
   if (ctorGetSucceeded && ctor.isObject() && &ctor.toObject() == defaultCtor) {
-    jsid speciesId = SYMBOL_TO_JSID(cx->wellKnownSymbols().species);
+    jsid speciesId = PropertyKey::Symbol(cx->wellKnownSymbols().species);
     JSFunction* getter;
     if (GetGetterPure(cx, defaultCtor, speciesId, &getter) && getter &&
         isDefaultSpecies(cx, getter)) {
@@ -3461,7 +3461,7 @@ void JSObject::traceChildren(JSTracer* trc) {
   // Step 5.
   RootedObject ctorObj(cx, &ctor.toObject());
   RootedValue s(cx);
-  RootedId speciesId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
+  RootedId speciesId(cx, PropertyKey::Symbol(cx->wellKnownSymbols().species));
   if (!GetProperty(cx, ctorObj, ctor, speciesId, &s)) {
     return nullptr;
   }
