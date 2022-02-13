@@ -242,7 +242,7 @@ MOZ_ALWAYS_INLINE bool MaybeHasInterestingSymbolProperty(
     JSObject** holder /* = nullptr */) {
   MOZ_ASSERT(symbol->isInterestingSymbol());
 
-  jsid id = SYMBOL_TO_JSID(symbol);
+  jsid id = PropertyKey::Symbol(symbol);
   do {
     if (obj->maybeHasInterestingSymbolProperty() ||
         MOZ_UNLIKELY(
@@ -267,7 +267,7 @@ MOZ_ALWAYS_INLINE bool GetInterestingSymbolProperty(
   if (!MaybeHasInterestingSymbolProperty(cx, obj, sym, &holder)) {
 #ifdef DEBUG
     JS::Rooted<JS::Value> receiver(cx, JS::ObjectValue(*obj));
-    JS::Rooted<jsid> id(cx, SYMBOL_TO_JSID(sym));
+    JS::Rooted<jsid> id(cx, PropertyKey::Symbol(sym));
     if (!GetProperty(cx, obj, receiver, id, vp)) {
       return false;
     }
@@ -280,7 +280,7 @@ MOZ_ALWAYS_INLINE bool GetInterestingSymbolProperty(
 
   JS::Rooted<JSObject*> holderRoot(cx, holder);
   JS::Rooted<JS::Value> receiver(cx, JS::ObjectValue(*obj));
-  JS::Rooted<jsid> id(cx, SYMBOL_TO_JSID(sym));
+  JS::Rooted<jsid> id(cx, PropertyKey::Symbol(sym));
   return GetProperty(cx, holderRoot, receiver, id, vp);
 }
 

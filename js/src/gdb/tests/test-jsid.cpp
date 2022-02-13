@@ -10,9 +10,9 @@ FRAGMENT(jsid, simple) {
   JS::Rooted<jsid> string_id(cx, JS::PropertyKey::fromPinnedString(interned));
   JS::Rooted<jsid> int_id(cx, JS::PropertyKey::Int(1729));
   JS::Rooted<jsid> unique_symbol_id(
-      cx, SYMBOL_TO_JSID(JS::NewSymbol(cx, interned)));
+      cx, JS::PropertyKey::Symbol(JS::NewSymbol(cx, interned)));
   JS::Rooted<jsid> registry_symbol_id(
-      cx, SYMBOL_TO_JSID(JS::GetSymbolFor(cx, interned)));
+      cx, JS::PropertyKey::Symbol(JS::GetSymbolFor(cx, interned)));
   JS::Rooted<jsid> well_known_symbol_id(
       cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::iterator));
   jsid void_id = JSID_VOID;
