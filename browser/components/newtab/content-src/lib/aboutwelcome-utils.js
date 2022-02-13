@@ -54,20 +54,18 @@ export const AboutWelcomeUtils = {
 export const DEFAULT_RTAMO_CONTENT = {
   template: "return_to_amo",
   utm_term: "rtamo",
+  totalNumberOfScreens: 1,
   order: 0,
   content: {
     hero_text: { string_id: "mr1-welcome-screen-hero-text" },
     title: { string_id: "return-to-amo-subtitle" },
-    has_noodles: true,
     subtitle: {
       string_id: "return-to-amo-addon-title",
     },
     help_text: {
-      text: {
-        string_id: "mr1-onboarding-welcome-image-caption",
-      },
+      text: { string_id: "mr1-onboarding-welcome-image-caption" },
     },
-    hide_logo: true,
+    hideLogo: true,
     background_url:
       "chrome://activity-stream/content/data/content/assets/proton-bkg.avif",
     primary_button: {

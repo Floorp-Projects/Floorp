@@ -13,82 +13,6 @@ export class MultiStageProtonScreen extends React.PureComponent {
     this.mainContentHeader.focus();
   }
 
-  getLogoStyle(content) {
-    if (!content.hide_logo) {
-      const useDefaultLogo = !content.logo;
-      const logoUrl = useDefaultLogo
-        ? "chrome://branding/content/about-logo.svg"
-        : content.logo.imageURL;
-      const logoSize = useDefaultLogo ? "80px" : content.logo.size;
-      return {
-        background: `url('${logoUrl}') top center / ${logoSize} no-repeat`,
-        height: logoSize,
-        padding: `${logoSize} 0 10px`,
-      };
-    }
-    return {};
-  }
-
-  handleAutoClose(windowObj, currentURL) {
-    const autoCloseTime = 20000;
-    setTimeout(function() {
-      // set the timer to close last screen and redirect to about:home after 20 seconds
-      const screenEl = windowObj.document.querySelector(".screen");
-      if (
-        windowObj.location.href === currentURL &&
-        screenEl.className.includes("dialog-last")
-      ) {
-        windowObj.location.href = "about:home";
-      }
-    }, autoCloseTime);
-  }
-
-  getScreenClassName(isWelcomeScreen, isLastScreen) {
-    return isWelcomeScreen
-      ? "screen-0"
-      : `${this.props.order === 1 ? `dialog-initial` : ``} ${
-          isLastScreen ? `dialog-last` : ``
-        } screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
-  }
-
-  renderContentTiles() {
-    const { content } = this.props;
-    return (
-      <React.Fragment>
-        {content.tiles &&
-        content.tiles.type === "colorway" &&
-        content.tiles.colorways ? (
-          <Colorways
-            content={content}
-            activeTheme={this.props.activeTheme}
-            handleAction={this.props.handleAction}
-          />
-        ) : null}
-        {content.tiles &&
-        content.tiles.type === "theme" &&
-        content.tiles.data ? (
-          <Themes
-            content={content}
-            activeTheme={this.props.activeTheme}
-            handleAction={this.props.handleAction}
-          />
-        ) : null}
-      </React.Fragment>
-    );
-  }
-
-  renderNoodles(isWelcomeScreen, includeNoodles) {
-    return (
-      <React.Fragment>
-        {includeNoodles ? <div className={`noodle orange-L`} /> : null}
-        {includeNoodles ? <div className={`noodle purple-C`} /> : null}
-        {isWelcomeScreen ? <div className={`noodle solid-L`} /> : null}
-        {includeNoodles ? <div className={`noodle outline-L`} /> : null}
-        {includeNoodles ? <div className={`noodle yellow-circle`} /> : null}
-      </React.Fragment>
-    );
-  }
-
   render() {
     const {
       autoClose,
@@ -98,19 +22,29 @@ export class MultiStageProtonScreen extends React.PureComponent {
       totalNumberOfScreens: total,
     } = this.props;
     const windowObj = this.props.windowObj || window;
-    let currentURL = windowObj.location.href;
     const isWelcomeScreen = this.props.order === 0;
     const isLastScreen = this.props.order === total;
-    const includeNoodles = content.has_noodles;
+    const autoCloseTime = 20000;
     // Assign proton screen style 'screen-1' or 'screen-2' by checking
     // if screen order is even or odd.
-    const screenClassName = this.getScreenClassName(
-      isWelcomeScreen,
-      isLastScreen
-    );
+    const screenClassName = isWelcomeScreen
+      ? "screen-0"
+      : `${this.props.order === 1 ? `dialog-initial` : ``} ${
+          this.props.order === total ? `dialog-last` : ``
+        } screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
 
     if (isLastScreen && autoClose) {
-      this.handleAutoClose(windowObj, currentURL);
+      let currentURL = windowObj.location.href;
+      setTimeout(function() {
+        // set the timer to close last screen and redirect to about:home after 20 seconds
+        const screenEl = windowObj.document.querySelector(".screen");
+        if (
+          windowObj.location.href === currentURL &&
+          screenEl.className.includes("dialog-last")
+        ) {
+          windowObj.location.href = "about:home";
+        }
+      }, autoCloseTime);
     }
 
     return (
@@ -139,11 +73,7 @@ export class MultiStageProtonScreen extends React.PureComponent {
             ) : null}
           </div>
         ) : null}
-        <div
-          className={`section-main ${includeNoodles ? "with-noodles" : ""} ${
-            isWelcomeScreen ? "welcome-screen" : ""
-          }`}
-        >
+        <div className="section-main">
           {content.secondary_button_top ? (
             <SecondaryCTA
               content={content}
@@ -151,16 +81,17 @@ export class MultiStageProtonScreen extends React.PureComponent {
               position="top"
             />
           ) : null}
-          {this.renderNoodles(isWelcomeScreen, includeNoodles)}
+          <div className={`noodle orange-L`} />
+          <div className={`noodle purple-C`} />
+          {isWelcomeScreen ? <div className={`noodle solid-L`} /> : null}
+          <div className={`noodle outline-L`} />
+          <div className={`noodle yellow-circle`} />
           <div
             className={`main-content ${
               isLastScreen && autoClose ? "no-steps" : ""
             }`}
           >
-            <div
-              className={`brand-logo ${content.hide_logo ? "hide" : ""}`}
-              style={this.getLogoStyle(content)}
-            />
+            <div className={`brand-logo ${content.hideLogo ? "hide" : ""}`} />
             <div className={`${isRtamo ? "rtamo-icon" : "hide-rtamo-icon"}`}>
               <img
                 className={`${isTheme ? "rtamo-theme-icon" : ""}`}
@@ -169,13 +100,13 @@ export class MultiStageProtonScreen extends React.PureComponent {
                 alt=""
               />
             </div>
-            {isLastScreen && content.has_fancy_title ? (
+            {isLastScreen && content.hasFancyTitle ? (
               <div className="confetti" />
             ) : null}
             <div className="main-content-inner">
               <div
                 className={`welcome-text ${
-                  content.has_fancy_title ? "fancy-headings" : ""
+                  content.hasFancyTitle ? "fancy-headings" : ""
                 }`}
               >
                 <Localized text={content.title}>
@@ -191,7 +122,24 @@ export class MultiStageProtonScreen extends React.PureComponent {
                   </Localized>
                 ) : null}
               </div>
-              {this.renderContentTiles()}
+              {content.tiles &&
+              content.tiles.type === "colorway" &&
+              content.tiles.colorways ? (
+                <Colorways
+                  content={content}
+                  activeTheme={this.props.activeTheme}
+                  handleAction={this.props.handleAction}
+                />
+              ) : null}
+              {content.tiles &&
+              content.tiles.type === "theme" &&
+              content.tiles.data ? (
+                <Themes
+                  content={content}
+                  activeTheme={this.props.activeTheme}
+                  handleAction={this.props.handleAction}
+                />
+              ) : null}
               <div>
                 <Localized
                   text={
