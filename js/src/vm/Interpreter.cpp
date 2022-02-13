@@ -809,7 +809,7 @@ extern bool JS::InstanceofOperator(JSContext* cx, HandleObject obj,
 
   /* Step 2. */
   RootedValue hasInstance(cx);
-  RootedId id(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().hasInstance));
+  RootedId id(cx, PropertyKey::Symbol(cx->wellKnownSymbols().hasInstance));
   if (!GetProperty(cx, obj, obj, id, &hasInstance)) {
     return false;
   }

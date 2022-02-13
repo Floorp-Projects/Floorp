@@ -1156,7 +1156,7 @@ static JSObject* GetBufferSpeciesConstructor(
     if (GetOwnPropertyPure(cx, proto, NameToId(cx->names().constructor), &ctor,
                            &found) &&
         ctor.isObject() && &ctor.toObject() == defaultCtor) {
-      jsid speciesId = SYMBOL_TO_JSID(cx->wellKnownSymbols().species);
+      jsid speciesId = PropertyKey::Symbol(cx->wellKnownSymbols().species);
       JSFunction* getter;
       if (GetOwnGetterPure(cx, defaultCtor, speciesId, &getter) && getter &&
           IsArrayBufferSpecies(cx, getter)) {
@@ -1371,7 +1371,7 @@ template <typename T>
 
   // Step 5.
   RootedValue callee(cx);
-  RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
+  RootedId iteratorId(cx, PropertyKey::Symbol(cx->wellKnownSymbols().iterator));
   if (!GetProperty(cx, other, other, iteratorId, &callee)) {
     return nullptr;
   }

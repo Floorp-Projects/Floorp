@@ -686,8 +686,7 @@ static bool IsInternalDotName(JSContext* cx, HandleId id) {
 static bool CheckUnscopables(JSContext* cx, HandleObject obj, HandleId id,
                              bool* scopable) {
   RootedId unscopablesId(
-      cx,
-      SYMBOL_TO_JSID(cx->wellKnownSymbols().get(JS::SymbolCode::unscopables)));
+      cx, PropertyKey::Symbol(cx->wellKnownSymbols().unscopables));
   RootedValue v(cx);
   if (!GetProperty(cx, obj, obj, unscopablesId, &v)) {
     return false;

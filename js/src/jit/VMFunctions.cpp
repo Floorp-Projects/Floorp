@@ -1712,7 +1712,7 @@ static MOZ_ALWAYS_INLINE bool ValueToAtomOrSymbolPure(JSContext* cx,
     }
     *id = AtomToId(atom);
   } else if (idVal.isSymbol()) {
-    *id = SYMBOL_TO_JSID(idVal.toSymbol());
+    *id = PropertyKey::Symbol(idVal.toSymbol());
   } else {
     if (!ValueToIdPure(idVal, id)) {
       return false;

@@ -126,6 +126,13 @@ struct PropertyKey {
     return PropertyKey::fromRawBits(bits);
   }
 
+  static PropertyKey Symbol(JS::Symbol* sym) {
+    MOZ_ASSERT(sym != nullptr);
+    MOZ_ASSERT((size_t(sym) & JSID_TYPE_MASK) == 0);
+    MOZ_ASSERT(!js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell*>(sym)));
+    return PropertyKey::fromRawBits(size_t(sym) | JSID_TYPE_SYMBOL);
+  }
+
   // This API can be used by embedders to convert pinned (aka interned) strings,
   // as created by JS_AtomizeAndPinString, into PropertyKeys. This means the
   // string does not have to be explicitly rooted.
@@ -196,15 +203,6 @@ using jsid = JS::PropertyKey;
 
 #define JSID_INT_MIN 0
 #define JSID_INT_MAX INT32_MAX
-
-static MOZ_ALWAYS_INLINE jsid SYMBOL_TO_JSID(JS::Symbol* sym) {
-  jsid id;
-  MOZ_ASSERT(sym != nullptr);
-  MOZ_ASSERT((size_t(sym) & JSID_TYPE_MASK) == 0);
-  MOZ_ASSERT(!js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell*>(sym)));
-  JSID_BITS(id) = (size_t(sym) | JSID_TYPE_SYMBOL);
-  return id;
-}
 
 constexpr const jsid JSID_VOID;
 

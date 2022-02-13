@@ -1018,7 +1018,7 @@ static MOZ_ALWAYS_INLINE bool IsArraySpecies(JSContext* cx,
     return true;
   }
 
-  jsid speciesId = SYMBOL_TO_JSID(cx->wellKnownSymbols().species);
+  jsid speciesId = PropertyKey::Symbol(cx->wellKnownSymbols().species);
   JSFunction* getter;
   if (!GetGetterPure(cx, &ctor.toObject(), speciesId, &getter)) {
     return false;
@@ -4148,8 +4148,7 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
   }
 #endif
 
-  RootedId id(cx, SYMBOL_TO_JSID(
-                      cx->wellKnownSymbols().get(JS::SymbolCode::unscopables)));
+  RootedId id(cx, PropertyKey::Symbol(cx->wellKnownSymbols().unscopables));
   value.setObject(*unscopables);
   return DefineDataProperty(cx, proto, id, value, JSPROP_READONLY);
 }
@@ -4348,8 +4347,8 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
   }
 
   // Look up the '@@species' value on Array
-  Maybe<PropertyInfo> speciesProp =
-      arrayCtor->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
+  Maybe<PropertyInfo> speciesProp = arrayCtor->lookup(
+      cx, PropertyKey::Symbol(cx->wellKnownSymbols().species));
   if (speciesProp.isNothing() || !arrayCtor->hasGetter(*speciesProp)) {
     return;
   }
