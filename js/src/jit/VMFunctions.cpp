@@ -1712,7 +1712,7 @@ static MOZ_ALWAYS_INLINE bool ValueToAtomOrSymbolPure(JSContext* cx,
     }
     *id = AtomToId(atom);
   } else if (idVal.isSymbol()) {
-    *id = SYMBOL_TO_JSID(idVal.toSymbol());
+    *id = PropertyKey::Symbol(idVal.toSymbol());
   } else {
     if (!ValueToIdPure(idVal, id)) {
       return false;
@@ -1720,7 +1720,7 @@ static MOZ_ALWAYS_INLINE bool ValueToAtomOrSymbolPure(JSContext* cx,
   }
 
   // Watch out for ids that may be stored in dense elements.
-  static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT < JSID_INT_MAX,
+  static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT < PropertyKey::IntMax,
                 "All dense elements must have integer jsids");
   if (MOZ_UNLIKELY(id->isInt())) {
     return false;
@@ -1928,7 +1928,7 @@ bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
     return true;
   }
 
-  jsid id = INT_TO_JSID(index);
+  jsid id = PropertyKey::Int(index);
   uint32_t unused;
   if (obj->shape()->lookup(cx, id, &unused)) {
     vp[0].setBoolean(true);

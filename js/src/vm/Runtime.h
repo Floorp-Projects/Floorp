@@ -1102,7 +1102,7 @@ static MOZ_ALWAYS_INLINE void MakeRangeGCSafe(Value* beg, Value* end) {
 }
 
 static MOZ_ALWAYS_INLINE void MakeRangeGCSafe(jsid* beg, jsid* end) {
-  std::fill(beg, end, INT_TO_JSID(0));
+  std::fill(beg, end, PropertyKey::Int(0));
 }
 
 static MOZ_ALWAYS_INLINE void MakeRangeGCSafe(jsid* vec, size_t len) {
