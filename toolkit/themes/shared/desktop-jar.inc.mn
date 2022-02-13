@@ -24,6 +24,14 @@
 * skin/classic/global/arrowscrollbox.css                   (../../shared/arrowscrollbox.css)
   skin/classic/global/close-icon.css                       (../../shared/close-icon.css)
   skin/classic/global/datetimeinputpickers.css             (../../shared/datetimeinputpickers.css)
+  skin/classic/global/dirListing/dirListing.css            (../../shared/dirListing/dirListing.css)
+#ifdef XP_MACOSX
+  skin/classic/global/dirListing/folder.png                (../../shared/dirListing/folder-osx.png)
+  skin/classic/global/dirListing/up.png                    (../../shared/dirListing/up-osx.png)
+#else
+  skin/classic/global/dirListing/folder.png                (../../shared/dirListing/folder.png)
+  skin/classic/global/dirListing/up.png                    (../../shared/dirListing/up.png)
+#endif
   skin/classic/global/findbar.css                          (../../shared/findbar.css)
   skin/classic/global/notification.css                     (../../shared/notification.css)
   skin/classic/global/numberinput.css                      (../../shared/numberinput.css)
