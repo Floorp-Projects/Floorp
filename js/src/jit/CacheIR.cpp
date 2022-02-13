@@ -347,12 +347,12 @@ static bool ValueToNameOrSymbolId(JSContext* cx, HandleValue idVal,
   }
 
   if (!id.isAtom() && !id.isSymbol()) {
-    id.set(JSID_VOID);
+    id.set(JS::PropertyKey::Void());
     return true;
   }
 
   if (id.isAtom() && id.toAtom()->isIndex()) {
-    id.set(JSID_VOID);
+    id.set(JS::PropertyKey::Void());
     return true;
   }
 

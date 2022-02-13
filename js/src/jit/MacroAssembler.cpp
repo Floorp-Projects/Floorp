@@ -2976,7 +2976,7 @@ void MacroAssembler::PushEmptyRooted(VMFunctionData::RootType rootType) {
       Push(UndefinedValue());
       break;
     case VMFunctionData::RootId:
-      Push(ImmWord(JSID_BITS(JSID_VOID)));
+      Push(ImmWord(JSID_BITS(JS::PropertyKey::Void())));
       break;
   }
 }
