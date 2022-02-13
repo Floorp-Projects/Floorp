@@ -16,6 +16,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/dom/BindingNames.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/Exceptions.h"
@@ -189,8 +190,8 @@ bool WebIDLGlobalNameHash::GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
     if ((aNameType == AllNames ||
          !cache->HasEntryInSlot(entry.mConstructorId)) &&
         (!entry.mEnabled || entry.mEnabled(aCx, aObj))) {
-      JSString* str =
-          JS_AtomizeStringN(aCx, sNames + entry.mNameOffset, entry.mNameLength);
+      JSString* str = JS_AtomizeStringN(aCx, BindingName(entry.mNameOffset),
+                                        entry.mNameLength);
       if (!str || !aNames.append(JS::PropertyKey::fromNonIntAtom(str))) {
         return false;
       }
@@ -260,8 +261,8 @@ bool WebIDLGlobalNameHash::NewEnumerateSystemGlobal(
   for (size_t i = 0; i < sCount; ++i) {
     const WebIDLNameTableEntry& entry = sEntries[i];
     if (!entry.mEnabled || entry.mEnabled(aCx, aObj)) {
-      JSString* str =
-          JS_AtomizeStringN(aCx, sNames + entry.mNameOffset, entry.mNameLength);
+      JSString* str = JS_AtomizeStringN(aCx, BindingName(entry.mNameOffset),
+                                        entry.mNameLength);
       if (!str || !aProperties.append(JS::PropertyKey::fromNonIntAtom(str))) {
         return false;
       }
