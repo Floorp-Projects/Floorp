@@ -2882,7 +2882,7 @@ void MacroAssembler::Push(PropertyKey key, Register scratchReg) {
     }
   } else {
     MOZ_ASSERT(key.isInt());
-    Push(ImmWord(key.asBits));
+    Push(ImmWord(key.asRawBits()));
   }
 }
 
@@ -2903,7 +2903,7 @@ void MacroAssembler::movePropertyKey(PropertyKey key, Register dest) {
     }
   } else {
     MOZ_ASSERT(key.isInt());
-    movePtr(ImmWord(key.asBits), dest);
+    movePtr(ImmWord(key.asRawBits()), dest);
   }
 }
 

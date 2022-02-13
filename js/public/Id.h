@@ -52,45 +52,50 @@ namespace JS {
 
 enum class SymbolCode : uint32_t;
 
-struct PropertyKey {
-  size_t asBits;
+class PropertyKey {
+  uintptr_t asBits_;
 
-  constexpr PropertyKey() : asBits(JSID_TYPE_VOID) {}
+ public:
+  constexpr PropertyKey() : asBits_(JSID_TYPE_VOID) {}
 
-  static constexpr MOZ_ALWAYS_INLINE PropertyKey fromRawBits(size_t bits) {
+  static constexpr MOZ_ALWAYS_INLINE PropertyKey fromRawBits(uintptr_t bits) {
     PropertyKey id;
-    id.asBits = bits;
+    id.asBits_ = bits;
     return id;
   }
 
-  bool operator==(const PropertyKey& rhs) const { return asBits == rhs.asBits; }
-  bool operator!=(const PropertyKey& rhs) const { return asBits != rhs.asBits; }
+  bool operator==(const PropertyKey& rhs) const {
+    return asBits_ == rhs.asBits_;
+  }
+  bool operator!=(const PropertyKey& rhs) const {
+    return asBits_ != rhs.asBits_;
+  }
 
   MOZ_ALWAYS_INLINE bool isVoid() const {
-    MOZ_ASSERT_IF((asBits & JSID_TYPE_MASK) == JSID_TYPE_VOID,
-                  asBits == JSID_TYPE_VOID);
-    return asBits == JSID_TYPE_VOID;
+    MOZ_ASSERT_IF((asBits_ & JSID_TYPE_MASK) == JSID_TYPE_VOID,
+                  asBits_ == JSID_TYPE_VOID);
+    return asBits_ == JSID_TYPE_VOID;
   }
 
   MOZ_ALWAYS_INLINE bool isInt() const {
-    return !!(asBits & JSID_TYPE_INT_BIT);
+    return !!(asBits_ & JSID_TYPE_INT_BIT);
   }
 
   MOZ_ALWAYS_INLINE bool isString() const {
-    return (asBits & JSID_TYPE_MASK) == JSID_TYPE_STRING;
+    return (asBits_ & JSID_TYPE_MASK) == JSID_TYPE_STRING;
   }
 
   MOZ_ALWAYS_INLINE bool isSymbol() const {
-    return (asBits & JSID_TYPE_MASK) == JSID_TYPE_SYMBOL;
+    return (asBits_ & JSID_TYPE_MASK) == JSID_TYPE_SYMBOL;
   }
 
   MOZ_ALWAYS_INLINE bool isGCThing() const { return isString() || isSymbol(); }
 
-  constexpr uintptr_t asRawBits() const { return asBits; }
+  constexpr uintptr_t asRawBits() const { return asBits_; }
 
   MOZ_ALWAYS_INLINE int32_t toInt() const {
     MOZ_ASSERT(isInt());
-    uint32_t bits = static_cast<uint32_t>(asBits) >> 1;
+    uint32_t bits = static_cast<uint32_t>(asBits_) >> 1;
     return static_cast<int32_t>(bits);
   }
 
@@ -98,17 +103,18 @@ struct PropertyKey {
     MOZ_ASSERT(isString());
     // Use XOR instead of `& ~JSID_TYPE_MASK` because small immediates can be
     // encoded more efficiently on some platorms.
-    return reinterpret_cast<JSString*>(asBits ^ JSID_TYPE_STRING);
+    return reinterpret_cast<JSString*>(asBits_ ^ JSID_TYPE_STRING);
   }
 
   MOZ_ALWAYS_INLINE JS::Symbol* toSymbol() const {
     MOZ_ASSERT(isSymbol());
-    return reinterpret_cast<JS::Symbol*>(asBits ^ JSID_TYPE_SYMBOL);
+    return reinterpret_cast<JS::Symbol*>(asBits_ ^ JSID_TYPE_SYMBOL);
   }
 
   js::gc::Cell* toGCThing() const {
     MOZ_ASSERT(isGCThing());
-    return reinterpret_cast<js::gc::Cell*>(asBits & ~(size_t)JSID_TYPE_MASK);
+    return reinterpret_cast<js::gc::Cell*>(asBits_ &
+                                           ~uintptr_t(JSID_TYPE_MASK));
   }
 
   GCCellPtr toGCCellPtr() const {
@@ -138,9 +144,9 @@ struct PropertyKey {
 
   static PropertyKey Symbol(JS::Symbol* sym) {
     MOZ_ASSERT(sym != nullptr);
-    MOZ_ASSERT((size_t(sym) & JSID_TYPE_MASK) == 0);
+    MOZ_ASSERT((uintptr_t(sym) & JSID_TYPE_MASK) == 0);
     MOZ_ASSERT(!js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell*>(sym)));
-    return PropertyKey::fromRawBits(size_t(sym) | JSID_TYPE_SYMBOL);
+    return PropertyKey::fromRawBits(uintptr_t(sym) | JSID_TYPE_SYMBOL);
   }
 
   // This API can be used by embedders to convert pinned (aka interned) strings,
@@ -172,16 +178,16 @@ struct PropertyKey {
   // handles any JSAtom* that is known not to be representable with an int
   // PropertyKey.
   static PropertyKey fromNonIntAtom(JSAtom* atom) {
-    MOZ_ASSERT((size_t(atom) & JSID_TYPE_MASK) == 0);
+    MOZ_ASSERT((uintptr_t(atom) & JSID_TYPE_MASK) == 0);
     MOZ_ASSERT(PropertyKey::isNonIntAtom(atom));
-    return PropertyKey::fromRawBits(size_t(atom) | JSID_TYPE_STRING);
+    return PropertyKey::fromRawBits(uintptr_t(atom) | JSID_TYPE_STRING);
   }
 
   // The JSAtom/JSString type exposed to embedders is opaque.
   static PropertyKey fromNonIntAtom(JSString* str) {
-    MOZ_ASSERT((size_t(str) & JSID_TYPE_MASK) == 0);
+    MOZ_ASSERT((uintptr_t(str) & JSID_TYPE_MASK) == 0);
     MOZ_ASSERT(PropertyKey::isNonIntAtom(str));
-    return PropertyKey::fromRawBits(size_t(str) | JSID_TYPE_STRING);
+    return PropertyKey::fromRawBits(uintptr_t(str) | JSID_TYPE_STRING);
   }
 
   // Internal API!
