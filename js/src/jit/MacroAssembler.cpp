@@ -2871,9 +2871,9 @@ void MacroAssembler::Push(PropertyKey key, Register scratchReg) {
 
     if (key.isString()) {
       JSString* str = key.toString();
-      MOZ_ASSERT((uintptr_t(str) & JSID_TYPE_MASK) == 0);
-      static_assert(JSID_TYPE_STRING == 0,
-                    "need to orPtr JSID_TYPE_STRING tag if it's not 0");
+      MOZ_ASSERT((uintptr_t(str) & PropertyKey::TypeMask) == 0);
+      static_assert(PropertyKey::StringTypeTag == 0,
+                    "need to orPtr StringTypeTag if it's not 0");
       Push(ImmGCPtr(str));
     } else {
       MOZ_ASSERT(key.isSymbol());
@@ -2891,15 +2891,15 @@ void MacroAssembler::movePropertyKey(PropertyKey key, Register dest) {
     // See comment in |Push(PropertyKey, ...)| above for an explanation.
     if (key.isString()) {
       JSString* str = key.toString();
-      MOZ_ASSERT((uintptr_t(str) & JSID_TYPE_MASK) == 0);
-      static_assert(JSID_TYPE_STRING == 0,
+      MOZ_ASSERT((uintptr_t(str) & PropertyKey::TypeMask) == 0);
+      static_assert(PropertyKey::StringTypeTag == 0,
                     "need to orPtr JSID_TYPE_STRING tag if it's not 0");
       movePtr(ImmGCPtr(str), dest);
     } else {
       MOZ_ASSERT(key.isSymbol());
       JS::Symbol* sym = key.toSymbol();
       movePtr(ImmGCPtr(sym), dest);
-      orPtr(Imm32(JSID_TYPE_SYMBOL), dest);
+      orPtr(Imm32(PropertyKey::SymbolTypeTag), dest);
     }
   } else {
     MOZ_ASSERT(key.isInt());
