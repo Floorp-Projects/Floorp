@@ -95,15 +95,8 @@
   color: var(--lwt-text-color);
 }
 
-:root {
-  --focus-outline-width: 2px;
-  --focus-outline-color: currentColor;
-  --focus-outline: var(--focus-outline-width) solid var(--focus-outline-color);
-  --focus-outline-offset: 2px;
-}
-
 @media not (prefers-contrast) {
-  :root {
+  :root:-moz-lwtheme {
     --focus-outline-color: #0061E0;
   }
 
