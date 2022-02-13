@@ -186,9 +186,9 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     }
 
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_2__["MultiStageAboutWelcome"], {
-      message_id: props.messageId,
       screens: props.screens,
       metricsFlowUri: this.state.metricsFlowUri,
+      message_id: props.messageId,
       utm_term: props.UTMTerm,
       transitions: props.transitions,
       background_url: props.background_url
@@ -348,7 +348,7 @@ const MultiStageAboutWelcome = props => {
       if (index < props.screens.length - 1) {
         setTransition(props.transitions ? "in" : "");
         setScreenIndex(prevState => prevState + 1);
-      } else if (window.location.href === "about:welcome") {
+      } else {
         _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].handleUserAction({
           type: "OPEN_ABOUT_PAGE",
           data: {
@@ -407,9 +407,9 @@ const MultiStageAboutWelcome = props => {
   }, [useImportable, region]);
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: `outer-wrapper onboardingContainer proton transition-${transition}`,
-    style: props.background_url ? {
+    style: {
       backgroundImage: `url(${props.background_url})`
-    } : {}
+    }
   }, props.screens.map((screen, order) => {
     return index === order ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(WelcomeScreen, {
       key: screen.id + order,
@@ -696,6 +696,7 @@ const AboutWelcomeUtils = {
 const DEFAULT_RTAMO_CONTENT = {
   template: "return_to_amo",
   utm_term: "rtamo",
+  totalNumberOfScreens: 1,
   order: 0,
   content: {
     hero_text: {
@@ -704,7 +705,6 @@ const DEFAULT_RTAMO_CONTENT = {
     title: {
       string_id: "return-to-amo-subtitle"
     },
-    has_noodles: true,
     subtitle: {
       string_id: "return-to-amo-addon-title"
     },
@@ -713,7 +713,7 @@ const DEFAULT_RTAMO_CONTENT = {
         string_id: "mr1-onboarding-welcome-image-caption"
       }
     },
-    hide_logo: true,
+    hideLogo: true,
     background_url: "chrome://activity-stream/content/data/content/assets/proton-bkg.avif",
     primary_button: {
       label: {
@@ -779,66 +779,6 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
     this.mainContentHeader.focus();
   }
 
-  getLogoStyle(content) {
-    if (!content.hide_logo) {
-      const useDefaultLogo = !content.logo;
-      const logoUrl = useDefaultLogo ? "chrome://branding/content/about-logo.svg" : content.logo.imageURL;
-      const logoSize = useDefaultLogo ? "80px" : content.logo.size;
-      return {
-        background: `url('${logoUrl}') top center / ${logoSize} no-repeat`,
-        height: logoSize,
-        padding: `${logoSize} 0 10px`
-      };
-    }
-
-    return {};
-  }
-
-  handleAutoClose(windowObj, currentURL) {
-    const autoCloseTime = 20000;
-    setTimeout(function () {
-      // set the timer to close last screen and redirect to about:home after 20 seconds
-      const screenEl = windowObj.document.querySelector(".screen");
-
-      if (windowObj.location.href === currentURL && screenEl.className.includes("dialog-last")) {
-        windowObj.location.href = "about:home";
-      }
-    }, autoCloseTime);
-  }
-
-  getScreenClassName(isWelcomeScreen, isLastScreen) {
-    return isWelcomeScreen ? "screen-0" : `${this.props.order === 1 ? `dialog-initial` : ``} ${isLastScreen ? `dialog-last` : ``} screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
-  }
-
-  renderContentTiles() {
-    const {
-      content
-    } = this.props;
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, content.tiles && content.tiles.type === "colorway" && content.tiles.colorways ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_Colorways__WEBPACK_IMPORTED_MODULE_2__["Colorways"], {
-      content: content,
-      activeTheme: this.props.activeTheme,
-      handleAction: this.props.handleAction
-    }) : null, content.tiles && content.tiles.type === "theme" && content.tiles.data ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_Themes__WEBPACK_IMPORTED_MODULE_3__["Themes"], {
-      content: content,
-      activeTheme: this.props.activeTheme,
-      handleAction: this.props.handleAction
-    }) : null);
-  }
-
-  renderNoodles(isWelcomeScreen, includeNoodles) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, includeNoodles ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `noodle orange-L`
-    }) : null, includeNoodles ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `noodle purple-C`
-    }) : null, isWelcomeScreen ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `noodle solid-L`
-    }) : null, includeNoodles ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `noodle outline-L`
-    }) : null, includeNoodles ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `noodle yellow-circle`
-    }) : null);
-  }
-
   render() {
     const {
       autoClose,
@@ -848,16 +788,23 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
       totalNumberOfScreens: total
     } = this.props;
     const windowObj = this.props.windowObj || window;
-    let currentURL = windowObj.location.href;
     const isWelcomeScreen = this.props.order === 0;
     const isLastScreen = this.props.order === total;
-    const includeNoodles = content.has_noodles; // Assign proton screen style 'screen-1' or 'screen-2' by checking
+    const autoCloseTime = 20000; // Assign proton screen style 'screen-1' or 'screen-2' by checking
     // if screen order is even or odd.
 
-    const screenClassName = this.getScreenClassName(isWelcomeScreen, isLastScreen);
+    const screenClassName = isWelcomeScreen ? "screen-0" : `${this.props.order === 1 ? `dialog-initial` : ``} ${this.props.order === total ? `dialog-last` : ``} screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
 
     if (isLastScreen && autoClose) {
-      this.handleAutoClose(windowObj, currentURL);
+      let currentURL = windowObj.location.href;
+      setTimeout(function () {
+        // set the timer to close last screen and redirect to about:home after 20 seconds
+        const screenEl = windowObj.document.querySelector(".screen");
+
+        if (windowObj.location.href === currentURL && screenEl.className.includes("dialog-last")) {
+          windowObj.location.href = "about:home";
+        }
+      }, autoCloseTime);
     }
 
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
@@ -883,16 +830,25 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
       className: "attrib-text"
     })) : null) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `section-main ${includeNoodles ? "with-noodles" : ""} ${isWelcomeScreen ? "welcome-screen" : ""}`
+      className: "section-main"
     }, content.secondary_button_top ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_4__["SecondaryCTA"], {
       content: content,
       handleAction: this.props.handleAction,
       position: "top"
-    }) : null, this.renderNoodles(isWelcomeScreen, includeNoodles), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: `noodle orange-L`
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: `noodle purple-C`
+    }), isWelcomeScreen ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: `noodle solid-L`
+    }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: `noodle outline-L`
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: `noodle yellow-circle`
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: `main-content ${isLastScreen && autoClose ? "no-steps" : ""}`
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `brand-logo ${content.hide_logo ? "hide" : ""}`,
-      style: this.getLogoStyle(content)
+      className: `brand-logo ${content.hideLogo ? "hide" : ""}`
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: `${isRtamo ? "rtamo-icon" : "hide-rtamo-icon"}`
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
@@ -900,12 +856,12 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
       src: this.props.iconURL,
       role: "presentation",
       alt: ""
-    })), isLastScreen && content.has_fancy_title ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    })), isLastScreen && content.hasFancyTitle ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "confetti"
     }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "main-content-inner"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `welcome-text ${content.has_fancy_title ? "fancy-headings" : ""}`
+      className: `welcome-text ${content.hasFancyTitle ? "fancy-headings" : ""}`
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: content.title
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
@@ -916,7 +872,15 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
       "data-l10n-args": JSON.stringify({
         "addon-name": this.props.addonName
       })
-    })) : null), this.renderContentTiles(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    })) : null), content.tiles && content.tiles.type === "colorway" && content.tiles.colorways ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_Colorways__WEBPACK_IMPORTED_MODULE_2__["Colorways"], {
+      content: content,
+      activeTheme: this.props.activeTheme,
+      handleAction: this.props.handleAction
+    }) : null, content.tiles && content.tiles.type === "theme" && content.tiles.data ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_Themes__WEBPACK_IMPORTED_MODULE_3__["Themes"], {
+      content: content,
+      activeTheme: this.props.activeTheme,
+      handleAction: this.props.handleAction
+    }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: content.primary_button ? content.primary_button.label : null
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       className: "primary",
