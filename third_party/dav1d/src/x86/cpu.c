@@ -28,13 +28,14 @@
 #include "config.h"
 
 #include <stdint.h>
+#include <string.h>
 
 #include "common/attributes.h"
 
 #include "src/x86/cpu.h"
 
 typedef struct {
-    uint32_t eax, ebx, ecx, edx;
+    uint32_t eax, ebx, edx, ecx;
 } CpuidRegisters;
 
 void dav1d_cpu_cpuid(CpuidRegisters *regs, unsigned leaf, unsigned subleaf);
@@ -43,13 +44,22 @@ uint64_t dav1d_cpu_xgetbv(unsigned xcr);
 #define X(reg, mask) (((reg) & (mask)) == (mask))
 
 COLD unsigned dav1d_get_cpu_flags_x86(void) {
-    CpuidRegisters r = { 0 };
-    dav1d_cpu_cpuid(&r, 0, 0);
-    const unsigned max_leaf = r.eax;
+    union {
+        CpuidRegisters r;
+        struct {
+            uint32_t max_leaf;
+            char vendor[12];
+        };
+    } cpu;
+    dav1d_cpu_cpuid(&cpu.r, 0, 0);
     unsigned flags = 0;
 
-    if (max_leaf >= 1) {
+    if (cpu.max_leaf >= 1) {
+        CpuidRegisters r;
         dav1d_cpu_cpuid(&r, 1, 0);
+        const unsigned model  = ((r.eax >> 4) & 0x0f) + ((r.eax >> 12) & 0xf0);
+        const unsigned family = ((r.eax >> 8) & 0x0f) + ((r.eax >> 20) & 0xff);
+
         if (X(r.edx, 0x06008000)) /* CMOV/SSE/SSE2 */ {
             flags |= DAV1D_X86_CPU_FLAG_SSE2;
             if (X(r.ecx, 0x00000201)) /* SSE3/SSSE3 */ {
@@ -63,7 +73,7 @@ COLD unsigned dav1d_get_cpu_flags_x86(void) {
         if (X(r.ecx, 0x18000000)) /* OSXSAVE/AVX */ {
             const uint64_t xcr0 = dav1d_cpu_xgetbv(0);
             if (X(xcr0, 0x00000006)) /* XMM/YMM */ {
-                if (max_leaf >= 7) {
+                if (cpu.max_leaf >= 7) {
                     dav1d_cpu_cpuid(&r, 7, 0);
                     if (X(r.ebx, 0x00000128)) /* BMI1/BMI2/AVX2 */ {
                         flags |= DAV1D_X86_CPU_FLAG_AVX2;
@@ -76,6 +86,14 @@ COLD unsigned dav1d_get_cpu_flags_x86(void) {
             }
         }
 #endif
+        if (!memcmp(cpu.vendor, "AuthenticAMD", sizeof(cpu.vendor))) {
+            if ((flags & DAV1D_X86_CPU_FLAG_AVX2) && (family < 0x19 ||
+                (family == 0x19 && (model < 0x10 || (model >= 0x20 && model < 0x60)))))
+            {
+                /* Excavator, Zen, Zen+, Zen 2, Zen 3, Zen 3+ */
+                flags |= DAV1D_X86_CPU_FLAG_SLOW_GATHER;
+            }
+        }
     }
 
     return flags;
