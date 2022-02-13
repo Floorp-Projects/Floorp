@@ -137,6 +137,18 @@ class ProfileChunkedBuffer {
     }
   }
 
+  // Set the current chunk manager, except if it's already the one provided.
+  // The caller is responsible for keeping the chunk manager alive as along as
+  // it's used here (until the next (Re)SetChunkManager, or
+  // ~ProfileChunkedBuffer).
+  void SetChunkManagerIfDifferent(ProfileBufferChunkManager& aChunkManager) {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+    if (!mChunkManager || mChunkManager != &aChunkManager) {
+      Unused << ResetChunkManager(lock);
+      SetChunkManager(aChunkManager, lock);
+    }
+  }
+
   // Clear the contents of this buffer, ready to receive new chunks.
   // Note that memory is not freed: No chunks are destroyed, they are all
   // receycled.
