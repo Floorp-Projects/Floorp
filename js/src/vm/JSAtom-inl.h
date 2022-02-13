@@ -28,7 +28,7 @@ MOZ_ALWAYS_INLINE jsid AtomToId(JSAtom* atom) {
     return JS::PropertyKey::Int(int32_t(index));
   }
 
-  return JS::PropertyKey::fromNonIntAtom(atom);
+  return JS::PropertyKey::NonIntAtom(atom);
 }
 
 // Use the NameToId method instead!

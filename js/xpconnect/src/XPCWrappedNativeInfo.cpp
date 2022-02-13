@@ -286,7 +286,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
       NS_ERROR("bad constant name");
       return nullptr;
     }
-    jsid name = PropertyKey::fromNonIntAtom(str);
+    jsid name = PropertyKey::NonIntAtom(str);
 
     // XXX need better way to find dups
     // MOZ_ASSERT(!LookupMemberByID(name),"duplicate method/constant name");
@@ -311,7 +311,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
     return nullptr;
   }
 
-  RootedId interfaceName(cx, PropertyKey::fromNonIntAtom(str));
+  RootedId interfaceName(cx, PropertyKey::NonIntAtom(str));
 
   // Use placement new to create an object with the right amount of space
   // to hold the members array

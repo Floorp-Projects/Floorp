@@ -945,7 +945,7 @@ bool js::IndexToIdSlow(JSContext* cx, uint32_t index, MutableHandleId idp) {
     return false;
   }
 
-  idp.set(JS::PropertyKey::fromNonIntAtom(atom));
+  idp.set(JS::PropertyKey::NonIntAtom(atom));
   return true;
 }
 

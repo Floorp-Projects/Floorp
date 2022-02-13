@@ -191,7 +191,7 @@ bool WebIDLGlobalNameHash::GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
         (!entry.mEnabled || entry.mEnabled(aCx, aObj))) {
       JSString* str =
           JS_AtomizeStringN(aCx, sNames + entry.mNameOffset, entry.mNameLength);
-      if (!str || !aNames.append(JS::PropertyKey::fromNonIntAtom(str))) {
+      if (!str || !aNames.append(JS::PropertyKey::NonIntAtom(str))) {
         return false;
       }
     }
@@ -262,7 +262,7 @@ bool WebIDLGlobalNameHash::NewEnumerateSystemGlobal(
     if (!entry.mEnabled || entry.mEnabled(aCx, aObj)) {
       JSString* str =
           JS_AtomizeStringN(aCx, sNames + entry.mNameOffset, entry.mNameLength);
-      if (!str || !aProperties.append(JS::PropertyKey::fromNonIntAtom(str))) {
+      if (!str || !aProperties.append(JS::PropertyKey::NonIntAtom(str))) {
         return false;
       }
     }
