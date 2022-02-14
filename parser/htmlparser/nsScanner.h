@@ -161,7 +161,7 @@ class nsScanner final {
   void SetIncremental(bool anIncrValue) { mIncremental = anIncrValue; }
 
  protected:
-  bool AppendToBuffer(nsScannerString::Buffer* aBuffer);
+  void AppendToBuffer(nsScannerString::Buffer* aBuffer);
   bool AppendToBuffer(const nsAString& aStr) {
     nsScannerString::Buffer* buf = nsScannerString::AllocBufferFromString(aStr);
     if (!buf) return false;
@@ -169,7 +169,7 @@ class nsScanner final {
     return true;
   }
 
-  nsScannerString* mSlidingBuffer;
+  mozilla::UniquePtr<nsScannerString> mSlidingBuffer;
   nsScannerIterator mCurrentPosition;  // The position we will next read from in
                                        // the scanner buffer
   nsScannerIterator
