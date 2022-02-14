@@ -46,7 +46,10 @@ add_task(async function setup() {
 // the filetype is set to save to disk.
 add_task(async function aDownloadSavedToDiskPromptsForFolder() {
   let publicList = await Downloads.getList(Downloads.PUBLIC);
-  ensureMIMEState({ preferredAction: saveToDisk });
+  ensureMIMEState(
+    { preferredAction: saveToDisk },
+    { type: "text/plain", ext: "txt" }
+  );
   registerCleanupFunction(async () => {
     await publicList.removeFinished();
   });
@@ -76,7 +79,10 @@ add_task(async function aDownloadSavedToDiskPromptsForFolder() {
 add_task(async function testFilesHandledInternally() {
   let dir = await setupFilePickerDirectory();
 
-  ensureMIMEState({ preferredAction: handleInternally });
+  ensureMIMEState(
+    { preferredAction: handleInternally },
+    { type: "image/webp", ext: "webp" }
+  );
 
   let filePickerShown = false;
   MockFilePicker.showCallback = function(fp) {
@@ -88,14 +94,14 @@ add_task(async function testFilesHandledInternally() {
     gBrowser,
     url => {
       info("Got load for " + url);
-      return url.endsWith("file_image_svgxml.svg") && url.startsWith("file:");
+      return url.endsWith("file_green.webp") && url.startsWith("file:");
     },
     true,
     true
   );
   let loadingTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    opening: TEST_PATH + "file_image_svgxml.svg",
+    opening: TEST_PATH + "file_green.webp",
     waitForLoad: false,
     waitForStateStop: true,
   });
@@ -103,7 +109,7 @@ add_task(async function testFilesHandledInternally() {
   let openedTab = await thirdTabPromise;
   ok(!filePickerShown, "file picker should not have shown up.");
 
-  assertCorrectFile(dir, "file_image_svgxml.svg");
+  assertCorrectFile(dir, "file_green.webp");
 
   // Cleanup
   BrowserTestUtils.removeTab(loadingTab);
@@ -289,8 +295,11 @@ function createSaveDir() {
   return saveDir;
 }
 
-function ensureMIMEState({ preferredAction, preferredHandlerApp = null }) {
-  const mimeInfo = gMimeSvc.getFromTypeAndExtension("application/pdf", "pdf");
+function ensureMIMEState(
+  { preferredAction, preferredHandlerApp = null },
+  { type = "application/pdf", ext = "pdf" } = {}
+) {
+  const mimeInfo = gMimeSvc.getFromTypeAndExtension(type, ext);
   mimeInfo.preferredAction = preferredAction;
   mimeInfo.preferredApplicationHandler = preferredHandlerApp;
   mimeInfo.alwaysAskBeforeHandling = false;
