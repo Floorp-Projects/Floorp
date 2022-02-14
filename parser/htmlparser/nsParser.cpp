@@ -272,27 +272,6 @@ nsParser::SetContentSink(nsIContentSink* aSink) {
 NS_IMETHODIMP_(nsIContentSink*)
 nsParser::GetContentSink() { return mSink; }
 
-static nsIDTD* FindSuitableDTD(CParserContext& aParserContext) {
-  // We always find a DTD.
-  aParserContext.mAutoDetectStatus = ePrimaryDetect;
-
-  // Quick check for view source.
-  MOZ_ASSERT(aParserContext.mParserCommand != eViewSource,
-             "The old parser is not supposed to be used for View Source "
-             "anymore.");
-
-  // Now see if we're parsing HTML (which, as far as we're concerned, simply
-  // means "not XML").
-  if (aParserContext.mDocType != eXML) {
-    return new CNavDTD();
-  }
-
-  // If we're here, then we'd better be parsing XML.
-  NS_ASSERTION(aParserContext.mDocType == eXML,
-               "What are you trying to send me, here?");
-  return new nsExpatDriver();
-}
-
 NS_IMETHODIMP
 nsParser::CancelParsingEvents() {
   if (mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT) {
@@ -334,8 +313,21 @@ nsresult nsParser::WillBuildModel() {
     }
   }  // else XML fragment with nested parser context
 
-  mDTD = FindSuitableDTD(*mParserContext);
-  NS_ENSURE_TRUE(mDTD, NS_ERROR_OUT_OF_MEMORY);
+  // We always find a DTD.
+  mParserContext->mAutoDetectStatus = ePrimaryDetect;
+
+  // Quick check for view source.
+  MOZ_ASSERT(mParserContext->mParserCommand != eViewSource,
+             "The old parser is not supposed to be used for View Source "
+             "anymore.");
+
+  // Now see if we're parsing XML or HTML (which, as far as we're concerned,
+  // simply means "not XML").
+  if (mParserContext->mDocType == eXML) {
+    mDTD = new nsExpatDriver();
+  } else {
+    mDTD = new CNavDTD();
+  }
 
   nsITokenizer* tokenizer;
   nsresult rv = mParserContext->GetTokenizer(mDTD, mSink, tokenizer);
