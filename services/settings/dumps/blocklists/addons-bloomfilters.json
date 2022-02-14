@@ -3,6 +3,60 @@
     {
       "stash": {
         "blocked": [
+          "{4f809e0f-eb78-444f-bdbd-8cb29e83ee32}:10.0.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1644583085455,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1644604508357,
+      "id": "255d8998-accd-4df5-971d-0a814f5455fe",
+      "last_modified": 1644604685495
+    },
+    {
+      "stash": {
+        "blocked": [
+          "classlink_oneclick_extension@classlink.com:4.22",
+          "classlink_oneclick_extension@classlink.com:4.7",
+          "classlink_oneclick_extension@classlink.com:4.6",
+          "classlink_oneclick_extension@classlink.com:4.30",
+          "classlink_oneclick_extension@classlink.com:5.6",
+          "classlink_oneclick_extension@classlink.com:4.21",
+          "YoutubeDownloader@PeterOlayev.com:4.0.4",
+          "classlink_oneclick_extension@classlink.com:4.5",
+          "classlink_oneclick_extension@classlink.com:4.9",
+          "YoutubeDownloader@PeterOlayev.com:4.0.91",
+          "YoutubeDownloader@PeterOlayev.com:4.0.9",
+          "classlink_oneclick_extension@classlink.com:5.7",
+          "classlink_oneclick_extension@classlink.com:5.4",
+          "YoutubeDownloader@PeterOlayev.com:4.0.6",
+          "classlink_oneclick_extension@classlink.com:4.20",
+          "classlink_oneclick_extension@classlink.com:5.3",
+          "classlink_oneclick_extension@classlink.com:6.21",
+          "YoutubeDownloader@PeterOlayev.com:4.0.2",
+          "classlink_oneclick_extension@classlink.com:5.0",
+          "YoutubeDownloader@PeterOlayev.com:4.0.92",
+          "YoutubeDownloader@PeterOlayev.com:4.0.7",
+          "classlink_oneclick_extension@classlink.com:4.19",
+          "YoutubeDownloader@PeterOlayev.com:4.0",
+          "classlink_oneclick_extension@classlink.com:6.4",
+          "classlink_oneclick_extension@classlink.com:4.4",
+          "YoutubeDownloader@PeterOlayev.com:4.0.1",
+          "YoutubeDownloader@PeterOlayev.com:4.0.8",
+          "YoutubeDownloader@PeterOlayev.com:4.0.5",
+          "YoutubeDownloader@PeterOlayev.com:4.0.3"
+        ],
+        "unblocked": []
+      },
+      "schema": 1644567931356,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1644582908695,
+      "id": "9585394d-d3c2-436d-a12f-56f4d698786f",
+      "last_modified": 1644583085403
+    },
+    {
+      "stash": {
+        "blocked": [
           "extension@estate2021.com:1.0.0.2",
           "extension@estate2021.com:1.0.0.3"
         ],
