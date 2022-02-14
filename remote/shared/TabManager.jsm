@@ -198,6 +198,30 @@ var TabManager = {
     return this.getIdForBrowser(contentBrowser);
   },
 
+  /**
+   * Retrieve the id of a Browsing Context.
+   *
+   * For a top-level browsing context a custom unique id will be returned.
+   *
+   * @param {BrowsingContext=} browsingContext
+   *     The browsing context to get the id from.
+   *
+   * @returns {String}
+   *     The id of the browsing context.
+   */
+  getIdForBrowsingContext(browsingContext) {
+    if (!browsingContext) {
+      return null;
+    }
+
+    if (!browsingContext.parent) {
+      // Top-level browsing contexts have their own custom unique id.
+      return this.getIdForBrowser(browsingContext.embedderElement);
+    }
+
+    return browsingContext.id.toString();
+  },
+
   getTabCount() {
     let count = 0;
     for (const win of this.windows) {
