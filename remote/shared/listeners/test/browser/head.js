@@ -51,3 +51,18 @@ async function doGC() {
   ].getService(Ci.nsIMemoryReporterManager);
   await new Promise(resolve => MemoryReporter.minimizeMemoryUsage(resolve));
 }
+
+/**
+ * Load the provided url in an existing browser.
+ * Returns a promise which will resolve when the page is loaded.
+ *
+ * @param {Browser} browser
+ *     The browser element where the URL should be loaded.
+ * @param {String} url
+ *     The URL to load.
+ */
+async function loadURL(browser, url) {
+  const loaded = BrowserTestUtils.browserLoaded(browser);
+  BrowserTestUtils.loadURI(browser, url);
+  return loaded;
+}
