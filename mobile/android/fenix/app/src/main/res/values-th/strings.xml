@@ -20,9 +20,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">แท็บส่วนตัวของคุณจะถูกแสดงที่นี่</string>
 
-    <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 แท็บที่เปิด แตะเพื่อสลับไปยังแท็บ</string>
-
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">เลือกอยู่ %1$d</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
@@ -35,14 +32,6 @@
     <string name="tab_tray_close_multiselect_content_description">ออกจากโหมดเลือกหลายรายการ</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">บันทึกแท็บที่เลือกลงในชุดสะสม</string>
-    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string moz:removedIn="96" name="tab_tray_item_selected_multiselect_content_description" tools:ignore="UnusedResources">เลือกแล้ว %1$s</string>
-    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string moz:removedIn="96" name="tab_tray_item_unselected_multiselect_content_description" tools:ignore="UnusedResources">เลิกเลือกแล้ว %1$s</string>
-    <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string moz:removedIn="96" name="tab_tray_exit_multiselect_content_description" tools:ignore="UnusedResources">ออกจากโหมดเลือกหลายรายการแล้ว</string>
-    <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string moz:removedIn="96" name="tab_tray_enter_multiselect_content_description" tools:ignore="UnusedResources">เข้าสู่โหมดเลือกหลายรายการแล้ว เลือกแท็บที่จะบันทึกลงในชุดสะสม</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">เลือกแล้ว</string>
 
@@ -55,21 +44,18 @@
     <string name="recently_saved_show_all">แสดงหมด</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description_2">แสดงที่คั่นหน้าทั้งหมดที่บันทึกไว้</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">แสดงปุ่มที่คั่นหน้าทั้งหมดที่บันทึกไว้</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ผลิตขึ้นโดย Mozilla</string>
 
     <!-- Private Browsing -->
-    <!-- Title for private session option -->
-    <string moz:removedIn="96" name="private_browsing_title" tools:ignore="UnusedResources">คุณอยู่ในวาระส่วนตัว</string>
-
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">%1$s จะล้างประวัติการค้นหาและประวัติการเรียกดูของคุณจากแท็บส่วนตัวเมื่อคุณปิดแท็บเหล่านั้นหรือออกจากแอป แม้ว่าสิ่งนี้จะไม่ทำให้คุณไม่เปิดเผยตัวตนกับเว็บไซต์หรือผู้ให้บริการอินเทอร์เน็ตของคุณ แต่จะทำให้การรักษาความเป็นส่วนตัวของสิ่งที่คุณทำออนไลน์จากผู้อื่นที่ใช้อุปกรณ์เครื่องนี้ง่ายขึ้น</string>
     <string name="private_browsing_common_myths">ความเข้าใจผิดที่พบบ่อยเกี่ยวกับการท่องเว็บแบบส่วนตัว</string>
-    <!-- Delete session button to erase your history in a private session -->
-    <string moz:removedIn="96" name="private_browsing_delete_session" tools:ignore="UnusedResources">ลบวาระ</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
@@ -130,13 +116,12 @@
     <string name="recent_tabs_show_all">แสดงหมด</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">แสดงปุ่มแท็บล่าสุดทั้งหมด</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">แสดงแท็บล่าสุดทั้งหมด</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">การค้นหา \&quot;%1$s\&quot; ของคุณ</string>
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-    The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
-    <string moz:removedIn="96" name="recent_tabs_search_term_count" tools:ignore="UnusedResources">ไซต์: %1$s</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
@@ -146,9 +131,6 @@
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
     <string name="history_metadata_header_2">เยี่ยมชมล่าสุด</string>
-    <!-- Header text for a section on the home screen that displays grouped highlights from the
-         user's browsing history, such as topics they have researched or explored on the web -->
-    <string moz:removedIn="96" name="history_metadata_header_3" tools:ignore="UnusedResources">ผลค้นหาล่าสุด</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">ลบ</string>
@@ -159,8 +141,6 @@
     <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">แสดงปุ่มการสำรวจที่ผ่านมาทั้งหมด</string>
 
     <!-- Browser Fragment -->
-    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string moz:removedIn="96" name="browser_tabs_button" tools:ignore="UnusedResources">แท็บที่เปิดอยู่</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">ย้อนกลับ</string>
 
@@ -170,12 +150,8 @@
     <string name="browser_menu_refresh">เรียกใหม่</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">หยุด</string>
-    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">แก้ไขที่คั่นหน้า</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">ส่วนเสริม</string>
-    <!-- Browser menu button that opens the addon extensions manager -->
-    <string moz:removedIn="96" name="browser_menu_extensions" tools:ignore="UnusedResources">ส่วนขยาย</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">ไม่มีส่วนเสริมที่นี่</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -198,14 +174,10 @@
     <string name="resync_button_content_description">ซิงค์ใหม่</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ค้นหาในหน้า</string>
-    <!-- Browser menu button that creates a private tab -->
-    <string moz:removedIn="96" name="browser_menu_private_tab" tools:ignore="UnusedResources">แท็บส่วนตัว</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">บันทึกไปยังชุดสะสม</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">แบ่งปัน</string>
-    <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string moz:removedIn="96" name="menu_share_with" tools:ignore="UnusedResources">แบ่งปันด้วย…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">เปิดใน %1$s</string>
@@ -221,8 +193,6 @@
     <string name="browser_menu_read_close">ปิดมุมมองผู้อ่าน</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">เปิดในแอป</string>
-    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string moz:removedIn="96" name="browser_menu_read_appearance" tools:ignore="UnusedResources">ลักษณะที่ปรากฏ</string>
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">ปรับแต่งมุมมองผู้อ่าน</string>
@@ -239,15 +209,9 @@
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">หน้าแรก</string>
 
-    <!-- Error message to show when the user tries to access a scheme not
-        handled by the app (Ex: blob, tel etc) -->
-    <string moz:removedIn="96" name="unknown_scheme_error_message" tools:ignore="UnusedResources">ไม่สามารถเชื่อมต่อได้เนื่องจากเป็นรูปแบบ URL ที่ไม่รู้จัก</string>
-
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">ภาษาที่เลือก</string>
-    <!-- Content description for search icon -->
-    <string moz:removedIn="96" name="a11y_search_icon_content_description" tools:ignore="UnusedResources">ค้นหา</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">ตามภาษาอุปกรณ์</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -260,8 +224,6 @@
     <string name="search_engine_button">เครื่องมือค้นหา</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">การตั้งค่าเครื่องมือค้นหา</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string moz:removedIn="96" name="search_engines_search_with" tools:ignore="UnusedResources">คราวนี้ค้นหาด้วย:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">เติมลิงก์จากคลิปบอร์ด</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -318,8 +280,6 @@
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">การตั้งค่า</string>
-    <!-- Preference category for basic settings -->
-    <string moz:removedIn="96" name="preferences_category_basics" tools:ignore="UnusedResources">พื้นฐาน</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">ทั่วไป</string>
     <!-- Preference category for all links about Fenix -->
@@ -330,27 +290,15 @@
     <string name="preferences_search">ค้นหา</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">แถบที่อยู่</string>
-    <!-- Preference linking to help about Fenix -->
-    <string moz:removedIn="96" name="preferences_help" tools:ignore="UnusedResources">ช่วยเหลือ</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">ให้คะแนนบน Google Play</string>
-    <!-- Preference for giving feedback about Fenix -->
-    <string moz:removedIn="96" name="preferences_feedback" tools:ignore="UnusedResources">เสนอข้อคิดเห็น</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">เกี่ยวกับ %1$s</string>
-    <!-- Preference linking to the your rights SUMO page -->
-    <string moz:removedIn="96" name="preferences_your_rights" tools:ignore="UnusedResources">สิทธิของคุณ</string>
-    <!-- Preference for settings related to saved passwords -->
-    <string moz:removedIn="96" name="preferences_passwords" tools:ignore="UnusedResources">รหัสผ่าน</string>
-    <!-- Preference for settings related to saved credit cards and addresses -->
-    <string moz:removedIn="96" name="preferences_credit_cards_addresses" tools:ignore="UnusedResources">บัตรเครดิตและที่อยู่</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">ตั้งเป็นเบราว์เซอร์เริ่มต้น</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">ขั้นสูง</string>
-    <!-- Preference category for privacy settings -->
-    <string moz:removedIn="96" name="preferences_category_privacy" tools:ignore="UnusedResources">ความเป็นส่วนตัว</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">ความเป็นส่วนตัวและความปลอดภัย</string>
     <!-- Preference for advanced site permissions -->
@@ -376,8 +324,6 @@
     <string name="toast_override_fxa_sync_server_done">เปลี่ยนแปลงเซิร์ฟเวอร์บัญชี Firefox/Sync แล้ว กำลังออกจากแอปพลิเคชันเพื่อนำการเปลี่ยนแปลงไปใช้…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">บัญชี</string>
-    <!-- Preference shown on banner to sign into account -->
-    <string moz:removedIn="96" name="preferences_sign_in" tools:ignore="UnusedResources">ลงชื่อเข้า</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">แถบเครื่องมือ</string>
     <!-- Preference for changing default theme to dark or light mode -->
@@ -400,10 +346,6 @@
     <string name="preferences_data_choices">ตัวเลือกข้อมูล</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">การเก็บรวบรวมข้อมูล</string>
-    <!-- Preference linking to the privacy notice -->
-    <string moz:removedIn="96" name="preferences_privacy_link" tools:ignore="UnusedResources">ประกาศความเป็นส่วนตัว</string>
-    <!-- Preference category for developer tools -->
-    <string moz:removedIn="96" name="developer_tools_category" tools:ignore="UnusedResources">เครื่องมือนักพัฒนา</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">การดีบั๊กระยะไกลผ่าน USB</string>
     <!-- Preference title for switch preference to show search engines -->
@@ -459,9 +401,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">เยี่ยมชมล่าสุด</string>
-    <!-- Title for the customize home screen settings section for recent searches. Recent searches
-     is a section where users see a list of groups of tabs that they have visited in the past few days -->
-    <string moz:removedIn="96" name="customize_toggle_recent_searches" tools:ignore="UnusedResources">ผลค้นหาล่าสุด</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
@@ -475,6 +414,9 @@
     <string name="wallpaper_updated_snackbar_message">เปลี่ยนรูปพื้นหลังแล้ว!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">ดู</string>
+
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label">แตะโลโก้เพื่อเปลี่ยนรูปพื้นหลัง</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -529,23 +471,12 @@
     <string name="fxa_received_tab_channel_description">การแจ้งเตือนสำหรับแท็บที่ได้รับจากอุปกรณ์ Firefox อื่น ๆ</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">แท็บที่ได้รับ</string>
-    <!-- When multiple tabs have been received -->
-    <string moz:removedIn="96" name="fxa_tabs_received_notification_name" tools:ignore="UnusedResources">แท็บที่ได้รับ</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">แท็บจาก %s</string>
 
     <!-- Advanced Preferences -->
-    <!-- Preference for tracking protection settings -->
-    <string moz:removedIn="96" name="preferences_tracking_protection_settings" tools:ignore="UnusedResources">การป้องกันการติดตาม</string>
-    <!-- Preference switch for tracking protection -->
-    <string moz:removedIn="96" name="preferences_tracking_protection" tools:ignore="UnusedResources">การป้องกันการติดตาม</string>
-
-    <!-- Preference switch description for tracking protection -->
-    <string moz:removedIn="96" name="preferences_tracking_protection_description" tools:ignore="UnusedResources">ปิดกั้นเนื้อหาและสคริปต์ที่ติดตามคุณออนไลน์</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">ข้อยกเว้น</string>
-    <!-- Preference description for tracking protection exceptions -->
-    <string moz:removedIn="96" name="preferences_tracking_protection_exceptions_description" tools:ignore="UnusedResources">การป้องกันการติดตามปิดอยู่สำหรับเว็บไซต์เหล่านี้</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">เปิดสำหรับไซต์ทั้งหมด</string>
     <!-- Text displayed when there are no exceptions -->
@@ -553,38 +484,22 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">เรียนรู้เพิ่มเติม</string>
 
-    <!-- Preference switch for Telemetry -->
-    <string moz:removedIn="96" name="preferences_telemetry" tools:ignore="UnusedResources">การวัดและส่งข้อมูลทางไกล</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">การใช้งานและข้อมูลทางเทคนิค</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">แบ่งปันข้อมูลประสิทธิภาพ, การใช้งาน, ฮาร์ดแวร์ และการปรับแต่งเกี่ยวกับเบราว์เซอร์ของคุณกับ Mozilla เพื่อช่วยเราทำ %1$s ให้ดีขึ้น</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">ข้อมูลการตลาด</string>
-    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string moz:removedIn="96" name="preferences_marketing_data_description" tools:ignore="UnusedResources">แบ่งปันข้อมูลเกี่ยวกับคุณลักษณะที่คุณใช้ใน %1$s กับ Leanplum ผู้ให้บริการการตลาดมือถือของเรา</string>
     <!-- Preference description for marketing data collection -->
     <string name="preferences_marketing_data_description2">แบ่งปันข้อมูลการใช้งานพื้นฐานกับ Adjust ผู้จำหน่ายการตลาดมือถือของเรา</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">การศึกษา</string>
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">อนุญาตให้ Mozilla ติดตั้งและเรียกใช้การศึกษา</string>
-    <!-- Title for experiments preferences -->
-    <string moz:removedIn="96" name="preference_experiments" tools:ignore="UnusedResources">การทดลอง</string>
-    <!-- Summary for experiments preferences -->
-    <string moz:removedIn="96" name="preference_experiments_summary" tools:ignore="UnusedResources">อนุญาตให้ Mozilla ติดตั้งและเก็บรวบรวมข้อมูลสำหรับคุณลักษณะทดลอง</string>
-    <!-- Preference switch for crash reporter -->
-    <string moz:removedIn="96" name="preferences_crash_reporter" tools:ignore="UnusedResources">ตัวรายงานข้อขัดข้อง</string>
-    <!-- Preference switch for Mozilla location service -->
-    <string moz:removedIn="96" name="preferences_mozilla_location_service" tools:ignore="UnusedResources">บริการตำแหน่งที่ตั้ง Mozilla</string>
-    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string moz:removedIn="96" name="preferences_fenix_health_report" tools:ignore="UnusedResources">รายงานสุขภาพ %s</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">เปิด Sync</string>
-    <!-- Preference for account login -->
-    <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">ลงชื่อเข้า</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">ลงชื่อเข้าเพื่อเชื่อมต่ออีกครั้ง</string>
     <!-- Preference for removing FxA account -->
@@ -593,10 +508,6 @@
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[สแกนรหัส QR ที่แสดงใน <b>firefox.com/pair</b>]]></string>
-    <!-- Button to open camera for pairing -->
-    <string moz:removedIn="96" name="pair_open_camera" tools:ignore="UnusedResources">เปิดกล้อง</string>
-    <!-- Button to cancel pairing -->
-    <string moz:removedIn="96" name="pair_cancel" tools:ignore="UnusedResources">ยกเลิก</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -625,10 +536,6 @@
     <string name="preference_gestures_swipe_toolbar_show_tabs">ปัดแถบเครื่องมือไปด้านบนเพื่อเปิดแท็บ</string>
 
     <!-- Library -->
-    <!-- Option in Library to open Sessions page -->
-    <string moz:removedIn="96" name="library_sessions" tools:ignore="UnusedResources">วาระ</string>
-    <!-- Option in Library to open Screenshots page -->
-    <string moz:removedIn="96" name="library_screenshots" tools:ignore="UnusedResources">ภาพหน้าจอ</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">การดาวน์โหลด</string>
     <!-- Option in library to open Bookmarks page -->
@@ -645,16 +552,8 @@
     <string name="library_history">ประวัติ</string>
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">แท็บใหม่</string>
-    <!-- Option in Library to find text in page -->
-    <string moz:removedIn="96" name="library_find_in_page" tools:ignore="UnusedResources">ค้นหาในหน้า</string>
-    <!-- Option in Library to open Reading List -->
-    <string moz:removedIn="96" name="library_reading_list" tools:ignore="UnusedResources">รายการอ่าน</string>
-    <!-- Menu Item Label for Search in Library -->
-    <string moz:removedIn="96" name="library_search" tools:ignore="UnusedResources">ค้นหา</string>
     <!-- Settings Page Title -->
     <string name="settings_title">การตั้งค่า</string>
-    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string moz:removedIn="96" name="content_description_history_menu" tools:ignore="UnusedResources">เมนูรายการประวัติ</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">ปิด</string>
 
@@ -753,8 +652,6 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">แท็บที่เปิด</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string moz:removedIn="96" name="tabs_header_private_title" tools:ignore="UnusedResources">วาระส่วนตัว</string>
-    <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">แท็บส่วนตัว</string>
     <!-- Title for the list of tabs in the synced tabs -->
     <string name="tabs_header_synced_tabs_title">แท็บที่ซิงค์</string>
@@ -766,10 +663,6 @@
     <string name="tab_drawer_fab_content">ส่วนตัว</string>
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">ซิงค์</string>
-    <!-- Text shown as the title of the open tab tray -->
-    <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">แท็บที่เปิด</string>
-    <!-- Text shown in the menu for saving tabs to a collection -->
-    <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">บันทึกไปยังชุดสะสม</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">แบ่งปันแท็บทั้งหมด</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -782,12 +675,6 @@
     <string name="tab_tray_menu_tab_settings">การตั้งค่าแท็บ</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">ปิดแท็บทั้งหมด</string>
-    <!-- Shortcut action to open new tab -->
-    <string moz:removedIn="96" name="tab_tray_menu_open_new_tab" tools:ignore="UnusedResources">แท็บใหม่</string>
-    <!-- Shortcut action to open the home screen -->
-    <string moz:removedIn="96" name="tab_tray_menu_home" tools:ignore="UnusedResources">ไปยังหน้าแรก</string>
-    <!-- Shortcut action to toggle private mode -->
-    <string moz:removedIn="96" name="tab_tray_menu_toggle" tools:ignore="UnusedResources">สลับโหมดแท็บ</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">ที่คั่นหน้า</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -806,27 +693,11 @@
     <string name="close_tab_title">ปิดแท็บ %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">เปิดเมนูแท็บ</string>
-    <!-- Open tabs menu item to close all tabs -->
-    <string moz:removedIn="96" name="tabs_menu_close_all_tabs" tools:ignore="UnusedResources">ปิดแท็บทั้งหมด</string>
-    <!-- Open tabs menu item to share all tabs -->
-    <string moz:removedIn="96" name="tabs_menu_share_tabs" tools:ignore="UnusedResources">แบ่งปันแท็บ</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">บันทึกแท็บไปยังชุดสะสม</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">เมนูแท็บ</string>
-    <!-- Tab menu item to share the tab -->
-    <string moz:removedIn="96" name="tab_share" tools:ignore="UnusedResources">แบ่งปันแท็บ</string>
 
-    <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string moz:removedIn="96" name="current_session_delete" tools:ignore="UnusedResources">ลบ</string>
-    <!-- Button in the current session menu. Saves the session when pressed -->
-    <string moz:removedIn="96" name="current_session_save" tools:ignore="UnusedResources">บันทึก</string>
-    <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string moz:removedIn="96" name="current_session_share" tools:ignore="UnusedResources">แบ่งปัน</string>
-    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string moz:removedIn="96" name="current_session_image" tools:ignore="UnusedResources">ภาพวาระปัจจุบัน</string>
-    <!-- Button to save the current set of tabs into a collection -->
-    <string moz:removedIn="96" name="save_to_collection" tools:ignore="UnusedResources">บันทึกไปยังชุดสะสม</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">ลบชุดสะสม</string>
     <!-- Text for the menu button to rename a collection -->
@@ -846,37 +717,27 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (โหมดส่วนตัว)</string>
 
-    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
-    <string moz:removedIn="96" name="tab_tray_save_to_collection" tools:ignore="UnusedResources">บันทึก</string>
-
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string name="tab_tray_header_title_1">แท็บอื่น ๆ</string>
 
     <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search">ป้อนคำค้นหา</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">ลบประวัติ</string>
-    <!-- Text for the dialog to confirm clearing all history -->
-    <string moz:removedIn="96" name="history_delete_all_dialog" tools:ignore="UnusedResources">คุณแน่ใจหรือไม่ว่าต้องการล้างประวัติของคุณ?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">ลบประวัติแล้ว</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">ลบ %1$s แล้ว</string>
-    <!-- Text for positive action to delete history in deleting history dialog -->
-    <string moz:removedIn="96" name="history_clear_dialog" tools:ignore="UnusedResources">ล้าง</string>
     <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">ลบ</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">เลือกอยู่ %1$d</string>
-    <!-- Text for the button to clear selected history items. The first parameter
-        is a digit showing the number of items you have selected -->
-    <string moz:removedIn="96" name="history_delete_some" tools:ignore="UnusedResources">ลบ %1$d รายการ</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">วันนี้</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">เมื่อวาน</string>
-    <!-- Text for the header that groups the history for last 24 hours -->
-    <string moz:removedIn="96" name="history_24_hours" tools:ignore="UnusedResources">24 ชั่วโมงที่ผ่านมา</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">7 วันที่ผ่านมา</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -897,9 +758,6 @@
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">เลือกอยู่ %1$d</string>
 
-    <!-- History overflow menu open in new tab button -->
-    <string moz:removedIn="96" name="download_menu_open" tools:ignore="UnusedResources">เปิด</string>
-
 
     <!-- Text for the button to remove a single download item -->
     <string name="download_delete_item_1">เอาออก</string>
@@ -908,8 +766,6 @@
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">ขออภัย %1$s ไม่สามารถโหลดหน้านั้นได้</string>
-    <!-- Description text displayed on the tab crash page -->
-    <string moz:removedIn="96" name="tab_crash_description" tools:ignore="UnusedResources">คุณสามารถพยายามกู้คืนหรือปิดแท็บนี้ได้จากด้านล่าง</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">ส่งรายงานข้อขัดข้องไปยัง Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -917,23 +773,11 @@
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">เรียกคืนแท็บ</string>
 
-    <!-- Content Description for session item menu button -->
-    <string moz:removedIn="96" name="content_description_session_menu" tools:ignore="UnusedResources">ตัวเลือกวาระ</string>
-
-    <!-- Content Description for session item share button -->
-    <string moz:removedIn="96" name="content_description_session_share" tools:ignore="UnusedResources">แบ่งปันวาระ</string>
-
     <!-- Bookmarks -->
-    <!-- Content description for bookmarks library menu -->
-    <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">เมนูที่คั่นหน้า</string>
-    <!-- Screen title for selecting a bookmarks folder -->
-    <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">เลือกโฟลเดอร์</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">คุณแน่ใจหรือไม่ว่าต้องการลบโฟลเดอร์นี้?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s จะลบรายการที่เลือก</string>
-    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string moz:removedIn="96" name="bookmark_delete_folder_snackbar" tools:ignore="UnusedResources">ลบ %1$s แล้ว</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">เพิ่มโฟลเดอร์</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -942,8 +786,6 @@
     <string name="edit_bookmark_snackbar_action">แก้ไข</string>
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">แก้ไข</string>
-    <!-- Bookmark overflow menu select button -->
-    <string moz:removedIn="96" name="bookmark_menu_select_button" tools:ignore="UnusedResources">เลือก</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">คัดลอก</string>
     <!-- Bookmark overflow menu share button -->
@@ -992,8 +834,6 @@
     <string name="bookmark_undo_deletion">เลิกทำ</string>
 
     <!-- Site Permissions -->
-    <!-- Site permissions preferences header -->
-    <string moz:removedIn="96" name="permissions_header" tools:ignore="UnusedResources">สิทธิอนุญาต</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">ไปยังการตั้งค่า</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -1002,8 +842,6 @@
     <string name="quick_settings_sheet">แผ่นการตั้งค่าด่วน</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">แนะนำ</string>
-    <!-- button that allows editing site permissions settings -->
-    <string moz:removedIn="96" name="quick_settings_sheet_manage_site_permissions" tools:ignore="UnusedResources">จัดการสิทธิอนุญาตไซต์</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">ล้างสิทธิอนุญาต</string>
     <!-- Button label for clearing a site permission-->
@@ -1022,6 +860,8 @@
     <string name="preference_phone_feature_notification">การแจ้งเตือน</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">ที่เก็บถาวร</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">คุกกี้ข้ามไซต์</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">เนื้อหาที่ควบคุมด้วย DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1110,14 +950,10 @@
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string moz:removedIn="96" name="share_header" tools:ignore="UnusedResources">ส่งและแบ่งปัน</string>
-    <!-- Share screen header -->
     <string name="share_header_2">แบ่งปัน</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">แบ่งปัน</string>
-    <!-- Sub-header in the dialog to share a link to another app -->
-    <string moz:removedIn="96" name="share_link_subheader" tools:ignore="UnusedResources">แบ่งปันลิงก์</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">ส่งไปยังอุปกรณ์</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1152,18 +988,8 @@
     <string name="sync_add_new_device_connect_button">เชื่อมต่ออุปกรณ์อื่น…</string>
 
     <!-- Notifications -->
-    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string moz:removedIn="96" name="notification_pbm_channel_name" tools:ignore="UnusedResources">วาระการเรียกดูแบบส่วนตัว</string>
-    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string moz:removedIn="96" name="notification_pbm_delete_text" tools:ignore="UnusedResources">ลบแท็บส่วนตัว</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">ปิดแท็บส่วนตัว</string>
-    <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string moz:removedIn="96" name="notification_pbm_action_open" tools:ignore="UnusedResources">เปิด</string>
-    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string moz:removedIn="96" name="notification_pbm_action_delete_and_open" tools:ignore="UnusedResources">ลบและเปิด</string>
-    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string moz:removedIn="96" name="notification_powered_by_channel_name" tools:ignore="UnusedResources">ขับเคลื่อนโดย</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">การตลาด</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
@@ -1178,36 +1004,22 @@
     <string name="snackbar_collection_deleted">ลบชุดสะสมแล้ว</string>
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">เปลี่ยนชื่อชุดสะสมแล้ว</string>
-    <!-- Text shown in snackbar when user deletes a tab -->
-    <string moz:removedIn="96" name="snackbar_tab_deleted" tools:ignore="UnusedResources">ลบแท็บแล้ว</string>
-    <!-- Text shown in snackbar when user deletes all tabs -->
-    <string moz:removedIn="96" name="snackbar_tabs_deleted" tools:ignore="UnusedResources">ลบแท็บแล้ว</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">ปิดแท็บแล้ว</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">ปิดแท็บแล้ว</string>
-    <!-- Text shown in snackbar when user closes tabs -->
-    <string moz:removedIn="96" name="snackbar_message_tabs_closed" tools:ignore="UnusedResources">ปิดแท็บแล้ว!</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">บันทึกที่คั่นหน้าแล้ว!</string>
-    <!-- Text shown in snackbar action for viewing bookmarks -->
-    <string moz:removedIn="96" name="snackbar_message_bookmarks_view" tools:ignore="UnusedResources">ดู</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">เพิ่มไปยังไซต์เด่นแล้ว!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">ปิดแท็บส่วนตัวแล้ว</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">ปิดแท็บส่วนตัวแล้ว</string>
-    <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string moz:removedIn="96" name="snackbar_private_tabs_deleted" tools:ignore="UnusedResources">ลบแท็บส่วนตัวแล้ว</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">เลิกทำ</string>
     <!-- Text shown in snackbar when user removes a top site -->
     <string name="snackbar_top_site_removed">เอาไซต์ออกแล้ว</string>
-    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">เลิกทำ</string>
-    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string moz:removedIn="96" name="a11y_dialog_deleted_confirm" tools:ignore="UnusedResources">ยืนยัน</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">อนุญาตให้ %1$s เปิด %2$s</string>
@@ -1255,11 +1067,6 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ที่อยู่</string>
-    <!-- Title for history items in Delete browsing data -->
-    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_title" tools:ignore="UnusedResources">ประวัติ</string>
-    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
-        number of history pages the user has -->
-    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_subtitle" tools:ignore="UnusedResources">%d หน้า</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">คุกกี้</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -1276,8 +1083,6 @@
     <string name="preferences_delete_browsing_data_button">ลบข้อมูลการเรียกดู</string>
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">ลบข้อมูลการเรียกดูเมื่อออก</string>
-    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string moz:removedIn="96" name="preference_summary_delete_browsing_data_on_quit" tools:ignore="UnusedResources">ลบข้อมูลการเรียกดูโดยอัตโนมัติเมื่อคุณเลือก &quot;ออก&quot; จากเมนูหลัก</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">ลบข้อมูลการเรียกดูโดยอัตโนมัติเมื่อคุณเลือก \&quot;ออก\&quot; จากเมนูหลัก</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -1327,28 +1132,14 @@
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">ยินดีต้อนรับสู่ %s!</string>
-    <!-- text for the Firefox Accounts section header -->
-    <string moz:removedIn="96" name="onboarding_fxa_section_header" tools:ignore="UnusedResources">มีบัญชีอยู่แล้ว?</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">ซิงค์ Firefox ระหว่างอุปกรณ์</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_description">นำที่คั่นหน้า ประวัติ และรหัสผ่านไปยัง Firefox บนอุปกรณ์นี้</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_header_3" tools:ignore="UnusedResources">คุณลงชื่อเข้าในชื่อ %s บนเบราว์เซอร์ Firefox อื่นบนอุปกรณ์นี้ คุณต้องการลงชื่อเข้าด้วยบัญชีนี้หรือไม่?</string>
-    <!-- text for the button to confirm automatic sign-in -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_confirm" tools:ignore="UnusedResources">ใช่ ให้ฉันลงชื่อเข้า</string>
-    <!-- text for the automatic sign-in button while signing in is in process -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_signing_in" tools:ignore="UnusedResources">กำลังลงชื่อเข้า…</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">ลงทะเบียน</string>
-    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_stay_signed_out" tools:ignore="UnusedResources">ลงชื่อออกต่อไป</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync เปิดอยู่</string>
-    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_automatic_signin_failed" tools:ignore="UnusedResources">ไม่สามารถเข้าสู่ระบบ</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">ความเป็นส่วนตัวตลอดเวลา</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
@@ -1357,8 +1148,6 @@
     <string name="onboarding_tracking_protection_standard_button_2">มาตรฐาน (ค่าเริ่มต้น)</string>
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_3">ความเป็นส่วนตัวและประสิทธิภาพแบบสมดุล หน้าเว็บจะโหลดเป็นปกติ</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string moz:removedIn="96" name="onboarding_tracking_protection_strict_button" tools:ignore="UnusedResources">เข้มงวด (แนะนำ)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">เข้มงวด</string>
     <!-- text for strict blocking option button description -->
@@ -1413,8 +1202,6 @@
     <string name="sign_in_with_email">ใช้อีเมลแทน</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[ไม่มีบัญชีใช่หรือไม่? <u>สร้างบัญชี</u>เพื่อซิงค์ Firefox ระหว่างอุปกรณ์]]></string>
-    <!-- Text shown in confirmation dialog to sign out of account -->
-    <string moz:removedIn="96" name="sign_out_confirmation_message" tools:ignore="UnusedResources">Firefox จะหยุดการซิงค์กับบัญชีของคุณ แต่จะไม่ลบข้อมูลการเรียกดูใด ๆ ของคุณบนอุปกรณ์นี้</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s จะหยุดซิงค์กับบัญชีของคุณ แต่จะไม่ลบข้อมูลการท่องเว็บใด ๆ ของคุณบนอุปกรณ์นี้</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1470,8 +1257,6 @@
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">ในแท็บทั้งหมด</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">เฉพาะในแท็บส่วนตัว</string>
-    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string moz:removedIn="96" name="preference_enhanced_tracking_protection_custom_tracking_content_3" tools:ignore="UnusedResources">เฉพาะในแท็บที่กำหนดเอง</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">ตัวขุดเหรียญดิจิทัล</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1512,10 +1297,6 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">นำทางย้อนกลับ</string>
-    <!-- About page Your rights link text -->
-    <string moz:removedIn="96" name="about_your_rights" tools:ignore="UnusedResources">สิทธิของคุณ</string>
-    <!-- About page link text to open open source licenses screen -->
-    <string moz:removedIn="96" name="about_open_source_licenses" tools:ignore="UnusedResources">ไลบรารีเปิดต้นฉบับที่เราใช้</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">มีอะไรใหม่ใน %s</string>
     <!-- Open source licenses page title
@@ -1550,11 +1331,6 @@
         The first parameter is number of long clicks left to enable the menu -->
     <string name="about_debug_menu_toast_progress">เมนูดีบั๊ก: คลิกซ้าย %1$d ทีเพื่อเปิดใช้งาน</string>
     <string name="about_debug_menu_toast_done">เปิดใช้งานเมนูดีบั๊ก</string>
-
-    <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string moz:removedIn="96" name="tab_counter_content_description_one_tab" tools:ignore="UnusedResources">1 แท็บ</string>
-    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string moz:removedIn="96" name="tab_counter_content_description_multi_tab" tools:ignore="UnusedResources">%d แท็บ</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1606,10 +1382,6 @@
     <string name="preferences_passwords_sync_logins">ซิงค์การเข้าสู่ระบบ</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">ซิงค์การเข้าสู่ระบบระหว่างอุปกรณ์</string>
-    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string moz:removedIn="96" name="preferences_passwords_sync_logins_reconnect" tools:ignore="UnusedResources">เชื่อมต่อใหม่</string>
-    <!-- Syncing saved logins in Fenix needs login -->
-    <string moz:removedIn="96" name="preferences_passwords_sync_logins_sign_in" tools:ignore="UnusedResources">ลงชื่อเข้าไปยัง Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">การเข้าสู่ระบบที่บันทึกไว้</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1626,36 +1398,16 @@
     <string name="preferences_passwords_exceptions_remove_all">ลบข้อยกเว้นทั้งหมด</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">ค้นหาการเข้าสู่ระบบ</string>
-    <!-- Option to sort logins list A-Z, alphabetically -->
-    <string moz:removedIn="96" name="preferences_passwords_saved_logins_alphabetically" tools:ignore="UnusedResources">ตามตัวอักษร</string>
-    <!-- Option to sort logins list by most recently used -->
-    <string moz:removedIn="96" name="preferences_passwords_saved_logins_recently_used" tools:ignore="UnusedResources">เพิ่งใช้ล่าสุด</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">ไซต์</string>
     <!-- The header for the username for a login -->
     <string name="preferences_passwords_saved_logins_username">ชื่อผู้ใช้</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">รหัสผ่าน</string>
-    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin" tools:ignore="UnusedResources">ป้อน PIN ของคุณใหม่อีกครั้ง</string>
-    <!-- Message displayed in security prompt to access saved logins -->
-    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin_description" tools:ignore="UnusedResources">ปลดล็อกเพื่อดูการเข้าสู่ระบบที่บันทึกไว้ของคุณ</string>
-    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string moz:removedIn="96" name="logins_insecure_connection_warning" tools:ignore="UnusedResources">การเชื่อมต่อนี้ไม่ปลอดภัย การเข้าสู่ระบบที่ป้อนในที่นี้อาจถูกบุกรุกได้</string>
-    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string moz:removedIn="96" name="logins_insecure_connection_warning_learn_more" tools:ignore="UnusedResources">เรียนรู้เพิ่มเติม</string>
-    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string moz:removedIn="96" name="logins_doorhanger_save" tools:ignore="UnusedResources">คุณต้องการให้ %s บันทึกการเข้าสู่ระบบนี้หรือไม่?</string>
-    <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string moz:removedIn="96" name="logins_doorhanger_save_confirmation" tools:ignore="UnusedResources">บันทึก</string>
-    <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string moz:removedIn="96" name="logins_doorhanger_save_dont_save" tools:ignore="UnusedResources">ไม่บันทึก</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">คัดลอกรหัสผ่านไปยังคลิปบอร์ดแล้ว</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">คัดลอกชื่อผู้ใช้ไปยังคลิปบอร์ดแล้ว</string>
-    <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string moz:removedIn="96" name="logins_site_copied" tools:ignore="UnusedResources">คัดลอกไซต์ไปยังคลิปบอร์ดแล้ว</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">คัดลอกรหัสผ่าน</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
@@ -1666,8 +1418,6 @@
     <string name="saved_login_clear_username">ล้างชื่อผู้ใช้</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
     <string name="saved_login_clear_hostname">ล้างชื่อโฮสต์</string>
-    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string moz:removedIn="96" name="saved_login_copy_site" tools:ignore="UnusedResources">คัดลอกไซต์</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">เปิดไซต์ในเบราว์เซอร์</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -1729,8 +1479,6 @@
     <string name="credit_cards_expiration_date_year">ปีหมดอายุ</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">ชื่อบนบัตร</string>
-    <!-- The header for the nickname for a credit card -->
-    <string moz:removedIn="96" name="credit_cards_card_nickname" tools:ignore="UnusedResources">ชื่อย่อบัตร</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">ลบบัตร</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
@@ -1785,18 +1533,12 @@
     <string name="search_add_custom_engine_search_string_hint">สตริงการค้นหาที่จะใช้</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string formatted="false" name="search_add_custom_engine_search_string_example">แทนที่คำค้นด้วย “%s” ตัวอย่าง:\nhttps://www.google.com/search?q=%s</string>
-    <!-- Text for the button to learn more about adding a custom search engine -->
-    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_label" tools:ignore="UnusedResources">เรียนรู้เพิ่มเติม</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">รายละเอียดเครื่องมือค้นหาที่กำหนดเอง</string>
-    <!-- Accessibility description for the 'Learn more' link -->
-    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_description" tools:ignore="UnusedResources">ลิงก์เรียนรู้เพิ่มเติม</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">ป้อนชื่อเครื่องมือค้นหา</string>
-    <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string moz:removedIn="96" name="search_add_custom_engine_error_existing_name" tools:ignore="UnusedResources">มีเครื่องมือค้นหาชื่อ “%s” อยู่แล้ว</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">ป้อนสตริงการค้นหา</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1836,6 +1578,10 @@
     <string name="quick_settings_sheet_secure_connection_2">การเชื่อมต่อปลอดภัย</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">การเชื่อมต่อไม่ปลอดภัย</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">ล้างคุกกี้และข้อมูลไซต์</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[คุณแน่ใจหรือไม่ว่าต้องการล้างคุกกี้และข้อมูลทั้งหมดสำหรับไซต์นี้ <b>%s</b>?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">คุณแน่ใจหรือไม่ว่าต้องการล้างสิทธิอนุญาตทั้งหมดบนไซต์ทั้งหมด?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1844,12 +1590,12 @@
     <string name="confirm_clear_permission_site">คุณแน่ใจหรือไม่ว่าต้องการล้างสิทธิอนุญาตนี้สำหรับไซต์นี้?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">ไม่มีข้อยกเว้นไซต์</string>
-    <!-- Label for the Pocket default top site -->
-    <string moz:removedIn="96" name="pocket_top_articles" tools:ignore="UnusedResources">สุดยอดบทความ</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">คุณแน่ใจหรือไม่ว่าต้องการลบที่คั่นหน้านี้?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">เพิ่มไปยังไซต์เด่น</string>
+    <!-- Browser menu button that removes a top site from the home fragment -->
+    <string name="browser_menu_remove_from_top_sites">เอาออกจากไซต์เด่น</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">ยืนยันโดย: %1$s</string>
@@ -1871,8 +1617,6 @@
     <string name="saved_login_password_description"></string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">บันทึกการเปลี่ยนแปลงเพื่อเข้าสู่ระบบ</string>
-    <!--  The button description to discard changes to an edited login. -->
-    <string moz:removedIn="96" name="discard_changes" tools:ignore="UnusedResources">ละทิ้งการเปลี่ยนแปลง</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">แก้ไข</string>
     <!--  The page title for adding new login. -->
@@ -1938,6 +1682,8 @@
 
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">ตั้งค่า</string>
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">สปอนเซอร์ของเราและความเป็นส่วนตัวของคุณ</string>
     <!-- Label text displayed for a sponsored top site. -->
     <string name="top_sites_sponsored_label">ได้รับการสนับสนุน</string>
 

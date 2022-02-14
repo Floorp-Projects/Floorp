@@ -21,9 +21,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Các thẻ riêng tư của bạn sẽ được hiển thị ở đây.</string>
 
-    <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 thẻ đang mở. Chạm để chuyển thẻ.</string>
-
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d đã chọn</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
@@ -36,14 +33,6 @@
     <string name="tab_tray_close_multiselect_content_description">Thoát chế độ nhiều lựa chọn</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Lưu các thẻ đã chọn vào bộ sưu tập</string>
-    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string moz:removedIn="96" name="tab_tray_item_selected_multiselect_content_description" tools:ignore="UnusedResources">Đã chọn %1$s</string>
-    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string moz:removedIn="96" name="tab_tray_item_unselected_multiselect_content_description" tools:ignore="UnusedResources">Đã bỏ chọn %1$s</string>
-    <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string moz:removedIn="96" name="tab_tray_exit_multiselect_content_description" tools:ignore="UnusedResources">Đã thoát chế độ nhiều lựa chọn</string>
-    <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string moz:removedIn="96" name="tab_tray_enter_multiselect_content_description" tools:ignore="UnusedResources">Đã vào chế độ nhiều lựa chọn, chọn các thẻ để lưu vào bộ sưu tập</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Đã chọn</string>
 
@@ -63,16 +52,12 @@
     <string name="about_content">%1$s được sản xuất bởi Mozilla.</string>
 
     <!-- Private Browsing -->
-    <!-- Title for private session option -->
-    <string moz:removedIn="96" name="private_browsing_title" tools:ignore="UnusedResources">Bạn đang ở trong chế độ riêng tư</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">%1$s xóa lịch sử tìm kiếm và duyệt web của bạn khỏi các thẻ riêng tư khi bạn đóng chúng hoặc thoát khỏi ứng dụng. Mặc dù điều này không làm cho bạn ẩn danh với các trang web hoặc nhà cung cấp dịch vụ internet của bạn, nhưng nó giúp bạn dễ dàng giữ những gì bạn làm trực tuyến riêng tư với bất kỳ ai khác sử dụng thiết bị này.</string>
     <string name="private_browsing_common_myths">
        Những lầm tưởng phổ biến về duyệt web riêng tư
     </string>
-    <!-- Delete session button to erase your history in a private session -->
-    <string moz:removedIn="96" name="private_browsing_delete_session" tools:ignore="UnusedResources">Xóa phiên</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
@@ -139,9 +124,6 @@
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Tìm kiếm của bạn cho \&quot;%1$s\&quot;</string>
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-    The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
-    <string moz:removedIn="96" name="recent_tabs_search_term_count" tools:ignore="UnusedResources">Trang web: %1$s</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
@@ -151,9 +133,6 @@
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
     <string name="history_metadata_header_2">Đã xem gần đây</string>
-    <!-- Header text for a section on the home screen that displays grouped highlights from the
-         user's browsing history, such as topics they have researched or explored on the web -->
-    <string moz:removedIn="96" name="history_metadata_header_3" tools:ignore="UnusedResources">Tìm kiếm gần đây</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Xóa</string>
@@ -164,9 +143,6 @@
     <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Nút hiển thị tất cả các khám phá trước đây</string>
 
     <!-- Browser Fragment -->
-    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string moz:removedIn="96" name="browser_tabs_button" tools:ignore="UnusedResources">Các thẻ đang mở</string>
-
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Quay lại</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -175,12 +151,8 @@
     <string name="browser_menu_refresh">Làm mới</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Dừng</string>
-    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Chỉnh sửa dấu trang</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Tiện ích</string>
-    <!-- Browser menu button that opens the addon extensions manager -->
-    <string moz:removedIn="96" name="browser_menu_extensions" tools:ignore="UnusedResources">Tiện ích mở rộng</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Không có tiện ích nào ở đây</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -203,14 +175,10 @@
     <string name="resync_button_content_description">Đồng bộ hóa lại</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Tìm trong trang</string>
-    <!-- Browser menu button that creates a private tab -->
-    <string moz:removedIn="96" name="browser_menu_private_tab" tools:ignore="UnusedResources">Thẻ riêng tư</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Lưu vào bộ sưu tập</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Chia sẻ</string>
-    <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string moz:removedIn="96" name="menu_share_with" tools:ignore="UnusedResources">Chia sẻ với…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Mở bằng %1$s</string>
@@ -226,8 +194,6 @@
     <string name="browser_menu_read_close">Đóng chế độ đọc sách</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Mở trong ứng dụng</string>
-    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string moz:removedIn="96" name="browser_menu_read_appearance" tools:ignore="UnusedResources">Giao diện</string>
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Tùy chỉnh chế độ đọc</string>
@@ -244,15 +210,9 @@
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Màn hình chính</string>
 
-    <!-- Error message to show when the user tries to access a scheme not
-        handled by the app (Ex: blob, tel etc) -->
-    <string moz:removedIn="96" name="unknown_scheme_error_message" tools:ignore="UnusedResources">Không thể kết nối. Không thể nhận dạng URL.</string>
-
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Ngôn ngữ được chọn</string>
-    <!-- Content description for search icon -->
-    <string moz:removedIn="96" name="a11y_search_icon_content_description" tools:ignore="UnusedResources">Tìm kiếm</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">Theo ngôn ngữ thiết bị</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -265,8 +225,6 @@
     <string name="search_engine_button">Công cụ tìm kiếm</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Cài đặt công cụ tìm kiếm</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string moz:removedIn="96" name="search_engines_search_with" tools:ignore="UnusedResources">Lần này, tìm kiếm với:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Điền liên kết từ khay nhớ tạm</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -320,8 +278,6 @@
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Cài đặt</string>
-    <!-- Preference category for basic settings -->
-    <string moz:removedIn="96" name="preferences_category_basics" tools:ignore="UnusedResources">Cơ bản</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Tổng quát</string>
     <!-- Preference category for all links about Fenix -->
@@ -332,27 +288,15 @@
     <string name="preferences_search">Tìm kiếm</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Thanh địa chỉ</string>
-    <!-- Preference linking to help about Fenix -->
-    <string moz:removedIn="96" name="preferences_help" tools:ignore="UnusedResources">Trợ giúp</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Đánh giá trên Google Play</string>
-    <!-- Preference for giving feedback about Fenix -->
-    <string moz:removedIn="96" name="preferences_feedback" tools:ignore="UnusedResources">Gửi phản hồi</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Về %1$s</string>
-    <!-- Preference linking to the your rights SUMO page -->
-    <string moz:removedIn="96" name="preferences_your_rights" tools:ignore="UnusedResources">Quyền lợi của bạn</string>
-    <!-- Preference for settings related to saved passwords -->
-    <string moz:removedIn="96" name="preferences_passwords" tools:ignore="UnusedResources">Mật khẩu</string>
-    <!-- Preference for settings related to saved credit cards and addresses -->
-    <string moz:removedIn="96" name="preferences_credit_cards_addresses" tools:ignore="UnusedResources">Thẻ tín dụng và địa chỉ</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Đặt làm trình duyệt mặc định</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Nâng cao</string>
-    <!-- Preference category for privacy settings -->
-    <string moz:removedIn="96" name="preferences_category_privacy" tools:ignore="UnusedResources">Riêng tư</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Riêng tư và bảo mật</string>
     <!-- Preference for advanced site permissions -->
@@ -377,8 +321,6 @@
     <string name="toast_override_fxa_sync_server_done">Tài khoản máy chủ Firefox/đồng bộ hóa đã thay đổi. Thoát ứng dụng để áp dụng thay đổi…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Tài khoản</string>
-    <!-- Preference shown on banner to sign into account -->
-    <string moz:removedIn="96" name="preferences_sign_in" tools:ignore="UnusedResources">Đăng nhập</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Thanh công cụ</string>
     <!-- Preference for changing default theme to dark or light mode -->
@@ -401,10 +343,6 @@
     <string name="preferences_data_choices">Lựa chọn dữ liệu</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Thu thập dữ liệu</string>
-    <!-- Preference linking to the privacy notice -->
-    <string moz:removedIn="96" name="preferences_privacy_link" tools:ignore="UnusedResources">Thông báo bảo mật</string>
-    <!-- Preference category for developer tools -->
-    <string moz:removedIn="96" name="developer_tools_category" tools:ignore="UnusedResources">Công cụ dành cho nhà phát triển</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Gỡ lỗi từ xa qua USB</string>
     <!-- Preference title for switch preference to show search engines -->
@@ -460,9 +398,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Đã xem gần đây</string>
-    <!-- Title for the customize home screen settings section for recent searches. Recent searches
-     is a section where users see a list of groups of tabs that they have visited in the past few days -->
-    <string moz:removedIn="96" name="customize_toggle_recent_searches" tools:ignore="UnusedResources">Tìm kiếm gần đây</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
@@ -540,23 +475,13 @@
     <string name="fxa_received_tab_channel_description">Thông báo các thẻ nhận được từ các thiết bị Firefox khác.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Thẻ đã nhận</string>
-    <!-- When multiple tabs have been received -->
-    <string moz:removedIn="96" name="fxa_tabs_received_notification_name" tools:ignore="UnusedResources">Các thẻ đã nhận</string>
 
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Thẻ từ %s</string>
 
     <!-- Advanced Preferences -->
-    <!-- Preference for tracking protection settings -->
-    <string moz:removedIn="96" name="preferences_tracking_protection_settings" tools:ignore="UnusedResources">Trình chống theo dõi</string>
-    <!-- Preference switch for tracking protection -->
-    <string moz:removedIn="96" name="preferences_tracking_protection" tools:ignore="UnusedResources">Trình chống theo dõi</string>
-    <!-- Preference switch description for tracking protection -->
-    <string moz:removedIn="96" name="preferences_tracking_protection_description" tools:ignore="UnusedResources">Chặn nội dung và tập lệnh theo dõi bạn trực tuyến</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Ngoại trừ</string>
-    <!-- Preference description for tracking protection exceptions -->
-    <string moz:removedIn="96" name="preferences_tracking_protection_exceptions_description" tools:ignore="UnusedResources">Trình chống theo dõi đã bị tắt cho các trang web này</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Bật cho tất cả các trang web</string>
     <!-- Text displayed when there are no exceptions -->
@@ -564,38 +489,22 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Tìm hiểu thêm</string>
 
-    <!-- Preference switch for Telemetry -->
-    <string moz:removedIn="96" name="preferences_telemetry" tools:ignore="UnusedResources">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Sử dụng và dữ liệu kỹ thuật</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Chia sẻ hiệu năng, cách sử dụng, phần cứng và dữ liệu tùy biến liên quan đến trình duyệt của bạn với Mozilla để giúp chúng tôi tạo ra %1$s tốt hơn</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Dữ liệu tiếp thị</string>
-    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string moz:removedIn="96" name="preferences_marketing_data_description" tools:ignore="UnusedResources">Chia sẻ dữ liệu về những tính năng bạn sử dụng trong %1$s với Leanplum, nhà cung cấp tiếp thị di động của chúng tôi.</string>
     <!-- Preference description for marketing data collection -->
     <string name="preferences_marketing_data_description2">Chia sẻ dữ liệu sử dụng cơ bản với Adjust, nhà cung cấp tiếp thị di động của chúng tôi</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Nghiên cứu</string>
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">Cho phép Mozilla cài đặt và chạy các nghiên cứu</string>
-    <!-- Title for experiments preferences -->
-    <string moz:removedIn="96" name="preference_experiments" tools:ignore="UnusedResources">Thử nghiệm</string>
-    <!-- Summary for experiments preferences -->
-    <string moz:removedIn="96" name="preference_experiments_summary" tools:ignore="UnusedResources">Cho phép Mozilla cài đặt và thu thập dữ liệu cho các tính năng thử nghiệm</string>
-    <!-- Preference switch for crash reporter -->
-    <string moz:removedIn="96" name="preferences_crash_reporter" tools:ignore="UnusedResources">Trình báo cáo lỗi</string>
-    <!-- Preference switch for Mozilla location service -->
-    <string moz:removedIn="96" name="preferences_mozilla_location_service" tools:ignore="UnusedResources">Dịch vụ định vị Mozilla</string>
-    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string moz:removedIn="96" name="preferences_fenix_health_report" tools:ignore="UnusedResources">Báo cáo sức khỏe %s</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Bật đồng bộ hóa</string>
-    <!-- Preference for account login -->
-    <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Đăng nhập</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Đăng nhập để kết nối lại</string>
     <!-- Preference for removing FxA account -->
@@ -604,10 +513,6 @@
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[Quét mã QR được hiển thị tại <b>firefox.com/pair</b>]]></string>
-    <!-- Button to open camera for pairing -->
-    <string moz:removedIn="96" name="pair_open_camera" tools:ignore="UnusedResources">Mở Camera</string>
-    <!-- Button to cancel pairing -->
-    <string moz:removedIn="96" name="pair_cancel" tools:ignore="UnusedResources">Hủy bỏ</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -636,10 +541,6 @@
     <string name="preference_gestures_swipe_toolbar_show_tabs">Vuốt thanh công cụ lên để mở các thẻ</string>
 
     <!-- Library -->
-    <!-- Option in Library to open Sessions page -->
-    <string moz:removedIn="96" name="library_sessions" tools:ignore="UnusedResources">Phiên</string>
-    <!-- Option in Library to open Screenshots page -->
-    <string moz:removedIn="96" name="library_screenshots" tools:ignore="UnusedResources">Ảnh chụp màn hình</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Tải xuống</string>
     <!-- Option in library to open Bookmarks page -->
@@ -656,16 +557,8 @@
     <string name="library_history">Lịch sử</string>
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">Thẻ mới</string>
-    <!-- Option in Library to find text in page -->
-    <string moz:removedIn="96" name="library_find_in_page" tools:ignore="UnusedResources">Tìm trong trang</string>
-    <!-- Option in Library to open Reading List -->
-    <string moz:removedIn="96" name="library_reading_list" tools:ignore="UnusedResources">Danh sách đọc</string>
-    <!-- Menu Item Label for Search in Library -->
-    <string moz:removedIn="96" name="library_search" tools:ignore="UnusedResources">Tìm kiếm</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Cài đặt</string>
-    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string moz:removedIn="96" name="content_description_history_menu" tools:ignore="UnusedResources">Menu mục lịch sử</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Đóng</string>
 
@@ -763,8 +656,6 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Các thẻ đang mở</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string moz:removedIn="96" name="tabs_header_private_title" tools:ignore="UnusedResources">Phiên riêng tư</string>
-    <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Các thẻ riêng tư</string>
     <!-- Title for the list of tabs in the synced tabs -->
     <string name="tabs_header_synced_tabs_title">Các thẻ đã đồng bộ</string>
@@ -776,10 +667,6 @@
     <string name="tab_drawer_fab_content">Riêng tư</string>
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">Đồng bộ hóa</string>
-    <!-- Text shown as the title of the open tab tray -->
-    <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">Các thẻ đang mở</string>
-    <!-- Text shown in the menu for saving tabs to a collection -->
-    <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">Lưu vào bộ sưu tập</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Chia sẻ tất cả các thẻ</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -792,12 +679,6 @@
     <string name="tab_tray_menu_tab_settings">Cài đặt thẻ</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Đóng tất cả các thẻ</string>
-    <!-- Shortcut action to open new tab -->
-    <string moz:removedIn="96" name="tab_tray_menu_open_new_tab" tools:ignore="UnusedResources">Thẻ mới</string>
-    <!-- Shortcut action to open the home screen -->
-    <string moz:removedIn="96" name="tab_tray_menu_home" tools:ignore="UnusedResources">Đi đến trang chủ</string>
-    <!-- Shortcut action to toggle private mode -->
-    <string moz:removedIn="96" name="tab_tray_menu_toggle" tools:ignore="UnusedResources">Chuyển đổi chế độ thẻ</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">Đánh dấu</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -816,26 +697,10 @@
     <string name="close_tab_title">Đóng thẻ %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Menu các thẻ đang mở</string>
-    <!-- Open tabs menu item to close all tabs -->
-    <string moz:removedIn="96" name="tabs_menu_close_all_tabs" tools:ignore="UnusedResources">Đóng tất cả các thẻ</string>
-    <!-- Open tabs menu item to share all tabs -->
-    <string moz:removedIn="96" name="tabs_menu_share_tabs" tools:ignore="UnusedResources">Chia sẻ các thẻ</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Lưu các thẻ vào bộ sưu tập</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Menu thẻ</string>
-    <!-- Tab menu item to share the tab -->
-    <string moz:removedIn="96" name="tab_share" tools:ignore="UnusedResources">Chia sẻ thẻ</string>
-    <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string moz:removedIn="96" name="current_session_delete" tools:ignore="UnusedResources">Xóa</string>
-    <!-- Button in the current session menu. Saves the session when pressed -->
-    <string moz:removedIn="96" name="current_session_save" tools:ignore="UnusedResources">Lưu</string>
-    <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string moz:removedIn="96" name="current_session_share" tools:ignore="UnusedResources">Chia sẻ</string>
-    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string moz:removedIn="96" name="current_session_image" tools:ignore="UnusedResources">Hình ảnh phiên hiện tại</string>
-    <!-- Button to save the current set of tabs into a collection -->
-    <string moz:removedIn="96" name="save_to_collection" tools:ignore="UnusedResources">Lưu vào bộ sưu tập</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Xóa bộ sưu tập</string>
     <!-- Text for the menu button to rename a collection -->
@@ -855,37 +720,27 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Chế độ riêng tư)</string>
 
-    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
-    <string moz:removedIn="96" name="tab_tray_save_to_collection" tools:ignore="UnusedResources">Lưu</string>
-
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string name="tab_tray_header_title_1">Các thẻ khác</string>
 
     <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search">Nhập từ tìm kiếm</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Xóa lịch sử</string>
-    <!-- Text for the dialog to confirm clearing all history -->
-    <string moz:removedIn="96" name="history_delete_all_dialog" tools:ignore="UnusedResources">Bạn có chắc muốn xóa lịch sử của bạn không?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">Đã xóa lịch sử</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">Đã xóa %1$s</string>
-    <!-- Text for positive action to delete history in deleting history dialog -->
-    <string moz:removedIn="96" name="history_clear_dialog" tools:ignore="UnusedResources">Xóa</string>
     <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">Xóa</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d đã chọn</string>
-    <!-- Text for the button to clear selected history items. The first parameter
-        is a digit showing the number of items you have selected -->
-    <string moz:removedIn="96" name="history_delete_some" tools:ignore="UnusedResources">Xóa %1$d mục</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Hôm nay</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">Hôm qua</string>
-    <!-- Text for the header that groups the history for last 24 hours -->
-    <string moz:removedIn="96" name="history_24_hours" tools:ignore="UnusedResources">24 giờ qua</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">7 ngày qua</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -906,9 +761,6 @@
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d đã chọn</string>
 
-    <!-- History overflow menu open in new tab button -->
-    <string moz:removedIn="96" name="download_menu_open" tools:ignore="UnusedResources">Mở</string>
-
 
     <!-- Text for the button to remove a single download item -->
     <string name="download_delete_item_1">Xóa</string>
@@ -917,8 +769,6 @@
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Xin lỗi. %1$s không thể tải trang đó.</string>
-    <!-- Description text displayed on the tab crash page -->
-    <string moz:removedIn="96" name="tab_crash_description" tools:ignore="UnusedResources">Bạn có thể cố gắng khôi phục hoặc đóng thẻ này bên dưới.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Gửi báo cáo lỗi đến Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -926,23 +776,11 @@
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Khôi phục thẻ</string>
 
-    <!-- Content Description for session item menu button -->
-    <string moz:removedIn="96" name="content_description_session_menu" tools:ignore="UnusedResources">Tùy chọn phiên</string>
-
-    <!-- Content Description for session item share button -->
-    <string moz:removedIn="96" name="content_description_session_share" tools:ignore="UnusedResources">Chia sẻ phiên</string>
-
     <!-- Bookmarks -->
-    <!-- Content description for bookmarks library menu -->
-    <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Menu dấu trang</string>
-    <!-- Screen title for selecting a bookmarks folder -->
-    <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Chọn thư mục</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Bạn có chắc chắn muốn xóa thư mục này?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s sẽ xóa các mục đã chọn.</string>
-    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string moz:removedIn="96" name="bookmark_delete_folder_snackbar" tools:ignore="UnusedResources">Đã xóa %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Thêm thư mục</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -951,8 +789,6 @@
     <string name="edit_bookmark_snackbar_action">CHỈNH SỬA</string>
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Chỉnh sửa</string>
-    <!-- Bookmark overflow menu select button -->
-    <string moz:removedIn="96" name="bookmark_menu_select_button" tools:ignore="UnusedResources">Chọn</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Sao chép</string>
     <!-- Bookmark overflow menu share button -->
@@ -1001,8 +837,6 @@
     <string name="bookmark_undo_deletion">HOÀN TÁC</string>
 
     <!-- Site Permissions -->
-    <!-- Site permissions preferences header -->
-    <string moz:removedIn="96" name="permissions_header" tools:ignore="UnusedResources">Quyền hạn</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Đi đến Cài đặt</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -1011,8 +845,6 @@
     <string name="quick_settings_sheet">Bảng cài đặt nhanh</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Được đề xuất</string>
-    <!-- button that allows editing site permissions settings -->
-    <string moz:removedIn="96" name="quick_settings_sheet_manage_site_permissions" tools:ignore="UnusedResources">Quản lý quyền hạn trang web</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Xóa các quyền</string>
     <!-- Button label for clearing a site permission-->
@@ -1122,14 +954,10 @@
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string moz:removedIn="96" name="share_header" tools:ignore="UnusedResources">Gửi và chia sẻ</string>
-    <!-- Share screen header -->
     <string name="share_header_2">Chia sẻ</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Chia sẻ</string>
-    <!-- Sub-header in the dialog to share a link to another app -->
-    <string moz:removedIn="96" name="share_link_subheader" tools:ignore="UnusedResources">Chia sẻ liên kết</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Gửi đến thiết bị</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1164,18 +992,8 @@
     <string name="sync_add_new_device_connect_button">Kết nối thiết bị khác…</string>
 
     <!-- Notifications -->
-    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string moz:removedIn="96" name="notification_pbm_channel_name" tools:ignore="UnusedResources">Phiên duyệt web riêng tư</string>
-    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string moz:removedIn="96" name="notification_pbm_delete_text" tools:ignore="UnusedResources">Xóa các thẻ riêng tư</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Đóng các thẻ riêng tư</string>
-    <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string moz:removedIn="96" name="notification_pbm_action_open" tools:ignore="UnusedResources">Mở</string>
-    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string moz:removedIn="96" name="notification_pbm_action_delete_and_open" tools:ignore="UnusedResources">Xóa và mở</string>
-    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string moz:removedIn="96" name="notification_powered_by_channel_name" tools:ignore="UnusedResources">Được hỗ trợ bởi</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Tiếp thị</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
@@ -1190,36 +1008,22 @@
     <string name="snackbar_collection_deleted">Đã xóa bộ sưu tập</string>
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Đã đổi tên bộ sưu tập</string>
-    <!-- Text shown in snackbar when user deletes a tab -->
-    <string moz:removedIn="96" name="snackbar_tab_deleted" tools:ignore="UnusedResources">Đã xóa thẻ</string>
-    <!-- Text shown in snackbar when user deletes all tabs -->
-    <string moz:removedIn="96" name="snackbar_tabs_deleted" tools:ignore="UnusedResources">Đã xóa các thẻ</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Đã đóng thẻ</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Đã đóng các thẻ</string>
-    <!-- Text shown in snackbar when user closes tabs -->
-    <string moz:removedIn="96" name="snackbar_message_tabs_closed" tools:ignore="UnusedResources">Đã đóng các thẻ!</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Đã lưu dấu trang!</string>
-    <!-- Text shown in snackbar action for viewing bookmarks -->
-    <string moz:removedIn="96" name="snackbar_message_bookmarks_view" tools:ignore="UnusedResources">Xem</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Đã thêm vào trang web hàng đầu!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Đã đóng thẻ riêng tư</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Đã đóng các thẻ riêng tư</string>
-    <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string moz:removedIn="96" name="snackbar_private_tabs_deleted" tools:ignore="UnusedResources">Đã xóa các thẻ riêng tư</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">HOÀN TÁC</string>
     <!-- Text shown in snackbar when user removes a top site -->
     <string name="snackbar_top_site_removed">Đã xóa trang</string>
-    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">Hoàn tác</string>
-    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string moz:removedIn="96" name="a11y_dialog_deleted_confirm" tools:ignore="UnusedResources">Xác nhận</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Cho phép %1$s để mở %2$s</string>
@@ -1266,11 +1070,6 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d địa chỉ</string>
-    <!-- Title for history items in Delete browsing data -->
-    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_title" tools:ignore="UnusedResources">Lịch sử</string>
-    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
-        number of history pages the user has -->
-    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_subtitle" tools:ignore="UnusedResources">%d trang</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookie</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -1287,8 +1086,6 @@
     <string name="preferences_delete_browsing_data_button">Xóa dữ liệu duyệt web</string>
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Xóa dữ liệu duyệt web khi thoát</string>
-    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string moz:removedIn="96" name="preference_summary_delete_browsing_data_on_quit" tools:ignore="UnusedResources">Tự động xóa dữ liệu duyệt khi bạn chọn &quot;Thoát&quot; từ menu chính</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Tự động xóa dữ liệu duyệt khi bạn chọn \&quot;Thoát\&quot; từ menu chính</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -1337,28 +1134,14 @@
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Chào mừng đến với %s!</string>
-    <!-- text for the Firefox Accounts section header -->
-    <string moz:removedIn="96" name="onboarding_fxa_section_header" tools:ignore="UnusedResources">Đã có một tài khoản?</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Đồng bộ hóa Firefox giữa các thiết bị</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_description">Mang dấu trang, lịch sử và mật khẩu vào Firefox trên thiết bị này.</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_header_3" tools:ignore="UnusedResources">Bạn đã đăng nhập dưới dạng %s trên trình duyệt Firefox khác trên điện thoại này. Bạn có muốn đăng nhập bằng tài khoản này không?</string>
-    <!-- text for the button to confirm automatic sign-in -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_confirm" tools:ignore="UnusedResources">Có, đăng nhập cho tôi</string>
-    <!-- text for the automatic sign-in button while signing in is in process -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_signing_in" tools:ignore="UnusedResources">Đang đăng nhập…</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Đăng ký</string>
-    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_stay_signed_out" tools:ignore="UnusedResources">Vẫn đăng xuất</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Đồng bộ hóa được bật</string>
-    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_automatic_signin_failed" tools:ignore="UnusedResources">Không thể đăng nhập</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Luôn bảo vệ quyền riêng tư</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
@@ -1367,8 +1150,6 @@
     <string name="onboarding_tracking_protection_standard_button_2">Tiêu chuẩn (mặc định)</string>
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_3">Cân bằng cho sự riêng tư và hiệu suất. Các trang tải bình thường.</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string moz:removedIn="96" name="onboarding_tracking_protection_strict_button" tools:ignore="UnusedResources">Nghiêm ngặt (được khuyến nghị)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Nghiêm ngặt</string>
     <!-- text for strict blocking option button description -->
@@ -1423,8 +1204,6 @@
     <string name="sign_in_with_email">Sử dụng email thay thế</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Không có tài khoản? <u>Tạo một cái</u> để đồng bộ hóa Firefox giữa các thiết bị.]]></string>
-    <!-- Text shown in confirmation dialog to sign out of account -->
-    <string moz:removedIn="96" name="sign_out_confirmation_message" tools:ignore="UnusedResources">Firefox sẽ ngừng đồng bộ hóa với tài khoản của bạn, nhưng sẽ không xóa mọi dữ liệu duyệt web của bạn trên thiết bị này.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s sẽ ngừng đồng bộ hóa với tài khoản của bạn, nhưng sẽ không xóa bất kỳ dữ liệu duyệt web nào của bạn trên thiết bị này.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1480,8 +1259,6 @@
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Trong tất cả các thẻ</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Chỉ trong thẻ riêng tư</string>
-    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string moz:removedIn="96" name="preference_enhanced_tracking_protection_custom_tracking_content_3" tools:ignore="UnusedResources">Chỉ trong thẻ tùy chỉnh</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Tiền điện tử</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1521,10 +1298,6 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Điều hướng quay lại</string>
-    <!-- About page Your rights link text -->
-    <string moz:removedIn="96" name="about_your_rights" tools:ignore="UnusedResources">Quyền lợi của bạn</string>
-    <!-- About page link text to open open source licenses screen -->
-    <string moz:removedIn="96" name="about_open_source_licenses" tools:ignore="UnusedResources">Các thư viện mã nguồn mở chúng tôi sử dụng</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Có gì mới trong %s</string>
     <!-- Open source licenses page title
@@ -1559,11 +1332,6 @@
         The first parameter is number of long clicks left to enable the menu -->
     <string name="about_debug_menu_toast_progress">Menu gỡ lỗi: chạm %1$d lần nữa để bật</string>
     <string name="about_debug_menu_toast_done">Menu gỡ lỗi đã được kích hoạt</string>
-
-    <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string moz:removedIn="96" name="tab_counter_content_description_one_tab" tools:ignore="UnusedResources">1 thẻ</string>
-    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string moz:removedIn="96" name="tab_counter_content_description_multi_tab" tools:ignore="UnusedResources">%d thẻ</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1613,10 +1381,6 @@
     <string name="preferences_passwords_sync_logins">Đồng bộ hóa thông tin đăng nhập</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Đồng bộ hóa thông tin đăng nhập trên các thiết bị</string>
-    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string moz:removedIn="96" name="preferences_passwords_sync_logins_reconnect" tools:ignore="UnusedResources">Kết nối lại</string>
-    <!-- Syncing saved logins in Fenix needs login -->
-    <string moz:removedIn="96" name="preferences_passwords_sync_logins_sign_in" tools:ignore="UnusedResources">Đăng nhập vào đồng bộ hóa</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Thông tin đăng nhập đã lưu</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1633,36 +1397,16 @@
     <string name="preferences_passwords_exceptions_remove_all">Xóa tất cả các ngoại lệ</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Tìm thông tin đăng nhập</string>
-    <!-- Option to sort logins list A-Z, alphabetically -->
-    <string moz:removedIn="96" name="preferences_passwords_saved_logins_alphabetically" tools:ignore="UnusedResources">Theo thứ tự chữ cái</string>
-    <!-- Option to sort logins list by most recently used -->
-    <string moz:removedIn="96" name="preferences_passwords_saved_logins_recently_used" tools:ignore="UnusedResources">Được sử dụng gần đây</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Trang</string>
     <!-- The header for the username for a login -->
     <string name="preferences_passwords_saved_logins_username">Tên đăng nhập</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Mật khẩu</string>
-    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin" tools:ignore="UnusedResources">Nhập lại mã PIN của bạn</string>
-    <!-- Message displayed in security prompt to access saved logins -->
-    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin_description" tools:ignore="UnusedResources">Mở khóa để xem thông tin đăng nhập đã lưu của bạn</string>
-    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string moz:removedIn="96" name="logins_insecure_connection_warning" tools:ignore="UnusedResources">Đây là kết nối không an toàn. Đăng nhập vào đây có thể gây tổn hại cho bạn.</string>
-    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string moz:removedIn="96" name="logins_insecure_connection_warning_learn_more" tools:ignore="UnusedResources">Tìm hiểu thêm</string>
-    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string moz:removedIn="96" name="logins_doorhanger_save" tools:ignore="UnusedResources">Bạn có muốn %s lưu thông tin đăng nhập này không?</string>
-    <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string moz:removedIn="96" name="logins_doorhanger_save_confirmation" tools:ignore="UnusedResources">Lưu</string>
-    <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string moz:removedIn="96" name="logins_doorhanger_save_dont_save" tools:ignore="UnusedResources">Không lưu</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Đã sao chép mật khẩu vào bộ nhớ tạm</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">Đã sao chép tên người dùng vào bộ nhớ tạm</string>
-    <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string moz:removedIn="96" name="logins_site_copied" tools:ignore="UnusedResources">Đã sao chép trang web vào bộ nhớ tạm</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Sao chép mật khẩu</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
@@ -1673,8 +1417,6 @@
     <string name="saved_login_clear_username">Xóa tên người dùng</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
     <string name="saved_login_clear_hostname">Xóa tên máy chủ</string>
-    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string moz:removedIn="96" name="saved_login_copy_site" tools:ignore="UnusedResources">Sao chép URL trang web</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">Mở trang web trong trình duyệt</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -1735,8 +1477,6 @@
     <string name="credit_cards_expiration_date_year">Năm hết hạn</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Tên trên thẻ</string>
-    <!-- The header for the nickname for a credit card -->
-    <string moz:removedIn="96" name="credit_cards_card_nickname" tools:ignore="UnusedResources">Biệt danh thẻ</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">Xóa thẻ</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
@@ -1792,18 +1532,12 @@
     <string name="search_add_custom_engine_search_string_hint">Chuỗi tìm kiếm để sử dụng</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string formatted="false" name="search_add_custom_engine_search_string_example">Thay thế chuỗi truy vấn thành “%s”. Ví dụ:\nhttps://www.google.com/search?q=%s</string>
-    <!-- Text for the button to learn more about adding a custom search engine -->
-    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_label" tools:ignore="UnusedResources">Tìm hiểu thêm</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Chi tiết công cụ tìm kiếm tùy chỉnh</string>
-    <!-- Accessibility description for the 'Learn more' link -->
-    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_description" tools:ignore="UnusedResources">Tìm hiểu thêm về liên kết</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Nhập tên công cụ tìm kiếm</string>
-    <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string moz:removedIn="96" name="search_add_custom_engine_error_existing_name" tools:ignore="UnusedResources">Công cụ tìm kiếm với tên “%s” đã tồn tại.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Nhập chuỗi tìm kiếm</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1855,8 +1589,6 @@
     <string name="confirm_clear_permission_site">Bạn có chắc chắn rằng bạn muốn xóa quyền hạn này cho trang web này?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Không có ngoại lệ trang web</string>
-    <!-- Label for the Pocket default top site -->
-    <string moz:removedIn="96" name="pocket_top_articles" tools:ignore="UnusedResources">Bài viết hàng đầu</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Bạn có chắc chắn muốn xóa dấu trang này?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
@@ -1884,8 +1616,6 @@
     <string name="saved_login_password_description">Trường văn bản có thể chỉnh sửa cho mật khẩu của thông tin đăng nhập.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Lưu các thay đổi vào thông tin đăng nhập.</string>
-    <!--  The button description to discard changes to an edited login. -->
-    <string moz:removedIn="96" name="discard_changes" tools:ignore="UnusedResources">Loại bỏ những thay đổi</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Chỉnh sửa</string>
     <!--  The page title for adding new login. -->

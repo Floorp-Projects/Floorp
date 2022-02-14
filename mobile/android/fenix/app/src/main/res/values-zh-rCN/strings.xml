@@ -1004,7 +1004,7 @@
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">发送到设备</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
-    <string name="share_link_all_apps_subheader">所有动作</string>
+    <string name="share_link_all_apps_subheader">所有操作</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">最近使用</string>
     <!-- An option from the three dot menu to into sync -->
