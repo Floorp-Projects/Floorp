@@ -141,10 +141,15 @@ class nsParser final : public nsIParser,
   NS_IMETHOD Parse(nsIURI* aURL) override;
 
   /**
-   * This method needs documentation
+   * This method gets called when you want to parse a fragment of XML surrounded
+   * by the context |aTagStack|. It requires that the parser have been given a
+   * fragment content sink.
+   *
+   * @param aSourceBuffer The XML that hasn't been parsed yet.
+   * @param aTagStack The context of the source buffer.
    */
-  NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
-                           nsTArray<nsString>& aTagStack) override;
+  nsresult ParseFragment(const nsAString& aSourceBuffer,
+                         nsTArray<nsString>& aTagStack);
 
   NS_IMETHOD ContinueInterruptedParsing() override;
   NS_IMETHOD_(void) BlockParser() override;
@@ -247,7 +252,7 @@ class nsParser final : public nsIParser,
    */
   void HandleParserContinueEvent(class nsParserContinueEvent*);
 
-  virtual void Reset() override {
+  void Reset() {
     Cleanup();
     Initialize();
   }
