@@ -23,7 +23,6 @@
 static const double kSpringForce = 250.0;
 static const double kVelocityTwitchTolerance = 0.0000001;
 static const double kWholePagePixelSize = 550.0;
-static const double kRubberBandResistanceFactor = 4.0;
 static const double kSwipeSuccessThreshold = 0.25;
 static const double kSwipeSuccessVelocityContribution = 0.05;
 
