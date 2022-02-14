@@ -1642,9 +1642,6 @@ nsExpatDriver::Terminate() {
 NS_IMETHODIMP_(int32_t)
 nsExpatDriver::GetType() { return NS_IPARSER_FLAG_XML; }
 
-NS_IMETHODIMP_(nsDTDMode)
-nsExpatDriver::GetMode() const { return eDTDMode_full_standards; }
-
 /*************************** Unused methods **********************************/
 
 void nsExpatDriver::MaybeStopParser(nsresult aState) {

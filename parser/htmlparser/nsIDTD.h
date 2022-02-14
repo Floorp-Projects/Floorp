@@ -82,12 +82,6 @@ class nsIDTD : public nsISupports {
   NS_IMETHOD_(void) Terminate() = 0;
 
   NS_IMETHOD_(int32_t) GetType() = 0;
-
-  /**
-   * Call this method after calling WillBuildModel to determine what mode the
-   * DTD actually is using, as it may differ from aParserContext.mDTDMode.
-   */
-  NS_IMETHOD_(nsDTDMode) GetMode() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
@@ -98,6 +92,5 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
   void DidBuildModel() override;                                  \
   NS_IMETHOD BuildModel(nsIContentSink* aSink) override;          \
   NS_IMETHOD_(void) Terminate() override;                         \
-  NS_IMETHOD_(int32_t) GetType() override;                        \
-  NS_IMETHOD_(nsDTDMode) GetMode() const override;
+  NS_IMETHOD_(int32_t) GetType() override;
 #endif /* nsIDTD_h___ */
