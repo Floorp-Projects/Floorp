@@ -111,10 +111,10 @@ class nsHtml5TreeOpExecutor final
    */
   NS_IMETHOD WillParse() override;
 
-  /**
-   *
-   */
-  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) override;
+  NS_IMETHOD WillBuildModel(nsDTDMode /* unused */) override {
+    return WillBuildModel();
+  }
+  nsresult WillBuildModel();
 
   /**
    * Emits EOF.
