@@ -115,6 +115,10 @@ bool AudioSink::HasUnplayedFrames() {
          (mAudioStream && mAudioStream->GetPositionInFrames() + 1 < mWritten);
 }
 
+TimeUnit AudioSink::UnplayedDuration() const {
+  return TimeUnit::FromMicroseconds(AudioQueuedInRingBufferMS());
+}
+
 void AudioSink::Shutdown() {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
