@@ -110,14 +110,6 @@ class nsIParser : public nsParserBase {
                                   bool aForceAutoDetection = false) = 0;
 
   /**
-   * Get the DTD associated with this parser
-   * @update vidur 9/29/99
-   * @param aDTD out param that will contain the result
-   * @return NS_OK if successful, NS_ERROR_FAILURE for runtime error
-   */
-  NS_IMETHOD GetDTD(nsIDTD** aDTD) = 0;
-
-  /**
    * Get the nsIStreamListener for this parser
    */
   virtual nsIStreamListener* GetStreamListener() = 0;
@@ -190,12 +182,5 @@ class nsIParser : public nsParserBase {
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIParser, NS_IPARSER_IID)
-
-/* ===========================================================*
-  Some useful constants...
- * ===========================================================*/
-
-#define NS_IPARSER_FLAG_XML 0x00000200
-#define NS_IPARSER_FLAG_HTML 0x00000400
 
 #endif

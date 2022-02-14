@@ -1627,9 +1627,6 @@ nsExpatDriver::Terminate() {
   mInternalState = NS_ERROR_HTMLPARSER_STOPPARSING;
 }
 
-NS_IMETHODIMP_(int32_t)
-nsExpatDriver::GetType() { return NS_IPARSER_FLAG_XML; }
-
 /*************************** Unused methods **********************************/
 
 void nsExpatDriver::MaybeStopParser(nsresult aState) {

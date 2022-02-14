@@ -49,6 +49,7 @@
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWeakReference.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 
 class nsIDTD;
@@ -193,14 +194,6 @@ class nsParser final : public nsIParser,
   NS_DECL_NSISTREAMLISTENER
 
   /**
-   * Get the DTD associated with this parser
-   * @update vidur 9/29/99
-   * @param aDTD out param that will contain the result
-   * @return NS_OK if successful, NS_ERROR_FAILURE for runtime error
-   */
-  NS_IMETHOD GetDTD(nsIDTD** aDTD) override;
-
-  /**
    * Get the nsIStreamListener for this parser
    */
   virtual nsIStreamListener* GetStreamListener() override;
@@ -254,6 +247,16 @@ class nsParser final : public nsIParser,
 
   bool IsOkToProcessNetworkData() {
     return !IsScriptExecuting() && !mProcessingNetworkData;
+  }
+
+  // Returns Nothing() if we haven't determined yet what the parser is being
+  // used for. Else returns whether this parser is used for parsing XML.
+  mozilla::Maybe<bool> IsForParsingXML() {
+    if (!mParserContext || mParserContext->mDTDMode == eDTDMode_autodetect) {
+      return mozilla::Nothing();
+    }
+
+    return mozilla::Some(mParserContext->mDocType == eXML);
   }
 
  protected:

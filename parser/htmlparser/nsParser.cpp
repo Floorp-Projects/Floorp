@@ -713,7 +713,7 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
         nsresult theTokenizerResult;
         if (mFlags & NS_PARSER_FLAG_CAN_TOKENIZE) {
           mParserContext->mScanner.Mark();
-          if (mDTD->GetType() == NS_IPARSER_FLAG_XML &&
+          if (mParserContext->mDocType == eXML &&
               mParserContext->mParserCommand != eViewSource) {
             nsExpatDriver* expat = static_cast<nsExpatDriver*>(mDTD.get());
             theTokenizerResult =
@@ -1074,18 +1074,6 @@ nsresult nsParser::OnStopRequest(nsIRequest* request, nsresult status) {
   // it is reenabled.
 
   return rv;
-}
-
-/**
- * Get the DTD associated with this parser
- */
-NS_IMETHODIMP
-nsParser::GetDTD(nsIDTD** aDTD) {
-  if (mParserContext) {
-    NS_IF_ADDREF(*aDTD = mDTD);
-  }
-
-  return NS_OK;
 }
 
 /**
