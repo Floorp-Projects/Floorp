@@ -49,9 +49,6 @@ class nsIDTD : public nsISupports {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDTD_IID)
 
-  NS_IMETHOD WillBuildModel(const CParserContext& aParserContext,
-                            nsIContentSink* aSink) = 0;
-
   /**
    * Called by the parser after the parsing process has concluded
    */
@@ -86,11 +83,9 @@ class nsIDTD : public nsISupports {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
 
-#define NS_DECL_NSIDTD                                            \
-  NS_IMETHOD WillBuildModel(const CParserContext& aParserContext, \
-                            nsIContentSink* aSink) override;      \
-  void DidBuildModel() override;                                  \
-  NS_IMETHOD BuildModel(nsIContentSink* aSink) override;          \
-  NS_IMETHOD_(void) Terminate() override;                         \
+#define NS_DECL_NSIDTD                                   \
+  void DidBuildModel() override;                         \
+  NS_IMETHOD BuildModel(nsIContentSink* aSink) override; \
+  NS_IMETHOD_(void) Terminate() override;                \
   NS_IMETHOD_(int32_t) GetType() override;
 #endif /* nsIDTD_h___ */
