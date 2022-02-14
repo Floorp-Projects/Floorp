@@ -39,6 +39,8 @@ class nsExpatDriver : public nsIDTD, public nsITokenizer {
 
   nsExpatDriver();
 
+  nsresult Initialize(nsIURI* aURI, nsIContentSink* aSink);
+
   int HandleExternalEntityRef(const char16_t* aOpenEntityNames,
                               const char16_t* aBase, const char16_t* aSystemId,
                               const char16_t* aPublicId);
