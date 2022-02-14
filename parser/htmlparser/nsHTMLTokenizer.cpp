@@ -46,7 +46,6 @@ nsresult nsHTMLTokenizer::WillTokenize(bool aIsFinalChunk) { return NS_OK; }
  *                      reach a <script>).
  * @return Success or error
  */
-nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,
-                                       bool& aFlushTokens) {
+nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner) {
   return NS_ERROR_HTMLPARSER_EOF;
 }

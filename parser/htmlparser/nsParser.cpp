@@ -37,10 +37,8 @@
 
 using namespace mozilla;
 
-#define NS_PARSER_FLAG_OBSERVERS_ENABLED 0x00000004
-#define NS_PARSER_FLAG_PENDING_CONTINUE_EVENT 0x00000008
-#define NS_PARSER_FLAG_FLUSH_TOKENS 0x00000020
-#define NS_PARSER_FLAG_CAN_TOKENIZE 0x00000040
+#define NS_PARSER_FLAG_PENDING_CONTINUE_EVENT 0x00000001
+#define NS_PARSER_FLAG_CAN_TOKENIZE 0x00000002
 
 //-------------- Begin ParseContinue Event Definition ------------------------
 /*
@@ -137,7 +135,7 @@ void nsParser::Initialize(bool aConstructor) {
   mStreamStatus = NS_OK;
   mCommand = eViewNormal;
   mBlocked = 0;
-  mFlags = NS_PARSER_FLAG_OBSERVERS_ENABLED | NS_PARSER_FLAG_CAN_TOKENIZE;
+  mFlags = NS_PARSER_FLAG_CAN_TOKENIZE;
 
   mProcessingNetworkData = false;
   mIsAboutBlank = false;
@@ -786,9 +784,6 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
   uint32_t theCount = aTagStack.Length();
   uint32_t theIndex = 0;
 
-  // Disable observers for fragments
-  mFlags &= ~NS_PARSER_FLAG_OBSERVERS_ENABLED;
-
   for (theIndex = 0; theIndex < theCount; theIndex++) {
     theContext.Append('<');
     theContext.Append(aTagStack[theCount - theIndex - 1]);
@@ -805,7 +800,6 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
   // pass false for the aLastCall parameter.
   result = Parse(theContext, (void*)&theContext, false);
   if (NS_FAILED(result)) {
-    mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED;
     return result;
   }
 
@@ -854,8 +848,6 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
       result = Parse(endContext, &theContext, true);
     }
   }
-
-  mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED;
 
   return result;
 }
@@ -1368,15 +1360,12 @@ nsresult nsParser::Tokenize(bool aIsFinalChunk) {
   }
 
   if (NS_SUCCEEDED(result)) {
-    bool flushTokens = false;
-
     bool killSink = false;
 
     WillTokenize(aIsFinalChunk);
     while (NS_SUCCEEDED(result)) {
       mParserContext->mScanner->Mark();
-      result =
-          theTokenizer->ConsumeToken(*mParserContext->mScanner, flushTokens);
+      result = theTokenizer->ConsumeToken(*mParserContext->mScanner);
       if (NS_FAILED(result)) {
         mParserContext->mScanner->RewindToMark();
         if (NS_ERROR_HTMLPARSER_EOF == result) {
@@ -1387,13 +1376,6 @@ nsresult nsParser::Tokenize(bool aIsFinalChunk) {
           result = Terminate();
           break;
         }
-      } else if (flushTokens && (mFlags & NS_PARSER_FLAG_OBSERVERS_ENABLED)) {
-        // I added the extra test of NS_PARSER_FLAG_OBSERVERS_ENABLED to fix
-        // Bug# 23931. Flush tokens on seeing </SCRIPT> -- Ref: Bug# 22485 --
-        // Also remember to update the marked position.
-        mFlags |= NS_PARSER_FLAG_FLUSH_TOKENS;
-        mParserContext->mScanner->Mark();
-        break;
       }
     }
 
