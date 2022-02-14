@@ -80,14 +80,7 @@ class PrototypeDocumentParser final : public nsIParser,
 
   NS_IMETHOD Terminate() override { return NS_ERROR_NOT_IMPLEMENTED; }
 
-  NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
-                           nsTArray<nsString>& aTagStack) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   NS_IMETHOD CancelParsingEvents() override { return NS_ERROR_NOT_IMPLEMENTED; }
-
-  virtual void Reset() override {}
 
   virtual bool IsInsertionPointDefined() override { return false; }
 

@@ -580,9 +580,8 @@ nsresult nsParser::Parse(const nsAString& aSourceBuffer, bool aLastCall) {
   return ResumeParse(false, false, false);
 }
 
-NS_IMETHODIMP
-nsParser::ParseFragment(const nsAString& aSourceBuffer,
-                        nsTArray<nsString>& aTagStack) {
+nsresult nsParser::ParseFragment(const nsAString& aSourceBuffer,
+                                 nsTArray<nsString>& aTagStack) {
   if (mInternalState == NS_ERROR_OUT_OF_MEMORY) {
     // Checking NS_ERROR_OUT_OF_MEMORY instead of NS_FAILED
     // to avoid introducing unintentional changes to behavior.
