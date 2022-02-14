@@ -11,6 +11,7 @@ EXPORTS.mozilla += [
     "Hal.h",
     "HalBatteryInformation.h",
     "HalImpl.h",
+    "HalIPCUtils.h",
     "HalNetworkInformation.h",
     "HalSandbox.h",
     "HalScreenConfiguration.h",

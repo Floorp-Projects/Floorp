@@ -60,7 +60,7 @@ mozilla::dom::ScreenDetails Screen::ToScreenDetails() {
 mozilla::hal::ScreenConfiguration Screen::ToScreenConfiguration() {
   return mozilla::hal::ScreenConfiguration(
       nsIntRect(mRect.x, mRect.y, mRect.width, mRect.height),
-      hal::eScreenOrientation_None, 0, mColorDepth, mPixelDepth);
+      hal::ScreenOrientation::None, 0, mColorDepth, mPixelDepth);
 }
 
 NS_IMETHODIMP

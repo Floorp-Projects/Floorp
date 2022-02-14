@@ -16,10 +16,7 @@
 using namespace mozilla::dom;
 using namespace mozilla::hal;
 
-namespace java = mozilla::java;
-
-namespace mozilla {
-namespace hal_impl {
+namespace mozilla::hal_impl {
 
 void Vibrate(const nsTArray<uint32_t>& pattern, WindowIdentifier&&) {
   // Ignore the WindowIdentifier parameter; it's here only because hal::Vibrate,
@@ -102,47 +99,56 @@ void GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) {
   aScreenConfiguration->angle() = bridge->GetScreenAngle();
 }
 
+static bool IsSupportedScreenOrientation(hal::ScreenOrientation aOrientation) {
+  // The Android backend only supports these orientations.
+  static constexpr ScreenOrientation kSupportedOrientations[] = {
+      ScreenOrientation::PortraitPrimary,
+      ScreenOrientation::PortraitSecondary,
+      ScreenOrientation::PortraitPrimary | ScreenOrientation::PortraitSecondary,
+      ScreenOrientation::LandscapePrimary,
+      ScreenOrientation::LandscapeSecondary,
+      ScreenOrientation::LandscapePrimary |
+          ScreenOrientation::LandscapeSecondary,
+      ScreenOrientation::PortraitPrimary |
+          ScreenOrientation::PortraitSecondary |
+          ScreenOrientation::LandscapePrimary |
+          ScreenOrientation::LandscapeSecondary,
+      ScreenOrientation::Default,
+  };
+  for (auto supportedOrientation : kSupportedOrientations) {
+    if (aOrientation == supportedOrientation) {
+      return true;
+    }
+  }
+  return false;
+}
+
 RefPtr<MozPromise<bool, bool, false>> LockScreenOrientation(
     const hal::ScreenOrientation& aOrientation) {
-  switch (aOrientation) {
-    // The Android backend only supports these orientations.
-    case eScreenOrientation_PortraitPrimary:
-    case eScreenOrientation_PortraitSecondary:
-    case eScreenOrientation_PortraitPrimary |
-        eScreenOrientation_PortraitSecondary:
-    case eScreenOrientation_LandscapePrimary:
-    case eScreenOrientation_LandscapeSecondary:
-    case eScreenOrientation_LandscapePrimary |
-        eScreenOrientation_LandscapeSecondary:
-    case eScreenOrientation_PortraitPrimary |
-        eScreenOrientation_PortraitSecondary |
-        eScreenOrientation_LandscapePrimary |
-        eScreenOrientation_LandscapeSecondary:
-    case eScreenOrientation_Default: {
-      java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
-      if (runtime != NULL) {
-        auto result = runtime->LockScreenOrientation(aOrientation);
-        auto geckoResult = java::GeckoResult::LocalRef(std::move(result));
-        return geckoResult
-                   ? MozPromise<bool, bool, false>::FromGeckoResult(geckoResult)
-                   : MozPromise<bool, bool, false>::CreateAndReject(false,
-                                                                    __func__);
-      } else {
-        return MozPromise<bool, bool, false>::CreateAndReject(false, __func__);
-      }
-    }
-    default:
-      NS_WARNING("Unsupported screen orientation type");
-      return MozPromise<bool, bool, false>::CreateAndReject(false, __func__);
+  using LockPromise = MozPromise<bool, bool, false>;
+
+  if (!IsSupportedScreenOrientation(aOrientation)) {
+    NS_WARNING("Unsupported screen orientation type");
+    return LockPromise::CreateAndReject(false, __func__);
   }
+
+  java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
+  if (!runtime) {
+    return LockPromise::CreateAndReject(false, __func__);
+  }
+  auto result = runtime->LockScreenOrientation(uint32_t(aOrientation));
+  auto geckoResult = java::GeckoResult::LocalRef(std::move(result));
+  if (!geckoResult) {
+    return LockPromise::CreateAndReject(false, __func__);
+  }
+  return LockPromise::FromGeckoResult(geckoResult);
 }
 
 void UnlockScreenOrientation() {
   java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
-  if (runtime != NULL) {
+  if (runtime) {
     runtime->UnlockScreenOrientation();
   }
 }
 
-}  // namespace hal_impl
-}  // namespace mozilla
+}  // namespace mozilla::hal_impl
