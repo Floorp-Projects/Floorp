@@ -19,6 +19,9 @@ pkg_check_modules(JxlThreads REQUIRED IMPORTED_TARGET libjxl_threads)
 add_executable(decode_oneshot decode_oneshot.cc)
 target_link_libraries(decode_oneshot PkgConfig::Jxl PkgConfig::JxlThreads)
 
+add_executable(decode_progressive decode_progressive.cc)
+target_link_libraries(decode_progressive PkgConfig::Jxl PkgConfig::JxlThreads)
+
 add_executable(encode_oneshot encode_oneshot.cc)
 target_link_libraries(encode_oneshot PkgConfig::Jxl PkgConfig::JxlThreads)
 

@@ -214,8 +214,8 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
 
     if (ppf->info.have_animation) {
       frame->frame_info.duration = gcb.DelayTime;
-      frame->x0 = image_rect.x0();
-      frame->y0 = image_rect.y0();
+      frame->x0 = total_rect.x0();
+      frame->y0 = total_rect.y0();
       if (last_base_was_none) {
         replace = true;
       }

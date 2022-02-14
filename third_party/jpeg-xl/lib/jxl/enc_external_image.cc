@@ -16,6 +16,7 @@
 #include "jxl/types.h"
 #include "lib/jxl/alpha.h"
 #include "lib/jxl/base/byte_order.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/color_management.h"
 #include "lib/jxl/common.h"
 
@@ -108,7 +109,7 @@ Status PixelFormatToExternal(const JxlPixelFormat& pixel_format,
 Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
                            size_t ysize, size_t bits_per_sample,
                            JxlEndianness endianness, ThreadPool* pool,
-                           ImageF* channel, bool float_in) {
+                           ImageF* channel, bool float_in, size_t align) {
   // TODO(firsching): Avoid code duplication with the function below.
   if (bits_per_sample < 1 || bits_per_sample > 32) {
     return JXL_FAILURE("Invalid bits_per_sample value.");
@@ -124,8 +125,12 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
   // bits_per_sample > 1.
   const size_t bytes_per_pixel = DivCeil(bits_per_sample, jxl::kBitsPerByte);
 
-  const size_t row_size = xsize * bytes_per_pixel;
-  if (ysize && bytes.size() / ysize < row_size) {
+  const size_t last_row_size = xsize * bytes_per_pixel;
+  const size_t row_size =
+      (align > 1 ? jxl::DivCeil(last_row_size, align) * align : last_row_size);
+  const size_t bytes_to_read = row_size * (ysize - 1) + last_row_size;
+  if (xsize == 0 || ysize == 0) return JXL_FAILURE("Empty image");
+  if (bytes.size() < bytes_to_read) {
     return JXL_FAILURE("Buffer size is too small");
   }
   JXL_ASSERT(channel->xsize() == xsize);
@@ -210,7 +215,7 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
                            bool has_alpha, bool alpha_is_premultiplied,
                            size_t bits_per_sample, JxlEndianness endianness,
                            bool flipped_y, ThreadPool* pool, ImageBundle* ib,
-                           bool float_in) {
+                           bool float_in, size_t align) {
   if (bits_per_sample < 1 || bits_per_sample > 32) {
     return JXL_FAILURE("Invalid bits_per_sample value.");
   }
@@ -232,11 +237,17 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
     return JXL_FAILURE("not supported, try bits_per_sample=32");
   }
 
-  const size_t row_size = xsize * bytes_per_pixel;
-  if (ysize && bytes.size() / ysize < row_size) {
-    return JXL_FAILURE("Buffer size is too small");
+  const size_t last_row_size = xsize * bytes_per_pixel;
+  const size_t row_size =
+      (align > 1 ? jxl::DivCeil(last_row_size, align) * align : last_row_size);
+  const size_t bytes_to_read = row_size * (ysize - 1) + last_row_size;
+  if (xsize == 0 || ysize == 0) return JXL_FAILURE("Empty image");
+  if (bytes.size() < bytes_to_read) {
+    return JXL_FAILURE(
+        "Buffer size is too small: expected at least %" PRIuS
+        " bytes (= %" PRIuS " * %" PRIuS " * %" PRIuS "), got %" PRIuS " bytes",
+        bytes_to_read, xsize, ysize, bytes_per_pixel, bytes.size());
   }
-
   const bool little_endian =
       endianness == JXL_LITTLE_ENDIAN ||
       (endianness == JXL_NATIVE_ENDIAN && IsLittleEndian());
@@ -419,8 +430,8 @@ Status BufferToImageF(const JxlPixelFormat& pixel_format, size_t xsize,
 
   JXL_RETURN_IF_ERROR(ConvertFromExternal(
       jxl::Span<const uint8_t>(static_cast<const uint8_t*>(buffer), size),
-      xsize, ysize, bitdepth, pixel_format.endianness, pool, channel,
-      float_in));
+      xsize, ysize, bitdepth, pixel_format.endianness, pool, channel, float_in,
+      pixel_format.align));
 
   return true;
 }
@@ -441,7 +452,7 @@ Status BufferToImageBundle(const JxlPixelFormat& pixel_format, uint32_t xsize,
       /*has_alpha=*/pixel_format.num_channels == 2 ||
           pixel_format.num_channels == 4,
       /*alpha_is_premultiplied=*/false, bitdepth, pixel_format.endianness,
-      /*flipped_y=*/false, pool, ib, float_in));
+      /*flipped_y=*/false, pool, ib, float_in, pixel_format.align));
   ib->VerifyMetadata();
 
   return true;
