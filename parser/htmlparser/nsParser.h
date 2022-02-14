@@ -240,6 +240,7 @@ class nsParser final : public nsIParser,
 
   void Reset() {
     Cleanup();
+    mUnusedInput.Truncate();
     Initialize();
   }
 
@@ -260,7 +261,7 @@ class nsParser final : public nsIParser,
   }
 
  protected:
-  void Initialize(bool aConstructor = false);
+  void Initialize();
   void Cleanup();
 
   /**
