@@ -193,7 +193,7 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
    * @param aCommand the parser command (Yeah, this is bad API design. Let's
    * make this better when retiring nsIParser)
    */
-  virtual void MarkAsNotScriptCreated(const char* aCommand) override;
+  void MarkAsNotScriptCreated(const char* aCommand);
 
   /**
    * True if this is a script-created HTML5 parser.

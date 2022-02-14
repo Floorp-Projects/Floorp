@@ -252,11 +252,6 @@ class nsParser final : public nsIParser,
   bool HasNonzeroScriptNestingLevel() const final;
 
   /**
-   * No-op.
-   */
-  virtual void MarkAsNotScriptCreated(const char* aCommand) override;
-
-  /**
    * Always false.
    */
   virtual bool IsScriptCreated() override;

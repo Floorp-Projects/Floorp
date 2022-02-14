@@ -218,11 +218,6 @@ class nsIParser : public nsParserBase {
   virtual bool HasNonzeroScriptNestingLevel() const = 0;
 
   /**
-   * Marks the HTML5 parser as not a script-created parser.
-   */
-  virtual void MarkAsNotScriptCreated(const char* aCommand) = 0;
-
-  /**
    * True if this is a script-created HTML5 parser.
    */
   virtual bool IsScriptCreated() = 0;
