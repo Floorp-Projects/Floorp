@@ -158,18 +158,6 @@ class nsIParser : public nsParserBase {
   NS_IMETHOD Terminate(void) = 0;
 
   /**
-   * This method gets called when you want to parse a fragment of HTML or XML
-   * surrounded by the context |aTagStack|. It requires that the parser have
-   * been given a fragment content sink.
-   *
-   * @param aSourceBuffer The XML or HTML that hasn't been parsed yet.
-   * @param aTagStack The context of the source buffer.
-   * @return Success or failure.
-   */
-  NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
-                           nsTArray<nsString>& aTagStack) = 0;
-
-  /**
    *  Call this method to cancel any pending parsing events.
    *  Parsing events may be pending if all of the document's content
    *  has been passed to the parser but the parser has been interrupted
@@ -180,8 +168,6 @@ class nsIParser : public nsParserBase {
    */
 
   NS_IMETHOD CancelParsingEvents() = 0;
-
-  virtual void Reset() = 0;
 
   /**
    * True if the insertion point (per HTML5) is defined.

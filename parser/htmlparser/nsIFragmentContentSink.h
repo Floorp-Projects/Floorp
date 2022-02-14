@@ -23,7 +23,7 @@ class DocumentFragment;
 
 /**
  * The fragment sink allows a client to parse a fragment of sink, possibly
- * surrounded in context. Also see nsIParser::ParseFragment().
+ * surrounded in context. Also see nsParser::ParseFragment().
  * Note: once you've parsed a fragment, the fragment sink must be re-set on
  * the parser in order to parse another fragment.
  */

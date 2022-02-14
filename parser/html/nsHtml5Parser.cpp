@@ -477,18 +477,10 @@ nsHtml5Parser::Terminate() {
 }
 
 NS_IMETHODIMP
-nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
-                             nsTArray<nsString>& aTagStack) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsHtml5Parser::CancelParsingEvents() {
   MOZ_ASSERT_UNREACHABLE("Don't call this!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-void nsHtml5Parser::Reset() { MOZ_ASSERT_UNREACHABLE("Don't call this!"); }
 
 bool nsHtml5Parser::IsInsertionPointDefined() {
   return !mExecutor->IsFlushing() && !mInsertionPointPermanentlyUndefined &&
