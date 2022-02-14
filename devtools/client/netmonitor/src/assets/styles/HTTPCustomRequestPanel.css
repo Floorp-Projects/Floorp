@@ -73,6 +73,7 @@
   flex: 1 1 auto;
   height: auto;
   overflow: auto;
+  min-width: max-content;
 }
 
 #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) {
@@ -136,10 +137,6 @@
 .tabpanel-summary-container.http-custom-input .http-custom-delete-button:hover::before {
   fill: var(--theme-selection-color);
   background-color: var(--theme-selection-background);
-}
-
-.tabpanel-summary-container .http-custom-section {
-  border: 1px solid var(--grey-25);
 }
 
 .network-monitor .http-custom-request {
