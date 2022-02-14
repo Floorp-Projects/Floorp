@@ -45,7 +45,6 @@
 #include "nsDeque.h"
 #include "CParserContext.h"
 #include "nsParserCIID.h"
-#include "nsITokenizer.h"
 #include "nsHTMLTags.h"
 #include "nsIContentSink.h"
 #include "nsCOMArray.h"

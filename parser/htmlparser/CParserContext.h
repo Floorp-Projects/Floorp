@@ -37,14 +37,11 @@ class CParserContext {
 
   ~CParserContext();
 
-  nsresult GetTokenizer(nsIDTD* aDTD, nsIContentSink* aSink,
-                        nsITokenizer*& aTokenizer);
   void SetMimeType(const nsACString& aMimeType);
 
   nsCOMPtr<nsIRequest>
       mRequest;  // provided by necko to differnciate different input streams
                  // why is mRequest strongly referenced? see bug 102376.
-  nsCOMPtr<nsITokenizer> mTokenizer;
   nsScanner mScanner;
 
   nsCString mMimeType;
