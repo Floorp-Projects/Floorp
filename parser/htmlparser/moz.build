@@ -25,9 +25,7 @@ EXPORTS += [
     "nsIFragmentContentSink.h",
     "nsIHTMLContentSink.h",
     "nsIParser.h",
-    "nsITokenizer.h",
     "nsParserBase.h",
-    "nsParserCIID.h",
     "nsParserConstants.h",
     "nsRLBoxExpatDriver.h",
     "nsScannerString.h",
@@ -39,16 +37,10 @@ UNIFIED_SOURCES += [
     "nsElementTable.cpp",
     "nsExpatDriver.cpp",
     "nsHTMLTags.cpp",
-    "nsHTMLTokenizer.cpp",
     "nsParser.cpp",
-    "nsParserModule.cpp",
     "nsParserMsgUtils.cpp",
     "nsScanner.cpp",
     "nsScannerString.cpp",
-]
-
-XPCOM_MANIFESTS += [
-    "components.conf",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

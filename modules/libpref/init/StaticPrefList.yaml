@@ -5594,7 +5594,7 @@
 
 - name: gfx.will-change.ignore-opacity
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # We expose two prefs: gfx.webrender.all and gfx.webrender.enabled.
