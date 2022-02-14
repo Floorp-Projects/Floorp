@@ -89,11 +89,6 @@ class SnapshotSelector extends EventEmitter {
      */
     url: undefined,
     /**
-     * The referrer to the page the snapshots are for.
-     * @type {string | undefined}
-     */
-    referrerUrl: undefined,
-    /**
      * The type of snapshots desired.
      * @type {PageDataCollector.DATA_TYPE | undefined}
      */
@@ -122,7 +117,7 @@ class SnapshotSelector extends EventEmitter {
    * @param {boolean} [options.selectOverlappingVisits]
    *   Whether to select snapshots where visits overlapped the current context url
    * @param {boolean} [options.selectCommonReferrer]
-   *   Whether to select snapshots which share a common referrer to the context url
+   *   Whether to select snapshots which share a common referrer with the context url's interactions
    * @param {function} [options.getCurrentSessionUrls]
    *   A function that returns a Set containing the urls for the current session.
    */
@@ -253,14 +248,9 @@ class SnapshotSelector extends EventEmitter {
       );
     }
 
-    if (
-      context.selectCommonReferrer &&
-      context.referrerUrl &&
-      context.referrerUrl != ""
-    ) {
+    if (context.selectCommonReferrer) {
       let commonReferrerSnapshots = await Snapshots.queryCommonReferrer(
-        context.url,
-        context.referrerUrl
+        context.url
       );
 
       logConsole.debug(
@@ -297,16 +287,13 @@ class SnapshotSelector extends EventEmitter {
    *
    * @param {string} url
    *  The url of the context
-   * @param {string} referrerUrl
-   *   The url of the context's referrer, if any.
    */
-  setUrl(url, referrerUrl) {
-    if (this.#context.url == url && this.#context.referrerUrl == referrerUrl) {
+  setUrl(url) {
+    if (this.#context.url == url) {
       return;
     }
 
     this.#context.url = url;
-    this.#context.referrerUrl = referrerUrl;
     this.rebuild();
   }
 
@@ -316,16 +303,13 @@ class SnapshotSelector extends EventEmitter {
    *
    * @param {string} url
    *  The url of the context
-   * @param {string} referrerUrl
-   *   The url of the context's referrer, if any.
    */
-  setUrlAndRebuildNow(url, referrerUrl) {
-    if (this.#context.url == url && this.#context.referrerUrl == referrerUrl) {
+  setUrlAndRebuildNow(url) {
+    if (this.#context.url == url) {
       return;
     }
 
     this.#context.url = url;
-    this.#context.referrerUrl = referrerUrl;
     this.#buildSnapshots();
   }
 
