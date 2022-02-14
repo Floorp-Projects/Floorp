@@ -76,27 +76,6 @@ class nsIDTD : public nsISupports {
   NS_IMETHOD BuildModel(nsIContentSink* aSink) = 0;
 
   /**
-   * This method is called to determine whether or not a tag of one
-   * type can contain a tag of another type.
-   *
-   * @update  gess 3/25/98
-   * @param   aParent -- int tag of parent container
-   * @param   aChild -- int tag of child container
-   * @return true if parent can contain child
-   */
-  NS_IMETHOD_(bool) CanContain(int32_t aParent, int32_t aChild) const = 0;
-
-  /**
-   * This method gets called to determine whether a given
-   * tag is itself a container
-   *
-   * @update  gess 3/25/98
-   * @param   aTag -- tag to test for containership
-   * @return  true if given tag can contain other tags
-   */
-  NS_IMETHOD_(bool) IsContainer(int32_t aTag) const = 0;
-
-  /**
    * Use this id you want to stop the building content model
    * --------------[ Sets DTD to STOP mode ]----------------
    * It's recommended to use this method in accordance with
@@ -124,9 +103,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
                             nsIContentSink* aSink) override;      \
   NS_IMETHOD DidBuildModel(nsresult anErrorCode) override;        \
   NS_IMETHOD BuildModel(nsIContentSink* aSink) override;          \
-  NS_IMETHOD_(bool)                                               \
-  CanContain(int32_t aParent, int32_t aChild) const override;     \
-  NS_IMETHOD_(bool) IsContainer(int32_t aTag) const override;     \
   NS_IMETHOD_(void) Terminate() override;                         \
   NS_IMETHOD_(int32_t) GetType() override;                        \
   NS_IMETHOD_(nsDTDMode) GetMode() const override;
