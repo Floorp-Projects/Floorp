@@ -517,6 +517,10 @@ browsing-use-smooth-scrolling =
     .label = Use smooth scrolling
     .accesskey = m
 
+browsing-gtk-use-non-overlay-scrollbars =
+    .label = Always show scrollbars
+    .accesskey = o
+
 browsing-use-onscreen-keyboard =
     .label = Show a touch keyboard when necessary
     .accesskey = c

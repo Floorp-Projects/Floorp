@@ -108,6 +108,7 @@ const PREFS_FOR_DISPLAY = [
   "widget.use-xdg-desktop-portal.file-picker",
   "widget.use-xdg-desktop-portal.mime-handler",
   "widget.use-xdg-desktop-portal.print",
+  "widget.gtk.overlay-scrollbars.enabled",
   "widget.wayland",
 ];
 
