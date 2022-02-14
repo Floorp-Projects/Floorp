@@ -12,17 +12,29 @@
 #include "nsMimeTypes.h"
 #include "nsHTMLTokenizer.h"
 
-CParserContext::CParserContext(nsScanner* aScanner, eParserCommands aCommand,
-                               eAutoDetectResult aStatus, bool aCopyUnused)
-    : mScanner(mozilla::WrapUnique(aScanner)),
+CParserContext::CParserContext(nsIURI* aURI, eParserCommands aCommand)
+    : mScanner(aURI),
       mDTDMode(eDTDMode_autodetect),
-      mDocType(static_cast<eParserDocType>(0)),
+      mDocType(eUnknown),
       mStreamListenerState(eNone),
-      mContextType(eCTNone),
-      mAutoDetectStatus(aStatus),
+      mContextType(eCTURL),
       mParserCommand(aCommand),
       mMultipart(true),
-      mCopyUnused(aCopyUnused) {
+      mCopyUnused(false) {
+  MOZ_COUNT_CTOR(CParserContext);
+}
+
+CParserContext::CParserContext(const nsAString& aBuffer,
+                               eParserCommands aCommand, bool aLastBuffer)
+    : mScanner(aBuffer, !aLastBuffer),
+      mMimeType("application/xml"_ns),
+      mDTDMode(eDTDMode_full_standards),
+      mDocType(eXML),
+      mStreamListenerState(aLastBuffer ? eOnStop : eOnDataAvail),
+      mContextType(eCTString),
+      mParserCommand(aCommand),
+      mMultipart(!aLastBuffer),
+      mCopyUnused(aLastBuffer) {
   MOZ_COUNT_CTOR(CParserContext);
 }
 
@@ -34,7 +46,7 @@ CParserContext::~CParserContext() {
 void CParserContext::SetMimeType(const nsACString& aMimeType) {
   mMimeType.Assign(aMimeType);
 
-  mDocType = ePlainText;
+  mDocType = eUnknown;
 
   if (mMimeType.EqualsLiteral(TEXT_HTML))
     mDocType = eHTML_Strict;

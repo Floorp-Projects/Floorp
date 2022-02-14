@@ -234,8 +234,8 @@ void nsParser::SetDocumentCharset(NotNull<const Encoding*> aCharset,
                                   bool aForceAutoDetection) {
   mCharset = aCharset;
   mCharsetSource = aCharsetSource;
-  if (mParserContext && mParserContext->mScanner) {
-    mParserContext->mScanner->SetDocumentCharset(aCharset, aCharsetSource);
+  if (mParserContext) {
+    mParserContext->mScanner.SetDocumentCharset(aCharset, aCharsetSource);
   }
 }
 
@@ -547,10 +547,7 @@ nsParser::Parse(nsIURI* aURL) {
 
   MOZ_ASSERT(!mParserContext, "We expect mParserContext to be null.");
 
-  nsScanner* theScanner = new nsScanner(aURL, false);
-  mParserContext = MakeUnique<CParserContext>(theScanner, mCommand);
-  mParserContext->mMultipart = true;
-  mParserContext->mContextType = CParserContext::eCTURL;
+  mParserContext = MakeUnique<CParserContext>(aURL, mCommand);
 
   return NS_OK;
 }
@@ -561,8 +558,6 @@ nsParser::Parse(nsIURI* aURL) {
  * @param   aSourceBuffer contains a string-full of real content
  */
 nsresult nsParser::Parse(const nsAString& aSourceBuffer, bool aLastCall) {
-  nsresult result = NS_OK;
-
   if (mInternalState == NS_ERROR_OUT_OF_MEMORY) {
     // Checking NS_ERROR_OUT_OF_MEMORY instead of NS_FAILED
     // to avoid introducing unintentional changes to behavior.
@@ -571,7 +566,7 @@ nsresult nsParser::Parse(const nsAString& aSourceBuffer, bool aLastCall) {
 
   // Don't bother if we're never going to parse this.
   if (mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING) {
-    return result;
+    return NS_OK;
   }
 
   if (!aLastCall && aSourceBuffer.IsEmpty()) {
@@ -580,61 +575,28 @@ nsresult nsParser::Parse(const nsAString& aSourceBuffer, bool aLastCall) {
     // some data is actually passed in.
     // But if this is the last call, make sure to finish up
     // stuff correctly.
-    return result;
+    return NS_OK;
   }
 
   // Maintain a reference to ourselves so we don't go away
   // till we're completely done.
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
 
-  if (aLastCall || !aSourceBuffer.IsEmpty() || !mUnusedInput.IsEmpty()) {
-    if (!mParserContext) {
-      // Only make a new context if we don't have one.
-      nsScanner* theScanner = new nsScanner(mUnusedInput);
-      NS_ENSURE_TRUE(theScanner, NS_ERROR_OUT_OF_MEMORY);
+  if (!mParserContext) {
+    // Only make a new context if we don't have one.
+    mParserContext =
+        MakeUnique<CParserContext>(mUnusedInput, mCommand, aLastCall);
 
-      mParserContext = MakeUnique<CParserContext>(theScanner, mCommand,
-                                                  eUnknownDetect, aLastCall);
-
-      mParserContext->mMultipart = !aLastCall;  // By default
-
-      // Start fix bug 40143
-      if (mParserContext->mMultipart) {
-        mParserContext->mStreamListenerState = eOnDataAvail;
-        if (mParserContext->mScanner) {
-          mParserContext->mScanner->SetIncremental(true);
-        }
-      } else {
-        mParserContext->mStreamListenerState = eOnStop;
-        if (mParserContext->mScanner) {
-          mParserContext->mScanner->SetIncremental(false);
-        }
-      }
-      // end fix for 40143
-
-      mParserContext->mContextType = CParserContext::eCTString;
-      mParserContext->SetMimeType("application/xml"_ns);
-      mParserContext->mDTDMode = eDTDMode_full_standards;
-
-      mUnusedInput.Truncate();
-
-      mParserContext->mScanner->Append(aSourceBuffer);
-      // Do not interrupt document.write() - bug 95487
-      result = ResumeParse(false, false, false);
-    } else {
-      mParserContext->mScanner->Append(aSourceBuffer);
-      // Set stream listener state to eOnStop, on the final context - Fix
-      // 68160, to guarantee DidBuildModel() call - Fix 36148
-      if (aLastCall) {
-        mParserContext->mStreamListenerState = eOnStop;
-        mParserContext->mScanner->SetIncremental(false);
-      }
-
-      ResumeParse(false, false, false);
-    }
+    mUnusedInput.Truncate();
+  } else if (aLastCall) {
+    // Set stream listener state to eOnStop, on the final context - Fix
+    // 68160, to guarantee DidBuildModel() call - Fix 36148
+    mParserContext->mStreamListenerState = eOnStop;
+    mParserContext->mScanner.SetIncremental(false);
   }
 
-  return result;
+  mParserContext->mScanner.Append(aSourceBuffer);
+  return ResumeParse(false, false, false);
 }
 
 NS_IMETHODIMP
@@ -765,12 +727,12 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
       bool theIterationIsOk = true;
 
       while (result == NS_OK && theIterationIsOk) {
-        if (!mUnusedInput.IsEmpty() && mParserContext->mScanner) {
+        if (!mUnusedInput.IsEmpty()) {
           // -- Ref: Bug# 22485 --
           // Insert the unused input into the source buffer
           // as if it was read from the input stream.
           // Adding UngetReadable() per vidur!!
-          mParserContext->mScanner->UngetReadable(mUnusedInput);
+          mParserContext->mScanner.UngetReadable(mUnusedInput);
           mUnusedInput.Truncate(0);
         }
 
@@ -1089,7 +1051,7 @@ nsresult nsParser::OnDataAvailable(nsIRequest* request,
     ParserWriteStruct pws;
     pws.mNeedCharsetCheck = true;
     pws.mParser = this;
-    pws.mScanner = mParserContext->mScanner.get();
+    pws.mScanner = &mParserContext->mScanner;
     pws.mRequest = request;
 
     rv = pIStream->ReadSegments(ParserWriteFunc, &pws, aLength, &totalRead);
@@ -1129,7 +1091,7 @@ nsresult nsParser::OnStopRequest(nsIRequest* request, nsresult status) {
 
   if (mParserContext->mRequest == request) {
     mParserContext->mStreamListenerState = eOnStop;
-    mParserContext->mScanner->SetIncremental(false);
+    mParserContext->mScanner.SetIncremental(false);
   }
 
   mStreamStatus = status;
@@ -1193,10 +1155,10 @@ nsresult nsParser::Tokenize(bool aIsFinalChunk) {
 
     WillTokenize(aIsFinalChunk);
     while (NS_SUCCEEDED(result)) {
-      mParserContext->mScanner->Mark();
-      result = theTokenizer->ConsumeToken(*mParserContext->mScanner);
+      mParserContext->mScanner.Mark();
+      result = theTokenizer->ConsumeToken(mParserContext->mScanner);
       if (NS_FAILED(result)) {
-        mParserContext->mScanner->RewindToMark();
+        mParserContext->mScanner.RewindToMark();
         if (NS_ERROR_HTMLPARSER_EOF == result) {
           break;
         }
