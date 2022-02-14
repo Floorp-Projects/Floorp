@@ -208,13 +208,6 @@ class nsParser final : public nsIParser,
   void SetSinkCharset(NotNull<const Encoding*> aCharset);
 
   /**
-   *  Removes continue parsing events
-   *  @update  kmcclusk 5/18/98
-   */
-
-  NS_IMETHOD CancelParsingEvents() override;
-
-  /**
    * Return true.
    */
   virtual bool IsInsertionPointDefined() override;

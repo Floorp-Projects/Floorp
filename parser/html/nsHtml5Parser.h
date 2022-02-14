@@ -137,11 +137,6 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
   NS_IMETHOD Terminate() override;
 
   /**
-   * Don't call. For interface compat only.
-   */
-  NS_IMETHOD CancelParsingEvents() override;
-
-  /**
    * True if the insertion point (per HTML5) is defined.
    */
   virtual bool IsInsertionPointDefined() override;

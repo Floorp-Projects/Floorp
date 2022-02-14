@@ -476,12 +476,6 @@ nsHtml5Parser::Terminate() {
   return executor->DidBuildModel(true);
 }
 
-NS_IMETHODIMP
-nsHtml5Parser::CancelParsingEvents() {
-  MOZ_ASSERT_UNREACHABLE("Don't call this!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 bool nsHtml5Parser::IsInsertionPointDefined() {
   return !mExecutor->IsFlushing() && !mInsertionPointPermanentlyUndefined &&
          (!GetStreamParser() || mScriptNestingLevel != 0);
