@@ -32,8 +32,6 @@ nsHTMLTokenizer::nsHTMLTokenizer() {
   // TODO Assert about:blank-ness.
 }
 
-nsresult nsHTMLTokenizer::WillTokenize(bool aIsFinalChunk) { return NS_OK; }
-
 /**
  * This method is repeatedly called by the tokenizer.
  * Each time, we determine the kind of token we're about to
@@ -46,6 +44,7 @@ nsresult nsHTMLTokenizer::WillTokenize(bool aIsFinalChunk) { return NS_OK; }
  *                      reach a <script>).
  * @return Success or error
  */
-nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner) {
+nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,
+                                       bool aIsFinalChunk) {
   return NS_ERROR_HTMLPARSER_EOF;
 }

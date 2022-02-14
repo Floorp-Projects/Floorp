@@ -31,14 +31,12 @@ class nsITokenizer : public nsISupports {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITOKENIZER_IID)
 
-  NS_IMETHOD WillTokenize(bool aIsFinalChunk) = 0;
-  NS_IMETHOD ConsumeToken(nsScanner& aScanner) = 0;
+  NS_IMETHOD ConsumeToken(nsScanner& aScanner, bool aIsFinalChunk) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITokenizer, NS_ITOKENIZER_IID)
 
-#define NS_DECL_NSITOKENIZER                            \
-  NS_IMETHOD WillTokenize(bool aIsFinalChunk) override; \
-  NS_IMETHOD ConsumeToken(nsScanner& aScanner) override;
+#define NS_DECL_NSITOKENIZER \
+  NS_IMETHOD ConsumeToken(nsScanner& aScanner, bool aIsFinalChunk) override;
 
 #endif
