@@ -194,8 +194,6 @@ this.PrefsFeed = class PrefsFeed {
     );
     this._setBoolPref(values, "discoverystream.isCollectionDismissible", false);
     this._setBoolPref(values, "discoverystream.hardcoded-basic-layout", false);
-    this._setBoolPref(values, "discoverystream.recs.personalized", false);
-    this._setBoolPref(values, "discoverystream.spocs.personalized", false);
     this._setBoolPref(values, "discoverystream.personalization.enabled", false);
     this._setBoolPref(values, "discoverystream.personalization.override");
     this._setStringPref(
