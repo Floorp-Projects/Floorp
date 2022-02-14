@@ -20,8 +20,8 @@ inline void GetCurrentScreenConfiguration(
   aScreenConfiguration->orientation() =
       aScreenConfiguration->rect().Width() >=
               aScreenConfiguration->rect().Height()
-          ? hal::eScreenOrientation_LandscapePrimary
-          : hal::eScreenOrientation_PortraitPrimary;
+          ? hal::ScreenOrientation::LandscapePrimary
+          : hal::ScreenOrientation::PortraitPrimary;
 }
 
 }  // namespace fallback
