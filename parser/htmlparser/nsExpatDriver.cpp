@@ -1612,8 +1612,7 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
 NS_IMETHODIMP
 nsExpatDriver::BuildModel(nsIContentSink* aSink) { return mInternalState; }
 
-NS_IMETHODIMP
-nsExpatDriver::DidBuildModel(nsresult anErrorCode) {
+void nsExpatDriver::DidBuildModel() {
   if (!mInParser) {
     // Because nsExpatDriver is cycle-collected, it gets destroyed
     // asynchronously. We want to eagerly release the sandbox back into the
@@ -1623,7 +1622,6 @@ nsExpatDriver::DidBuildModel(nsresult anErrorCode) {
   }
   mOriginalSink = nullptr;
   mSink = nullptr;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

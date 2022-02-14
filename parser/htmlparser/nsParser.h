@@ -284,12 +284,9 @@ class nsParser final : public nsIParser,
   nsresult WillBuildModel();
 
   /**
-   *
-   * @update	gess5/18/98
-   * @param
-   * @return
+   * Called when parsing is done.
    */
-  nsresult DidBuildModel(nsresult anErrorCode);
+  void DidBuildModel();
 
  private:
   /*******************************************
