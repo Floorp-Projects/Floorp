@@ -285,7 +285,7 @@ nsresult XMLDocument::StartDocumentLoad(
   mParser->SetDocumentCharset(encoding, charsetSource);
   mParser->SetCommand(aCommand);
   mParser->SetContentSink(sink);
-  mParser->Parse(aUrl, this);
+  mParser->Parse(aUrl);
 
   return NS_OK;
 }

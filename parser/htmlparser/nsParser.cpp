@@ -113,18 +113,12 @@ class nsParserContinueEvent : public Runnable {
 /**
  *  default constructor
  */
-nsParser::nsParser()
-    : mParserContext(nullptr), mCharset(WINDOWS_1252_ENCODING) {
-  Initialize(true);
-}
+nsParser::nsParser() : mCharset(WINDOWS_1252_ENCODING) { Initialize(true); }
 
 nsParser::~nsParser() { Cleanup(); }
 
 void nsParser::Initialize(bool aConstructor) {
-  if (aConstructor) {
-    // Raw pointer
-    mParserContext = 0;
-  } else {
+  if (!aConstructor) {
     mUnusedInput.Truncate();
   }
 
@@ -142,18 +136,6 @@ void nsParser::Initialize(bool aConstructor) {
 }
 
 void nsParser::Cleanup() {
-#ifdef DEBUG
-  if (mParserContext && mParserContext->mPrevContext) {
-    NS_WARNING("Extra parser contexts still on the parser stack");
-  }
-#endif
-
-  while (mParserContext) {
-    CParserContext* pc = mParserContext->mPrevContext;
-    delete mParserContext;
-    mParserContext = pc;
-  }
-
   // It should not be possible for this flag to be set when we are getting
   // destroyed since this flag implies a pending nsParserContinueEvent, which
   // has an owning reference to |this|.
@@ -171,11 +153,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsParser)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDTD)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSink)
-  CParserContext* pc = tmp->mParserContext;
-  while (pc) {
-    cb.NoteXPCOMChild(pc->mTokenizer);
-    pc = pc->mPrevContext;
-  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsParser)
@@ -357,8 +334,6 @@ nsresult nsParser::WillBuildModel() {
     }
   }  // else XML fragment with nested parser context
 
-  NS_ASSERTION(!mDTD || !mParserContext->mPrevContext,
-               "Clobbering DTD for non-root parser context!");
   mDTD = FindSuitableDTD(*mParserContext);
   NS_ENSURE_TRUE(mDTD, NS_ERROR_OUT_OF_MEMORY);
 
@@ -380,61 +355,20 @@ nsresult nsParser::WillBuildModel() {
 
 /**
  * This gets called when the parser is done with its input.
- * Note that the parser may have been called recursively, so we
- * have to check for a prev. context before closing out the DTD/sink.
  */
 void nsParser::DidBuildModel() {
-  if (IsComplete()) {
-    if (mParserContext && !mParserContext->mPrevContext) {
-      // Let sink know if we're about to end load because we've been terminated.
-      // In that case we don't want it to run deferred scripts.
-      bool terminated = mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING;
-      if (mDTD && mSink) {
-        mDTD->DidBuildModel();
-        mSink->DidBuildModel(terminated);
-      }
-
-      // Ref. to bug 61462.
-      mParserContext->mRequest = nullptr;
+  if (IsComplete() && mParserContext) {
+    // Let sink know if we're about to end load because we've been terminated.
+    // In that case we don't want it to run deferred scripts.
+    bool terminated = mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING;
+    if (mDTD && mSink) {
+      mDTD->DidBuildModel();
+      mSink->DidBuildModel(terminated);
     }
-  }
-}
 
-/**
- * This method adds a new parser context to the list,
- * pushing the current one to the next position.
- *
- * @param   ptr to new context
- */
-void nsParser::PushContext(CParserContext& aContext) {
-  NS_ASSERTION(aContext.mPrevContext == mParserContext,
-               "Trying to push a context whose previous context differs from "
-               "the current parser context.");
-  mParserContext = &aContext;
-}
-
-/**
- * This method pops the topmost context off the stack,
- * returning it to the user. The next context  (if any)
- * becomes the current context.
- * @update	gess7/22/98
- * @return  prev. context
- */
-CParserContext* nsParser::PopContext() {
-  CParserContext* oldContext = mParserContext;
-  if (oldContext) {
-    mParserContext = oldContext->mPrevContext;
-    if (mParserContext) {
-      // If the old context was blocked, propagate the blocked state
-      // back to the new one. Also, propagate the stream listener state
-      // but don't override onStop state to guarantee the call to
-      // DidBuildModel().
-      if (mParserContext->mStreamListenerState != eOnStop) {
-        mParserContext->mStreamListenerState = oldContext->mStreamListenerState;
-      }
-    }
+    // Ref. to bug 61462.
+    mParserContext->mRequest = nullptr;
   }
-  return oldContext;
 }
 
 /**
@@ -463,17 +397,6 @@ nsParser::Terminate(void) {
   // The IsComplete() call inside of DidBuildModel looks at the
   // pendingContinueEvents flag.
   CancelParsingEvents();
-
-  // If we got interrupted in the middle of a document.write, then we might
-  // have more than one parser context on our parsercontext stack. This has
-  // the effect of making DidBuildModel a no-op, meaning that we never call
-  // our sink's DidBuildModel and break the reference cycle, causing a leak.
-  // Since we're getting terminated, we manually clean up our context stack.
-  while (mParserContext && mParserContext->mPrevContext) {
-    CParserContext* prev = mParserContext->mPrevContext;
-    delete mParserContext;
-    mParserContext = prev;
-  }
 
   if (mDTD) {
     mDTD->Terminate();
@@ -609,7 +532,7 @@ bool nsParser::IsScriptCreated() { return false; }
  *  of this method.
  */
 NS_IMETHODIMP
-nsParser::Parse(nsIURI* aURL, void* aKey) {
+nsParser::Parse(nsIURI* aURL) {
   MOZ_ASSERT(aURL, "Error: Null URL given");
 
   if (mInternalState == NS_ERROR_OUT_OF_MEMORY) {
@@ -618,23 +541,18 @@ nsParser::Parse(nsIURI* aURL, void* aKey) {
     return mInternalState;
   }
 
-  nsresult result = NS_ERROR_HTMLPARSER_BADURL;
-
-  if (aURL) {
-    nsScanner* theScanner = new nsScanner(aURL, false);
-    CParserContext* pc =
-        new CParserContext(mParserContext, theScanner, aKey, mCommand);
-    if (pc && theScanner) {
-      pc->mMultipart = true;
-      pc->mContextType = CParserContext::eCTURL;
-      PushContext(*pc);
-
-      result = NS_OK;
-    } else {
-      result = mInternalState = NS_ERROR_HTMLPARSER_BADCONTEXT;
-    }
+  if (!aURL) {
+    return NS_ERROR_HTMLPARSER_BADURL;
   }
-  return result;
+
+  MOZ_ASSERT(!mParserContext, "We expect mParserContext to be null.");
+
+  nsScanner* theScanner = new nsScanner(aURL, false);
+  mParserContext = MakeUnique<CParserContext>(theScanner, mCommand);
+  mParserContext->mMultipart = true;
+  mParserContext->mContextType = CParserContext::eCTURL;
+
+  return NS_OK;
 }
 
 /**
@@ -642,8 +560,7 @@ nsParser::Parse(nsIURI* aURL, void* aKey) {
  *
  * @param   aSourceBuffer contains a string-full of real content
  */
-nsresult nsParser::Parse(const nsAString& aSourceBuffer, void* aKey,
-                         bool aLastCall) {
+nsresult nsParser::Parse(const nsAString& aSourceBuffer, bool aLastCall) {
   nsresult result = NS_OK;
 
   if (mInternalState == NS_ERROR_OUT_OF_MEMORY) {
@@ -671,85 +588,49 @@ nsresult nsParser::Parse(const nsAString& aSourceBuffer, void* aKey,
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
 
   if (aLastCall || !aSourceBuffer.IsEmpty() || !mUnusedInput.IsEmpty()) {
-    // Note: The following code will always find the parser context associated
-    // with the given key, even if that context has been suspended (e.g., for
-    // another document.write call). This doesn't appear to be exactly what IE
-    // does in the case where this happens, but this makes more sense.
-    CParserContext* pc = mParserContext;
-    while (pc && pc->mKey != aKey) {
-      pc = pc->mPrevContext;
-    }
-
-    if (!pc) {
-      // Only make a new context if we don't have one, OR if we do, but has a
-      // different context key.
+    if (!mParserContext) {
+      // Only make a new context if we don't have one.
       nsScanner* theScanner = new nsScanner(mUnusedInput);
       NS_ENSURE_TRUE(theScanner, NS_ERROR_OUT_OF_MEMORY);
 
-      eAutoDetectResult theStatus = eUnknownDetect;
+      mParserContext = MakeUnique<CParserContext>(theScanner, mCommand,
+                                                  eUnknownDetect, aLastCall);
 
-      if (mParserContext &&
-          mParserContext->mMimeType.EqualsLiteral("application/xml")) {
-        // Ref. Bug 90379
-        NS_ASSERTION(mDTD, "How come the DTD is null?");
-
-        if (mParserContext) {
-          theStatus = mParserContext->mAutoDetectStatus;
-          // Added this to fix bug 32022.
-        }
-      }
-
-      pc = new CParserContext(mParserContext, theScanner, aKey, mCommand,
-                              theStatus, aLastCall);
-      NS_ENSURE_TRUE(pc, NS_ERROR_OUT_OF_MEMORY);
-
-      PushContext(*pc);
-
-      pc->mMultipart = !aLastCall;  // By default
-      if (pc->mPrevContext) {
-        pc->mMultipart |= pc->mPrevContext->mMultipart;
-      }
+      mParserContext->mMultipart = !aLastCall;  // By default
 
       // Start fix bug 40143
-      if (pc->mMultipart) {
-        pc->mStreamListenerState = eOnDataAvail;
-        if (pc->mScanner) {
-          pc->mScanner->SetIncremental(true);
+      if (mParserContext->mMultipart) {
+        mParserContext->mStreamListenerState = eOnDataAvail;
+        if (mParserContext->mScanner) {
+          mParserContext->mScanner->SetIncremental(true);
         }
       } else {
-        pc->mStreamListenerState = eOnStop;
-        if (pc->mScanner) {
-          pc->mScanner->SetIncremental(false);
+        mParserContext->mStreamListenerState = eOnStop;
+        if (mParserContext->mScanner) {
+          mParserContext->mScanner->SetIncremental(false);
         }
       }
       // end fix for 40143
 
-      pc->mContextType = CParserContext::eCTString;
-      pc->SetMimeType("application/xml"_ns);
-      pc->mDTDMode = eDTDMode_full_standards;
+      mParserContext->mContextType = CParserContext::eCTString;
+      mParserContext->SetMimeType("application/xml"_ns);
+      mParserContext->mDTDMode = eDTDMode_full_standards;
 
       mUnusedInput.Truncate();
 
-      pc->mScanner->Append(aSourceBuffer);
+      mParserContext->mScanner->Append(aSourceBuffer);
       // Do not interrupt document.write() - bug 95487
       result = ResumeParse(false, false, false);
     } else {
-      pc->mScanner->Append(aSourceBuffer);
-      if (!pc->mPrevContext) {
-        // Set stream listener state to eOnStop, on the final context - Fix
-        // 68160, to guarantee DidBuildModel() call - Fix 36148
-        if (aLastCall) {
-          pc->mStreamListenerState = eOnStop;
-          pc->mScanner->SetIncremental(false);
-        }
-
-        if (pc == mParserContext) {
-          // If pc is not mParserContext, then this call to ResumeParse would
-          // do the wrong thing and try to continue parsing using
-          // mParserContext. We need to wait to actually resume parsing on pc.
-          ResumeParse(false, false, false);
-        }
+      mParserContext->mScanner->Append(aSourceBuffer);
+      // Set stream listener state to eOnStop, on the final context - Fix
+      // 68160, to guarantee DidBuildModel() call - Fix 36148
+      if (aLastCall) {
+        mParserContext->mStreamListenerState = eOnStop;
+        mParserContext->mScanner->SetIncremental(false);
       }
+
+      ResumeParse(false, false, false);
     }
   }
 
@@ -784,7 +665,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
 
   // First, parse the context to build up the DTD's tag stack. Note that we
   // pass false for the aLastCall parameter.
-  result = Parse(theContext, (void*)&theContext, false);
+  result = Parse(theContext, false);
   if (NS_FAILED(result)) {
     return result;
   }
@@ -803,12 +684,12 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
   // the end tags.  However, if tagStack is empty, it's the last call
   // for XML as well.
   if (theCount == 0) {
-    result = Parse(aSourceBuffer, &theContext, true);
+    result = Parse(aSourceBuffer, true);
     fragSink->DidBuildContent();
   } else {
     // Add an end tag chunk, so expat will read the whole source buffer,
     // and not worry about ']]' etc.
-    result = Parse(aSourceBuffer + u"</"_ns, &theContext, false);
+    result = Parse(aSourceBuffer + u"</"_ns, false);
     fragSink->DidBuildContent();
 
     if (NS_SUCCEEDED(result)) {
@@ -831,9 +712,11 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
         endContext.Append('>');
       }
 
-      result = Parse(endContext, &theContext, true);
+      result = Parse(endContext, true);
     }
   }
+
+  mParserContext.reset();
 
   return result;
 }
@@ -929,38 +812,12 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
 
           return NS_OK;
         }
-        if ((NS_OK == result &&
-             theTokenizerResult == NS_ERROR_HTMLPARSER_EOF) ||
-            result == NS_ERROR_HTMLPARSER_INTERRUPTED) {
-          bool theContextIsStringBased =
-              CParserContext::eCTString == mParserContext->mContextType;
-
-          if (mParserContext->mStreamListenerState == eOnStop ||
-              !mParserContext->mMultipart || theContextIsStringBased) {
-            if (!mParserContext->mPrevContext) {
-              if (mParserContext->mStreamListenerState == eOnStop) {
-                DidBuildModel();
-                return NS_OK;
-              }
-            } else {
-              CParserContext* theContext = PopContext();
-              if (theContext) {
-                theIterationIsOk = allowIteration && theContextIsStringBased;
-                if (theContext->mCopyUnused) {
-                  if (!theContext->mScanner->CopyUnusedData(mUnusedInput)) {
-                    mInternalState = NS_ERROR_OUT_OF_MEMORY;
-                  }
-                }
-
-                delete theContext;
-              }
-
-              result = mInternalState;
-              aIsFinalChunk = mParserContext &&
-                              mParserContext->mStreamListenerState == eOnStop;
-              // ...then intentionally fall through to mSink->WillInterrupt()...
-            }
-          }
+        if (((NS_OK == result &&
+              theTokenizerResult == NS_ERROR_HTMLPARSER_EOF) ||
+             result == NS_ERROR_HTMLPARSER_INTERRUPTED) &&
+            mParserContext->mStreamListenerState == eOnStop) {
+          DidBuildModel();
+          return NS_OK;
         }
 
         if (theTokenizerResult == NS_ERROR_HTMLPARSER_EOF ||
@@ -1024,8 +881,6 @@ nsresult nsParser::OnStartRequest(nsIRequest* request) {
   mParserContext->mAutoDetectStatus = eUnknownDetect;
   mParserContext->mRequest = request;
 
-  NS_ASSERTION(!mParserContext->mPrevContext,
-               "Clobbering DTD for non-root parser context!");
   mDTD = nullptr;
 
   nsresult rv;
@@ -1227,20 +1082,14 @@ nsresult nsParser::OnDataAvailable(nsIRequest* request,
     return rv;
   }
 
-  CParserContext* theContext = mParserContext;
-
-  while (theContext && theContext->mRequest != request) {
-    theContext = theContext->mPrevContext;
-  }
-
-  if (theContext) {
-    theContext->mStreamListenerState = eOnDataAvail;
+  if (mParserContext->mRequest == request) {
+    mParserContext->mStreamListenerState = eOnDataAvail;
 
     uint32_t totalRead;
     ParserWriteStruct pws;
     pws.mNeedCharsetCheck = true;
     pws.mParser = this;
-    pws.mScanner = theContext->mScanner.get();
+    pws.mScanner = mParserContext->mScanner.get();
     pws.mRequest = request;
 
     rv = pIStream->ReadSegments(ParserWriteFunc, &pws, aLength, &totalRead);
@@ -1278,15 +1127,9 @@ nsresult nsParser::OnStopRequest(nsIRequest* request, nsresult status) {
 
   nsresult rv = NS_OK;
 
-  CParserContext* pc = mParserContext;
-  while (pc) {
-    if (pc->mRequest == request) {
-      pc->mStreamListenerState = eOnStop;
-      pc->mScanner->SetIncremental(false);
-      break;
-    }
-
-    pc = pc->mPrevContext;
+  if (mParserContext->mRequest == request) {
+    mParserContext->mStreamListenerState = eOnStop;
+    mParserContext->mScanner->SetIncremental(false);
   }
 
   mStreamStatus = status;
