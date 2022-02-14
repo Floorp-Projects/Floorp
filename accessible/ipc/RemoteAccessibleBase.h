@@ -137,11 +137,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   /**
    * Return true if this is an embedded object.
    */
-  bool IsEmbeddedObject() const {
-    role role = Role();
-    return role != roles::TEXT_LEAF && role != roles::WHITESPACE &&
-           role != roles::STATICTEXT;
-  }
+  bool IsEmbeddedObject() const { return !IsText(); }
 
   virtual bool IsLink() const override {
     if (IsHTMLLink()) {
