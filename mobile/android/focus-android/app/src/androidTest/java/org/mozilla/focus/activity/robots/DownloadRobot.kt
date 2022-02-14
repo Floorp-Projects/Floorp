@@ -16,7 +16,6 @@ import org.mozilla.focus.helpers.TestHelper.isPackageInstalled
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
-import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
 import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
 
 class DownloadRobot {
@@ -29,14 +28,12 @@ class DownloadRobot {
 
     fun verifyDownloadDialogGone() = assertTrue(downloadDialogTitle.waitUntilGone(waitingTime))
 
-    fun verifyDownloadNotification() = NotificationRobot().verifySystemNotificationExists(downloadNotificationText)
-
     fun verifyPhotosOpens() = assertPhotosOpens()
 
     fun clickDownloadIconAsset() {
         val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
         runWithIdleRes(sessionLoadedIdlingResource) {
-            downloadIconAsset.waitForExists(webPageLoadwaitingTime)
+            downloadIconAsset.waitForExists(waitingTime)
             downloadIconAsset.click()
         }
     }
@@ -54,7 +51,7 @@ class DownloadRobot {
     fun openDownloadedFile() {
         val snackBarButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/snackbar_action"))
         snackBarButton.waitForExists(waitingTime)
-        snackBarButton.clickAndWaitForNewWindow(webPageLoadwaitingTime)
+        snackBarButton.clickAndWaitForNewWindow(waitingTime)
     }
 
     class Transition

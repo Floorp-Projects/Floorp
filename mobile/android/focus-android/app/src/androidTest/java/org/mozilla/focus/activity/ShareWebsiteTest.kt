@@ -16,7 +16,7 @@ import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
-import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
+import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
 
@@ -60,7 +60,7 @@ class ShareWebsiteTest {
         /* Go to a webpage */
         searchScreen {
         }.loadPage(webServer.url("").toString()) {
-            progressBar.waitUntilGone(webPageLoadwaitingTime)
+            progressBar.waitUntilGone(waitingTime)
         }.openMainMenu {
         }.openShareScreen {
             verifyShareAppsListOpened()

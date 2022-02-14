@@ -24,7 +24,7 @@ import org.mozilla.focus.helpers.TestHelper.waitingTime
 
 class SettingsGeneralMenuRobot {
     companion object {
-        const val DEFAULT_APPS_SETTINGS_ACTION = "android.settings.MANAGE_DEFAULT_APPS_SETTINGS"
+        const val ACTION_REQUEST_ROLE = "android.app.role.action.REQUEST_ROLE"
     }
 
     fun verifyGeneralSettingsItems() {
@@ -39,7 +39,7 @@ class SettingsGeneralMenuRobot {
     }
 
     fun verifyAndroidDefaultAppsMenuAppears() {
-        intended(IntentMatchers.hasAction(DEFAULT_APPS_SETTINGS_ACTION))
+        intended(IntentMatchers.hasAction(ACTION_REQUEST_ROLE))
     }
 
     fun verifyOpenWithDialog() {

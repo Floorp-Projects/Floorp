@@ -11,7 +11,9 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withSubstring
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
+import androidx.test.uiautomator.Until
 import junit.framework.TestCase.assertTrue
 import org.hamcrest.Matchers.allOf
 import org.mozilla.focus.R
@@ -24,7 +26,7 @@ class ThreeDotMainMenuRobot {
 
     fun verifyShareButtonExists() = assertTrue(shareBtn.exists())
 
-    fun verifyAddToHSButtonExists() = assertTrue(addToHSmenuItem.exists())
+    fun verifyAddToHomeButtonExists() = assertTrue(addToHomeButton.exists())
 
     fun verifyFindInPageExists() = findInPageButton.check(matches(isDisplayed()))
 
@@ -34,7 +36,19 @@ class ThreeDotMainMenuRobot {
 
     fun verifySettingsButtonExists() = settingsMenuButton().check(matches(isDisplayed()))
 
-    fun verifyReportSiteIssueButtonExists() = reportSiteIssueButton.check(matches(isDisplayed()))
+    fun verifyReportSiteIssueButtonExists() {
+        // Report Site Issue lazily appears, so we need to wait
+        val reportSiteIssueButton = mDevice.wait(
+            Until.hasObject(
+                By.res("$packageName:id/mozac_browser_menu_menuView").hasDescendant(
+                    By.text("Report Site Issue…")
+                )
+            ),
+            waitingTime
+        )
+
+        assertTrue(reportSiteIssueButton)
+    }
 
     fun verifyHelpPageLinkExists() = helpPageMenuLink.check(matches(isDisplayed()))
 
@@ -78,8 +92,8 @@ class ThreeDotMainMenuRobot {
         }
 
         fun openAddToHSDialog(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenRobot.Transition {
-            addToHSmenuItem.waitForExists(waitingTime)
-            addToHSmenuItem.click()
+            addToHomeButton.waitForExists(waitingTime)
+            addToHomeButton.click()
 
             AddToHomeScreenRobot().interact()
             return AddToHomeScreenRobot.Transition()
@@ -106,7 +120,7 @@ private val shareBtn = mDevice.findObject(
         .description("Share…")
 )
 
-private val addToHSmenuItem = mDevice.findObject(
+private val addToHomeButton = mDevice.findObject(
     UiSelector()
         .text("Add to Home screen")
 )
@@ -131,5 +145,3 @@ private val openWithList = mDevice.findObject(
 )
 
 private val requestDesktopSiteButton = onView(withSubstring("Desktop site"))
-
-private val reportSiteIssueButton = onView(withText("Report Site Issue…"))

@@ -6,6 +6,7 @@ package org.mozilla.focus.activity.robots
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -67,7 +68,6 @@ private val site_identity_Icon = onView(withId(R.id.site_favicon))
 private val trackingProtectionSwitch =
     onView(
         allOf(
-            withId(R.id.switch_widget),
-            hasSibling(withText("Enhanced Tracking Protection"))
+            withId(R.id.switch_widget), hasSibling(withText("Enhanced Tracking Protection"))
         )
-    )
+    ).inRoot(isDialog())

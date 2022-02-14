@@ -16,7 +16,6 @@ import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.pressEnterKey
 import org.mozilla.focus.helpers.TestHelper.waitingTime
-import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
 import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
 
 class SearchRobot {
@@ -74,11 +73,11 @@ class SearchRobot {
 
             runWithIdleRes(sessionLoadedIdlingResource) {
                 assertTrue(
-                    BrowserRobot().progressBar.waitUntilGone(webPageLoadwaitingTime)
+                    BrowserRobot().progressBar.waitUntilGone(waitingTime)
                 )
                 assertTrue(
-                    geckoEngineView.waitForExists(webPageLoadwaitingTime) ||
-                        trackingProtectionDialog.waitForExists(webPageLoadwaitingTime)
+                    geckoEngineView.waitForExists(waitingTime) ||
+                        trackingProtectionDialog.waitForExists(waitingTime)
                 )
             }
 

@@ -16,14 +16,15 @@ import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParentIndex
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
+import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
-import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
 import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
 
 class BrowserRobot {
@@ -36,27 +37,28 @@ class BrowserRobot {
     fun verifyBrowserView() =
         assertTrue(
             mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
-                .waitForExists(webPageLoadwaitingTime)
+                .waitForExists(waitingTime)
         )
 
     fun verifyPageContent(expectedText: String) {
         val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
         mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
-            .waitForExists(webPageLoadwaitingTime)
+            .waitForExists(waitingTime)
 
         runWithIdleRes(sessionLoadedIdlingResource) {
             assertTrue(
                 mDevice.findObject(UiSelector().textContains(expectedText))
-                    .waitForExists(webPageLoadwaitingTime)
+                    .waitForExists(waitingTime)
             )
         }
     }
 
     fun verifyTrackingProtectionAlert(expectedText: String) {
+        mDevice.wait(Until.findObject(By.textContains(expectedText)), waitingTime)
         assertTrue(
             mDevice.findObject(UiSelector().textContains(expectedText))
-                .waitForExists(webPageLoadwaitingTime)
+                .waitForExists(waitingTime)
         )
         // close the JavaScript alert
         mDevice.pressBack()
@@ -65,12 +67,12 @@ class BrowserRobot {
     fun verifyPageURL(expectedText: String) {
         val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
-        browserURLbar.waitForExists(webPageLoadwaitingTime)
+        browserURLbar.waitForExists(waitingTime)
 
         runWithIdleRes(sessionLoadedIdlingResource) {
             assertTrue(
                 mDevice.findObject(UiSelector().textContains(expectedText))
-                    .waitForExists(webPageLoadwaitingTime)
+                    .waitForExists(waitingTime)
             )
         }
     }
@@ -84,7 +86,7 @@ class BrowserRobot {
 
     fun longPressLink(linkText: String) {
         val link = mDevice.findObject(UiSelector().text(linkText))
-        link.waitForExists(webPageLoadwaitingTime)
+        link.waitForExists(waitingTime)
         link.longClick()
     }
 
@@ -118,30 +120,30 @@ class BrowserRobot {
     fun selectTab(tabTitle: String): ViewInteraction = onView(withText(tabTitle)).perform(click())
 
     fun verifyShareAppsListOpened() =
-        assertTrue(shareAppsList.waitForExists(webPageLoadwaitingTime))
+        assertTrue(shareAppsList.waitForExists(waitingTime))
 
     fun clickPlayButton() {
         val playButton =
             mDevice.findObject(UiSelector().text("Play"))
-        playButton.waitForExists(webPageLoadwaitingTime)
+        playButton.waitForExists(waitingTime)
         playButton.click()
     }
 
     fun clickPauseButton() {
         val pauseButton =
             mDevice.findObject(UiSelector().text("Pause"))
-        pauseButton.waitForExists(webPageLoadwaitingTime)
+        pauseButton.waitForExists(waitingTime)
         pauseButton.click()
     }
 
     fun waitForPlaybackToStart() {
         val playStateMessage = mDevice.findObject(UiSelector().text("Media file is playing"))
-        assertTrue(playStateMessage.waitForExists(webPageLoadwaitingTime))
+        assertTrue(playStateMessage.waitForExists(waitingTime))
     }
 
     fun verifyPlaybackStopped() {
         val playStateMessage = mDevice.findObject(UiSelector().text("Media file is paused"))
-        assertTrue(playStateMessage.waitForExists(webPageLoadwaitingTime))
+        assertTrue(playStateMessage.waitForExists(waitingTime))
     }
 
     fun dismissMediaPlayingAlert() {
@@ -161,7 +163,7 @@ class BrowserRobot {
 
     class Transition {
         fun openSearchBar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
-            browserURLbar.waitForExists(webPageLoadwaitingTime)
+            browserURLbar.waitForExists(waitingTime)
             browserURLbar.click()
 
             SearchRobot().interact()
@@ -178,7 +180,7 @@ class BrowserRobot {
         }
 
         fun openMainMenu(interact: ThreeDotMainMenuRobot.() -> Unit): ThreeDotMainMenuRobot.Transition {
-            browserURLbar.waitForExists(webPageLoadwaitingTime)
+            browserURLbar.waitForExists(waitingTime)
             mainMenu
                 .check(matches(isDisplayed()))
                 .perform(click())

@@ -27,8 +27,12 @@ class SessionLoadedIdlingResource : IdlingResource {
         return if (tab?.content?.loading == true) {
             false
         } else {
-            invokeCallback()
-            true
+            if (tab?.content?.progress == 100) {
+                invokeCallback()
+                true
+            } else {
+                false
+            }
         }
     }
 

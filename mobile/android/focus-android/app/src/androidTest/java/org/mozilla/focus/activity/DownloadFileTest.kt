@@ -5,7 +5,6 @@ package org.mozilla.focus.activity
 
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.GrantPermissionRule
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -14,10 +13,12 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.downloadRobot
+import org.mozilla.focus.activity.robots.notificationTray
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.DeleteFilesHelper.deleteFileUsingDisplayName
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
+import org.mozilla.focus.helpers.RetryTestRule
 import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
@@ -34,11 +35,9 @@ class DownloadFileTest {
     @get:Rule
     var mActivityTestRule = MainActivityIntentsTestRule(showFirstRun = false)
 
-    @get:Rule
-    var mGrantPermissions = GrantPermissionRule.grant(
-        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        android.Manifest.permission.READ_EXTERNAL_STORAGE
-    )
+    @Rule
+    @JvmField
+    val retryTestRule = RetryTestRule(3)
 
     @Before
     fun setUp() {
@@ -90,6 +89,11 @@ class DownloadFileTest {
         val downloadPageUrl = webServer.url("").toString()
         val downloadFileName = "download.jpg"
 
+        notificationTray {
+            mDevice.openNotification()
+            clearNotifications()
+        }
+
         // Load website with service worker
         searchScreen {
         }.loadPage(downloadPageUrl) { }
@@ -104,7 +108,9 @@ class DownloadFileTest {
             clickDownloadButton()
             verifySnackBarText("finished")
             mDevice.openNotification()
-            verifyDownloadNotification()
+            notificationTray {
+                verifyDownloadNotification("Download completed", downloadFileName)
+            }
         }
     }
 

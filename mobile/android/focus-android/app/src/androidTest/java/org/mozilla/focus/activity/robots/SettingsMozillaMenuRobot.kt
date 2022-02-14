@@ -17,7 +17,6 @@ import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.waitingTime
-import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
 import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
 
 class SettingsMozillaMenuRobot {
@@ -48,19 +47,19 @@ class SettingsMozillaMenuRobot {
             assertTrue(
                 "Expected app version number not found",
                 mDevice.findObject(UiSelector().textContains(versionName))
-                    .waitForExists(webPageLoadwaitingTime)
+                    .waitForExists(waitingTime)
             )
 
             assertTrue(
                 "Expected GV version not found",
                 mDevice.findObject(UiSelector().textContains(gvVersion))
-                    .waitForExists(webPageLoadwaitingTime)
+                    .waitForExists(waitingTime)
             )
 
             assertTrue(
                 "Expected GV build ID not found",
                 mDevice.findObject(UiSelector().textContains(gvBuildId))
-                    .waitForExists(webPageLoadwaitingTime)
+                    .waitForExists(waitingTime)
             )
         }
     }

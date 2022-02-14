@@ -3,7 +3,7 @@
 import org.mozilla.focus.gradle.tasks.GithubDetailsTask
 
 buildscript {
-    ext.espresso_version = '3.1.0-alpha4'
+    ext.espresso_version = '3.4.0'
     ext.coroutines_version = '1.4.2'
     ext.jna_version = "5.6.0"
     // Pinning the last working version of the service-telemetry component until we decide

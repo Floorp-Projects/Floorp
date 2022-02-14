@@ -66,7 +66,7 @@ class CustomTabRobot {
     fun verifyPageURL(expectedText: String) {
         val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
-        customTabUrl.waitForExists(TestHelper.webPageLoadwaitingTime)
+        customTabUrl.waitForExists(TestHelper.waitingTime)
 
         runWithIdleRes(sessionLoadedIdlingResource) {
             assertTrue(
