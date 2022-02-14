@@ -1341,6 +1341,30 @@ TEST(BaseProfiler, BlocksRingBuffer)
       }                                                                       \
     } while (false)
 
+#  define EXPECT_JSON_ARRAY_EXCLUDES(GETTER, TYPE, VALUE)               \
+    do {                                                                \
+      if ((GETTER).isNull()) {                                          \
+        EXPECT_FALSE((GETTER).isNull())                                 \
+            << #GETTER " doesn't exist or is null";                     \
+      } else if (!(GETTER).isArray()) {                                 \
+        EXPECT_TRUE((GETTER).is##TYPE()) << #GETTER " is not an array"; \
+      } else {                                                          \
+        const Json::ArrayIndex size = (GETTER).size();                  \
+        for (Json::ArrayIndex i = 0; i < size; ++i) {                   \
+          if (!(GETTER)[i].is##TYPE()) {                                \
+            EXPECT_TRUE((GETTER)[i].is##TYPE())                         \
+                << #GETTER "[" << i << "] is not " #TYPE;               \
+            break;                                                      \
+          }                                                             \
+          if ((GETTER)[i].as##TYPE() == (VALUE)) {                      \
+            EXPECT_TRUE((GETTER)[i].as##TYPE() != (VALUE))              \
+                << #GETTER " contains " #VALUE;                         \
+            break;                                                      \
+          }                                                             \
+        }                                                               \
+      }                                                                 \
+    } while (false)
+
 // Check that the given process root contains all the expected properties.
 static void JSONRootCheck(const Json::Value& aRoot,
                           bool aWithMainThread = true) {
@@ -4044,6 +4068,9 @@ TEST(GeckoProfiler, BaseProfilerHandOff)
   ASSERT_TRUE(!baseprofiler::profiler_is_active());
   ASSERT_TRUE(!profiler_is_active());
 
+  BASE_PROFILER_MARKER_UNTYPED("Base marker before base profiler", OTHER, {});
+  PROFILER_MARKER_UNTYPED("Gecko marker before base profiler", OTHER, {});
+
   // Start the Base Profiler.
   baseprofiler::profiler_start(
       PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
@@ -4055,10 +4082,12 @@ TEST(GeckoProfiler, BaseProfilerHandOff)
   // Add at least a marker, which should go straight into the buffer.
   Maybe<baseprofiler::ProfilerBufferInfo> info0 =
       baseprofiler::profiler_get_buffer_info();
-  BASE_PROFILER_MARKER_UNTYPED("Marker from base profiler", OTHER, {});
+  BASE_PROFILER_MARKER_UNTYPED("Base marker during base profiler", OTHER, {});
   Maybe<baseprofiler::ProfilerBufferInfo> info1 =
       baseprofiler::profiler_get_buffer_info();
   ASSERT_GT(info1->mRangeEnd, info0->mRangeEnd);
+
+  PROFILER_MARKER_UNTYPED("Gecko marker during base profiler", OTHER, {});
 
   // Start the Gecko Profiler, which should grab the Base Profiler profile and
   // stop it.
@@ -4069,12 +4098,22 @@ TEST(GeckoProfiler, BaseProfilerHandOff)
   ASSERT_TRUE(!baseprofiler::profiler_is_active());
   ASSERT_TRUE(profiler_is_active());
 
+  BASE_PROFILER_MARKER_UNTYPED("Base marker during gecko profiler", OTHER, {});
+  PROFILER_MARKER_UNTYPED("Gecko marker during gecko profiler", OTHER, {});
+
   // Write some Gecko Profiler samples.
   ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
 
   // Check that the Gecko Profiler profile contains at least the Base Profiler
   // main thread samples.
   UniquePtr<char[]> profile = profiler_get_profile();
+
+  profiler_stop();
+  ASSERT_TRUE(!profiler_is_active());
+
+  BASE_PROFILER_MARKER_UNTYPED("Base marker after gecko profiler", OTHER, {});
+  PROFILER_MARKER_UNTYPED("Gecko marker after gecko profiler", OTHER, {});
+
   JSONOutputCheck(profile.get(), [](const Json::Value& aRoot) {
     GET_JSON(threads, aRoot["threads"], Array);
     {
@@ -4084,17 +4123,28 @@ TEST(GeckoProfiler, BaseProfilerHandOff)
         GET_JSON(name, thread["name"], String);
         if (name.asString() == "GeckoMain") {
           found = true;
+          EXPECT_JSON_ARRAY_EXCLUDES(thread["stringTable"], String,
+                                     "Base marker before base profiler");
+          EXPECT_JSON_ARRAY_EXCLUDES(thread["stringTable"], String,
+                                     "Gecko marker before base profiler");
           EXPECT_JSON_ARRAY_CONTAINS(thread["stringTable"], String,
-                                     "Marker from base profiler");
+                                     "Base marker during base profiler");
+          EXPECT_JSON_ARRAY_EXCLUDES(thread["stringTable"], String,
+                                     "Gecko marker during base profiler");
+          EXPECT_JSON_ARRAY_EXCLUDES(thread["stringTable"], String,
+                                     "Base marker during gecko profiler");
+          EXPECT_JSON_ARRAY_CONTAINS(thread["stringTable"], String,
+                                     "Gecko marker during gecko profiler");
+          EXPECT_JSON_ARRAY_EXCLUDES(thread["stringTable"], String,
+                                     "Base marker after gecko profiler");
+          EXPECT_JSON_ARRAY_EXCLUDES(thread["stringTable"], String,
+                                     "Gecko marker after gecko profiler");
           break;
         }
       }
       EXPECT_TRUE(found);
     }
   });
-
-  profiler_stop();
-  ASSERT_TRUE(!profiler_is_active());
 }
 
 static std::string_view GetFeatureName(uint32_t feature) {
