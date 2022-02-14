@@ -14510,6 +14510,7 @@
     "products": ["firefox"],
     "alert_emails": ["bryce@mozilla.com", "padenot@mozila.com", "alwu@mozilla.com"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 100,
