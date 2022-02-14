@@ -11,7 +11,7 @@
  ********************************************************************
 
   function:
-    last mod: $Id: decode.c 17576 2010-10-29 01:07:51Z tterribe $
+    last mod: $Id$
 
  ********************************************************************/
 
@@ -417,7 +417,6 @@ static int oc_dec_init(oc_dec_ctx *_dec,const th_info *_info,
   _dec->stripe_cb.ctx=NULL;
   _dec->stripe_cb.stripe_decoded=NULL;
 #if defined(HAVE_CAIRO)
-  _dec->telemetry=0;
   _dec->telemetry_bits=0;
   _dec->telemetry_qi=0;
   _dec->telemetry_mbmode=0;
@@ -1203,6 +1202,9 @@ static void oc_dec_residual_tokens_unpack(oc_dec_ctx *_dec){
 
 
 static int oc_dec_postprocess_init(oc_dec_ctx *_dec){
+  /*musl libc malloc()/realloc() calls might use floating point, so make sure
+     we've cleared the MMX state for them.*/
+  oc_restore_fpu(&_dec->state);
   /*pp_level 0: disabled; free any memory used and return*/
   if(_dec->pp_level<=OC_PP_LEVEL_DISABLED){
     if(_dec->dc_qis!=NULL){
@@ -2019,28 +2021,24 @@ int th_decode_ctl(th_dec_ctx *_dec,int _req,void *_buf,
   case TH_DECCTL_SET_TELEMETRY_MBMODE:{
     if(_dec==NULL||_buf==NULL)return TH_EFAULT;
     if(_buf_sz!=sizeof(int))return TH_EINVAL;
-    _dec->telemetry=1;
     _dec->telemetry_mbmode=*(int *)_buf;
     return 0;
   }break;
   case TH_DECCTL_SET_TELEMETRY_MV:{
     if(_dec==NULL||_buf==NULL)return TH_EFAULT;
     if(_buf_sz!=sizeof(int))return TH_EINVAL;
-    _dec->telemetry=1;
     _dec->telemetry_mv=*(int *)_buf;
     return 0;
   }break;
   case TH_DECCTL_SET_TELEMETRY_QI:{
     if(_dec==NULL||_buf==NULL)return TH_EFAULT;
     if(_buf_sz!=sizeof(int))return TH_EINVAL;
-    _dec->telemetry=1;
     _dec->telemetry_qi=*(int *)_buf;
     return 0;
   }break;
   case TH_DECCTL_SET_TELEMETRY_BITS:{
     if(_dec==NULL||_buf==NULL)return TH_EFAULT;
     if(_buf_sz!=sizeof(int))return TH_EINVAL;
-    _dec->telemetry=1;
     _dec->telemetry_bits=*(int *)_buf;
     return 0;
   }break;
@@ -2080,6 +2078,664 @@ static void oc_dec_init_dummy_frame(th_dec_ctx *_dec){
   yoffset=yhstride*(ptrdiff_t)(yheight-OC_UMV_PADDING-1)+OC_UMV_PADDING;
   memset(_dec->state.ref_frame_data[0]-yoffset,0x80,yplane_sz+2*cplane_sz);
 }
+
+#if defined(HAVE_CAIRO)
+static void oc_render_telemetry(th_dec_ctx *_dec,th_ycbcr_buffer _ycbcr,
+ int _telemetry){
+  /*Stuff the plane into cairo.*/
+  cairo_surface_t *cs;
+  unsigned char   *data;
+  unsigned char   *y_row;
+  unsigned char   *u_row;
+  unsigned char   *v_row;
+  unsigned char   *rgb_row;
+  int              cstride;
+  int              w;
+  int              h;
+  int              x;
+  int              y;
+  int              hdec;
+  int              vdec;
+  w=_ycbcr[0].width;
+  h=_ycbcr[0].height;
+  hdec=!(_dec->state.info.pixel_fmt&1);
+  vdec=!(_dec->state.info.pixel_fmt&2);
+  /*Lazy data buffer init.
+    We could try to re-use the post-processing buffer, which would save
+     memory, but complicate the allocation logic there.
+    I don't think anyone cares about memory usage when using telemetry; it is
+     not meant for embedded devices.*/
+  if(_dec->telemetry_frame_data==NULL){
+    _dec->telemetry_frame_data=_ogg_malloc(
+     (w*h+2*(w>>hdec)*(h>>vdec))*sizeof(*_dec->telemetry_frame_data));
+    if(_dec->telemetry_frame_data==NULL)return;
+  }
+  cs=cairo_image_surface_create(CAIRO_FORMAT_RGB24,w,h);
+  /*Sadly, no YUV support in Cairo (yet); convert into the RGB buffer.*/
+  data=cairo_image_surface_get_data(cs);
+  if(data==NULL){
+    cairo_surface_destroy(cs);
+    return;
+  }
+  cstride=cairo_image_surface_get_stride(cs);
+  y_row=_ycbcr[0].data;
+  u_row=_ycbcr[1].data;
+  v_row=_ycbcr[2].data;
+  rgb_row=data;
+  for(y=0;y<h;y++){
+    for(x=0;x<w;x++){
+      int r;
+      int g;
+      int b;
+      r=(1904000*y_row[x]+2609823*v_row[x>>hdec]-363703744)/1635200;
+      g=(3827562*y_row[x]-1287801*u_row[x>>hdec]
+       -2672387*v_row[x>>hdec]+447306710)/3287200;
+      b=(952000*y_row[x]+1649289*u_row[x>>hdec]-225932192)/817600;
+      rgb_row[4*x+0]=OC_CLAMP255(b);
+      rgb_row[4*x+1]=OC_CLAMP255(g);
+      rgb_row[4*x+2]=OC_CLAMP255(r);
+    }
+    y_row+=_ycbcr[0].stride;
+    u_row+=_ycbcr[1].stride&-((y&1)|!vdec);
+    v_row+=_ycbcr[2].stride&-((y&1)|!vdec);
+    rgb_row+=cstride;
+  }
+  /*Draw coded identifier for each macroblock (stored in Hilbert order).*/
+  {
+    cairo_t           *c;
+    const oc_fragment *frags;
+    oc_mv             *frag_mvs;
+    const signed char *mb_modes;
+    oc_mb_map         *mb_maps;
+    size_t             nmbs;
+    size_t             mbi;
+    int                row2;
+    int                col2;
+    int                qim[3]={0,0,0};
+    if(_dec->state.nqis==2){
+      int bqi;
+      bqi=_dec->state.qis[0];
+      if(_dec->state.qis[1]>bqi)qim[1]=1;
+      if(_dec->state.qis[1]<bqi)qim[1]=-1;
+    }
+    if(_dec->state.nqis==3){
+      int bqi;
+      int cqi;
+      int dqi;
+      bqi=_dec->state.qis[0];
+      cqi=_dec->state.qis[1];
+      dqi=_dec->state.qis[2];
+      if(cqi>bqi&&dqi>bqi){
+        if(dqi>cqi){
+          qim[1]=1;
+          qim[2]=2;
+        }
+        else{
+          qim[1]=2;
+          qim[2]=1;
+        }
+      }
+      else if(cqi<bqi&&dqi<bqi){
+        if(dqi<cqi){
+          qim[1]=-1;
+          qim[2]=-2;
+        }
+        else{
+          qim[1]=-2;
+          qim[2]=-1;
+        }
+      }
+      else{
+        if(cqi<bqi)qim[1]=-1;
+        else qim[1]=1;
+        if(dqi<bqi)qim[2]=-1;
+        else qim[2]=1;
+      }
+    }
+    c=cairo_create(cs);
+    frags=_dec->state.frags;
+    frag_mvs=_dec->state.frag_mvs;
+    mb_modes=_dec->state.mb_modes;
+    mb_maps=_dec->state.mb_maps;
+    nmbs=_dec->state.nmbs;
+    row2=0;
+    col2=0;
+    for(mbi=0;mbi<nmbs;mbi++){
+      float x;
+      float y;
+      int   bi;
+      y=h-(row2+((col2+1>>1)&1))*16-16;
+      x=(col2>>1)*16;
+      cairo_set_line_width(c,1.);
+      /*Keyframe (all intra) red box.*/
+      if(_dec->state.frame_type==OC_INTRA_FRAME){
+        if(_dec->telemetry_mbmode&0x02){
+          cairo_set_source_rgba(c,1.,0,0,.5);
+          cairo_rectangle(c,x+2.5,y+2.5,11,11);
+          cairo_stroke_preserve(c);
+          cairo_set_source_rgba(c,1.,0,0,.25);
+          cairo_fill(c);
+        }
+      }
+      else{
+        ptrdiff_t fragi;
+        int       frag_mvx;
+        int       frag_mvy;
+        for(bi=0;bi<4;bi++){
+          fragi=mb_maps[mbi][0][bi];
+          if(fragi>=0&&frags[fragi].coded){
+            frag_mvx=OC_MV_X(frag_mvs[fragi]);
+            frag_mvy=OC_MV_Y(frag_mvs[fragi]);
+            break;
+          }
+        }
+        if(bi<4){
+          switch(mb_modes[mbi]){
+            case OC_MODE_INTRA:{
+              if(_dec->telemetry_mbmode&0x02){
+                cairo_set_source_rgba(c,1.,0,0,.5);
+                cairo_rectangle(c,x+2.5,y+2.5,11,11);
+                cairo_stroke_preserve(c);
+                cairo_set_source_rgba(c,1.,0,0,.25);
+                cairo_fill(c);
+              }
+            }break;
+            case OC_MODE_INTER_NOMV:{
+              if(_dec->telemetry_mbmode&0x01){
+                cairo_set_source_rgba(c,0,0,1.,.5);
+                cairo_rectangle(c,x+2.5,y+2.5,11,11);
+                cairo_stroke_preserve(c);
+                cairo_set_source_rgba(c,0,0,1.,.25);
+                cairo_fill(c);
+              }
+            }break;
+            case OC_MODE_INTER_MV:{
+              if(_dec->telemetry_mbmode&0x04){
+                cairo_rectangle(c,x+2.5,y+2.5,11,11);
+                cairo_set_source_rgba(c,0,1.,0,.5);
+                cairo_stroke(c);
+              }
+              if(_dec->telemetry_mv&0x04){
+                cairo_move_to(c,x+8+frag_mvx,y+8-frag_mvy);
+                cairo_set_source_rgba(c,1.,1.,1.,.9);
+                cairo_set_line_width(c,3.);
+                cairo_line_to(c,x+8+frag_mvx*.66,y+8-frag_mvy*.66);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,2.);
+                cairo_line_to(c,x+8+frag_mvx*.33,y+8-frag_mvy*.33);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,1.);
+                cairo_line_to(c,x+8,y+8);
+                cairo_stroke(c);
+              }
+            }break;
+            case OC_MODE_INTER_MV_LAST:{
+              if(_dec->telemetry_mbmode&0x08){
+                cairo_rectangle(c,x+2.5,y+2.5,11,11);
+                cairo_set_source_rgba(c,0,1.,0,.5);
+                cairo_move_to(c,x+13.5,y+2.5);
+                cairo_line_to(c,x+2.5,y+8);
+                cairo_line_to(c,x+13.5,y+13.5);
+                cairo_stroke(c);
+              }
+              if(_dec->telemetry_mv&0x08){
+                cairo_move_to(c,x+8+frag_mvx,y+8-frag_mvy);
+                cairo_set_source_rgba(c,1.,1.,1.,.9);
+                cairo_set_line_width(c,3.);
+                cairo_line_to(c,x+8+frag_mvx*.66,y+8-frag_mvy*.66);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,2.);
+                cairo_line_to(c,x+8+frag_mvx*.33,y+8-frag_mvy*.33);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,1.);
+                cairo_line_to(c,x+8,y+8);
+                cairo_stroke(c);
+              }
+            }break;
+            case OC_MODE_INTER_MV_LAST2:{
+              if(_dec->telemetry_mbmode&0x10){
+                cairo_rectangle(c,x+2.5,y+2.5,11,11);
+                cairo_set_source_rgba(c,0,1.,0,.5);
+                cairo_move_to(c,x+8,y+2.5);
+                cairo_line_to(c,x+2.5,y+8);
+                cairo_line_to(c,x+8,y+13.5);
+                cairo_move_to(c,x+13.5,y+2.5);
+                cairo_line_to(c,x+8,y+8);
+                cairo_line_to(c,x+13.5,y+13.5);
+                cairo_stroke(c);
+              }
+              if(_dec->telemetry_mv&0x10){
+                cairo_move_to(c,x+8+frag_mvx,y+8-frag_mvy);
+                cairo_set_source_rgba(c,1.,1.,1.,.9);
+                cairo_set_line_width(c,3.);
+                cairo_line_to(c,x+8+frag_mvx*.66,y+8-frag_mvy*.66);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,2.);
+                cairo_line_to(c,x+8+frag_mvx*.33,y+8-frag_mvy*.33);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,1.);
+                cairo_line_to(c,x+8,y+8);
+                cairo_stroke(c);
+              }
+            }break;
+            case OC_MODE_GOLDEN_NOMV:{
+              if(_dec->telemetry_mbmode&0x20){
+                cairo_set_source_rgba(c,1.,1.,0,.5);
+                cairo_rectangle(c,x+2.5,y+2.5,11,11);
+                cairo_stroke_preserve(c);
+                cairo_set_source_rgba(c,1.,1.,0,.25);
+                cairo_fill(c);
+              }
+            }break;
+            case OC_MODE_GOLDEN_MV:{
+              if(_dec->telemetry_mbmode&0x40){
+                cairo_rectangle(c,x+2.5,y+2.5,11,11);
+                cairo_set_source_rgba(c,1.,1.,0,.5);
+                cairo_stroke(c);
+              }
+              if(_dec->telemetry_mv&0x40){
+                cairo_move_to(c,x+8+frag_mvx,y+8-frag_mvy);
+                cairo_set_source_rgba(c,1.,1.,1.,.9);
+                cairo_set_line_width(c,3.);
+                cairo_line_to(c,x+8+frag_mvx*.66,y+8-frag_mvy*.66);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,2.);
+                cairo_line_to(c,x+8+frag_mvx*.33,y+8-frag_mvy*.33);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,1.);
+                cairo_line_to(c,x+8,y+8);
+                cairo_stroke(c);
+              }
+            }break;
+            case OC_MODE_INTER_MV_FOUR:{
+              if(_dec->telemetry_mbmode&0x80){
+                cairo_rectangle(c,x+2.5,y+2.5,4,4);
+                cairo_rectangle(c,x+9.5,y+2.5,4,4);
+                cairo_rectangle(c,x+2.5,y+9.5,4,4);
+                cairo_rectangle(c,x+9.5,y+9.5,4,4);
+                cairo_set_source_rgba(c,0,1.,0,.5);
+                cairo_stroke(c);
+              }
+              /*4mv is odd, coded in raster order.*/
+              fragi=mb_maps[mbi][0][0];
+              if(frags[fragi].coded&&_dec->telemetry_mv&0x80){
+                frag_mvx=OC_MV_X(frag_mvs[fragi]);
+                frag_mvx=OC_MV_Y(frag_mvs[fragi]);
+                cairo_move_to(c,x+4+frag_mvx,y+12-frag_mvy);
+                cairo_set_source_rgba(c,1.,1.,1.,.9);
+                cairo_set_line_width(c,3.);
+                cairo_line_to(c,x+4+frag_mvx*.66,y+12-frag_mvy*.66);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,2.);
+                cairo_line_to(c,x+4+frag_mvx*.33,y+12-frag_mvy*.33);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,1.);
+                cairo_line_to(c,x+4,y+12);
+                cairo_stroke(c);
+              }
+              fragi=mb_maps[mbi][0][1];
+              if(frags[fragi].coded&&_dec->telemetry_mv&0x80){
+                frag_mvx=OC_MV_X(frag_mvs[fragi]);
+                frag_mvx=OC_MV_Y(frag_mvs[fragi]);
+                cairo_move_to(c,x+12+frag_mvx,y+12-frag_mvy);
+                cairo_set_source_rgba(c,1.,1.,1.,.9);
+                cairo_set_line_width(c,3.);
+                cairo_line_to(c,x+12+frag_mvx*.66,y+12-frag_mvy*.66);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,2.);
+                cairo_line_to(c,x+12+frag_mvx*.33,y+12-frag_mvy*.33);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,1.);
+                cairo_line_to(c,x+12,y+12);
+                cairo_stroke(c);
+              }
+              fragi=mb_maps[mbi][0][2];
+              if(frags[fragi].coded&&_dec->telemetry_mv&0x80){
+                frag_mvx=OC_MV_X(frag_mvs[fragi]);
+                frag_mvx=OC_MV_Y(frag_mvs[fragi]);
+                cairo_move_to(c,x+4+frag_mvx,y+4-frag_mvy);
+                cairo_set_source_rgba(c,1.,1.,1.,.9);
+                cairo_set_line_width(c,3.);
+                cairo_line_to(c,x+4+frag_mvx*.66,y+4-frag_mvy*.66);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,2.);
+                cairo_line_to(c,x+4+frag_mvx*.33,y+4-frag_mvy*.33);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,1.);
+                cairo_line_to(c,x+4,y+4);
+                cairo_stroke(c);
+              }
+              fragi=mb_maps[mbi][0][3];
+              if(frags[fragi].coded&&_dec->telemetry_mv&0x80){
+                frag_mvx=OC_MV_X(frag_mvs[fragi]);
+                frag_mvx=OC_MV_Y(frag_mvs[fragi]);
+                cairo_move_to(c,x+12+frag_mvx,y+4-frag_mvy);
+                cairo_set_source_rgba(c,1.,1.,1.,.9);
+                cairo_set_line_width(c,3.);
+                cairo_line_to(c,x+12+frag_mvx*.66,y+4-frag_mvy*.66);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,2.);
+                cairo_line_to(c,x+12+frag_mvx*.33,y+4-frag_mvy*.33);
+                cairo_stroke_preserve(c);
+                cairo_set_line_width(c,1.);
+                cairo_line_to(c,x+12,y+4);
+                cairo_stroke(c);
+              }
+            }break;
+          }
+        }
+      }
+      /*qii illustration.*/
+      if(_dec->telemetry_qi&0x2){
+        cairo_set_line_cap(c,CAIRO_LINE_CAP_SQUARE);
+        for(bi=0;bi<4;bi++){
+          ptrdiff_t fragi;
+          int       qiv;
+          int       xp;
+          int       yp;
+          xp=x+(bi&1)*8;
+          yp=y+8-(bi&2)*4;
+          fragi=mb_maps[mbi][0][bi];
+          if(fragi>=0&&frags[fragi].coded){
+            qiv=qim[frags[fragi].qii];
+            cairo_set_line_width(c,3.);
+            cairo_set_source_rgba(c,0.,0.,0.,.5);
+            switch(qiv){
+              /*Double plus:*/
+              case 2:{
+                if((bi&1)^((bi&2)>>1)){
+                  cairo_move_to(c,xp+2.5,yp+1.5);
+                  cairo_line_to(c,xp+2.5,yp+3.5);
+                  cairo_move_to(c,xp+1.5,yp+2.5);
+                  cairo_line_to(c,xp+3.5,yp+2.5);
+                  cairo_move_to(c,xp+5.5,yp+4.5);
+                  cairo_line_to(c,xp+5.5,yp+6.5);
+                  cairo_move_to(c,xp+4.5,yp+5.5);
+                  cairo_line_to(c,xp+6.5,yp+5.5);
+                  cairo_stroke_preserve(c);
+                  cairo_set_source_rgba(c,0.,1.,1.,1.);
+                }
+                else{
+                  cairo_move_to(c,xp+5.5,yp+1.5);
+                  cairo_line_to(c,xp+5.5,yp+3.5);
+                  cairo_move_to(c,xp+4.5,yp+2.5);
+                  cairo_line_to(c,xp+6.5,yp+2.5);
+                  cairo_move_to(c,xp+2.5,yp+4.5);
+                  cairo_line_to(c,xp+2.5,yp+6.5);
+                  cairo_move_to(c,xp+1.5,yp+5.5);
+                  cairo_line_to(c,xp+3.5,yp+5.5);
+                  cairo_stroke_preserve(c);
+                  cairo_set_source_rgba(c,0.,1.,1.,1.);
+                }
+              }break;
+              /*Double minus:*/
+              case -2:{
+                cairo_move_to(c,xp+2.5,yp+2.5);
+                cairo_line_to(c,xp+5.5,yp+2.5);
+                cairo_move_to(c,xp+2.5,yp+5.5);
+                cairo_line_to(c,xp+5.5,yp+5.5);
+                cairo_stroke_preserve(c);
+                cairo_set_source_rgba(c,1.,1.,1.,1.);
+              }break;
+              /*Plus:*/
+              case 1:{
+                if((bi&2)==0)yp-=2;
+                if((bi&1)==0)xp-=2;
+                cairo_move_to(c,xp+4.5,yp+2.5);
+                cairo_line_to(c,xp+4.5,yp+6.5);
+                cairo_move_to(c,xp+2.5,yp+4.5);
+                cairo_line_to(c,xp+6.5,yp+4.5);
+                cairo_stroke_preserve(c);
+                cairo_set_source_rgba(c,.1,1.,.3,1.);
+                break;
+              }
+              /*Fall through.*/
+              /*Minus:*/
+              case -1:{
+                cairo_move_to(c,xp+2.5,yp+4.5);
+                cairo_line_to(c,xp+6.5,yp+4.5);
+                cairo_stroke_preserve(c);
+                cairo_set_source_rgba(c,1.,.3,.1,1.);
+              }break;
+              default:continue;
+            }
+            cairo_set_line_width(c,1.);
+            cairo_stroke(c);
+          }
+        }
+      }
+      col2++;
+      if((col2>>1)>=_dec->state.nhmbs){
+        col2=0;
+        row2+=2;
+      }
+    }
+    /*Bit usage indicator[s]:*/
+    if(_dec->telemetry_bits){
+      int widths[6];
+      int fpsn;
+      int fpsd;
+      int mult;
+      int fullw;
+      int padw;
+      int i;
+      fpsn=_dec->state.info.fps_numerator;
+      fpsd=_dec->state.info.fps_denominator;
+      mult=(_dec->telemetry_bits>=0xFF?1:_dec->telemetry_bits);
+      fullw=250.f*h*fpsd*mult/fpsn;
+      padw=w-24;
+      /*Header and coded block bits.*/
+      if(_dec->telemetry_frame_bytes<0||
+       _dec->telemetry_frame_bytes==OC_LOTS_OF_BITS){
+        _dec->telemetry_frame_bytes=0;
+      }
+      if(_dec->telemetry_coding_bytes<0||
+       _dec->telemetry_coding_bytes>_dec->telemetry_frame_bytes){
+        _dec->telemetry_coding_bytes=0;
+      }
+      if(_dec->telemetry_mode_bytes<0||
+       _dec->telemetry_mode_bytes>_dec->telemetry_frame_bytes){
+        _dec->telemetry_mode_bytes=0;
+      }
+      if(_dec->telemetry_mv_bytes<0||
+       _dec->telemetry_mv_bytes>_dec->telemetry_frame_bytes){
+        _dec->telemetry_mv_bytes=0;
+      }
+      if(_dec->telemetry_qi_bytes<0||
+       _dec->telemetry_qi_bytes>_dec->telemetry_frame_bytes){
+        _dec->telemetry_qi_bytes=0;
+      }
+      if(_dec->telemetry_dc_bytes<0||
+       _dec->telemetry_dc_bytes>_dec->telemetry_frame_bytes){
+        _dec->telemetry_dc_bytes=0;
+      }
+      widths[0]=padw*
+       (_dec->telemetry_frame_bytes-_dec->telemetry_coding_bytes)/fullw;
+      widths[1]=padw*
+       (_dec->telemetry_coding_bytes-_dec->telemetry_mode_bytes)/fullw;
+      widths[2]=padw*
+       (_dec->telemetry_mode_bytes-_dec->telemetry_mv_bytes)/fullw;
+      widths[3]=padw*(_dec->telemetry_mv_bytes-_dec->telemetry_qi_bytes)/fullw;
+      widths[4]=padw*(_dec->telemetry_qi_bytes-_dec->telemetry_dc_bytes)/fullw;
+      widths[5]=padw*(_dec->telemetry_dc_bytes)/fullw;
+      for(i=0;i<6;i++)if(widths[i]>w)widths[i]=w;
+      cairo_set_source_rgba(c,.0,.0,.0,.6);
+      cairo_rectangle(c,10,h-33,widths[0]+1,5);
+      cairo_rectangle(c,10,h-29,widths[1]+1,5);
+      cairo_rectangle(c,10,h-25,widths[2]+1,5);
+      cairo_rectangle(c,10,h-21,widths[3]+1,5);
+      cairo_rectangle(c,10,h-17,widths[4]+1,5);
+      cairo_rectangle(c,10,h-13,widths[5]+1,5);
+      cairo_fill(c);
+      cairo_set_source_rgb(c,1,0,0);
+      cairo_rectangle(c,10.5,h-32.5,widths[0],4);
+      cairo_fill(c);
+      cairo_set_source_rgb(c,0,1,0);
+      cairo_rectangle(c,10.5,h-28.5,widths[1],4);
+      cairo_fill(c);
+      cairo_set_source_rgb(c,0,0,1);
+      cairo_rectangle(c,10.5,h-24.5,widths[2],4);
+      cairo_fill(c);
+      cairo_set_source_rgb(c,.6,.4,.0);
+      cairo_rectangle(c,10.5,h-20.5,widths[3],4);
+      cairo_fill(c);
+      cairo_set_source_rgb(c,.3,.3,.3);
+      cairo_rectangle(c,10.5,h-16.5,widths[4],4);
+      cairo_fill(c);
+      cairo_set_source_rgb(c,.5,.5,.8);
+      cairo_rectangle(c,10.5,h-12.5,widths[5],4);
+      cairo_fill(c);
+    }
+    /*Master qi indicator[s]:*/
+    if(_dec->telemetry_qi&0x1){
+      cairo_text_extents_t extents;
+      char                 buffer[10];
+      int                  p;
+      int                  y;
+      p=0;
+      y=h-7.5;
+      if(_dec->state.qis[0]>=10)buffer[p++]=48+_dec->state.qis[0]/10;
+      buffer[p++]=48+_dec->state.qis[0]%10;
+      if(_dec->state.nqis>=2){
+        buffer[p++]=' ';
+        if(_dec->state.qis[1]>=10)buffer[p++]=48+_dec->state.qis[1]/10;
+        buffer[p++]=48+_dec->state.qis[1]%10;
+      }
+      if(_dec->state.nqis==3){
+        buffer[p++]=' ';
+        if(_dec->state.qis[2]>=10)buffer[p++]=48+_dec->state.qis[2]/10;
+        buffer[p++]=48+_dec->state.qis[2]%10;
+      }
+      buffer[p++]='\0';
+      cairo_select_font_face(c,"sans",
+       CAIRO_FONT_SLANT_NORMAL,CAIRO_FONT_WEIGHT_BOLD);
+      cairo_set_font_size(c,18);
+      cairo_text_extents(c,buffer,&extents);
+      cairo_set_source_rgb(c,1,1,1);
+      cairo_move_to(c,w-extents.x_advance-10,y);
+      cairo_show_text(c,buffer);
+      cairo_set_source_rgb(c,0,0,0);
+      cairo_move_to(c,w-extents.x_advance-10,y);
+      cairo_text_path(c,buffer);
+      cairo_set_line_width(c,.8);
+      cairo_set_line_join(c,CAIRO_LINE_JOIN_ROUND);
+      cairo_stroke(c);
+    }
+    cairo_destroy(c);
+  }
+  /*Out of the Cairo plane into the telemetry YUV buffer.*/
+  _ycbcr[0].data=_dec->telemetry_frame_data;
+  _ycbcr[0].stride=_ycbcr[0].width;
+  _ycbcr[1].data=_ycbcr[0].data+h*_ycbcr[0].stride;
+  _ycbcr[1].stride=_ycbcr[1].width;
+  _ycbcr[2].data=_ycbcr[1].data+(h>>vdec)*_ycbcr[1].stride;
+  _ycbcr[2].stride=_ycbcr[2].width;
+  y_row=_ycbcr[0].data;
+  u_row=_ycbcr[1].data;
+  v_row=_ycbcr[2].data;
+  rgb_row=data;
+  /*This is one of the few places it's worth handling chroma on a
+     case-by-case basis.*/
+  switch(_dec->state.info.pixel_fmt){
+    case TH_PF_420:{
+      for(y=0;y<h;y+=2){
+        unsigned char *y_row2;
+        unsigned char *rgb_row2;
+        y_row2=y_row+_ycbcr[0].stride;
+        rgb_row2=rgb_row+cstride;
+        for(x=0;x<w;x+=2){
+          int y;
+          int u;
+          int v;
+          y=(65481*rgb_row[4*x+2]+128553*rgb_row[4*x+1]
+           +24966*rgb_row[4*x+0]+4207500)/255000;
+          y_row[x]=OC_CLAMP255(y);
+          y=(65481*rgb_row[4*x+6]+128553*rgb_row[4*x+5]
+           +24966*rgb_row[4*x+4]+4207500)/255000;
+          y_row[x+1]=OC_CLAMP255(y);
+          y=(65481*rgb_row2[4*x+2]+128553*rgb_row2[4*x+1]
+           +24966*rgb_row2[4*x+0]+4207500)/255000;
+          y_row2[x]=OC_CLAMP255(y);
+          y=(65481*rgb_row2[4*x+6]+128553*rgb_row2[4*x+5]
+           +24966*rgb_row2[4*x+4]+4207500)/255000;
+          y_row2[x+1]=OC_CLAMP255(y);
+          u=(-8372*(rgb_row[4*x+2]+rgb_row[4*x+6]
+           +rgb_row2[4*x+2]+rgb_row2[4*x+6])
+           -16436*(rgb_row[4*x+1]+rgb_row[4*x+5]
+           +rgb_row2[4*x+1]+rgb_row2[4*x+5])
+           +24808*(rgb_row[4*x+0]+rgb_row[4*x+4]
+           +rgb_row2[4*x+0]+rgb_row2[4*x+4])+29032005)/225930;
+          v=(39256*(rgb_row[4*x+2]+rgb_row[4*x+6]
+           +rgb_row2[4*x+2]+rgb_row2[4*x+6])
+           -32872*(rgb_row[4*x+1]+rgb_row[4*x+5]
+            +rgb_row2[4*x+1]+rgb_row2[4*x+5])
+           -6384*(rgb_row[4*x+0]+rgb_row[4*x+4]
+            +rgb_row2[4*x+0]+rgb_row2[4*x+4])+45940035)/357510;
+          u_row[x>>1]=OC_CLAMP255(u);
+          v_row[x>>1]=OC_CLAMP255(v);
+        }
+        y_row+=_ycbcr[0].stride<<1;
+        u_row+=_ycbcr[1].stride;
+        v_row+=_ycbcr[2].stride;
+        rgb_row+=cstride<<1;
+      }
+    }break;
+    case TH_PF_422:{
+      for(y=0;y<h;y++){
+        for(x=0;x<w;x+=2){
+          int y;
+          int u;
+          int v;
+          y=(65481*rgb_row[4*x+2]+128553*rgb_row[4*x+1]
+           +24966*rgb_row[4*x+0]+4207500)/255000;
+          y_row[x]=OC_CLAMP255(y);
+          y=(65481*rgb_row[4*x+6]+128553*rgb_row[4*x+5]
+           +24966*rgb_row[4*x+4]+4207500)/255000;
+          y_row[x+1]=OC_CLAMP255(y);
+          u=(-16744*(rgb_row[4*x+2]+rgb_row[4*x+6])
+           -32872*(rgb_row[4*x+1]+rgb_row[4*x+5])
+           +49616*(rgb_row[4*x+0]+rgb_row[4*x+4])+29032005)/225930;
+          v=(78512*(rgb_row[4*x+2]+rgb_row[4*x+6])
+           -65744*(rgb_row[4*x+1]+rgb_row[4*x+5])
+           -12768*(rgb_row[4*x+0]+rgb_row[4*x+4])+45940035)/357510;
+          u_row[x>>1]=OC_CLAMP255(u);
+          v_row[x>>1]=OC_CLAMP255(v);
+        }
+        y_row+=_ycbcr[0].stride;
+        u_row+=_ycbcr[1].stride;
+        v_row+=_ycbcr[2].stride;
+        rgb_row+=cstride;
+      }
+    }break;
+    /*case TH_PF_444:*/
+    default:{
+      for(y=0;y<h;y++){
+        for(x=0;x<w;x++){
+          int y;
+          int u;
+          int v;
+          y=(65481*rgb_row[4*x+2]+128553*rgb_row[4*x+1]
+           +24966*rgb_row[4*x+0]+4207500)/255000;
+          u=(-33488*rgb_row[4*x+2]-65744*rgb_row[4*x+1]
+           +99232*rgb_row[4*x+0]+29032005)/225930;
+          v=(157024*rgb_row[4*x+2]-131488*rgb_row[4*x+1]
+           -25536*rgb_row[4*x+0]+45940035)/357510;
+          y_row[x]=OC_CLAMP255(y);
+          u_row[x]=OC_CLAMP255(u);
+          v_row[x]=OC_CLAMP255(v);
+        }
+        y_row+=_ycbcr[0].stride;
+        u_row+=_ycbcr[1].stride;
+        v_row+=_ycbcr[2].stride;
+        rgb_row+=cstride;
+      }
+    }break;
+  }
+  /*Finished.
+    Destroy the surface.*/
+  cairo_surface_destroy(cs);
+}
+#endif
 
 int th_decode_packetin(th_dec_ctx *_dec,const ogg_packet *_op,
  ogg_int64_t *_granpos){
@@ -2121,6 +2777,15 @@ int th_decode_packetin(th_dec_ctx *_dec,const ogg_packet *_op,
     int             pli;
     int             notstart;
     int             notdone;
+#ifdef HAVE_CAIRO
+    int             telemetry;
+    /*Save the current telemetry state.
+      This prevents it from being modified in the middle of decoding this
+       frame, which could cause us to skip calls to the striped decoding
+       callback.*/
+    telemetry=_dec->telemetry_mbmode||_dec->telemetry_mv||
+     _dec->telemetry_qi||_dec->telemetry_bits;
+#endif
     /*Select a free buffer to use for the reconstructed version of this frame.*/
     for(refi=0;refi==_dec->state.ref_frame_idx[OC_FRAME_GOLD]||
      refi==_dec->state.ref_frame_idx[OC_FRAME_PREV];refi++);
@@ -2258,7 +2923,11 @@ int th_decode_packetin(th_dec_ctx *_dec,const ogg_packet *_op,
         avail_fragy_end=OC_MINI(avail_fragy_end,
          _dec->pipe.fragy_end[pli]-edelay<<frag_shift);
       }
+#ifdef HAVE_CAIRO
+      if(_dec->stripe_cb.stripe_decoded!=NULL&&!telemetry){
+#else
       if(_dec->stripe_cb.stripe_decoded!=NULL){
+#endif
         /*The callback might want to use the FPU, so let's make sure they can.
           We violate all kinds of ABI restrictions by not doing this until
            now, but none of them actually matter since we don't use floating
@@ -2294,6 +2963,20 @@ int th_decode_packetin(th_dec_ctx *_dec,const ogg_packet *_op,
     /*Restore the FPU before dump_frame, since that _does_ use the FPU (for PNG
        gamma values, if nothing else).*/
     oc_restore_fpu(&_dec->state);
+#ifdef HAVE_CAIRO
+    /*If telemetry ioctls are active, we need to draw to the output buffer.*/
+    if(telemetry){
+      oc_render_telemetry(_dec,stripe_buf,telemetry);
+      oc_ycbcr_buffer_flip(_dec->pp_frame_buf,stripe_buf);
+      /*If we had a striped decoding callback, we skipped calling it above
+         (because the telemetry wasn't rendered yet).
+        Call it now with the whole frame.*/
+      if(_dec->stripe_cb.stripe_decoded!=NULL){
+        (*_dec->stripe_cb.stripe_decoded)(_dec->stripe_cb.ctx,
+         stripe_buf,0,_dec->state.fplanes[0].nvfrags);
+      }
+    }
+#endif
 #if defined(OC_DUMP_IMAGES)
     /*We only dump images if there were some coded blocks.*/
     oc_state_dump_frame(&_dec->state,OC_FRAME_SELF,"dec");
@@ -2305,659 +2988,5 @@ int th_decode_packetin(th_dec_ctx *_dec,const ogg_packet *_op,
 int th_decode_ycbcr_out(th_dec_ctx *_dec,th_ycbcr_buffer _ycbcr){
   if(_dec==NULL||_ycbcr==NULL)return TH_EFAULT;
   oc_ycbcr_buffer_flip(_ycbcr,_dec->pp_frame_buf);
-#if defined(HAVE_CAIRO)
-  /*If telemetry ioctls are active, we need to draw to the output buffer.
-    Stuff the plane into cairo.*/
-  if(_dec->telemetry){
-    cairo_surface_t *cs;
-    unsigned char   *data;
-    unsigned char   *y_row;
-    unsigned char   *u_row;
-    unsigned char   *v_row;
-    unsigned char   *rgb_row;
-    int              cstride;
-    int              w;
-    int              h;
-    int              x;
-    int              y;
-    int              hdec;
-    int              vdec;
-    w=_ycbcr[0].width;
-    h=_ycbcr[0].height;
-    hdec=!(_dec->state.info.pixel_fmt&1);
-    vdec=!(_dec->state.info.pixel_fmt&2);
-    /*Lazy data buffer init.
-      We could try to re-use the post-processing buffer, which would save
-       memory, but complicate the allocation logic there.
-      I don't think anyone cares about memory usage when using telemetry; it is
-       not meant for embedded devices.*/
-    if(_dec->telemetry_frame_data==NULL){
-      _dec->telemetry_frame_data=_ogg_malloc(
-       (w*h+2*(w>>hdec)*(h>>vdec))*sizeof(*_dec->telemetry_frame_data));
-      if(_dec->telemetry_frame_data==NULL)return 0;
-    }
-    cs=cairo_image_surface_create(CAIRO_FORMAT_RGB24,w,h);
-    /*Sadly, no YUV support in Cairo (yet); convert into the RGB buffer.*/
-    data=cairo_image_surface_get_data(cs);
-    if(data==NULL){
-      cairo_surface_destroy(cs);
-      return 0;
-    }
-    cstride=cairo_image_surface_get_stride(cs);
-    y_row=_ycbcr[0].data;
-    u_row=_ycbcr[1].data;
-    v_row=_ycbcr[2].data;
-    rgb_row=data;
-    for(y=0;y<h;y++){
-      for(x=0;x<w;x++){
-        int r;
-        int g;
-        int b;
-        r=(1904000*y_row[x]+2609823*v_row[x>>hdec]-363703744)/1635200;
-        g=(3827562*y_row[x]-1287801*u_row[x>>hdec]
-         -2672387*v_row[x>>hdec]+447306710)/3287200;
-        b=(952000*y_row[x]+1649289*u_row[x>>hdec]-225932192)/817600;
-        rgb_row[4*x+0]=OC_CLAMP255(b);
-        rgb_row[4*x+1]=OC_CLAMP255(g);
-        rgb_row[4*x+2]=OC_CLAMP255(r);
-      }
-      y_row+=_ycbcr[0].stride;
-      u_row+=_ycbcr[1].stride&-((y&1)|!vdec);
-      v_row+=_ycbcr[2].stride&-((y&1)|!vdec);
-      rgb_row+=cstride;
-    }
-    /*Draw coded identifier for each macroblock (stored in Hilbert order).*/
-    {
-      cairo_t           *c;
-      const oc_fragment *frags;
-      oc_mv             *frag_mvs;
-      const signed char *mb_modes;
-      oc_mb_map         *mb_maps;
-      size_t             nmbs;
-      size_t             mbi;
-      int                row2;
-      int                col2;
-      int                qim[3]={0,0,0};
-      if(_dec->state.nqis==2){
-        int bqi;
-        bqi=_dec->state.qis[0];
-        if(_dec->state.qis[1]>bqi)qim[1]=1;
-        if(_dec->state.qis[1]<bqi)qim[1]=-1;
-      }
-      if(_dec->state.nqis==3){
-        int bqi;
-        int cqi;
-        int dqi;
-        bqi=_dec->state.qis[0];
-        cqi=_dec->state.qis[1];
-        dqi=_dec->state.qis[2];
-        if(cqi>bqi&&dqi>bqi){
-          if(dqi>cqi){
-            qim[1]=1;
-            qim[2]=2;
-          }
-          else{
-            qim[1]=2;
-            qim[2]=1;
-          }
-        }
-        else if(cqi<bqi&&dqi<bqi){
-          if(dqi<cqi){
-            qim[1]=-1;
-            qim[2]=-2;
-          }
-          else{
-            qim[1]=-2;
-            qim[2]=-1;
-          }
-        }
-        else{
-          if(cqi<bqi)qim[1]=-1;
-          else qim[1]=1;
-          if(dqi<bqi)qim[2]=-1;
-          else qim[2]=1;
-        }
-      }
-      c=cairo_create(cs);
-      frags=_dec->state.frags;
-      frag_mvs=_dec->state.frag_mvs;
-      mb_modes=_dec->state.mb_modes;
-      mb_maps=_dec->state.mb_maps;
-      nmbs=_dec->state.nmbs;
-      row2=0;
-      col2=0;
-      for(mbi=0;mbi<nmbs;mbi++){
-        float x;
-        float y;
-        int   bi;
-        y=h-(row2+((col2+1>>1)&1))*16-16;
-        x=(col2>>1)*16;
-        cairo_set_line_width(c,1.);
-        /*Keyframe (all intra) red box.*/
-        if(_dec->state.frame_type==OC_INTRA_FRAME){
-          if(_dec->telemetry_mbmode&0x02){
-            cairo_set_source_rgba(c,1.,0,0,.5);
-            cairo_rectangle(c,x+2.5,y+2.5,11,11);
-            cairo_stroke_preserve(c);
-            cairo_set_source_rgba(c,1.,0,0,.25);
-            cairo_fill(c);
-          }
-        }
-        else{
-          ptrdiff_t fragi;
-          int       frag_mvx;
-          int       frag_mvy;
-          for(bi=0;bi<4;bi++){
-            fragi=mb_maps[mbi][0][bi];
-            if(fragi>=0&&frags[fragi].coded){
-              frag_mvx=OC_MV_X(frag_mvs[fragi]);
-              frag_mvy=OC_MV_Y(frag_mvs[fragi]);
-              break;
-            }
-          }
-          if(bi<4){
-            switch(mb_modes[mbi]){
-              case OC_MODE_INTRA:{
-                if(_dec->telemetry_mbmode&0x02){
-                  cairo_set_source_rgba(c,1.,0,0,.5);
-                  cairo_rectangle(c,x+2.5,y+2.5,11,11);
-                  cairo_stroke_preserve(c);
-                  cairo_set_source_rgba(c,1.,0,0,.25);
-                  cairo_fill(c);
-                }
-              }break;
-              case OC_MODE_INTER_NOMV:{
-                if(_dec->telemetry_mbmode&0x01){
-                  cairo_set_source_rgba(c,0,0,1.,.5);
-                  cairo_rectangle(c,x+2.5,y+2.5,11,11);
-                  cairo_stroke_preserve(c);
-                  cairo_set_source_rgba(c,0,0,1.,.25);
-                  cairo_fill(c);
-                }
-              }break;
-              case OC_MODE_INTER_MV:{
-                if(_dec->telemetry_mbmode&0x04){
-                  cairo_rectangle(c,x+2.5,y+2.5,11,11);
-                  cairo_set_source_rgba(c,0,1.,0,.5);
-                  cairo_stroke(c);
-                }
-                if(_dec->telemetry_mv&0x04){
-                  cairo_move_to(c,x+8+frag_mvx,y+8-frag_mvy);
-                  cairo_set_source_rgba(c,1.,1.,1.,.9);
-                  cairo_set_line_width(c,3.);
-                  cairo_line_to(c,x+8+frag_mvx*.66,y+8-frag_mvy*.66);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,2.);
-                  cairo_line_to(c,x+8+frag_mvx*.33,y+8-frag_mvy*.33);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,1.);
-                  cairo_line_to(c,x+8,y+8);
-                  cairo_stroke(c);
-                }
-              }break;
-              case OC_MODE_INTER_MV_LAST:{
-                if(_dec->telemetry_mbmode&0x08){
-                  cairo_rectangle(c,x+2.5,y+2.5,11,11);
-                  cairo_set_source_rgba(c,0,1.,0,.5);
-                  cairo_move_to(c,x+13.5,y+2.5);
-                  cairo_line_to(c,x+2.5,y+8);
-                  cairo_line_to(c,x+13.5,y+13.5);
-                  cairo_stroke(c);
-                }
-                if(_dec->telemetry_mv&0x08){
-                  cairo_move_to(c,x+8+frag_mvx,y+8-frag_mvy);
-                  cairo_set_source_rgba(c,1.,1.,1.,.9);
-                  cairo_set_line_width(c,3.);
-                  cairo_line_to(c,x+8+frag_mvx*.66,y+8-frag_mvy*.66);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,2.);
-                  cairo_line_to(c,x+8+frag_mvx*.33,y+8-frag_mvy*.33);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,1.);
-                  cairo_line_to(c,x+8,y+8);
-                  cairo_stroke(c);
-                }
-              }break;
-              case OC_MODE_INTER_MV_LAST2:{
-                if(_dec->telemetry_mbmode&0x10){
-                  cairo_rectangle(c,x+2.5,y+2.5,11,11);
-                  cairo_set_source_rgba(c,0,1.,0,.5);
-                  cairo_move_to(c,x+8,y+2.5);
-                  cairo_line_to(c,x+2.5,y+8);
-                  cairo_line_to(c,x+8,y+13.5);
-                  cairo_move_to(c,x+13.5,y+2.5);
-                  cairo_line_to(c,x+8,y+8);
-                  cairo_line_to(c,x+13.5,y+13.5);
-                  cairo_stroke(c);
-                }
-                if(_dec->telemetry_mv&0x10){
-                  cairo_move_to(c,x+8+frag_mvx,y+8-frag_mvy);
-                  cairo_set_source_rgba(c,1.,1.,1.,.9);
-                  cairo_set_line_width(c,3.);
-                  cairo_line_to(c,x+8+frag_mvx*.66,y+8-frag_mvy*.66);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,2.);
-                  cairo_line_to(c,x+8+frag_mvx*.33,y+8-frag_mvy*.33);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,1.);
-                  cairo_line_to(c,x+8,y+8);
-                  cairo_stroke(c);
-                }
-              }break;
-              case OC_MODE_GOLDEN_NOMV:{
-                if(_dec->telemetry_mbmode&0x20){
-                  cairo_set_source_rgba(c,1.,1.,0,.5);
-                  cairo_rectangle(c,x+2.5,y+2.5,11,11);
-                  cairo_stroke_preserve(c);
-                  cairo_set_source_rgba(c,1.,1.,0,.25);
-                  cairo_fill(c);
-                }
-              }break;
-              case OC_MODE_GOLDEN_MV:{
-                if(_dec->telemetry_mbmode&0x40){
-                  cairo_rectangle(c,x+2.5,y+2.5,11,11);
-                  cairo_set_source_rgba(c,1.,1.,0,.5);
-                  cairo_stroke(c);
-                }
-                if(_dec->telemetry_mv&0x40){
-                  cairo_move_to(c,x+8+frag_mvx,y+8-frag_mvy);
-                  cairo_set_source_rgba(c,1.,1.,1.,.9);
-                  cairo_set_line_width(c,3.);
-                  cairo_line_to(c,x+8+frag_mvx*.66,y+8-frag_mvy*.66);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,2.);
-                  cairo_line_to(c,x+8+frag_mvx*.33,y+8-frag_mvy*.33);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,1.);
-                  cairo_line_to(c,x+8,y+8);
-                  cairo_stroke(c);
-                }
-              }break;
-              case OC_MODE_INTER_MV_FOUR:{
-                if(_dec->telemetry_mbmode&0x80){
-                  cairo_rectangle(c,x+2.5,y+2.5,4,4);
-                  cairo_rectangle(c,x+9.5,y+2.5,4,4);
-                  cairo_rectangle(c,x+2.5,y+9.5,4,4);
-                  cairo_rectangle(c,x+9.5,y+9.5,4,4);
-                  cairo_set_source_rgba(c,0,1.,0,.5);
-                  cairo_stroke(c);
-                }
-                /*4mv is odd, coded in raster order.*/
-                fragi=mb_maps[mbi][0][0];
-                if(frags[fragi].coded&&_dec->telemetry_mv&0x80){
-                  frag_mvx=OC_MV_X(frag_mvs[fragi]);
-                  frag_mvx=OC_MV_Y(frag_mvs[fragi]);
-                  cairo_move_to(c,x+4+frag_mvx,y+12-frag_mvy);
-                  cairo_set_source_rgba(c,1.,1.,1.,.9);
-                  cairo_set_line_width(c,3.);
-                  cairo_line_to(c,x+4+frag_mvx*.66,y+12-frag_mvy*.66);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,2.);
-                  cairo_line_to(c,x+4+frag_mvx*.33,y+12-frag_mvy*.33);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,1.);
-                  cairo_line_to(c,x+4,y+12);
-                  cairo_stroke(c);
-                }
-                fragi=mb_maps[mbi][0][1];
-                if(frags[fragi].coded&&_dec->telemetry_mv&0x80){
-                  frag_mvx=OC_MV_X(frag_mvs[fragi]);
-                  frag_mvx=OC_MV_Y(frag_mvs[fragi]);
-                  cairo_move_to(c,x+12+frag_mvx,y+12-frag_mvy);
-                  cairo_set_source_rgba(c,1.,1.,1.,.9);
-                  cairo_set_line_width(c,3.);
-                  cairo_line_to(c,x+12+frag_mvx*.66,y+12-frag_mvy*.66);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,2.);
-                  cairo_line_to(c,x+12+frag_mvx*.33,y+12-frag_mvy*.33);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,1.);
-                  cairo_line_to(c,x+12,y+12);
-                  cairo_stroke(c);
-                }
-                fragi=mb_maps[mbi][0][2];
-                if(frags[fragi].coded&&_dec->telemetry_mv&0x80){
-                  frag_mvx=OC_MV_X(frag_mvs[fragi]);
-                  frag_mvx=OC_MV_Y(frag_mvs[fragi]);
-                  cairo_move_to(c,x+4+frag_mvx,y+4-frag_mvy);
-                  cairo_set_source_rgba(c,1.,1.,1.,.9);
-                  cairo_set_line_width(c,3.);
-                  cairo_line_to(c,x+4+frag_mvx*.66,y+4-frag_mvy*.66);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,2.);
-                  cairo_line_to(c,x+4+frag_mvx*.33,y+4-frag_mvy*.33);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,1.);
-                  cairo_line_to(c,x+4,y+4);
-                  cairo_stroke(c);
-                }
-                fragi=mb_maps[mbi][0][3];
-                if(frags[fragi].coded&&_dec->telemetry_mv&0x80){
-                  frag_mvx=OC_MV_X(frag_mvs[fragi]);
-                  frag_mvx=OC_MV_Y(frag_mvs[fragi]);
-                  cairo_move_to(c,x+12+frag_mvx,y+4-frag_mvy);
-                  cairo_set_source_rgba(c,1.,1.,1.,.9);
-                  cairo_set_line_width(c,3.);
-                  cairo_line_to(c,x+12+frag_mvx*.66,y+4-frag_mvy*.66);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,2.);
-                  cairo_line_to(c,x+12+frag_mvx*.33,y+4-frag_mvy*.33);
-                  cairo_stroke_preserve(c);
-                  cairo_set_line_width(c,1.);
-                  cairo_line_to(c,x+12,y+4);
-                  cairo_stroke(c);
-                }
-              }break;
-            }
-          }
-        }
-        /*qii illustration.*/
-        if(_dec->telemetry_qi&0x2){
-          cairo_set_line_cap(c,CAIRO_LINE_CAP_SQUARE);
-          for(bi=0;bi<4;bi++){
-            ptrdiff_t fragi;
-            int       qiv;
-            int       xp;
-            int       yp;
-            xp=x+(bi&1)*8;
-            yp=y+8-(bi&2)*4;
-            fragi=mb_maps[mbi][0][bi];
-            if(fragi>=0&&frags[fragi].coded){
-              qiv=qim[frags[fragi].qii];
-              cairo_set_line_width(c,3.);
-              cairo_set_source_rgba(c,0.,0.,0.,.5);
-              switch(qiv){
-                /*Double plus:*/
-                case 2:{
-                  if((bi&1)^((bi&2)>>1)){
-                    cairo_move_to(c,xp+2.5,yp+1.5);
-                    cairo_line_to(c,xp+2.5,yp+3.5);
-                    cairo_move_to(c,xp+1.5,yp+2.5);
-                    cairo_line_to(c,xp+3.5,yp+2.5);
-                    cairo_move_to(c,xp+5.5,yp+4.5);
-                    cairo_line_to(c,xp+5.5,yp+6.5);
-                    cairo_move_to(c,xp+4.5,yp+5.5);
-                    cairo_line_to(c,xp+6.5,yp+5.5);
-                    cairo_stroke_preserve(c);
-                    cairo_set_source_rgba(c,0.,1.,1.,1.);
-                  }
-                  else{
-                    cairo_move_to(c,xp+5.5,yp+1.5);
-                    cairo_line_to(c,xp+5.5,yp+3.5);
-                    cairo_move_to(c,xp+4.5,yp+2.5);
-                    cairo_line_to(c,xp+6.5,yp+2.5);
-                    cairo_move_to(c,xp+2.5,yp+4.5);
-                    cairo_line_to(c,xp+2.5,yp+6.5);
-                    cairo_move_to(c,xp+1.5,yp+5.5);
-                    cairo_line_to(c,xp+3.5,yp+5.5);
-                    cairo_stroke_preserve(c);
-                    cairo_set_source_rgba(c,0.,1.,1.,1.);
-                  }
-                }break;
-                /*Double minus:*/
-                case -2:{
-                  cairo_move_to(c,xp+2.5,yp+2.5);
-                  cairo_line_to(c,xp+5.5,yp+2.5);
-                  cairo_move_to(c,xp+2.5,yp+5.5);
-                  cairo_line_to(c,xp+5.5,yp+5.5);
-                  cairo_stroke_preserve(c);
-                  cairo_set_source_rgba(c,1.,1.,1.,1.);
-                }break;
-                /*Plus:*/
-                case 1:{
-                  if(bi&2==0)yp-=2;
-                  if(bi&1==0)xp-=2;
-                  cairo_move_to(c,xp+4.5,yp+2.5);
-                  cairo_line_to(c,xp+4.5,yp+6.5);
-                  cairo_move_to(c,xp+2.5,yp+4.5);
-                  cairo_line_to(c,xp+6.5,yp+4.5);
-                  cairo_stroke_preserve(c);
-                  cairo_set_source_rgba(c,.1,1.,.3,1.);
-                  break;
-                }
-                /*Fall through.*/
-                /*Minus:*/
-                case -1:{
-                  cairo_move_to(c,xp+2.5,yp+4.5);
-                  cairo_line_to(c,xp+6.5,yp+4.5);
-                  cairo_stroke_preserve(c);
-                  cairo_set_source_rgba(c,1.,.3,.1,1.);
-                }break;
-                default:continue;
-              }
-              cairo_set_line_width(c,1.);
-              cairo_stroke(c);
-            }
-          }
-        }
-        col2++;
-        if((col2>>1)>=_dec->state.nhmbs){
-          col2=0;
-          row2+=2;
-        }
-      }
-      /*Bit usage indicator[s]:*/
-      if(_dec->telemetry_bits){
-        int widths[6];
-        int fpsn;
-        int fpsd;
-        int mult;
-        int fullw;
-        int padw;
-        int i;
-        fpsn=_dec->state.info.fps_numerator;
-        fpsd=_dec->state.info.fps_denominator;
-        mult=(_dec->telemetry_bits>=0xFF?1:_dec->telemetry_bits);
-        fullw=250.f*h*fpsd*mult/fpsn;
-        padw=w-24;
-        /*Header and coded block bits.*/
-        if(_dec->telemetry_frame_bytes<0||
-         _dec->telemetry_frame_bytes==OC_LOTS_OF_BITS){
-          _dec->telemetry_frame_bytes=0;
-        }
-        if(_dec->telemetry_coding_bytes<0||
-         _dec->telemetry_coding_bytes>_dec->telemetry_frame_bytes){
-          _dec->telemetry_coding_bytes=0;
-        }
-        if(_dec->telemetry_mode_bytes<0||
-         _dec->telemetry_mode_bytes>_dec->telemetry_frame_bytes){
-          _dec->telemetry_mode_bytes=0;
-        }
-        if(_dec->telemetry_mv_bytes<0||
-         _dec->telemetry_mv_bytes>_dec->telemetry_frame_bytes){
-          _dec->telemetry_mv_bytes=0;
-        }
-        if(_dec->telemetry_qi_bytes<0||
-         _dec->telemetry_qi_bytes>_dec->telemetry_frame_bytes){
-          _dec->telemetry_qi_bytes=0;
-        }
-        if(_dec->telemetry_dc_bytes<0||
-         _dec->telemetry_dc_bytes>_dec->telemetry_frame_bytes){
-          _dec->telemetry_dc_bytes=0;
-        }
-        widths[0]=padw*(_dec->telemetry_frame_bytes-_dec->telemetry_coding_bytes)/fullw;
-        widths[1]=padw*(_dec->telemetry_coding_bytes-_dec->telemetry_mode_bytes)/fullw;
-        widths[2]=padw*(_dec->telemetry_mode_bytes-_dec->telemetry_mv_bytes)/fullw;
-        widths[3]=padw*(_dec->telemetry_mv_bytes-_dec->telemetry_qi_bytes)/fullw;
-        widths[4]=padw*(_dec->telemetry_qi_bytes-_dec->telemetry_dc_bytes)/fullw;
-        widths[5]=padw*(_dec->telemetry_dc_bytes)/fullw;
-        for(i=0;i<6;i++)if(widths[i]>w)widths[i]=w;
-        cairo_set_source_rgba(c,.0,.0,.0,.6);
-        cairo_rectangle(c,10,h-33,widths[0]+1,5);
-        cairo_rectangle(c,10,h-29,widths[1]+1,5);
-        cairo_rectangle(c,10,h-25,widths[2]+1,5);
-        cairo_rectangle(c,10,h-21,widths[3]+1,5);
-        cairo_rectangle(c,10,h-17,widths[4]+1,5);
-        cairo_rectangle(c,10,h-13,widths[5]+1,5);
-        cairo_fill(c);
-        cairo_set_source_rgb(c,1,0,0);
-        cairo_rectangle(c,10.5,h-32.5,widths[0],4);
-        cairo_fill(c);
-        cairo_set_source_rgb(c,0,1,0);
-        cairo_rectangle(c,10.5,h-28.5,widths[1],4);
-        cairo_fill(c);
-        cairo_set_source_rgb(c,0,0,1);
-        cairo_rectangle(c,10.5,h-24.5,widths[2],4);
-        cairo_fill(c);
-        cairo_set_source_rgb(c,.6,.4,.0);
-        cairo_rectangle(c,10.5,h-20.5,widths[3],4);
-        cairo_fill(c);
-        cairo_set_source_rgb(c,.3,.3,.3);
-        cairo_rectangle(c,10.5,h-16.5,widths[4],4);
-        cairo_fill(c);
-        cairo_set_source_rgb(c,.5,.5,.8);
-        cairo_rectangle(c,10.5,h-12.5,widths[5],4);
-        cairo_fill(c);
-      }
-      /*Master qi indicator[s]:*/
-      if(_dec->telemetry_qi&0x1){
-        cairo_text_extents_t extents;
-        char                 buffer[10];
-        int                  p;
-        int                  y;
-        p=0;
-        y=h-7.5;
-        if(_dec->state.qis[0]>=10)buffer[p++]=48+_dec->state.qis[0]/10;
-        buffer[p++]=48+_dec->state.qis[0]%10;
-        if(_dec->state.nqis>=2){
-          buffer[p++]=' ';
-          if(_dec->state.qis[1]>=10)buffer[p++]=48+_dec->state.qis[1]/10;
-          buffer[p++]=48+_dec->state.qis[1]%10;
-        }
-        if(_dec->state.nqis==3){
-          buffer[p++]=' ';
-          if(_dec->state.qis[2]>=10)buffer[p++]=48+_dec->state.qis[2]/10;
-          buffer[p++]=48+_dec->state.qis[2]%10;
-        }
-        buffer[p++]='\0';
-        cairo_select_font_face(c,"sans",
-         CAIRO_FONT_SLANT_NORMAL,CAIRO_FONT_WEIGHT_BOLD);
-        cairo_set_font_size(c,18);
-        cairo_text_extents(c,buffer,&extents);
-        cairo_set_source_rgb(c,1,1,1);
-        cairo_move_to(c,w-extents.x_advance-10,y);
-        cairo_show_text(c,buffer);
-        cairo_set_source_rgb(c,0,0,0);
-        cairo_move_to(c,w-extents.x_advance-10,y);
-        cairo_text_path(c,buffer);
-        cairo_set_line_width(c,.8);
-        cairo_set_line_join(c,CAIRO_LINE_JOIN_ROUND);
-        cairo_stroke(c);
-      }
-      cairo_destroy(c);
-    }
-    /*Out of the Cairo plane into the telemetry YUV buffer.*/
-    _ycbcr[0].data=_dec->telemetry_frame_data;
-    _ycbcr[0].stride=_ycbcr[0].width;
-    _ycbcr[1].data=_ycbcr[0].data+h*_ycbcr[0].stride;
-    _ycbcr[1].stride=_ycbcr[1].width;
-    _ycbcr[2].data=_ycbcr[1].data+(h>>vdec)*_ycbcr[1].stride;
-    _ycbcr[2].stride=_ycbcr[2].width;
-    y_row=_ycbcr[0].data;
-    u_row=_ycbcr[1].data;
-    v_row=_ycbcr[2].data;
-    rgb_row=data;
-    /*This is one of the few places it's worth handling chroma on a
-       case-by-case basis.*/
-    switch(_dec->state.info.pixel_fmt){
-      case TH_PF_420:{
-        for(y=0;y<h;y+=2){
-          unsigned char *y_row2;
-          unsigned char *rgb_row2;
-          y_row2=y_row+_ycbcr[0].stride;
-          rgb_row2=rgb_row+cstride;
-          for(x=0;x<w;x+=2){
-            int y;
-            int u;
-            int v;
-            y=(65481*rgb_row[4*x+2]+128553*rgb_row[4*x+1]
-             +24966*rgb_row[4*x+0]+4207500)/255000;
-            y_row[x]=OC_CLAMP255(y);
-            y=(65481*rgb_row[4*x+6]+128553*rgb_row[4*x+5]
-             +24966*rgb_row[4*x+4]+4207500)/255000;
-            y_row[x+1]=OC_CLAMP255(y);
-            y=(65481*rgb_row2[4*x+2]+128553*rgb_row2[4*x+1]
-             +24966*rgb_row2[4*x+0]+4207500)/255000;
-            y_row2[x]=OC_CLAMP255(y);
-            y=(65481*rgb_row2[4*x+6]+128553*rgb_row2[4*x+5]
-             +24966*rgb_row2[4*x+4]+4207500)/255000;
-            y_row2[x+1]=OC_CLAMP255(y);
-            u=(-8372*(rgb_row[4*x+2]+rgb_row[4*x+6]
-             +rgb_row2[4*x+2]+rgb_row2[4*x+6])
-             -16436*(rgb_row[4*x+1]+rgb_row[4*x+5]
-             +rgb_row2[4*x+1]+rgb_row2[4*x+5])
-             +24808*(rgb_row[4*x+0]+rgb_row[4*x+4]
-             +rgb_row2[4*x+0]+rgb_row2[4*x+4])+29032005)/225930;
-            v=(39256*(rgb_row[4*x+2]+rgb_row[4*x+6]
-             +rgb_row2[4*x+2]+rgb_row2[4*x+6])
-             -32872*(rgb_row[4*x+1]+rgb_row[4*x+5]
-              +rgb_row2[4*x+1]+rgb_row2[4*x+5])
-             -6384*(rgb_row[4*x+0]+rgb_row[4*x+4]
-              +rgb_row2[4*x+0]+rgb_row2[4*x+4])+45940035)/357510;
-            u_row[x>>1]=OC_CLAMP255(u);
-            v_row[x>>1]=OC_CLAMP255(v);
-          }
-          y_row+=_ycbcr[0].stride<<1;
-          u_row+=_ycbcr[1].stride;
-          v_row+=_ycbcr[2].stride;
-          rgb_row+=cstride<<1;
-        }
-      }break;
-      case TH_PF_422:{
-        for(y=0;y<h;y++){
-          for(x=0;x<w;x+=2){
-            int y;
-            int u;
-            int v;
-            y=(65481*rgb_row[4*x+2]+128553*rgb_row[4*x+1]
-             +24966*rgb_row[4*x+0]+4207500)/255000;
-            y_row[x]=OC_CLAMP255(y);
-            y=(65481*rgb_row[4*x+6]+128553*rgb_row[4*x+5]
-             +24966*rgb_row[4*x+4]+4207500)/255000;
-            y_row[x+1]=OC_CLAMP255(y);
-            u=(-16744*(rgb_row[4*x+2]+rgb_row[4*x+6])
-             -32872*(rgb_row[4*x+1]+rgb_row[4*x+5])
-             +49616*(rgb_row[4*x+0]+rgb_row[4*x+4])+29032005)/225930;
-            v=(78512*(rgb_row[4*x+2]+rgb_row[4*x+6])
-             -65744*(rgb_row[4*x+1]+rgb_row[4*x+5])
-             -12768*(rgb_row[4*x+0]+rgb_row[4*x+4])+45940035)/357510;
-            u_row[x>>1]=OC_CLAMP255(u);
-            v_row[x>>1]=OC_CLAMP255(v);
-          }
-          y_row+=_ycbcr[0].stride;
-          u_row+=_ycbcr[1].stride;
-          v_row+=_ycbcr[2].stride;
-          rgb_row+=cstride;
-        }
-      }break;
-      /*case TH_PF_444:*/
-      default:{
-        for(y=0;y<h;y++){
-          for(x=0;x<w;x++){
-            int y;
-            int u;
-            int v;
-            y=(65481*rgb_row[4*x+2]+128553*rgb_row[4*x+1]
-             +24966*rgb_row[4*x+0]+4207500)/255000;
-            u=(-33488*rgb_row[4*x+2]-65744*rgb_row[4*x+1]
-             +99232*rgb_row[4*x+0]+29032005)/225930;
-            v=(157024*rgb_row[4*x+2]-131488*rgb_row[4*x+1]
-             -25536*rgb_row[4*x+0]+45940035)/357510;
-            y_row[x]=OC_CLAMP255(y);
-            u_row[x]=OC_CLAMP255(u);
-            v_row[x]=OC_CLAMP255(v);
-          }
-          y_row+=_ycbcr[0].stride;
-          u_row+=_ycbcr[1].stride;
-          v_row+=_ycbcr[2].stride;
-          rgb_row+=cstride;
-        }
-      }break;
-    }
-    /*Finished.
-      Destroy the surface.*/
-    cairo_surface_destroy(cs);
-  }
-#endif
   return 0;
 }

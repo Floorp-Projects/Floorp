@@ -20,7 +20,7 @@
 #include "armcpu.h"
 
 #if !defined(OC_ARM_ASM)|| \
- !defined(OC_ARM_ASM_EDSP)&&!defined(OC_ARM_ASM_ARMV6)&& \
+ !defined(OC_ARM_ASM_EDSP)&&!defined(OC_ARM_ASM_MEDIA)&& \
  !defined(OC_ARM_ASM_NEON)
 ogg_uint32_t oc_cpu_flags_get(void){
   return 0;
@@ -104,6 +104,44 @@ ogg_uint32_t oc_cpu_flags_get(void){
     }
     fclose(fin);
   }
+  return flags;
+}
+
+#elif defined(__riscos__)
+#include <kernel.h>
+#include <swis.h>
+
+ogg_uint32_t oc_cpu_flags_get(void) {
+  ogg_uint32_t flags = 0;
+
+#if defined(OC_ARM_ASM_EDSP) || defined(OC_ARM_ASM_MEDIA)
+
+  if (_swi(OS_Byte,_IN(0)|_IN(2)|_RETURN(1), 129, 0xFF) <= 0xA9)
+     _swix(OS_Module, _INR(0,1), 1, "System:Modules.CallASWI");
+
+  ogg_uint32_t features;
+  _kernel_oserror* test = _swix(OS_PlatformFeatures, _IN(0)|_OUT(0), 0, &features);
+  if (test == NULL) {
+#if defined(OC_ARM_ASM_EDSP)
+    if((features>>10 & 1) == 1)flags|=OC_CPU_ARM_EDSP;
+#endif
+
+#if defined(OC_ARM_ASM_MEDIA)
+    if ((features>>31 & 1) == 1) {
+      ogg_uint32_t shadd = 0;
+      test =_swix(OS_PlatformFeatures, _INR(0,1)|_OUT(0), 34, 29, &shadd);
+      if (test==NULL && shadd==1)flags|=OC_CPU_ARM_MEDIA;
+    }
+#endif
+  }
+#endif
+
+#if defined(OC_ARM_ASM_NEON)
+  ogg_uint32_t mvfr1;
+  test = _swix(VFPSupport_Features, _IN(0)|_OUT(2), 0, &mvfr1);
+  if (test==NULL && (mvfr1 & 0xFFF00)==0x11100)flags|=OC_CPU_ARM_NEON;
+#endif
+
   return flags;
 }
 
