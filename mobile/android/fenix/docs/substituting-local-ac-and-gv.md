@@ -51,7 +51,7 @@ diff --git a/mobile/android/geckoview/build.gradle b/mobile/android/geckoview/bu
 And execute `./mach build | grep version` to find a version number like `98.0.20211208151112-SNAPSHOT`.
 
 ### 3. Modify ac to consume local GV
-See the diff below. Remember to update the GV version with the version you found in step 2!
+Update the build.gradle and Gecko.kt file in Fenix (see the diff below). Remember to update the GV version with the version you found in step 2!
 ```diff
 diff --git a/build.gradle b/build.gradle
 index fa8149781f..863df65a57 100644
