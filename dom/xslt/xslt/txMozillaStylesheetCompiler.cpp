@@ -77,7 +77,7 @@ class txStylesheetSink final : public nsIXMLContentSink,
   NS_IMETHOD WillParse(void) override { return NS_OK; }
   NS_IMETHOD DidBuildModel(bool aTerminated) override;
   NS_IMETHOD WillInterrupt(void) override { return NS_OK; }
-  NS_IMETHOD WillResume(void) override { return NS_OK; }
+  void WillResume() override {}
   NS_IMETHOD SetParser(nsParserBase* aParser) override { return NS_OK; }
   virtual void FlushPendingNotifications(mozilla::FlushType aType) override {}
   virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding) override {
