@@ -1,0 +1,43 @@
+{
+  "extensionName": {
+    "message": "플로어 업데이트 알림",
+    "description": "Name of the extension."
+  },
+
+  "SetExN": {
+      "message": "color"
+  },
+  "scan-code": {
+    "message": "QR コードをスキャンしてください"
+  },
+  "save-code": {
+    "message": "コードを保存"
+  },
+  "SetSavN": {
+    "message": "Save"
+  },
+
+  "extensionDescription": {
+    "message": "이것은 Floorp용 업데이터입니다.",
+    "description": "This is an updater for Floorp."
+  },
+
+  "notificationTitle": {
+    "message": "업데이트 알림",
+    "description": "Title"
+  },
+  "notificationContent": {
+    "message": "Floorp의 최신 버전이 출시되었습니다 !\n설치 프로그램을 다운로드하려면 클릭하십시오..\n현재 버전:$OLD$\n최신 버전:$NEW$",
+    "description": "Tells the user which link they clicked.",
+    "placeholders": {
+      "old" : {
+        "content" : "$1",
+        "example" : "https://developer.mozilla.org"
+      },
+      "new" : {
+        "content" : "$2",
+        "example" : "https://developer.mozilla.org"
+      }
+    }
+  }
+}

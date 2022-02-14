@@ -16,12 +16,9 @@ DIRS += [
     "search-detection",
     "floorp-rss-read",
     "floorpsync",
-    "open-closed",
     "translate",
-    "qr-code",
-    "superdrag",
     "tab-s",
-    "notify",
+    "floorp-system",
     "floorp-protector",
     "gesturefy",
 ]

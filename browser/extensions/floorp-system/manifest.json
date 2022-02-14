@@ -1,0 +1,56 @@
+{
+
+  "manifest_version": 2,
+  "name": "__MSG_extensionName__",
+  "description": "__MSG_extensionDescription__",
+  "version": "1.0",
+  "homepage_url": "https://ablaze.one",
+  "permissions": [
+    "notifications",
+    "tabs",
+    "storage",
+    "sessions",
+    "storage",
+    "clipboardWrite",
+    "search",
+    "activeTab"
+  ],
+
+	"browser_action": {
+		"default_icon":  "icons/i.svg",
+		"default_title": "__MSG_action__",
+		"browser_style":  true
+	},
+
+  "page_action": {
+    "browser_style": true,
+    "default_icon": "icons/icon.svg",
+    "default_popup": "qr-code/popup.html",
+    "show_matches": [
+      "<all_urls>"
+    ]
+  },
+
+  "background": {
+    "scripts": ["background-script.js"]
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "superdrag.js"
+      ],"run_at": "document_end"
+    }
+  ],
+
+  "applications": {
+    "gecko": {
+      "id": "floorp-system@floorp.ablaze.one"
+    }
+  },
+
+  "default_locale": "en"
+}
