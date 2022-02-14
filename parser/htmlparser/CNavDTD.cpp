@@ -44,8 +44,7 @@ CNavDTD::BuildModel(nsIContentSink* aSink) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-CNavDTD::DidBuildModel(nsresult anErrorCode) { return NS_OK; }
+void CNavDTD::DidBuildModel() {}
 
 NS_IMETHODIMP_(void)
 CNavDTD::Terminate() {}
