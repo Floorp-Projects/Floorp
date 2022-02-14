@@ -76,11 +76,6 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
   nsresult GetChannel(nsIChannel** aChannel);
 
   /**
-   * Return |this| for backwards compat.
-   */
-  NS_IMETHOD GetDTD(nsIDTD** aDTD) override;
-
-  /**
    * Get the stream parser for this parser
    */
   virtual nsIStreamListener* GetStreamListener() override;

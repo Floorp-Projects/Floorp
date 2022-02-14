@@ -199,18 +199,15 @@ txStylesheetSink::OnDataAvailable(nsIRequest* aRequest,
                                   nsIInputStream* aInputStream,
                                   uint64_t aOffset, uint32_t aCount) {
   if (!mCheckedForXML) {
-    nsCOMPtr<nsIDTD> dtd;
-    mParser->GetDTD(getter_AddRefs(dtd));
-    if (dtd) {
-      mCheckedForXML = true;
-      if (!(dtd->GetType() & NS_IPARSER_FLAG_XML)) {
-        nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-        nsAutoString spec;
-        getSpec(channel, spec);
-        mCompiler->cancel(NS_ERROR_XSLT_WRONG_MIME_TYPE, nullptr, spec.get());
+    Maybe<bool> isForXML = mParser->IsForParsingXML();
+    mCheckedForXML = isForXML.isSome();
+    if (mCheckedForXML && !isForXML.value()) {
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+      nsAutoString spec;
+      getSpec(channel, spec);
+      mCompiler->cancel(NS_ERROR_XSLT_WRONG_MIME_TYPE, nullptr, spec.get());
 
-        return NS_ERROR_XSLT_WRONG_MIME_TYPE;
-      }
+      return NS_ERROR_XSLT_WRONG_MIME_TYPE;
     }
   }
 
@@ -281,9 +278,8 @@ txStylesheetSink::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
     //     nsIHTMLContentSink.
     result = NS_ERROR_XSLT_NETWORK_ERROR;
   } else if (!mCheckedForXML) {
-    nsCOMPtr<nsIDTD> dtd;
-    mParser->GetDTD(getter_AddRefs(dtd));
-    if (dtd && !(dtd->GetType() & NS_IPARSER_FLAG_XML)) {
+    Maybe<bool> isForXML = mParser->IsForParsingXML();
+    if (isForXML.isSome() && !isForXML.value()) {
       result = NS_ERROR_XSLT_WRONG_MIME_TYPE;
     }
   }
