@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1644567930111,
+      "derHash": "N2EL91bKTDz6GGlsTBSXOOZEyp9nY4fsUBZzZdakXMo=",
+      "subject": "CN=Digidentity PKIoverheid Server CA 2020,O=Digidentity B.V.,C=NL",
+      "subjectDN": "MFkxCzAJBgNVBAYTAk5MMRkwFwYDVQQKDBBEaWdpZGVudGl0eSBCLlYuMS8wLQYDVQQDDCZEaWdpZGVudGl0eSBQS0lvdmVyaGVpZCBTZXJ2ZXIgQ0EgMjAyMA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c6efc5a8dbba37f6c4ba76f0ccd0f86ceb94b6b66cfd390227a747d4d83ff0b3",
+        "size": 2487,
+        "filename": "DnmLzHZn-pLaQKZ9c6lYR5BOqhZMey469UF5T1hne2k=.pem",
+        "location": "security-state-staging/intermediates/cd42a716-ce60-48c0-a709-ead47fce1fbe.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "DnmLzHZn+pLaQKZ9c6lYR5BOqhZMey469UF5T1hne2k=",
+      "crlite_enrolled": false,
+      "id": "5f56fcf5-5fc3-476f-865b-5607ab67cac6",
+      "last_modified": 1644591449953
+    },
+    {
+      "schema": 1644590907108,
+      "derHash": "N2EL91bKTDz6GGlsTBSXOOZEyp9nY4fsUBZzZdakXMo=",
+      "subject": "CN=Digidentity PKIoverheid Server CA 2020,O=Digidentity B.V.,C=NL",
+      "subjectDN": "MFkxCzAJBgNVBAYTAk5MMRkwFwYDVQQKDBBEaWdpZGVudGl0eSBCLlYuMS8wLQYDVQQDDCZEaWdpZGVudGl0eSBQS0lvdmVyaGVpZCBTZXJ2ZXIgQ0EgMjAyMA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c6efc5a8dbba37f6c4ba76f0ccd0f86ceb94b6b66cfd390227a747d4d83ff0b3",
+        "size": 2487,
+        "filename": "DnmLzHZn-pLaQKZ9c6lYR5BOqhZMey469UF5T1hne2k=.pem",
+        "location": "security-state-staging/intermediates/757831dd-1795-41f0-85b5-3bdaf5cb5601.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "DnmLzHZn+pLaQKZ9c6lYR5BOqhZMey469UF5T1hne2k=",
+      "crlite_enrolled": false,
+      "id": "aaf24e45-19fe-4a12-a2f3-d98e7fc92964",
+      "last_modified": 1644591449942
+    },
+    {
       "schema": 1644422524927,
       "derHash": "s5xKRZbTGRr6Oz0lTSjlxIL80NUA4Kkzf5knfLii7vg=",
       "subject": "CN=TrustID Server CA A52,OU=TrustID Server,O=IdenTrust,C=US",
@@ -953,24 +989,6 @@
       "crlite_enrolled": true,
       "id": "96382960-f466-4b1e-978c-efbc31fa4596",
       "last_modified": 1644375434993
-    },
-    {
-      "schema": 1644367736167,
-      "derHash": "N2EL91bKTDz6GGlsTBSXOOZEyp9nY4fsUBZzZdakXMo=",
-      "subject": "CN=Digidentity PKIoverheid Server CA 2020,O=Digidentity B.V.,C=NL",
-      "subjectDN": "MFkxCzAJBgNVBAYTAk5MMRkwFwYDVQQKDBBEaWdpZGVudGl0eSBCLlYuMS8wLQYDVQQDDCZEaWdpZGVudGl0eSBQS0lvdmVyaGVpZCBTZXJ2ZXIgQ0EgMjAyMA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c6efc5a8dbba37f6c4ba76f0ccd0f86ceb94b6b66cfd390227a747d4d83ff0b3",
-        "size": 2487,
-        "filename": "DnmLzHZn-pLaQKZ9c6lYR5BOqhZMey469UF5T1hne2k=.pem",
-        "location": "security-state-staging/intermediates/757831dd-1795-41f0-85b5-3bdaf5cb5601.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "DnmLzHZn+pLaQKZ9c6lYR5BOqhZMey469UF5T1hne2k=",
-      "crlite_enrolled": true,
-      "id": "aaf24e45-19fe-4a12-a2f3-d98e7fc92964",
-      "last_modified": 1644375434983
     },
     {
       "schema": 1644367731858,
@@ -3239,24 +3257,6 @@
       "crlite_enrolled": true,
       "id": "0bc47da0-e7f9-4d90-abc8-4a6d3f0c15c7",
       "last_modified": 1643540241408
-    },
-    {
-      "schema": 1643539745757,
-      "derHash": "N2EL91bKTDz6GGlsTBSXOOZEyp9nY4fsUBZzZdakXMo=",
-      "subject": "CN=Digidentity PKIoverheid Server CA 2020,O=Digidentity B.V.,C=NL",
-      "subjectDN": "MFkxCzAJBgNVBAYTAk5MMRkwFwYDVQQKDBBEaWdpZGVudGl0eSBCLlYuMS8wLQYDVQQDDCZEaWdpZGVudGl0eSBQS0lvdmVyaGVpZCBTZXJ2ZXIgQ0EgMjAyMA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c6efc5a8dbba37f6c4ba76f0ccd0f86ceb94b6b66cfd390227a747d4d83ff0b3",
-        "size": 2487,
-        "filename": "DnmLzHZn-pLaQKZ9c6lYR5BOqhZMey469UF5T1hne2k=.pem",
-        "location": "security-state-staging/intermediates/cd42a716-ce60-48c0-a709-ead47fce1fbe.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "DnmLzHZn+pLaQKZ9c6lYR5BOqhZMey469UF5T1hne2k=",
-      "crlite_enrolled": true,
-      "id": "5f56fcf5-5fc3-476f-865b-5607ab67cac6",
-      "last_modified": 1643540241398
     },
     {
       "schema": 1643539739222,
