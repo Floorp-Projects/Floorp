@@ -453,16 +453,6 @@ CParserContext* nsParser::PopContext() {
 }
 
 /**
- *  Call this when you want control whether or not the parser will parse
- *  and tokenize input (TRUE), or whether it just caches input to be
- *  parsed later (FALSE).
- *
- *  @param   aState determines whether we parse/tokenize or just cache.
- *  @return  current state
- */
-void nsParser::SetUnusedInput(nsString& aBuffer) { mUnusedInput = aBuffer; }
-
-/**
  *  Call this when you want to *force* the parser to terminate the
  *  parsing process altogether. This is binary -- so once you terminate
  *  you can't resume without restarting altogether.
