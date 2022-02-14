@@ -182,6 +182,8 @@ nsresult LSSnapshot::Init(const nsAString& aKey,
   MOZ_ASSERT(!mInitialized);
   MOZ_ASSERT(!mSentFinish);
 
+  QM_TRY(OkIf(Utf16ValidUpTo(aKey) == aKey.Length()), NS_ERROR_ILLEGAL_VALUE);
+
   mSelfRef = this;
 
   LoadState loadState = aInitInfo.loadState();
@@ -615,6 +617,8 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(!mSentFinish);
+
+  QM_TRY(OkIf(Utf16ValidUpTo(aKey) == aKey.Length()), NS_ERROR_ILLEGAL_VALUE);
 
   nsString result;
 
