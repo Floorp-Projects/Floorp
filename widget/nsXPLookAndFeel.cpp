@@ -426,11 +426,13 @@ static constexpr struct {
     {"browser.display.windows.native_menus"_ns},
     {"browser.proton.places-tooltip.enabled"_ns},
     {"layout.css.prefers-color-scheme.content-override"_ns},
+    // Affects media queries and scrollbar sizes, so gotta relayout.
+    {"widget.gtk.overlay-scrollbars.enabled"_ns,
+     widget::ThemeChangeKind::StyleAndLayout},
     // This affects not only the media query, but also the native theme, so we
     // need to re-layout.
     {"browser.theme.toolbar-theme"_ns, widget::ThemeChangeKind::AllBits},
     {"browser.theme.content-theme"_ns},
-    {"layout.css.color-scheme.content-override"_ns},
 };
 
 // Read values from the user's preferences.
