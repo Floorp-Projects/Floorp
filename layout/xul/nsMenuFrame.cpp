@@ -612,11 +612,20 @@ nsresult nsMenuFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
 }
 
 void nsMenuFrame::OpenMenu(bool aSelectFirstItem) {
-  if (!mContent) return;
-
-  if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
-    pm->KillMenuTimer();
+  if (!mContent) {
+    return;
   }
+
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (!pm) {
+    return;
+  }
+
+  pm->KillMenuTimer();
+  if (!pm->MayShowMenu(mContent)) {
+    return;
+  }
+
   // Open the menu asynchronously.
   mContent->OwnerDoc()->Dispatch(
       TaskCategory::Other,
