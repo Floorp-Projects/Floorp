@@ -99,8 +99,6 @@ class PrototypeDocumentParser final : public nsIParser,
 
   bool HasNonzeroScriptNestingLevel() const final { return false; }
 
-  virtual void MarkAsNotScriptCreated(const char* aCommand) override {}
-
   virtual bool IsScriptCreated() override { return false; }
 
   // End nsIParser
