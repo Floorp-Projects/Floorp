@@ -332,59 +332,6 @@ nsParser::CancelParsingEvents() {
 ////////////////////////////////////////////////////////////////////////
 
 /**
- * Evalutes EXPR1 and EXPR2 exactly once each, in that order.  Stores the value
- * of EXPR2 in RV is EXPR2 fails, otherwise RV contains the result of EXPR1
- * (which could be success or failure).
- *
- * To understand the motivation for this construct, consider these example
- * methods:
- *
- *   nsresult nsSomething::DoThatThing(nsIWhatever* obj) {
- *     nsresult rv = NS_OK;
- *     ...
- *     return obj->DoThatThing();
- *     NS_ENSURE_SUCCESS(rv, rv);
- *     ...
- *     return rv;
- *   }
- *
- *   void nsCaller::MakeThingsHappen() {
- *     return mSomething->DoThatThing(mWhatever);
- *   }
- *
- * Suppose, for whatever reason*, we want to shift responsibility for calling
- * mWhatever->DoThatThing() from nsSomething::DoThatThing up to
- * nsCaller::MakeThingsHappen.  We might rewrite the two methods as follows:
- *
- *   nsresult nsSomething::DoThatThing() {
- *     nsresult rv = NS_OK;
- *     ...
- *     ...
- *     return rv;
- *   }
- *
- *   void nsCaller::MakeThingsHappen() {
- *     nsresult rv;
- *     PREFER_LATTER_ERROR_CODE(mSomething->DoThatThing(),
- *                              mWhatever->DoThatThing(),
- *                              rv);
- *     return rv;
- *   }
- *
- * *Possible reasons include: nsCaller doesn't want to give mSomething access
- * to mWhatever, nsCaller wants to guarantee that mWhatever->DoThatThing() will
- * be called regardless of how nsSomething::DoThatThing behaves, &c.
- */
-#define PREFER_LATTER_ERROR_CODE(EXPR1, EXPR2, RV) \
-  {                                                \
-    nsresult RV##__temp = EXPR1;                   \
-    RV = EXPR2;                                    \
-    if (NS_FAILED(RV)) {                           \
-      RV = RV##__temp;                             \
-    }                                              \
-  }
-
-/**
  * This gets called just prior to the model actually
  * being constructed. It's important to make this the
  * last thing that happens right before parsing, so we
