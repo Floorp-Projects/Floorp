@@ -44,7 +44,6 @@
 #include "nsIParser.h"
 #include "nsDeque.h"
 #include "CParserContext.h"
-#include "nsParserCIID.h"
 #include "nsHTMLTags.h"
 #include "nsIContentSink.h"
 #include "nsCOMArray.h"
@@ -307,7 +306,5 @@ class nsParser final : public nsIParser,
   bool mProcessingNetworkData;
   bool mIsAboutBlank;
 };
-
-nsresult nsParserInitialize();
 
 #endif
