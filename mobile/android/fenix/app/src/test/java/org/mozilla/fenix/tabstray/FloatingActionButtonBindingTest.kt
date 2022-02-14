@@ -122,7 +122,7 @@ class FloatingActionButtonBindingTest {
         verify(exactly = 0) { actionButton.hide() }
         verify(exactly = 1) { actionButton.setText(R.string.tab_drawer_fab_sync) }
         verify(exactly = 1) { actionButton.setIconResource(R.drawable.ic_fab_sync) }
-        verify(exactly = 2) { actionButton.contentDescription = any() }
+        verify(exactly = 3) { actionButton.contentDescription = any() }
 
         tabsTrayStore.dispatch(TabsTrayAction.SyncNow)
         tabsTrayStore.waitUntilIdle()
@@ -133,6 +133,6 @@ class FloatingActionButtonBindingTest {
         verify(exactly = 0) { actionButton.hide() }
         verify(exactly = 1) { actionButton.setText(R.string.sync_syncing_in_progress) }
         verify(exactly = 2) { actionButton.setIconResource(R.drawable.ic_fab_sync) }
-        verify(exactly = 2) { actionButton.contentDescription = any() }
+        verify(exactly = 4) { actionButton.contentDescription = any() }
     }
 }

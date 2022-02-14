@@ -7,6 +7,7 @@ package org.mozilla.fenix.tabstray
 import mozilla.components.browser.state.state.createTab
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.mozilla.fenix.tabstray.syncedtabs.getFakeSyncedTabList
 
 class TabsTrayStoreReducerTest {
     @Test
@@ -65,6 +66,20 @@ class TabsTrayStoreReducerTest {
         val resultState = TabsTrayReducer.reduce(
             initialState,
             TabsTrayAction.UpdatePrivateTabs(privateTabs)
+        )
+
+        assertEquals(expectedState, resultState)
+    }
+
+    @Test
+    fun `WHEN UpdateSyncedTabs THEN synced tabs are added`() {
+        val syncedTabs = getFakeSyncedTabList()
+        val initialState = TabsTrayState()
+        val expectedState = initialState.copy(syncedTabs = syncedTabs)
+
+        val resultState = TabsTrayReducer.reduce(
+            initialState,
+            TabsTrayAction.UpdateSyncedTabs(syncedTabs)
         )
 
         assertEquals(expectedState, resultState)

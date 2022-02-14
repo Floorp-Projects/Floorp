@@ -5,32 +5,47 @@
 package org.mozilla.fenix.tabstray.viewholders
 
 import android.view.View
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.compose.ui.platform.ComposeView
 import androidx.recyclerview.widget.RecyclerView
-import org.mozilla.fenix.R
-import org.mozilla.fenix.databinding.ComponentSyncTabsTrayLayoutBinding
+import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.fenix.tabstray.NavigationInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
+import org.mozilla.fenix.tabstray.TabsTrayState
+import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsList
+import org.mozilla.fenix.theme.FirefoxTheme
 
+/**
+ * Temporary ViewHolder to render [SyncedTabsList] until all of the Tabs Tray is written in Compose.
+ *
+ * @param composeView Root ComposeView passed-in from TrayPagerAdapter.
+ * @param tabsTrayStore Store used as a Composable State to listen for changes to [TabsTrayState.syncedTabs].
+ * @param navigationInteractor The lambda for handling clicks on synced tabs.
+ */
 class SyncedTabsPageViewHolder(
-    containerView: View,
-    private val tabsTrayStore: TabsTrayStore
-) : AbstractPageViewHolder(containerView) {
+    private val composeView: ComposeView,
+    private val tabsTrayStore: TabsTrayStore,
+    private val navigationInteractor: NavigationInteractor,
+) : AbstractPageViewHolder(composeView) {
 
-    override fun bind(
-        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>
-    ) {
-        val binding = ComponentSyncTabsTrayLayoutBinding.bind(containerView)
-
-        binding.syncedTabsList.layoutManager = GridLayoutManager(containerView.context, 1)
-        binding.syncedTabsList.adapter = adapter
-
-        binding.syncedTabsTrayLayout.tabsTrayStore = tabsTrayStore
+    fun bind() {
+        composeView.setContent {
+            val tabs = tabsTrayStore.observeAsComposableState { state -> state.syncedTabs }.value
+            FirefoxTheme {
+                SyncedTabsList(
+                    syncedTabs = tabs ?: emptyList(),
+                    onTabClick = navigationInteractor::onSyncedTabClicked
+                )
+            }
+        }
     }
 
+    override fun bind(adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>) = Unit // no-op
+
     override fun detachedFromWindow() = Unit // no-op
+
     override fun attachedToWindow() = Unit // no-op
 
     companion object {
-        const val LAYOUT_ID = R.layout.component_sync_tabs_tray_layout
+        val LAYOUT_ID = View.generateViewId()
     }
 }

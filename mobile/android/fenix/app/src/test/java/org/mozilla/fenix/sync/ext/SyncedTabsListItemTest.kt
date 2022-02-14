@@ -13,12 +13,14 @@ import mozilla.components.concept.sync.DeviceType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mozilla.fenix.sync.SyncedTabsAdapter
+import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
+import org.mozilla.fenix.tabstray.syncedtabs.toComposeList
 
-class SyncedTabsAdapterKtTest {
+class SyncedTabsListItemTest {
     private val noTabDevice = SyncedDeviceTabs(
         device = mockk {
             every { displayName } returns "Charcoal"
+            every { id } returns "123"
             every { deviceType } returns DeviceType.DESKTOP
         },
         tabs = emptyList()
@@ -27,6 +29,7 @@ class SyncedTabsAdapterKtTest {
     private val oneTabDevice = SyncedDeviceTabs(
         device = mockk {
             every { displayName } returns "Charcoal"
+            every { id } returns "1234"
             every { deviceType } returns DeviceType.DESKTOP
         },
         tabs = listOf(
@@ -47,6 +50,7 @@ class SyncedTabsAdapterKtTest {
     private val twoTabDevice = SyncedDeviceTabs(
         device = mockk {
             every { displayName } returns "Emerald"
+            every { id } returns "12345"
             every { deviceType } returns DeviceType.MOBILE
         },
         tabs = listOf(
@@ -76,25 +80,25 @@ class SyncedTabsAdapterKtTest {
     )
 
     @Test
-    fun `verify ordering of adapter items`() {
+    fun `verify ordering of list items`() {
         val syncedDeviceList = listOf(oneTabDevice, twoTabDevice)
-        val adapterData = syncedDeviceList.toAdapterList()
+        val listData = syncedDeviceList.toComposeList()
 
-        assertEquals(5, adapterData.count())
-        assertTrue(adapterData[0] is SyncedTabsAdapter.AdapterItem.Device)
-        assertTrue(adapterData[1] is SyncedTabsAdapter.AdapterItem.Tab)
-        assertTrue(adapterData[2] is SyncedTabsAdapter.AdapterItem.Device)
-        assertTrue(adapterData[3] is SyncedTabsAdapter.AdapterItem.Tab)
-        assertTrue(adapterData[4] is SyncedTabsAdapter.AdapterItem.Tab)
+        assertEquals(5, listData.count())
+        assertTrue(listData[0] is SyncedTabsListItem.Device)
+        assertTrue(listData[1] is SyncedTabsListItem.Tab)
+        assertTrue(listData[2] is SyncedTabsListItem.Device)
+        assertTrue(listData[3] is SyncedTabsListItem.Tab)
+        assertTrue(listData[4] is SyncedTabsListItem.Tab)
     }
 
     @Test
     fun `verify no tabs displayed`() {
         val syncedDeviceList = listOf(noTabDevice)
-        val adapterData = syncedDeviceList.toAdapterList()
+        val adapterData = syncedDeviceList.toComposeList()
 
         assertEquals(2, adapterData.count())
-        assertTrue(adapterData[0] is SyncedTabsAdapter.AdapterItem.Device)
-        assertTrue(adapterData[1] is SyncedTabsAdapter.AdapterItem.NoTabs)
+        assertTrue(adapterData[0] is SyncedTabsListItem.Device)
+        assertTrue(adapterData[1] is SyncedTabsListItem.NoTabs)
     }
 }

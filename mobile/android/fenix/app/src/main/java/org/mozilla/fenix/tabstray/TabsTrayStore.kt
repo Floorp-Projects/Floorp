@@ -11,6 +11,7 @@ import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
+import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
 
 /**
  * Value type that represents the state of the tabs tray.
@@ -32,6 +33,7 @@ data class TabsTrayState(
     val searchTermPartition: TabPartition? = null,
     val normalTabs: List<TabSessionState> = emptyList(),
     val privateTabs: List<TabSessionState> = emptyList(),
+    val syncedTabs: List<SyncedTabsListItem> = emptyList(),
     val syncing: Boolean = false,
     val focusGroupTabId: String? = null
 ) : State {
@@ -155,6 +157,11 @@ sealed class TabsTrayAction : Action {
      * Updates the list of tabs in [TabsTrayState.privateTabs].
      */
     data class UpdatePrivateTabs(val tabs: List<TabSessionState>) : TabsTrayAction()
+
+    /**
+     * Updates the list of synced tabs in [TabsTrayState.syncedTabs].
+     */
+    data class UpdateSyncedTabs(val tabs: List<SyncedTabsListItem>) : TabsTrayAction()
 }
 
 /**
@@ -195,6 +202,8 @@ internal object TabsTrayReducer {
                 state.copy(normalTabs = action.tabs)
             is TabsTrayAction.UpdatePrivateTabs ->
                 state.copy(privateTabs = action.tabs)
+            is TabsTrayAction.UpdateSyncedTabs ->
+                state.copy(syncedTabs = action.tabs)
         }
     }
 }

@@ -176,9 +176,6 @@
     <dimen name="saved_logins_item_margin_start">16dp</dimen>
     <dimen name="saved_logins_item_margin_end">48dp</dimen>
 
-    <!-- Synced Tabs Fragment -->
-    <dimen name="synced_tabs_error_margin">20dp</dimen>
-
     <!-- Account Settings Fragment  -->
     <dimen name="account_settings_device_name_min_height">48dp</dimen>
 
