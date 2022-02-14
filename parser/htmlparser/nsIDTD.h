@@ -23,7 +23,6 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
-#include "nsITokenizer.h"
 
 #define NS_IDTD_IID                                  \
   {                                                  \
@@ -54,7 +53,6 @@ class nsIDTD : public nsISupports {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDTD_IID)
 
   NS_IMETHOD WillBuildModel(const CParserContext& aParserContext,
-                            nsITokenizer* aTokenizer,
                             nsIContentSink* aSink) = 0;
 
   /**
@@ -69,14 +67,13 @@ class nsIDTD : public nsISupports {
    * Called (possibly repeatedly) by the parser to parse tokens and construct
    * the document model via the sink provided to WillBuildModel.
    *
-   * @param   aTokenizer - tokenizer providing the token stream to be parsed
    * @param   aCountLines - informs the DTD whether to count newlines
    *                        (not wanted, e.g., when handling document.write)
    * @param   aCharsetPtr - address of an nsCString containing the charset
    *                        that the DTD should use (pointer in case the DTD
    *                        opts to ignore this parameter)
    */
-  NS_IMETHOD BuildModel(nsITokenizer* aTokenizer, nsIContentSink* aSink) = 0;
+  NS_IMETHOD BuildModel(nsIContentSink* aSink) = 0;
 
   /**
    * This method is called to determine whether or not a tag of one
@@ -122,17 +119,15 @@ class nsIDTD : public nsISupports {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
 
-#define NS_DECL_NSIDTD                                                       \
-  NS_IMETHOD WillBuildModel(const CParserContext& aParserContext,            \
-                            nsITokenizer* aTokenizer, nsIContentSink* aSink) \
-      override;                                                              \
-  NS_IMETHOD DidBuildModel(nsresult anErrorCode) override;                   \
-  NS_IMETHOD BuildModel(nsITokenizer* aTokenizer, nsIContentSink* aSink)     \
-      override;                                                              \
-  NS_IMETHOD_(bool)                                                          \
-  CanContain(int32_t aParent, int32_t aChild) const override;                \
-  NS_IMETHOD_(bool) IsContainer(int32_t aTag) const override;                \
-  NS_IMETHOD_(void) Terminate() override;                                    \
-  NS_IMETHOD_(int32_t) GetType() override;                                   \
+#define NS_DECL_NSIDTD                                            \
+  NS_IMETHOD WillBuildModel(const CParserContext& aParserContext, \
+                            nsIContentSink* aSink) override;      \
+  NS_IMETHOD DidBuildModel(nsresult anErrorCode) override;        \
+  NS_IMETHOD BuildModel(nsIContentSink* aSink) override;          \
+  NS_IMETHOD_(bool)                                               \
+  CanContain(int32_t aParent, int32_t aChild) const override;     \
+  NS_IMETHOD_(bool) IsContainer(int32_t aTag) const override;     \
+  NS_IMETHOD_(void) Terminate() override;                         \
+  NS_IMETHOD_(int32_t) GetType() override;                        \
   NS_IMETHOD_(nsDTDMode) GetMode() const override;
 #endif /* nsIDTD_h___ */

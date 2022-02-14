@@ -1505,7 +1505,7 @@ RLBoxExpatSandboxData::~RLBoxExpatSandboxData() {
 
 NS_IMETHODIMP
 nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
-                              nsITokenizer* aTokenizer, nsIContentSink* aSink) {
+                              nsIContentSink* aSink) {
   mSink = do_QueryInterface(aSink);
   if (!mSink) {
     NS_ERROR("nsExpatDriver didn't get an nsIExpatSink");
@@ -1610,9 +1610,7 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
 }
 
 NS_IMETHODIMP
-nsExpatDriver::BuildModel(nsITokenizer* aTokenizer, nsIContentSink* aSink) {
-  return mInternalState;
-}
+nsExpatDriver::BuildModel(nsIContentSink* aSink) { return mInternalState; }
 
 NS_IMETHODIMP
 nsExpatDriver::DidBuildModel(nsresult anErrorCode) {
