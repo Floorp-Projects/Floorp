@@ -499,7 +499,7 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": ["extension", "dictionary", "locale", "theme"]
+                "enum": ["extension", "dictionary", "locale", "theme", "sitepermission"]
               }
             },
             "blocked_install_message": {
