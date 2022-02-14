@@ -228,6 +228,10 @@
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>หน้าเว็บนี้ที่ %1$s ถูกรายงานว่าเป็นไซต์หลอกลวงและถูกปิดกั้นตามค่ากำหนดความปลอดภัยของคุณ</p>]]></string>
 
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">ไซต์ที่ปลอดภัยไม่พร้อมใช้งาน</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[คุณได้เปิดใช้งานโหมด HTTPS-Only สำหรับความปลอดภัยที่มากขึ้น และรุ่น HTTPS ของ <em>%1$s</em> ไม่พร้อมใช้งาน]]></string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
     <string name="mozac_browser_errorpages_httpsonly_button">ดำเนินการต่อไปยังไซต์ HTTP</string>
 </resources>

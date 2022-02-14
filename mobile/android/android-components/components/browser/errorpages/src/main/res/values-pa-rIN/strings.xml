@@ -147,7 +147,7 @@
     ]]></string>
 
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
-    <string name="mozac_browser_errorpages_corrupted_content_title">ਨਿਕਾਰਾ ਹੋਈ ਦੀ ਸਮੱਗਰੀ ਗਲਤੀ</string>
+    <string name="mozac_browser_errorpages_corrupted_content_title">ਖਰਾਬ ਹੋਈ ਦੀ ਸਮੱਗਰੀ ਗਲਤੀ</string>
 
     <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
