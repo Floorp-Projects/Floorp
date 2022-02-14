@@ -111,15 +111,11 @@ class nsParserContinueEvent : public Runnable {
 /**
  *  default constructor
  */
-nsParser::nsParser() : mCharset(WINDOWS_1252_ENCODING) { Initialize(true); }
+nsParser::nsParser() : mCharset(WINDOWS_1252_ENCODING) { Initialize(); }
 
 nsParser::~nsParser() { Cleanup(); }
 
-void nsParser::Initialize(bool aConstructor) {
-  if (!aConstructor) {
-    mUnusedInput.Truncate();
-  }
-
+void nsParser::Initialize() {
   mContinueEvent = nullptr;
   mCharsetSource = kCharsetUninitialized;
   mCharset = WINDOWS_1252_ENCODING;
