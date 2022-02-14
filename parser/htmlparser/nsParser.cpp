@@ -624,8 +624,6 @@ void nsParser::DecrementScriptNestingLevel() {}
 
 bool nsParser::HasNonzeroScriptNestingLevel() const { return false; }
 
-void nsParser::MarkAsNotScriptCreated(const char* aCommand) {}
-
 bool nsParser::IsScriptCreated() { return false; }
 
 /**
