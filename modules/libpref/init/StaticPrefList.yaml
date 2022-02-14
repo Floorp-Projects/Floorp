@@ -12861,6 +12861,26 @@
 #endif
   mirror: always
 
+# Various metrics to control SwipeTracker.
+- name: widget.swipe.velocity-twitch-tolerance
+  type: float
+  value: 0.0000001f
+  mirror: always
+
+- name: widget.swipe.success-threshold
+  type: float
+#if defined(XP_WIN)
+  value: 0.5f
+#else
+  value: 0.25f
+#endif
+  mirror: always
+
+- name: widget.swipe.success-velocity-contribution
+  type: float
+  value: 0.05f
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "xul."
 #---------------------------------------------------------------------------
