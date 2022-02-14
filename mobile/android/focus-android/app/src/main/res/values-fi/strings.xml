@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -780,7 +780,9 @@
     <string name="preference_https_only_title">Vain HTTPS -tila</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preference_https_only_summary2">Yrittää automaattisesti muodostaa yhteyden sivustoihin käyttämällä HTTPS:ää turvallisuuden parantamiseksi. HTTPS-yhteydet tarjoavat suojatun, salatun yhteyden vierailemillesi verkkosivustoille.</string>
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Yrittää automaattisesti muodostaa yhteyden sivustoihin käyttämällä HTTPS:ää turvallisuuden parantamiseksi. HTTPS-yhteydet tarjoavat suojatun, salatun yhteyden vierailemillesi verkkosivustoille.</string>
+
+    <string name="preference_https_only_summary3">Yrittää muodostaa automaattisesti yhteyden sivustoihin käyttämällä salattua HTTPS-protokollaa turvallisuuden parantamiseksi.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Poikkeukset</string>
