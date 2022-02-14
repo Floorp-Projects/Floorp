@@ -347,8 +347,7 @@ nsresult nsParser::WillBuildModel() {
 
   if (eUnknownDetect != mParserContext->mAutoDetectStatus) return NS_OK;
 
-  if (eDTDMode_unknown == mParserContext->mDTDMode ||
-      eDTDMode_autodetect == mParserContext->mDTDMode) {
+  if (eDTDMode_autodetect == mParserContext->mDTDMode) {
     if (mIsAboutBlank) {
       mParserContext->mDTDMode = eDTDMode_quirks;
       mParserContext->mDocType = eHTML_Quirks;
@@ -640,7 +639,6 @@ nsParser::Parse(nsIURI* aURL, void* aKey) {
     if (pc && theScanner) {
       pc->mMultipart = true;
       pc->mContextType = CParserContext::eCTURL;
-      pc->mDTDMode = eDTDMode_autodetect;
       PushContext(*pc);
 
       result = NS_OK;

@@ -658,7 +658,7 @@ nsresult nsHtml5Parser::StartExecutor() {
    * We know we're in document.open(), so our document must already
    * have a script global andthe WillBuildModel call is safe.
    */
-  return executor->WillBuildModel(eDTDMode_unknown);
+  return executor->WillBuildModel();
 }
 
 nsresult nsHtml5Parser::Initialize(mozilla::dom::Document* aDoc, nsIURI* aURI,
