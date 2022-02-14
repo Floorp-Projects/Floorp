@@ -13,7 +13,11 @@
     "storage",
     "clipboardWrite",
     "search",
-    "activeTab"
+    "activeTab",
+    "browserSettings",
+    "mozillaAddons",
+    "about:*",
+    "about:reader*"
   ],
 
 	"browser_action": {
@@ -38,7 +42,8 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "<all_urls>",
+        "about:*"
       ],
       "js": [
         "superdrag.js"

@@ -60,13 +60,14 @@
         "storage",
         "activeTab",
         "contextMenus",
-        "webRequest"
-    ],
-
-    "optional_permissions": [
+        "webRequest",
+        "browserSettings",
+        "mozillaAddons",
+        "about:*",
+        "about:reader*",
         "webNavigation"
     ],
-
+    
     "web_accessible_resources": [
         "/icons/icon-32.png",
         "/icons/google-translate-32.png",
@@ -89,25 +90,25 @@
     },
 
     "content_scripts": [{
-            "matches": ["<all_urls>"],
+            "matches": ["<all_urls>","about:*"],
             "run_at": "document_start",
             "all_frames": false,
             "js": ["/contentScript/checkScriptIsInjected.js"]
         },
         {
-            "matches": ["<all_urls>"],
+            "matches": ["<all_urls>","about:*"],
             "run_at": "document_start",
             "all_frames": true,
             "js": ["/lib/languages.js", "/lib/config.js", "/lib/platformInfo.js"]
         },
         {
-            "matches": ["<all_urls>"],
+            "matches": ["<all_urls>","about:*"],
             "run_at": "document_end",
             "all_frames": true,
             "js": ["/lib/i18n.js", "/contentScript/showOriginal.js", "/contentScript/pageTranslator.js", "/contentScript/translateSelected.js", "/contentScript/showTranslated.js"]
         },
         {
-            "matches": ["<all_urls>"],
+            "matches": ["<all_urls>","about:*"],
             "run_at": "document_end",
             "all_frames": false,
             "js": ["/contentScript/popupMobile.js"]
@@ -116,7 +117,7 @@
             "matches": ["https://www.deepl.com/translator*"],
             "run_at": "document_end",
             "all_frames": false,
-            "js": ["/contentScript/deepl.js"]
+            "js": ["/contentScript/deepl.js","about:*"]
         }
     ],
 
