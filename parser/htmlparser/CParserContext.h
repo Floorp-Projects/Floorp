@@ -20,6 +20,8 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
+class nsITokenizer;
+
 /**
  * Note that the parser is given FULL access to all
  * data in a parsercontext. Hey, that what it's for!
