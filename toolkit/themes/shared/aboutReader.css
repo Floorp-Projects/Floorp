@@ -49,6 +49,10 @@ body {
   /* light colours */
 }
 
+pre {
+  font-family: inherit;
+}
+
 body.sepia {
   --main-background: #f4ecd8;
   --main-foreground: #5b4636;
