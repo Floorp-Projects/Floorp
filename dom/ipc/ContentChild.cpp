@@ -898,11 +898,10 @@ void ContentChild::SetProcessName(const nsACString& aName,
 
 static nsresult GetCreateWindowParams(nsIOpenWindowInfo* aOpenWindowInfo,
                                       nsDocShellLoadState* aLoadState,
-                                      bool aForceNoReferrer, float* aFullZoom,
+                                      bool aForceNoReferrer,
                                       nsIReferrerInfo** aReferrerInfo,
                                       nsIPrincipal** aTriggeringPrincipal,
                                       nsIContentSecurityPolicy** aCsp) {
-  *aFullZoom = 1.0f;
   if (!aTriggeringPrincipal || !aCsp) {
     NS_ERROR("aTriggeringPrincipal || aCsp is null");
     return NS_ERROR_FAILURE;
@@ -955,8 +954,6 @@ static nsresult GetCreateWindowParams(nsIOpenWindowInfo* aOpenWindowInfo,
   }
 
   referrerInfo.swap(*aReferrerInfo);
-
-  *aFullZoom = parent->FullZoom();
   return NS_OK;
 }
 
@@ -1015,12 +1012,11 @@ nsresult ContentChild::ProvideWindowCommon(
     bool loadInDifferentProcess =
         aForceNoOpener && StaticPrefs::dom_noopener_newprocess_enabled();
     if (loadInDifferentProcess) {
-      float fullZoom;
       nsCOMPtr<nsIPrincipal> triggeringPrincipal;
       nsCOMPtr<nsIContentSecurityPolicy> csp;
       nsCOMPtr<nsIReferrerInfo> referrerInfo;
       rv = GetCreateWindowParams(aOpenWindowInfo, aLoadState, aForceNoReferrer,
-                                 &fullZoom, getter_AddRefs(referrerInfo),
+                                 getter_AddRefs(referrerInfo),
                                  getter_AddRefs(triggeringPrincipal),
                                  getter_AddRefs(csp));
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1034,8 +1030,8 @@ nsresult ContentChild::ProvideWindowCommon(
       MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(name));
 
       Unused << SendCreateWindowInDifferentProcess(
-          aTabOpener, parent, aChromeFlags, aCalledFromJS, aURI, features,
-          fullZoom, name, triggeringPrincipal, csp, referrerInfo,
+          aTabOpener, parent, aChromeFlags, aCalledFromJS, aURI, features, name,
+          triggeringPrincipal, csp, referrerInfo,
           aOpenWindowInfo->GetOriginAttributes());
 
       // We return NS_ERROR_ABORT, so that the caller knows that we've abandoned
@@ -1224,12 +1220,11 @@ nsresult ContentChild::ProvideWindowCommon(
   };
 
   // Send down the request to open the window.
-  float fullZoom;
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   nsCOMPtr<nsIReferrerInfo> referrerInfo;
   rv = GetCreateWindowParams(aOpenWindowInfo, aLoadState, aForceNoReferrer,
-                             &fullZoom, getter_AddRefs(referrerInfo),
+                             getter_AddRefs(referrerInfo),
                              getter_AddRefs(triggeringPrincipal),
                              getter_AddRefs(csp));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1239,7 +1234,7 @@ nsresult ContentChild::ProvideWindowCommon(
   SendCreateWindow(aTabOpener, parent, newChild, aChromeFlags, aCalledFromJS,
                    aOpenWindowInfo->GetIsForPrinting(),
                    aOpenWindowInfo->GetIsForWindowDotPrint(), aURI, features,
-                   fullZoom, Principal(triggeringPrincipal), csp, referrerInfo,
+                   Principal(triggeringPrincipal), csp, referrerInfo,
                    aOpenWindowInfo->GetOriginAttributes(), std::move(resolve),
                    std::move(reject));
 
