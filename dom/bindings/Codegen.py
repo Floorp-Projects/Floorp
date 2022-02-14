@@ -413,12 +413,12 @@ class CGThing:
 
 class CGStringTable(CGThing):
     """
-    Generate a string table for the given strings with a function accessor:
+    Generate a function accessor for a WebIDL string table, using the existing
+    concatenated names string and mapping indexes to offsets in that string:
 
     const char *accessorName(unsigned int index) {
-      static const char table[] = "...";
-      static const uint16_t indices = { ... };
-      return &table[indices[index]];
+      static const uint16_t offsets = { ... };
+      return BindingName(offsets[index]);
     }
 
     This is more efficient than the more natural:
@@ -427,8 +427,8 @@ class CGStringTable(CGThing):
       ...
     };
 
-    The uint16_t indices are smaller than the pointer equivalents, and the
-    string table requires no runtime relocations.
+    The uint16_t offsets are smaller than the pointer equivalents, and the
+    concatenated string requires no runtime relocations.
     """
 
     def __init__(self, accessorName, strings, static=False):
@@ -440,30 +440,25 @@ class CGStringTable(CGThing):
     def declare(self):
         if self.static:
             return ""
-        return "extern const char *%s(unsigned int aIndex);\n" % self.accessorName
+        return "const char *%s(unsigned int aIndex);\n" % self.accessorName
 
     def define(self):
-        table = ' "\\0" '.join('"%s"' % s for s in self.strings)
-        indices = []
-        currentIndex = 0
+        offsets = []
         for s in self.strings:
-            indices.append(currentIndex)
-            currentIndex += len(s) + 1  # for the null terminator
+            offsets.append(BindingNamesOffsetEnum(s))
         return fill(
             """
             ${static}const char *${name}(unsigned int aIndex)
             {
-              static const char table[] = ${table};
-              static const uint16_t indices[] = { ${indices} };
-              static_assert(${currentIndex} <= UINT16_MAX, "string table overflow!");
-              return &table[indices[aIndex]];
+              static const BindingNamesOffset offsets[] = {
+                $*{offsets}
+              };
+              return BindingName(offsets[aIndex]);
             }
             """,
             static="static " if self.static else "",
             name=self.accessorName,
-            table=table,
-            indices=", ".join("%d" % index for index in indices),
-            currentIndex=currentIndex,
+            offsets="".join("BindingNamesOffset::%s,\n" % o for o in offsets),
         )
 
 
@@ -17686,42 +17681,33 @@ class CGRegisterWorkletBindings(CGAbstractMethod):
         return CGList(lines, "\n").define()
 
 
-def getGlobalNames(config):
-    names = []
-    for desc in config.getDescriptors(registersGlobalNamesOnWindow=True):
-        names.append((desc.name, desc))
-        names.extend(
-            (n.identifier.name, desc) for n in desc.interface.legacyFactoryFunctions
-        )
-        names.extend((n, desc) for n in desc.interface.legacyWindowAliases)
-    return names
+def BindingNamesOffsetEnum(name):
+    return CppKeywords.checkMethodName(name.replace(" ", "_"))
 
 
 class CGGlobalNames(CGGeneric):
-    def __init__(self, config):
-        currentOffset = 0
+    def __init__(self, names):
+        """
+        names is expected to be a list of tuples of the name and the descriptor it refers to.
+        """
+
         strings = []
         entries = []
-        for name, desc in getGlobalNames(config):
-            # Add a string to the list.
-            offset = currentOffset
-            strings.append('/* %i */ "%s\\0"' % (offset, name))
-            currentOffset += len(name) + 1  # Add trailing null.
-
+        for name, desc in names:
             # Generate the entry declaration
             # XXX(nika): mCreate & mEnabled require relocations. If we want to
             # reduce those, we could move them into separate tables.
             nativeEntry = fill(
                 """
                 {
-                  /* mNameOffset */ ${nameOffset}, // "${name}"
+                  /* mNameOffset */ BindingNamesOffset::${nameOffset},
                   /* mNameLength */ ${nameLength},
                   /* mConstructorId */ constructors::id::${realname},
                   /* mCreate */ ${realname}_Binding::CreateInterfaceObjects,
                   /* mEnabled */ ${enabled}
                 }
                 """,
-                nameOffset=offset,
+                nameOffset=BindingNamesOffsetEnum(name),
                 nameLength=len(name),
                 name=name,
                 realname=desc.name,
@@ -17761,7 +17747,7 @@ class CGGlobalNames(CGGeneric):
             return_type="const WebIDLNameTableEntry*",
             return_entry=dedent(
                 """
-                if (JS_LinearStringEqualsAscii(aKey, sNames + entry.mNameOffset, entry.mNameLength)) {
+                if (JS_LinearStringEqualsAscii(aKey, BindingName(entry.mNameOffset), entry.mNameLength)) {
                   return &entry;
                 }
                 return nullptr;
@@ -17773,13 +17759,9 @@ class CGGlobalNames(CGGeneric):
             """
             const uint32_t WebIDLGlobalNameHash::sCount = ${count};
 
-            const char WebIDLGlobalNameHash::sNames[] =
-              $*{strings}
-
             $*{entries}
 
             $*{getter}
-
             """,
             count=len(phf.entries),
             strings="\n".join(strings) + ";\n",
@@ -22075,6 +22057,7 @@ class GlobalGenRoots:
                 CGGeneric(define="#include <stdint.h>\n"),
                 CGGeneric(define="#include <type_traits>\n\n"),
                 CGGeneric(define='#include "js/experimental/JitInfo.h"\n\n'),
+                CGGeneric(define='#include "mozilla/dom/BindingNames.h"\n\n'),
                 CGGeneric(define='#include "mozilla/dom/PrototypeList.h"\n\n'),
                 idEnum,
             ]
@@ -22141,7 +22124,7 @@ class GlobalGenRoots:
         traitsDecls.extend(CGPrototypeTraitsClass(d) for d in descriptorsWithPrototype)
 
         ifaceNamesWithProto = [
-            d.interface.identifier.name for d in descriptorsWithPrototype
+            d.interface.getClassName() for d in descriptorsWithPrototype
         ]
         traitsDecls.append(
             CGStringTable("NamesOfInterfacesWithProtos", ifaceNamesWithProto)
@@ -22161,9 +22144,77 @@ class GlobalGenRoots:
         return curr
 
     @staticmethod
+    def BindingNames(config):
+        declare = fill(
+            """
+            enum class BindingNamesOffset : uint16_t {
+              $*{enumValues}
+            };
+
+            namespace binding_detail {
+            extern const char sBindingNames[];
+            }  // namespace binding_detail
+
+            MOZ_ALWAYS_INLINE const char* BindingName(BindingNamesOffset aOffset) {
+              return binding_detail::sBindingNames + static_cast<size_t>(aOffset);
+            }
+            """,
+            enumValues="".join(
+                "%s = %i,\n" % (BindingNamesOffsetEnum(n), o)
+                for (n, o) in config.namesStringOffsets
+            ),
+        )
+        define = fill(
+            """
+            namespace binding_detail {
+
+            const char sBindingNames[] = {
+              $*{namesString}
+            };
+
+            }  // namespace binding_detail
+
+            // Making this enum bigger than a uint16_t has consequences on the size
+            // of some structs (eg. WebIDLNameTableEntry) and tables. We should try
+            // to avoid that.
+            static_assert(EnumTypeFitsWithin<BindingNamesOffset, uint16_t>::value,
+                          "Size increase");
+            """,
+            namesString=' "\\0"\n'.join(
+                '/* %5i */ "%s"' % (o, n) for (n, o) in config.namesStringOffsets
+            )
+            + "\n",
+        )
+
+        curr = CGGeneric(declare=declare, define=define)
+        curr = CGWrapper(curr, pre="\n", post="\n")
+
+        curr = CGNamespace.build(["mozilla", "dom"], curr)
+        curr = CGWrapper(curr, post="\n")
+
+        curr = CGHeaders(
+            [],
+            [],
+            [],
+            [],
+            ["<stddef.h>", "<stdint.h>", "mozilla/Attributes.h"],
+            ["mozilla/dom/BindingNames.h", "mozilla/EnumTypeTraits.h"],
+            "BindingNames",
+            curr,
+        )
+
+        # Add include guards.
+        curr = CGIncludeGuard("BindingNames", curr)
+
+        # Done.
+        return curr
+
+    @staticmethod
     def RegisterBindings(config):
 
-        curr = CGNamespace.build(["mozilla", "dom"], CGGlobalNames(config))
+        curr = CGNamespace.build(
+            ["mozilla", "dom"], CGGlobalNames(config.windowGlobalNames)
+        )
         curr = CGWrapper(curr, post="\n")
 
         # Add the includes
@@ -22173,6 +22224,7 @@ class GlobalGenRoots:
                 hasInterfaceObject=True, isExposedInWindow=True, register=True
             )
         ]
+        defineIncludes.append("mozilla/dom/BindingNames.h")
         defineIncludes.append("mozilla/dom/WebIDLGlobalNameHash.h")
         defineIncludes.append("mozilla/dom/PrototypeList.h")
         defineIncludes.append("mozilla/PerfectHash.h")

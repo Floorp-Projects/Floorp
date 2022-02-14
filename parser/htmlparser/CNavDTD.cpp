@@ -17,13 +17,7 @@ CNavDTD::CNavDTD() {}
 CNavDTD::~CNavDTD() {}
 
 NS_IMETHODIMP
-CNavDTD::WillBuildModel(const CParserContext& aParserContext,
-                        nsITokenizer* aTokenizer, nsIContentSink* aSink) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CNavDTD::BuildModel(nsITokenizer* aTokenizer, nsIContentSink* aSink) {
+CNavDTD::BuildModel(nsIContentSink* aSink) {
   // NB: It is important to throw STOPPARSING if the sink is the wrong type in
   // order to make sure nsParser cleans up properly after itself.
   nsCOMPtr<nsIHTMLContentSink> sink = do_QueryInterface(aSink);
@@ -44,26 +38,7 @@ CNavDTD::BuildModel(nsITokenizer* aTokenizer, nsIContentSink* aSink) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-CNavDTD::DidBuildModel(nsresult anErrorCode) { return NS_OK; }
+void CNavDTD::DidBuildModel() {}
 
 NS_IMETHODIMP_(void)
 CNavDTD::Terminate() {}
-
-NS_IMETHODIMP_(int32_t)
-CNavDTD::GetType() { return NS_IPARSER_FLAG_HTML; }
-
-NS_IMETHODIMP_(nsDTDMode)
-CNavDTD::GetMode() const { return eDTDMode_quirks; }
-
-NS_IMETHODIMP_(bool)
-CNavDTD::CanContain(int32_t aParent, int32_t aChild) const {
-  MOZ_CRASH("nobody calls this");
-  return false;
-}
-
-NS_IMETHODIMP_(bool)
-CNavDTD::IsContainer(int32_t aTag) const {
-  MOZ_CRASH("nobody calls this");
-  return false;
-}

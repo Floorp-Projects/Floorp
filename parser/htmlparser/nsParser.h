@@ -44,13 +44,13 @@
 #include "nsIParser.h"
 #include "nsDeque.h"
 #include "CParserContext.h"
-#include "nsParserCIID.h"
-#include "nsITokenizer.h"
 #include "nsHTMLTags.h"
 #include "nsIContentSink.h"
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWeakReference.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 
 class nsIDTD;
 class nsIRunnable;
@@ -139,21 +139,18 @@ class nsParser final : public nsIParser,
   /**
    * Cause parser to parse input from given URL
    */
-  NS_IMETHOD Parse(nsIURI* aURL, void* aKey = nullptr) override;
+  NS_IMETHOD Parse(nsIURI* aURL) override;
 
   /**
-   * This method needs documentation
+   * This method gets called when you want to parse a fragment of XML surrounded
+   * by the context |aTagStack|. It requires that the parser have been given a
+   * fragment content sink.
+   *
+   * @param aSourceBuffer The XML that hasn't been parsed yet.
+   * @param aTagStack The context of the source buffer.
    */
-  NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
-                           nsTArray<nsString>& aTagStack) override;
-
-  /**
-   * This method gets called when the tokens have been consumed, and it's time
-   * to build the model via the content sink.
-   * @update	gess5/11/98
-   * @return  YES if model building went well -- NO otherwise.
-   */
-  NS_IMETHOD BuildModel(void) override;
+  nsresult ParseFragment(const nsAString& aSourceBuffer,
+                         nsTArray<nsString>& aTagStack);
 
   NS_IMETHOD ContinueInterruptedParsing() override;
   NS_IMETHOD_(void) BlockParser() override;
@@ -178,18 +175,6 @@ class nsParser final : public nsIParser,
   NS_IMETHOD_(bool) IsComplete() override;
 
   /**
-   *  This rather arcane method (hack) is used as a signal between the
-   *  DTD and the parser. It allows the DTD to tell the parser that content
-   *  that comes through (parser::parser(string)) but not consumed should
-   *  propagate into the next string based parse call.
-   *
-   *  @update  gess 9/1/98
-   *  @param   aState determines whether we propagate unused string content.
-   *  @return  current state
-   */
-  void SetUnusedInput(nsString& aBuffer);
-
-  /**
    * This method gets called (automatically) during incremental parsing
    * @update	gess5/11/98
    * @return  TRUE if all went well, otherwise FALSE
@@ -208,39 +193,12 @@ class nsParser final : public nsIParser,
   // nsIStreamListener methods:
   NS_DECL_NSISTREAMLISTENER
 
-  void PushContext(CParserContext& aContext);
-  CParserContext* PopContext();
-  CParserContext* PeekContext() { return mParserContext; }
-
-  /**
-   * Get the channel associated with this parser
-   * @update harishd,gagan 07/17/01
-   * @param aChannel out param that will contain the result
-   * @return NS_OK if successful
-   */
-  NS_IMETHOD GetChannel(nsIChannel** aChannel) override;
-
-  /**
-   * Get the DTD associated with this parser
-   * @update vidur 9/29/99
-   * @param aDTD out param that will contain the result
-   * @return NS_OK if successful, NS_ERROR_FAILURE for runtime error
-   */
-  NS_IMETHOD GetDTD(nsIDTD** aDTD) override;
-
   /**
    * Get the nsIStreamListener for this parser
    */
   virtual nsIStreamListener* GetStreamListener() override;
 
   void SetSinkCharset(NotNull<const Encoding*> aCharset);
-
-  /**
-   *  Removes continue parsing events
-   *  @update  kmcclusk 5/18/98
-   */
-
-  NS_IMETHOD CancelParsingEvents() override;
 
   /**
    * Return true.
@@ -260,22 +218,9 @@ class nsParser final : public nsIParser,
   bool HasNonzeroScriptNestingLevel() const final;
 
   /**
-   * No-op.
-   */
-  virtual void MarkAsNotScriptCreated(const char* aCommand) override;
-
-  /**
    * Always false.
    */
   virtual bool IsScriptCreated() override;
-
-  /**
-   *  Set to parser state to indicate whether parsing tokens can be interrupted
-   *  @param aCanInterrupt true if parser can be interrupted, false if it can
-   *                       not be interrupted.
-   *  @update  kmcclusk 5/18/98
-   */
-  void SetCanInterrupt(bool aCanInterrupt);
 
   /**
    * This is called when the final chunk has been
@@ -293,8 +238,9 @@ class nsParser final : public nsIParser,
    */
   void HandleParserContinueEvent(class nsParserContinueEvent*);
 
-  virtual void Reset() override {
+  void Reset() {
     Cleanup();
+    mUnusedInput.Truncate();
     Initialize();
   }
 
@@ -304,8 +250,18 @@ class nsParser final : public nsIParser,
     return !IsScriptExecuting() && !mProcessingNetworkData;
   }
 
+  // Returns Nothing() if we haven't determined yet what the parser is being
+  // used for. Else returns whether this parser is used for parsing XML.
+  mozilla::Maybe<bool> IsForParsingXML() {
+    if (!mParserContext || mParserContext->mDTDMode == eDTDMode_autodetect) {
+      return mozilla::Nothing();
+    }
+
+    return mozilla::Some(mParserContext->mDocType == eXML);
+  }
+
  protected:
-  void Initialize(bool aConstructor = false);
+  void Initialize();
   void Cleanup();
 
   /**
@@ -317,50 +273,22 @@ class nsParser final : public nsIParser,
   nsresult WillBuildModel();
 
   /**
-   *
-   * @update	gess5/18/98
-   * @param
-   * @return
+   * Called when parsing is done.
    */
-  nsresult DidBuildModel(nsresult anErrorCode);
+  void DidBuildModel();
 
  private:
-  /*******************************************
-    These are the tokenization methods...
-   *******************************************/
-
-  /**
-   *  Part of the code sandwich, this gets called right before
-   *  the tokenization process begins. The main reason for
-   *  this call is to allow the delegate to do initialization.
-   *
-   *  @update  gess 3/25/98
-   *  @param
-   *  @return  TRUE if it's ok to proceed
-   */
-  bool WillTokenize(bool aIsFinalChunk = false);
-
-  /**
-   *  This is the primary control routine. It iteratively
-   *  consumes tokens until an error occurs or you run out
-   *  of data.
-   *
-   *  @update  gess 3/25/98
-   *  @return  error code
-   */
-  nsresult Tokenize(bool aIsFinalChunk = false);
-
   /**
    * Pushes XML fragment parsing data to expat without an input stream.
    */
-  nsresult Parse(const nsAString& aSourceBuffer, void* aKey, bool aLastCall);
+  nsresult Parse(const nsAString& aSourceBuffer, bool aLastCall);
 
  protected:
   //*********************************************
   // And now, some data members...
   //*********************************************
 
-  CParserContext* mParserContext;
+  mozilla::UniquePtr<CParserContext> mParserContext;
   nsCOMPtr<nsIDTD> mDTD;
   nsCOMPtr<nsIContentSink> mSink;
   nsIRunnable* mContinueEvent;  // weak ref
@@ -380,7 +308,5 @@ class nsParser final : public nsIParser,
   bool mProcessingNetworkData;
   bool mIsAboutBlank;
 };
-
-nsresult nsParserInitialize();
 
 #endif
