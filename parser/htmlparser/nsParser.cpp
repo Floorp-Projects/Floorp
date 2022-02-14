@@ -1270,14 +1270,6 @@ nsresult nsParser::OnDataAvailable(nsIRequest* request,
   if (theContext) {
     theContext->mStreamListenerState = eOnDataAvail;
 
-    if (eInvalidDetect == theContext->mAutoDetectStatus) {
-      if (theContext->mScanner) {
-        nsScannerIterator iter;
-        theContext->mScanner->EndReading(iter);
-        theContext->mScanner->SetPosition(iter, true);
-      }
-    }
-
     uint32_t totalRead;
     ParserWriteStruct pws;
     pws.mNeedCharsetCheck = true;
