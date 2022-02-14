@@ -17,7 +17,7 @@ job-defaults:
         type: file
         name: 'public/build/{gradle_build}/{abi}/target.apk'
         github-name: '{gradle_build}-{version}-{abi}.apk'
-        path: '/builds/worker/checkouts/src/app/build/outputs/apk/{gradle_build}/{gradle_build_type}/{fileName}'
+        path: '/builds/worker/checkouts/vcs/app/build/outputs/apk/{gradle_build}/{gradle_build_type}/{fileName}'
     fetches:
         toolchain:
             - android-sdk-linux
@@ -155,7 +155,7 @@ jobs:
             # we override this with a generic name to make the signing kind cleaner
             name: 'public/build/app-focus-androidTest.apk'
             # this path is determined by the gradle build configs
-            path: '/builds/worker/checkouts/src/app/build/outputs/apk/androidTest/focus/debug/app-focus-debug-androidTest.apk'
+            path: '/builds/worker/checkouts/vcs/app/build/outputs/apk/androidTest/focus/debug/app-focus-debug-androidTest.apk'
         treeherder:
             symbol: debug(Bat)
 
@@ -174,7 +174,7 @@ jobs:
             test-build-type: nightly
         apk-artifact-template:
             name: 'public/build/app-focus-androidTest.apk'
-            path: '/builds/worker/checkouts/src/app/build/outputs/apk/androidTest/focus/nightly/app-focus-nightly-androidTest.apk'
+            path: '/builds/worker/checkouts/vcs/app/build/outputs/apk/androidTest/focus/nightly/app-focus-nightly-androidTest.apk'
         treeherder:
             symbol: nightly(Bat)
 
@@ -188,6 +188,6 @@ jobs:
             test-build-type: beta
         apk-artifact-template:
             name: 'public/build/app-focus-androidTest.apk'
-            path: '/builds/worker/checkouts/src/app/build/outputs/apk/androidTest/focus/beta/app-focus-beta-androidTest.apk'
+            path: '/builds/worker/checkouts/vcs/app/build/outputs/apk/androidTest/focus/beta/app-focus-beta-androidTest.apk'
         treeherder:
             symbol: beta(Bat)

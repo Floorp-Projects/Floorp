@@ -34,7 +34,7 @@ job-defaults:
         max-run-time: 7200
         artifacts:
                 - name: public/reports
-                  path: /builds/worker/checkouts/src/build/reports
+                  path: /builds/worker/checkouts/vcs/build/reports
                   type: directory
                 - name: public/github
                   path: /builds/worker/github
