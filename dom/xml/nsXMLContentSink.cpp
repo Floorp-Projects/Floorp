@@ -422,8 +422,7 @@ nsXMLContentSink::StyleSheetLoaded(StyleSheet* aSheet, bool aWasDeferred,
 NS_IMETHODIMP
 nsXMLContentSink::WillInterrupt(void) { return WillInterruptImpl(); }
 
-NS_IMETHODIMP
-nsXMLContentSink::WillResume(void) { return WillResumeImpl(); }
+void nsXMLContentSink::WillResume() { WillResumeImpl(); }
 
 NS_IMETHODIMP
 nsXMLContentSink::SetParser(nsParserBase* aParser) {
