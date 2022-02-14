@@ -148,14 +148,6 @@ class nsParser final : public nsIParser,
   NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
                            nsTArray<nsString>& aTagStack) override;
 
-  /**
-   * This method gets called when the tokens have been consumed, and it's time
-   * to build the model via the content sink.
-   * @update	gess5/11/98
-   * @return  YES if model building went well -- NO otherwise.
-   */
-  NS_IMETHOD BuildModel(void) override;
-
   NS_IMETHOD ContinueInterruptedParsing() override;
   NS_IMETHOD_(void) BlockParser() override;
   NS_IMETHOD_(void) UnblockParser() override;
