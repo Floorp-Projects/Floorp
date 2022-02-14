@@ -146,6 +146,18 @@ async function installSidebarExtension() {
           bcId: SpecialPowers.wrap(window).browsingContext.id,
         });
       },
+      "tab.html": `
+        <!DOCTYPE html>
+        <html>
+          Test extension (tab)
+          <script src="tab.js"></script>
+        </html>
+      `,
+      "tab.js": function() {
+        browser.test.sendMessage("tab-loaded", {
+          bcId: SpecialPowers.wrap(window).browsingContext.id,
+        });
+      },
     },
   });
 
