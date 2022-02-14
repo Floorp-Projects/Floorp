@@ -215,14 +215,6 @@ panelview[mainview] > .panel-header {
   display: none;
 }
 
-%ifdef NIGHTLY_BUILD
-@supports -moz-bool-pref("browser.tabs.hideThrobber") {
-  .tab-throbber {
-    display: none !important;
-  }
-}
-%endif
-
 #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] {
   position: absolute !important;
   display: block;
