@@ -687,18 +687,37 @@ static CloseMenuMode GetCloseMenuMode(nsIContent* aMenu) {
   }
 }
 
-void nsXULPopupManager::ShowMenu(nsIContent* aMenu, bool aSelectFirstItem) {
+auto nsXULPopupManager::MayShowMenu(nsIContent* aMenu) -> MayShowMenuResult {
   if (mNativeMenu && aMenu->IsElement() &&
       mNativeMenu->Element()->Contains(aMenu)) {
+    return {true};
+  }
+
+  nsMenuFrame* menuFrame = do_QueryFrame(aMenu->GetPrimaryFrame());
+  if (!menuFrame || !menuFrame->IsMenu()) {
+    return {};
+  }
+
+  nsMenuPopupFrame* popupFrame = menuFrame->GetPopup();
+  if (!popupFrame || !MayShowPopup(popupFrame)) {
+    return {};
+  }
+  return {false, menuFrame, popupFrame};
+}
+
+void nsXULPopupManager::ShowMenu(nsIContent* aMenu, bool aSelectFirstItem) {
+  auto mayShowResult = MayShowMenu(aMenu);
+  if (!mayShowResult) {
+    return;
+  }
+
+  if (mayShowResult.mIsNative) {
     mNativeMenu->OpenSubmenu(aMenu->AsElement());
     return;
   }
 
-  nsMenuFrame* menuFrame = do_QueryFrame(aMenu->GetPrimaryFrame());
-  if (!menuFrame || !menuFrame->IsMenu()) return;
-
-  nsMenuPopupFrame* popupFrame = menuFrame->GetPopup();
-  if (!popupFrame || !MayShowPopup(popupFrame)) return;
+  nsMenuFrame* menuFrame = mayShowResult.mMenuFrame;
+  nsMenuPopupFrame* popupFrame = mayShowResult.mMenuPopupFrame;
 
   // inherit whether or not we're a context menu from the parent
   bool parentIsContextMenu = false;

@@ -467,6 +467,19 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   // will remain active.
   void SetActiveMenuBar(nsMenuBarFrame* aMenuBar, bool aActivate);
 
+  struct MayShowMenuResult {
+    const bool mIsNative = false;
+    nsMenuFrame* const mMenuFrame = nullptr;
+    nsMenuPopupFrame* const mMenuPopupFrame = nullptr;
+
+    explicit operator bool() const {
+      MOZ_ASSERT(!!mMenuFrame == !!mMenuPopupFrame);
+      return mIsNative || mMenuFrame;
+    }
+  };
+
+  MayShowMenuResult MayShowMenu(nsIContent* aMenu);
+
   /**
    * Open a <menu> given its content node. If aSelectFirstItem is
    * set to true, the first item on the menu will automatically be
