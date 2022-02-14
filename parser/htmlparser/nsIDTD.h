@@ -77,8 +77,6 @@ class nsIDTD : public nsISupports {
    * @return
    */
   NS_IMETHOD_(void) Terminate() = 0;
-
-  NS_IMETHOD_(int32_t) GetType() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
@@ -86,6 +84,5 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
 #define NS_DECL_NSIDTD                                   \
   void DidBuildModel() override;                         \
   NS_IMETHOD BuildModel(nsIContentSink* aSink) override; \
-  NS_IMETHOD_(void) Terminate() override;                \
-  NS_IMETHOD_(int32_t) GetType() override;
+  NS_IMETHOD_(void) Terminate() override;
 #endif /* nsIDTD_h___ */

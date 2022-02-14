@@ -112,12 +112,6 @@ nsresult nsHtml5Parser::GetChannel(nsIChannel** aChannel) {
   }
 }
 
-NS_IMETHODIMP
-nsHtml5Parser::GetDTD(nsIDTD** aDTD) {
-  *aDTD = nullptr;
-  return NS_OK;
-}
-
 nsIStreamListener* nsHtml5Parser::GetStreamListener() {
   return mStreamListener;
 }
