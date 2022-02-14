@@ -10861,6 +10861,10 @@ theshop.jp
 shopselect.net
 base.shop
 
+// Beget Ltd
+// Submitted by Lev Nekrasov <lnekrasov@beget.com>
+*.beget.app
+
 // BetaInABox
 // Submitted by Adrian <adrian@betainabox.com>
 betainabox.com
@@ -13697,6 +13701,10 @@ me.vu
 // V.UA Domain Administrator : https://domain.v.ua/
 // Submitted by Serhii Rostilo <sergey@rostilo.kiev.ua>
 v.ua
+
+// Vultr Objects : https://www.vultr.com/products/object-storage/
+// Submitted by Niels Maumenee <storage@vultr.com>
+*.vultrobjects.com
 
 // Waffle Computer Inc., Ltd. : https://docs.waffleinfo.com
 // Submitted by Masayuki Note <masa@blade.wafflecell.com>
