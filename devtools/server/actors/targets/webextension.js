@@ -89,6 +89,9 @@ const webExtensionTargetPrototype = extend({}, parentProcessTargetPrototype);
  *        - isTopLevelTarget: {Boolean} flag to indicate if this is the top
  *          level target of the DevTools session
  *        - prefix: {String} the custom RDP prefix to use.
+ *        - sessionContext Object
+ *          The Session Context to help know what is debugged.
+ *          See devtools/server/actors/watcher/session-context.js
  */
 webExtensionTargetPrototype.initialize = function(
   conn,
@@ -98,6 +101,7 @@ webExtensionTargetPrototype.initialize = function(
     chromeGlobal,
     isTopLevelTarget,
     prefix,
+    sessionContext,
   }
 ) {
   this.addonId = addonId;
@@ -118,6 +122,7 @@ webExtensionTargetPrototype.initialize = function(
   parentProcessTargetPrototype.initialize.call(this, conn, {
     isTopLevelTarget,
     window: extensionWindow,
+    sessionContext,
   });
   this._chromeGlobal = chromeGlobal;
   this._prefix = prefix;
