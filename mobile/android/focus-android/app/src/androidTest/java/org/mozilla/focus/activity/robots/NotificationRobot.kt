@@ -119,4 +119,4 @@ private val notificationHeader = mDevice.findObject(
         .textContains(appName)
 )
 
-private val clearButton = mDevice.findObject(UiSelector().resourceId("com.android.systemui:id/dismiss_text"))
+private val clearButton = mDevice.findObject(UiSelector().resourceId("com.android.systemui:id/btn_clear_all"))
