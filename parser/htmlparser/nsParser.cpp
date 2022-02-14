@@ -22,7 +22,6 @@
 #include "nsExpatDriver.h"
 #include "nsIFragmentContentSink.h"
 #include "nsStreamUtils.h"
-#include "nsHTMLTokenizer.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsMimeTypes.h"
 #include "nsCharsetSource.h"
@@ -332,10 +331,6 @@ nsresult nsParser::WillBuildModel() {
   } else {
     mDTD = new CNavDTD();
   }
-
-  nsITokenizer* tokenizer;
-  nsresult rv = mParserContext->GetTokenizer(mDTD, mSink, tokenizer);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return mSink->WillBuildModel(mParserContext->mDTDMode);
 }
@@ -725,59 +720,32 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
 
         // Only allow parsing to be interrupted in the subsequent call to
         // build model.
-        nsITokenizer* theTokenizer = nullptr;
-        nsresult getTokenizerResult;
-        if (mParserContext) {
-          result = getTokenizerResult =
-              mParserContext->GetTokenizer(mDTD, mSink, theTokenizer);
-        } else {
-          getTokenizerResult = NS_ERROR_HTMLPARSER_BADTOKENIZER;
-          result = NS_OK;
-        }
-
         nsresult theTokenizerResult;
         if (mFlags & NS_PARSER_FLAG_CAN_TOKENIZE) {
-          if (NS_SUCCEEDED(getTokenizerResult)) {
-            theTokenizerResult = getTokenizerResult;
-
-            bool killSink = false;
-
-            while (NS_SUCCEEDED(theTokenizerResult)) {
-              mParserContext->mScanner.Mark();
-              theTokenizerResult = theTokenizer->ConsumeToken(
-                  mParserContext->mScanner, aIsFinalChunk);
-              if (NS_FAILED(theTokenizerResult)) {
-                mParserContext->mScanner.RewindToMark();
-                if (NS_ERROR_HTMLPARSER_EOF == theTokenizerResult) {
-                  break;
-                }
-                if (NS_ERROR_HTMLPARSER_STOPPARSING == theTokenizerResult) {
-                  killSink = true;
-                  theTokenizerResult = Terminate();
-                  break;
-                }
+          mParserContext->mScanner.Mark();
+          if (mDTD->GetType() == NS_IPARSER_FLAG_XML &&
+              mParserContext->mParserCommand != eViewSource) {
+            nsExpatDriver* expat = static_cast<nsExpatDriver*>(mDTD.get());
+            theTokenizerResult =
+                expat->ResumeParse(mParserContext->mScanner, aIsFinalChunk);
+            if (NS_FAILED(theTokenizerResult)) {
+              mParserContext->mScanner.RewindToMark();
+              if (NS_ERROR_HTMLPARSER_STOPPARSING == theTokenizerResult) {
+                theTokenizerResult = Terminate();
+                mSink = nullptr;
               }
             }
-
-            if (killSink) {
-              mSink = nullptr;
-            }
           } else {
-            theTokenizerResult = mInternalState =
-                NS_ERROR_HTMLPARSER_BADTOKENIZER;
+            // Nothing to do for non-XML. Note that this should only be
+            // about:blank at this point, we're also checking for view-source
+            // above, but that shouldn't end up here anymore.
+            theTokenizerResult = NS_ERROR_HTMLPARSER_EOF;
           }
         } else {
           theTokenizerResult = NS_OK;
         }
 
-        if (NS_SUCCEEDED(result)) {
-          if (mDTD) {
-            result = mDTD->BuildModel(mSink);
-          }
-        } else {
-          mInternalState = result = NS_ERROR_HTMLPARSER_BADTOKENIZER;
-        }
-
+        result = mDTD->BuildModel(mSink);
         if (result == NS_ERROR_HTMLPARSER_INTERRUPTED && aIsFinalChunk) {
           PostContinueEvent();
         }

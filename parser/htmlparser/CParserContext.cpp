@@ -8,9 +8,7 @@
 #include "CParserContext.h"
 #include "prenv.h"
 #include "nsIHTMLContentSink.h"
-#include "nsHTMLTokenizer.h"
 #include "nsMimeTypes.h"
-#include "nsHTMLTokenizer.h"
 
 CParserContext::CParserContext(nsIURI* aURI, eParserCommands aCommand)
     : mScanner(aURI),
@@ -59,22 +57,4 @@ void CParserContext::SetMimeType(const nsACString& aMimeType) {
            mMimeType.EqualsLiteral(APPLICATION_WAPXHTML_XML) ||
            mMimeType.EqualsLiteral(TEXT_RDF))
     mDocType = eXML;
-}
-
-nsresult CParserContext::GetTokenizer(nsIDTD* aDTD, nsIContentSink* aSink,
-                                      nsITokenizer*& aTokenizer) {
-  nsresult result = NS_OK;
-  int32_t type = aDTD ? aDTD->GetType() : NS_IPARSER_FLAG_HTML;
-
-  if (!mTokenizer) {
-    if (type == NS_IPARSER_FLAG_HTML || mParserCommand == eViewSource) {
-      mTokenizer = new nsHTMLTokenizer;
-    } else if (type == NS_IPARSER_FLAG_XML) {
-      mTokenizer = do_QueryInterface(aDTD, &result);
-    }
-  }
-
-  aTokenizer = mTokenizer;
-
-  return result;
 }

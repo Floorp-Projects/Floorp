@@ -351,9 +351,8 @@ static void GetLocalDTDURI(const nsCatalogData* aCatalogData, nsIURI* aDTD,
 /***************************** END CATALOG UTILS *****************************/
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsExpatDriver)
-  NS_INTERFACE_MAP_ENTRY(nsITokenizer)
   NS_INTERFACE_MAP_ENTRY(nsIDTD)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDTD)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsExpatDriver)
@@ -1226,8 +1225,7 @@ void nsExpatDriver::ParseBuffer(const char16_t* aBuffer, uint32_t aLength,
   }
 }
 
-NS_IMETHODIMP
-nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool aIsFinalChunk) {
+nsresult nsExpatDriver::ResumeParse(nsScanner& aScanner, bool aIsFinalChunk) {
   // We keep the scanner pointing to the position where Expat will start
   // parsing.
   nsScannerIterator currentExpatPosition;
