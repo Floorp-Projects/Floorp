@@ -278,20 +278,6 @@ class nsParser final : public nsIParser,
   void DidBuildModel();
 
  private:
-  /*******************************************
-    These are the tokenization methods...
-   *******************************************/
-
-  /**
-   *  This is the primary control routine. It iteratively
-   *  consumes tokens until an error occurs or you run out
-   *  of data.
-   *
-   *  @update  gess 3/25/98
-   *  @return  error code
-   */
-  nsresult Tokenize(bool aIsFinalChunk = false);
-
   /**
    * Pushes XML fragment parsing data to expat without an input stream.
    */
