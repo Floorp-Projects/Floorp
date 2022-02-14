@@ -46,6 +46,7 @@
 #include "jxl/encode.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/printf_macros.h"
+#include "lib/jxl/base/scope_guard.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/sanitizers.h"
 #include "png.h" /* original (unpatched) libpng is ok */
@@ -315,7 +316,6 @@ int processing_start(png_structp& png_ptr, png_infop& info_ptr, void* frame_ptr,
   if (!png_ptr || !info_ptr) return 1;
 
   if (setjmp(png_jmpbuf(png_ptr))) {
-    png_destroy_read_struct(&png_ptr, &info_ptr, 0);
     return 1;
   }
 
@@ -339,7 +339,6 @@ int processing_data(png_structp png_ptr, png_infop info_ptr, unsigned char* p,
   if (!png_ptr || !info_ptr) return 1;
 
   if (setjmp(png_jmpbuf(png_ptr))) {
-    png_destroy_read_struct(&png_ptr, &info_ptr, 0);
     return 1;
   }
 
@@ -354,7 +353,6 @@ int processing_finish(png_structp png_ptr, png_infop info_ptr,
   if (!png_ptr || !info_ptr) return 1;
 
   if (setjmp(png_jmpbuf(png_ptr))) {
-    png_destroy_read_struct(&png_ptr, &info_ptr, 0);
     return 1;
   }
 
@@ -366,8 +364,6 @@ int processing_finish(png_structp png_ptr, png_infop info_ptr,
   for (int i = 0; i < num_text; i++) {
     (void)BlobsReaderPNG::Decode(text_ptr[i], metadata);
   }
-
-  png_destroy_read_struct(&png_ptr, &info_ptr, 0);
 
   return 0;
 }
@@ -382,19 +378,36 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
   unsigned int id, j, w, h, w0, h0, x0, y0;
   unsigned int delay_num, delay_den, dop, bop, rowbytes, imagesize;
   unsigned char sig[8];
-  png_structp png_ptr;
-  png_infop info_ptr;
+  png_structp png_ptr = nullptr;
+  png_infop info_ptr = nullptr;
   PaddedBytes chunk;
   PaddedBytes chunkIHDR;
   std::vector<PaddedBytes> chunksInfo;
   bool isAnimated = false;
-  bool skipFirst = false;
   bool hasInfo = false;
-  bool all_dispose_bg = true;
   APNGFrame frameRaw = {};
   uint32_t num_channels;
   JxlPixelFormat format;
   unsigned int bytes_per_pixel = 0;
+
+  struct FrameInfo {
+    PackedImage data;
+    uint32_t duration;
+    size_t x0, xsize;
+    size_t y0, ysize;
+    uint32_t dispose_op;
+    uint32_t blend_op;
+  };
+
+  std::vector<FrameInfo> frames;
+
+  // Make sure png memory is released in any case.
+  auto scope_guard = MakeScopeGuard([&]() {
+    png_destroy_read_struct(&png_ptr, &info_ptr, 0);
+    // Just in case. Not all versions on libpng wipe-out the pointers.
+    png_ptr = nullptr;
+    info_ptr = nullptr;
+  });
 
   r = {bytes.data(), bytes.data() + bytes.size()};
   // Not a PNG => not an error
@@ -434,14 +447,12 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
 
     if (!processing_start(png_ptr, info_ptr, (void*)&frameRaw, hasInfo,
                           chunkIHDR, chunksInfo)) {
-      bool last_base_was_none = true;
       while (!r.Eof()) {
         id = read_chunk(&r, &chunk);
         if (!id) break;
 
         if (id == kId_acTL && !hasInfo && !isAnimated) {
           isAnimated = true;
-          skipFirst = true;
           ppf->info.have_animation = true;
           ppf->info.animation.tps_numerator = 1000;
           ppf->info.animation.tps_denominator = 1;
@@ -450,38 +461,12 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
           if (hasInfo) {
             if (!processing_finish(png_ptr, info_ptr, &ppf->metadata)) {
               // Allocates the frame buffer.
-              ppf->frames.emplace_back(w0, h0, format);
-              auto* frame = &ppf->frames.back();
-
-              frame->frame_info.duration = delay_num * 1000 / delay_den;
-              frame->x0 = x0;
-              frame->y0 = y0;
-              // TODO(veluca): this could in principle be implemented.
-              if (last_base_was_none && !all_dispose_bg &&
-                  (x0 != 0 || y0 != 0 || w0 != w || h0 != h || bop != 0)) {
-                return JXL_FAILURE(
-                    "APNG with dispose-to-0 is not supported for non-full or "
-                    "blended frames");
-              }
-              switch (dop) {
-                case 0:
-                  frame->use_for_next_frame = true;
-                  last_base_was_none = false;
-                  all_dispose_bg = false;
-                  break;
-                case 2:
-                  frame->use_for_next_frame = false;
-                  all_dispose_bg = false;
-                  break;
-                default:
-                  frame->use_for_next_frame = false;
-                  last_base_was_none = true;
-              }
-              frame->blend = bop != 0;
-
+              uint32_t duration = delay_num * 1000 / delay_den;
+              frames.push_back(FrameInfo{PackedImage(w0, h0, format), duration,
+                                         x0, w0, y0, h0, dop, bop});
+              auto& frame = frames.back().data;
               for (size_t y = 0; y < h0; ++y) {
-                memcpy(static_cast<uint8_t*>(frame->color.pixels()) +
-                           frame->color.stride * y,
+                memcpy(static_cast<uint8_t*>(frame.pixels()) + frame.stride * y,
                        frameRaw.rows[y], bytes_per_pixel * w0);
               }
             } else {
@@ -492,6 +477,11 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
           if (id == kId_IEND) {
             errorstate = false;
             break;
+          }
+          if (chunk.size() < 34) {
+            return JXL_FAILURE("Received a chunk that is too small (%" PRIuS
+                               "B)",
+                               chunk.size());
           }
           // At this point the old frame is done. Let's start a new one.
           w0 = png_get_uint_32(chunk.data() + 12);
@@ -517,13 +507,6 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
                                  chunkIHDR, chunksInfo)) {
               break;
             }
-
-          } else
-            skipFirst = false;
-
-          if (ppf->frames.size() == (skipFirst ? 1 : 0)) {
-            bop = 0;
-            if (dop == 2) dop = 1;
           }
         } else if (id == kId_IDAT) {
           // First IDAT chunk means we now have all header info
@@ -552,7 +535,13 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
           if (colortype & 4 ||
               png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
             ppf->info.alpha_bits = ppf->info.bits_per_sample;
-            if (sigbits) ppf->info.alpha_bits = sigbits->alpha;
+            if (sigbits) {
+              if (sigbits->alpha &&
+                  sigbits->alpha != ppf->info.bits_per_sample) {
+                return JXL_FAILURE("Unsupported alpha bit-depth");
+              }
+              ppf->info.alpha_bits = sigbits->alpha;
+            }
           } else {
             ppf->info.alpha_bits = 0;
           }
@@ -650,6 +639,110 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
   }
 
   if (errorstate) return false;
+
+  bool has_nontrivial_background = false;
+  bool previous_frame_should_be_cleared = false;
+  enum {
+    DISPOSE_OP_NONE = 0,
+    DISPOSE_OP_BACKGROUND = 1,
+    DISPOSE_OP_PREVIOUS = 2,
+  };
+  enum {
+    BLEND_OP_SOURCE = 0,
+    BLEND_OP_OVER = 1,
+  };
+  for (size_t i = 0; i < frames.size(); i++) {
+    auto& frame = frames[i];
+    JXL_ASSERT(frame.data.xsize == frame.xsize);
+    JXL_ASSERT(frame.data.ysize == frame.ysize);
+
+    // Before encountering a DISPOSE_OP_NONE frame, the canvas is filled with 0,
+    // so DISPOSE_OP_BACKGROUND and DISPOSE_OP_PREVIOUS are equivalent.
+    if (frame.dispose_op == DISPOSE_OP_NONE) {
+      has_nontrivial_background = true;
+    }
+    bool should_blend = frame.blend_op == BLEND_OP_OVER;
+    bool use_for_next_frame =
+        has_nontrivial_background && frame.dispose_op != DISPOSE_OP_PREVIOUS;
+    size_t x0 = frame.x0;
+    size_t y0 = frame.y0;
+
+    if (previous_frame_should_be_cleared) {
+      size_t xs = frame.data.xsize;
+      size_t ys = frame.data.ysize;
+      size_t px0 = frames[i - 1].x0;
+      size_t py0 = frames[i - 1].y0;
+      size_t pxs = frames[i - 1].xsize;
+      size_t pys = frames[i - 1].ysize;
+      if (px0 >= x0 && py0 >= y0 && px0 + pxs <= x0 + xs &&
+          py0 + pys <= y0 + ys && frame.blend_op == BLEND_OP_SOURCE &&
+          use_for_next_frame) {
+        // If the previous frame is entirely contained in the current frame and
+        // we are using BLEND_OP_SOURCE, nothing special needs to be done.
+        ppf->frames.emplace_back(std::move(frame.data));
+      } else if (px0 == x0 && py0 == y0 && px0 + pxs == x0 + xs &&
+                 py0 + pys == y0 + ys && use_for_next_frame) {
+        // If the new frame has the same size as the old one, but we are
+        // blending, we can instead just not blend.
+        should_blend = false;
+        ppf->frames.emplace_back(std::move(frame.data));
+      } else if (px0 <= x0 && py0 <= y0 && px0 + pxs >= x0 + xs &&
+                 py0 + pys >= y0 + ys && use_for_next_frame) {
+        // If the new frame is contained within the old frame, we can pad the
+        // new frame with zeros and not blend.
+        PackedImage new_data(pxs, pys, frame.data.format);
+        memset(new_data.pixels(), 0, new_data.pixels_size);
+        for (size_t y = 0; y < ys; y++) {
+          size_t bytes_per_pixel =
+              PackedImage::BitsPerChannel(new_data.format.data_type) *
+              new_data.format.num_channels / 8;
+          memcpy(static_cast<uint8_t*>(new_data.pixels()) +
+                     new_data.stride * (y + y0 - py0) +
+                     bytes_per_pixel * (x0 - px0),
+                 static_cast<const uint8_t*>(frame.data.pixels()) +
+                     frame.data.stride * y,
+                 xs * bytes_per_pixel);
+        }
+
+        x0 = px0;
+        y0 = py0;
+        should_blend = false;
+        ppf->frames.emplace_back(std::move(new_data));
+      } else {
+        // If all else fails, insert a dummy blank frame with kReplace.
+        PackedImage blank(pxs, pys, frame.data.format);
+        memset(blank.pixels(), 0, blank.pixels_size);
+        ppf->frames.emplace_back(std::move(blank));
+        auto& pframe = ppf->frames.back();
+        pframe.x0 = px0;
+        pframe.y0 = py0;
+        pframe.frame_info.duration = 0;
+        pframe.blend = false;
+        pframe.use_for_next_frame = true;
+
+        ppf->frames.emplace_back(std::move(frame.data));
+      }
+    } else {
+      ppf->frames.emplace_back(std::move(frame.data));
+    }
+
+    auto& pframe = ppf->frames.back();
+    pframe.x0 = x0;
+    pframe.y0 = y0;
+    pframe.frame_info.duration = frame.duration;
+    pframe.blend = should_blend;
+    pframe.use_for_next_frame = use_for_next_frame;
+
+    if (has_nontrivial_background &&
+        frame.dispose_op == DISPOSE_OP_BACKGROUND) {
+      previous_frame_should_be_cleared = true;
+    } else {
+      previous_frame_should_be_cleared = false;
+    }
+  }
+  if (ppf->frames.empty()) return JXL_FAILURE("No frames decoded");
+  ppf->frames.back().frame_info.is_last = true;
+
   return true;
 }
 

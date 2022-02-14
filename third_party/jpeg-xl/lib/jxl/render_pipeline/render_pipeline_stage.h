@@ -81,6 +81,8 @@ class RenderPipelineStage {
   virtual ~RenderPipelineStage() = default;
 
  protected:
+  virtual Status IsInitialized() const { return true; }
+
   // Processes one row of input, producing the appropriate number of rows of
   // output. Input/output rows can be obtained by calls to
   // `GetInputRow`/`GetOutputRow`. `xsize+2*xextra` represents the total number
@@ -121,11 +123,11 @@ class RenderPipelineStage {
   float* GetOutputRow(const RowInfo& output_rows, size_t c,
                       size_t offset) const {
     JXL_DASSERT(GetChannelMode(c) == RenderPipelineChannelMode::kInOut);
-    JXL_DASSERT(offset <= 1 << settings_.shift_y);
+    JXL_DASSERT(offset <= 1ul << settings_.shift_y);
     return output_rows[c][offset] + kRenderPipelineXOffset;
   }
 
-  const Settings settings_;
+  Settings settings_;
   friend class RenderPipeline;
   friend class SimpleRenderPipeline;
   friend class LowMemoryRenderPipeline;

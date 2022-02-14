@@ -122,8 +122,8 @@ Status EncodeImagePNM(const CodecInOut* io, const ColorEncoding& c_desired,
   const ImageBundle* transformed;
   JXL_RETURN_IF_ERROR(TransformIfNeeded(
       *to_color_transform, c_desired, GetJxlCms(), pool, &store, &transformed));
-  size_t stride = ib.oriented_xsize() *
-                  (c_desired.Channels() * bits_per_sample) / kBitsPerByte;
+  size_t bytes_per_sample = floating_point ? 4 : bits_per_sample > 8 ? 2 : 1;
+  size_t stride = ib.oriented_xsize() * c_desired.Channels() * bytes_per_sample;
   PaddedBytes pixels(stride * ib.oriented_ysize());
   JXL_RETURN_IF_ERROR(ConvertToExternal(
       *transformed, bits_per_sample, floating_point, c_desired.Channels(),

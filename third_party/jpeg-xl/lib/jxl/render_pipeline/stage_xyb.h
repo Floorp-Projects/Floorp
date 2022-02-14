@@ -21,6 +21,12 @@ namespace jxl {
 // Converts the color channels from XYB to the specified output encoding.
 std::unique_ptr<RenderPipelineStage> GetXYBStage(
     const OutputEncodingInfo& output_encoding_info);
+
+// Gets a stage to convert with fixed point arithmetic from XYB to sRGB8 and
+// write to a uint8 buffer.
+std::unique_ptr<RenderPipelineStage> GetFastXYBTosRGB8Stage(
+    uint8_t* rgb, size_t stride, size_t width, size_t height, bool rgba,
+    bool has_alpha, size_t alpha_c);
 }  // namespace jxl
 
 #endif  // LIB_JXL_RENDER_PIPELINE_STAGE_XYB_H_

@@ -994,19 +994,20 @@ class LossyFrameEncoder {
  private:
   void ComputeAllCoeffOrders(const FrameDimensions& frame_dim) {
     PROFILER_FUNC;
+    // No coefficient reordering in Falcon or faster.
+    auto used_orders_info = ComputeUsedOrders(
+        enc_state_->cparams.speed_tier, enc_state_->shared.ac_strategy,
+        Rect(enc_state_->shared.raw_quant_field));
+    enc_state_->used_orders.clear();
     enc_state_->used_orders.resize(
-        enc_state_->progressive_splitter.GetNumPasses());
+        enc_state_->progressive_splitter.GetNumPasses(),
+        used_orders_info.second);
     for (size_t i = 0; i < enc_state_->progressive_splitter.GetNumPasses();
          i++) {
-      // No coefficient reordering in Falcon or faster.
-      if (enc_state_->cparams.speed_tier < SpeedTier::kFalcon) {
-        enc_state_->used_orders[i] = ComputeUsedOrders(
-            enc_state_->cparams.speed_tier, enc_state_->shared.ac_strategy,
-            Rect(enc_state_->shared.raw_quant_field));
-      }
       ComputeCoeffOrder(
           enc_state_->cparams.speed_tier, *enc_state_->coeffs[i],
           enc_state_->shared.ac_strategy, frame_dim, enc_state_->used_orders[i],
+          used_orders_info.first,
           &enc_state_->shared
                .coeff_orders[i * enc_state_->shared.coeff_order_size]);
     }
