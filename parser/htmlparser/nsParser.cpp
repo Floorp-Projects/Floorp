@@ -367,7 +367,7 @@ nsresult nsParser::WillBuildModel() {
   nsresult rv = mParserContext->GetTokenizer(mDTD, mSink, tokenizer);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDTD->WillBuildModel(*mParserContext, tokenizer, mSink);
+  rv = mDTD->WillBuildModel(*mParserContext, mSink);
   nsresult sinkResult = mSink->WillBuildModel(mDTD->GetMode());
   // nsIDTD::WillBuildModel used to be responsible for calling
   // nsIContentSink::WillBuildModel, but that obligation isn't expressible
@@ -1011,7 +1011,7 @@ nsresult nsParser::BuildModel() {
 
   if (NS_SUCCEEDED(result)) {
     if (mDTD) {
-      result = mDTD->BuildModel(theTokenizer, mSink);
+      result = mDTD->BuildModel(mSink);
     }
   } else {
     mInternalState = result = NS_ERROR_HTMLPARSER_BADTOKENIZER;
