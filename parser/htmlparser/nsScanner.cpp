@@ -47,7 +47,8 @@ nsReadEndCondition::nsReadEndCondition(const char16_t* aTerminateChars)
  *  @param   aMode represents the parser mode (nav, other)
  *  @return
  */
-nsScanner::nsScanner(const nsAString& anHTMLString) {
+nsScanner::nsScanner(const nsAString& anHTMLString, bool aIncremental)
+    : mIncremental(aIncremental) {
   MOZ_COUNT_CTOR(nsScanner);
 
   mSlidingBuffer = nullptr;
@@ -59,9 +60,6 @@ nsScanner::nsScanner(const nsAString& anHTMLString) {
     mEndPosition = mCurrentPosition;
   }
   mMarkPosition = mCurrentPosition;
-  mIncremental = false;
-  mUnicodeDecoder = nullptr;
-  mCharsetSource = kCharsetUninitialized;
 }
 
 /**
@@ -69,10 +67,8 @@ nsScanner::nsScanner(const nsAString& anHTMLString) {
  *  the scanner receives. If you pass a null filename, you
  *  can still provide data to the scanner via append.
  */
-nsScanner::nsScanner(nsIURI* aURI, bool aCreateStream) : mURI(aURI) {
+nsScanner::nsScanner(nsIURI* aURI) : mURI(aURI), mIncremental(true) {
   MOZ_COUNT_CTOR(nsScanner);
-  NS_ASSERTION(!aCreateStream, "This is always true.");
-
   mSlidingBuffer = nullptr;
 
   // XXX This is a big hack.  We need to initialize the iterators to something.
@@ -84,10 +80,6 @@ nsScanner::nsScanner(nsIURI* aURI, bool aCreateStream) : mURI(aURI) {
   mMarkPosition = mCurrentPosition;
   mEndPosition = mCurrentPosition;
 
-  mIncremental = true;
-
-  mUnicodeDecoder = nullptr;
-  mCharsetSource = kCharsetUninitialized;
   // XML defaults to UTF-8 and about:blank is UTF-8, too.
   SetDocumentCharset(UTF_8_ENCODING, kCharsetFromDocTypeDefault);
 }

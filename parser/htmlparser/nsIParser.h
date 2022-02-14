@@ -43,7 +43,7 @@ class Encoding;
 
 enum eParserCommands { eViewNormal, eViewSource, eViewFragment, eViewErrors };
 
-enum eParserDocType { ePlainText = 0, eXML, eHTML_Quirks, eHTML_Strict };
+enum eParserDocType { eUnknown = 0, eXML, eHTML_Quirks, eHTML_Strict };
 
 enum eStreamState { eNone, eOnStart, eOnDataAvail, eOnStop };
 

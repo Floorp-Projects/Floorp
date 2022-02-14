@@ -17,6 +17,7 @@
 #ifndef SCANNER
 #define SCANNER
 
+#include "nsCharsetSource.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIParser.h"
@@ -44,13 +45,13 @@ class nsScanner final {
   /**
    *  Use this constructor for the XML fragment parsing case
    */
-  explicit nsScanner(const nsAString& anHTMLString);
+  nsScanner(const nsAString& anHTMLString, bool aIncremental);
 
   /**
    *  Use this constructor if you want i/o to be based on
    *  a file (therefore a stream) or just data you provide via Append().
    */
-  nsScanner(nsIURI* aURI, bool aCreateStream);
+  explicit nsScanner(nsIURI* aURI);
 
   ~nsScanner();
 
@@ -176,7 +177,7 @@ class nsScanner final {
   nsScannerIterator mEndPosition;  // The current end of the scanner buffer
   nsCOMPtr<nsIURI> mURI;
   bool mIncremental;
-  int32_t mCharsetSource;
+  int32_t mCharsetSource = kCharsetUninitialized;
   nsCString mCharset;
   mozilla::UniquePtr<mozilla::Decoder> mUnicodeDecoder;
 

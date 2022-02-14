@@ -29,12 +29,11 @@ class nsITokenizer;
 
 class CParserContext {
  public:
-  enum eContextType { eCTNone, eCTURL, eCTString, eCTStream };
+  enum eContextType { eCTURL, eCTString };
 
-  explicit CParserContext(nsScanner* aScanner,
-                          eParserCommands aCommand = eViewNormal,
-                          eAutoDetectResult aStatus = eUnknownDetect,
-                          bool aCopyUnused = false);
+  CParserContext(nsIURI* aURI, eParserCommands aCommand);
+  CParserContext(const nsAString& aBuffer, eParserCommands aCommand,
+                 bool aLastBuffer);
 
   ~CParserContext();
 
@@ -46,7 +45,7 @@ class CParserContext {
       mRequest;  // provided by necko to differnciate different input streams
                  // why is mRequest strongly referenced? see bug 102376.
   nsCOMPtr<nsITokenizer> mTokenizer;
-  mozilla::UniquePtr<nsScanner> mScanner;
+  nsScanner mScanner;
 
   nsCString mMimeType;
   nsDTDMode mDTDMode;
@@ -54,7 +53,7 @@ class CParserContext {
   eParserDocType mDocType;
   eStreamState mStreamListenerState;
   eContextType mContextType;
-  eAutoDetectResult mAutoDetectStatus;
+  eAutoDetectResult mAutoDetectStatus = eUnknownDetect;
   eParserCommands mParserCommand;
 
   bool mMultipart;
