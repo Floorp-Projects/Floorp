@@ -58,10 +58,6 @@ class PrototypeDocumentParser final : public nsIParser,
                                   int32_t aSource,
                                   bool aForceAutoDetection) override {}
 
-  NS_IMETHOD GetChannel(nsIChannel** aChannel) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   NS_IMETHOD GetDTD(nsIDTD** aDTD) override { return NS_ERROR_NOT_IMPLEMENTED; }
 
   virtual nsIStreamListener* GetStreamListener() override;
