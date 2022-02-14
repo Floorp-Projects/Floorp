@@ -80,8 +80,6 @@ class PrototypeDocumentParser final : public nsIParser,
 
   NS_IMETHOD Terminate() override { return NS_ERROR_NOT_IMPLEMENTED; }
 
-  NS_IMETHOD CancelParsingEvents() override { return NS_ERROR_NOT_IMPLEMENTED; }
-
   virtual bool IsInsertionPointDefined() override { return false; }
 
   void IncrementScriptNestingLevel() final {}
