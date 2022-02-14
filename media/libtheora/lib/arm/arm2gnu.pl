@@ -23,6 +23,7 @@ $\ = "\n";      # automatically add newline on print
 $n=0;
 
 $thumb = 0;     # ARM mode by default, not Thumb.
+@proc_stack = ();
 
 LINE:
 while (<>) {
@@ -85,13 +86,19 @@ while (<>) {
     # ".rdata" doesn't work in 'as' version 2.13.2, as it is ".rodata" there.
     #
     if ( /\bAREA\b/ ) {
+        my $align;
+        $align = "2";
+        if ( /ALIGN=(\d+)/ ) {
+            $align = $1;
+        }
         if ( /CODE/ ) {
             $nxstack = 1;
         }
         s/^(.+)CODE(.+)READONLY(.*)/    .text/;
-        s/^(.+)DATA(.+)READONLY(.*)/    .section .rdata\n    .align 2/;
-        s/^(.+)\|\|\.data\|\|(.+)/    .data\n    .align 2/;
+        s/^(.+)DATA(.+)READONLY(.*)/    .section .rdata/;
+        s/^(.+)\|\|\.data\|\|(.+)/    .data/;
         s/^(.+)\|\|\.bss\|\|(.+)/    .bss/;
+        s/$/;   .p2align $align/;
     }
 
     s/\|\|\.constdata\$(\d+)\|\|/.L_CONST$1/;       # ||.constdata$3||
@@ -105,12 +112,30 @@ while (<>) {
     s/\bCODE16\b/.code 16/ && do {$thumb = 1};
     if (/\bPROC\b/)
     {
-        print "    .thumb_func" if ($thumb);
+        my $prefix;
+        my $proc;
+        /^([A-Za-z_\.]\w+)\b/;
+        $proc = $1;
+        $prefix = "";
+        if ($proc)
+        {
+            $prefix = $prefix.sprintf("\t.type\t%s, %%function; ",$proc);
+            push(@proc_stack, $proc);
+            s/^[A-Za-z_\.]\w+/$&:/;
+        }
+        $prefix = $prefix."\t.thumb_func; " if ($thumb);
         s/\bPROC\b/@ $&/;
+        $_ = $prefix.$_;
     }
     s/^(\s*)(S|Q|SH|U|UQ|UH)ASX\b/$1$2ADDSUBX/;
     s/^(\s*)(S|Q|SH|U|UQ|UH)SAX\b/$1$2SUBADDX/;
-    s/\bENDP\b/@ $&/;
+    if (/\bENDP\b/)
+    {
+        my $proc;
+        s/\bENDP\b/@ $&/;
+        $proc = pop(@proc_stack);
+        $_ = "\t.size $proc, .-$proc".$_ if ($proc);
+    }
     s/\bSUBT\b/@ $&/;
     s/\bDATA\b/@ $&/;   # DATA directive is deprecated -- Asm guide, p.7-25
     s/\bKEEP\b/@ $&/;
@@ -223,6 +248,7 @@ while (<>) {
     {
         my $cmd=$_;
         my $value;
+        my $prefix;
         my $w1;
         my $w2;
         my $w3;
@@ -241,24 +267,21 @@ while (<>) {
         if( $bigend ne "")
         {
             # big endian
-
-            print "        .byte      0x".$w1;
-            print "        .byte      0x".$w2;
-            print "        .byte      0x".$w3;
-            print "        .byte      0x".$w4;
+            $prefix = "\t.byte\t0x".$w1.";".
+                      "\t.byte\t0x".$w2.";".
+                      "\t.byte\t0x".$w3.";".
+                      "\t.byte\t0x".$w4."; ";
         }
         else
         {
             # little endian
-
-            print "        .byte      0x".$w4;
-            print "        .byte      0x".$w3;
-            print "        .byte      0x".$w2;
-            print "        .byte      0x".$w1;
+            $prefix = "\t.byte\t0x".$w4.";".
+                      "\t.byte\t0x".$w3.";".
+                      "\t.byte\t0x".$w2.";".
+                      "\t.byte\t0x".$w1."; ";
         }
-
+        $_=$prefix.$_;
     }
-
 
     if ( /\badrl\b/i )
     {

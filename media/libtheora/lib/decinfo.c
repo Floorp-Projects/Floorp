@@ -11,7 +11,7 @@
  ********************************************************************
 
   function:
-    last mod: $Id: decinfo.c 17276 2010-06-05 05:57:05Z tterribe $
+    last mod: $Id$
 
  ********************************************************************/
 
@@ -20,6 +20,11 @@
 #include <limits.h>
 #include "decint.h"
 
+/*Only used for fuzzing.*/
+#if defined(HAVE_MEMORY_CONSTRAINT)
+static const int MAX_FUZZING_WIDTH = 16384;
+static const int MAX_FUZZING_HEIGHT = 16384;
+#endif
 
 
 /*Unpacks a series of octets from a given byte array into the pack buffer.
@@ -55,8 +60,8 @@ static int oc_info_unpack(oc_pack_buf *_opb,th_info *_info){
   /*verify we can parse this bitstream version.
      We accept earlier minors and all subminors, by spec*/
   if(_info->version_major>TH_VERSION_MAJOR||
-   _info->version_major==TH_VERSION_MAJOR&&
-   _info->version_minor>TH_VERSION_MINOR){
+   (_info->version_major==TH_VERSION_MAJOR&&
+   _info->version_minor>TH_VERSION_MINOR)){
     return TH_EVERSION;
   }
   /*Read the encoded frame description.*/
@@ -82,6 +87,11 @@ static int oc_info_unpack(oc_pack_buf *_opb,th_info *_info){
    _info->fps_numerator==0||_info->fps_denominator==0){
     return TH_EBADHEADER;
   }
+#if defined(HAVE_MEMORY_CONSTRAINT)
+  if(_info->frame_width>=MAX_FUZZING_WIDTH&&_info->frame_height>=MAX_FUZZING_HEIGHT){
+    return TH_EBADHEADER;
+  }
+#endif
   /*Note: The sense of pic_y is inverted in what we pass back to the
      application compared to how it is stored in the bitstream.
     This is because the bitstream uses a right-handed coordinate system, while
@@ -172,9 +182,23 @@ static int oc_dec_headerin(oc_pack_buf *_opb,th_info *_info,
   int  ret;
   val=oc_pack_read(_opb,8);
   packtype=(int)val;
-  /*If we're at a data packet and we have received all three headers, we're
-     done.*/
-  if(!(packtype&0x80)&&_info->frame_width>0&&_tc->vendor!=NULL&&*_setup!=NULL){
+  /*If we're at a data packet...*/
+  if(!(packtype&0x80)){
+    /*Check to make sure we received all three headers...
+      If we haven't seen any valid headers, assume this is not actually
+       Theora.*/
+    if(_info->frame_width<=0)return TH_ENOTFORMAT;
+    /*Follow our documentation, which says we'll return TH_EFAULT if this
+       are NULL (_info was checked by our caller).*/
+    if(_tc==NULL)return TH_EFAULT;
+    /*And if any other headers were missing, declare this packet "out of
+       sequence" instead.*/
+    if(_tc->vendor==NULL)return TH_EBADHEADER;
+    /*Don't check this until it's needed, since we allow passing NULL for the
+       arguments that we're not expecting the next header to fill in yet.*/
+    if(_setup==NULL)return TH_EFAULT;
+    if(*_setup==NULL)return TH_EBADHEADER;
+    /*If we got everything, we're done.*/
     return 0;
   }
   /*Check the codec string.*/
