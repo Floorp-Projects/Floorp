@@ -104,8 +104,7 @@ void nsHtml5Parser::SetDocumentCharset(NotNull<const Encoding*> aEncoding,
                                          (nsCharsetSource)aCharsetSource);
 }
 
-NS_IMETHODIMP
-nsHtml5Parser::GetChannel(nsIChannel** aChannel) {
+nsresult nsHtml5Parser::GetChannel(nsIChannel** aChannel) {
   if (GetStreamParser()) {
     return GetStreamParser()->GetChannel(aChannel);
   } else {

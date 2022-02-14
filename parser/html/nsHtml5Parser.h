@@ -75,7 +75,7 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
    * @param aChannel out param that will contain the result
    * @return NS_OK if successful or NS_NOT_AVAILABLE if not
    */
-  NS_IMETHOD GetChannel(nsIChannel** aChannel) override;
+  nsresult GetChannel(nsIChannel** aChannel);
 
   /**
    * Return |this| for backwards compat.

@@ -1420,21 +1420,6 @@ nsresult nsParser::Tokenize(bool aIsFinalChunk) {
 }
 
 /**
- * Get the channel associated with this parser
- *
- * @param aChannel out param that will contain the result
- * @return NS_OK if successful
- */
-NS_IMETHODIMP
-nsParser::GetChannel(nsIChannel** aChannel) {
-  nsresult result = NS_ERROR_NOT_AVAILABLE;
-  if (mParserContext && mParserContext->mRequest) {
-    result = CallQueryInterface(mParserContext->mRequest, aChannel);
-  }
-  return result;
-}
-
-/**
  * Get the DTD associated with this parser
  */
 NS_IMETHODIMP
