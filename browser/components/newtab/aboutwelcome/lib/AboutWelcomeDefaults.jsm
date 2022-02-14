@@ -38,6 +38,7 @@ const DEFAULT_WELCOME_CONTENT = {
             string_id: "mr1-onboarding-welcome-image-caption",
           },
         },
+        has_noodles: true,
         primary_button: {
           label: {
             string_id: "mr1-onboarding-pin-primary-button-label",
@@ -79,6 +80,7 @@ const DEFAULT_WELCOME_CONTENT = {
         subtitle: {
           string_id: "mr1-onboarding-default-subtitle",
         },
+        has_noodles: true,
         primary_button: {
           label: {
             string_id: "mr1-onboarding-default-primary-button-label",
@@ -108,6 +110,7 @@ const DEFAULT_WELCOME_CONTENT = {
         subtitle: {
           string_id: "mr1-onboarding-import-subtitle",
         },
+        has_noodles: true,
         primary_button: {
           label: {
             string_id:
@@ -139,6 +142,7 @@ const DEFAULT_WELCOME_CONTENT = {
         subtitle: {
           string_id: "mr1-onboarding-theme-subtitle",
         },
+        has_noodles: true,
         tiles: {
           type: "theme",
           action: {
