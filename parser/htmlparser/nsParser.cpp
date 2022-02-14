@@ -324,7 +324,11 @@ nsresult nsParser::WillBuildModel() {
   // Now see if we're parsing XML or HTML (which, as far as we're concerned,
   // simply means "not XML").
   if (mParserContext->mDocType == eXML) {
-    mDTD = new nsExpatDriver();
+    RefPtr<nsExpatDriver> expat = new nsExpatDriver();
+    nsresult rv = expat->Initialize(mParserContext->mScanner.GetURI(), mSink);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mDTD = expat.forget();
   } else {
     mDTD = new CNavDTD();
   }
@@ -333,16 +337,7 @@ nsresult nsParser::WillBuildModel() {
   nsresult rv = mParserContext->GetTokenizer(mDTD, mSink, tokenizer);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDTD->WillBuildModel(*mParserContext, mSink);
-  nsresult sinkResult = mSink->WillBuildModel(mParserContext->mDTDMode);
-  // nsIDTD::WillBuildModel used to be responsible for calling
-  // nsIContentSink::WillBuildModel, but that obligation isn't expressible
-  // in the nsIDTD interface itself, so it's sounder and simpler to give that
-  // responsibility back to the parser. The former behavior of the DTD was to
-  // NS_ENSURE_SUCCESS the sink WillBuildModel call, so if the sink returns
-  // failure we should use sinkResult instead of rv, to preserve the old error
-  // handling behavior of the DTD:
-  return NS_FAILED(sinkResult) ? sinkResult : rv;
+  return mSink->WillBuildModel(mParserContext->mDTDMode);
 }
 
 /**

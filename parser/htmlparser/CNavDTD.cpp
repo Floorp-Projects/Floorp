@@ -17,12 +17,6 @@ CNavDTD::CNavDTD() {}
 CNavDTD::~CNavDTD() {}
 
 NS_IMETHODIMP
-CNavDTD::WillBuildModel(const CParserContext& aParserContext,
-                        nsIContentSink* aSink) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 CNavDTD::BuildModel(nsIContentSink* aSink) {
   // NB: It is important to throw STOPPARSING if the sink is the wrong type in
   // order to make sure nsParser cleans up properly after itself.
