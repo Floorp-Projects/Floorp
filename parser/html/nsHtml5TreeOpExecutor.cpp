@@ -382,10 +382,8 @@ nsHtml5TreeOpExecutor::WillInterrupt() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsHtml5TreeOpExecutor::WillResume() {
+void nsHtml5TreeOpExecutor::WillResume() {
   MOZ_ASSERT_UNREACHABLE("Don't call. For interface compat only.");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

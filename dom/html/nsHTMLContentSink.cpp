@@ -108,7 +108,7 @@ class HTMLContentSink : public nsContentSink, public nsIHTMLContentSink {
   NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) override;
   NS_IMETHOD DidBuildModel(bool aTerminated) override;
   NS_IMETHOD WillInterrupt(void) override;
-  NS_IMETHOD WillResume(void) override;
+  void WillResume() override;
   NS_IMETHOD SetParser(nsParserBase* aParser) override;
   virtual void FlushPendingNotifications(FlushType aType) override;
   virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding) override;
@@ -830,8 +830,7 @@ HTMLContentSink::CloseContainer(const ElementType aTag) {
 NS_IMETHODIMP
 HTMLContentSink::WillInterrupt() { return WillInterruptImpl(); }
 
-NS_IMETHODIMP
-HTMLContentSink::WillResume() { return WillResumeImpl(); }
+void HTMLContentSink::WillResume() { WillResumeImpl(); }
 
 void HTMLContentSink::CloseHeadContext() {
   if (mCurrentContext) {
