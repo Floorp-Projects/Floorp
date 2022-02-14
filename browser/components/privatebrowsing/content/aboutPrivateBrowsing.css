@@ -6,3 +6,30 @@ html.private .showNormal,
 html.normal .showPrivate {
   display: none !important;
 }
+
+.wordmark{
+  background-size: 20em !important;
+  width: 24rem !important;
+}
+
+#search-handoff-button{
+  border-radius: 45px;
+  background-color: #5e5e5e;
+  border: solid 0.1px black;
+}
+
+#search-handoff-button .fake-textbox {
+  color: white !important;
+}
+
+body{
+  background-color: #242424 !important;
+}
+
+.promo.below-search{
+  display: none !important;
+}
+
+.info{
+  background-color: #3f3f3f !important;
+}
