@@ -162,6 +162,12 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         {
           addonId: this.addonId,
           addonBrowsingContextGroupId: policy.browsingContextGroupId,
+          // Bug 1754452: This flag is passed by the client to getWatcher(), but the server
+          // doesn't support this anyway. So always pass false here and keep things simple.
+          // Once we enable this flag, we will stop using connectToFrame and instantiate
+          // the WebExtensionTargetActor from watcher code instead, so that shouldn't
+          // introduce an issue for the future.
+          isServerTargetSwitchingEnabled: false,
         }
       );
 
