@@ -16,7 +16,6 @@
 #include "prenv.h"
 #include "prlock.h"
 #include "prcvar.h"
-#include "nsParserCIID.h"
 #include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsExpatDriver.h"

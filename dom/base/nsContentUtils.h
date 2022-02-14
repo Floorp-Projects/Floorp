@@ -94,7 +94,6 @@ class nsIInterfaceRequestor;
 class nsILoadGroup;
 class nsILoadInfo;
 class nsIObserver;
-class nsIParser;
 class nsIPluginTag;
 class nsIPrincipal;
 class nsIReferrerInfo;
@@ -112,6 +111,7 @@ class nsIURI;
 class nsIWidget;
 class nsIXPConnect;
 class nsNodeInfoManager;
+class nsParser;
 class nsPIWindowRoot;
 class nsPresContext;
 class nsStringBuffer;
@@ -3404,7 +3404,7 @@ class nsContentUtils {
   static UserInteractionObserver* sUserInteractionObserver;
 
   static nsHtml5StringParser* sHTMLFragmentParser;
-  static nsIParser* sXMLFragmentParser;
+  static nsParser* sXMLFragmentParser;
   static nsIFragmentContentSink* sXMLFragmentSink;
 
   /**

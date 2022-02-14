@@ -250,6 +250,7 @@ LOCAL_INCLUDES += [
     "/layout/tables",
     "/layout/xul",
     "/netwerk/base",
+    "/parser/htmlparser",
 ]
 
 FINAL_LIBRARY = "xul"
