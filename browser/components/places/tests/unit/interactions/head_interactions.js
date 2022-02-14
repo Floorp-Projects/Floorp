@@ -353,10 +353,7 @@ async function assertOverlappingSnapshots(expected, context) {
  *   @see SnapshotSelector.#context.
  */
 async function assertCommonReferrerSnapshots(expected, context) {
-  let snapshots = await Snapshots.queryCommonReferrer(
-    context.url,
-    context.referrerUrl
-  );
+  let snapshots = await Snapshots.queryCommonReferrer(context.url);
 
   await assertSnapshotList(snapshots, expected);
 }
