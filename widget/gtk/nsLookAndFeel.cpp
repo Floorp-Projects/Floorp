@@ -974,6 +974,10 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 1;
       break;
     }
+    case IntID::UseOverlayScrollbars: {
+      aResult = StaticPrefs::widget_gtk_overlay_scrollbars_enabled();
+      break;
+    }
     case IntID::TouchDeviceSupportPresent:
       aResult = widget::WidgetUtilsGTK::IsTouchDeviceSupportPresent() ? 1 : 0;
       break;
