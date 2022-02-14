@@ -54,11 +54,8 @@ class nsIDTD : public nsISupports {
 
   /**
    * Called by the parser after the parsing process has concluded
-   * @update  gess5/18/98
-   * @param   anErrorCode - contains error code resulting from parse process
-   * @return
    */
-  NS_IMETHOD DidBuildModel(nsresult anErrorCode) = 0;
+  virtual void DidBuildModel() = 0;
 
   /**
    * Called (possibly repeatedly) by the parser to parse tokens and construct
@@ -98,7 +95,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
 #define NS_DECL_NSIDTD                                            \
   NS_IMETHOD WillBuildModel(const CParserContext& aParserContext, \
                             nsIContentSink* aSink) override;      \
-  NS_IMETHOD DidBuildModel(nsresult anErrorCode) override;        \
+  void DidBuildModel() override;                                  \
   NS_IMETHOD BuildModel(nsIContentSink* aSink) override;          \
   NS_IMETHOD_(void) Terminate() override;                         \
   NS_IMETHOD_(int32_t) GetType() override;                        \

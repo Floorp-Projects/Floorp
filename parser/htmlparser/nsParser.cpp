@@ -383,33 +383,21 @@ nsresult nsParser::WillBuildModel() {
  * Note that the parser may have been called recursively, so we
  * have to check for a prev. context before closing out the DTD/sink.
  */
-nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
-  nsresult result = anErrorCode;
-
+void nsParser::DidBuildModel() {
   if (IsComplete()) {
     if (mParserContext && !mParserContext->mPrevContext) {
       // Let sink know if we're about to end load because we've been terminated.
       // In that case we don't want it to run deferred scripts.
       bool terminated = mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING;
       if (mDTD && mSink) {
-        nsresult dtdResult = mDTD->DidBuildModel(anErrorCode),
-                 sinkResult = mSink->DidBuildModel(terminated);
-        // nsIDTD::DidBuildModel used to be responsible for calling
-        // nsIContentSink::DidBuildModel, but that obligation isn't expressible
-        // in the nsIDTD interface itself, so it's sounder and simpler to give
-        // that responsibility back to the parser. The former behavior of the
-        // DTD was to NS_ENSURE_SUCCESS the sink DidBuildModel call, so if the
-        // sink returns failure we should use sinkResult instead of dtdResult,
-        // to preserve the old error handling behavior of the DTD:
-        result = NS_FAILED(sinkResult) ? sinkResult : dtdResult;
+        mDTD->DidBuildModel();
+        mSink->DidBuildModel(terminated);
       }
 
       // Ref. to bug 61462.
       mParserContext->mRequest = nullptr;
     }
   }
-
-  return result;
 }
 
 /**
@@ -489,7 +477,7 @@ nsParser::Terminate(void) {
 
   if (mDTD) {
     mDTD->Terminate();
-    DidBuildModel(result);
+    DidBuildModel();
   } else if (mSink) {
     // We have no parser context or no DTD yet (so we got terminated before we
     // got any data).  Manually break the reference cycle with the sink.
@@ -935,7 +923,7 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
         if (NS_ERROR_HTMLPARSER_STOPPARSING == result) {
           // Note: Parser Terminate() calls DidBuildModel.
           if (mInternalState != NS_ERROR_HTMLPARSER_STOPPARSING) {
-            DidBuildModel(mStreamStatus);
+            DidBuildModel();
             mInternalState = result;
           }
 
@@ -951,7 +939,7 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
               !mParserContext->mMultipart || theContextIsStringBased) {
             if (!mParserContext->mPrevContext) {
               if (mParserContext->mStreamListenerState == eOnStop) {
-                DidBuildModel(mStreamStatus);
+                DidBuildModel();
                 return NS_OK;
               }
             } else {
