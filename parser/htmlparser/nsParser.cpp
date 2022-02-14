@@ -725,14 +725,51 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
 
         // Only allow parsing to be interrupted in the subsequent call to
         // build model.
-        nsresult theTokenizerResult = (mFlags & NS_PARSER_FLAG_CAN_TOKENIZE)
-                                          ? Tokenize(aIsFinalChunk)
-                                          : NS_OK;
-
         nsITokenizer* theTokenizer = nullptr;
-        result = mParserContext
-                     ? mParserContext->GetTokenizer(mDTD, mSink, theTokenizer)
-                     : NS_OK;
+        nsresult getTokenizerResult;
+        if (mParserContext) {
+          result = getTokenizerResult =
+              mParserContext->GetTokenizer(mDTD, mSink, theTokenizer);
+        } else {
+          getTokenizerResult = NS_ERROR_HTMLPARSER_BADTOKENIZER;
+          result = NS_OK;
+        }
+
+        nsresult theTokenizerResult;
+        if (mFlags & NS_PARSER_FLAG_CAN_TOKENIZE) {
+          if (NS_SUCCEEDED(getTokenizerResult)) {
+            theTokenizerResult = getTokenizerResult;
+
+            bool killSink = false;
+
+            while (NS_SUCCEEDED(theTokenizerResult)) {
+              mParserContext->mScanner.Mark();
+              theTokenizerResult = theTokenizer->ConsumeToken(
+                  mParserContext->mScanner, aIsFinalChunk);
+              if (NS_FAILED(theTokenizerResult)) {
+                mParserContext->mScanner.RewindToMark();
+                if (NS_ERROR_HTMLPARSER_EOF == theTokenizerResult) {
+                  break;
+                }
+                if (NS_ERROR_HTMLPARSER_STOPPARSING == theTokenizerResult) {
+                  killSink = true;
+                  theTokenizerResult = Terminate();
+                  break;
+                }
+              }
+            }
+
+            if (killSink) {
+              mSink = nullptr;
+            }
+          } else {
+            theTokenizerResult = mInternalState =
+                NS_ERROR_HTMLPARSER_BADTOKENIZER;
+          }
+        } else {
+          theTokenizerResult = NS_OK;
+        }
+
         if (NS_SUCCEEDED(result)) {
           if (mDTD) {
             result = mDTD->BuildModel(mSink);
@@ -1079,59 +1116,6 @@ nsresult nsParser::OnStopRequest(nsIRequest* request, nsresult status) {
   // it is reenabled.
 
   return rv;
-}
-
-/*******************************************************************
-  Here come the tokenization methods...
- *******************************************************************/
-
-/**
- * This is the primary control routine to consume tokens.
- * It iteratively consumes tokens until an error occurs or
- * you run out of data.
- */
-nsresult nsParser::Tokenize(bool aIsFinalChunk) {
-  if (mInternalState == NS_ERROR_OUT_OF_MEMORY) {
-    // Checking NS_ERROR_OUT_OF_MEMORY instead of NS_FAILED
-    // to avoid introducing unintentional changes to behavior.
-    return mInternalState;
-  }
-
-  nsITokenizer* theTokenizer;
-
-  nsresult result = NS_ERROR_NOT_AVAILABLE;
-  if (mParserContext) {
-    result = mParserContext->GetTokenizer(mDTD, mSink, theTokenizer);
-  }
-
-  if (NS_SUCCEEDED(result)) {
-    bool killSink = false;
-
-    while (NS_SUCCEEDED(result)) {
-      mParserContext->mScanner.Mark();
-      result =
-          theTokenizer->ConsumeToken(mParserContext->mScanner, aIsFinalChunk);
-      if (NS_FAILED(result)) {
-        mParserContext->mScanner.RewindToMark();
-        if (NS_ERROR_HTMLPARSER_EOF == result) {
-          break;
-        }
-        if (NS_ERROR_HTMLPARSER_STOPPARSING == result) {
-          killSink = true;
-          result = Terminate();
-          break;
-        }
-      }
-    }
-
-    if (killSink) {
-      mSink = nullptr;
-    }
-  } else {
-    result = mInternalState = NS_ERROR_HTMLPARSER_BADTOKENIZER;
-  }
-
-  return result;
 }
 
 /**
