@@ -1576,7 +1576,7 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
                     XML_PARAM_ENTITY_PARSING_ALWAYS);
 #endif
 
-  auto baseURI = GetExpatBaseURI(aParserContext.mScanner->GetURI());
+  auto baseURI = GetExpatBaseURI(aParserContext.mScanner.GetURI());
   auto uri =
       TransferBuffer<XML_Char>(Sandbox(), &baseURI[0], ArrayLength(baseURI));
   RLBOX_EXPAT_MCALL(MOZ_XML_SetBase, *uri);
