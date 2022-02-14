@@ -392,20 +392,33 @@ uint32_t ComputeBestMethod(
     HistogramParams::ANSHistogramStrategy ans_histogram_strategy) {
   size_t method = 0;
   float fcost = ComputeHistoAndDataCost(histogram, alphabet_size, 0);
-  for (uint32_t shift = 0; shift <= ANS_LOG_TAB_SIZE;
-       ans_histogram_strategy != HistogramParams::ANSHistogramStrategy::kPrecise
-           ? shift += 2
-           : shift++) {
+  auto try_shift = [&](size_t shift) {
     float c = ComputeHistoAndDataCost(histogram, alphabet_size, shift + 1);
     if (c < fcost) {
       method = shift + 1;
       fcost = c;
-    } else if (ans_histogram_strategy ==
-               HistogramParams::ANSHistogramStrategy::kFast) {
-      // do not be as precise if estimating cost.
+    }
+  };
+  switch (ans_histogram_strategy) {
+    case HistogramParams::ANSHistogramStrategy::kPrecise: {
+      for (uint32_t shift = 0; shift <= ANS_LOG_TAB_SIZE; shift++) {
+        try_shift(shift);
+      }
       break;
     }
-  }
+    case HistogramParams::ANSHistogramStrategy::kApproximate: {
+      for (uint32_t shift = 0; shift <= ANS_LOG_TAB_SIZE; shift += 2) {
+        try_shift(shift);
+      }
+      break;
+    }
+    case HistogramParams::ANSHistogramStrategy::kFast: {
+      try_shift(0);
+      try_shift(ANS_LOG_TAB_SIZE / 2);
+      try_shift(ANS_LOG_TAB_SIZE);
+      break;
+    }
+  };
   *cost = fcost;
   return method;
 }

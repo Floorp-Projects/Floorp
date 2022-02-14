@@ -26,7 +26,7 @@ namespace jxl {
 namespace {
 
 TEST(RenderPipelineTest, Build) {
-  RenderPipeline::Builder builder(/*num_c=*/1, /*num_passes=*/1);
+  RenderPipeline::Builder builder(/*num_c=*/1);
   builder.AddStage(jxl::make_unique<UpsampleXSlowStage>());
   builder.AddStage(jxl::make_unique<UpsampleYSlowStage>());
   builder.AddStage(jxl::make_unique<Check0FinalStage>());
@@ -39,7 +39,7 @@ TEST(RenderPipelineTest, Build) {
 }
 
 TEST(RenderPipelineTest, CallAllGroups) {
-  RenderPipeline::Builder builder(/*num_c=*/1, /*num_passes=*/1);
+  RenderPipeline::Builder builder(/*num_c=*/1);
   builder.AddStage(jxl::make_unique<UpsampleXSlowStage>());
   builder.AddStage(jxl::make_unique<UpsampleYSlowStage>());
   builder.AddStage(jxl::make_unique<Check0FinalStage>());
@@ -58,7 +58,7 @@ TEST(RenderPipelineTest, CallAllGroups) {
     input_buffers.Done();
   }
 
-  EXPECT_TRUE(pipeline->ReceivedAllInput());
+  EXPECT_TRUE(pipeline->PassesWithAllInput() == 1);
 }
 
 struct RenderPipelineTestInputSettings {
@@ -70,6 +70,8 @@ struct RenderPipelineTestInputSettings {
   CompressParams cparams;
   // Short name for the encoder settings.
   std::string cparams_descr;
+
+  bool add_spot_color = false;
 
   Splines splines;
 };
@@ -94,6 +96,31 @@ TEST_P(RenderPipelineTestParam, PipelineTest) {
   }
   io.ShrinkTo(config.xsize, config.ysize);
 
+  if (config.add_spot_color) {
+    jxl::ImageF spot(config.xsize, config.ysize);
+    jxl::ZeroFillImage(&spot);
+
+    for (size_t y = 0; y < config.ysize; y++) {
+      float* JXL_RESTRICT row = spot.Row(y);
+      for (size_t x = 0; x < config.xsize; x++) {
+        row[x] = ((x ^ y) & 255) * (1.f / 255.f);
+      }
+    }
+    ExtraChannelInfo info;
+    info.bit_depth.bits_per_sample = 8;
+    info.dim_shift = 0;
+    info.type = jxl::ExtraChannel::kSpotColor;
+    info.spot_color[0] = 0.5f;
+    info.spot_color[1] = 0.2f;
+    info.spot_color[2] = 1.f;
+    info.spot_color[3] = 0.5f;
+
+    io.metadata.m.extra_channel_info.push_back(info);
+    std::vector<jxl::ImageF> ec;
+    ec.push_back(std::move(spot));
+    io.frames[0].SetExtraChannels(std::move(ec));
+  }
+
   PaddedBytes compressed;
 
   PassesEncoderState enc_state;
@@ -103,6 +130,8 @@ TEST_P(RenderPipelineTestParam, PipelineTest) {
 
   DecompressParams dparams;
 
+  dparams.render_spotcolors = true;
+
   CodecInOut io_default;
   ASSERT_TRUE(DecodeFile(dparams, compressed, &io_default, &pool));
   CodecInOut io_slow_pipeline;
@@ -111,13 +140,19 @@ TEST_P(RenderPipelineTestParam, PipelineTest) {
 
   ASSERT_EQ(io_default.frames.size(), io_slow_pipeline.frames.size());
   for (size_t i = 0; i < io_default.frames.size(); i++) {
+#if JXL_HIGH_PRECISION
+    constexpr float kMaxError = 1e-5;
+#else
+    constexpr float kMaxError = 1e-4;
+#endif
     VerifyRelativeError(*io_default.frames[i].color(),
-                        *io_slow_pipeline.frames[i].color(), 1e-5, 1e-5);
+                        *io_slow_pipeline.frames[i].color(), kMaxError,
+                        kMaxError);
     for (size_t ec = 0; ec < io_default.frames[i].extra_channels().size();
          ec++) {
       VerifyRelativeError(io_default.frames[i].extra_channels()[ec],
-                          io_slow_pipeline.frames[i].extra_channels()[ec], 1e-5,
-                          1e-5);
+                          io_slow_pipeline.frames[i].extra_channels()[ec],
+                          kMaxError, kMaxError);
     }
   }
 }
@@ -146,11 +181,15 @@ Splines CreateTestSplines() {
 std::vector<RenderPipelineTestInputSettings> GeneratePipelineTests() {
   std::vector<RenderPipelineTestInputSettings> all_tests;
 
-  for (size_t size : {128, 256, 258, 777}) {
+  std::pair<size_t, size_t> sizes[] = {
+      {128, 128}, {256, 256}, {258, 258}, {533, 401}, {777, 777},
+  };
+
+  for (auto size : sizes) {
     RenderPipelineTestInputSettings settings;
     settings.input_path = "imagecompression.info/flower_foveon.png";
-    settings.xsize = size;
-    settings.ysize = size;
+    settings.xsize = size.first;
+    settings.ysize = size.second;
 
     // Base settings.
     settings.cparams.butteraugli_distance = 1.0;
@@ -287,6 +326,15 @@ std::vector<RenderPipelineTestInputSettings> GeneratePipelineTests() {
 
     {
       auto s = settings;
+      s.input_path = "wide-gamut-tests/R2020-sRGB-blue.png";
+      s.cparams_descr = "AlphaVarDCTUpsamplingEPF";
+      s.cparams.epf = 1;
+      s.cparams.ec_resampling = 2;
+      all_tests.push_back(s);
+    }
+
+    {
+      auto s = settings;
       s.cparams.modular_mode = true;
       s.cparams.butteraugli_distance = 0;
       s.input_path = "wide-gamut-tests/R2020-sRGB-blue.png";
@@ -299,6 +347,13 @@ std::vector<RenderPipelineTestInputSettings> GeneratePipelineTests() {
       s.input_path = "wide-gamut-tests/R2020-sRGB-blue.png";
       s.cparams_descr = "AlphaDownsample";
       s.cparams.ec_resampling = 2;
+      all_tests.push_back(s);
+    }
+
+    {
+      auto s = settings;
+      s.cparams_descr = "SpotColor";
+      s.add_spot_color = true;
       all_tests.push_back(s);
     }
   }
