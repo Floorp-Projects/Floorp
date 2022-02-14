@@ -299,7 +299,6 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIParser.h"
 #include "nsIParserUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsIPluginTag.h"
@@ -346,7 +345,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIDOMWindowInlines.h"
-#include "nsParserCIID.h"
+#include "nsParser.h"
 #include "nsParserConstants.h"
 #include "nsPluginHost.h"
 #include "nsPoint.h"
@@ -452,7 +451,7 @@ nsContentUtils::UserInteractionObserver*
     nsContentUtils::sUserInteractionObserver = nullptr;
 
 nsHtml5StringParser* nsContentUtils::sHTMLFragmentParser = nullptr;
-nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
+nsParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
 bool nsContentUtils::sFragmentParsingActive = false;
 
@@ -590,8 +589,6 @@ static const nsAttrValue::EnumTable kAutocompleteContactFieldHintTable[] = {
     {nullptr, 0}};
 
 namespace {
-
-static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 static PLDHashTable* sEventListenerManagersHash;
 
@@ -5177,7 +5174,7 @@ nsresult nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
   mozilla::AutoRestore<bool> guard(nsContentUtils::sFragmentParsingActive);
   nsContentUtils::sFragmentParsingActive = true;
   if (!sXMLFragmentParser) {
-    nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID);
+    RefPtr<nsParser> parser = new nsParser();
     parser.forget(&sXMLFragmentParser);
     // sXMLFragmentParser now owns the parser
   }

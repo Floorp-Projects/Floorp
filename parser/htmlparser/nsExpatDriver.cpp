@@ -6,7 +6,6 @@
 #include "nsExpatDriver.h"
 #include "mozilla/fallible.h"
 #include "nsCOMPtr.h"
-#include "nsParserCIID.h"
 #include "CParserContext.h"
 #include "nsIExpatSink.h"
 #include "nsIContentSink.h"

@@ -9,7 +9,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsIParser.h"
 #include "nsDeque.h"
-#include "nsParserCIID.h"
 #include "nsIContentSink.h"
 #include "nsIRequest.h"
 #include "nsIChannel.h"

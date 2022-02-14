@@ -43,6 +43,7 @@ LOCAL_INCLUDES += [
     "/dom/xslt/base",
     "/dom/xul",
     "/layout/style",
+    "/parser/htmlparser",
 ]
 
 RESOURCE_FILES.dtd += [
