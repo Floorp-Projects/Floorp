@@ -153,7 +153,7 @@ class nsIParser : public nsParserBase {
   NS_IMETHOD_(bool) IsParserEnabled() override = 0;
   NS_IMETHOD_(bool) IsComplete() = 0;
 
-  NS_IMETHOD Parse(nsIURI* aURL, void* aKey = nullptr) = 0;
+  NS_IMETHOD Parse(nsIURI* aURL) = 0;
 
   NS_IMETHOD Terminate(void) = 0;
 

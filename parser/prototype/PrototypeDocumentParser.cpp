@@ -61,7 +61,7 @@ NS_IMETHODIMP_(bool)
 PrototypeDocumentParser::IsComplete() { return mIsComplete; }
 
 NS_IMETHODIMP
-PrototypeDocumentParser::Parse(nsIURI* aURL, void* aKey) {
+PrototypeDocumentParser::Parse(nsIURI* aURL) {
   // Look in the chrome cache: we've got this puppy loaded
   // already.
   nsXULPrototypeDocument* proto =

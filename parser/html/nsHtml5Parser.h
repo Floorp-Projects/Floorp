@@ -121,9 +121,8 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
    * Set up request observer.
    *
    * @param   aURL used for View Source title
-   * @param   aKey the root context key (used for document.write)
    */
-  NS_IMETHOD Parse(nsIURI* aURL, void* aKey = nullptr) override;
+  NS_IMETHOD Parse(nsIURI* aURL) override;
 
   /**
    * document.write and document.close
