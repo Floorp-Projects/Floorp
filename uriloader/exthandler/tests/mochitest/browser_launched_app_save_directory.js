@@ -13,7 +13,10 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", true]],
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["image.webp.enabled", true],
+    ],
   });
   const allowDirectoriesVal = DownloadIntegration.allowDirectories;
   DownloadIntegration.allowDirectories = true;
@@ -35,7 +38,7 @@ async function aDownloadLaunchedWithAppIsSavedInFolder(downloadDir) {
 
   let loadingTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    opening: TEST_PATH + "file_image_svgxml.svg",
+    opening: TEST_PATH + "file_green.webp",
     waitForLoad: false,
     waitForStateStop: true,
   });
