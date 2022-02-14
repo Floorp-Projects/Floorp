@@ -158,18 +158,6 @@ class nsIParser : public nsParserBase {
   NS_IMETHOD Terminate(void) = 0;
 
   /**
-   *  Call this method to cancel any pending parsing events.
-   *  Parsing events may be pending if all of the document's content
-   *  has been passed to the parser but the parser has been interrupted
-   *  because processing the tokens took too long.
-   *
-   *  @update  kmcclusk 05/18/01
-   *  @return  NS_OK if succeeded else ERROR.
-   */
-
-  NS_IMETHOD CancelParsingEvents() = 0;
-
-  /**
    * True if the insertion point (per HTML5) is defined.
    */
   virtual bool IsInsertionPointDefined() = 0;

@@ -270,17 +270,6 @@ nsParser::SetContentSink(nsIContentSink* aSink) {
 NS_IMETHODIMP_(nsIContentSink*)
 nsParser::GetContentSink() { return mSink; }
 
-NS_IMETHODIMP
-nsParser::CancelParsingEvents() {
-  if (mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT) {
-    NS_ASSERTION(mContinueEvent, "mContinueEvent is null");
-    // Revoke the pending continue parsing event
-    mContinueEvent = nullptr;
-    mFlags &= ~NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
-  }
-  return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////
 
 /**
@@ -371,13 +360,16 @@ nsParser::Terminate(void) {
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
   mInternalState = result = NS_ERROR_HTMLPARSER_STOPPARSING;
 
-  // CancelParsingEvents must be called to avoid leaking the nsParser object
   // @see bug 108049
-  // If NS_PARSER_FLAG_PENDING_CONTINUE_EVENT is set then CancelParsingEvents
-  // will reset it so DidBuildModel will call DidBuildModel on the DTD. Note:
-  // The IsComplete() call inside of DidBuildModel looks at the
-  // pendingContinueEvents flag.
-  CancelParsingEvents();
+  // If NS_PARSER_FLAG_PENDING_CONTINUE_EVENT is set then reset it so
+  // DidBuildModel will call DidBuildModel on the DTD. Note: The IsComplete()
+  // call inside of DidBuildModel looks at the pendingContinueEvents flag.
+  if (mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT) {
+    NS_ASSERTION(mContinueEvent, "mContinueEvent is null");
+    // Revoke the pending continue parsing event
+    mContinueEvent = nullptr;
+    mFlags &= ~NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
+  }
 
   if (mDTD) {
     mDTD->Terminate();
