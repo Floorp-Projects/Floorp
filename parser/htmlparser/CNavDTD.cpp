@@ -55,15 +55,3 @@ CNavDTD::GetType() { return NS_IPARSER_FLAG_HTML; }
 
 NS_IMETHODIMP_(nsDTDMode)
 CNavDTD::GetMode() const { return eDTDMode_quirks; }
-
-NS_IMETHODIMP_(bool)
-CNavDTD::CanContain(int32_t aParent, int32_t aChild) const {
-  MOZ_CRASH("nobody calls this");
-  return false;
-}
-
-NS_IMETHODIMP_(bool)
-CNavDTD::IsContainer(int32_t aTag) const {
-  MOZ_CRASH("nobody calls this");
-  return false;
-}
