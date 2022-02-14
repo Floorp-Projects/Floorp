@@ -51,7 +51,7 @@ class CrashHandlerService : Service() {
                 .setContentTitle(
                     getString(
                         R.string.mozac_lib_crash_dialog_title,
-                        crashReporter.promptConfiguration.organizationName
+                        crashReporter.promptConfiguration.appName
                     )
                 )
                 .setSmallIcon(R.drawable.mozac_lib_crash_notification)
