@@ -2904,10 +2904,8 @@ already_AddRefed<MediaSink> MediaDecoderStateMachine::CreateMediaSink() {
 TimeUnit MediaDecoderStateMachine::GetDecodedAudioDuration() const {
   MOZ_ASSERT(OnTaskQueue());
   if (mMediaSink->IsStarted()) {
-    // mDecodedAudioEndTime might be smaller than GetClock() when there is
-    // overlap between 2 adjacent audio samples or when we are playing
-    // a chained ogg file.
-    return std::max(mDecodedAudioEndTime - GetClock(), TimeUnit::Zero());
+    return mMediaSink->UnplayedDuration(TrackInfo::kAudioTrack) +
+           TimeUnit::FromMicroseconds(AudioQueue().Duration());
   }
   // MediaSink not started. All audio samples are in the queue.
   return TimeUnit::FromMicroseconds(AudioQueue().Duration());

@@ -54,9 +54,12 @@ class AudioSink : private AudioStream::DataSource {
   media::TimeUnit GetPosition();
   media::TimeUnit GetEndTime() const;
 
-  // Check whether we've pushed more frames to the audio hardware than it has
-  // played.
+  // Check whether we've pushed more frames to the audio stream than it
+  // has played.
   bool HasUnplayedFrames();
+
+  // The duration of the buffered frames.
+  media::TimeUnit UnplayedDuration() const;
 
   // Shut down the AudioSink's resources.
   void Shutdown();
