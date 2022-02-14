@@ -1103,22 +1103,6 @@ nsresult nsParser::OnStopRequest(nsIRequest* request, nsresult status) {
  *******************************************************************/
 
 /**
- *  Part of the code sandwich, this gets called right before
- *  the tokenization process begins. The main reason for
- *  this call is to allow the delegate to do initialization.
- */
-bool nsParser::WillTokenize(bool aIsFinalChunk) {
-  if (!mParserContext) {
-    return true;
-  }
-
-  nsITokenizer* theTokenizer;
-  nsresult result = mParserContext->GetTokenizer(mDTD, mSink, theTokenizer);
-  NS_ENSURE_SUCCESS(result, false);
-  return NS_SUCCEEDED(theTokenizer->WillTokenize(aIsFinalChunk));
-}
-
-/**
  * This is the primary control routine to consume tokens.
  * It iteratively consumes tokens until an error occurs or
  * you run out of data.
@@ -1140,10 +1124,10 @@ nsresult nsParser::Tokenize(bool aIsFinalChunk) {
   if (NS_SUCCEEDED(result)) {
     bool killSink = false;
 
-    WillTokenize(aIsFinalChunk);
     while (NS_SUCCEEDED(result)) {
       mParserContext->mScanner.Mark();
-      result = theTokenizer->ConsumeToken(mParserContext->mScanner);
+      result =
+          theTokenizer->ConsumeToken(mParserContext->mScanner, aIsFinalChunk);
       if (NS_FAILED(result)) {
         mParserContext->mScanner.RewindToMark();
         if (NS_ERROR_HTMLPARSER_EOF == result) {

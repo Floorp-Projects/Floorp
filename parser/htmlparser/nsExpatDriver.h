@@ -169,9 +169,6 @@ class nsExpatDriver : public nsIDTD, public nsITokenizer {
 
   // Used to track if we're in the parser.
   bool mInParser;
-  // Whether we're sure that we won't be getting more buffers to parse from
-  // Necko
-  bool mIsFinalChunk;
 
   nsresult mInternalState;
 

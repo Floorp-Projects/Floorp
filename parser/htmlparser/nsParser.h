@@ -291,17 +291,6 @@ class nsParser final : public nsIParser,
    *******************************************/
 
   /**
-   *  Part of the code sandwich, this gets called right before
-   *  the tokenization process begins. The main reason for
-   *  this call is to allow the delegate to do initialization.
-   *
-   *  @update  gess 3/25/98
-   *  @param
-   *  @return  TRUE if it's ok to proceed
-   */
-  bool WillTokenize(bool aIsFinalChunk = false);
-
-  /**
    *  This is the primary control routine. It iteratively
    *  consumes tokens until an error occurs or you run out
    *  of data.
