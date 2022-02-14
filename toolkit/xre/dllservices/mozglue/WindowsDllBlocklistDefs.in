@@ -242,6 +242,9 @@ ALL_PROCESSES += [
     DllBlocklistEntry("WRDll.x64.dll", (1, 1, 0, 227)),
     DllBlocklistEntry("WRDll.x86.dll", (1, 1, 0, 227)),
 
+    # Webroot SecureAnywhere causes deadlocks, bug 1752466
+    DllBlocklistEntry("WRusr.dll", (9, 0, 32, 49)),
+
     # InfoWatch Device Monitor causes crashes, bug 1704276
     DllBlocklistEntry("iwprn.dll", (6, 9, 11, 360)),
     DllBlocklistEntry("iwprn_x86.dll", (6, 9, 11, 360)),
