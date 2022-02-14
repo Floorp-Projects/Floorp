@@ -597,9 +597,7 @@ JSObject* ScreenOrientation::WrapObject(JSContext* aCx,
 }
 
 bool ScreenOrientation::ShouldResistFingerprinting() const {
-  if (nsContentUtils::ShouldResistFingerprinting(
-          "Legacy RFP function called to avoid observed hangs in the code "
-          "below if we can avoid it.")) {
+  if (nsContentUtils::ShouldResistFingerprinting()) {
     bool resist = false;
     if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
       resist = nsContentUtils::ShouldResistFingerprinting(owner->GetDocShell());
