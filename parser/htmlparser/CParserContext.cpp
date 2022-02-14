@@ -12,13 +12,9 @@
 #include "nsMimeTypes.h"
 #include "nsHTMLTokenizer.h"
 
-CParserContext::CParserContext(CParserContext* aPrevContext,
-                               nsScanner* aScanner, void* aKey,
-                               eParserCommands aCommand,
+CParserContext::CParserContext(nsScanner* aScanner, eParserCommands aCommand,
                                eAutoDetectResult aStatus, bool aCopyUnused)
-    : mKey(aKey),
-      mPrevContext(aPrevContext),
-      mScanner(mozilla::WrapUnique(aScanner)),
+    : mScanner(mozilla::WrapUnique(aScanner)),
       mDTDMode(eDTDMode_autodetect),
       mDocType(static_cast<eParserDocType>(0)),
       mStreamListenerState(eNone),

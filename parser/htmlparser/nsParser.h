@@ -51,6 +51,7 @@
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWeakReference.h"
+#include "mozilla/UniquePtr.h"
 
 class nsIDTD;
 class nsIRunnable;
@@ -139,7 +140,7 @@ class nsParser final : public nsIParser,
   /**
    * Cause parser to parse input from given URL
    */
-  NS_IMETHOD Parse(nsIURI* aURL, void* aKey = nullptr) override;
+  NS_IMETHOD Parse(nsIURI* aURL) override;
 
   /**
    * This method needs documentation
@@ -195,10 +196,6 @@ class nsParser final : public nsIParser,
 
   // nsIStreamListener methods:
   NS_DECL_NSISTREAMLISTENER
-
-  void PushContext(CParserContext& aContext);
-  CParserContext* PopContext();
-  CParserContext* PeekContext() { return mParserContext; }
 
   /**
    * Get the DTD associated with this parser
@@ -317,14 +314,14 @@ class nsParser final : public nsIParser,
   /**
    * Pushes XML fragment parsing data to expat without an input stream.
    */
-  nsresult Parse(const nsAString& aSourceBuffer, void* aKey, bool aLastCall);
+  nsresult Parse(const nsAString& aSourceBuffer, bool aLastCall);
 
  protected:
   //*********************************************
   // And now, some data members...
   //*********************************************
 
-  CParserContext* mParserContext;
+  mozilla::UniquePtr<CParserContext> mParserContext;
   nsCOMPtr<nsIDTD> mDTD;
   nsCOMPtr<nsIContentSink> mSink;
   nsIRunnable* mContinueEvent;  // weak ref
