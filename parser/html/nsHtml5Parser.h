@@ -147,11 +147,6 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
   /**
    * Don't call. For interface compat only.
    */
-  NS_IMETHOD BuildModel() override;
-
-  /**
-   * Don't call. For interface compat only.
-   */
   NS_IMETHOD CancelParsingEvents() override;
 
   /**

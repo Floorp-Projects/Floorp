@@ -728,7 +728,18 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
         nsresult theTokenizerResult = (mFlags & NS_PARSER_FLAG_CAN_TOKENIZE)
                                           ? Tokenize(aIsFinalChunk)
                                           : NS_OK;
-        result = BuildModel();
+
+        nsITokenizer* theTokenizer = nullptr;
+        result = mParserContext
+                     ? mParserContext->GetTokenizer(mDTD, mSink, theTokenizer)
+                     : NS_OK;
+        if (NS_SUCCEEDED(result)) {
+          if (mDTD) {
+            result = mDTD->BuildModel(mSink);
+          }
+        } else {
+          mInternalState = result = NS_ERROR_HTMLPARSER_BADTOKENIZER;
+        }
 
         if (result == NS_ERROR_HTMLPARSER_INTERRUPTED && aIsFinalChunk) {
           PostContinueEvent();
@@ -781,34 +792,6 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
   }
 
   return (result == NS_ERROR_HTMLPARSER_INTERRUPTED) ? NS_OK : result;
-}
-
-/**
- *  This is where we loop over the tokens created in the
- *  tokenization phase, and try to make sense out of them.
- */
-nsresult nsParser::BuildModel() {
-  if (mInternalState == NS_ERROR_OUT_OF_MEMORY) {
-    // Checking NS_ERROR_OUT_OF_MEMORY instead of NS_FAILED
-    // to avoid introducing unintentional changes to behavior.
-    return mInternalState;
-  }
-
-  nsITokenizer* theTokenizer = nullptr;
-
-  nsresult result = NS_OK;
-  if (mParserContext) {
-    result = mParserContext->GetTokenizer(mDTD, mSink, theTokenizer);
-  }
-
-  if (NS_SUCCEEDED(result)) {
-    if (mDTD) {
-      result = mDTD->BuildModel(mSink);
-    }
-  } else {
-    mInternalState = result = NS_ERROR_HTMLPARSER_BADTOKENIZER;
-  }
-  return result;
 }
 
 /*******************************************************************

@@ -170,14 +170,6 @@ class nsIParser : public nsParserBase {
                            nsTArray<nsString>& aTagStack) = 0;
 
   /**
-   * This method gets called when the tokens have been consumed, and it's time
-   * to build the model via the content sink.
-   * @update	gess5/11/98
-   * @return  error code -- 0 if model building went well .
-   */
-  NS_IMETHOD BuildModel(void) = 0;
-
-  /**
    *  Call this method to cancel any pending parsing events.
    *  Parsing events may be pending if all of the document's content
    *  has been passed to the parser but the parser has been interrupted
