@@ -13,7 +13,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
-#include "mozilla/dom/WritableStream.h"
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -25,6 +24,7 @@
 namespace mozilla::dom {
 
 class Promise;
+class WritableStream;
 
 class WritableStreamDefaultWriter final : public nsISupports,
                                           public nsWrapperCache {
