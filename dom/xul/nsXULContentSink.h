@@ -33,7 +33,6 @@ class XULContentSinkImpl final : public nsIXMLContentSink, public nsIExpatSink {
 
   // nsIContentSink
   NS_IMETHOD WillParse(void) override { return NS_OK; }
-  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) override;
   NS_IMETHOD DidBuildModel(bool aTerminated) override;
   NS_IMETHOD WillInterrupt(void) override;
   void WillResume() override;
