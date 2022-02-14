@@ -757,10 +757,16 @@ Result NSSCertDBTrustDomain::CheckRevocation(
           crliteResult != Result::ERROR_REVOKED_CERTIFICATE) {
         return crliteResult;
       }
-      // Always return the result of CheckCRLite if CRLite is being enforced and
-      // the certificate is covered by the CRLite filter.
-      if (mCRLiteMode == CRLiteMode::Enforce && crliteFilterCoversCertificate) {
-        return crliteResult;
+      if (crliteFilterCoversCertificate) {
+        // If we don't return here we will consult OCSP.
+        // In CRLiteMode::Enforce we can return "Revoked" or "Not Revoked"
+        // without consulting OCSP. In CRLiteMode::ConfirmRevocations we can
+        // only return "Not Revoked" without consulting OCSP.
+        if (mCRLiteMode == CRLiteMode::Enforce ||
+            (mCRLiteMode == CRLiteMode::ConfirmRevocations &&
+             crliteResult == Success)) {
+          return crliteResult;
+        }
       }
     }
   }
