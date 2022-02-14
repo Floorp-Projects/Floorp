@@ -396,3 +396,67 @@ add_task(async function xorigin_iframe_can_navigate_top() {
   await dialogClosedPromise;
   gBrowser.removeTab(tab);
 });
+
+/**
+ * Check that when navigating to an external protocol from an iframe in a
+ * background tab, we show the dialog in the correct tab.
+ */
+add_task(async function iframe_background_tab() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com/"
+  );
+
+  let innerLoaded = BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser,
+    true,
+    "https://example.org/"
+  );
+  info("Constructing frame");
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+    let frame = content.document.createElement("iframe");
+    frame.src = "https://example.org/";
+    content.document.body.prepend(frame);
+  });
+  await innerLoaded;
+
+  info("Switching to new tab");
+  let newTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.net/"
+  );
+
+  // Wait for the chooser dialog to open in the background tab. It should not
+  // open in the foreground tab which is unrelated to the external protocol
+  // navigation.
+  let dialogWindowPromise = waitForProtocolAppChooserDialog(gBrowser, true);
+
+  info("Navigating to external proto from frame in background tab");
+  let parentBC = tab.linkedBrowser.browsingContext;
+  await SpecialPowers.spawn(parentBC.children[0], [], async function() {
+    content.eval("location.href = 'mailto:example@example.com';");
+  });
+
+  // Wait for dialog to open in one of the tabs.
+  let dialog = await dialogWindowPromise;
+
+  is(
+    gBrowser.getTabDialogBox(tab.linkedBrowser)._tabDialogManager._topDialog,
+    dialog,
+    "Dialog opened in the background tab"
+  );
+
+  is(
+    dialog._frame.contentDocument.location.href,
+    CONTENT_HANDLING_URL,
+    "Opened dialog is appChooser dialog."
+  );
+
+  // Close the dialog:
+  let dialogClosedPromise = waitForProtocolAppChooserDialog(gBrowser, false);
+  dialog.close();
+  await dialogClosedPromise;
+
+  gBrowser.removeTab(tab);
+  gBrowser.removeTab(newTab);
+});
