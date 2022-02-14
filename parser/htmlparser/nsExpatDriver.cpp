@@ -1228,7 +1228,7 @@ void nsExpatDriver::ParseBuffer(const char16_t* aBuffer, uint32_t aLength,
 }
 
 NS_IMETHODIMP
-nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens) {
+nsExpatDriver::ConsumeToken(nsScanner& aScanner) {
   // We keep the scanner pointing to the position where Expat will start
   // parsing.
   nsScannerIterator currentExpatPosition;
