@@ -608,26 +608,19 @@ const Snapshots = new (class Snapshots {
   }
 
   /**
-   * Queries snapshots which have interactions sharing a common referrer with the context url
+   * Queries snapshots which have interactions sharing a common referrer with the context url's interactions
    *
    * @param {string} context_url
    *   the url that we're collecting snapshots for
-   * @param {string} referrer_url
-   *   the referrer of the url we're collecting snapshots for (may be empty)
    * @returns {Snapshot[]}
    *   Returns array of snapshots with the common referrer
    */
-  async queryCommonReferrer(context_url, referrer_url) {
+  async queryCommonReferrer(context_url) {
     await this.#ensureVersionUpdates();
     let db = await PlacesUtils.promiseDBConnection();
 
     let context_place_id = await this.queryPlaceIdFromUrl(context_url);
     if (context_place_id == -1) {
-      return [];
-    }
-
-    let context_referrer_id = await this.queryPlaceIdFromUrl(referrer_url);
-    if (context_referrer_id == -1) {
       return [];
     }
 
@@ -642,10 +635,13 @@ const Snapshots = new (class Snapshots {
       ON h.id = s.place_id
       LEFT JOIN moz_places_metadata_snapshots_extra e
       ON e.place_id = s.place_id
-      WHERE s.place_id != :context_place_id AND s.place_id IN (SELECT DISTINCT place_id FROM moz_places_metadata WHERE referrer_place_id = :context_referrer_id)
+      WHERE s.place_id IN (
+        SELECT p1.place_id FROM moz_places_metadata p1 JOIN moz_places_metadata p2 USING (referrer_place_id) 
+        WHERE p2.place_id = :context_place_id AND p1.place_id <> :context_place_id
+      )
       GROUP BY s.place_id
     `,
-      { context_referrer_id, context_place_id }
+      { context_place_id }
     );
 
     return rows.map(row => {
