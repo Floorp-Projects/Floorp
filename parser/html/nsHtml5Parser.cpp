@@ -483,12 +483,6 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
 }
 
 NS_IMETHODIMP
-nsHtml5Parser::BuildModel() {
-  MOZ_ASSERT_UNREACHABLE("Don't call this!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsHtml5Parser::CancelParsingEvents() {
   MOZ_ASSERT_UNREACHABLE("Don't call this!");
   return NS_ERROR_NOT_IMPLEMENTED;
