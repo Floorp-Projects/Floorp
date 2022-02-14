@@ -4131,7 +4131,7 @@ TEST(GeckoProfiler, BaseProfilerHandOff)
                                      "Base marker during base profiler");
           EXPECT_JSON_ARRAY_EXCLUDES(thread["stringTable"], String,
                                      "Gecko marker during base profiler");
-          EXPECT_JSON_ARRAY_EXCLUDES(thread["stringTable"], String,
+          EXPECT_JSON_ARRAY_CONTAINS(thread["stringTable"], String,
                                      "Base marker during gecko profiler");
           EXPECT_JSON_ARRAY_CONTAINS(thread["stringTable"], String,
                                      "Gecko marker during gecko profiler");
