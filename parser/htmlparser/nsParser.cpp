@@ -367,7 +367,7 @@ nsresult nsParser::WillBuildModel() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDTD->WillBuildModel(*mParserContext, mSink);
-  nsresult sinkResult = mSink->WillBuildModel(mDTD->GetMode());
+  nsresult sinkResult = mSink->WillBuildModel(mParserContext->mDTDMode);
   // nsIDTD::WillBuildModel used to be responsible for calling
   // nsIContentSink::WillBuildModel, but that obligation isn't expressible
   // in the nsIDTD interface itself, so it's sounder and simpler to give that
