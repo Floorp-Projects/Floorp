@@ -600,7 +600,7 @@ SearchService.prototype = {
       newCurrentEngine !== prevCurrentEngine &&
       prevMetaData &&
       settings.metaData &&
-      !this._hasSettingsMetaDataChanged(prevMetaData, settings.metaData)
+      !this._hasUserMetaDataChanged(prevMetaData)
     ) {
       this._showRemovalOfSearchEngineNotificationBox(
         prevCurrentEngine,
@@ -837,7 +837,7 @@ SearchService.prototype = {
       if (
         prevMetaData &&
         settings.metaData &&
-        !this._hasSettingsMetaDataChanged(prevMetaData, settings.metaData)
+        !this._hasUserMetaDataChanged(prevMetaData)
       ) {
         this._showRemovalOfSearchEngineNotificationBox(
           prevCurrentEngine.name,
@@ -924,6 +924,7 @@ SearchService.prototype = {
     this._searchDefault = null;
     this._searchPrivateDefault = null;
     this._maybeReloadDebounce = false;
+    this._settings._batchTask?.disarm();
   },
 
   _addEngineToStore(engine, skipDuplicateCheck = false) {
@@ -2874,14 +2875,12 @@ SearchService.prototype = {
   ]),
 
   /**
-   * @param {object} prevMetaDataObj
-   *   settings metaData Object
-   * @param {object} currentMetaDataObj
-   *   settings metaData Object
+   * @param {object} metaData
    * @returns {boolean}
-   *    Returns true if the metaData objects have different properties values.
+   *    Returns true if metaData has different property values than
+   *    the cached _metaData.
    */
-  _hasSettingsMetaDataChanged(prevMetaDataObj, currentMetaDataObj) {
+  _hasUserMetaDataChanged(metaData) {
     let metaDataProperties = [
       "locale",
       "region",
@@ -2890,9 +2889,9 @@ SearchService.prototype = {
       "distroID",
     ];
 
-    return metaDataProperties.some(
-      p => prevMetaDataObj?.[p] != currentMetaDataObj?.[p]
-    );
+    return metaDataProperties.some(p => {
+      return metaData?.[p] !== this._settings.getAttribute(p);
+    });
   },
 
   /**
