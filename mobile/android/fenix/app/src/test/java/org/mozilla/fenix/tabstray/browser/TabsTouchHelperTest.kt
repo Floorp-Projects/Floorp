@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.tabstray.browser
 
-import android.widget.FrameLayout
+import androidx.compose.ui.platform.ComposeView
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_IDLE
 import androidx.recyclerview.widget.ItemTouchHelper.Callback.makeMovementFlags
@@ -28,8 +28,8 @@ class TabsTouchHelperTest {
     @Test
     fun `movement flags remain unchanged if onSwipeToDelete is true`() {
         val recyclerView = RecyclerView(testContext)
-        val layout = FrameLayout(testContext)
-        val viewHolder = SyncedTabsPageViewHolder(layout, mockk())
+        val layout = ComposeView(testContext)
+        val viewHolder = SyncedTabsPageViewHolder(layout, mockk(), mockk())
         val callback = TouchCallback(mockk(), { true }, { false }, featureName)
 
         assertEquals(0, callback.getDragDirs(recyclerView, viewHolder))
@@ -47,8 +47,8 @@ class TabsTouchHelperTest {
     @Test
     fun `movement flags remain unchanged if onSwipeToDelete is false`() {
         val recyclerView = RecyclerView(testContext)
-        val layout = FrameLayout(testContext)
-        val viewHolder = SyncedTabsPageViewHolder(layout, mockk())
+        val layout = ComposeView(testContext)
+        val viewHolder = SyncedTabsPageViewHolder(layout, mockk(), mockk())
         val callback = TouchCallback(mockk(), { false }, { false }, featureName)
 
         assertEquals(0, callback.getDragDirs(recyclerView, viewHolder))
