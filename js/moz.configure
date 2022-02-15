@@ -1217,6 +1217,24 @@ set_config(
 )
 
 
+# Some platforms have HeapReg, some don't
+# =====================================================
+
+# The ARM simulator runs on x86 and might be excluded by the first test,
+# so we special-case it.
+
+
+@depends("--enable-simulator", target)
+def wasm_has_heapreg(simulator, target):
+    if target.cpu != "x86":
+        return True
+
+    if simulator and simulator[0] == "arm":
+        return True
+
+
+set_define("WASM_HAS_HEAPREG", wasm_has_heapreg)
+
 # Check for tm_zone, tm_gmtoff in struct tm
 # ===================================================
 with only_when(compile_environment):

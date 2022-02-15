@@ -1111,10 +1111,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   inline void ensureDouble(const ValueOperand& source, FloatRegister dest,
                            Label* failure);
 
-  void loadWasmPinnedRegsFromTls() {
-    // x86 doesn't have any pinned registers.
-  }
-
  public:
   // Used from within an Exit frame to handle a pending exception.
   void handleFailureWithHandlerTail(Label* profilerExitTail);
