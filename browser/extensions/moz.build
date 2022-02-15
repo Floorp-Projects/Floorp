@@ -20,7 +20,6 @@ DIRS += [
     "floorp-system",
     "floorp-protector",
     "gesturefy",
-    "superdrag",
 ]
 
 if CONFIG["NIGHTLY_BUILD"]:
