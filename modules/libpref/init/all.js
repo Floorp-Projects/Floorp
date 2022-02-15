@@ -156,9 +156,10 @@ pref("security.webauth.webauthn_enable_softtoken", false);
 pref("security.xfocsp.errorReporting.enabled", true);
 pref("security.xfocsp.errorReporting.automatic", false);
 
-// 0: Disable CRLite entirely
-// 1: Enable and check revocations via CRLite, but only collect telemetry
-// 2: Enable and enforce revocations via CRLite
+// 0: Disable CRLite entirely.
+// 1: Consult CRLite but only collect telemetry.
+// 2: Consult CRLite and enforce both "Revoked" and "Not Revoked" results.
+// 3: Consult CRLite and enforce "Not Revoked" results, but defer to OCSP for "Revoked".
 pref("security.pki.crlite_mode", 1);
 
 // Issuer we use to detect MitM proxies. Set to the issuer of the cert of the

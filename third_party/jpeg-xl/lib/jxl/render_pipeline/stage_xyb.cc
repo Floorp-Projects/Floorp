@@ -210,5 +210,60 @@ std::unique_ptr<RenderPipelineStage> GetXYBStage(
   return HWY_DYNAMIC_DISPATCH(GetXYBStage)(output_encoding_info);
 }
 
+namespace {
+class FastXYBStage : public RenderPipelineStage {
+ public:
+  FastXYBStage(uint8_t* rgb, size_t stride, size_t width, size_t height,
+               bool rgba, bool has_alpha, size_t alpha_c)
+      : RenderPipelineStage(RenderPipelineStage::Settings()),
+        rgb_(rgb),
+        stride_(stride),
+        width_(width),
+        height_(height),
+        rgba_(rgba),
+        has_alpha_(has_alpha),
+        alpha_c_(alpha_c) {}
+
+  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                  float* JXL_RESTRICT temp) const final {
+    if (ypos >= height_) return;
+    JXL_ASSERT(xextra == 0);
+    const float* xyba[4] = {
+        GetInputRow(input_rows, 0, 0), GetInputRow(input_rows, 1, 0),
+        GetInputRow(input_rows, 2, 0),
+        has_alpha_ ? GetInputRow(input_rows, alpha_c_, 0) : nullptr};
+    uint8_t* out_buf = rgb_ + stride_ * ypos + (rgba_ ? 4 : 3) * xpos;
+    FastXYBTosRGB8(xyba, out_buf, rgba_,
+                   xsize + xpos <= width_ ? xsize : width_ - xpos);
+  }
+
+  RenderPipelineChannelMode GetChannelMode(size_t c) const final {
+    return c < 3 || (has_alpha_ && c == alpha_c_)
+               ? RenderPipelineChannelMode::kInput
+               : RenderPipelineChannelMode::kIgnored;
+  }
+
+ private:
+  uint8_t* rgb_;
+  size_t stride_;
+  size_t width_;
+  size_t height_;
+  bool rgba_;
+  bool has_alpha_;
+  size_t alpha_c_;
+  std::vector<float> opaque_alpha_;
+};
+
+}  // namespace
+
+std::unique_ptr<RenderPipelineStage> GetFastXYBTosRGB8Stage(
+    uint8_t* rgb, size_t stride, size_t width, size_t height, bool rgba,
+    bool has_alpha, size_t alpha_c) {
+  JXL_ASSERT(HasFastXYBTosRGB8());
+  return make_unique<FastXYBStage>(rgb, stride, width, height, rgba, has_alpha,
+                                   alpha_c);
+}
+
 }  // namespace jxl
 #endif

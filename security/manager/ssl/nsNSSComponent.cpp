@@ -1541,6 +1541,7 @@ void nsNSSComponent::setValidationOptions(
     case CRLiteMode::Disabled:
     case CRLiteMode::TelemetryOnly:
     case CRLiteMode::Enforce:
+    case CRLiteMode::ConfirmRevocations:
       break;
     default:
       crliteMode = defaultCRLiteMode;

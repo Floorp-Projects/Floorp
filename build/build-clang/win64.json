@@ -1,6 +1,4 @@
 {
-    "stages": "4",
-    "pgo" : true,
     "build_wasm": true,
     "cc": "cl.exe",
     "cxx": "cl.exe",

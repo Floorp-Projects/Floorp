@@ -49,7 +49,7 @@ MemoryOutputStream::Close() {
 NS_IMETHODIMP
 MemoryOutputStream::Write(const char* aBuf, uint32_t aCount,
                           uint32_t* _retval) {
-  return WriteSegments(NS_CopySegmentToBuffer, (char*)aBuf, aCount, _retval);
+  return WriteSegments(NS_CopyBufferToSegment, (char*)aBuf, aCount, _retval);
 }
 
 NS_IMETHODIMP

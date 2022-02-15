@@ -47,7 +47,7 @@ const zoomOnMeta =
   Services.prefs.getIntPref("mousewheel.with_meta.action", 1) == 3;
 const isAppLocaleRTL = Services.locale.isAppLocaleRTL;
 
-var AboutReader = function(actor, articlePromise) {
+var AboutReader = function(actor, articlePromise, docContentType = "document") {
   let win = actor.contentWindow;
   let url = this._getOriginalUrl(win);
   if (
@@ -218,7 +218,7 @@ var AboutReader = function(actor, articlePromise) {
     new NarrateControls(win, this._languagePromise);
   }
 
-  this._loadArticle();
+  this._loadArticle(docContentType);
 
   let dropdown = this._toolbarElement;
 
@@ -782,7 +782,7 @@ AboutReader.prototype = {
     AsyncPrefs.set("reader.font_type", this._fontType);
   },
 
-  async _loadArticle() {
+  async _loadArticle(docContentType = "document") {
     let url = this._getOriginalUrl();
     this._showProgressDelayed();
 
@@ -793,7 +793,10 @@ AboutReader.prototype = {
 
     if (!article) {
       try {
-        article = await ReaderMode.downloadAndParseDocument(url);
+        article = await ReaderMode.downloadAndParseDocument(
+          url,
+          docContentType
+        );
       } catch (e) {
         if (e && e.newURL) {
           let readerURL = "about:reader?url=" + encodeURIComponent(e.newURL);
@@ -1009,7 +1012,17 @@ AboutReader.prototype = {
 
     this._domainElement.href = article.url;
     let articleUri = Services.io.newURI(article.url);
-    this._domainElement.textContent = this._stripHost(articleUri.host);
+
+    try {
+      this._domainElement.textContent = this._stripHost(articleUri.host);
+    } catch (ex) {
+      let url = this._actor.document.URL;
+      url = url.substring(url.indexOf("%2F") + 6);
+      url = url.substring(0, url.indexOf("%2F"));
+
+      this._domainElement.textContent = url;
+    }
+
     this._creditsElement.textContent = article.byline;
 
     this._titleElement.textContent = article.title;

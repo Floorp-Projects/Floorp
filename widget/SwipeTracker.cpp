@@ -21,11 +21,7 @@
 // These values were tweaked to make the physics feel similar to the native
 // swipe.
 static const double kSpringForce = 250.0;
-static const double kVelocityTwitchTolerance = 0.0000001;
 static const double kWholePagePixelSize = 550.0;
-static const double kRubberBandResistanceFactor = 4.0;
-static const double kSwipeSuccessThreshold = 0.25;
-static const double kSwipeSuccessVelocityContribution = 0.05;
 
 namespace mozilla {
 
@@ -94,13 +90,16 @@ bool SwipeTracker::ComputeSwipeSuccess() const {
 
   // If the fingers were moving away from the target direction when they were
   // lifted from the touchpad, abort the swipe.
-  if (mCurrentVelocity * targetValue < -kVelocityTwitchTolerance) {
+  if (mCurrentVelocity * targetValue <
+      -StaticPrefs::widget_swipe_velocity_twitch_tolerance()) {
     return false;
   }
 
   return (mGestureAmount * targetValue +
-          mCurrentVelocity * targetValue * kSwipeSuccessVelocityContribution) >=
-         kSwipeSuccessThreshold;
+          mCurrentVelocity * targetValue *
+              StaticPrefs::widget_swipe_success_velocity_contribution()) >=
+
+         StaticPrefs::widget_swipe_success_threshold();
 }
 
 nsEventStatus SwipeTracker::ProcessEvent(const PanGestureInput& aEvent) {

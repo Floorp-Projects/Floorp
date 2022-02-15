@@ -76,8 +76,10 @@ set(WARNINGS_AS_ERRORS_DEFAULT false)
 
 if((SANITIZER STREQUAL "msan") OR JPEGXL_EMSCRIPTEN)
   set(BUNDLE_LIBPNG_DEFAULT YES)
+  set(BUNDLE_GFLAGS_DEFAULT YES)
 else()
   set(BUNDLE_LIBPNG_DEFAULT NO)
+  set(BUNDLE_GFLAGS_DEFAULT NO)
 endif()
 
 # Standard cmake naming for building shared libraries.
@@ -95,6 +97,8 @@ set(JPEGXL_ENABLE_BENCHMARK true CACHE BOOL
     "Build JPEGXL benchmark tools.")
 set(JPEGXL_ENABLE_EXAMPLES true CACHE BOOL
     "Build JPEGXL library usage examples.")
+set(JPEGXL_BUNDLE_GFLAGS ${BUNDLE_GFLAGS_DEFAULT} CACHE BOOL
+    "Build gflags from source and link it statically.")
 set(JPEGXL_BUNDLE_LIBPNG ${BUNDLE_LIBPNG_DEFAULT} CACHE BOOL
     "Build libpng from source and link it statically.")
 set(JPEGXL_ENABLE_JNI true CACHE BOOL
@@ -326,7 +330,9 @@ set(DOXYGEN_GENERATE_HTML "YES")
 set(DOXYGEN_GENERATE_XML "YES")
 set(DOXYGEN_STRIP_FROM_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/include")
 set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "README.md")
+if(JPEGXL_WARNINGS_AS_ERRORS)
 set(DOXYGEN_WARN_AS_ERROR "YES")
+endif()
 set(DOXYGEN_QUIET "YES")
 doxygen_add_docs(doc
   "${CMAKE_CURRENT_SOURCE_DIR}/lib/include"
