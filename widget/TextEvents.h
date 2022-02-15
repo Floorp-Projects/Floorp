@@ -476,8 +476,8 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
    *                    writing mode at current selection.  However, when there
    *                    is no focused element and no selection ranges, this
    *                    should be set to Nothing().  Using the result of
-   *                    `TextEventDispatcher::MaybeWritingModeAtSelection()` is
-   *                    recommended.
+   *                    `TextEventDispatcher::MaybeQueryWritingModeAtSelection()`
+   *                    is recommended.
    */
   MOZ_CAN_RUN_SCRIPT void InitAllEditCommands(
       const Maybe<WritingMode>& aWritingMode);
@@ -493,8 +493,8 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
    *                    writing mode at current selection.  However, when there
    *                    is no focused element and no selection ranges, this
    *                    should be set to Nothing().  Using the result of
-   *                    `TextEventDispatcher::MaybeWritingModeAtSelection()` is
-   *                    recommended.
+   *                    `TextEventDispatcher::MaybeQueryWritingModeAtSelection()`
+   *                    is recommended.
    * @return            false if some resource is not available to get
    *                    commands unexpectedly.  Otherwise, true even if
    *                    retrieved command is nothing.
