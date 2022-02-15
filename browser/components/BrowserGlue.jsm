@@ -4659,6 +4659,7 @@ BrowserGlue.prototype = {
       "pictureinpicture.settings",
       true
     );
+    Services.telemetry.setEventRecordingEnabled("pictureinpicture", true);
 
     const TOGGLE_ENABLED_PREF =
       "media.videocontrols.picture-in-picture.video-toggle.enabled";
