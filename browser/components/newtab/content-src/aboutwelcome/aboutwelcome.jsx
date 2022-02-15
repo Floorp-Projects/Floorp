@@ -78,7 +78,7 @@ class AboutWelcome extends React.PureComponent {
         metricsFlowUri={this.state.metricsFlowUri}
         utm_term={props.UTMTerm}
         transitions={props.transitions}
-        background_url={props.background_url}
+        backdrop={props.backdrop}
       />
     );
   }
