@@ -3265,8 +3265,13 @@ void nsCycleCollector::FixGrayBits(bool aIsShutdown, TimeLog& aTimeLog) {
 
   uint32_t count = 0;
   do {
-    mCCJSRuntime->GarbageCollect(aIsShutdown ? JS::GCReason::SHUTDOWN_CC
-                                             : JS::GCReason::CC_FORCED);
+    if (aIsShutdown) {
+      mCCJSRuntime->GarbageCollect(JS::GCOptions::Shutdown,
+                                   JS::GCReason::SHUTDOWN_CC);
+    } else {
+      mCCJSRuntime->GarbageCollect(JS::GCOptions::Normal,
+                                   JS::GCReason::CC_FORCED);
+    }
 
     mCCJSRuntime->FixWeakMappingGrayBits();
 

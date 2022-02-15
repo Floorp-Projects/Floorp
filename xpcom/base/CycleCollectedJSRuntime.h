@@ -394,7 +394,7 @@ class CycleCollectedJSRuntime {
   void FixWeakMappingGrayBits() const;
   void CheckGrayBits() const;
   bool AreGCGrayBitsValid() const;
-  void GarbageCollect(JS::GCReason aReason) const;
+  void GarbageCollect(JS::GCOptions options, JS::GCReason aReason) const;
 
   // This needs to be an nsWrapperCache, not a JSObject, because we need to know
   // when our object gets moved.  But we can't trace it (and hence update our
