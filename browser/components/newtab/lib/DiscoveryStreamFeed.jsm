@@ -66,8 +66,6 @@ const PREF_REC_IMPRESSIONS = "discoverystream.rec.impressions";
 const PREF_COLLECTIONS_ENABLED =
   "discoverystream.sponsored-collections.enabled";
 const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
-const PREF_RECS_PERSONALIZED = "discoverystream.recs.personalized";
-const PREF_SPOCS_PERSONALIZED = "discoverystream.spocs.personalized";
 const PREF_PERSONALIZATION = "discoverystream.personalization.enabled";
 const PREF_PERSONALIZATION_OVERRIDE =
   "discoverystream.personalization.override";
@@ -169,12 +167,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
   get personalized() {
     // If both spocs and recs are not personalized, we might as well return false here.
-    const spocsPersonalized = this.store.getState().Prefs.values[
-      PREF_SPOCS_PERSONALIZED
-    ];
-    const recsPersonalized = this.store.getState().Prefs.values[
-      PREF_RECS_PERSONALIZED
-    ];
+    const spocsPersonalized = this.store.getState().Prefs.values?.pocketConfig
+      ?.spocsPersonalized;
+    const recsPersonalized = this.store.getState().Prefs.values?.pocketConfig
+      ?.recsPersonalized;
     const personalization = this.store.getState().Prefs.values[
       PREF_PERSONALIZATION
     ];
@@ -1040,12 +1036,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   async scoreItems(items, type) {
-    const spocsPersonalized = this.store.getState().Prefs.values[
-      PREF_SPOCS_PERSONALIZED
-    ];
-    const recsPersonalized = this.store.getState().Prefs.values[
-      PREF_RECS_PERSONALIZED
-    ];
+    const spocsPersonalized = this.store.getState().Prefs.values?.pocketConfig
+      ?.spocsPersonalized;
+    const recsPersonalized = this.store.getState().Prefs.values?.pocketConfig
+      ?.recsPersonalized;
     const personalizedByType =
       type === "feed" ? recsPersonalized : spocsPersonalized;
 
@@ -1270,12 +1264,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       options.isStartup
     );
 
-    const spocsPersonalized = this.store.getState().Prefs.values[
-      PREF_SPOCS_PERSONALIZED
-    ];
-    const recsPersonalized = this.store.getState().Prefs.values[
-      PREF_RECS_PERSONALIZED
-    ];
+    const spocsPersonalized = this.store.getState().Prefs.values?.pocketConfig
+      ?.spocsPersonalized;
+    const recsPersonalized = this.store.getState().Prefs.values?.pocketConfig
+      ?.recsPersonalized;
 
     let expirationPerComponent = {};
     if (this.personalized) {

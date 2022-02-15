@@ -14,6 +14,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/dom/WritableStream.h"
 #include "mozilla/dom/WritableStreamDefaultWriterBinding.h"
 #include "nsCOMPtr.h"
 

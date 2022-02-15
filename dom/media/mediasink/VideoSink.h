@@ -39,6 +39,7 @@ class VideoSink : public MediaSink {
   media::TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
 
   bool HasUnplayedFrames(TrackType aType) const override;
+  media::TimeUnit UnplayedDuration(TrackType aType) const override;
 
   void SetPlaybackRate(double aPlaybackRate) override;
 

@@ -11,7 +11,7 @@
  ********************************************************************
 
   function:
-    last mod: $Id: idct.c 17410 2010-09-21 21:53:48Z tterribe $
+    last mod: $Id$
 
  ********************************************************************/
 
@@ -241,8 +241,8 @@ static void oc_idct8x8_3(ogg_int16_t _y[64],ogg_int16_t _x[64]){
   for(i=0;i<8;i++)idct8_2(_y+i,w+i*8);
   /*Adjust for the scale factor.*/
   for(i=0;i<64;i++)_y[i]=(ogg_int16_t)(_y[i]+8>>4);
-  /*Clear input data for next block (decoder only).*/
-  if(_x!=_y)_x[0]=_x[1]=_x[8]=0;
+  /*Clear input data for next block.*/
+  _x[0]=_x[1]=_x[8]=0;
 }
 
 /*Performs an inverse 8x8 Type-II DCT transform.
@@ -272,8 +272,8 @@ static void oc_idct8x8_10(ogg_int16_t _y[64],ogg_int16_t _x[64]){
   for(i=0;i<8;i++)idct8_4(_y+i,w+i*8);
   /*Adjust for the scale factor.*/
   for(i=0;i<64;i++)_y[i]=(ogg_int16_t)(_y[i]+8>>4);
-  /*Clear input data for next block (decoder only).*/
-  if(_x!=_y)_x[0]=_x[1]=_x[2]=_x[3]=_x[8]=_x[9]=_x[10]=_x[16]=_x[17]=_x[24]=0;
+  /*Clear input data for next block.*/
+  _x[0]=_x[1]=_x[2]=_x[3]=_x[8]=_x[9]=_x[10]=_x[16]=_x[17]=_x[24]=0;
 }
 
 /*Performs an inverse 8x8 Type-II DCT transform.
@@ -291,7 +291,8 @@ static void oc_idct8x8_slow(ogg_int16_t _y[64],ogg_int16_t _x[64]){
   for(i=0;i<8;i++)idct8(_y+i,w+i*8);
   /*Adjust for the scale factor.*/
   for(i=0;i<64;i++)_y[i]=(ogg_int16_t)(_y[i]+8>>4);
-  if(_x!=_y)for(i=0;i<64;i++)_x[i]=0;
+  /*Clear input data for next block.*/
+  for(i=0;i<64;i++)_x[i]=0;
 }
 
 /*Performs an inverse 8x8 Type-II DCT transform.

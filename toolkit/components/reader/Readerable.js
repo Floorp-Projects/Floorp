@@ -58,7 +58,7 @@ var Readerable = {
   ],
 
   shouldCheckUri(uri, isBaseUri = false) {
-    if (!["http", "https", "file"].includes(uri.scheme)) {
+    if (!["http", "https", "file", "moz-nullprincipal"].includes(uri.scheme)) {
       return false;
     }
 

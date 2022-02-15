@@ -839,6 +839,21 @@ void nsContentSecurityUtils::DetectJsHacks() {
     sJSHacksPresent = true;
   }
 
+  // These preferences are for autoconfiguration of Firefox by admins.
+  // The first will load a file over the network; the second will
+  // fall back to a local file if the network is unavailable
+  nsAutoString configUrlPref;
+  rv = Preferences::GetString("autoadmin.global_config_url", configUrlPref);
+  if (!NS_FAILED(rv) && !configUrlPref.IsEmpty()) {
+    sJSHacksPresent = true;
+  }
+
+  bool failOverToCache;
+  rv = Preferences::GetBool("autoadmin.failover_to_cached", &failOverToCache);
+  if (!NS_FAILED(rv) && failOverToCache) {
+    sJSHacksPresent = true;
+  }
+
   sJSHacksChecked = true;
 }
 

@@ -366,6 +366,108 @@ function getCRLiteEnrollmentRecordFor(nsCert) {
   };
 }
 
+add_task(async function test_crlite_confirm_revocations_mode() {
+  Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
+  Services.prefs.setIntPref(
+    "security.pki.crlite_mode",
+    CRLiteModeConfirmRevocationsValue
+  );
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+  let issuerCert = constructCertFromFile("test_crlite_filters/issuer.pem");
+  let noSCTCertIssuer = constructCertFromFile(
+    "test_crlite_filters/no-sct-issuer.pem"
+  );
+
+  let crliteEnrollmentRecords = [
+    getCRLiteEnrollmentRecordFor(issuerCert),
+    getCRLiteEnrollmentRecordFor(noSCTCertIssuer),
+  ];
+
+  await IntermediatePreloadsClient.onSync({
+    data: {
+      current: crliteEnrollmentRecords,
+      created: crliteEnrollmentRecords,
+      updated: [],
+      deleted: [],
+    },
+  });
+
+  let result = await syncAndDownload([
+    {
+      timestamp: "2020-10-17T00:00:00Z",
+      type: "full",
+      id: "0000",
+      coverage: [
+        {
+          logID: "9lyUL9F3MCIUVBgIMJRWjuNNExkzv98MLyALzE7xZOM=",
+          minTimestamp: 0,
+          maxTimestamp: 9999999999999,
+        },
+        {
+          logID: "pLkJkLQYWBSHuxOizGdwCjw1mAT5G9+443fNDsgN3BA=",
+          minTimestamp: 0,
+          maxTimestamp: 9999999999999,
+        },
+      ],
+    },
+  ]);
+  equal(
+    result,
+    "finished;2020-10-17T00:00:00Z-full",
+    "CRLite filter download should have run"
+  );
+
+  // The CRLite result should be enforced for this certificate and
+  // OCSP should not be consulted.
+  let validCert = constructCertFromFile("test_crlite_filters/valid.pem");
+  await checkCertErrorGenericAtTime(
+    certdb,
+    validCert,
+    PRErrorCodeSuccess,
+    certificateUsageSSLServer,
+    new Date("2020-10-20T00:00:00Z").getTime() / 1000,
+    undefined,
+    "vpn.worldofspeed.org",
+    0
+  );
+
+  // OCSP should be consulted for this certificate, but OCSP is disabled by
+  // Ci.nsIX509CertDB.FLAG_LOCAL_ONLY so this will return Success.
+  let revokedCert = constructCertFromFile("test_crlite_filters/revoked.pem");
+  await checkCertErrorGenericAtTime(
+    certdb,
+    revokedCert,
+    PRErrorCodeSuccess,
+    certificateUsageSSLServer,
+    new Date("2020-10-20T00:00:00Z").getTime() / 1000,
+    undefined,
+    "us-datarecovery.com",
+    Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
+  );
+
+  // Switch back to enforcement to confirm that it was the security.pki.crlite_mode
+  // that caused us to return Success for revokedCert.
+  Services.prefs.setIntPref(
+    "security.pki.crlite_mode",
+    CRLiteModeEnforcePrefValue
+  );
+
+  await checkCertErrorGenericAtTime(
+    certdb,
+    revokedCert,
+    SEC_ERROR_REVOKED_CERTIFICATE,
+    certificateUsageSSLServer,
+    new Date("2020-10-20T00:00:00Z").getTime() / 1000,
+    undefined,
+    "us-datarecovery.com",
+    0
+  );
+});
+
 add_task(async function test_crlite_filters_and_check_revocation() {
   Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
   Services.prefs.setIntPref(

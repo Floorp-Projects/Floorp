@@ -766,13 +766,20 @@ nsresult NS_CopySegmentToBuffer(nsIInputStream* aInStr, void* aClosure,
   return NS_OK;
 }
 
-nsresult NS_CopySegmentToBuffer(nsIOutputStream* aOutStr, void* aClosure,
+nsresult NS_CopyBufferToSegment(nsIOutputStream* aOutStr, void* aClosure,
                                 char* aBuffer, uint32_t aOffset,
                                 uint32_t aCount, uint32_t* aCountRead) {
   const char* fromBuf = static_cast<const char*>(aClosure);
   memcpy(aBuffer, &fromBuf[aOffset], aCount);
   *aCountRead = aCount;
   return NS_OK;
+}
+
+nsresult NS_CopyStreamToSegment(nsIOutputStream* aOutputStream, void* aClosure,
+                                char* aToSegment, uint32_t aFromOffset,
+                                uint32_t aCount, uint32_t* aReadCount) {
+  nsIInputStream* fromStream = static_cast<nsIInputStream*>(aClosure);
+  return fromStream->Read(aToSegment, aCount, aReadCount);
 }
 
 nsresult NS_DiscardSegment(nsIInputStream* aInStr, void* aClosure,
