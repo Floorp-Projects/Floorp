@@ -20,8 +20,8 @@ const DEFAULT_WELCOME_CONTENT = {
   id: "DEFAULT_ABOUTWELCOME_PROTON",
   template: "multistage",
   transitions: true,
-  background_url:
-    "chrome://activity-stream/content/data/content/assets/proton-bkg.avif",
+  backdrop:
+    "#212121 url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) center/cover no-repeat fixed",
   screens: [
     {
       id: "AW_PIN_FIREFOX",

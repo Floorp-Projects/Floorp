@@ -550,12 +550,23 @@ ssl3_HandleParsedExtensions(sslSocket *ss, SSLHandshakeType message)
                     if (allowNotOffered) {
                         continue; /* Skip over unknown extensions. */
                     }
-                /* Fall through. */
+                    /* RFC8446 Section 4.2 - Implementations MUST NOT send extension responses if
+                     * the remote endpoint did not send the corresponding extension request ...
+                     * Upon receiving such an extension, an endpoint MUST abort the handshake with
+                     * an "unsupported_extension" alert. */
+                    SSL_TRC(3, ("%d: TLS13: unknown extension %d in message %d",
+                                SSL_GETPID(), extension, message));
+                    tls13_FatalError(ss, SSL_ERROR_RX_UNEXPECTED_EXTENSION,
+                                     unsupported_extension);
+                    return SECFailure;
                 case tls13_extension_disallowed:
-                    SSL_TRC(3, ("%d: TLS13: unexpected extension %d in message %d",
+                    /* RFC8446 Section 4.2 - If an implementation receives an extension which it
+                     * recognizes and which is not specified for the message in which it appears,
+                     * it MUST abort the handshake with an "illegal_parameter" alert. */
+                    SSL_TRC(3, ("%d: TLS13: disallowed extension %d in message %d",
                                 SSL_GETPID(), extension, message));
                     tls13_FatalError(ss, SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION,
-                                     unsupported_extension);
+                                     illegal_parameter);
                     return SECFailure;
             }
         }

@@ -11450,11 +11450,6 @@
   value: true
   mirror: always
 
-- name: security.csp.enable
-  type: bool
-  value: true
-  mirror: always
-
 - name: security.csp.reporting.script-sample.max-length
   type: int32_t
   value: 40
@@ -12686,7 +12681,7 @@
 # Whether we use overlay scrollbars on GTK.
 - name: widget.gtk.overlay-scrollbars.enabled
   type: RelaxedAtomicBool
-  value: @EARLY_BETA_OR_EARLIER@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Whether we honor the scrollbar colors from the gtk theme.

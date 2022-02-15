@@ -108,6 +108,8 @@ class WinWindowOcclusionTrackerInteractiveTest : public ::testing::Test {
     RefPtr<MockWinWidget> window = MockWinWidget::Create(
         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, /* aExStyle */ 0, aBounds);
     EXPECT_NE(nullptr, window.get());
+    HWND hwnd = window->GetWnd();
+    ::ShowWindow(hwnd, SW_SHOWNORMAL);
     WinWindowOcclusionTracker::Get()->Enable(window, window->GetWnd());
     return window;
   }
@@ -132,6 +134,7 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest, SimpleOcclusion) {
   window->SetExpectation(widget::OcclusionState::OCCLUDED);
   CreateNativeWindowWithBounds(LayoutDeviceIntRect(0, 0, 100, 100));
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
   EXPECT_FALSE(window->IsExpectingCall());
@@ -140,10 +143,11 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest, SimpleOcclusion) {
 // Simple test partially covering a tracked window with a native window.
 TEST_F(WinWindowOcclusionTrackerInteractiveTest, PartialOcclusion) {
   RefPtr<MockWinWidget> window =
-      CreateTrackedWindowWithBounds(LayoutDeviceIntRect(0, 0, 100, 100));
+      CreateTrackedWindowWithBounds(LayoutDeviceIntRect(0, 0, 200, 200));
   window->SetExpectation(widget::OcclusionState::VISIBLE);
   CreateNativeWindowWithBounds(LayoutDeviceIntRect(0, 0, 50, 50));
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
   EXPECT_FALSE(window->IsExpectingCall());
@@ -163,6 +167,7 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest, OffscreenOcclusion) {
   CreateNativeWindowWithBounds(LayoutDeviceIntRect(screenLeft, 0, 50, 100));
   window->SetExpectation(widget::OcclusionState::OCCLUDED);
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
   EXPECT_FALSE(window->IsExpectingCall());
@@ -175,6 +180,8 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest, SimpleVisible) {
   window->SetExpectation(widget::OcclusionState::VISIBLE);
   CreateNativeWindowWithBounds(LayoutDeviceIntRect(200, 0, 100, 100));
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
   EXPECT_FALSE(window->IsExpectingCall());
@@ -189,6 +196,7 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest, SimpleHidden) {
   ::CloseWindow(window->GetWnd());
   window->SetExpectation(widget::OcclusionState::HIDDEN);
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
   EXPECT_FALSE(window->IsExpectingCall());
@@ -203,6 +211,7 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest,
       CreateTrackedWindowWithBounds(LayoutDeviceIntRect(0, 0, 100, 100));
   window->SetExpectation(widget::OcclusionState::VISIBLE);
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
 
@@ -214,6 +223,7 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest,
   ::CloseWindow(window->GetWnd());
 
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
 
@@ -235,6 +245,7 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest,
   ::OpenIcon(window->GetWnd());
 
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
 
@@ -242,6 +253,7 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest,
   window->SetExpectation(widget::OcclusionState::OCCLUDED);
   CreateNativeWindowWithBounds(LayoutDeviceIntRect(0, 0, 100, 100));
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
   EXPECT_FALSE(window->IsExpectingCall());
@@ -253,6 +265,7 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest, LockScreenVisibleOcclusion) {
       CreateTrackedWindowWithBounds(LayoutDeviceIntRect(0, 0, 100, 100));
   window->SetExpectation(widget::OcclusionState::VISIBLE);
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
 
@@ -266,6 +279,8 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest, LockScreenVisibleOcclusion) {
                 WTS_SESSION_LOCK, currentSessionId);
 
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
+
     MSG msg;
     bool gotMessage =
         ::PeekMessageW(&msg, WinEventHub::Get()->GetWnd(), 0, 0, PM_REMOVE);
@@ -287,6 +302,7 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest, LockScreenHiddenOcclusion) {
   ::CloseWindow(window->GetWnd());
   window->SetExpectation(widget::OcclusionState::HIDDEN);
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
 
@@ -304,6 +320,8 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest, LockScreenHiddenOcclusion) {
               WTS_SESSION_LOCK, currentSessionId);
 
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
+
     MSG msg;
     bool gotMessage =
         ::PeekMessageW(&msg, WinEventHub::Get()->GetWnd(), 0, 0, PM_REMOVE);
@@ -321,9 +339,11 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest, LockScreenHiddenOcclusion) {
 // as occluded.
 TEST_F(WinWindowOcclusionTrackerInteractiveTest, LockScreenDifferentSession) {
   RefPtr<MockWinWidget> window =
-      CreateTrackedWindowWithBounds(LayoutDeviceIntRect(0, 0, 100, 100));
+      CreateTrackedWindowWithBounds(LayoutDeviceIntRect(0, 0, 200, 200));
   window->SetExpectation(widget::OcclusionState::VISIBLE);
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
+
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
 
@@ -341,6 +361,8 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest, LockScreenDifferentSession) {
   // Create a native window to trigger occlusion calculation.
   CreateNativeWindowWithBounds(LayoutDeviceIntRect(0, 0, 50, 50));
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
+
     MSG msg;
     bool gotMessage =
         ::PeekMessageW(&msg, WinEventHub::Get()->GetWnd(), 0, 0, PM_REMOVE);
@@ -361,6 +383,8 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest, DisplayOnOffHandling) {
       CreateTrackedWindowWithBounds(LayoutDeviceIntRect(0, 0, 100, 100));
   window->SetExpectation(widget::OcclusionState::VISIBLE);
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
+
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
 
@@ -369,12 +393,16 @@ TEST_F(WinWindowOcclusionTrackerInteractiveTest, DisplayOnOffHandling) {
   // Turning display off and on isn't feasible, so send a notification.
   OnDisplayStateChanged(/* aDisplayOn */ false);
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
+
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
 
   window->SetExpectation(widget::OcclusionState::VISIBLE);
   OnDisplayStateChanged(/* aDisplayOn */ true);
   while (window->IsExpectingCall()) {
+    WinWindowOcclusionTracker::Get()->TriggerCalculation();
+
     NS_ProcessNextEvent(nullptr, /* aMayWait = */ true);
   }
   EXPECT_FALSE(window->IsExpectingCall());

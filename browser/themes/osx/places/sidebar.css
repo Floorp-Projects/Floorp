@@ -49,7 +49,3 @@
   /* Default font size is 11px on mac, so this is 12px */
   font-size: 1.0909rem;
 }
-
-#viewButton:focus {
-  box-shadow: var(--focus-ring-box-shadow);
-}

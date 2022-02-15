@@ -272,7 +272,7 @@ SearchService.prototype = {
       this._addObservers();
     } catch (ex) {
       this._initRV = ex.result !== undefined ? ex.result : Cr.NS_ERROR_FAILURE;
-      logConsole.error("_init: failure initializing search:", ex.result);
+      logConsole.error("_init: failure initializing search:", ex);
     }
 
     this._initialized = true;

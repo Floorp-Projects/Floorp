@@ -1,7 +1,7 @@
 .. -*- Mode: rst; fill-column: 80; -*-
 
-Welcome to GeckoView's documentation!
-=====================================
+GeckoView
+=========
 
 .. toctree::
    :maxdepth: 1

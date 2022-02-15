@@ -2,8 +2,8 @@
 alabaster==0.7.12
 Babel==2.8.0
 backports-abc==0.5
-boto3==1.15.6
-botocore==1.18.6
+boto3==1.16.63
+botocore==1.19.63
 certifi==2020.6.20
 chardet==3.0.4
 colorama==0.4.4

@@ -7,6 +7,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/StaticPrefs_test.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
@@ -1037,7 +1038,7 @@ nsresult TextInputProcessor::InitEditCommands(
 
   Maybe<WritingMode> writingMode;
   if (RefPtr<TextEventDispatcher> dispatcher = mDispatcher) {
-    writingMode = dispatcher->MaybeWritingModeAtSelection();
+    writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
   }
 
   // FYI: WidgetKeyboardEvent::InitAllEditCommands() isn't available here
@@ -1045,15 +1046,15 @@ nsresult TextInputProcessor::InitEditCommands(
   //      avoid performance issues so that we need to initialize each
   //      command manually here.
   if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
-          nsIWidget::NativeKeyBindingsForSingleLineEditor, writingMode))) {
+          NativeKeyBindingsType::SingleLineEditor, writingMode))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
-          nsIWidget::NativeKeyBindingsForMultiLineEditor, writingMode))) {
+          NativeKeyBindingsType::MultiLineEditor, writingMode))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
-          nsIWidget::NativeKeyBindingsForRichTextEditor, writingMode))) {
+          NativeKeyBindingsType::RichTextEditor, writingMode))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 

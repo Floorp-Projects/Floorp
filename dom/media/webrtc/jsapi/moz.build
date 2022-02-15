@@ -25,7 +25,6 @@ UNIFIED_SOURCES += [
     "PacketDumper.cpp",
     "PeerConnectionCtx.cpp",
     "PeerConnectionImpl.cpp",
-    "PeerConnectionMedia.cpp",
     "RTCDtlsTransport.cpp",
     "RTCDTMFSender.cpp",
     "RTCRtpReceiver.cpp",

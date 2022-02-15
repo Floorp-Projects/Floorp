@@ -58,6 +58,6 @@ tabmodalprompt {
               0 1px 3px hsla(0,0%,0%,.2);
 }
 
-.tabmodalprompt-buttonContainer > button:focus {
-  box-shadow: var(--focus-ring-box-shadow)
+.tabmodalprompt-buttonContainer > button:focus-visible {
+  outline: var(--focus-outline);
 }

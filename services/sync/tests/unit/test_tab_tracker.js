@@ -151,7 +151,7 @@ add_task(async function run_test() {
   tracker.onLocationChange(
     { isTopLevel: true },
     undefined,
-    undefined,
+    Services.io.newURI("https://www.mozilla.org"),
     Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT
   );
   Assert.ok(
@@ -159,7 +159,12 @@ add_task(async function run_test() {
     "location change within the same document request didn't flag as modified"
   );
 
-  tracker.onLocationChange({ isTopLevel: true }, undefined, undefined, 0);
+  tracker.onLocationChange(
+    { isTopLevel: true },
+    undefined,
+    Services.io.newURI("https://www.mozilla.org"),
+    Ci.nsIWebProgressListener.LOCATION_CHANGE_RELOAD
+  );
   Assert.ok(
     tracker.modified,
     "location change for a new top-level document flagged as modified"
@@ -173,19 +178,13 @@ add_task(async function run_test() {
 
 add_task(async function run_sync_on_tab_change_test() {
   let { manager } = await setupForExperimentFeature();
-
   await manager.onStartup();
   await ExperimentAPI.ready();
 
   let testExperimentDelay = 5000;
-  // We use this to ensure we're using a different value than the experiment
-  let prefDelayOffset = 500;
 
   // This is the fallback pref if we don't have a experiment running
-  Svc.Prefs.set(
-    "services.sync.syncedTabs.syncDelayAfterTabChange",
-    testExperimentDelay + prefDelayOffset
-  );
+  Svc.Prefs.set("syncedTabs.syncDelayAfterTabChange", testExperimentDelay);
 
   let doEnrollmentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
     {
@@ -196,6 +195,10 @@ add_task(async function run_sync_on_tab_change_test() {
     {
       manager,
     }
+  );
+  Assert.ok(
+    manager.store.getExperimentForFeature("syncAfterTabChange"),
+    "Should be enrolled in the experiment"
   );
 
   let engine = Service.engineManager.get("tabs");
@@ -219,14 +222,71 @@ add_task(async function run_sync_on_tab_change_test() {
     // We should be scheduling <= experiment value
     Assert.ok(scheduler.nextSync - Date.now() <= testExperimentDelay);
   }
+
+  _("Test navigating within the same tab triggers a sync");
+  // Pretend we just synced
+  await tracker.clearChangedIDs();
+
+  tracker.onLocationChange(
+    { isTopLevel: true },
+    undefined,
+    Services.io.newURI("https://www.mozilla.org"),
+    Ci.nsIWebProgressListener.LOCATION_CHANGE_RELOAD
+  );
+  Assert.ok(
+    tracker.modified,
+    "location change for a new top-level document flagged as modified"
+  );
+  Assert.ok(
+    scheduler.nextSync - Date.now() <= testExperimentDelay,
+    "top level document change triggers a sync when experiment is enabled"
+  );
+
+  // Pretend we just synced
+  await tracker.clearChangedIDs();
+  scheduler.nextSync = Date.now() + scheduler.idleInterval;
+
+  _("Test navigating to an about page does not trigger sync");
+  tracker.onLocationChange(
+    { isTopLevel: true },
+    undefined,
+    Services.io.newURI("about:config")
+  );
+  Assert.ok(!tracker.modified, "about page does not trigger a tab modified");
+  Assert.ok(
+    scheduler.nextSync - Date.now() > testExperimentDelay,
+    "about schema should not trigger a sync happening soon"
+  );
+
+  _("Test adjusting the filterScheme pref works");
+  // Pretend we just synced
+  await tracker.clearChangedIDs();
+  scheduler.nextSync = Date.now() + scheduler.idleInterval;
+
+  Svc.Prefs.set(
+    "engine.tabs.filteredSchemes",
+    // Removing the about scheme for this test
+    "resource|chrome|file|blob|moz-extension"
+  );
+  tracker.onLocationChange(
+    { isTopLevel: true },
+    undefined,
+    Services.io.newURI("about:config")
+  );
+  Assert.ok(
+    tracker.modified,
+    "about page triggers a modified after we changed the pref"
+  );
+  Assert.ok(
+    scheduler.nextSync - Date.now() <= testExperimentDelay,
+    "about page should trigger a sync soon after we changed the pref"
+  );
   await doEnrollmentCleanup();
 
   _("If there is no experiment, fallback to the pref");
-  let delayPref = Svc.Prefs.get(
-    "services.sync.syncedTabs.syncDelayAfterTabChange"
-  );
+  let delayPref = Svc.Prefs.get("syncedTabs.syncDelayAfterTabChange");
   let evttype = "TabOpen";
-  Assert.equal(delayPref, testExperimentDelay + prefDelayOffset);
+  Assert.equal(delayPref, testExperimentDelay);
   // Fire ontab event
   tracker.onTab({ type: evttype, originalTarget: evttype });
 
@@ -237,7 +297,7 @@ add_task(async function run_sync_on_tab_change_test() {
 
   _("We should not have a sync if experiment if off and pref is 0");
 
-  Svc.Prefs.set("services.sync.syncedTabs.syncDelayAfterTabChange", 0);
+  Svc.Prefs.set("syncedTabs.syncDelayAfterTabChange", 0);
   let doAnotherEnrollmentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
     {
       enabled: true,
@@ -249,7 +309,7 @@ add_task(async function run_sync_on_tab_change_test() {
     }
   );
   // Schedule sync a super long time from now
-  scheduler.nextSync = Date.now() + 60000;
+  scheduler.nextSync = Date.now() + scheduler.idleInterval;
 
   // Fire ontab event
   evttype = "TabOpen";

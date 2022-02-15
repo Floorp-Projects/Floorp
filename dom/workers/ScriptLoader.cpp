@@ -1338,14 +1338,12 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       nsCOMPtr<nsIContentSecurityPolicy> csp = mWorkerPrivate->GetCSP();
       // We did inherit CSP in bug 1223647. If we do not already have a CSP, we
       // should get it from the HTTP headers on the worker script.
-      if (StaticPrefs::security_csp_enable()) {
-        if (!csp) {
-          rv = mWorkerPrivate->SetCSPFromHeaderValues(tCspHeaderValue,
-                                                      tCspROHeaderValue);
-          NS_ENSURE_SUCCESS(rv, rv);
-        } else {
-          csp->EnsureEventTarget(mWorkerPrivate->MainThreadEventTarget());
-        }
+      if (!csp) {
+        rv = mWorkerPrivate->SetCSPFromHeaderValues(tCspHeaderValue,
+                                                    tCspROHeaderValue);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        csp->EnsureEventTarget(mWorkerPrivate->MainThreadEventTarget());
       }
 
       mWorkerPrivate->UpdateReferrerInfoFromHeader(tRPHeaderCValue);
