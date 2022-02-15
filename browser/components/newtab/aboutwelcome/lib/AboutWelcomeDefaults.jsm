@@ -27,6 +27,7 @@ const DEFAULT_WELCOME_CONTENT = {
       id: "AW_PIN_FIREFOX",
       order: 0,
       content: {
+        position: "corner",
         title: {
           string_id: "mr1-onboarding-pin-header",
         },

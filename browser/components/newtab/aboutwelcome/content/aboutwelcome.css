@@ -665,27 +665,27 @@ body[lwt-newtab-brighttext] {
   -moz-context-properties: fill;
   fill: #FFA437;
 }
-.onboardingContainer .screen-0 {
+.onboardingContainer [pos=corner] {
   min-width: 700px;
 }
-.onboardingContainer .screen-0 .section-left {
+.onboardingContainer [pos=corner] .section-left {
   display: flex;
   flex-direction: column;
   margin-inline-start: 6vw;
 }
-.onboardingContainer .screen-0 .section-left .message-text {
+.onboardingContainer [pos=corner] .section-left .message-text {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
-.onboardingContainer .screen-0 .section-left .message-text .spacer-top {
+.onboardingContainer [pos=corner] .section-left .message-text .spacer-top {
   flex: 2;
 }
-.onboardingContainer .screen-0 .section-left .message-text .spacer-bottom {
+.onboardingContainer [pos=corner] .section-left .message-text .spacer-bottom {
   flex: 1;
 }
-.onboardingContainer .screen-0 .section-left .message-text h1 {
+.onboardingContainer [pos=corner] .section-left .message-text h1 {
   color: #FFF;
   font-weight: bold;
   font-size: clamp(48px, 7vw, 104px);
@@ -695,7 +695,7 @@ body[lwt-newtab-brighttext] {
   text-align: initial;
   white-space: pre-wrap;
 }
-.onboardingContainer .screen-0 .section-left .attrib-text {
+.onboardingContainer [pos=corner] .section-left .attrib-text {
   height: 18px;
   margin-bottom: 25px;
   text-align: initial;
@@ -705,12 +705,12 @@ body[lwt-newtab-brighttext] {
   text-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
   transition-delay: 0.5s;
 }
-.onboardingContainer .screen-0 .section-main {
+.onboardingContainer [pos=corner] .section-main {
   flex-shrink: 0;
   width: 490px;
   z-index: 1;
 }
-.onboardingContainer .screen-0 .section-main .main-content {
+.onboardingContainer [pos=corner] .section-main .main-content {
   background: transparent;
   display: block;
   position: absolute;
@@ -719,21 +719,21 @@ body[lwt-newtab-brighttext] {
   inset-inline-end: 80px;
   transition: var(--transition);
 }
-.onboardingContainer .screen-0 .section-main .brand-logo {
+.onboardingContainer [pos=corner] .section-main .brand-logo {
   margin-top: 0;
   transition-delay: 1.2s;
 }
-.onboardingContainer .screen-0 .section-main .primary,
-.onboardingContainer .screen-0 .section-main .secondary-cta:not(.top) {
+.onboardingContainer [pos=corner] .section-main .primary,
+.onboardingContainer [pos=corner] .section-main .secondary-cta:not(.top) {
   transition-delay: 1.7s;
 }
-.onboardingContainer .screen-0 .section-main .secondary-cta.top {
+.onboardingContainer [pos=corner] .section-main .secondary-cta.top {
   transition-delay: 0.5s;
 }
-.onboardingContainer .screen-0 .section-main .welcome-text {
+.onboardingContainer [pos=corner] .section-main .welcome-text {
   transition-delay: 1.2s;
 }
-.onboardingContainer .screen-0 .solid-L {
+.onboardingContainer [pos=corner] .solid-L {
   width: 1300px;
   height: 1050px;
   bottom: -390px;
@@ -741,14 +741,14 @@ body[lwt-newtab-brighttext] {
   transform: rotate(-80deg);
   transition-delay: 0.5s;
 }
-.onboardingContainer .screen-0 .orange-L {
+.onboardingContainer [pos=corner] .orange-L {
   width: 466px;
   height: 356px;
   bottom: 270px;
   inset-inline-end: -245px;
   transition-delay: 0.8s;
 }
-.onboardingContainer .screen-0 .purple-C {
+.onboardingContainer [pos=corner] .purple-C {
   width: 467px;
   height: 382px;
   bottom: -100px;
@@ -843,12 +843,12 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .dialog-initial .steps {
   transition-delay: 1s;
 }
-.onboardingContainer .screen:not(.dialog-initial):not(.screen-0) .colorway-variations,
-.onboardingContainer .screen:not(.dialog-initial):not(.screen-0) .tiles-theme-section {
+.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .colorway-variations,
+.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .tiles-theme-section {
   transition-delay: 0.2s;
 }
-.onboardingContainer .screen:not(.dialog-initial):not(.screen-0) .primary,
-.onboardingContainer .screen:not(.dialog-initial):not(.screen-0) .secondary-cta {
+.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .primary,
+.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .secondary-cta {
   transition-delay: 0.4s;
 }
 .onboardingContainer .screen-2 {
@@ -943,16 +943,16 @@ body[lwt-newtab-brighttext] {
   rotate: var(--rotate);
   scale: var(--scale);
 }
-.onboardingContainer.transition-in .screen-0 .brand-logo,
-.onboardingContainer.transition-in .screen-0 .welcome-text,
-.onboardingContainer.transition-in .screen-0 .primary,
-.onboardingContainer.transition-in .screen-0 .secondary-cta:not(.top),
-.onboardingContainer.transition-in .screen-0 .message-text {
+.onboardingContainer.transition-in [pos=corner] .brand-logo,
+.onboardingContainer.transition-in [pos=corner] .welcome-text,
+.onboardingContainer.transition-in [pos=corner] .primary,
+.onboardingContainer.transition-in [pos=corner] .secondary-cta:not(.top),
+.onboardingContainer.transition-in [pos=corner] .message-text {
   opacity: 0;
   translate: 0 var(--translate);
 }
-.onboardingContainer.transition-in .screen-0 .attrib-text,
-.onboardingContainer.transition-in .screen-0 .secondary-cta.top {
+.onboardingContainer.transition-in [pos=corner] .attrib-text,
+.onboardingContainer.transition-in [pos=corner] .secondary-cta.top {
   opacity: 0;
 }
 .onboardingContainer.transition-in .dialog-initial .main-content {
@@ -963,14 +963,14 @@ body[lwt-newtab-brighttext] {
   opacity: 0;
   translate: 0 calc(-1 * var(--translate));
 }
-.onboardingContainer.transition-in .screen:not(.dialog-initial):not(.screen-0) .steps {
+.onboardingContainer.transition-in .screen:not(.dialog-initial):not([pos=corner]) .steps {
   opacity: 0.2;
 }
-.onboardingContainer.transition-in .screen:not(.screen-0) .welcome-text,
-.onboardingContainer.transition-in .screen:not(.screen-0) .colorway-variations,
-.onboardingContainer.transition-in .screen:not(.screen-0) .tiles-theme-section,
-.onboardingContainer.transition-in .screen:not(.screen-0) .primary,
-.onboardingContainer.transition-in .screen:not(.screen-0) .secondary-cta:not(.top) {
+.onboardingContainer.transition-in .screen:not([pos=corner]) .welcome-text,
+.onboardingContainer.transition-in .screen:not([pos=corner]) .colorway-variations,
+.onboardingContainer.transition-in .screen:not([pos=corner]) .tiles-theme-section,
+.onboardingContainer.transition-in .screen:not([pos=corner]) .primary,
+.onboardingContainer.transition-in .screen:not([pos=corner]) .secondary-cta:not(.top) {
   opacity: 0;
   translate: 0 calc(-1 * var(--translate));
 }
@@ -980,44 +980,44 @@ body[lwt-newtab-brighttext] {
   scale: var(--scale);
   transition-delay: 0.2s;
 }
-.onboardingContainer.transition-out .screen-0 .message-text {
+.onboardingContainer.transition-out [pos=corner] .message-text {
   opacity: 0;
   translate: 0 var(--translate);
 }
-.onboardingContainer.transition-out .screen-0 .main-content {
+.onboardingContainer.transition-out [pos=corner] .main-content {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.2s;
 }
-.onboardingContainer.transition-out .screen-0 .solid-L {
+.onboardingContainer.transition-out [pos=corner] .solid-L {
   transition-delay: 0.4s;
 }
-.onboardingContainer.transition-out .screen-0 .attrib-text,
-.onboardingContainer.transition-out .screen-0 .secondary-cta.top {
+.onboardingContainer.transition-out [pos=corner] .attrib-text,
+.onboardingContainer.transition-out [pos=corner] .secondary-cta.top {
   opacity: 0;
   transition-delay: 0.2s;
 }
-.onboardingContainer.transition-out .screen:not(.dialog-last):not(.screen-0) .main-content {
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .main-content {
   overflow: hidden;
 }
-.onboardingContainer.transition-out .screen:not(.dialog-last):not(.screen-0) .welcome-text {
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .welcome-text {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.1s;
 }
-.onboardingContainer.transition-out .screen:not(.dialog-last):not(.screen-0) .colorway-variations,
-.onboardingContainer.transition-out .screen:not(.dialog-last):not(.screen-0) .tiles-theme-section {
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .colorway-variations,
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .tiles-theme-section {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.2s;
 }
-.onboardingContainer.transition-out .screen:not(.dialog-last):not(.screen-0) .primary,
-.onboardingContainer.transition-out .screen:not(.dialog-last):not(.screen-0) .secondary-cta:not(.top) {
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .primary,
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .secondary-cta:not(.top) {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.3s;
 }
-.onboardingContainer.transition-out .screen:not(.dialog-last):not(.screen-0) .steps {
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .steps {
   opacity: 0.2;
   transition-delay: 0.5s;
 }
