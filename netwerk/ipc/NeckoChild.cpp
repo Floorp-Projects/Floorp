@@ -71,7 +71,8 @@ void NeckoChild::InitNeckoChild() {
     if (NS_WARN_IF(cpc->IsShuttingDown())) {
       return;
     }
-    gNeckoChild = cpc->SendPNeckoConstructor();
+    RefPtr<NeckoChild> child = new NeckoChild();
+    gNeckoChild = cpc->SendPNeckoConstructor(child);
     NS_ASSERTION(gNeckoChild, "PNecko Protocol init failed!");
   }
 }
