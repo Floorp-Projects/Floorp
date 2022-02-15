@@ -3798,12 +3798,18 @@ class MacroAssembler : public MacroAssemblerSpecific {
   CodeOffset wasmCallImport(const wasm::CallSiteDesc& desc,
                             const wasm::CalleeDesc& callee);
 
-  // WasmTableCallIndexReg must contain the index of the indirect call.
-  // This is for wasm calls only.
-  CodeOffset wasmCallIndirect(const wasm::CallSiteDesc& desc,
-                              const wasm::CalleeDesc& callee,
-                              bool needsBoundsCheck,
-                              mozilla::Maybe<uint32_t> tableSize);
+  // WasmTableCallIndexReg must contain the index of the indirect call.  This is
+  // for wasm calls only.
+  //
+  // Indirect calls use a dual-path mechanism where a run-time test determines
+  // whether a context switch is needed (slow path) or not (fast path).  This
+  // gives rise to two call instructions, both of which need safe points.  As
+  // per normal, the call offsets are the code offsets at the end of the call
+  // instructions (the return points).
+  void wasmCallIndirect(const wasm::CallSiteDesc& desc,
+                        const wasm::CalleeDesc& callee, bool needsBoundsCheck,
+                        mozilla::Maybe<uint32_t> tableSize,
+                        CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
 
   // WasmTableCallIndexReg must contain the index of the indirect call.
   // This is for asm.js calls only.
@@ -3818,13 +3824,21 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                            wasm::SymbolicAddress builtin,
                                            wasm::FailureMode failureMode);
 
+  // Compute ptr += (indexTemp32 << shift) where shift can be any value < 32.
+  // May destroy indexTemp32.  The value of indexTemp32 must be positive, and it
+  // is implementation-defined what happens if bits are lost or the value
+  // becomes negative through the shift.  On 64-bit systems, the high 32 bits of
+  // indexTemp32 must be zero, not garbage.
+  void shiftIndex32AndAdd(Register indexTemp32, int shift,
+                          Register pointer) PER_SHARED_ARCH;
+
   // The System ABI frequently states that the high bits of a 64-bit register
   // that holds a 32-bit return value are unpredictable, and C++ compilers will
   // indeed generate code that leaves garbage in the upper bits.
   //
   // Adjust the contents of the 64-bit register `r` to conform to our internal
   // convention, which requires predictable high bits.  In practice, this means
-  // that the 32-bit valuewill be zero-extended or sign-extended to 64 bits as
+  // that the 32-bit value will be zero-extended or sign-extended to 64 bits as
   // appropriate for the platform.
   void widenInt32(Register r) DEFINED_ON(arm64, x64, mips64);
 

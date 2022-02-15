@@ -479,6 +479,7 @@ bool ModuleGenerator::linkCallSites() {
     switch (callSite.kind()) {
       case CallSiteDesc::Import:
       case CallSiteDesc::Indirect:
+      case CallSiteDesc::IndirectFast:
       case CallSiteDesc::Symbolic:
         break;
       case CallSiteDesc::Func: {
