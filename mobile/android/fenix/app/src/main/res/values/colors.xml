@@ -58,7 +58,7 @@
     <!-- Disabled text -->
     <color name="fx_mobile_text_color_disabled">@color/photonDarkGrey90A40</color>
     <!-- Warning text -->
-    <color name="fx_mobile_text_color_warning" tools:ignore="UnusedResources">@color/photonRed80</color>
+    <color name="fx_mobile_text_color_warning" tools:ignore="UnusedResources">@color/photonRed70</color>
     <!-- Small heading, Text link -->
     <color name="fx_mobile_text_color_accent">@color/photonViolet70</color>
     <!-- Small heading, Text link -->
@@ -93,7 +93,7 @@
     <color name="fx_mobile_icon_color_information">@color/photonBlue30</color>
     <!-- Icon button -->
     <color name="fx_mobile_icon_color_button" tools:ignore="UnusedResources">@color/photonInk20</color>
-    <color name="fx_mobile_icon_color_warning" tools:ignore="UnusedResources">@color/photonRed80</color>
+    <color name="fx_mobile_icon_color_warning" tools:ignore="UnusedResources">@color/photonRed70</color>
     <color name="fx_mobile_icon_color_accent_violet">@color/photonViolet60</color>
     <color name="fx_mobile_icon_color_accent_blue">@color/photonBlue60</color>
     <color name="fx_mobile_icon_color_accent_pink">@color/photonPink60</color>
@@ -116,7 +116,7 @@
     <!-- Form parts -->
     <color name="fx_mobile_border_color_disabled" tools:ignore="UnusedResources">@color/photonDarkGrey90A40</color>
     <!-- Form parts -->
-    <color name="fx_mobile_border_color_warning" tools:ignore="UnusedResources">@color/photonRed80</color>
+    <color name="fx_mobile_border_color_warning" tools:ignore="UnusedResources">@color/photonRed70</color>
 
     <!-- Private theme color variables -->
 

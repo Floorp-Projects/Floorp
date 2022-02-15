@@ -125,7 +125,7 @@ private val lightColorPalette = FirefoxColors(
     textPrimary = PhotonColors.DarkGrey90,
     textSecondary = PhotonColors.DarkGrey05,
     textDisabled = PhotonColors.DarkGrey90A40,
-    textWarning = PhotonColors.Red80,
+    textWarning = PhotonColors.Red70,
     textAccent = PhotonColors.Violet70,
     textAccentDisabled = PhotonColors.Violet70A80,
     textOnColorPrimary = PhotonColors.LightGrey05,
@@ -142,7 +142,7 @@ private val lightColorPalette = FirefoxColors(
     iconOnColor = PhotonColors.LightGrey05,
     iconNotice = PhotonColors.Blue30,
     iconButton = PhotonColors.Ink20,
-    iconWarning = PhotonColors.Red80,
+    iconWarning = PhotonColors.Red70,
     iconAccentViolet = PhotonColors.Violet60,
     iconAccentBlue = PhotonColors.Blue60,
     iconAccentPink = PhotonColors.Pink60,
@@ -155,7 +155,7 @@ private val lightColorPalette = FirefoxColors(
     borderFormDefault = PhotonColors.DarkGrey90,
     borderAccent = PhotonColors.Ink20,
     borderDisabled = PhotonColors.DarkGrey90A40,
-    borderWarning = PhotonColors.Red80
+    borderWarning = PhotonColors.Red70
 )
 
 /**
