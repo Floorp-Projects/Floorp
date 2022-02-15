@@ -789,8 +789,8 @@ class ContextMenuChild extends JSWindowActorChild {
     const context = this.context;
 
     context.timeStamp = aEvent.timeStamp;
-    context.screenXDevPx = aEvent.screenX * this.contentWindow.devicePixelRatio;
-    context.screenYDevPx = aEvent.screenY * this.contentWindow.devicePixelRatio;
+    context.screenX = aEvent.screenX;
+    context.screenY = aEvent.screenY;
     context.mozInputSource = aEvent.mozInputSource;
 
     let node = aEvent.composedTarget;
