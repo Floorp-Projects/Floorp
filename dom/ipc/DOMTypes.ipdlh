@@ -27,6 +27,7 @@ using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using struct mozilla::dom::LoadingSessionHistoryInfo
   from "mozilla/dom/SessionHistoryEntry.h";
 
+using hal::ScreenOrientation from "mozilla/HalIPCUtils.h";
 using LayoutDeviceIntRect from "Units.h";
 using DesktopIntRect from "Units.h";
 using DesktopToLayoutDeviceScale from "Units.h";
@@ -133,6 +134,8 @@ struct ScreenDetails {
   DesktopToLayoutDeviceScale contentsScaleFactor;
   CSSToLayoutDeviceScale defaultCSSScaleFactor;
   float dpi;
+  ScreenOrientation orientation;
+  uint16_t orientationAngle;
 };
 
 struct DimensionInfo

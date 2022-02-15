@@ -77,28 +77,6 @@ void GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo) {
   AndroidBridge::Bridge()->GetCurrentNetworkInformation(aNetworkInfo);
 }
 
-void EnableScreenConfigurationNotifications() {
-  java::GeckoAppShell::EnableScreenOrientationNotifications();
-}
-
-void DisableScreenConfigurationNotifications() {
-  java::GeckoAppShell::DisableScreenOrientationNotifications();
-}
-
-void GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) {
-  AndroidBridge* bridge = AndroidBridge::Bridge();
-  if (!bridge) {
-    return;
-  }
-
-  RefPtr<widget::Screen> screen =
-      widget::ScreenManager::GetSingleton().GetPrimaryScreen();
-  *aScreenConfiguration = screen->ToScreenConfiguration();
-  aScreenConfiguration->orientation() =
-      static_cast<hal::ScreenOrientation>(bridge->GetScreenOrientation());
-  aScreenConfiguration->angle() = bridge->GetScreenAngle();
-}
-
 static bool IsSupportedScreenOrientation(hal::ScreenOrientation aOrientation) {
   // The Android backend only supports these orientations.
   static constexpr ScreenOrientation kSupportedOrientations[] = {

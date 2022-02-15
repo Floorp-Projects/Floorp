@@ -45,14 +45,6 @@ struct WakeLockInformation {
   uint64_t[] lockingProcesses;
 };
 
-struct ScreenConfiguration {
-  nsIntRect rect;
-  ScreenOrientation orientation;
-  uint16_t angle;
-  uint32_t colorDepth;
-  uint32_t pixelDepth;
-};
-
 } // namespace hal
 
 namespace hal_sandbox {
@@ -65,7 +57,6 @@ child:
     async NotifyBatteryChange(BatteryInformation aBatteryInfo);
     async NotifyNetworkChange(NetworkInformation aNetworkInfo);
     async NotifyWakeLockChange(WakeLockInformation aWakeLockInfo);
-    async NotifyScreenConfigurationChange(ScreenConfiguration aScreenOrientation);
 
 parent:
     async Vibrate(uint32_t[] pattern, uint64_t[] id, PBrowser browser);
@@ -90,8 +81,6 @@ parent:
     sync GetWakeLockInfo(nsString aTopic)
       returns (WakeLockInformation aWakeLockInfo);
 
-    async EnableScreenConfigurationNotifications();
-    async DisableScreenConfigurationNotifications();
     async LockScreenOrientation(ScreenOrientation aOrientation)
       returns (bool allowed);
     async UnlockScreenOrientation();
