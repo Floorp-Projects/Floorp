@@ -408,8 +408,6 @@ class PeerConnectionImpl final
   // called when DTLS connects; we only need this once
   nsresult OnAlpnNegotiated(bool aPrivacyRequested);
 
-  bool IsActive() const;
-
   // initialize telemetry for when calls start
   void StartCallTelem();
 
@@ -466,7 +464,6 @@ class PeerConnectionImpl final
   NS_IMETHODIMP EnsureDataConnection(uint16_t aLocalPort, uint16_t aNumstreams,
                                      uint32_t aMaxMessageSize, bool aMMSSet);
 
-  nsresult CloseInt();
   nsresult CheckApiState(bool assert_ice_ready) const;
   void CheckThread() const { MOZ_ASSERT(CheckThreadInt(), "Wrong thread"); }
   bool CheckThreadInt() const {
@@ -480,9 +477,6 @@ class PeerConnectionImpl final
   // for simulcast mochitests.
   RefPtr<MediaPipeline> GetMediaPipelineForTrack(
       dom::MediaStreamTrack& aRecvTrack);
-
-  // Shut down media - called on main thread only
-  void ShutdownMedia();
 
   void CandidateReady(const std::string& candidate,
                       const std::string& transportId, const std::string& ufrag);
@@ -747,10 +741,6 @@ class PeerConnectionImpl final
   // Used to ensure the target for default local address lookup is only set
   // once.
   bool mTargetForDefaultLocalAddressLookupIsSet = false;
-
-  // Set to true when the object is going to be released.
-  // TODO: Do we actually need this?
-  bool mDestroyed = false;
 
   // Keep track of local hostnames to register. Registration is deferred
   // until StartIceChecks has run. Accessed on main thread only.

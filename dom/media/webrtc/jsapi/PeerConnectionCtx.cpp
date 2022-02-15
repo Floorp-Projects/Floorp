@@ -421,7 +421,7 @@ void PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer,
   MOZ_ASSERT(PeerConnectionCtx::isActive());
 
   for (auto& idAndPc : GetInstance()->mPeerConnections) {
-    if (idAndPc.second->IsActive()) {
+    if (!idAndPc.second->IsClosed()) {
       idAndPc.second->GetStats(nullptr, true)
           ->Then(
               GetMainThreadSerialEventTarget(), __func__,

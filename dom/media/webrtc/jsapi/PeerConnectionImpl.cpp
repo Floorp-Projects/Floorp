@@ -351,6 +351,12 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
 }
 
 PeerConnectionImpl::~PeerConnectionImpl() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MOZ_ASSERT(!mTransportHandler,
+             "PeerConnection should either be closed, or not initted in the "
+             "first place.");
+
   if (mTimeCard) {
     STAMP_TIMECARD(mTimeCard, "Destructor Invoked");
     STAMP_TIMECARD(mTimeCard, mHandle.c_str());
@@ -359,19 +365,6 @@ PeerConnectionImpl::~PeerConnectionImpl() {
     mTimeCard = nullptr;
   }
 
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mWindow && mActiveOnWindow) {
-    mWindow->RemovePeerConnection();
-    // No code is supposed to observe the assignment below, but
-    // hopefully it makes looking at this object in a debugger
-    // make more sense.
-    mActiveOnWindow = false;
-  }
-
-  if (mPrivateWindow && mTransportHandler) {
-    mTransportHandler->ExitPrivateMode();
-  }
   if (PeerConnectionCtx::isActive()) {
     PeerConnectionCtx::GetInstance()->RemovePeerConnection(mHandle);
   } else {
@@ -380,15 +373,6 @@ PeerConnectionImpl::~PeerConnectionImpl() {
 
   CSFLogInfo(LOGTAG, "%s: PeerConnectionImpl destructor invoked for %s",
              __FUNCTION__, mHandle.c_str());
-
-  // Since this and Initialize() occur on MainThread, they can't both be
-  // running at once
-
-  // Right now, we delete PeerConnectionCtx at XPCOM shutdown only, but we
-  // probably want to shut it down more aggressively to save memory.  We
-  // could shut down here when there are no uses.  It might be more optimal
-  // to release off a timer (and XPCOM Shutdown) to avoid churn
-  ShutdownMedia();
 }
 
 nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
@@ -1940,10 +1924,6 @@ nsresult PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const {
     CSFLogError(LOGTAG, "%s: called API while closed", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
-  if (mDestroyed) {
-    CSFLogError(LOGTAG, "%s: called API after shutdown", __FUNCTION__);
-    return NS_ERROR_FAILURE;
-  }
   return NS_OK;
 }
 
@@ -1956,12 +1936,110 @@ PeerConnectionImpl::Close() {
     return NS_OK;
   }
 
-  CloseInt();
+  mSignalingState = RTCSignalingState::Closed;
+
+  // We do this at the end of the call because we want to make sure we've waited
+  // for all trickle ICE candidates to come in; this can happen well after we've
+  // transitioned to connected. As a bonus, this allows us to detect race
+  // conditions where a stats dispatch happens right as the PC closes.
+  if (!mPrivateWindow) {
+    RecordLongtermICEStatistics();
+  }
+  RecordEndOfCallTelemetry();
+
+  CSFLogInfo(LOGTAG,
+             "%s: Closing PeerConnectionImpl %s; "
+             "ending call",
+             __FUNCTION__, mHandle.c_str());
+  if (mJsepSession) {
+    mJsepSession->Close();
+  }
+  if (mDataConnection) {
+    CSFLogInfo(LOGTAG, "%s: Destroying DataChannelConnection %p for %s",
+               __FUNCTION__, (void*)mDataConnection.get(), mHandle.c_str());
+    mDataConnection->Destroy();
+    mDataConnection =
+        nullptr;  // it may not go away until the runnables are dead
+  }
+  // before we destroy references to local tracks, detach from them
+  for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
+    RefPtr<dom::MediaStreamTrack> track = transceiver->GetSendTrack();
+    if (track) {
+      track->RemovePrincipalChangeObserver(this);
+    }
+  }
+
+  if (mStunAddrsRequest) {
+    for (const auto& hostname : mRegisteredMDNSHostnames) {
+      mStunAddrsRequest->SendUnregisterMDNSHostname(
+          nsCString(hostname.c_str()));
+    }
+    mRegisteredMDNSHostnames.clear();
+    mStunAddrsRequest->Cancel();
+    mStunAddrsRequest = nullptr;
+  }
+
+  for (auto& transceiver : mTransceivers) {
+    // transceivers are garbage-collected, so we need to poke them to perform
+    // cleanup right now so the appropriate events fire.
+    transceiver->Shutdown_m();
+  }
+
+  mTransceivers.clear();
+
+  mQueuedIceCtxOperations.clear();
+
   // Uncount this connection as active on the inner window upon close.
   if (mWindow && mActiveOnWindow) {
     mWindow->RemovePeerConnection();
     mActiveOnWindow = false;
   }
+
+  if (!mTransportHandler) {
+    // We were never initialized, apparently.
+    return NS_OK;
+  }
+
+  // Clear any resources held by libwebrtc through our Call instance.
+  RefPtr<GenericPromise> promise;
+  if (mCall) {
+    // Make sure the compiler does not get confused and try to acquire a
+    // reference to this thread _after_ we null out mCall.
+    auto callThread = mCall->mCallThread;
+    promise = InvokeAsync(callThread, __func__, [call = std::move(mCall)]() {
+      call->Destroy();
+      return GenericPromise::CreateAndResolve(
+          true, "PCImpl->WebRtcCallWrapper::Destroy");
+    });
+  } else {
+    promise = GenericPromise::CreateAndResolve(true, __func__);
+  }
+
+  // We do this after the call is destroyed, to allow things like RTCP BYE to
+  // make it out on the wire before we shut the MediaTransportHandler down.
+  // Before we can tear down the MediaTransportHandler, we also need to unhook
+  // from sigslot, which is accomplished by destroying mSignalHandler.
+  MOZ_RELEASE_ASSERT(mSTSThread);
+  promise
+      ->Then(
+          mSTSThread, __func__,
+          [signalHandler = std::move(mSignalHandler)]() mutable {
+            CSFLogDebug(
+                LOGTAG,
+                "Destroying PeerConnectionImpl::SignalHandler on STS thread");
+            return GenericPromise::CreateAndResolve(
+                true, "PeerConnectionImpl::~SignalHandler");
+          })
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [transportHandler = std::move(mTransportHandler),
+           privateWindow = mPrivateWindow]() mutable {
+            CSFLogDebug(LOGTAG, "PCImpl->mTransportHandler::RemoveTransports");
+            transportHandler->RemoveTransportsExcept(std::set<std::string>());
+            if (privateWindow) {
+              transportHandler->ExitPrivateMode();
+            }
+          });
 
   return NS_OK;
 }
@@ -2010,8 +2088,7 @@ nsresult PeerConnectionImpl::SetConfiguration(
 bool PeerConnectionImpl::PluginCrash(uint32_t aPluginID,
                                      const nsAString& aPluginName) {
   // fire an event to the DOM window if this is "ours"
-  bool result = !mDestroyed ? AnyCodecHasPluginID(aPluginID) : false;
-  if (!result) {
+  if (!AnyCodecHasPluginID(aPluginID)) {
     return false;
   }
 
@@ -2101,117 +2178,6 @@ void PeerConnectionImpl::RecordEndOfCallTelemetry() {
   mCallTelemEnded = true;
 }
 
-nsresult PeerConnectionImpl::CloseInt() {
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-
-  mSignalingState = RTCSignalingState::Closed;
-
-  // We do this at the end of the call because we want to make sure we've waited
-  // for all trickle ICE candidates to come in; this can happen well after we've
-  // transitioned to connected. As a bonus, this allows us to detect race
-  // conditions where a stats dispatch happens right as the PC closes.
-  if (!mPrivateWindow) {
-    RecordLongtermICEStatistics();
-  }
-  RecordEndOfCallTelemetry();
-  CSFLogInfo(LOGTAG,
-             "%s: Closing PeerConnectionImpl %s; "
-             "ending call",
-             __FUNCTION__, mHandle.c_str());
-  if (mJsepSession) {
-    mJsepSession->Close();
-  }
-  if (mDataConnection) {
-    CSFLogInfo(LOGTAG, "%s: Destroying DataChannelConnection %p for %s",
-               __FUNCTION__, (void*)mDataConnection.get(), mHandle.c_str());
-    mDataConnection->Destroy();
-    mDataConnection =
-        nullptr;  // it may not go away until the runnables are dead
-  }
-  ShutdownMedia();
-
-  // DataConnection will need to stay alive until all threads/runnables exit
-
-  return NS_OK;
-}
-
-void PeerConnectionImpl::ShutdownMedia() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mDestroyed) return;
-  mDestroyed = true;
-
-  // before we destroy references to local tracks, detach from them
-  for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
-    RefPtr<dom::MediaStreamTrack> track = transceiver->GetSendTrack();
-    if (track) {
-      track->RemovePrincipalChangeObserver(this);
-    }
-  }
-
-  if (mStunAddrsRequest) {
-    for (const auto& hostname : mRegisteredMDNSHostnames) {
-      mStunAddrsRequest->SendUnregisterMDNSHostname(
-          nsCString(hostname.c_str()));
-    }
-    mRegisteredMDNSHostnames.clear();
-    mStunAddrsRequest->Cancel();
-    mStunAddrsRequest = nullptr;
-  }
-
-  for (auto& transceiver : mTransceivers) {
-    // transceivers are garbage-collected, so we need to poke them to perform
-    // cleanup right now so the appropriate events fire.
-    transceiver->Shutdown_m();
-  }
-
-  mTransceivers.clear();
-
-  mQueuedIceCtxOperations.clear();
-
-  if (!mTransportHandler) {
-    // We were never initialized, apparently.
-    return;
-  }
-
-  // Clear any resources held by libwebrtc through our Call instance.
-  RefPtr<GenericPromise> promise;
-  if (mCall) {
-    // Make sure the compiler does not get confused and try to acquire a
-    // reference to this thread _after_ we null out mCall.
-    auto callThread = mCall->mCallThread;
-    promise = InvokeAsync(callThread, __func__, [call = std::move(mCall)]() {
-      call->Destroy();
-      return GenericPromise::CreateAndResolve(
-          true, "PCImpl->WebRtcCallWrapper::Destroy");
-    });
-  } else {
-    promise = GenericPromise::CreateAndResolve(true, __func__);
-  }
-
-  // We do this after the call is destroyed, to allow things like RTCP BYE to
-  // make it out on the wire before we shut the MediaTransportHandler down.
-  // Before we can tear down the MediaTransportHandler, we also need to unhook
-  // from sigslot, which is accomplished by destroying mSignalHandler.
-  MOZ_RELEASE_ASSERT(mSTSThread);
-  promise
-      ->Then(
-          mSTSThread, __func__,
-          [signalHandler = std::move(mSignalHandler)]() mutable {
-            CSFLogDebug(
-                LOGTAG,
-                "Destroying PeerConnectionImpl::SignalHandler on STS thread");
-            return GenericPromise::CreateAndResolve(
-                true, "PeerConnectionImpl::~SignalHandler");
-          })
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [transportHandler = std::move(mTransportHandler)]() mutable {
-            CSFLogDebug(LOGTAG, "PCImpl->mTransportHandler::RemoveTransports");
-            transportHandler->RemoveTransportsExcept(std::set<std::string>());
-          });
-}
-
 DOMMediaStream* PeerConnectionImpl::GetReceiveStream(
     const std::string& aId) const {
   nsString wanted = NS_ConvertASCIItoUTF16(aId.c_str());
@@ -2278,9 +2244,6 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
           mPCObserver->OnStateChange(PCObserverStateType::SignalingState, jrv);
         }
 
-        // TODO: Spec says that we should do this even if JS closes the PC
-        // during the signalingstatechange event. We'd need to refactor a
-        // little here to make this possible.
         if (remote) {
           dom::RTCRtpReceiver::StreamAssociationChanges changes;
           for (const auto& transceiver : mTransceivers) {
@@ -2426,8 +2389,6 @@ bool PeerConnectionImpl::IsClosed() const {
   return mSignalingState == RTCSignalingState::Closed;
 }
 
-bool PeerConnectionImpl::IsActive() const { return !mDestroyed; }
-
 PeerConnectionWrapper::PeerConnectionWrapper(const std::string& handle)
     : impl_(nullptr) {
   PeerConnectionImpl* impl =
@@ -2436,8 +2397,6 @@ PeerConnectionWrapper::PeerConnectionWrapper(const std::string& handle)
   if (!PeerConnectionCtx::isActive() || !impl) {
     return;
   }
-
-  if (!impl->IsActive()) return;
 
   impl_ = impl;
 }
