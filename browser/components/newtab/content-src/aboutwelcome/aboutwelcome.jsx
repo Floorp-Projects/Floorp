@@ -22,7 +22,6 @@ class AboutWelcome extends React.PureComponent {
     if (!this.props.skipFxA) {
       this.fetchFxAFlowUri();
     }
-
     // Record impression with performance data after allowing the page to load
     const recordImpression = domState => {
       const { domComplete, domInteractive } = performance
@@ -72,12 +71,11 @@ class AboutWelcome extends React.PureComponent {
         />
       );
     }
-
     return (
       <MultiStageAboutWelcome
+        message_id={props.messageId}
         screens={props.screens}
         metricsFlowUri={this.state.metricsFlowUri}
-        message_id={props.messageId}
         utm_term={props.UTMTerm}
         transitions={props.transitions}
         background_url={props.background_url}

@@ -26,16 +26,6 @@
 
 namespace jxl {
 
-void SetDefaultOrder(AcStrategy acs, coeff_order_t* JXL_RESTRICT order) {
-  PROFILER_FUNC;
-  const size_t size =
-      kDCTBlockSize * acs.covered_blocks_x() * acs.covered_blocks_y();
-  const coeff_order_t* natural_coeff_order = acs.NaturalCoeffOrder();
-  for (size_t k = 0; k < size; ++k) {
-    order[k] = natural_coeff_order[k];
-  }
-}
-
 uint32_t CoeffOrderContext(uint32_t val) {
   uint32_t token, nbits, bits;
   HybridUintConfig(0, 0, 0).Encode(val, &token, &nbits, &bits);
@@ -90,6 +80,7 @@ namespace {
 
 Status DecodeCoeffOrder(AcStrategy acs, coeff_order_t* order, BitReader* br,
                         ANSSymbolReader* reader,
+                        std::vector<coeff_order_t>& natural_order,
                         const std::vector<uint8_t>& context_map) {
   PROFILER_FUNC;
   const size_t llf = acs.covered_blocks_x() * acs.covered_blocks_y();
@@ -98,9 +89,8 @@ Status DecodeCoeffOrder(AcStrategy acs, coeff_order_t* order, BitReader* br,
   JXL_RETURN_IF_ERROR(
       ReadPermutation(llf, size, order, br, reader, context_map));
   if (order == nullptr) return true;
-  const coeff_order_t* natural_coeff_order = acs.NaturalCoeffOrder();
   for (size_t k = 0; k < size; ++k) {
-    order[k] = natural_coeff_order[order[k]];
+    order[k] = natural_order[order[k]];
   }
   return true;
 }
@@ -113,6 +103,7 @@ Status DecodeCoeffOrders(uint16_t used_orders, uint32_t used_acs,
   std::vector<uint8_t> context_map;
   ANSCode code;
   std::unique_ptr<ANSSymbolReader> reader;
+  std::vector<coeff_order_t> natural_order;
   // Bitstream does not have histograms if no coefficient order is used.
   if (used_orders != 0) {
     JXL_RETURN_IF_ERROR(
@@ -130,18 +121,28 @@ Status DecodeCoeffOrders(uint16_t used_orders, uint32_t used_acs,
     computed |= 1 << ord;
     AcStrategy acs = AcStrategy::FromRawStrategy(o);
     bool used = (acs_mask & (1 << ord)) != 0;
+
+    const size_t llf = acs.covered_blocks_x() * acs.covered_blocks_y();
+    const size_t size = kDCTBlockSize * llf;
+
+    if (used || (used_orders & (1 << ord))) {
+      if (natural_order.size() < size) natural_order.resize(size);
+      acs.ComputeNaturalCoeffOrder(natural_order.data());
+    }
+
     if ((used_orders & (1 << ord)) == 0) {
       // No need to set the default order if no ACS uses this order.
       if (used) {
         for (size_t c = 0; c < 3; c++) {
-          SetDefaultOrder(acs, &order[CoeffOrderOffset(ord, c)]);
+          memcpy(&order[CoeffOrderOffset(ord, c)], natural_order.data(),
+                 size * sizeof(*order));
         }
       }
     } else {
       for (size_t c = 0; c < 3; c++) {
         coeff_order_t* dest = used ? &order[CoeffOrderOffset(ord, c)] : nullptr;
-        JXL_RETURN_IF_ERROR(
-            DecodeCoeffOrder(acs, dest, br, reader.get(), context_map));
+        JXL_RETURN_IF_ERROR(DecodeCoeffOrder(acs, dest, br, reader.get(),
+                                             natural_order, context_map));
       }
     }
   }

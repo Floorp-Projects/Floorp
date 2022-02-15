@@ -293,6 +293,18 @@ pocketNewtab:
         browser.newtabpage.activity-stream.discoverystream.newSponsoredLabel.enabled
       description: >-
         Updates the sponsored label position to below the image for Pocket cards on newtab.
+    recsPersonalized:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.recs.personalized
+      description: >-
+        Enables Pocket stories personalization.
+    spocsPersonalized:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.spocs.personalized
+      description: >-
+        Enables Pocket sponsored content personalization.
 saveToPocket:
   description: The save to Pocket feature
   hasExposure: false

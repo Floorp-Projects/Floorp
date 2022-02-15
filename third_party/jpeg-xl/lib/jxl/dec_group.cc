@@ -259,6 +259,8 @@ Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
     r[i] =
         Rect(block_rect.x0() >> hshift[i], block_rect.y0() >> vshift[i],
              block_rect.xsize() >> hshift[i], block_rect.ysize() >> vshift[i]);
+    JXL_ASSERT(r[i].IsInside({0, 0, dec_state->shared->dc->Plane(i).xsize(),
+                              dec_state->shared->dc->Plane(i).ysize()}));
   }
 
   for (size_t by = 0; by < ysize_blocks; ++by) {

@@ -16,6 +16,7 @@ const TEST_PROTON_CONTENT = [
           navigate: true,
         },
       },
+      has_noodles: true,
     },
   },
   {
@@ -35,6 +36,7 @@ const TEST_PROTON_CONTENT = [
           navigate: true,
         },
       },
+      has_noodles: true,
     },
   },
 ];

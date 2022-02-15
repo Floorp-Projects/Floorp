@@ -217,9 +217,12 @@ HWY_NOINLINE void TestFastXYB() {
         Image3F xyb(kChunk * kChunk, kChunk);
         std::vector<uint8_t> roundtrip(kChunk * kChunk * kChunk * 3);
         ToXYB(ib, nullptr, &xyb, GetJxlCms());
-        jxl::HWY_NAMESPACE::FastXYBTosRGB8(
-            xyb, Rect(xyb), Rect(xyb), nullptr, Rect(), /*is_rgba=*/false,
-            roundtrip.data(), xyb.xsize(), xyb.xsize() * 3);
+        for (int y = 0; y < kChunk; y++) {
+          const float* xyba[4] = {xyb.PlaneRow(0, y), xyb.PlaneRow(1, y),
+                                  xyb.PlaneRow(2, y), nullptr};
+          jxl::HWY_NAMESPACE::FastXYBTosRGB8(
+              xyba, roundtrip.data() + 3 * xyb.xsize() * y, false, xyb.xsize());
+        }
         for (int ir = 0; ir < kChunk; ir++) {
           for (int ig = 0; ig < kChunk; ig++) {
             for (int ib = 0; ib < kChunk; ib++) {

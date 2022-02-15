@@ -17,5 +17,5 @@ origin:
   url: "https://www.theora.org/"
   license: "BSD-3-Clause-Clear"
 
-  # update.sh will update this value
-  release: "74b57560775804bf248e3e5b4e57964112ccd7af (2010-10-29 04:21:26 +0000)"
+  release: commit 7180717276af1ebc7da15c83162d6c5d6203aabf (2020-10-27T09:17:42.000-07:00).
+  revision: 7180717276af1ebc7da15c83162d6c5d6203aabf

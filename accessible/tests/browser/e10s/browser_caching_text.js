@@ -185,6 +185,29 @@ addAccessibleTask(
 );
 
 /**
+ * Test HyperText embedded object methods near a list bullet.
+ */
+addAccessibleTask(
+  `<ul><li id="li"><a id="link" href="https://example.com/">a</a></li></ul>`,
+  async function(browser, docAcc) {
+    const li = findAccessibleChildByID(docAcc, "li", [nsIAccessibleHyperText]);
+    let link = li.getLinkAt(0);
+    queryInterfaces(link, [nsIAccessible]);
+    is(getAccessibleDOMNodeID(link), "link", "LinkAt 0 is the link");
+    is(li.getLinkIndex(link), 0, "getLinkIndex for link is 0");
+    is(link.startIndex, 2, "link's startIndex is 2");
+    is(li.getLinkIndexAtOffset(2), 0, "getLinkIndexAtOffset(2) is 0");
+    is(li.getLinkIndexAtOffset(0), -1, "getLinkIndexAtOffset(0) is -1");
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+    remoteIframe: !isWinNoCache,
+  }
+);
+
+/**
  * Test text attribute methods.
  */
 addAccessibleTask(

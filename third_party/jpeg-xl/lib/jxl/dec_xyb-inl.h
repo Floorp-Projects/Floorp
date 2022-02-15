@@ -86,10 +86,9 @@ static inline HWY_MAYBE_UNUSED bool HasFastXYBTosRGB8() {
 #endif
 }
 
-static inline HWY_MAYBE_UNUSED void FastXYBTosRGB8(
-    const Image3F& input, const Rect& input_rect, const Rect& output_buf_rect,
-    const ImageF* alpha, const Rect& alpha_rect, bool is_rgba,
-    uint8_t* JXL_RESTRICT output_buf, size_t xsize, size_t output_stride) {
+static inline HWY_MAYBE_UNUSED void FastXYBTosRGB8(const float* input[4],
+                                                   uint8_t* output,
+                                                   bool is_rgba, size_t xsize) {
   // This function is very NEON-specific. As such, it uses intrinsics directly.
 #if HWY_TARGET == HWY_NEON
   // WARNING: doing fixed point arithmetic correctly is very complicated.
@@ -173,170 +172,161 @@ static inline HWY_MAYBE_UNUSED void FastXYBTosRGB8(
     // > 0.0031308f (note that v16 has 13 mantissa bits)
     return vbslq_s16(vcgeq_s16(v16, vdupq_n_s16(26)), v16_pow, v16_linear);
   };
-  for (size_t y = 0; y < output_buf_rect.ysize(); y++) {
-    const float* JXL_RESTRICT row_in_x = input_rect.ConstPlaneRow(input, 0, y);
-    const float* JXL_RESTRICT row_in_y = input_rect.ConstPlaneRow(input, 1, y);
-    const float* JXL_RESTRICT row_in_b = input_rect.ConstPlaneRow(input, 2, y);
-    const float* JXL_RESTRICT row_in_a =
-        alpha == nullptr ? nullptr : alpha_rect.ConstRow(*alpha, y);
-    size_t cnt = !is_rgba ? 3 : 4;
-    size_t base_ptr =
-        (y + output_buf_rect.y0()) * output_stride + output_buf_rect.x0() * cnt;
-    for (size_t x = 0; x < output_buf_rect.xsize(); x += 8) {
-      // Normal ranges for xyb for in-gamut sRGB colors:
-      // x: -0.015386 0.028100
-      // y: 0.000000 0.845308
-      // b: 0.000000 0.845308
 
-      // We actually want x * 8 to have some extra precision.
-      // TODO(veluca): consider different approaches here, like vld1q_f32_x2.
-      float32x4_t opsin_x_left = vld1q_f32(row_in_x + x);
-      int16x4_t opsin_x16_times8_left =
-          vqmovn_s32(vcvtq_n_s32_f32(opsin_x_left, 18));
-      float32x4_t opsin_x_right =
-          vld1q_f32(row_in_x + x + (x + 4 < output_buf_rect.xsize() ? 4 : 0));
-      int16x4_t opsin_x16_times8_right =
-          vqmovn_s32(vcvtq_n_s32_f32(opsin_x_right, 18));
-      int16x8_t opsin_x16_times8 =
-          vcombine_s16(opsin_x16_times8_left, opsin_x16_times8_right);
+  const float* JXL_RESTRICT row_in_x = input[0];
+  const float* JXL_RESTRICT row_in_y = input[1];
+  const float* JXL_RESTRICT row_in_b = input[2];
+  const float* JXL_RESTRICT row_in_a = input[3];
+  for (size_t x = 0; x < xsize; x += 8) {
+    // Normal ranges for xyb for in-gamut sRGB colors:
+    // x: -0.015386 0.028100
+    // y: 0.000000 0.845308
+    // b: 0.000000 0.845308
 
-      float32x4_t opsin_y_left = vld1q_f32(row_in_y + x);
-      int16x4_t opsin_y16_left = vqmovn_s32(vcvtq_n_s32_f32(opsin_y_left, 15));
-      float32x4_t opsin_y_right =
-          vld1q_f32(row_in_y + x + (x + 4 < output_buf_rect.xsize() ? 4 : 0));
-      int16x4_t opsin_y16_right =
-          vqmovn_s32(vcvtq_n_s32_f32(opsin_y_right, 15));
-      int16x8_t opsin_y16 = vcombine_s16(opsin_y16_left, opsin_y16_right);
+    // We actually want x * 8 to have some extra precision.
+    // TODO(veluca): consider different approaches here, like vld1q_f32_x2.
+    float32x4_t opsin_x_left = vld1q_f32(row_in_x + x);
+    int16x4_t opsin_x16_times8_left =
+        vqmovn_s32(vcvtq_n_s32_f32(opsin_x_left, 18));
+    float32x4_t opsin_x_right =
+        vld1q_f32(row_in_x + x + (x + 4 < xsize ? 4 : 0));
+    int16x4_t opsin_x16_times8_right =
+        vqmovn_s32(vcvtq_n_s32_f32(opsin_x_right, 18));
+    int16x8_t opsin_x16_times8 =
+        vcombine_s16(opsin_x16_times8_left, opsin_x16_times8_right);
 
-      float32x4_t opsin_b_left = vld1q_f32(row_in_b + x);
-      int16x4_t opsin_b16_left = vqmovn_s32(vcvtq_n_s32_f32(opsin_b_left, 15));
-      float32x4_t opsin_b_right =
-          vld1q_f32(row_in_b + x + (x + 4 < output_buf_rect.xsize() ? 4 : 0));
-      int16x4_t opsin_b16_right =
-          vqmovn_s32(vcvtq_n_s32_f32(opsin_b_right, 15));
-      int16x8_t opsin_b16 = vcombine_s16(opsin_b16_left, opsin_b16_right);
+    float32x4_t opsin_y_left = vld1q_f32(row_in_y + x);
+    int16x4_t opsin_y16_left = vqmovn_s32(vcvtq_n_s32_f32(opsin_y_left, 15));
+    float32x4_t opsin_y_right =
+        vld1q_f32(row_in_y + x + (x + 4 < xsize ? 4 : 0));
+    int16x4_t opsin_y16_right = vqmovn_s32(vcvtq_n_s32_f32(opsin_y_right, 15));
+    int16x8_t opsin_y16 = vcombine_s16(opsin_y16_left, opsin_y16_right);
 
-      int16x8_t neg_bias16 = vdupq_n_s16(-124);        // -0.0037930732552754493
-      int16x8_t neg_bias_cbrt16 = vdupq_n_s16(-5110);  // -0.155954201
-      int16x8_t neg_bias_half16 = vdupq_n_s16(-62);
+    float32x4_t opsin_b_left = vld1q_f32(row_in_b + x);
+    int16x4_t opsin_b16_left = vqmovn_s32(vcvtq_n_s32_f32(opsin_b_left, 15));
+    float32x4_t opsin_b_right =
+        vld1q_f32(row_in_b + x + (x + 4 < xsize ? 4 : 0));
+    int16x4_t opsin_b16_right = vqmovn_s32(vcvtq_n_s32_f32(opsin_b_right, 15));
+    int16x8_t opsin_b16 = vcombine_s16(opsin_b16_left, opsin_b16_right);
 
-      // Color space: XYB -> RGB
-      // Compute ((y+x-bias_cbrt)^3-(y-x-bias_cbrt)^3)/2,
-      // ((y+x-bias_cbrt)^3+(y-x-bias_cbrt)^3)/2+bias, (b-bias_cbrt)^3+bias.
-      // Note that ignoring x2 in the formulas below (as x << y) results in
-      // errors of at least 3 in the final sRGB values.
-      int16x8_t opsin_yp16 = vqsubq_s16(opsin_y16, neg_bias_cbrt16);
-      int16x8_t ysq16 = vqrdmulhq_s16(opsin_yp16, opsin_yp16);
-      int16x8_t twentyfourx16 = vmulq_n_s16(opsin_x16_times8, 3);
-      int16x8_t twentyfourxy16 = vqrdmulhq_s16(opsin_yp16, twentyfourx16);
-      int16x8_t threexsq16 =
-          vrshrq_n_s16(vqrdmulhq_s16(opsin_x16_times8, twentyfourx16), 6);
+    int16x8_t neg_bias16 = vdupq_n_s16(-124);        // -0.0037930732552754493
+    int16x8_t neg_bias_cbrt16 = vdupq_n_s16(-5110);  // -0.155954201
+    int16x8_t neg_bias_half16 = vdupq_n_s16(-62);
 
-      // We can ignore x^3 here. Note that this is multiplied by 8.
-      int16x8_t mixed_rmg16 = vqrdmulhq_s16(twentyfourxy16, opsin_yp16);
+    // Color space: XYB -> RGB
+    // Compute ((y+x-bias_cbrt)^3-(y-x-bias_cbrt)^3)/2,
+    // ((y+x-bias_cbrt)^3+(y-x-bias_cbrt)^3)/2+bias, (b-bias_cbrt)^3+bias.
+    // Note that ignoring x2 in the formulas below (as x << y) results in
+    // errors of at least 3 in the final sRGB values.
+    int16x8_t opsin_yp16 = vqsubq_s16(opsin_y16, neg_bias_cbrt16);
+    int16x8_t ysq16 = vqrdmulhq_s16(opsin_yp16, opsin_yp16);
+    int16x8_t twentyfourx16 = vmulq_n_s16(opsin_x16_times8, 3);
+    int16x8_t twentyfourxy16 = vqrdmulhq_s16(opsin_yp16, twentyfourx16);
+    int16x8_t threexsq16 =
+        vrshrq_n_s16(vqrdmulhq_s16(opsin_x16_times8, twentyfourx16), 6);
 
-      int16x8_t mixed_rpg_sos_half = vhaddq_s16(ysq16, threexsq16);
-      int16x8_t mixed_rpg16 = vhaddq_s16(
-          vqrdmulhq_s16(opsin_yp16, mixed_rpg_sos_half), neg_bias_half16);
+    // We can ignore x^3 here. Note that this is multiplied by 8.
+    int16x8_t mixed_rmg16 = vqrdmulhq_s16(twentyfourxy16, opsin_yp16);
 
-      int16x8_t gamma_b16 = vqsubq_s16(opsin_b16, neg_bias_cbrt16);
-      int16x8_t gamma_bsq16 = vqrdmulhq_s16(gamma_b16, gamma_b16);
-      int16x8_t gamma_bcb16 = vqrdmulhq_s16(gamma_bsq16, gamma_b16);
-      int16x8_t mixed_b16 = vqaddq_s16(gamma_bcb16, neg_bias16);
-      // mixed_rpg and mixed_b are in 0-1 range.
-      // mixed_rmg has a smaller range (-0.035 to 0.035 for valid sRGB). Note
-      // that at this point it is already multiplied by 8.
+    int16x8_t mixed_rpg_sos_half = vhaddq_s16(ysq16, threexsq16);
+    int16x8_t mixed_rpg16 = vhaddq_s16(
+        vqrdmulhq_s16(opsin_yp16, mixed_rpg_sos_half), neg_bias_half16);
 
-      // We multiply all the mixed values by 1/4 (i.e. shift them to 13-bit
-      // fixed point) to ensure intermediate quantities are in range. Note that
-      // r-g is not shifted, and was x8 before here; this corresponds to a x32
-      // overall multiplicative factor and ensures that all the matrix constants
-      // are in 0-1 range.
-      // Similarly, mixed_rpg16 is already multiplied by 1/4 because of the two
-      // vhadd + using neg_bias_half.
-      mixed_b16 = vshrq_n_s16(mixed_b16, 2);
+    int16x8_t gamma_b16 = vqsubq_s16(opsin_b16, neg_bias_cbrt16);
+    int16x8_t gamma_bsq16 = vqrdmulhq_s16(gamma_b16, gamma_b16);
+    int16x8_t gamma_bcb16 = vqrdmulhq_s16(gamma_bsq16, gamma_b16);
+    int16x8_t mixed_b16 = vqaddq_s16(gamma_bcb16, neg_bias16);
+    // mixed_rpg and mixed_b are in 0-1 range.
+    // mixed_rmg has a smaller range (-0.035 to 0.035 for valid sRGB). Note
+    // that at this point it is already multiplied by 8.
 
-      // Unmix (multiply by 3x3 inverse_matrix)
-      // For increased precision, we use a matrix for converting from
-      // ((mixed_r - mixed_g)/2, (mixed_r + mixed_g)/2, mixed_b) to rgb. This
-      // avoids cancellation effects when computing (y+x)^3-(y-x)^3.
-      // We compute mixed_rpg - mixed_b because the (1+c)*mixed_rpg - c *
-      // mixed_b pattern is repeated frequently in the code below. This allows
-      // us to save a multiply per channel, and removes the presence of
-      // some constants above 1. Moreover, mixed_rmg - mixed_b is in (-1, 1)
-      // range, so the subtraction is safe.
-      // All the magic-looking constants here are derived by computing the
-      // inverse opsin matrix for the transformation modified as described
-      // above.
+    // We multiply all the mixed values by 1/4 (i.e. shift them to 13-bit
+    // fixed point) to ensure intermediate quantities are in range. Note that
+    // r-g is not shifted, and was x8 before here; this corresponds to a x32
+    // overall multiplicative factor and ensures that all the matrix constants
+    // are in 0-1 range.
+    // Similarly, mixed_rpg16 is already multiplied by 1/4 because of the two
+    // vhadd + using neg_bias_half.
+    mixed_b16 = vshrq_n_s16(mixed_b16, 2);
 
-      // Precomputation common to multiple color values.
-      int16x8_t mixed_rpgmb16 = vqsubq_s16(mixed_rpg16, mixed_b16);
-      int16x8_t mixed_rpgmb_times_016 = vqrdmulhq_n_s16(mixed_rpgmb16, 5394);
-      int16x8_t mixed_rg16 = vqaddq_s16(mixed_rpgmb_times_016, mixed_rpg16);
+    // Unmix (multiply by 3x3 inverse_matrix)
+    // For increased precision, we use a matrix for converting from
+    // ((mixed_r - mixed_g)/2, (mixed_r + mixed_g)/2, mixed_b) to rgb. This
+    // avoids cancellation effects when computing (y+x)^3-(y-x)^3.
+    // We compute mixed_rpg - mixed_b because the (1+c)*mixed_rpg - c *
+    // mixed_b pattern is repeated frequently in the code below. This allows
+    // us to save a multiply per channel, and removes the presence of
+    // some constants above 1. Moreover, mixed_rmg - mixed_b is in (-1, 1)
+    // range, so the subtraction is safe.
+    // All the magic-looking constants here are derived by computing the
+    // inverse opsin matrix for the transformation modified as described
+    // above.
 
-      // R
-      int16x8_t linear_r16 =
-          vqaddq_s16(mixed_rg16, vqrdmulhq_n_s16(mixed_rmg16, 21400));
+    // Precomputation common to multiple color values.
+    int16x8_t mixed_rpgmb16 = vqsubq_s16(mixed_rpg16, mixed_b16);
+    int16x8_t mixed_rpgmb_times_016 = vqrdmulhq_n_s16(mixed_rpgmb16, 5394);
+    int16x8_t mixed_rg16 = vqaddq_s16(mixed_rpgmb_times_016, mixed_rpg16);
 
-      // G
-      int16x8_t linear_g16 =
-          vqaddq_s16(mixed_rg16, vqrdmulhq_n_s16(mixed_rmg16, -7857));
+    // R
+    int16x8_t linear_r16 =
+        vqaddq_s16(mixed_rg16, vqrdmulhq_n_s16(mixed_rmg16, 21400));
 
-      // B
-      int16x8_t linear_b16 = vqrdmulhq_n_s16(mixed_rpgmb16, -30996);
-      linear_b16 = vqaddq_s16(linear_b16, mixed_b16);
-      linear_b16 = vqaddq_s16(linear_b16, vqrdmulhq_n_s16(mixed_rmg16, -6525));
+    // G
+    int16x8_t linear_g16 =
+        vqaddq_s16(mixed_rg16, vqrdmulhq_n_s16(mixed_rmg16, -7857));
 
-      // Apply SRGB transfer function.
-      int16x8_t r = srgb_tf(linear_r16);
-      int16x8_t g = srgb_tf(linear_g16);
-      int16x8_t b = srgb_tf(linear_b16);
+    // B
+    int16x8_t linear_b16 = vqrdmulhq_n_s16(mixed_rpgmb16, -30996);
+    linear_b16 = vqaddq_s16(linear_b16, mixed_b16);
+    linear_b16 = vqaddq_s16(linear_b16, vqrdmulhq_n_s16(mixed_rmg16, -6525));
 
-      uint8x8_t r8 =
-          vqmovun_s16(vrshrq_n_s16(vsubq_s16(r, vshrq_n_s16(r, 8)), 6));
-      uint8x8_t g8 =
-          vqmovun_s16(vrshrq_n_s16(vsubq_s16(g, vshrq_n_s16(g, 8)), 6));
-      uint8x8_t b8 =
-          vqmovun_s16(vrshrq_n_s16(vsubq_s16(b, vshrq_n_s16(b, 8)), 6));
+    // Apply SRGB transfer function.
+    int16x8_t r = srgb_tf(linear_r16);
+    int16x8_t g = srgb_tf(linear_g16);
+    int16x8_t b = srgb_tf(linear_b16);
 
-      size_t n = output_buf_rect.xsize() - x;
-      if (is_rgba) {
-        float32x4_t a_f32_left =
-            row_in_a ? vld1q_f32(row_in_a + x) : vdupq_n_f32(1.0f);
-        float32x4_t a_f32_right =
-            row_in_a ? vld1q_f32(row_in_a + x +
-                                 (x + 4 < output_buf_rect.xsize() ? 4 : 0))
-                     : vdupq_n_f32(1.0f);
-        int16x4_t a16_left = vqmovn_s32(vcvtq_n_s32_f32(a_f32_left, 8));
-        int16x4_t a16_right = vqmovn_s32(vcvtq_n_s32_f32(a_f32_right, 8));
-        uint8x8_t a8 = vqmovun_s16(vcombine_s16(a16_left, a16_right));
-        uint8_t* buf = output_buf + base_ptr + 4 * x;
-        uint8x8x4_t data = {r8, g8, b8, a8};
-        if (n >= 8) {
-          vst4_u8(buf, data);
-        } else {
-          uint8_t tmp[8 * 4];
-          vst4_u8(tmp, data);
-          memcpy(buf, tmp, n * 4);
-        }
+    uint8x8_t r8 =
+        vqmovun_s16(vrshrq_n_s16(vsubq_s16(r, vshrq_n_s16(r, 8)), 6));
+    uint8x8_t g8 =
+        vqmovun_s16(vrshrq_n_s16(vsubq_s16(g, vshrq_n_s16(g, 8)), 6));
+    uint8x8_t b8 =
+        vqmovun_s16(vrshrq_n_s16(vsubq_s16(b, vshrq_n_s16(b, 8)), 6));
+
+    size_t n = xsize - x;
+    if (is_rgba) {
+      float32x4_t a_f32_left =
+          row_in_a ? vld1q_f32(row_in_a + x) : vdupq_n_f32(1.0f);
+      float32x4_t a_f32_right =
+          row_in_a ? vld1q_f32(row_in_a + x + (x + 4 < xsize ? 4 : 0))
+                   : vdupq_n_f32(1.0f);
+      int16x4_t a16_left = vqmovn_s32(vcvtq_n_s32_f32(a_f32_left, 8));
+      int16x4_t a16_right = vqmovn_s32(vcvtq_n_s32_f32(a_f32_right, 8));
+      uint8x8_t a8 = vqmovun_s16(vcombine_s16(a16_left, a16_right));
+      uint8_t* buf = output + 4 * x;
+      uint8x8x4_t data = {r8, g8, b8, a8};
+      if (n >= 8) {
+        vst4_u8(buf, data);
       } else {
-        uint8_t* buf = output_buf + base_ptr + 3 * x;
-        uint8x8x3_t data = {r8, g8, b8};
-        if (n >= 8) {
-          vst3_u8(buf, data);
-        } else {
-          uint8_t tmp[8 * 3];
-          vst3_u8(tmp, data);
-          memcpy(buf, tmp, n * 3);
-        }
+        uint8_t tmp[8 * 4];
+        vst4_u8(tmp, data);
+        memcpy(buf, tmp, n * 4);
+      }
+    } else {
+      uint8_t* buf = output + 3 * x;
+      uint8x8x3_t data = {r8, g8, b8};
+      if (n >= 8) {
+        vst3_u8(buf, data);
+      } else {
+        uint8_t tmp[8 * 3];
+        vst3_u8(tmp, data);
+        memcpy(buf, tmp, n * 3);
       }
     }
   }
 #else
   (void)input;
-  (void)input_rect;
-  (void)output_buf_rect;
-  (void)output_buf;
+  (void)output;
+  (void)is_rgba;
   (void)xsize;
   JXL_ABORT("Unreachable");
 #endif

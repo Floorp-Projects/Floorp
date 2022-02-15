@@ -76,6 +76,7 @@ enum class CRLiteMode {
   Disabled = 0,
   TelemetryOnly = 1,
   Enforce = 2,
+  ConfirmRevocations = 3,
 };
 
 enum class NetscapeStepUpPolicy : uint32_t;

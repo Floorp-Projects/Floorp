@@ -272,6 +272,17 @@ typedef enum {
    */
   JXL_ENC_FRAME_SETTING_JPEG_RECON_CFL = 30,
 
+  /** Prepare the frame for indexing in the frame index box.
+   * 0 = ignore this frame (same as not setting a value),
+   * 1 = index this frame within the Frame Index Box.
+   * If any frames are indexed, the first frame needs to
+   * be indexed, too. If the first frame is not indexed, and
+   * a later frame is attempted to be indexed, JXL_ENC_ERROR will occur.
+   * If non-keyframes, i.e., frames with cropping, blending or patches are
+   * attempted to be indexed, JXL_ENC_ERROR will occur.
+   */
+  JXL_ENC_FRAME_INDEX_BOX = 31,
+
   /** Enum value not to be used as an option. This value is added to force the
    * C compiler to have the enum to take a known size.
    */
@@ -818,7 +829,6 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetBasicInfo(JxlEncoder* enc,
  * @param type type of the extra channel.
  * @param info global extra channel metadata. Object owned by the caller and its
  * contents are copied internally.
- * @return JXL_ENC_SUCCESS on success, JXL_ENC_ERROR on error
  */
 JXL_EXPORT void JxlEncoderInitExtraChannelInfo(JxlExtraChannelType type,
                                                JxlExtraChannelInfo* info);

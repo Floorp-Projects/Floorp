@@ -53,8 +53,6 @@ constexpr uint32_t kPermutationContexts = 8;
 
 uint32_t CoeffOrderContext(uint32_t val);
 
-void SetDefaultOrder(AcStrategy acs, coeff_order_t* JXL_RESTRICT order);
-
 Status DecodeCoeffOrders(uint16_t used_orders, uint32_t used_acs,
                          coeff_order_t* order, BitReader* br);
 
