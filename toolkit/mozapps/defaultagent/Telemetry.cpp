@@ -166,9 +166,9 @@ static FilePathResult GetPingsenderPath() {
 
 static mozilla::WindowsError SendPing(
     const std::string defaultBrowser, const std::string previousDefaultBrowser,
-    const std::string osVersion, const std::string osLocale,
-    const std::string notificationType, const std::string notificationShown,
-    const std::string notificationAction,
+    const std::string defaultPdf, const std::string osVersion,
+    const std::string osLocale, const std::string notificationType,
+    const std::string notificationShown, const std::string notificationAction,
     const std::string prevNotificationAction) {
   // Fill in the ping JSON object.
   Json::Value ping;
@@ -176,6 +176,7 @@ static mozilla::WindowsError SendPing(
   ping["build_version"] = MOZILLA_VERSION;
   ping["default_browser"] = defaultBrowser;
   ping["previous_default_browser"] = previousDefaultBrowser;
+  ping["default_pdf_viewer_raw"] = defaultPdf;
   ping["os_version"] = osVersion;
   ping["os_locale"] = osLocale;
   ping["notification_type"] = notificationType;
@@ -424,10 +425,11 @@ HRESULT MaybeWritePreviousNotificationAction(
 }
 
 HRESULT SendDefaultBrowserPing(
-    const DefaultBrowserInfo& browserInfo,
+    const DefaultBrowserInfo& browserInfo, const DefaultPdfInfo& pdfInfo,
     const NotificationActivities& activitiesPerformed) {
   std::string currentDefaultBrowser =
       GetStringForBrowser(browserInfo.currentDefaultBrowser);
+  std::string currentDefaultPdf = pdfInfo.currentDefaultPdf;
   std::string notificationType =
       GetStringForNotificationType(activitiesPerformed.type);
   std::string notificationShown =
@@ -504,8 +506,8 @@ HRESULT SendDefaultBrowserPing(
   }
   std::string previousDefaultBrowser = previousDefaultBrowserResult.unwrap();
 
-  return SendPing(currentDefaultBrowser, previousDefaultBrowser, osVersion,
-                  osLocale, notificationType, notificationShown,
-                  notificationAction, prevNotificationAction)
+  return SendPing(currentDefaultBrowser, previousDefaultBrowser,
+                  currentDefaultPdf, osVersion, osLocale, notificationType,
+                  notificationShown, notificationAction, prevNotificationAction)
       .AsHResult();
 }
