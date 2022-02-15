@@ -302,6 +302,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual AccGroupInfo* GetOrCreateGroupInfo() override;
 
+  virtual bool HasPrimaryAction() const override;
+
  private:
   uintptr_t mParent;
   static const uintptr_t kNoParent = UINTPTR_MAX;

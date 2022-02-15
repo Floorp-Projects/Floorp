@@ -972,6 +972,8 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   virtual AccGroupInfo* GetOrCreateGroupInfo() override;
 
+  virtual bool HasPrimaryAction() const override;
+
   virtual void ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
                                  int32_t* aPosInSet) const override;
 
