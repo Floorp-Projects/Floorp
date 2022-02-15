@@ -35,7 +35,7 @@ NS_IMPL_ISUPPORTS(nsMacUtilsImpl, nsIMacUtils)
 using mozilla::StaticMutexAutoLock;
 using mozilla::Unused;
 
-#if defined(MOZ_SANDBOX)
+#if defined(MOZ_SANDBOX) || defined(__aarch64__)
 StaticAutoPtr<nsCString> nsMacUtilsImpl::sCachedAppPath;
 StaticMutex nsMacUtilsImpl::sCachedAppPathMutex;
 #endif
@@ -139,7 +139,7 @@ nsMacUtilsImpl::GetIsTranslated(bool* aIsTranslated) {
   return NS_OK;
 }
 
-#if defined(MOZ_SANDBOX)
+#if defined(MOZ_SANDBOX) || defined(__aarch64__)
 // Get the path to the .app directory (aka bundle) for the parent process.
 // When executing in the child process, this is the outer .app (such as
 // Firefox.app) and not the inner .app containing the child process
@@ -217,8 +217,9 @@ nsresult nsMacUtilsImpl::ClearCachedAppPathOnShutdown() {
   ClearOnShutdown(&sCachedAppPath);
   return NS_OK;
 }
+#endif /* MOZ_SANDBOX || __aarch64__ */
 
-#  if defined(DEBUG)
+#if defined(MOZ_SANDBOX) && defined(DEBUG)
 // If XPCOM_MEM_BLOAT_LOG or XPCOM_MEM_LEAK_LOG is set to a log file
 // path, return the path to the parent directory (where sibling log
 // files will be saved.)
@@ -255,8 +256,7 @@ nsresult nsMacUtilsImpl::GetDirectoryPath(const char* aPath,
   }
   return NS_OK;
 }
-#  endif /* DEBUG */
-#endif   /* MOZ_SANDBOX */
+#endif /* MOZ_SANDBOX  && DEBUG */
 
 /* static */
 bool nsMacUtilsImpl::IsTCSMAvailable() {
