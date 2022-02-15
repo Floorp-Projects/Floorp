@@ -76,23 +76,19 @@
   padding: 2px 4px;
 }
 
-#sidebar-switcher-target:-moz-focusring:not(:hover, [open]),
-#sidebar-close:-moz-focusring:not(:hover, [open]) {
-  outline: var(--default-focusring);
+#sidebar-switcher-target:hover {
+  background-color: var(--toolbarbutton-hover-background);
 }
 
 #sidebar-switcher-target:hover:active,
 #sidebar-switcher-target.active {
-  background: var(--toolbarbutton-active-background);
+  background-color: var(--toolbarbutton-active-background);
 }
 
-/* Ensure we do not lose contrast between lightweight and OS theme colours */
-#sidebar-switcher-target:hover:-moz-lwtheme {
-  background: hsla(240, 5%, 5%, 0.1);
-}
-#sidebar-switcher-target:hover:active:-moz-lwtheme,
-#sidebar-switcher-target.active:-moz-lwtheme {
-  background: hsla(240, 5%, 5%, 0.15);
+#sidebar-switcher-target:focus-visible,
+#sidebar-close:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 0;
 }
 
 #sidebarMenu-popup .subviewbutton {
