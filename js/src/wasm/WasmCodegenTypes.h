@@ -409,13 +409,14 @@ class CallSiteDesc {
       (1 << LINE_OR_BYTECODE_BITS_SIZE) - 1;
 
   enum Kind {
-    Func,        // pc-relative call to a specific function
-    Import,      // wasm import call
-    Indirect,    // wasm indirect call
-    Symbolic,    // call to a single symbolic callee
-    EnterFrame,  // call to a enter frame handler
-    LeaveFrame,  // call to a leave frame handler
-    Breakpoint   // call to instruction breakpoint
+    Func,          // pc-relative call to a specific function
+    Import,        // wasm import call
+    Indirect,      // dynamic callee called via register, context on stack
+    IndirectFast,  // dynamically determined to be same-instance
+    Symbolic,      // call to a single symbolic callee
+    EnterFrame,    // call to a enter frame handler
+    LeaveFrame,    // call to a leave frame handler
+    Breakpoint     // call to instruction breakpoint
   };
   CallSiteDesc() : lineOrBytecode_(0), kind_(0) {}
   explicit CallSiteDesc(Kind kind) : lineOrBytecode_(0), kind_(kind) {
