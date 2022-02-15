@@ -14514,7 +14514,7 @@
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 100,
-    "bug_numbers": [1238433, 1570634, 1752207],
+    "bug_numbers": [1238433, 1570634, 1752207, 1755363],
     "description": "Frames of of 10,000 decoded frames dropped in an HTMLVideoElement"
   },
   "MEDIA_DECODER_BACKEND_USED": {
