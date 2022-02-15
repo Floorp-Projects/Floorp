@@ -272,13 +272,16 @@ impl RenderTarget for ColorRenderTarget {
                 RenderTaskKind::Picture(ref pic_task) => {
                     let pic = &ctx.prim_store.pictures[pic_task.pic_index.0];
 
-                    let raster_spatial_node_index = pic.raster_config
-                        .as_ref()
-                        .map(|raster_config| {
+                    let raster_spatial_node_index = match pic.raster_config {
+                        Some(ref raster_config) => {
                             let surface = &ctx.surfaces[raster_config.surface_index.0];
                             surface.raster_spatial_node_index
-                        })
-                        .expect("bug: pass-through pic found on render task");
+                        }
+                        None => {
+                            // This must be the main framebuffer
+                            ctx.root_spatial_node_index
+                        }
+                    };
 
                     let target_rect = task.get_target_rect();
 
