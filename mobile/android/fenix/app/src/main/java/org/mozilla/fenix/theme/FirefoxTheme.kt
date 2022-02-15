@@ -85,6 +85,7 @@ private val darkColorPalette = FirefoxColors(
     iconNotice = PhotonColors.Blue30,
     iconButton = PhotonColors.LightGrey05,
     iconWarning = PhotonColors.Red20,
+    iconWarningButton = PhotonColors.Red70,
     iconAccentViolet = PhotonColors.Violet20,
     iconAccentBlue = PhotonColors.Blue20,
     iconAccentPink = PhotonColors.Pink20,
@@ -145,6 +146,7 @@ private val lightColorPalette = FirefoxColors(
     iconNotice = PhotonColors.Blue30,
     iconButton = PhotonColors.Ink20,
     iconWarning = PhotonColors.Red70,
+    iconWarningButton = PhotonColors.Red70,
     iconAccentViolet = PhotonColors.Violet60,
     iconAccentBlue = PhotonColors.Blue60,
     iconAccentPink = PhotonColors.Pink60,
@@ -210,6 +212,7 @@ class FirefoxColors(
     iconNotice: Color,
     iconButton: Color,
     iconWarning: Color,
+    iconWarningButton: Color,
     iconAccentViolet: Color,
     iconAccentBlue: Color,
     iconAccentPink: Color,
@@ -363,6 +366,9 @@ class FirefoxColors(
         private set
     var iconWarning by mutableStateOf(iconWarning)
         private set
+    // Warning icon on Secondary button
+    var iconWarningButton by mutableStateOf(iconWarningButton)
+        private set
     var iconAccentViolet by mutableStateOf(iconAccentViolet)
         private set
     var iconAccentBlue by mutableStateOf(iconAccentBlue)
@@ -446,6 +452,7 @@ class FirefoxColors(
         iconNotice = other.iconNotice
         iconButton = other.iconButton
         iconWarning = other.iconWarning
+        iconWarningButton = other.iconWarningButton
         iconAccentViolet = other.iconAccentViolet
         iconAccentBlue = other.iconAccentBlue
         iconAccentPink = other.iconAccentPink
@@ -506,6 +513,7 @@ class FirefoxColors(
         iconNotice = iconNotice,
         iconButton = iconButton,
         iconWarning = iconWarning,
+        iconWarningButton = iconWarningButton,
         iconAccentViolet = iconAccentViolet,
         iconAccentBlue = iconAccentBlue,
         iconAccentPink = iconAccentPink,
