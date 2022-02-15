@@ -786,7 +786,7 @@ body {
     fill: #FFA437;
   }
 
-  .screen-0 {
+  [pos='corner'] {
     min-width: 700px;
 
     .section-left {
@@ -992,7 +992,7 @@ body {
   }
 
   // Delays for transitioning-in of intermediate screens
-  .screen:not(.dialog-initial):not(.screen-0) {
+  .screen:not(.dialog-initial):not([pos='corner']) {
     .colorway-variations,
     .tiles-theme-section {
       transition-delay: 0.2s;
@@ -1106,7 +1106,7 @@ body {
       scale: var(--scale);
     }
 
-    .screen-0 {
+    [pos='corner'] {
       .brand-logo,
       .welcome-text,
       .primary,
@@ -1134,13 +1134,13 @@ body {
       }
     }
 
-    .screen:not(.dialog-initial):not(.screen-0) {
+    .screen:not(.dialog-initial):not([pos='corner']) {
       .steps {
         opacity: 0.2;
       }
     }
 
-    .screen:not(.screen-0) {
+    .screen:not([pos='corner']) {
       .welcome-text,
       .colorway-variations,
       .tiles-theme-section,
@@ -1160,7 +1160,7 @@ body {
       transition-delay: 0.2s;
     }
 
-    .screen-0 {
+    [pos='corner'] {
       .message-text {
         opacity: 0;
         translate: 0 var(--translate);
@@ -1183,7 +1183,7 @@ body {
       }
     }
 
-    .screen:not(.dialog-last):not(.screen-0) {
+    .screen:not(.dialog-last):not([pos='corner']) {
       .main-content {
         overflow: hidden;
       }
