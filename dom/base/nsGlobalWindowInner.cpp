@@ -211,6 +211,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsDOMOfflineResourceList.h"
 #include "nsDebug.h"
+#include "nsDeviceContext.h"
 #include "nsDocShell.h"
 #include "nsFocusManager.h"
 #include "nsFrameMessageManager.h"
@@ -3516,28 +3517,31 @@ float nsGlobalWindowInner::GetMozInnerScreenY(CallerType aCallerType,
   FORWARD_TO_OUTER_OR_THROW(GetMozInnerScreenYOuter, (aCallerType), aError, 0);
 }
 
+static nsPresContext* GetPresContextForRatio(Document* aDoc) {
+  if (nsPresContext* presContext = aDoc->GetPresContext()) {
+    return presContext;
+  }
+  // We're in an undisplayed subdocument... There's not really an awesome way
+  // to tell what the right DPI is from here, so we try to walk up our parent
+  // document chain to the extent that the docs can observe each other.
+  Document* doc = aDoc;
+  while (doc->StyleOrLayoutObservablyDependsOnParentDocumentLayout()) {
+    doc = doc->GetInProcessParentDocument();
+    if (nsPresContext* presContext = doc->GetPresContext()) {
+      return presContext;
+    }
+  }
+  return nullptr;
+}
+
 double nsGlobalWindowInner::GetDevicePixelRatio(CallerType aCallerType,
                                                 ErrorResult& aError) {
   ENSURE_ACTIVE_DOCUMENT(aError, 0.0);
 
-  RefPtr<nsPresContext> presContext = mDoc->GetPresContext();
+  RefPtr<nsPresContext> presContext = GetPresContextForRatio(mDoc);
   if (NS_WARN_IF(!presContext)) {
-    // We're in an undisplayed subdocument... There's not really an awesome way
-    // to tell what the right DPI is from here, so we try to walk up our parent
-    // document chain to the extent that the docs can observe each other.
-    Document* doc = mDoc;
-    while (doc->StyleOrLayoutObservablyDependsOnParentDocumentLayout()) {
-      doc = doc->GetInProcessParentDocument();
-      presContext = doc->GetPresContext();
-      if (presContext) {
-        break;
-      }
-    }
-
-    if (!presContext) {
-      // Still nothing, oh well.
-      return 1.0;
-    }
+    // Still nothing, oh well.
+    return 1.0;
   }
 
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
@@ -3562,6 +3566,15 @@ double nsGlobalWindowInner::GetDevicePixelRatio(CallerType aCallerType,
 
   return double(AppUnitsPerCSSPixel()) /
          double(presContext->AppUnitsPerDevPixel());
+}
+
+double nsGlobalWindowInner::GetDesktopToDeviceScale(ErrorResult& aError) {
+  ENSURE_ACTIVE_DOCUMENT(aError, 0.0);
+  nsPresContext* presContext = GetPresContextForRatio(mDoc);
+  if (!presContext) {
+    return 1.0;
+  }
+  return presContext->DeviceContext()->GetDesktopToDeviceScale().scale;
 }
 
 uint64_t nsGlobalWindowInner::GetMozPaintCount(ErrorResult& aError) {
