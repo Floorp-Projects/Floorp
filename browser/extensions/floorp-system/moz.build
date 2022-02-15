@@ -8,44 +8,43 @@ DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
 DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
 
 
-FINAL_TARGET_FILES.features["Floorp-extensions@ablaze.one"] += [
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
     "background-script.js",
     "manifest.json",
-    "superdrag.js",
 ]
 
-FINAL_TARGET_FILES.features["Floorp-extensions@ablaze.one"]["_locales"]["ja"] += [
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["ja"] += [
     "_locales/ja/messages.json",
 ]
 
-FINAL_TARGET_FILES.features["Floorp-extensions@ablaze.one"]["_locales"]["en"] += [
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["en"] += [
     "_locales/en/messages.json",
 ]
 
-FINAL_TARGET_FILES.features["Floorp-extensions@ablaze.one"]["_locales"]["ko"] += [
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["ko"] += [
     "_locales/ko/messages.json",
 ]
 
-FINAL_TARGET_FILES.features["Floorp-extensions@ablaze.one"]["_locales"]["ru"] += [
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["ru"] += [
     "_locales/ru/messages.json",
 ]
 
-FINAL_TARGET_FILES.features["Floorp-extensions@ablaze.one"]["_locales"]["zh_TW"] += [
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["zh_TW"] += [
     "_locales/zh_TW/messages.json",
 ]
 
-FINAL_TARGET_FILES.features["Floorp-extensions@ablaze.one"]["_locales"]["zh_CN"] += [
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["zh_CN"] += [
     "_locales/zh_CN/messages.json",
 ]
 
-FINAL_TARGET_FILES.features["Floorp-extensions@ablaze.one"]["icons"] += [
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["icons"] += [
     "icons/i.svg",
     "icons/icon.svg",
     "icons/LICENSE",
     "icons/link-48.png",
 ]
 
-FINAL_TARGET_FILES.features["Floorp-extensions@ablaze.one"]["qr-code"] += [
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["qr-code"] += [
     "qr-code/popup.html",
     "qr-code/popup.js",
     "qr-code/qrious.js",

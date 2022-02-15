@@ -7,7 +7,6 @@
 # Floorp プロテクションは今回の試験的機能に含まれないので削除
 
 DIRS += [
-    "doh-rollout",
     "formautofill",
     "screenshots",
     "webcompat",
@@ -21,6 +20,7 @@ DIRS += [
     "floorp-system",
     "floorp-protector",
     "gesturefy",
+    "superdrag",
 ]
 
 if CONFIG["NIGHTLY_BUILD"]:
