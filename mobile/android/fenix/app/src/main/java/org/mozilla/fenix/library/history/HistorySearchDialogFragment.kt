@@ -5,18 +5,24 @@
 package org.mozilla.fenix.library.history
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.speech.RecognizerIntent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintProperties.BOTTOM
 import androidx.constraintlayout.widget.ConstraintProperties.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintProperties.TOP
@@ -26,6 +32,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -43,7 +50,7 @@ import org.mozilla.fenix.library.history.awesomebar.AwesomeBarView
 import org.mozilla.fenix.library.history.toolbar.ToolbarView
 import org.mozilla.fenix.settings.SupportUtils
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class HistorySearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private var _binding: FragmentHistorySearchDialogBinding? = null
     private val binding get() = _binding!!
@@ -53,6 +60,8 @@ class HistorySearchDialogFragment : AppCompatDialogFragment(), UserInteractionHa
     private lateinit var toolbarView: ToolbarView
     private lateinit var awesomeBarView: AwesomeBarView
 
+    private val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+    private var voiceSearchButtonAlreadyAdded = false
     private var dialogHandledAction = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -167,6 +176,7 @@ class HistorySearchDialogFragment : AppCompatDialogFragment(), UserInteractionHa
             updateAccessibilityTraversalOrder()
         }
 
+        addVoiceSearchButton()
         observeAwesomeBarState()
 
         consumeFrom(store) {
@@ -256,4 +266,51 @@ class HistorySearchDialogFragment : AppCompatDialogFragment(), UserInteractionHa
             }
         }
     }
+
+    private val startVoiceSearchForResult =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val intent = result.data
+                intent?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.first()?.also {
+                    toolbarView.view.edit.updateUrl(url = it, shouldHighlight = true)
+                    interactor.onTextChanged(it)
+                    toolbarView.view.edit.focus()
+                }
+            }
+        }
+
+    private fun addVoiceSearchButton() {
+        val shouldShowVoiceSearch = isSpeechAvailable() &&
+            requireContext().settings().shouldShowVoiceSearch
+
+        if (voiceSearchButtonAlreadyAdded || !shouldShowVoiceSearch) return
+
+        toolbarView.view.addEditAction(
+            BrowserToolbar.Button(
+                imageDrawable = AppCompatResources.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
+                contentDescription = requireContext().getString(R.string.voice_search_content_description),
+                visible = { true },
+                listener = ::launchVoiceSearch
+            )
+        )
+
+        voiceSearchButtonAlreadyAdded = true
+    }
+
+    private fun launchVoiceSearch() {
+        // Note if a user disables speech while the app is on the search fragment
+        // the voice button will still be available and *will* cause a crash if tapped,
+        // since the `visible` call is only checked on create. In order to avoid extra complexity
+        // around such a small edge case, we make the button have no functionality in this case.
+        if (!isSpeechAvailable()) { return }
+
+        speechIntent.apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_PROMPT, requireContext().getString(R.string.voice_search_explainer))
+        }
+
+        startVoiceSearchForResult.launch(speechIntent)
+    }
+
+    private fun isSpeechAvailable(): Boolean = speechIntent.resolveActivity(requireContext().packageManager) != null
 }
