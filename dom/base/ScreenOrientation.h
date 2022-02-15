@@ -80,6 +80,7 @@ class ScreenOrientation final : public DOMEventTargetHelper {
   // This method calls in to the HAL to unlock the device and removes
   // full screen change listener.
   void UnlockDeviceOrientation();
+  void CleanupFullscreenListener();
 
   // This method performs the same function as |Lock| except it takes
   // a hal::ScreenOrientation argument instead of an OrientationType.

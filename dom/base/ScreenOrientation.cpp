@@ -82,7 +82,11 @@ ScreenOrientation::ScreenOrientation(nsPIDOMWindowInner* aWindow,
 }
 
 ScreenOrientation::~ScreenOrientation() {
-  UnlockDeviceOrientation();
+  if (mTriedToLockDeviceOrientation) {
+    UnlockDeviceOrientation();
+  } else {
+    CleanupFullscreenListener();
+  }
 
   MOZ_ASSERT(!mFullscreenListener);
 }
@@ -403,11 +407,11 @@ void ScreenOrientation::Unlock(ErrorResult& aRv) {
 }
 
 void ScreenOrientation::UnlockDeviceOrientation() {
-  if (mTriedToLockDeviceOrientation) {
-    hal::UnlockScreenOrientation();
-    mTriedToLockDeviceOrientation = false;
-  }
+  hal::UnlockScreenOrientation();
+  CleanupFullscreenListener();
+}
 
+void ScreenOrientation::CleanupFullscreenListener() {
   if (!mFullscreenListener || !GetOwner()) {
     mFullscreenListener = nullptr;
     return;
