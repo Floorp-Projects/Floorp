@@ -135,7 +135,7 @@ add_task(async function test_rtamo_aboutwelcome() {
     "RTAMO UI",
     // Expected selectors:
     [
-      "div.onboardingContainer",
+      `div.onboardingContainer[style*='.avif']`,
       "h2[data-l10n-id='return-to-amo-addon-title']",
       "div.rtamo-icon",
       "button.primary[data-l10n-id='return-to-amo-add-extension-label']",

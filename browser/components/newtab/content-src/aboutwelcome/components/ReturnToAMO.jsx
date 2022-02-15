@@ -78,9 +78,7 @@ export class ReturnToAMO extends React.PureComponent {
     return (
       <div
         className={"outer-wrapper onboardingContainer proton"}
-        style={{
-          backgroundImage: `url(${content.background_url})`,
-        }}
+        style={content.backdrop ? { background: content.backdrop } : {}}
       >
         <MultiStageProtonScreen
           content={content}

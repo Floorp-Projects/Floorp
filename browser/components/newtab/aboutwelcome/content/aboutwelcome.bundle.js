@@ -1331,9 +1331,9 @@ class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompo
 
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "outer-wrapper onboardingContainer proton",
-      style: {
-        backgroundImage: `url(${content.background_url})`
-      }
+      style: content.backdrop ? {
+        background: content.backdrop
+      } : {}
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_2__["MultiStageProtonScreen"], {
       content: content,
       isRtamo: true,
