@@ -2200,7 +2200,10 @@ gfxFont* gfxFontGroup::GetDefaultFont() {
     } else {
       gfxFontEntry* fe = pfl->GetDefaultFontEntry();
       if (fe) {
-        return fe->FindOrMakeFont(&mStyle);
+        gfxFont* f = fe->FindOrMakeFont(&mStyle);
+        if (f) {
+          return f;
+        }
       }
     }
   }
