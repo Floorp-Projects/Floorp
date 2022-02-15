@@ -152,6 +152,9 @@ def create_interactive_action(parameters, graph_config, input, task_group_id, ta
         payload.setdefault("features", {})["interactive"] = True
         payload.setdefault("env", {})["TASKCLUSTER_INTERACTIVE"] = "true"
 
+        for key in task_def["payload"]["env"].keys():
+            payload["env"][key] = task_def["payload"]["env"].get(key, "")
+
         return task
 
     # Create the task and any of its dependencies. This uses a new taskGroupId to avoid
