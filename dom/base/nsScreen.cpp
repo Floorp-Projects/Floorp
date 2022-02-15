@@ -80,7 +80,7 @@ nsDeviceContext* nsScreen::GetDeviceContext() {
   return nsLayoutUtils::GetDeviceContextForScreenInfo(GetOuter());
 }
 
-nsresult nsScreen::GetRect(CSSIntRect& aRect) {
+nsresult nsScreen::GetRect(nsRect& aRect) {
   // Return window inner rect to prevent fingerprinting.
   if (ShouldResistFingerprinting()) {
     return GetWindowInnerRect(aRect);
@@ -88,12 +88,14 @@ nsresult nsScreen::GetRect(CSSIntRect& aRect) {
 
   // Here we manipulate the value of aRect to represent the screen size,
   // if in RDM.
-  if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
-    if (Document* doc = owner->GetExtantDoc()) {
-      Maybe<CSSIntSize> deviceSize =
+  nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
+  if (owner) {
+    mozilla::dom::Document* doc = owner->GetExtantDoc();
+    if (doc) {
+      Maybe<mozilla::CSSIntSize> deviceSize =
           nsGlobalWindowOuter::GetRDMDeviceSize(*doc);
       if (deviceSize.isSome()) {
-        const CSSIntSize& size = deviceSize.value();
+        const mozilla::CSSIntSize& size = deviceSize.value();
         aRect.SetRect(0, 0, size.width, size.height);
         return NS_OK;
       }
@@ -106,40 +108,18 @@ nsresult nsScreen::GetRect(CSSIntRect& aRect) {
     return NS_ERROR_FAILURE;
   }
 
-  nsRect r;
-  context->GetRect(r);
-  aRect = CSSIntRect::FromAppUnitsRounded(r);
-  return NS_OK;
-}
+  context->GetRect(aRect);
+  LayoutDevicePoint screenTopLeftDev = LayoutDevicePixel::FromAppUnits(
+      aRect.TopLeft(), context->AppUnitsPerDevPixel());
+  DesktopPoint screenTopLeftDesk =
+      screenTopLeftDev / context->GetDesktopToDeviceScale();
 
-nsresult nsScreen::GetAvailRect(CSSIntRect& aRect) {
-  // Return window inner rect to prevent fingerprinting.
-  if (ShouldResistFingerprinting()) {
-    return GetWindowInnerRect(aRect);
-  }
+  aRect.x = NSToIntRound(screenTopLeftDesk.x);
+  aRect.y = NSToIntRound(screenTopLeftDesk.y);
 
-  // Here we manipulate the value of aRect to represent the screen size,
-  // if in RDM.
-  if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
-    if (Document* doc = owner->GetExtantDoc()) {
-      Maybe<CSSIntSize> deviceSize =
-          nsGlobalWindowOuter::GetRDMDeviceSize(*doc);
-      if (deviceSize.isSome()) {
-        const CSSIntSize& size = deviceSize.value();
-        aRect.SetRect(0, 0, size.width, size.height);
-        return NS_OK;
-      }
-    }
-  }
+  aRect.SetHeight(nsPresContext::AppUnitsToIntCSSPixels(aRect.Height()));
+  aRect.SetWidth(nsPresContext::AppUnitsToIntCSSPixels(aRect.Width()));
 
-  nsDeviceContext* context = GetDeviceContext();
-  if (!context) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRect r;
-  context->GetClientRect(r);
-  aRect = CSSIntRect::FromAppUnitsRounded(r);
   return NS_OK;
 }
 
@@ -161,7 +141,57 @@ hal::ScreenOrientation nsScreen::GetOrientationType() const {
   return s->GetOrientationType();
 }
 
-ScreenOrientation* nsScreen::Orientation() const { return mScreenOrientation; }
+nsresult nsScreen::GetAvailRect(nsRect& aRect) {
+  // Return window inner rect to prevent fingerprinting.
+  if (ShouldResistFingerprinting()) {
+    return GetWindowInnerRect(aRect);
+  }
+
+  // Here we manipulate the value of aRect to represent the screen size,
+  // if in RDM.
+  nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
+  if (owner) {
+    mozilla::dom::Document* doc = owner->GetExtantDoc();
+    if (doc) {
+      Maybe<mozilla::CSSIntSize> deviceSize =
+          nsGlobalWindowOuter::GetRDMDeviceSize(*doc);
+      if (deviceSize.isSome()) {
+        const mozilla::CSSIntSize& size = deviceSize.value();
+        aRect.SetRect(0, 0, size.width, size.height);
+        return NS_OK;
+      }
+    }
+  }
+
+  nsDeviceContext* context = GetDeviceContext();
+
+  if (!context) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRect r;
+  context->GetRect(r);
+  LayoutDevicePoint screenTopLeftDev = LayoutDevicePixel::FromAppUnits(
+      r.TopLeft(), context->AppUnitsPerDevPixel());
+  DesktopPoint screenTopLeftDesk =
+      screenTopLeftDev / context->GetDesktopToDeviceScale();
+
+  context->GetClientRect(aRect);
+
+  aRect.x = NSToIntRound(screenTopLeftDesk.x) +
+            nsPresContext::AppUnitsToIntCSSPixels(aRect.x - r.x);
+  aRect.y = NSToIntRound(screenTopLeftDesk.y) +
+            nsPresContext::AppUnitsToIntCSSPixels(aRect.y - r.y);
+
+  aRect.SetHeight(nsPresContext::AppUnitsToIntCSSPixels(aRect.Height()));
+  aRect.SetWidth(nsPresContext::AppUnitsToIntCSSPixels(aRect.Width()));
+
+  return NS_OK;
+}
+
+mozilla::dom::ScreenOrientation* nsScreen::Orientation() const {
+  return mScreenOrientation;
+}
 
 void nsScreen::GetMozOrientation(nsString& aOrientation,
                                  CallerType aCallerType) const {
@@ -208,7 +238,7 @@ JSObject* nsScreen::WrapObject(JSContext* aCx,
   return Screen_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsresult nsScreen::GetWindowInnerRect(CSSIntRect& aRect) {
+nsresult nsScreen::GetWindowInnerRect(nsRect& aRect) {
   aRect.x = 0;
   aRect.y = 0;
   nsCOMPtr<nsPIDOMWindowInner> win = GetOwner();
@@ -221,6 +251,8 @@ nsresult nsScreen::GetWindowInnerRect(CSSIntRect& aRect) {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = win->GetInnerHeight(&height);
   NS_ENSURE_SUCCESS(rv, rv);
+  // FIXME(emilio): This is an nsRect but should really be a CSSIntRect, these
+  // are CSS pixels!
   aRect.SizeTo(std::round(width), std::round(height));
   return NS_OK;
 }
