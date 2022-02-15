@@ -121,6 +121,7 @@ add_task(async function setup() {
   registerRestoreHandler("application/pdf", "pdf");
   registerRestoreHandler("binary/octet-stream", "pdf");
   registerRestoreHandler("application/unknown", "pdf");
+  registerRestoreHandler("image/webp", "webp");
 });
 
 /**
@@ -572,18 +573,21 @@ add_task(async function test_check_open_with_external_then_internal() {
  */
 add_task(
   async function test_internal_handler_hidden_with_viewable_internally_type() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["image.webp.enabled", true]],
+    });
     Services.telemetry.clearEvents();
 
     const mimeInfosToRestore = alwaysAskForHandlingTypes({
-      "text/xml": "xml",
       "binary/octet-stream": "xml",
+      "image/webp": "webp",
     });
 
     for (let [file, checkDefault] of [
       // The default for binary/octet-stream is changed by the PDF tests above,
       // this may change given bug 1659008, so I'm just ignoring the default for now.
       ["file_xml_attachment_binary_octet_stream.xml", false],
-      ["file_xml_attachment_test.xml", true],
+      ["file_green.webp", true],
     ]) {
       let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
       let loadingTab = await BrowserTestUtils.openNewForegroundTab({
@@ -608,13 +612,21 @@ add_task(
       checkTelemetry(
         "open " + file + " for viewable internal type",
         "ask",
-        file == "file_xml_attachment_test.xml" ? "other" : "octetstream",
+        file.endsWith(".webp") ? "other" : "octetstream",
         "attachment"
       );
 
-      ok(!internalHandlerRadio.hidden, "The option should be visible for XML");
+      let fileDesc = file.substring(file.lastIndexOf(".") + 1);
+
+      ok(
+        !internalHandlerRadio.hidden,
+        `The option should be visible for ${fileDesc}`
+      );
       if (checkDefault) {
-        ok(internalHandlerRadio.selected, "The option should be selected");
+        ok(
+          internalHandlerRadio.selected,
+          `The option should be selected for ${fileDesc}`
+        );
       }
 
       let dialog = doc.querySelector("#unknownContentType");
