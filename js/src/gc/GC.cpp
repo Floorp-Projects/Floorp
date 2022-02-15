@@ -1391,7 +1391,7 @@ bool GCRuntime::shouldCompact() {
   // if we are currently animating, unless the user is inactive or we're
   // responding to memory pressure.
 
-  if (gcOptions() != JS::GCOptions::Shrink || !isCompactingGCEnabled()) {
+  if (!isShrinkingGC() || !isCompactingGCEnabled()) {
     return false;
   }
 
@@ -2530,7 +2530,7 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
      * relazification can cause performance issues when we have to reparse
      * the same functions over and over.
      */
-    if (gcOptions() == JS::GCOptions::Shrink) {
+    if (isShrinkingGC()) {
       relazifyFunctionsForShrinkingGC();
       purgePropMapTablesForShrinkingGC();
       purgeSourceURLsForShrinkingGC();
