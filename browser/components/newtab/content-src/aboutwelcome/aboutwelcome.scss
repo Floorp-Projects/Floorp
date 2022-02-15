@@ -34,8 +34,6 @@ body {
   text-align: center;
   overflow-x: auto;
   height: 100vh;
-  background: radial-gradient(79.33% 221.6% at 7.58% 89.55%, #15141A 0%, rgba(21, 20, 26, 0) 54.36%, rgba(21, 20, 26, 0.63) 100%) center / cover no-repeat fixed;
-  background-color: #212121;
 
   @media (prefers-contrast: more) {
     background-color: var(--in-content-page-background);

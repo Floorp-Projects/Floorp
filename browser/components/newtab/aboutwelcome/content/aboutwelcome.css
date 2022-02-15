@@ -51,8 +51,6 @@ body[lwt-newtab-brighttext] {
   text-align: center;
   overflow-x: auto;
   height: 100vh;
-  background: radial-gradient(79.33% 221.6% at 7.58% 89.55%, #15141A 0%, rgba(21, 20, 26, 0) 54.36%, rgba(21, 20, 26, 0.63) 100%) center/cover no-repeat fixed;
-  background-color: #212121;
   --main-content-min-height: 271px;
   --transition: 0.6s opacity, 0.6s scale, 0.6s rotate, 0.6s translate;
 }
