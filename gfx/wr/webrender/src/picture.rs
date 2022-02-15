@@ -3708,6 +3708,8 @@ pub struct SurfaceInfo {
     pub device_pixel_scale: DevicePixelScale,
     /// The scale factors of the surface to raster transform.
     pub parent_scale_factors: (f32, f32),
+    /// If true, apply snapping context from parent
+    pub enable_snapping: bool,
 }
 
 impl SurfaceInfo {
@@ -3718,6 +3720,7 @@ impl SurfaceInfo {
         spatial_tree: &SpatialTree,
         device_pixel_scale: DevicePixelScale,
         parent_scale_factors: (f32, f32),
+        enable_snapping: bool,
     ) -> Self {
         let map_surface_to_world = SpaceMapper::new_with_target(
             spatial_tree.root_reference_frame_index(),
@@ -3745,6 +3748,7 @@ impl SurfaceInfo {
             surface_spatial_node_index,
             device_pixel_scale,
             parent_scale_factors,
+            enable_snapping,
         }
     }
 }
@@ -5505,7 +5509,7 @@ impl PicturePrimitive {
 
                 // Check if there is perspective or if an SVG filter is applied, and thus whether a new
                 // rasterization root should be established.
-                let device_pixel_scale = match composite_mode {
+                let (device_pixel_scale, enable_snapping) = match composite_mode {
                     PictureCompositeMode::TileCache { slice_id } => {
                         let tile_cache = tile_caches.get_mut(&slice_id).unwrap();
 
@@ -5544,7 +5548,7 @@ impl PicturePrimitive {
 
                         let device_pixel_scale = Scale::new(scaling_factor);
 
-                        device_pixel_scale
+                        (device_pixel_scale, false)
                     }
                     _ => {
                         let min_scale = 1.0;
@@ -5552,11 +5556,24 @@ impl PicturePrimitive {
                         let scaling_factor = scale_factors.0.max(scale_factors.1).max(min_scale);
                         let device_pixel_scale = Scale::new(scaling_factor);
 
-                        device_pixel_scale
+                        let has_snapping_transform = frame_context
+                            .spatial_tree
+                            .get_spatial_node(surface_spatial_node_index)
+                            .snapping_transform
+                            .is_some();
+
+                        let is_identity_scale = scale_factors.0 == 1.0 && scale_factors.1 == 1.0;
+                        let enable_snapping = has_snapping_transform && is_identity_scale;
+
+                        (device_pixel_scale, enable_snapping)
                     }
                 };
 
-                let raster_spatial_node_index = surface_spatial_node_index;
+                let raster_spatial_node_index = if enable_snapping {
+                    frame_context.spatial_tree.root_reference_frame_index()
+                } else {
+                    surface_spatial_node_index
+                };
 
                 let surface = SurfaceInfo::new(
                     surface_spatial_node_index,
@@ -5565,6 +5582,7 @@ impl PicturePrimitive {
                     &frame_context.spatial_tree,
                     device_pixel_scale,
                     scale_factors,
+                    enable_snapping,
                 );
 
                 let surface_index = SurfaceIndex(surfaces.len());
@@ -6582,8 +6600,8 @@ fn get_surface_rects(
     let parent_surface = &surfaces[parent_surface_index.0];
 
     let local_to_parent = SpaceMapper::new_with_target(
-        parent_surface.raster_spatial_node_index,
-        surfaces[surface_index.0].raster_spatial_node_index,
+        parent_surface.surface_spatial_node_index,
+        surfaces[surface_index.0].surface_spatial_node_index,
         parent_surface.clipping_rect,
         spatial_tree,
     );
@@ -6663,22 +6681,42 @@ fn get_surface_rects(
         }
     };
 
-    let mut clipped = (clipped_local.cast_unit() * surface.device_pixel_scale).round_out();
+    let (mut clipped, mut unclipped) = if surface.enable_snapping {
+        assert_eq!(surface.device_pixel_scale.0, 1.0);
+
+        let local_to_world = SpaceMapper::new_with_target(
+            spatial_tree.root_reference_frame_index(),
+            surface.surface_spatial_node_index,
+            WorldRect::max_rect(),
+            spatial_tree,
+        );
+
+        let clipped = local_to_world.map(&clipped_local.cast_unit()).unwrap() * surface.device_pixel_scale;
+        let unclipped = local_to_world.map(&unclipped_local).unwrap() * surface.device_pixel_scale;
+
+        (clipped, unclipped)
+    } else {
+        let clipped = (clipped_local.cast_unit() * surface.device_pixel_scale).round_out();
+        let unclipped = unclipped_local.cast_unit() * surface.device_pixel_scale;
+
+        (clipped, unclipped)
+    };
+
     let task_size_f = clipped.size();
 
     if task_size_f.width > MAX_SURFACE_SIZE || task_size_f.height > MAX_SURFACE_SIZE {
         let max_dimension = task_size_f.width.max(task_size_f.height);
 
+        surface.enable_snapping = false;
         surface.device_pixel_scale = Scale::new(MAX_SURFACE_SIZE / max_dimension);
 
         clipped = (clipped_local.cast_unit() * surface.device_pixel_scale).round();
+        unclipped = (unclipped_local.cast_unit() * surface.device_pixel_scale).round();
     }
 
-    let unclipped = unclipped_local.cast_unit() * surface.device_pixel_scale;
     let task_size = clipped.size().to_i32();
-
-    debug_assert!(task_size.width <= MAX_SURFACE_SIZE as i32);
-    debug_assert!(task_size.height <= MAX_SURFACE_SIZE as i32);
+    assert!(task_size.width <= MAX_SURFACE_SIZE as i32);
+    assert!(task_size.height <= MAX_SURFACE_SIZE as i32);
 
     let uv_rect_kind = calculate_uv_rect_kind(
         clipped,
