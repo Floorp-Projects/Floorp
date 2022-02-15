@@ -8,6 +8,10 @@
 
 #include "builtin/streams/PipeToState-inl.h"
 
+#ifdef MOZ_DOM_STREAMS
+#  error "Shouldnt be built"
+#endif
+
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Maybe.h"  // mozilla::Maybe, mozilla::Nothing, mozilla::Some
 
