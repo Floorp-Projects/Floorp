@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: glean-parser
-Version: 4.4.0
+Version: 5.0.1
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: Michael Droettboom
@@ -84,6 +84,19 @@ $ glean_parser check < ping.json
 # Changelog
 
 ## Unreleased
+
+## 5.0.1
+
+- Fix the logic for the metric expiration by version ([bug 1753194](https://bugzilla.mozilla.org/show_bug.cgi?id=1753194))
+
+## 5.0.0
+
+- Remove C# support ([#436](https://github.com/mozilla/glean_parser/pull/436)).
+- Add support for Rust code generation ([bug 1677434](https://bugzilla.mozilla.org/show_bug.cgi?id=1677434))
+- Report an error if no files are passed ([bug 1751730](https://bugzilla.mozilla.org/show_bug.cgi?id=1751730))
+- [data-review] Report an error if no metrics match provided bug number ([bug 1752576](https://bugzilla.mozilla.org/show_bug.cgi?id=1752576))
+- [data-review] Include notification_emails in list of those responsible ([bug 1752576](https://bugzilla.mozilla.org/show_bug.cgi?id=1752576))
+- Add support for expiring metrics by the provided major version ([bug 1753194](https://bugzilla.mozilla.org/show_bug.cgi?id=1753194))
 
 ## 4.4.0
 
