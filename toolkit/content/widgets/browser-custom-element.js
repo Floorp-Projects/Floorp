@@ -1265,8 +1265,8 @@
 
     startScroll({
       scrolldir,
-      screenX,
-      screenY,
+      screenXDevPx,
+      screenYDevPx,
       scrollId,
       presShellId,
       browsingContext,
@@ -1292,8 +1292,8 @@
         Ci.nsIScreenManager
       );
       let screen = screenManager.screenForRect(
-        screenX * window.devicePixelRatio,
-        screenY * window.devicePixelRatio,
+        screenXDevPx,
+        screenYDevPx,
         1,
         1
       );
@@ -1338,6 +1338,8 @@
       let maxX = (left.value + width.value) / scaleFactor - 0.5 * POPUP_SIZE;
       let minY = top.value / scaleFactor + 0.5 * POPUP_SIZE;
       let maxY = (top.value + height.value) / scaleFactor - 0.5 * POPUP_SIZE;
+      let screenX = screenXDevPx / window.devicePixelRatio;
+      let screenY = screenYDevPx / window.devicePixelRatio;
       let popupX = Math.max(minX, Math.min(maxX, screenX));
       let popupY = Math.max(minY, Math.min(maxY, screenY));
       this._autoScrollPopup.openPopupAtScreen(popupX, popupY);
