@@ -32,7 +32,7 @@ use crate::space::SpaceMapper;
 use crate::segment::SegmentBuilder;
 use std::{f32, mem};
 use crate::util::{VecHelper, Preallocator};
-use crate::visibility::{update_prim_visibility, FrameVisibilityState, FrameVisibilityContext};
+use crate::visibility::{update_primitive_visibility, FrameVisibilityState, FrameVisibilityContext};
 use plane_split::Splitter;
 
 
@@ -125,7 +125,7 @@ impl FrameGlobalResources {
 
 pub struct FrameScratchBuffer {
     dirty_region_stack: Vec<DirtyRegion>,
-    surface_stack: Vec<(PictureIndex, SurfaceIndex)>,
+    surface_stack: Vec<SurfaceIndex>,
     clip_chain_stack: ClipChainStack,
 }
 
@@ -204,13 +204,12 @@ impl<'a> FrameBuildingState<'a> {
         &mut self,
         surface_index: SurfaceIndex,
         tasks: Vec<RenderTaskId>,
-        clipping_rect: PictureRect,
+        raster_rect: DeviceRect,
     ) {
         let surface = &mut self.surfaces[surface_index.0];
         assert!(surface.render_tasks.is_none());
         surface.render_tasks = Some(SurfaceRenderTasks::Tiled(tasks));
-        // TODO(gw): Include the dirty rect here, to reduce child surface sizes
-        surface.clipping_rect = clipping_rect;
+        surface.raster_rect = Some(raster_rect);
     }
 
     /// Initialize render tasks for a simple surface, that contains only a
@@ -220,12 +219,12 @@ impl<'a> FrameBuildingState<'a> {
         surface_index: SurfaceIndex,
         task_id: RenderTaskId,
         parent_surface_index: SurfaceIndex,
-        clipping_rect: PictureRect,
+        raster_rect: DeviceRect,
     ) {
         let surface = &mut self.surfaces[surface_index.0];
         assert!(surface.render_tasks.is_none());
         surface.render_tasks = Some(SurfaceRenderTasks::Simple(task_id));
-        surface.clipping_rect = clipping_rect;
+        surface.raster_rect = Some(raster_rect);
 
         self.add_child_render_task(
             parent_surface_index,
@@ -242,12 +241,12 @@ impl<'a> FrameBuildingState<'a> {
         root_task_id: RenderTaskId,
         port_task_id: RenderTaskId,
         parent_surface_index: SurfaceIndex,
-        clipping_rect: PictureRect,
+        raster_rect: DeviceRect,
     ) {
         let surface = &mut self.surfaces[surface_index.0];
         assert!(surface.render_tasks.is_none());
         surface.render_tasks = Some(SurfaceRenderTasks::Chained { root_task_id, port_task_id });
-        surface.clipping_rect = clipping_rect;
+        surface.raster_rect = Some(raster_rect);
 
         self.add_child_render_task(
             parent_surface_index,
@@ -376,6 +375,7 @@ impl FrameBuilder {
                 global_device_pixel_scale,
                 spatial_tree,
                 global_screen_world_rect,
+                surfaces: &mut scene.surfaces,
                 debug_flags,
                 scene_properties,
                 config: scene.config,
@@ -405,9 +405,8 @@ impl FrameBuilder {
                         // If we have a tile cache for this picture, see if any of the
                         // relative transforms have changed, which means we need to
                         // re-map the dependencies of any child primitives.
-                        let surface = &scene.surfaces[surface_index.0];
                         let world_culling_rect = tile_cache.pre_update(
-                            surface.local_rect,
+                            layout_rect_as_picture_rect(&pic.estimated_local_rect),
                             surface_index,
                             &visibility_context,
                             &mut visibility_state,
@@ -416,23 +415,21 @@ impl FrameBuilder {
                         // Push a new surface, supplying the list of clips that should be
                         // ignored, since they are handled by clipping when drawing this surface.
                         visibility_state.push_surface(
-                            *pic_index,
                             surface_index,
                             &tile_cache.shared_clips,
                             frame_context.spatial_tree,
                         );
 
-                        update_prim_visibility(
+                        update_primitive_visibility(
+                            &mut scene.prim_store,
                             *pic_index,
                             None,
                             &world_culling_rect,
-                            &mut scene.prim_store,
-                            &mut scene.prim_instances,
-                            &mut scene.surfaces,
-                            true,
                             &visibility_context,
                             &mut visibility_state,
                             tile_cache,
+                            true,
+                            &mut scene.prim_instances,
                         );
 
                         // Build the dirty region(s) for this tile cache.
