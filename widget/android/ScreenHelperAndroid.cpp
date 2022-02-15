@@ -36,10 +36,12 @@ static already_AddRefed<Screen> MakePrimaryScreen() {
   uint32_t depth = java::GeckoAppShell::GetScreenDepth();
   float density = java::GeckoAppShell::GetDensity();
   float dpi = java::GeckoAppShell::GetDpi();
-  RefPtr<Screen> screen = new Screen(bounds, bounds, depth, depth,
-                                     DesktopToLayoutDeviceScale(density),
-                                     CSSToLayoutDeviceScale(1.0f), dpi);
-  return screen.forget();
+  auto orientation =
+      hal::ScreenOrientation(java::GeckoAppShell::GetScreenOrientation());
+  uint16_t angle = java::GeckoAppShell::GetScreenAngle();
+  return MakeAndAddRef<Screen>(
+      bounds, bounds, depth, depth, DesktopToLayoutDeviceScale(density),
+      CSSToLayoutDeviceScale(1.0f), dpi, orientation, angle);
 }
 
 ScreenHelperAndroid::ScreenHelperAndroid() {

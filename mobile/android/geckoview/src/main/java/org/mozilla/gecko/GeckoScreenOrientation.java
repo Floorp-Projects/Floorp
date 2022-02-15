@@ -17,7 +17,6 @@ import android.view.Surface;
 import android.view.WindowManager;
 import java.util.ArrayList;
 import java.util.List;
-import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.ThreadUtils;
 
 /*
@@ -69,8 +68,6 @@ public class GeckoScreenOrientation {
   private static final int DEFAULT_ROTATION = Surface.ROTATION_0;
   // Last updated screen orientation with Gecko value space.
   private ScreenOrientation mScreenOrientation = ScreenOrientation.PORTRAIT_PRIMARY;
-  // Whether the update should notify Gecko about screen orientation changes.
-  private boolean mShouldNotify = true;
 
   public interface OrientationChangeListener {
     void onScreenOrientationChanged(ScreenOrientation newOrientation);
@@ -100,23 +97,6 @@ public class GeckoScreenOrientation {
   public void removeListener(final OrientationChangeListener aListener) {
     ThreadUtils.assertOnUiThread();
     mListeners.remove(aListener);
-  }
-
-  /*
-   * Enable Gecko screen orientation events on update.
-   */
-  public void enableNotifications() {
-    // We should notify Gecko of current orientation information at force.
-    mScreenOrientation = ScreenOrientation.NONE;
-    mShouldNotify = true;
-    update();
-  }
-
-  /*
-   * Disable Gecko screen orientation events on update.
-   */
-  public void disableNotifications() {
-    mShouldNotify = false;
   }
 
   /*
@@ -161,9 +141,6 @@ public class GeckoScreenOrientation {
     return update(getScreenOrientation(aAndroidOrientation, getRotation()));
   }
 
-  @WrapForJNI(dispatchTo = "gecko")
-  private static native void onOrientationChange(short screenOrientation, short angle);
-
   /*
    * Update screen orientation given the screen orientation.
    *
@@ -193,21 +170,6 @@ public class GeckoScreenOrientation {
     mScreenOrientation = screenOrientation;
     Log.d(LOGTAG, "updating to new orientation " + mScreenOrientation);
     notifyListeners(mScreenOrientation);
-    if (mShouldNotify) {
-      if (aScreenOrientation == ScreenOrientation.NONE) {
-        return false;
-      }
-
-      if (GeckoThread.isRunning()) {
-        onOrientationChange(screenOrientation.value, getAngle());
-      } else {
-        GeckoThread.queueNativeCall(
-            GeckoScreenOrientation.class,
-            "onOrientationChange",
-            screenOrientation.value,
-            getAngle());
-      }
-    }
     ScreenManagerHelper.refreshScreenInfo();
     return true;
   }

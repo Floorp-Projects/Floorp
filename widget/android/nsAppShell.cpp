@@ -65,7 +65,6 @@
 #include "GeckoEditableSupport.h"
 #include "GeckoNetworkManager.h"
 #include "GeckoProcessManager.h"
-#include "GeckoScreenOrientation.h"
 #include "GeckoSystemStateListener.h"
 #include "GeckoTelemetryDelegate.h"
 #include "GeckoVRManager.h"
@@ -428,7 +427,6 @@ nsAppShell::nsAppShell()
     mozilla::GeckoBatteryManager::Init();
     mozilla::GeckoNetworkManager::Init();
     mozilla::GeckoProcessManager::Init();
-    mozilla::GeckoScreenOrientation::Init();
     mozilla::GeckoSystemStateListener::Init();
     mozilla::widget::Telemetry::Init();
     mozilla::widget::ImageDecoderSupport::Init();

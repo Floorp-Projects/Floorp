@@ -1206,16 +1206,6 @@ public class GeckoAppShell {
   }
 
   @WrapForJNI(calledFrom = "gecko")
-  private static void enableScreenOrientationNotifications() {
-    GeckoScreenOrientation.getInstance().enableNotifications();
-  }
-
-  @WrapForJNI(calledFrom = "gecko")
-  private static void disableScreenOrientationNotifications() {
-    GeckoScreenOrientation.getInstance().disableNotifications();
-  }
-
-  @WrapForJNI(calledFrom = "gecko")
   private static void notifyWakeLockChanged(final String topic, final String state) {
     final int intState;
     if ("unlocked".equals(state)) {

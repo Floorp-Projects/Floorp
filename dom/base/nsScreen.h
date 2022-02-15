@@ -100,6 +100,9 @@ class nsScreen : public mozilla::DOMEventTargetHelper {
 
   IMPL_EVENT_HANDLER(change);
 
+  uint16_t GetOrientationAngle() const;
+  mozilla::hal::ScreenOrientation GetOrientationType() const;
+
   // Deprecated
   void GetMozOrientation(nsString& aOrientation,
                          mozilla::dom::CallerType aCallerType) const;
@@ -115,6 +118,9 @@ class nsScreen : public mozilla::DOMEventTargetHelper {
                                JS::Handle<JSObject*> aGivenProto) override;
 
   mozilla::dom::ScreenOrientation* Orientation() const;
+  mozilla::dom::ScreenOrientation* GetOrientationIfExists() const {
+    return mScreenOrientation.get();
+  }
 
  protected:
   nsDeviceContext* GetDeviceContext();
