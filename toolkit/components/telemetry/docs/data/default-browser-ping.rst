@@ -28,6 +28,7 @@ Here's the format of the ping data, with example values for each property:
       os_locale: <string>, // ex. en-US
       default_browser: <string>, // ex. "firefox"
       previous_default_browser: <string>, // ex. "edge"
+      default_pdf_viewer_raw: <string>, // ex. "firefox"
       notification_type: <string>, // ex. "initial" or "followup"
       notification_shown: <string>, // ex. "shown", or "not-shown", or "error"
       notification_action: <string>, // ex. "no-action" or "make-firefox-default-button"
@@ -61,6 +62,10 @@ Which browser was set as the system default before it was changed to the current
 The OS does not keep track of previous default settings, so the agent records this information itself. That means that it will be inaccurate until the first time the default is changed after the agent task begins running. Before then, the value of ``previous_default_browser`` will be the same as ``default_browser``.
 
 This value is updated every time the Default Browser Agent runs, so when the default browser is first changed the values for ``default_browser`` and ``previous_default_browser`` will be different. But on subsequent executions of the Default Browser Agent, the two values will be the same.
+
+``default_pdf_viewer_raw``
+--------------------------
+Which pdf viewer is currently set as the system default. This is simply a string with the name of the pdf viewer.
 
 ``notification_type``
 ---------------------
