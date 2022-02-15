@@ -449,6 +449,8 @@ class GCRuntime {
 
   bool isShrinkingGC() const { return gcOptions() == JS::GCOptions::Shrink; }
 
+  bool isShutdownGC() const { return gcOptions() == JS::GCOptions::Shutdown; }
+
   bool initSweepActions();
 
   void setGrayRootsTracer(JSGrayRootsTracer traceOp, void* data);

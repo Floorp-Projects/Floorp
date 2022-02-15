@@ -2393,9 +2393,11 @@ bool GCRuntime::beginPreparePhase(JS::GCReason reason, AutoGCSession& session) {
   /*
    * Process any queued source compressions during the start of a major
    * GC.
+   *
+   * Bug 1650075: When we start passing GCOptions::Shutdown for
+   * GCReason::XPCONNECT_SHUTDOWN GCs we can remove the extra check.
    */
-  if (!IsShutdownReason(reason) && reason != JS::GCReason::ROOTS_REMOVED &&
-      reason != JS::GCReason::XPCONNECT_SHUTDOWN) {
+  if (!isShutdownGC() && reason != JS::GCReason::XPCONNECT_SHUTDOWN) {
     StartHandlingCompressionsOnGC(rt);
   }
 
@@ -2547,11 +2549,16 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
      */
     purgeRuntime();
 
-    if (IsShutdownReason(reason)) {
+    if (isShutdownGC()) {
       /* Clear any engine roots that may hold external data live. */
       for (GCZonesIter zone(this); !zone.done(); zone.next()) {
         zone->clearRootsForShutdownGC();
       }
+
+#ifdef DEBUG
+      marker.markQueue.clear();
+      marker.queuePos = 0;
+#endif
     }
   }
 
@@ -3006,12 +3013,11 @@ AutoDisableBarriers::~AutoDisableBarriers() {
   }
 }
 
-static bool ShouldCleanUpEverything(JS::GCReason reason,
-                                    JS::GCOptions options) {
+static bool ShouldCleanUpEverything(JS::GCOptions options) {
   // During shutdown, we must clean everything up, for the sake of leak
   // detection. When a runtime has no contexts, or we're doing a GC before a
   // shutdown CC, those are strong indications that we're shutting down.
-  return IsShutdownReason(reason) || options == JS::GCOptions::Shrink;
+  return options == JS::GCOptions::Shutdown || options == JS::GCOptions::Shrink;
 }
 
 static bool ShouldSweepOnBackgroundThread(JS::GCReason reason) {
@@ -3085,7 +3091,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
     case State::NotActive:
       MOZ_ASSERT(marker.isDrained());
       initialReason = reason;
-      cleanUpEverything = ShouldCleanUpEverything(reason, gcOptions());
+      cleanUpEverything = ShouldCleanUpEverything(gcOptions());
       sweepOnBackgroundThread = ShouldSweepOnBackgroundThread(reason);
       isCompacting = shouldCompact();
       MOZ_ASSERT(!lastMarkSlice);
@@ -3766,7 +3772,7 @@ bool GCRuntime::checkIfGCAllowedInCurrentState(JS::GCReason reason) {
 
   // Only allow shutdown GCs when we're destroying the runtime. This keeps
   // the GC callback from triggering a nested GC and resetting global state.
-  if (rt->isBeingDestroyed() && !IsShutdownReason(reason)) {
+  if (rt->isBeingDestroyed() && !isShutdownGC()) {
     return false;
   }
 
@@ -3846,18 +3852,11 @@ void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
   stats().log("GC starting in state %s", StateName(incrementalState));
 
   AutoTraceLog logGC(TraceLoggerForCurrentThread(), TraceLogger_GC);
-  AutoStopVerifyingBarriers av(rt, IsShutdownReason(reason));
+  AutoStopVerifyingBarriers av(rt, isShutdownGC());
   AutoMaybeLeaveAtomsZone leaveAtomsZone(rt->mainContextFromOwnThread());
   AutoSetZoneSliceThresholds sliceThresholds(this);
 
   schedulingState.updateHighFrequencyModeForReason(reason);
-
-#ifdef DEBUG
-  if (IsShutdownReason(reason)) {
-    marker.markQueue.clear();
-    marker.queuePos = 0;
-  }
-#endif
 
   bool repeat;
   do {
@@ -3882,7 +3881,7 @@ void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
     if (!isIncrementalGCInProgress()) {
       if (cycleResult == ResetIncremental) {
         repeat = true;
-      } else if (rootsRemoved && IsShutdownReason(reason)) {
+      } else if (rootsRemoved && isShutdownGC()) {
         /* Need to re-schedule all zones for GC. */
         JS::PrepareForFullGC(rt->mainContextFromOwnThread());
         repeat = true;

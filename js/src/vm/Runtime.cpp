@@ -285,7 +285,7 @@ void JSRuntime::destroyRuntime() {
     profilingScripts = false;
 
     JS::PrepareForFullGC(cx);
-    gc.gc(JS::GCOptions::Normal, JS::GCReason::DESTROY_RUNTIME);
+    gc.gc(JS::GCOptions::Shutdown, JS::GCReason::DESTROY_RUNTIME);
   }
 
   AutoNoteSingleThreadedRegion anstr;
