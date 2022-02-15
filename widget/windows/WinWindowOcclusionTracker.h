@@ -75,6 +75,8 @@ class WinWindowOcclusionTracker final : public DisplayStatusListener,
     return mSerializedTaskDispatcher;
   }
 
+  void TriggerCalculation();
+
   void DumpOccludingWindows(HWND aHWnd);
 
  private:
@@ -99,6 +101,7 @@ class WinWindowOcclusionTracker final : public DisplayStatusListener,
     // Returns existing WindowOcclusionCalculator instance.
     static WindowOcclusionCalculator* GetInstance() { return sCalculator; }
 
+    void Initialize();
     void Shutdown(layers::SynchronousTask* aTask);
 
     void EnableOcclusionTrackingForWindow(HWND hwnd);
@@ -106,6 +109,8 @@ class WinWindowOcclusionTracker final : public DisplayStatusListener,
 
     // If a window becomes visible, makes sure event hooks are registered.
     void HandleVisibilityChanged(bool aVisible);
+
+    void HandleTriggerCalculation();
 
    private:
     WindowOcclusionCalculator();
@@ -236,7 +241,6 @@ class WinWindowOcclusionTracker final : public DisplayStatusListener,
     HWND mMovingWindow = 0;
 
     // Only used on Win10+.
-    // XXX VirtualDesktopManager is going to be handled by Bug 1732737.
     RefPtr<IVirtualDesktopManager> mVirtualDesktopManager;
 
     // Used to serialize tasks related to mRootWindowHwndsOcclusionState.
