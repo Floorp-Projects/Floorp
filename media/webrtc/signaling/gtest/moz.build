@@ -20,6 +20,7 @@ if (
     and not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["MOZ_ASAN"])
 ):
     LOCAL_INCLUDES += [
+        "!/ipc/ipdl/_ipdlheaders",
         "/dom/media",
         "/dom/media/gtest",
         "/dom/media/systemservices",
