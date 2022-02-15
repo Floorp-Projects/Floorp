@@ -171,8 +171,6 @@ let Player = {
       audioButton.previousElementSibling.hidden = false;
     }
 
-    Services.telemetry.setEventRecordingEnabled("pictureinpicture", true);
-
     this.resizeDebouncer = new DeferredTask(() => {
       this.recordEvent("resize", {
         width: window.outerWidth.toString(),
