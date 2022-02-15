@@ -4004,23 +4004,18 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
   storePtr(WasmTlsReg,
            Address(getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
 
-  // TODO: The null test cannot quite go away because we need a valid(ish) tls
-  // to load the target state and switch realms.  A couple of possibilities:
-  //
-  // - We could have a dummy tls in the null tls slots, and then catch the
-  //   signal when we later jump to null.  Not clear what the implications would
-  //   be for the realm switch, since *cx would already be updated.
-  //
-  // - If the newTls is null, then the loading of the HeapReg from it (except on
-  //   x86-32) will cause a trap, and that trap will happen before the realm
-  //   switch, and that may be good enough.
-
+#ifdef WASM_HAS_HEAPREG
+  // Use the null pointer exception resulting from loading HeapReg from a null
+  // Tls to handle a call to a null slot.
+  loadWasmPinnedRegsFromTls(mozilla::Some(trapOffset));
+#else
   Label nonNull;
   branchTestPtr(Assembler::NonZero, WasmTlsReg, WasmTlsReg, &nonNull);
   wasmTrap(wasm::Trap::IndirectCallToNull, trapOffset);
   bind(&nonNull);
 
   loadWasmPinnedRegsFromTls();
+#endif
   switchToWasmTlsRealm(index, WasmTableCallScratchReg1);
 
   loadPtr(Address(calleeScratch, offsetof(wasm::FunctionTableElem, code)),
@@ -4243,6 +4238,21 @@ void MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length,
   if (JitOptions.spectreIndexMasking) {
     and32(Imm32(length - 1), index);
   }
+}
+
+void MacroAssembler::loadWasmPinnedRegsFromTls(
+    mozilla::Maybe<wasm::BytecodeOffset> trapOffset) {
+#ifdef WASM_HAS_HEAPREG
+  static_assert(offsetof(wasm::TlsData, memoryBase) < 4096,
+                "We count only on the low page being inaccessible");
+  if (trapOffset) {
+    append(wasm::Trap::IndirectCallToNull,
+           wasm::TrapSite(currentOffset(), *trapOffset));
+  }
+  loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
+#else
+  MOZ_ASSERT(!trapOffset);
+#endif
 }
 
 //}}} check_macroassembler_style
