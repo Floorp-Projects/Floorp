@@ -2391,14 +2391,9 @@ bool PeerConnectionImpl::IsClosed() const {
 
 PeerConnectionWrapper::PeerConnectionWrapper(const std::string& handle)
     : impl_(nullptr) {
-  PeerConnectionImpl* impl =
-      PeerConnectionCtx::GetInstance()->GetPeerConnection(handle);
-
-  if (!PeerConnectionCtx::isActive() || !impl) {
-    return;
+  if (PeerConnectionCtx::isActive()) {
+    impl_ = PeerConnectionCtx::GetInstance()->GetPeerConnection(handle);
   }
-
-  impl_ = impl;
 }
 
 const RefPtr<MediaTransportHandler> PeerConnectionImpl::GetTransportHandler()
