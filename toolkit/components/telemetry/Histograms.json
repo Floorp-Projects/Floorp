@@ -14515,7 +14515,7 @@
     "high": 10000,
     "n_buckets": 100,
     "bug_numbers": [1238433, 1570634, 1752207],
-    "description": "Percentage of frames decoded frames dropped in an HTMLVideoElement"
+    "description": "Frames of of 10,000 decoded frames dropped in an HTMLVideoElement"
   },
   "MEDIA_DECODER_BACKEND_USED": {
     "record_in_processes": ["main", "content", "gpu"],
