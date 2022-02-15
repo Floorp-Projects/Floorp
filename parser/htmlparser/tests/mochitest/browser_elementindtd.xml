@@ -1,0 +1,8 @@
+<!DOCTYPE html
+[
+  <!ENTITY % externaldtd SYSTEM "chrome://mochitests/content/browser/parser/htmlparser/tests/mochitest/browser_elementindtd.dtd" >
+  %externaldtd;
+]>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<body>&entitywithelement;</body>
+</html>

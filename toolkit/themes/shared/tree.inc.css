@@ -216,9 +216,11 @@ html|input.tree-input {
   left: 0;
   appearance: none;
   -moz-box-flex: 1;
-  border: 1px solid SelectedItem;
-  margin: 0;
-  margin-inline-start: -4px;
+  border: 0;
+  border-radius: 2px;
+  outline: var(--focus-outline);
+  margin-block: -1px 0;
+  margin-inline: -2px 0;
   padding: 1px;
   font: inherit;
 }

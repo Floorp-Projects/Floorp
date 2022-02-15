@@ -8051,6 +8051,7 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   const wasm::CallSiteDesc& desc = mir->desc();
   const wasm::CalleeDesc& callee = mir->callee();
   CodeOffset retOffset;
+  CodeOffset secondRetOffset;
   switch (callee.which()) {
     case wasm::CalleeDesc::Func:
       retOffset = masm.call(desc, callee.funcIndex());
@@ -8064,8 +8065,13 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
       retOffset = masm.asmCallIndirect(desc, callee);
       break;
     case wasm::CalleeDesc::WasmTable:
-      retOffset = masm.wasmCallIndirect(desc, callee, lir->needsBoundsCheck(),
-                                        lir->tableSize());
+      masm.wasmCallIndirect(desc, callee, lir->needsBoundsCheck(),
+                            lir->tableSize(), &retOffset, &secondRetOffset);
+      // Register reloading and realm switching are handled dynamically inside
+      // wasmCallIndirect.  There are two return offsets, one for each call
+      // instruction (fast path and slow path).
+      reloadRegs = false;
+      switchRealm = false;
       break;
     case wasm::CalleeDesc::Builtin:
       retOffset = masm.call(desc, callee.builtin());
@@ -8085,9 +8091,17 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
 
   // Now that all the outbound in-memory args are on the stack, note the
   // required lower boundary point of the associated StackMap.
-  lir->safepoint()->setFramePushedAtStackMapBase(
-      masm.framePushed() - mir->stackArgAreaSizeUnaligned());
+  uint32_t framePushedAtStackMapBase =
+      masm.framePushed() - mir->stackArgAreaSizeUnaligned();
+  lir->safepoint()->setFramePushedAtStackMapBase(framePushedAtStackMapBase);
   MOZ_ASSERT(!lir->safepoint()->isWasmTrap());
+
+  // Note the assembler offset and framePushed for use by the adjunct
+  // LSafePoint, see visitor for LWasmCallIndirectAdjunctSafepoint below.
+  if (callee.which() == wasm::CalleeDesc::WasmTable) {
+    lir->adjunctSafepoint()->recordSafepointInfo(secondRetOffset,
+                                                 framePushedAtStackMapBase);
+  }
 
   if (reloadRegs) {
     masm.loadPtr(Address(masm.getStackPointer(), WasmCallerTlsOffsetBeforeCall),
@@ -8120,6 +8134,13 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
     MOZ_ASSERT(tryNote.end > tryNote.begin);
   }
 #endif
+}
+
+void CodeGenerator::visitWasmCallIndirectAdjunctSafepoint(
+    LWasmCallIndirectAdjunctSafepoint* lir) {
+  markSafepointAt(lir->safepointLocation().offset(), lir);
+  lir->safepoint()->setFramePushedAtStackMapBase(
+      lir->framePushedAtStackMapBase());
 }
 
 void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {

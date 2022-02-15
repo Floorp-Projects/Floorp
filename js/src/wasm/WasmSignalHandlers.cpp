@@ -949,22 +949,48 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
 
   Trap trap;
   BytecodeOffset bytecode;
-  if (!segment.code().lookupTrap(regs.pc, &trap, &bytecode) ||
-      trap != Trap::OutOfBounds) {
+  if (!segment.code().lookupTrap(regs.pc, &trap, &bytecode)) {
     return false;
+  }
+  switch (trap) {
+    case Trap::OutOfBounds:
+      break;
+#ifdef WASM_HAS_HEAPREG
+    case Trap::IndirectCallToNull:
+      // We use the null pointer exception from loading the heapreg to
+      // handle indirect calls to null.
+      break;
+#endif
+    default:
+      return false;
   }
 
   Instance& instance =
       *GetNearestEffectiveTls(Frame::fromUntaggedWasmExitFP(regs.fp))->instance;
   MOZ_ASSERT(&instance.code() == &segment.code());
 
-  if (!instance.memoryAccessInGuardRegion((uint8_t*)addr, numBytes)) {
-    return false;
+  switch (trap) {
+    case Trap::OutOfBounds:
+      if (!instance.memoryAccessInGuardRegion((uint8_t*)addr, numBytes)) {
+        return false;
+      }
+      break;
+#ifdef WASM_HAS_HEAPREG
+    case Trap::IndirectCallToNull:
+      // Null pointer plus the appropriate offset.
+      if (addr !=
+          reinterpret_cast<uint8_t*>(offsetof(wasm::TlsData, memoryBase))) {
+        return false;
+      }
+      break;
+#endif
+    default:
+      MOZ_CRASH("Should not happen");
   }
 
   JSContext* cx = TlsContext.get();  // Cold simulator helper function
   jit::JitActivation* activation = cx->activation()->asJit();
-  activation->startWasmTrap(Trap::OutOfBounds, bytecode.offset(), regs);
+  activation->startWasmTrap(trap, bytecode.offset(), regs);
   *newPC = segment.trapCode();
   return true;
 }

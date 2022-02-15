@@ -69,7 +69,7 @@ def register_callback_action(
     parameters as follows:
 
     ``parameters``:
-        Decision task parameters, see ``gecko_taskgraph.parameters.Parameters``.
+        Decision task parameters, see ``taskgraph.parameters.Parameters``.
     ``input``:
         Input matching specified JSON schema, ``None`` if no ``schema``
         parameter is given to ``register_callback_action``.
@@ -274,7 +274,7 @@ def render_actions_json(parameters, graph_config, decision_task_id):
 
     Parameters
     ----------
-    parameters : gecko_taskgraph.parameters.Parameters
+    parameters : taskgraph.parameters.Parameters
         Decision task parameters.
 
     Returns

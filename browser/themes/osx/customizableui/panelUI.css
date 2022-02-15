@@ -88,6 +88,6 @@ menu.subviewbutton > .menu-right {
   background-color: var(--panel-item-active-bgcolor);
 }
 
-.panel-button:-moz-focusring {
-  box-shadow: var(--focus-ring-box-shadow);
+.panel-button:focus-visible {
+  outline: var(--focus-outline);
 }

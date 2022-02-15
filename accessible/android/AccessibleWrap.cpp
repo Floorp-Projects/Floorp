@@ -356,14 +356,16 @@ void AccessibleWrap::NavigateText(int32_t aGranularity, int32_t aStartOffset,
   }
 
   int32_t newOffset;
-  LocalAccessible* newAnchor = nullptr;
+  Accessible* newAnchorBase = nullptr;
   if (aForward) {
-    newAnchor = pivot.NextText(this, &start, &end, pivotGranularity);
+    newAnchorBase = pivot.NextText(this, &start, &end, pivotGranularity);
     newOffset = end;
   } else {
-    newAnchor = pivot.PrevText(this, &start, &end, pivotGranularity);
+    newAnchorBase = pivot.PrevText(this, &start, &end, pivotGranularity);
     newOffset = start;
   }
+  LocalAccessible* newAnchor =
+      newAnchorBase ? newAnchorBase->AsLocal() : nullptr;
 
   if (newAnchor && (start != aStartOffset || end != aEndOffset)) {
     if (IsTextLeaf() && newAnchor == LocalParent()) {

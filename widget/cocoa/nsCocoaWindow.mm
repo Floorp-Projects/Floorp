@@ -47,6 +47,7 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ScopeExit.h"
