@@ -39,6 +39,13 @@ function getPendingMinidump(id) {
 var ChildCrashHandler = {
   // The event listener for this is hooked up in GeckoViewStartup.jsm
   observe(aSubject, aTopic, aData) {
+    if (
+      aTopic !== "ipc:content-shutdown" &&
+      aTopic !== "compositor:process-aborted"
+    ) {
+      return;
+    }
+
     aSubject.QueryInterface(Ci.nsIPropertyBag2);
 
     const disableReporting = Cc["@mozilla.org/process/environment;1"]
@@ -53,8 +60,10 @@ var ChildCrashHandler = {
       return;
     }
 
+    // If dumpID is empty the process was likely killed by the system and we therefore do not want
+    // to report the crash.
     const dumpID = aSubject.get("dumpID");
-    if (aTopic === "ipc:content-shutdown" && !dumpID) {
+    if (!dumpID) {
       Services.telemetry
         .getHistogramById("FX_CONTENT_CRASH_DUMP_UNAVAILABLE")
         .add(1);
