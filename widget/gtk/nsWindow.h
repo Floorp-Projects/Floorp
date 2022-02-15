@@ -86,9 +86,10 @@ typedef struct _GdkEventTouchpadPinch GdkEventTouchpadPinch;
 #endif
 
 namespace mozilla {
+enum class NativeKeyBindingsType : uint8_t;
+
 class TimeStamp;
 class CurrentX11TimeGetter;
-
 }  // namespace mozilla
 
 class nsWindow final : public nsBaseWidget {
@@ -273,7 +274,8 @@ class nsWindow final : public nsBaseWidget {
   InputContext GetInputContext() override;
   TextEventDispatcherListener* GetNativeTextEventDispatcherListener() override;
   MOZ_CAN_RUN_SCRIPT bool GetEditCommands(
-      NativeKeyBindingsType aType, const mozilla::WidgetKeyboardEvent& aEvent,
+      mozilla::NativeKeyBindingsType aType,
+      const mozilla::WidgetKeyboardEvent& aEvent,
       nsTArray<mozilla::CommandInt>& aCommands) override;
 
   // These methods are for toplevel windows only.
