@@ -1,0 +1,37 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    platform: linux1804-64/opt
+    require-build:
+        by-project:
+            try:
+                linux1804-64/opt: build-linux64/opt
+            default:
+                linux1804-64/opt: build-linux64-shippable/opt
+    fetches:
+        build:
+            - target.tar.bz2
+        toolchain:
+            - linux64-geckodriver
+    run-on-projects: []
+    treeherder:
+        kind: test
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: ubuntu1804-test}
+        max-run-time: 1800
+    optimization:
+        skip-unless-expanded: null
+
+interventions:
+    description: webcompat intervention tests
+    treeherder:
+        symbol: wc(I)
+        tier: 3
+    python-version: [3]
+    run:
+        using: mach
+        # Need to start Xvfb if we remove --headless
+        mach: test-interventions --headless --binary $MOZ_FETCHES_DIR/firefox/firefox --webdriver-binary $MOZ_FETCHES_DIR/geckodriver --log-tbpl -

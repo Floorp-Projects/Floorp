@@ -359,6 +359,9 @@ def initialize(topsrcdir):
         "power": MachCommandReference("tools/power/mach_commands.py"),
         "try": MachCommandReference("tools/tryselect/mach_commands.py"),
         "import-pr": MachCommandReference("tools/vcs/mach_commands.py"),
+        "test-interventions": MachCommandReference(
+            "testing/webcompat/mach_commands.py"
+        ),
     }
 
     # Set a reasonable limit to the number of open files.
