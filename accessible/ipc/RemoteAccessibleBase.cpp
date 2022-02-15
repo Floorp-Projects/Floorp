@@ -644,6 +644,11 @@ void RemoteAccessibleBase<Derived>::InvalidateGroupInfo() {
 }
 
 template <class Derived>
+bool RemoteAccessibleBase<Derived>::HasPrimaryAction() const {
+  return mCachedFields && mCachedFields->HasAttribute(nsGkAtoms::action);
+}
+
+template <class Derived>
 void RemoteAccessibleBase<Derived>::TakeFocus() const {
   Unused << mDoc->SendTakeFocus(mID);
 }

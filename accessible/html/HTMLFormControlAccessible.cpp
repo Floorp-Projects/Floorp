@@ -168,17 +168,10 @@ HTMLButtonAccessible::HTMLButtonAccessible(nsIContent* aContent,
   mGenericTypes |= eButton;
 }
 
-uint8_t HTMLButtonAccessible::ActionCount() const { return 1; }
+bool HTMLButtonAccessible::HasPrimaryAction() const { return true; }
 
 void HTMLButtonAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex == eAction_Click) aName.AssignLiteral("press");
-}
-
-bool HTMLButtonAccessible::DoAction(uint8_t aIndex) const {
-  if (aIndex != eAction_Click) return false;
-
-  DoCommand();
-  return true;
 }
 
 uint64_t HTMLButtonAccessible::State() {
@@ -420,7 +413,7 @@ uint64_t HTMLTextFieldAccessible::NativeState() const {
   return state;
 }
 
-uint8_t HTMLTextFieldAccessible::ActionCount() const { return 1; }
+bool HTMLTextFieldAccessible::HasPrimaryAction() const { return true; }
 
 void HTMLTextFieldAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex == eAction_Click) aName.AssignLiteral("activate");
