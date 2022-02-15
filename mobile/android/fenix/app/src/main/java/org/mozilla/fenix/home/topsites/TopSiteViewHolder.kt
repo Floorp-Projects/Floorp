@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.topsites
 
 import android.view.View
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.R
@@ -14,10 +15,11 @@ import org.mozilla.fenix.utils.AccessibilityGridLayoutManager
 
 class TopSiteViewHolder(
     view: View,
+    viewLifecycleOwner: LifecycleOwner,
     interactor: TopSiteInteractor
 ) : RecyclerView.ViewHolder(view) {
 
-    private val topSitesAdapter = TopSitesAdapter(interactor)
+    private val topSitesAdapter = TopSitesAdapter(viewLifecycleOwner, interactor)
     val binding = ComponentTopSitesBinding.bind(view)
 
     init {

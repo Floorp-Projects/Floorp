@@ -49,7 +49,7 @@ class TopSitesPagerAdapterTest {
 
     @Before
     fun setup() {
-        topSitesPagerAdapter = spyk(TopSitesPagerAdapter(mockk()))
+        topSitesPagerAdapter = spyk(TopSitesPagerAdapter(mockk(), mockk()))
     }
 
     @Test

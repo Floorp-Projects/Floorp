@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.topsites
 
 import android.view.View
 import androidx.core.view.isVisible
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import mozilla.components.feature.top.sites.TopSite
@@ -18,11 +19,12 @@ import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 
 class TopSitePagerViewHolder(
     view: View,
+    viewLifecycleOwner: LifecycleOwner,
     interactor: TopSiteInteractor
 ) : RecyclerView.ViewHolder(view) {
 
     private val binding = ComponentTopSitesPagerBinding.bind(view)
-    private val topSitesPagerAdapter = TopSitesPagerAdapter(interactor)
+    private val topSitesPagerAdapter = TopSitesPagerAdapter(viewLifecycleOwner, interactor)
     private val pageIndicator = binding.pageIndicator
     private var currentPage = 0
 

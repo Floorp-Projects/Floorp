@@ -47,7 +47,7 @@ class StartupReportFullyDrawnTest {
         holderItemView = spyk(binding.root)
         every { activity.findViewById<LinearLayout>(R.id.rootContainer) } returns rootContainer
         every { holderItemView.context } returns activity
-        holder = TopSiteItemViewHolder(holderItemView, mockk())
+        holder = TopSiteItemViewHolder(holderItemView, mockk(), mockk())
         every { rootContainer.viewTreeObserver } returns viewTreeObserver
         every { holderItemView.viewTreeObserver } returns viewTreeObserver
 

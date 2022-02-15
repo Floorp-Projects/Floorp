@@ -10,7 +10,8 @@ import android.view.View
 import android.widget.PopupWindow
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.view.isVisible
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -28,6 +29,7 @@ import org.mozilla.fenix.utils.view.ViewHolder
 
 class TopSiteItemViewHolder(
     view: View,
+    private val viewLifecycleOwner: LifecycleOwner,
     private val interactor: TopSiteInteractor
 ) : ViewHolder(view) {
     private lateinit var topSite: TopSite
@@ -83,7 +85,7 @@ class TopSiteItemViewHolder(
         if (topSite is TopSite.Provided) {
             binding.topSiteSubtitle.isVisible = true
 
-            CoroutineScope(IO).launch {
+            viewLifecycleOwner.lifecycleScope.launch(IO) {
                 itemView.context.components.core.client.bitmapForUrl(topSite.imageUrl)?.let { bitmap ->
                     withContext(Main) {
                         binding.faviconImage.setImageBitmap(bitmap)

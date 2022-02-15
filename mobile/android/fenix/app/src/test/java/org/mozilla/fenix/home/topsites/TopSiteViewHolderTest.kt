@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.topsites
 
 import android.view.LayoutInflater
+import androidx.lifecycle.LifecycleOwner
 import io.mockk.mockk
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.test.robolectric.testContext
@@ -20,17 +21,19 @@ import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 class TopSiteViewHolderTest {
 
     private lateinit var binding: ComponentTopSitesBinding
+    private lateinit var lifecycleOwner: LifecycleOwner
     private lateinit var interactor: TopSiteInteractor
 
     @Before
     fun setup() {
         binding = ComponentTopSitesBinding.inflate(LayoutInflater.from(testContext))
-        interactor = mockk()
+        interactor = mockk(relaxed = true)
+        lifecycleOwner = mockk(relaxed = true)
     }
 
     @Test
     fun `binds list of top sites`() {
-        TopSiteViewHolder(binding.root, interactor).bind(
+        TopSiteViewHolder(binding.root, lifecycleOwner, interactor).bind(
             listOf(
                 TopSite.Default(
                     id = 1L,
