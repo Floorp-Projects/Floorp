@@ -307,7 +307,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     }
 
     protected void onAppBackground() {
-      setPriorityLevel(PriorityLevel.BACKGROUND);
+      setPriorityLevel(PriorityLevel.IDLE);
     }
   }
 
