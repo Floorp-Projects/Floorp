@@ -6,6 +6,27 @@
 html {
   box-sizing: border-box;
 }
+#floorp {
+  position: fixed;
+  bottom: 0.5em;
+  right: 1em;
+  font-size: 0.8em;
+  color: #909090;
+}
+#releasenote {
+  position: fixed;
+  color: #bbb;
+  font-size: 0.8em;
+  right: 1.5em;
+}
+
+#newtab-search-text{
+  border-radius: 64px;
+}
+
+#searchSubmit{
+  border-radius: 0 100px 100px 0;
+}
   /* top sites */
   .top-site-outer .tile {
     border-radius: 12px !important;
@@ -13,7 +34,6 @@ html {
     width: 44px !important;
     box-shadow: none !important;
   }
-
   .top-site-outer .tile .icon-wrapper {
     border-radius: 4px !important;
     width: 24px !important;
