@@ -68,8 +68,8 @@ export const DEFAULT_RTAMO_CONTENT = {
       },
     },
     hide_logo: true,
-    background_url:
-      "chrome://activity-stream/content/data/content/assets/proton-bkg.avif",
+    backdrop:
+      "#212121 url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) center/cover no-repeat fixed",
     primary_button: {
       label: { string_id: "return-to-amo-add-extension-label" },
       source_id: "ADD_EXTENSION_BUTTON",
