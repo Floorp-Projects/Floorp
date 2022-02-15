@@ -930,7 +930,7 @@ Inspector.prototype = {
    */
   getSelectedSidebar: function() {
     const pref = "devtools.inspector.selectedSidebar";
-    // @backward-compat { version 97 } If selected sidebar pref is not set from older versions,
+    // @backward-compat { version 99 } If selected sidebar pref is not set from older versions,
     //                                 falls back to active sidebar pref.
     if (!Services.prefs.prefHasUserValue(pref)) {
       return this.getActiveSidebar();
