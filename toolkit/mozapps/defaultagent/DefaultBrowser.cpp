@@ -9,11 +9,8 @@
 #include <string>
 
 #include <shlobj.h>
-#include <shlwapi.h>
 
-#include "common.h"
 #include "EventLog.h"
-#include "Registry.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/RefPtr.h"
@@ -70,15 +67,18 @@ static BrowserResult GetDefaultBrowser() {
   }
 
   // Whatever is handling the HTTP protocol is effectively the default browser.
-  wchar_t* rawRegisteredApp;
-  hr = pAAR->QueryCurrentDefault(L"http", AT_URLPROTOCOL, AL_EFFECTIVE,
-                                 &rawRegisteredApp);
-  if (FAILED(hr)) {
-    LOG_ERROR(hr);
-    return BrowserResult(mozilla::WindowsError::FromHResult(hr));
+  mozilla::UniquePtr<wchar_t, mozilla::CoTaskMemFreeDeleter> registeredApp;
+  {
+    wchar_t* rawRegisteredApp;
+    hr = pAAR->QueryCurrentDefault(L"http", AT_URLPROTOCOL, AL_EFFECTIVE,
+                                   &rawRegisteredApp);
+    if (FAILED(hr)) {
+      LOG_ERROR(hr);
+      return BrowserResult(mozilla::WindowsError::FromHResult(hr));
+    }
+    registeredApp = mozilla::UniquePtr<wchar_t, mozilla::CoTaskMemFreeDeleter>(
+        rawRegisteredApp);
   }
-  mozilla::UniquePtr<wchar_t, mozilla::CoTaskMemFreeDeleter> registeredApp(
-      rawRegisteredApp);
 
   // Get the application Friendly Name associated to the found ProgID. This is
   // sized to be larger than any observed or expected friendly names. Long
@@ -86,7 +86,7 @@ static BrowserResult GetDefaultBrowser() {
   std::array<wchar_t, 256> friendlyName{};
   DWORD friendlyNameLen = friendlyName.size();
   hr = AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_FRIENDLYAPPNAME,
-                         registeredApp.get(), NULL, friendlyName.data(),
+                         registeredApp.get(), nullptr, friendlyName.data(),
                          &friendlyNameLen);
   if (FAILED(hr)) {
     LOG_ERROR(hr);
