@@ -4876,13 +4876,13 @@ var SessionStoreInternal = {
   /**
    * Restore a window's dimensions
    * @param aWidth
-   *        Window width
+   *        Window width in desktop pixels
    * @param aHeight
-   *        Window height
+   *        Window height in desktop pixels
    * @param aLeft
-   *        Window left
+   *        Window left in desktop pixels
    * @param aTop
-   *        Window top
+   *        Window top in desktop pixels
    * @param aSizeMode
    *        Window size mode (eg: maximized)
    * @param aSizeModeBeforeMinimized

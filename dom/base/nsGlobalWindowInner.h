@@ -869,6 +869,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
                            mozilla::ErrorResult& aError);
   double GetDevicePixelRatio(mozilla::dom::CallerType aCallerType,
                              mozilla::ErrorResult& aError);
+  double GetDesktopToDeviceScale(mozilla::ErrorResult& aError);
   int32_t GetScrollMinX(mozilla::ErrorResult& aError);
   int32_t GetScrollMinY(mozilla::ErrorResult& aError);
   int32_t GetScrollMaxX(mozilla::ErrorResult& aError);
