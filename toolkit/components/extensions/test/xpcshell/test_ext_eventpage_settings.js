@@ -121,7 +121,10 @@ add_task(async function test_browser_settings() {
   await extension.awaitMessage("homepageOverride");
   ok(true, "homepageOverride.onChange fired");
 
-  if (AppConstants.platform !== "android") {
+  if (
+    AppConstants.platform !== "android" &&
+    AppConstants.MOZ_APP_NAME !== "thunderbird"
+  ) {
     await extension.terminateBackground();
     assertPersistentListeners(
       extension,
