@@ -13,6 +13,14 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const {
+  saveToDisk,
+  alwaysAsk,
+  useHelperApp,
+  handleInternally,
+  useSystemDefault,
+} = Ci.nsIHandlerInfo;
+
 const TOPIC_PDFJS_HANDLER_CHANGED = "pdfjs:handlerChanged";
 
 ChromeUtils.defineModuleGetter(
@@ -99,6 +107,7 @@ HandlerService.prototype = {
       // Since we need DownloadsViewInternally to verify mimetypes, we run this after
       // DownloadsViewInternally is registered via the 'handlersvc-store-initialized' notification.
       this._migrateDownloadsImprovementsIfNeeded();
+      this._migrateSVGXMLIfNeeded();
     }
   },
 
@@ -369,6 +378,11 @@ HandlerService.prototype = {
    *
    * See Bug 1736924 for more information.
    */
+  _noInternalHandlingDefault: new Set([
+    "text/xml",
+    "application/xml",
+    "image/svg+xml",
+  ]),
   _migrateDownloadsImprovementsIfNeeded() {
     // Migrate if the preference is enabled AND if the migration has never been run before.
     // Otherwise, we risk overwriting preferences for existing profiles!
@@ -380,16 +394,16 @@ HandlerService.prototype = {
       !this._store.data.isDownloadsImprovementsAlreadyMigrated
     ) {
       for (let [type, mimeInfo] of Object.entries(this._store.data.mimeTypes)) {
-        let isViewableInternally = DownloadIntegration.shouldViewDownloadInternally(
-          type
-        );
+        let isViewableInternally =
+          DownloadIntegration.shouldViewDownloadInternally(type) &&
+          !this._noInternalHandlingDefault.has(type);
         let isAskOnly = mimeInfo && mimeInfo.ask;
 
         if (isAskOnly) {
           if (isViewableInternally) {
-            mimeInfo.action = Ci.nsIHandlerInfo.handleInternally;
+            mimeInfo.action = handleInternally;
           } else {
-            mimeInfo.action = Ci.nsIHandlerInfo.saveToDisk;
+            mimeInfo.action = saveToDisk;
           }
 
           // Sets alwaysAskBeforeHandling to false. Needed to ensure that:
@@ -400,6 +414,30 @@ HandlerService.prototype = {
       }
 
       this._store.data.isDownloadsImprovementsAlreadyMigrated = true;
+      this._store.saveSoon();
+    }
+  },
+
+  _migrateSVGXMLIfNeeded() {
+    // Migrate if the preference is enabled AND if the migration has never been run before.
+    // We need to make sure we only run this once.
+    if (
+      Services.prefs.getBoolPref(
+        "browser.download.improvements_to_download_panel"
+      ) &&
+      !Services.policies.getActivePolicies()?.Handlers &&
+      !this._store.data.isSVGXMLAlreadyMigrated
+    ) {
+      for (let type of this._noInternalHandlingDefault) {
+        if (Object.hasOwn(this._store.data.mimeTypes, type)) {
+          let mimeInfo = this._store.data.mimeTypes[type];
+          if (!mimeInfo.ask && mimeInfo.action == handleInternally) {
+            mimeInfo.action = saveToDisk;
+          }
+        }
+      }
+
+      this._store.data.isSVGXMLAlreadyMigrated = true;
       this._store.saveSoon();
     }
   },
@@ -465,12 +503,12 @@ HandlerService.prototype = {
 
     // Only a limited number of preferredAction values is allowed.
     if (
-      handlerInfo.preferredAction == Ci.nsIHandlerInfo.saveToDisk ||
-      handlerInfo.preferredAction == Ci.nsIHandlerInfo.useSystemDefault ||
-      handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally ||
+      handlerInfo.preferredAction == saveToDisk ||
+      handlerInfo.preferredAction == useSystemDefault ||
+      handlerInfo.preferredAction == handleInternally ||
       // For files (ie mimetype rather than protocol handling info), ensure
       // we can store the "always ask" state, too:
-      (handlerInfo.preferredAction == Ci.nsIHandlerInfo.alwaysAsk &&
+      (handlerInfo.preferredAction == alwaysAsk &&
         this._isMIMEInfo(handlerInfo) &&
         Services.prefs.getBoolPref(
           "browser.download.improvements_to_download_panel"
@@ -478,7 +516,7 @@ HandlerService.prototype = {
     ) {
       storedHandlerInfo.action = handlerInfo.preferredAction;
     } else {
-      storedHandlerInfo.action = Ci.nsIHandlerInfo.useHelperApp;
+      storedHandlerInfo.action = useHelperApp;
     }
 
     if (handlerInfo.alwaysAskBeforeHandling) {
@@ -570,13 +608,13 @@ HandlerService.prototype = {
         handlerInfo.hasDefaultHandler
       );
       if (
-        handlerInfo.preferredAction == Ci.nsIHandlerInfo.alwaysAsk &&
+        handlerInfo.preferredAction == alwaysAsk &&
         handlerInfo.alwaysAskBeforeHandling
       ) {
         // `store` will default to `useHelperApp` because `alwaysAsk` is
         // not one of the 3 recognized options; for compatibility, do
         // the same here.
-        handlerInfo.preferredAction = Ci.nsIHandlerInfo.useHelperApp;
+        handlerInfo.preferredAction = useHelperApp;
       }
     }
     // If it *is* a stub, don't override alwaysAskBeforeHandling or the
