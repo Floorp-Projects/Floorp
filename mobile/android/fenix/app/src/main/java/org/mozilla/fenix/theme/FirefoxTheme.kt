@@ -69,7 +69,7 @@ private val darkColorPalette = FirefoxColors(
     textWarning = PhotonColors.Red20,
     textAccent = PhotonColors.Violet20,
     textAccentDisabled = PhotonColors.Violet20A60,
-    textOnColor = PhotonColors.LightGrey05,
+    textOnColorPrimary = PhotonColors.LightGrey05,
     textActionPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.DarkGrey90,
     textActionTertiary = PhotonColors.LightGrey05,
@@ -127,7 +127,7 @@ private val lightColorPalette = FirefoxColors(
     textWarning = PhotonColors.Red80,
     textAccent = PhotonColors.Violet70,
     textAccentDisabled = PhotonColors.Violet70A80,
-    textOnColor = PhotonColors.LightGrey05,
+    textOnColorPrimary = PhotonColors.LightGrey05,
     textActionPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.DarkGrey90,
     textActionTertiary = PhotonColors.DarkGrey90,
@@ -190,7 +190,7 @@ class FirefoxColors(
     textWarning: Color,
     textAccent: Color,
     textAccentDisabled: Color,
-    textOnColor: Color,
+    textOnColorPrimary: Color,
     textActionPrimary: Color,
     textActionSecondary: Color,
     textActionTertiary: Color,
@@ -308,7 +308,7 @@ class FirefoxColors(
     var textAccentDisabled by mutableStateOf(textAccentDisabled)
         private set
     // Text Inverted/On Color
-    var textOnColor by mutableStateOf(textOnColor)
+    var textOnColorPrimary by mutableStateOf(textOnColorPrimary)
         private set
     // Action Primary text
     var textActionPrimary by mutableStateOf(textActionPrimary)
@@ -418,7 +418,7 @@ class FirefoxColors(
         textWarning = other.textWarning
         textAccent = other.textAccent
         textAccentDisabled = other.textAccentDisabled
-        textOnColor = other.textOnColor
+        textOnColorPrimary = other.textOnColorPrimary
         textActionPrimary = other.textActionPrimary
         textActionSecondary = other.textSecondary
         textActionTertiary = other.textActionTertiary
@@ -476,7 +476,7 @@ class FirefoxColors(
         textWarning = textWarning,
         textAccent = textAccent,
         textAccentDisabled = textAccentDisabled,
-        textOnColor = textOnColor,
+        textOnColorPrimary = textOnColorPrimary,
         textActionPrimary = textActionPrimary,
         textActionSecondary = textActionSecondary,
         textActionTertiary = textActionTertiary,

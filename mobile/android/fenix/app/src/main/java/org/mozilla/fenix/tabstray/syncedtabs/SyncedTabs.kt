@@ -221,7 +221,7 @@ fun SyncedTabsErrorButton(buttonText: String, onClick: () -> Unit) {
         Icon(
             painter = painterResource(R.drawable.ic_sign_in),
             contentDescription = null,
-            tint = FirefoxTheme.colors.textOnColor,
+            tint = FirefoxTheme.colors.textOnColorPrimary,
         )
 
         Spacer(Modifier.width(8.dp))
@@ -229,7 +229,7 @@ fun SyncedTabsErrorButton(buttonText: String, onClick: () -> Unit) {
         Text(
             text = buttonText,
             modifier = Modifier.align(Alignment.CenterVertically),
-            color = FirefoxTheme.colors.textOnColor,
+            color = FirefoxTheme.colors.textOnColorPrimary,
             fontSize = 14.sp,
             fontFamily = FontFamily(Font(R.font.metropolis_semibold)),
             maxLines = 2
