@@ -460,3 +460,13 @@ c5 79 70 f9 f5            vpshufd \\$0xF5, %xmm1, %xmm15
 c4 c1 71 ef c7            vpxor %xmm15, %xmm1, %xmm0
 66 0f 73 d0 07            psrlq \\$0x07, %xmm0
 66 41 0f ef c7            pxor %xmm15, %xmm0`]]);
+
+// vpblendvp optimization when bitselect follows comparison.
+codegenTestX64_adhoc(
+     `(module
+         (func (export "f") (param v128) (param v128) (param v128) (param v128) (result v128)
+           (v128.bitselect (local.get 2) (local.get 3)
+              (i32x4.eq (local.get 0) (local.get 1)))))`,
+         'f', `
+66 0f 76 c1               pcmpeqd %xmm1, %xmm0
+c4 e3 61 4c c2 00         vpblendvb %xmm0, %xmm2, %xmm3, %xmm0`);

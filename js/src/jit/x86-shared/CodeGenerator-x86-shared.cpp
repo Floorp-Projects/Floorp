@@ -2294,9 +2294,10 @@ void CodeGenerator::visitWasmTernarySimd128(LWasmTernarySimd128* ins) {
     case wasm::SimdOp::I32x4LaneSelect:
     case wasm::SimdOp::I64x2LaneSelect: {
       FloatRegister lhs = ToFloatRegister(ins->v0());
-      FloatRegister rhsDest = ToFloatRegister(ins->v1());
+      FloatRegister rhs = ToFloatRegister(ins->v1());
       FloatRegister mask = ToFloatRegister(ins->v2());
-      masm.laneSelectSimd128(mask, rhsDest, lhs);
+      FloatRegister dest = ToFloatRegister(ins->output());
+      masm.laneSelectSimd128(mask, lhs, rhs, dest);
       break;
     }
     default:

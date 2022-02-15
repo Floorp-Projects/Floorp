@@ -2279,12 +2279,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // Mask lane values must be ~0 or 0. The former selects from lhs and the
   // latter from rhs.
   // The implementation works effectively for I8x16, I16x8, I32x4, and I64x2.
-  inline void laneSelectSimd128(FloatRegister mask, FloatRegister rhsDest,
-                                FloatRegister lhs) DEFINED_ON(x86_shared);
-
   inline void laneSelectSimd128(FloatRegister mask, FloatRegister lhs,
                                 FloatRegister rhs, FloatRegister dest)
-      DEFINED_ON(arm64);
+      DEFINED_ON(x86_shared, arm64);
 
   inline void interleaveHighInt8x16(FloatRegister lhs, FloatRegister rhs,
                                     FloatRegister dest)
