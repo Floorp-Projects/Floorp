@@ -226,9 +226,10 @@ pub struct FontContext {
 unsafe impl Send for FontContext {}
 
 fn get_skew_bounds(bottom: i32, top: i32, skew_factor: f32, _vertical: bool) -> (f32, f32) {
-    let skew_min = ((bottom as f32 + 0.5) * skew_factor).floor();
-    let skew_max = ((top as f32 - 0.5) * skew_factor).ceil();
-    (skew_min, skew_max)
+    let skew_min = (bottom as f32 + 0.5) * skew_factor;
+    let skew_max = (top as f32 - 0.5) * skew_factor;
+    // Negative skew factor may switch the sense of skew_min and skew_max.
+    (skew_min.min(skew_max).floor(), skew_min.max(skew_max).ceil())
 }
 
 fn skew_bitmap(
