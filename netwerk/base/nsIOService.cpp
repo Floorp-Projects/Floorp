@@ -634,6 +634,7 @@ void nsIOService::OnProcessLaunchComplete(SocketProcessHost* aHost,
   mSocketProcessLaunchComplete = aSucceeded;
 
   if (mShutdown || !SocketProcessReady() || !aSucceeded) {
+    mPendingEvents.Clear();
     return;
   }
 
@@ -676,6 +677,7 @@ void nsIOService::OnProcessUnexpectedShutdown(SocketProcessHost* aHost) {
 
   LOG(("nsIOService::OnProcessUnexpectedShutdown\n"));
   DestroySocketProcess();
+  mPendingEvents.Clear();
 }
 
 RefPtr<MemoryReportingProcess> nsIOService::GetSocketProcessMemoryReporter() {
