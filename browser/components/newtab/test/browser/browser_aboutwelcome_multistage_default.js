@@ -7,6 +7,7 @@ const TEST_PROTON_CONTENT = [
     id: "AW_STEP1",
     order: 0,
     content: {
+      position: "corner",
       title: "Step 1",
       primary_button: {
         label: "Next",

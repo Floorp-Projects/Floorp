@@ -56,7 +56,7 @@ add_task(async function test_aboutwelcome_with_noodles() {
     "renders screen with noodles",
     // Expected selectors:
     [
-      "main.TEST_NOODLE_STEP",
+      "main.TEST_NOODLE_STEP[pos='center']",
       "div.noodle.purple-C",
       "div.noodle.orange-L",
       "div.noodle.outline-L",
@@ -87,7 +87,10 @@ add_task(async function test_aboutwelcome_with_customized_logo() {
     browser,
     "renders screen with customized logo",
     // Expected selectors:
-    ["main.TEST_LOGO_STEP", `div.brand-logo[style*='${EXPECTED_LOGO_STYLE}']`],
+    [
+      "main.TEST_LOGO_STEP[pos='center']",
+      `div.brand-logo[style*='${EXPECTED_LOGO_STYLE}']`,
+    ],
     // Unexpected selectors:
     [`div.brand-logo[style*='${DEFAULT_LOGO_STYLE}']`]
   );
