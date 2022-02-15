@@ -71,15 +71,17 @@ function openContextMenu(aMessage, aBrowser, aActor) {
   // We don't have access to the original event here, as that happened in
   // another process. Therefore we synthesize a new MouseEvent to propagate the
   // inputSource to the subsequently triggered popupshowing event.
-  var newEvent = document.createEvent("MouseEvent");
+  let newEvent = document.createEvent("MouseEvent");
+  let screenX = context.screenXDevPx / window.devicePixelRatio;
+  let screenY = context.screenYDevPx / window.devicePixelRatio;
   newEvent.initNSMouseEvent(
     "contextmenu",
     true,
     true,
     null,
     0,
-    context.screenX,
-    context.screenY,
+    screenX,
+    screenY,
     0,
     0,
     false,
