@@ -89,13 +89,14 @@ class RecentlyClosedTabsStorageTest {
     @Test
     fun testAddingTabsWithMax() {
         // Test tab
+        val t1 = System.currentTimeMillis()
         val closedTab = RecoverableTab(
             engineSessionState = null,
             state = TabState(
                 id = "first-tab",
                 title = "Mozilla",
                 url = "https://mozilla.org",
-                lastAccess = System.currentTimeMillis()
+                lastAccess = t1
             )
         )
 
@@ -107,7 +108,7 @@ class RecentlyClosedTabsStorageTest {
                 id = "second-tab",
                 title = "Pocket",
                 url = "https://pocket.com",
-                lastAccess = System.currentTimeMillis()
+                lastAccess = t1 - 1000
             )
         )
 
@@ -195,14 +196,13 @@ class RecentlyClosedTabsStorageTest {
         )
 
         // Test tab
-        val t2 = t1 - 1000
         val secondClosedTab = RecoverableTab(
             engineSessionState = mock(),
             state = TabState(
                 id = "second-tab",
                 title = "Pocket",
                 url = "https://pocket.com",
-                lastAccess = t2
+                lastAccess = t1 - 1000
             )
         )
 
@@ -233,13 +233,14 @@ class RecentlyClosedTabsStorageTest {
     fun testRemovingOneTab() {
         // Test tab
         val engineState1: EngineSessionState = mock()
+        val t1 = System.currentTimeMillis()
         val closedTab = RecoverableTab(
             engineSessionState = engineState1,
             state = TabState(
                 id = "first-tab",
                 title = "Mozilla",
                 url = "https://mozilla.org",
-                lastAccess = System.currentTimeMillis()
+                lastAccess = t1
             )
         )
 
@@ -251,7 +252,7 @@ class RecentlyClosedTabsStorageTest {
                 id = "second-tab",
                 title = "Pocket",
                 url = "https://pocket.com",
-                lastAccess = System.currentTimeMillis()
+                lastAccess = t1 - 1000
             )
         )
 
