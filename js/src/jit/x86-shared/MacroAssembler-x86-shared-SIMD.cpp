@@ -191,9 +191,9 @@ void MacroAssemblerX86Shared::blendInt16x8(FloatRegister lhs, FloatRegister rhs,
   vpblendw(mask, rhs, lhs, output);
 }
 
-void MacroAssemblerX86Shared::laneSelectSimd128(FloatRegister lhs,
+void MacroAssemblerX86Shared::laneSelectSimd128(FloatRegister mask,
+                                                FloatRegister lhs,
                                                 FloatRegister rhs,
-                                                FloatRegister mask,
                                                 FloatRegister output) {
   vpblendvb(mask, lhs, rhs, output);
 }

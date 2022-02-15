@@ -846,12 +846,17 @@ void LIRGenerator::visitWasmTernarySimd128(MWasmTernarySimd128* ins) {
     case wasm::SimdOp::I16x8LaneSelect:
     case wasm::SimdOp::I32x4LaneSelect:
     case wasm::SimdOp::I64x2LaneSelect: {
-      auto mask = Assembler::HasAVX() ? useRegister(ins->v2())
-                                      : useFixed(ins->v2(), vmm0);
-      auto* lir = new (alloc())
-          LWasmTernarySimd128(ins->simdOp(), useRegister(ins->v0()),
-                              useRegisterAtStart(ins->v1()), mask);
-      defineReuseInput(lir, ins, LWasmTernarySimd128::V1);
+      if (Assembler::HasAVX()) {
+        auto* lir = new (alloc()) LWasmTernarySimd128(
+            ins->simdOp(), useRegisterAtStart(ins->v0()),
+            useRegisterAtStart(ins->v1()), useRegisterAtStart(ins->v2()));
+        define(lir, ins);
+      } else {
+        auto* lir = new (alloc()) LWasmTernarySimd128(
+            ins->simdOp(), useRegister(ins->v0()),
+            useRegisterAtStart(ins->v1()), useFixed(ins->v2(), vmm0));
+        defineReuseInput(lir, ins, LWasmTernarySimd128::V1);
+      }
       break;
     }
     default:
@@ -1059,6 +1064,70 @@ bool MWasmTernarySimd128::specializeBitselectConstantMaskAsShuffle(
     }
   }
   return true;
+}
+bool MWasmTernarySimd128::canRelaxBitselect() {
+  wasm::SimdOp simdOp;
+  if (v2()->isWasmBinarySimd128()) {
+    simdOp = v2()->toWasmBinarySimd128()->simdOp();
+  } else if (v2()->isWasmBinarySimd128WithConstant()) {
+    simdOp = v2()->toWasmBinarySimd128WithConstant()->simdOp();
+  } else {
+    return false;
+  }
+  switch (simdOp) {
+    case wasm::SimdOp::I8x16Eq:
+    case wasm::SimdOp::I8x16Ne:
+    case wasm::SimdOp::I8x16GtS:
+    case wasm::SimdOp::I8x16GeS:
+    case wasm::SimdOp::I8x16LtS:
+    case wasm::SimdOp::I8x16LeS:
+    case wasm::SimdOp::I8x16GtU:
+    case wasm::SimdOp::I8x16GeU:
+    case wasm::SimdOp::I8x16LtU:
+    case wasm::SimdOp::I8x16LeU:
+    case wasm::SimdOp::I16x8Eq:
+    case wasm::SimdOp::I16x8Ne:
+    case wasm::SimdOp::I16x8GtS:
+    case wasm::SimdOp::I16x8GeS:
+    case wasm::SimdOp::I16x8LtS:
+    case wasm::SimdOp::I16x8LeS:
+    case wasm::SimdOp::I16x8GtU:
+    case wasm::SimdOp::I16x8GeU:
+    case wasm::SimdOp::I16x8LtU:
+    case wasm::SimdOp::I16x8LeU:
+    case wasm::SimdOp::I32x4Eq:
+    case wasm::SimdOp::I32x4Ne:
+    case wasm::SimdOp::I32x4GtS:
+    case wasm::SimdOp::I32x4GeS:
+    case wasm::SimdOp::I32x4LtS:
+    case wasm::SimdOp::I32x4LeS:
+    case wasm::SimdOp::I32x4GtU:
+    case wasm::SimdOp::I32x4GeU:
+    case wasm::SimdOp::I32x4LtU:
+    case wasm::SimdOp::I32x4LeU:
+    case wasm::SimdOp::I64x2Eq:
+    case wasm::SimdOp::I64x2Ne:
+    case wasm::SimdOp::I64x2GtS:
+    case wasm::SimdOp::I64x2GeS:
+    case wasm::SimdOp::I64x2LtS:
+    case wasm::SimdOp::I64x2LeS:
+    case wasm::SimdOp::F32x4Eq:
+    case wasm::SimdOp::F32x4Ne:
+    case wasm::SimdOp::F32x4Gt:
+    case wasm::SimdOp::F32x4Ge:
+    case wasm::SimdOp::F32x4Lt:
+    case wasm::SimdOp::F32x4Le:
+    case wasm::SimdOp::F64x2Eq:
+    case wasm::SimdOp::F64x2Ne:
+    case wasm::SimdOp::F64x2Gt:
+    case wasm::SimdOp::F64x2Ge:
+    case wasm::SimdOp::F64x2Lt:
+    case wasm::SimdOp::F64x2Le:
+      return true;
+    default:
+      break;
+  }
+  return false;
 }
 #endif
 
