@@ -263,9 +263,6 @@ async function testFileAccessMacOnly() {
   // the $TMPDIR to derive the path to the registry.
   let fontRegistryDir = macTempDir.parent.clone();
   fontRegistryDir.appendRelativePath("C/com.apple.FontRegistry");
-
-  // Assume the font registry directory has been created by the system.
-  Assert.ok(fontRegistryDir.exists(), `${fontRegistryDir.path} exists`);
   if (fontRegistryDir.exists()) {
     tests.push({
       desc: `FontRegistry (${fontRegistryDir.path})`,
@@ -279,8 +276,6 @@ async function testFileAccessMacOnly() {
     // exists in the the font registry directory.
     let fontFile = fontRegistryDir.clone();
     fontFile.appendRelativePath("font");
-    // Assume the `font` file has been created by the system.
-    Assert.ok(fontFile.exists(), `${fontFile.path} exists`);
     if (fontFile.exists()) {
       tests.push({
         desc: `FontRegistry file (${fontFile.path})`,
