@@ -297,6 +297,31 @@ mochitest-browser-chrome:
             default: default
     allow-software-gl-layers: false
 
+mochitest-browser-a11y:
+    description: "Mochitest browser-a11y run"
+    suite:
+        name: mochitest-browser-a11y
+    treeherder-symbol: M(ba)
+    schedules-component: mochitest-browser-a11y
+    loopback-video: true
+    run-without-variant: false
+    variants:
+        - fission
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    android.*: []
+                    default: built-projects
+            default: []
+    tier: default
+    max-run-time: 1800
+    mozharness:
+        mochitest-flavor: browser
+    instance-size: default
+    allow-software-gl-layers: false
+    virtualization: virtual
+
 mochitest-browser-chrome-failures:
     description: "Mochitest failures for browser chrome run"
     treeherder-symbol: M-f(bc)

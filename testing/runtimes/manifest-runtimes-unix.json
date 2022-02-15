@@ -90,7 +90,7 @@
     "accessible/tests/mochitest/treeupdate/a11y.ini": 19.39,
     "accessible/tests/mochitest/value/a11y.ini": 0.69
   },
-  "mochitest-browser-chrome": {
+  "mochitest-browser-a11y": {
     "accessible/tests/browser/bounds/browser.ini": 5.2,
     "accessible/tests/browser/browser.ini": 16.99,
     "accessible/tests/browser/e10s/browser.ini": 49.61,
@@ -102,7 +102,9 @@
     "accessible/tests/browser/scroll/browser.ini": 1.38,
     "accessible/tests/browser/states/browser.ini": 8.24,
     "accessible/tests/browser/telemetry/browser.ini": 11.13,
-    "accessible/tests/browser/tree/browser.ini": 1.77,
+    "accessible/tests/browser/tree/browser.ini": 1.77
+  },
+  "mochitest-browser-chrome": {
     "browser/base/content/test/about/browser.ini": 103.88,
     "browser/base/content/test/alerts/browser.ini": 14.05,
     "browser/base/content/test/caps/browser.ini": 0.14,
