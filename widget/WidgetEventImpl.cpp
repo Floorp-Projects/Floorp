@@ -885,7 +885,7 @@ bool WidgetKeyboardEvent::ExecuteEditCommands(NativeKeyBindingsType aType,
     Maybe<WritingMode> writingMode;
     if (RefPtr<widget::TextEventDispatcher> textEventDispatcher =
             mWidget->GetTextEventDispatcher()) {
-      writingMode = textEventDispatcher->MaybeWritingModeAtSelection();
+      writingMode = textEventDispatcher->MaybeQueryWritingModeAtSelection();
     }
     if (NS_WARN_IF(!InitEditCommandsFor(aType, writingMode))) {
       return false;

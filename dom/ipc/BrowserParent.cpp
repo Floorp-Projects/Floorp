@@ -1770,7 +1770,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestNativeKeyBindings(
   Maybe<WritingMode> writingMode;
   if (RefPtr<widget::TextEventDispatcher> dispatcher =
           widget->GetTextEventDispatcher()) {
-    writingMode = dispatcher->MaybeWritingModeAtSelection();
+    writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
   }
   if (localEvent.InitEditCommandsFor(keyBindingsType, writingMode)) {
     *aCommands = localEvent.EditCommandsConstRef(keyBindingsType).Clone();
@@ -2017,7 +2017,7 @@ void BrowserParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent) {
     if (aEvent.mWidget) {
       if (RefPtr<widget::TextEventDispatcher> dispatcher =
               aEvent.mWidget->GetTextEventDispatcher()) {
-        writingMode = dispatcher->MaybeWritingModeAtSelection();
+        writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
       }
     }
     aEvent.InitAllEditCommands(writingMode);
