@@ -602,6 +602,9 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       ((mouseEvent && mouseEvent->IsReal()) ||
        aEvent->mClass == eWheelEventClass) &&
       !PointerLockManager::IsLocked()) {
+    // XXX Probably doesn't matter much, but storing these in CSS pixels instead
+    // of device pixels means behavior can be a bit odd if you zoom while
+    // pointer-locked.
     sLastScreenPoint =
         Event::GetScreenCoords(aPresContext, aEvent, aEvent->mRefPoint);
     sLastClientPoint = Event::GetClientCoords(
