@@ -447,9 +447,7 @@ class GCRuntime {
 
   bool isCompactingGCEnabled() const;
 
-  bool isShrinkingGC() const {
-    return maybeGcOptions == mozilla::Some(JS::GCOptions::Shrink);
-  }
+  bool isShrinkingGC() const { return gcOptions() == JS::GCOptions::Shrink; }
 
   bool initSweepActions();
 
