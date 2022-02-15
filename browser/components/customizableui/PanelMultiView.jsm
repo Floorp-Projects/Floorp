@@ -1170,16 +1170,13 @@ var PanelMultiView = class extends AssociatedToNode {
 
     // Screen manager uses screen coordinates, while screenX/Y and anchorRect
     // are in CSS pixels, so need to convert to the right coordinate space.
-    let cssToDesktopPixels =
-      this.window.devicePixelRatio / this.window.desktopToDeviceScale;
+    let devicePixelRatio = this.window.devicePixelRatio;
     let screen = this._screenManager.screenForRect(
-      anchor.screenX * cssToDesktopPixels,
-      anchor.screenY * cssToDesktopPixels,
-      anchorRect.width * cssToDesktopPixels,
-      anchorRect.height * cssToDesktopPixels
+      anchor.screenX * devicePixelRatio,
+      anchor.screenY * devicePixelRatio,
+      anchorRect.width * devicePixelRatio,
+      anchorRect.height * devicePixelRatio
     );
-    // GetAvailRect returns screen-device pixels, which we can convert to CSS
-    // pixels here.
     let availTop = {},
       availHeight = {};
     screen.GetAvailRect({}, availTop, {}, availHeight);

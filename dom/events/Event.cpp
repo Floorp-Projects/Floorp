@@ -581,11 +581,12 @@ CSSIntPoint Event::GetScreenCoords(nsPresContext* aPresContext,
   LayoutDeviceIntPoint rounded = RoundedToInt(topLevelPoint);
 
   nsPoint pt = LayoutDevicePixel::ToAppUnits(
-      rounded, aPresContext->DeviceContext()->AppUnitsPerDevPixel());
+      rounded,
+      aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
   pt += LayoutDevicePixel::ToAppUnits(
       guiEvent->mWidget->TopLevelWidgetToScreenOffset(),
-      aPresContext->DeviceContext()->AppUnitsPerDevPixel());
+      aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
   return CSSPixel::FromAppUnitsRounded(pt);
 }

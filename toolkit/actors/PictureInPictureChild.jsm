@@ -1129,14 +1129,14 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
 
     let toggle = this.getToggleElement(shadowRoot);
     if (this.isMouseOverToggle(toggle, event)) {
-      let devicePixelRatio = toggle.ownerGlobal.devicePixelRatio;
-      this.sendAsyncMessage("PictureInPicture:OpenToggleContextMenu", {
-        screenXDevPx: event.screenX * devicePixelRatio,
-        screenYDevPx: event.screenY * devicePixelRatio,
-        mozInputSource: event.mozInputSource,
-      });
       event.stopImmediatePropagation();
       event.preventDefault();
+
+      this.sendAsyncMessage("PictureInPicture:OpenToggleContextMenu", {
+        screenX: event.screenX,
+        screenY: event.screenY,
+        mozInputSource: event.mozInputSource,
+      });
     }
   }
 
