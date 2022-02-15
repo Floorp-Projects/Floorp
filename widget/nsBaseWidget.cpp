@@ -21,6 +21,7 @@
 #include "mozilla/GlobalKeyListener.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Sprintf.h"
@@ -2181,7 +2182,7 @@ const IMENotificationRequests& nsIWidget::IMENotificationRequestsRef() {
 
 void nsIWidget::PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent) {}
 
-bool nsIWidget::GetEditCommands(nsIWidget::NativeKeyBindingsType aType,
+bool nsIWidget::GetEditCommands(NativeKeyBindingsType aType,
                                 const WidgetKeyboardEvent& aEvent,
                                 nsTArray<CommandInt>& aCommands) {
   MOZ_ASSERT(aEvent.IsTrusted());

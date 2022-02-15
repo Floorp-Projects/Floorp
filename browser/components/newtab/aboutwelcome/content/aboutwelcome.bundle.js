@@ -191,7 +191,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
       metricsFlowUri: this.state.metricsFlowUri,
       utm_term: props.UTMTerm,
       transitions: props.transitions,
-      background_url: props.background_url
+      backdrop: props.backdrop
     });
   }
 
@@ -407,8 +407,8 @@ const MultiStageAboutWelcome = props => {
   }, [useImportable, region]);
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: `outer-wrapper onboardingContainer proton transition-${transition}`,
-    style: props.background_url ? {
-      backgroundImage: `url(${props.background_url})`
+    style: props.backdrop ? {
+      background: props.backdrop
     } : {}
   }, props.screens.map((screen, order) => {
     return index === order ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(WelcomeScreen, {
@@ -714,7 +714,7 @@ const DEFAULT_RTAMO_CONTENT = {
       }
     },
     hide_logo: true,
-    background_url: "chrome://activity-stream/content/data/content/assets/proton-bkg.avif",
+    backdrop: "#212121 url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) center/cover no-repeat fixed",
     primary_button: {
       label: {
         string_id: "return-to-amo-add-extension-label"

@@ -299,6 +299,11 @@ add_task(async function test_unblock_download_visible() {
 
 // Test Download an insecure svg and choose "Open with Firefox"
 add_task(async function download_open_insecure_SVG() {
+  const mimeInfo = MIMEService.getFromTypeAndExtension("image/svg+xml", "svg");
+  mimeInfo.alwaysAskBeforeHandling = false;
+  mimeInfo.preferredAction = mimeInfo.handleInternally;
+  HandlerService.store(mimeInfo);
+
   for (let prefVal of [true, false]) {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.download.improvements_to_download_panel", prefVal]],
@@ -331,4 +336,5 @@ add_task(async function download_open_insecure_SVG() {
       "A Blocked SVG can be opened internally"
     );
   }
+  HandlerService.remove(mimeInfo);
 });

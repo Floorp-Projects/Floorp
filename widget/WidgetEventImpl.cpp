@@ -3,19 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/BasicEvents.h"
-#include "mozilla/ContentEvents.h"
+#include "BasicEvents.h"
+#include "ContentEvents.h"
+#include "MiscEvents.h"
+#include "MouseEvents.h"
+#include "NativeKeyBindingsType.h"
+#include "TextEventDispatcher.h"
+#include "TextEvents.h"
+#include "TouchEvents.h"
+
 #include "mozilla/EventStateManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/MiscEvents.h"
-#include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_mousewheel.h"
 #include "mozilla/StaticPrefs_ui.h"
-#include "mozilla/TextEventDispatcher.h"
-#include "mozilla/TextEvents.h"
-#include "mozilla/TouchEvents.h"
 #include "mozilla/WritingModes.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/WheelEventBinding.h"
@@ -813,28 +815,24 @@ void WidgetKeyboardEvent::InitAllEditCommands(
   }
 
   DebugOnly<bool> okIgnored = InitEditCommandsFor(
-      nsIWidget::NativeKeyBindingsForSingleLineEditor, aWritingMode);
-  NS_WARNING_ASSERTION(
-      okIgnored,
-      "InitEditCommandsFor(nsIWidget::NativeKeyBindingsForSingleLineEditor) "
-      "failed, but ignored");
-  okIgnored = InitEditCommandsFor(
-      nsIWidget::NativeKeyBindingsForMultiLineEditor, aWritingMode);
-  NS_WARNING_ASSERTION(
-      okIgnored,
-      "InitEditCommandsFor(nsIWidget::NativeKeyBindingsForMultiLineEditor) "
-      "failed, but ignored");
-  okIgnored = InitEditCommandsFor(nsIWidget::NativeKeyBindingsForRichTextEditor,
-                                  aWritingMode);
-  NS_WARNING_ASSERTION(
-      okIgnored,
-      "InitEditCommandsFor(nsIWidget::NativeKeyBindingsForRichTextEditor) "
-      "failed, but ignored");
+      NativeKeyBindingsType::SingleLineEditor, aWritingMode);
+  NS_WARNING_ASSERTION(okIgnored,
+                       "InitEditCommandsFor(NativeKeyBindingsType::"
+                       "SingleLineEditor) failed, but ignored");
+  okIgnored =
+      InitEditCommandsFor(NativeKeyBindingsType::MultiLineEditor, aWritingMode);
+  NS_WARNING_ASSERTION(okIgnored,
+                       "InitEditCommandsFor(NativeKeyBindingsType::"
+                       "MultiLineEditor) failed, but ignored");
+  okIgnored =
+      InitEditCommandsFor(NativeKeyBindingsType::RichTextEditor, aWritingMode);
+  NS_WARNING_ASSERTION(okIgnored,
+                       "InitEditCommandsFor(NativeKeyBindingsType::"
+                       "RichTextEditor) failed, but ignored");
 }
 
 bool WidgetKeyboardEvent::InitEditCommandsFor(
-    nsIWidget::NativeKeyBindingsType aType,
-    const Maybe<WritingMode>& aWritingMode) {
+    NativeKeyBindingsType aType, const Maybe<WritingMode>& aWritingMode) {
   bool& initialized = IsEditCommandsInitializedRef(aType);
   if (initialized) {
     return true;
@@ -868,9 +866,9 @@ bool WidgetKeyboardEvent::InitEditCommandsFor(
   return initialized;
 }
 
-bool WidgetKeyboardEvent::ExecuteEditCommands(
-    nsIWidget::NativeKeyBindingsType aType, DoCommandCallback aCallback,
-    void* aCallbackData) {
+bool WidgetKeyboardEvent::ExecuteEditCommands(NativeKeyBindingsType aType,
+                                              DoCommandCallback aCallback,
+                                              void* aCallbackData) {
   // If the event was created without widget, e.g., created event in chrome
   // script, this shouldn't execute native key bindings.
   if (NS_WARN_IF(!mWidget)) {
@@ -887,7 +885,7 @@ bool WidgetKeyboardEvent::ExecuteEditCommands(
     Maybe<WritingMode> writingMode;
     if (RefPtr<widget::TextEventDispatcher> textEventDispatcher =
             mWidget->GetTextEventDispatcher()) {
-      writingMode = textEventDispatcher->MaybeWritingModeAtSelection();
+      writingMode = textEventDispatcher->MaybeQueryWritingModeAtSelection();
     }
     if (NS_WARN_IF(!InitEditCommandsFor(aType, writingMode))) {
       return false;

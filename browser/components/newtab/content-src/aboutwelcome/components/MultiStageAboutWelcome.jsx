@@ -143,13 +143,7 @@ export const MultiStageAboutWelcome = props => {
     <React.Fragment>
       <div
         className={`outer-wrapper onboardingContainer proton transition-${transition}`}
-        style={
-          props.background_url
-            ? {
-                backgroundImage: `url(${props.background_url})`,
-              }
-            : {}
-        }
+        style={props.backdrop ? { background: props.backdrop } : {}}
       >
         {props.screens.map((screen, order) => {
           return index === order ? (

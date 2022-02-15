@@ -1090,11 +1090,15 @@ void BaseCompiler::shuffleStackResultsBeforeBranch(StackHeight srcHeight,
 //
 // Function calls.
 
-void BaseCompiler::beginCall(FunctionCall& call, UseABI useABI,
-                             InterModule interModule) {
-  MOZ_ASSERT_IF(useABI == UseABI::Builtin, interModule == InterModule::False);
+void BaseCompiler::beginCall(
+    FunctionCall& call, UseABI useABI,
+    RestoreRegisterStateAndRealm restoreRegisterStateAndRealm) {
+  MOZ_ASSERT_IF(
+      useABI == UseABI::Builtin,
+      restoreRegisterStateAndRealm == RestoreRegisterStateAndRealm::False);
 
-  call.isInterModule = interModule == InterModule::True;
+  call.restoreRegisterStateAndRealm =
+      restoreRegisterStateAndRealm == RestoreRegisterStateAndRealm::True;
   call.usesSystemAbi = useABI == UseABI::System;
 
   if (call.usesSystemAbi) {
@@ -1123,7 +1127,7 @@ void BaseCompiler::endCall(FunctionCall& call, size_t stackSpace) {
   MOZ_ASSERT(stackMapGenerator_.framePushedExcludingOutboundCallArgs.isSome());
   stackMapGenerator_.framePushedExcludingOutboundCallArgs.reset();
 
-  if (call.isInterModule) {
+  if (call.restoreRegisterStateAndRealm) {
     fr.loadTlsPtr(WasmTlsReg);
     masm.loadWasmPinnedRegsFromTls();
     masm.switchToWasmTlsRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
@@ -1349,9 +1353,10 @@ CodeOffset BaseCompiler::callSymbolic(SymbolicAddress callee,
 
 // Precondition: sync()
 
-CodeOffset BaseCompiler::callIndirect(uint32_t funcTypeIndex,
-                                      uint32_t tableIndex, const Stk& indexVal,
-                                      const FunctionCall& call) {
+void BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
+                                const Stk& indexVal, const FunctionCall& call,
+                                CodeOffset* fastCallOffset,
+                                CodeOffset* slowCallOffset) {
   const TypeIdDesc& funcTypeId = moduleEnv_.typeIds[funcTypeIndex];
   MOZ_ASSERT(funcTypeId.kind() != TypeIdDescKind::None);
 
@@ -1361,8 +1366,8 @@ CodeOffset BaseCompiler::callIndirect(uint32_t funcTypeIndex,
 
   CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Indirect);
   CalleeDesc callee = CalleeDesc::wasmTable(table, funcTypeId);
-  return masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true),
-                               mozilla::Nothing());
+  masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true),
+                        mozilla::Nothing(), fastCallOffset, slowCallOffset);
 }
 
 // Precondition: sync()
@@ -4319,7 +4324,8 @@ bool BaseCompiler::emitCall() {
 
   FunctionCall baselineCall(lineOrBytecode);
   beginCall(baselineCall, UseABI::Wasm,
-            import ? InterModule::True : InterModule::False);
+            import ? RestoreRegisterStateAndRealm::True
+                   : RestoreRegisterStateAndRealm::False);
 
   if (!emitCallArgs(funcType.args(), results, &baselineCall,
                     CalleeOnStack::False)) {
@@ -4379,7 +4385,9 @@ bool BaseCompiler::emitCallIndirect() {
   }
 
   FunctionCall baselineCall(lineOrBytecode);
-  beginCall(baselineCall, UseABI::Wasm, InterModule::True);
+  // State and realm are restored as needed by by callIndirect (really by
+  // MacroAssembler::wasmCallIndirect).
+  beginCall(baselineCall, UseABI::Wasm, RestoreRegisterStateAndRealm::False);
 
   if (!emitCallArgs(funcType.args(), results, &baselineCall,
                     CalleeOnStack::True)) {
@@ -4387,9 +4395,14 @@ bool BaseCompiler::emitCallIndirect() {
   }
 
   const Stk& callee = peek(results.count());
-  CodeOffset raOffset =
-      callIndirect(funcTypeIndex, tableIndex, callee, baselineCall);
-  if (!createStackMap("emitCallIndirect", raOffset)) {
+  CodeOffset fastCallOffset;
+  CodeOffset slowCallOffset;
+  callIndirect(funcTypeIndex, tableIndex, callee, baselineCall, &fastCallOffset,
+               &slowCallOffset);
+  if (!createStackMap("emitCallIndirect", fastCallOffset)) {
+    return false;
+  }
+  if (!createStackMap("emitCallIndirect", slowCallOffset)) {
     return false;
   }
 
@@ -4446,7 +4459,7 @@ bool BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee,
   StackResultsLoc noStackResults;
 
   FunctionCall baselineCall(lineOrBytecode);
-  beginCall(baselineCall, UseABI::Builtin, InterModule::False);
+  beginCall(baselineCall, UseABI::Builtin, RestoreRegisterStateAndRealm::False);
 
   if (!emitCallArgs(signature, noStackResults, &baselineCall,
                     CalleeOnStack::False)) {
@@ -5196,7 +5209,7 @@ bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
   size_t stackSpace = stackConsumed(numNonInstanceArgs);
 
   FunctionCall baselineCall(lineOrBytecode);
-  beginCall(baselineCall, UseABI::System, InterModule::True);
+  beginCall(baselineCall, UseABI::System, RestoreRegisterStateAndRealm::True);
 
   ABIArg instanceArg = reservePointerArgument(&baselineCall);
 

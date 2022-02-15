@@ -141,7 +141,10 @@ void FinalizationRegistryZone::decCrossZoneCount(Zone* otherZone) {
   }
 }
 
-void FinalizationRegistryZone::clearRecords() { recordMap.clear(); }
+void FinalizationRegistryZone::clearRecords() {
+  recordMap.clear();
+  crossZoneCount.clear();
+}
 
 static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
   obj = UncheckedUnwrapWithoutExpose(obj);

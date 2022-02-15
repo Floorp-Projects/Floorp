@@ -1103,10 +1103,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void vpmaddubswSimd128(const SimdConstant& v, FloatRegister lhs,
                          FloatRegister dest);
 
-  void loadWasmPinnedRegsFromTls() {
-    loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
-  }
-
  public:
   Condition testInt32Truthy(bool truthy, const ValueOperand& operand) {
     test32(operand.valueReg(), operand.valueReg());

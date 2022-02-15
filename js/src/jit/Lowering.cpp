@@ -3133,8 +3133,7 @@ void LIRGenerator::visitWasmInterruptCheck(MWasmInterruptCheck* ins) {
   auto* lir =
       new (alloc()) LWasmInterruptCheck(useRegisterAtStart(ins->tlsPtr()));
   add(lir, ins);
-
-  assignWasmSafepoint(lir, ins);
+  assignWasmSafepoint(lir);
 }
 
 void LIRGenerator::visitWasmTrap(MWasmTrap* ins) {
@@ -5388,8 +5387,18 @@ void LIRGenerator::visitWasmCall(MWasmCall* ins) {
   }
 
   add(lir, ins);
+  assignWasmSafepoint(lir);
 
-  assignWasmSafepoint(lir, ins);
+  // WasmCall with WasmTable has two call instructions, and they both need a
+  // safepoint associated with them.  Create a second safepoint here; the node
+  // otherwise does nothing, and codegen for it only marks the safepoint at the
+  // node.
+  if (ins->callee().which() == wasm::CalleeDesc::WasmTable) {
+    auto* adjunctSafepoint = new (alloc()) LWasmCallIndirectAdjunctSafepoint();
+    add(adjunctSafepoint);
+    assignWasmSafepoint(adjunctSafepoint);
+    lir->setAdjunctSafepoint(adjunctSafepoint);
+  }
 }
 
 void LIRGenerator::visitSetDOMProperty(MSetDOMProperty* ins) {

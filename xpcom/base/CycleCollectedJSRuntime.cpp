@@ -1584,10 +1584,11 @@ bool CycleCollectedJSRuntime::AreGCGrayBitsValid() const {
   return js::AreGCGrayBitsValid(mJSRuntime);
 }
 
-void CycleCollectedJSRuntime::GarbageCollect(JS::GCReason aReason) const {
+void CycleCollectedJSRuntime::GarbageCollect(JS::GCOptions aOptions,
+                                             JS::GCReason aReason) const {
   JSContext* cx = CycleCollectedJSContext::Get()->Context();
   JS::PrepareForFullGC(cx);
-  JS::NonIncrementalGC(cx, JS::GCOptions::Normal, aReason);
+  JS::NonIncrementalGC(cx, aOptions, aReason);
 }
 
 void CycleCollectedJSRuntime::JSObjectsTenured() {

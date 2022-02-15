@@ -11,6 +11,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/WritingModes.h"
@@ -400,7 +401,7 @@ bool HeadlessWidget::GetEditCommands(NativeKeyBindingsType aType,
   Maybe<WritingMode> writingMode;
   if (aEvent.NeedsToRemapNavigationKey()) {
     if (RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher()) {
-      writingMode = dispatcher->MaybeWritingModeAtSelection();
+      writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
     }
   }
 

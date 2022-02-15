@@ -188,7 +188,7 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_RelativeTimeFormat:
       return false;
 #endif
-
+#ifndef MOZ_DOM_STREAMS
     case JSProto_ReadableStream:
     case JSProto_ReadableStreamDefaultReader:
     case JSProto_ReadableStreamDefaultController:
@@ -204,6 +204,7 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
       return !realmOptions.getStreamsEnabled() ||
              !realmOptions.getWritableStreamsEnabled();
     }
+#endif
 
     // Return true if the given constructor has been disabled at run-time.
     case JSProto_Atomics:

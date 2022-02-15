@@ -43,12 +43,25 @@ enum class GCOptions : uint32_t {
   // collection because of internal references
   Normal = 0,
 
+  // A shrinking GC.
+  //
   // Try to release as much memory as possible by clearing internal caches,
   // aggressively discarding JIT code and decommitting unused chunks. This
   // ensures all unreferenced objects are removed from the system.
   //
   // Finally, compact the GC heap.
   Shrink = 1,
+
+  // A shutdown GC.
+  //
+  // This does more drastic cleanup as part of system shutdown, including:
+  //  - clearing WeakRef kept object sets
+  //  - not marking FinalizationRegistry roots
+  //  - repeating collection if JS::NotifyGCRootsRemoved was called
+  //  - skipping scheduling of various future work that won't be needed
+  //
+  // Note that this assumes that no JS will run after this point!
+  Shutdown = 2
 };
 
 }  // namespace JS

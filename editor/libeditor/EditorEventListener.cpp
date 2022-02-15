@@ -8,20 +8,21 @@
 
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc.
 #include "mozilla/AutoRestore.h"
-#include "mozilla/ContentEvents.h"         // for InternalFocusEvent
-#include "mozilla/EditorBase.h"            // for EditorBase, etc.
-#include "mozilla/EventListenerManager.h"  // for EventListenerManager
-#include "mozilla/EventStateManager.h"     // for EventStateManager
-#include "mozilla/HTMLEditor.h"            // for HTMLEditor
-#include "mozilla/IMEStateManager.h"       // for IMEStateManager
-#include "mozilla/Preferences.h"           // for Preferences
-#include "mozilla/PresShell.h"             // for PresShell
-#include "mozilla/TextEditor.h"            // for TextEditor
-#include "mozilla/TextEvents.h"            // for WidgetCompositionEvent
-#include "mozilla/dom/Element.h"           // for Element
-#include "mozilla/dom/Event.h"             // for Event
-#include "mozilla/dom/EventTarget.h"       // for EventTarget
-#include "mozilla/dom/MouseEvent.h"        // for MouseEvent
+#include "mozilla/ContentEvents.h"          // for InternalFocusEvent
+#include "mozilla/EditorBase.h"             // for EditorBase, etc.
+#include "mozilla/EventListenerManager.h"   // for EventListenerManager
+#include "mozilla/EventStateManager.h"      // for EventStateManager
+#include "mozilla/HTMLEditor.h"             // for HTMLEditor
+#include "mozilla/IMEStateManager.h"        // for IMEStateManager
+#include "mozilla/NativeKeyBindingsType.h"  // for NativeKeyBindingsType
+#include "mozilla/Preferences.h"            // for Preferences
+#include "mozilla/PresShell.h"              // for PresShell
+#include "mozilla/TextEditor.h"             // for TextEditor
+#include "mozilla/TextEvents.h"             // for WidgetCompositionEvent
+#include "mozilla/dom/Element.h"            // for Element
+#include "mozilla/dom/Event.h"              // for Event
+#include "mozilla/dom/EventTarget.h"        // for EventTarget
+#include "mozilla/dom/MouseEvent.h"         // for MouseEvent
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsCaret.h"            // for nsCaret
@@ -638,9 +639,8 @@ nsresult EditorEventListener::KeyPress(WidgetKeyboardEvent* aKeyboardEvent) {
   // WidgetEvent::mWidget temporarily.
   AutoRestore<nsCOMPtr<nsIWidget>> saveWidget(aKeyboardEvent->mWidget);
   aKeyboardEvent->mWidget = widget;
-  if (aKeyboardEvent->ExecuteEditCommands(
-          nsIWidget::NativeKeyBindingsForRichTextEditor, DoCommandCallback,
-          doc)) {
+  if (aKeyboardEvent->ExecuteEditCommands(NativeKeyBindingsType::RichTextEditor,
+                                          DoCommandCallback, doc)) {
     aKeyboardEvent->PreventDefault();
   }
   return NS_OK;
