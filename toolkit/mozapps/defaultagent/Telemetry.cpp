@@ -15,6 +15,7 @@
 #include "EventLog.h"
 #include "Notification.h"
 #include "Policy.h"
+#include "UtfConvert.h"
 
 #include "json/json.h"
 #include "mozilla/ArrayUtils.h"
@@ -98,14 +99,9 @@ static TelemetryFieldResult GetOSLocale() {
   }
 
   // We'll need the locale string in UTF-8 to be able to submit it.
-  int bufLen = WideCharToMultiByte(CP_UTF8, 0, localeName, -1, nullptr, 0,
-                                   nullptr, nullptr);
-  mozilla::UniquePtr<char[]> narrowLocaleName =
-      mozilla::MakeUnique<char[]>(bufLen);
-  WideCharToMultiByte(CP_UTF8, 0, localeName, -1, narrowLocaleName.get(),
-                      bufLen, nullptr, nullptr);
+  Utf16ToUtf8Result narrowLocaleName = Utf16ToUtf8(localeName);
 
-  return std::string(narrowLocaleName.get());
+  return narrowLocaleName.unwrapOr("");
 }
 
 static FilePathResult GetPingFilePath(std::wstring& uuid) {
