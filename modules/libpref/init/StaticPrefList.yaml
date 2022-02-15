@@ -3610,13 +3610,17 @@
   value: false
   mirror: always
 
-# DON'T enable, there are known issues!
 - name: dom.streams.byte_streams.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
 - name: dom.streams.writable_streams.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: dom.streams.transform_streams.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
