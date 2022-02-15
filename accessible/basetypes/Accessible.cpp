@@ -275,3 +275,14 @@ void Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut) {
       NS_ConvertUTF16toUTF8(aKey).get(), xsValue);
   if (NS_SUCCEEDED(rv)) aStringOut.Assign(xsValue);
 }
+
+const Accessible* Accessible::ActionAncestor() const {
+  for (Accessible* parent = Parent(); parent && !parent->IsDoc();
+       parent = parent->Parent()) {
+    if (parent->HasPrimaryAction()) {
+      return parent;
+    }
+  }
+
+  return nullptr;
+}

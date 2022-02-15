@@ -3259,12 +3259,8 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   }
 
   if (aCacheDomain & CacheDomain::Actions) {
-    uint8_t actionCount = ActionCount();
-    ImageAccessible* imgAcc = AsImage();
-    bool hasLongDesc = imgAcc && imgAcc->HasLongDesc();
-
-    if (actionCount && !(actionCount == 1 && hasLongDesc)) {
-      // We only cache the first action that is not showlongdesc.
+    if (HasPrimaryAction()) {
+      // Here we cache the primary action.
       nsAutoString actionName;
       ActionNameAt(0, actionName);
       RefPtr<nsAtom> actionAtom = NS_Atomize(actionName);
@@ -3273,8 +3269,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       fields->SetAttribute(nsGkAtoms::action, DeleteEntry());
     }
 
-    if (imgAcc) {
-      if (hasLongDesc) {
+    if (ImageAccessible* imgAcc = AsImage()) {
+      // Here we cache the showlongdesc action.
+      if (imgAcc->HasLongDesc()) {
         fields->SetAttribute(nsGkAtoms::longdesc, true);
       } else if (aUpdateType == CacheUpdateType::Update) {
         fields->SetAttribute(nsGkAtoms::longdesc, DeleteEntry());
