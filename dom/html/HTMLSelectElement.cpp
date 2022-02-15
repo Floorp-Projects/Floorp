@@ -122,6 +122,7 @@ HTMLSelectElement::HTMLSelectElement(
       mDefaultSelectionSet(false),
       mCanShowInvalidUI(true),
       mCanShowValidUI(true),
+      mIsOpenInParentProcess(false),
       mNonOptionChildren(0),
       mOptGroupCount(0),
       mSelectedIndex(-1) {
@@ -1563,24 +1564,6 @@ void HTMLSelectElement::SetSelectionChanged(bool aValue, bool aNotify) {
 void HTMLSelectElement::UpdateSelectedOptions() {
   if (mSelectedOptions) {
     mSelectedOptions->SetDirty();
-  }
-}
-
-bool HTMLSelectElement::OpenInParentProcess() {
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
-  nsComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
-  if (comboFrame) {
-    return comboFrame->IsOpenInParentProcess();
-  }
-
-  return false;
-}
-
-void HTMLSelectElement::SetOpenInParentProcess(bool aVal) {
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
-  nsComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
-  if (comboFrame) {
-    comboFrame->SetOpenInParentProcess(aVal);
   }
 }
 

@@ -149,11 +149,7 @@ class nsComboboxControlFrame final : public nsBlockFrame,
   nsresult RedisplaySelectedText();
   int32_t UpdateRecentIndex(int32_t aIndex);
 
-  bool IsOpenInParentProcess() { return mIsOpenInParentProcess; }
-
-  void SetOpenInParentProcess(bool aVal) { mIsOpenInParentProcess = aVal; }
-
-  bool IsDroppedDown() { return IsOpenInParentProcess(); }
+  bool IsDroppedDown() const;
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(int32_t index) final;

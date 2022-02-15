@@ -574,6 +574,10 @@ int32_t nsComboboxControlFrame::GetIndexOfDisplayArea() {
   return mDisplayedIndex;
 }
 
+bool nsComboboxControlFrame::IsDroppedDown() const {
+  return Select().OpenInParentProcess();
+}
+
 //----------------------------------------------------------------------
 // nsISelectControlFrame
 //----------------------------------------------------------------------
