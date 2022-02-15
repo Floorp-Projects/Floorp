@@ -12,6 +12,7 @@ import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusDisabled
 import mozilla.components.service.nimbus.NimbusServerSettings
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.experiments.nimbus.NimbusInterface
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
@@ -79,14 +80,21 @@ fun createNimbus(context: Context, url: String?): NimbusApi =
                 setExperimentsLocally(R.raw.initial_experiments)
             }
 
-            // We may have downloaded experiments on a previous run, so let's start using them
-            // now. We didn't do this earlier, so as to make getExperimentBranch and friends returns
-            // the same thing throughout the session. This call does its work on the db thread.
-            applyPendingExperiments()
-
             // Now fetch the experiments from the server. These will be available for feature
             // configuration on the next run of the app. This call launches on the fetch thread.
             fetchExperiments()
+
+            register(object : NimbusInterface.Observer {
+                override fun onExperimentsFetched() {
+                    // We may have downloaded experiments on a previous run, so let's start using them
+                    // now. We didn't do this earlier, so as to make getExperimentBranch and friends returns
+                    // the same thing throughout the session. This call does its work on the db thread.
+                    applyPendingExperiments()
+
+                    // Remove lingering observer when we're done fetching experiments on startup.
+                    unregister(this)
+                }
+            })
         }
     } catch (e: Throwable) {
         // Something went wrong. We'd like not to, but stability of the app is more important than
