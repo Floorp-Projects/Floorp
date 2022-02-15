@@ -29,9 +29,6 @@ constexpr auto kAllScreenOrientationBits = ScreenOrientation((1 << 5) - 1);
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ScreenOrientation);
 
-class ScreenConfiguration;
-using ScreenConfigurationObserver = Observer<ScreenConfiguration>;
-
 }  // namespace mozilla::hal
 
 #endif  // mozilla_HalScreenConfiguration_h

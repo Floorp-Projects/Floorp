@@ -39,6 +39,7 @@
 #include "nsString.h"
 #include "nsTPromiseFlatString.h"
 #include "nscore.h"
+#include "prenv.h"
 
 #if !defined(DEBUG) && !defined(MOZ_ENABLE_JS_DUMP)
 #  include "mozilla/StaticPrefs_browser.h"

@@ -51,26 +51,27 @@ void ScreenManager::Refresh(nsTArray<RefPtr<Screen>>&& aScreens) {
     // GetSingleton returns invalid data since it is freed.
     return;
   }
-  GetSingleton().RefreshInternal(std::move(aScreens));
-}
-
-void ScreenManager::RefreshInternal(nsTArray<RefPtr<Screen>>&& aScreens) {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refresh screens"));
-
-  mScreenList = std::move(aScreens);
-
-  CopyScreensToAllRemotesIfIsParent();
+  GetSingleton().RefreshInternal(std::move(aScreens));
 }
 
 void ScreenManager::Refresh(nsTArray<mozilla::dom::ScreenDetails>&& aScreens) {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refresh screens from IPC"));
 
-  mScreenList.Clear();
+  AutoTArray<RefPtr<Screen>, 4> screens;
   for (auto& screen : aScreens) {
-    mScreenList.AppendElement(new Screen(screen));
+    screens.AppendElement(new Screen(screen));
   }
+  RefreshInternal(std::move(screens));
+}
+
+void ScreenManager::RefreshInternal(nsTArray<RefPtr<Screen>>&& aScreens) {
+  mScreenList = std::move(aScreens);
 
   CopyScreensToAllRemotesIfIsParent();
+  if (nsCOMPtr<nsIObserverService> s = services::GetObserverService()) {
+    s->NotifyObservers(nullptr, "screen-information-changed", nullptr);
+  }
 }
 
 template <class Range>
@@ -127,10 +128,11 @@ ScreenManager::ScreenForRect(int32_t aX, int32_t aY, int32_t aWidth,
   if (mScreenList.IsEmpty()) {
     MOZ_LOG(sScreenLog, LogLevel::Warning,
             ("No screen available. This can happen in xpcshell."));
-    RefPtr<Screen> ret = new Screen(
+    auto screen = MakeRefPtr<Screen>(
         LayoutDeviceIntRect(), LayoutDeviceIntRect(), 0, 0,
-        DesktopToLayoutDeviceScale(), CSSToLayoutDeviceScale(), 96 /* dpi */);
-    ret.forget(aOutScreen);
+        DesktopToLayoutDeviceScale(), CSSToLayoutDeviceScale(), 96 /* dpi */,
+        hal::ScreenOrientation::None, 0);
+    screen.forget(aOutScreen);
     return NS_OK;
   }
 
@@ -213,14 +215,13 @@ already_AddRefed<Screen> ScreenManager::GetPrimaryScreen() {
   if (mScreenList.IsEmpty()) {
     MOZ_LOG(sScreenLog, LogLevel::Warning,
             ("No screen available. This can happen in xpcshell."));
-    RefPtr<Screen> ret = new Screen(
-        LayoutDeviceIntRect(), LayoutDeviceIntRect(), 0, 0,
-        DesktopToLayoutDeviceScale(), CSSToLayoutDeviceScale(), 96 /* dpi */);
-    return ret.forget();
+    return MakeAndAddRef<Screen>(LayoutDeviceIntRect(), LayoutDeviceIntRect(),
+                                 0, 0, DesktopToLayoutDeviceScale(),
+                                 CSSToLayoutDeviceScale(), 96 /* dpi */,
+                                 hal::ScreenOrientation::None, 0);
   }
 
-  RefPtr<Screen> ret = mScreenList[0];
-  return ret.forget();
+  return do_AddRef(mScreenList[0]);
 }
 
 NS_IMETHODIMP
