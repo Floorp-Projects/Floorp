@@ -458,8 +458,8 @@ class MacroAssemblerX86Shared : public Assembler {
                     FloatRegister temp, const uint8_t lanes[16]);
   void blendInt16x8(FloatRegister lhs, FloatRegister rhs, FloatRegister output,
                     const uint16_t lanes[8]);
-  void laneSelectSimd128(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister mask, FloatRegister output);
+  void laneSelectSimd128(FloatRegister mask, FloatRegister lhs,
+                         FloatRegister rhs, FloatRegister output);
 
   void compareInt8x16(FloatRegister lhs, Operand rhs, Assembler::Condition cond,
                       FloatRegister output);

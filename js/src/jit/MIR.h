@@ -10083,6 +10083,10 @@ class MWasmTernarySimd128 : public MTernaryInstruction,
   // as a shuffle and it is profitable to specialize it on this platform, return
   // true and the appropriate shuffle mask.
   bool specializeBitselectConstantMaskAsShuffle(int8_t shuffle[16]);
+  // Checks if more relaxed version of lane select can be used. It returns true
+  // if a bit mask input expected to be all 0s or 1s for entire 8-bit lanes,
+  // false otherwise.
+  bool canRelaxBitselect();
 #endif
 
   wasm::SimdOp simdOp() const { return simdOp_; }

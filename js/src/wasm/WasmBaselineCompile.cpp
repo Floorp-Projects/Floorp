@@ -7767,7 +7767,7 @@ bool BaseCompiler::emitVectorLaneSelect() {
   RegV128 mask = popV128(RegV128(vmm0));
   RegV128 rhsDest = popV128();
   RegV128 lhs = popV128();
-  masm.laneSelectSimd128(mask, rhsDest, lhs);
+  masm.laneSelectSimd128(mask, lhs, rhsDest, rhsDest);
   freeV128(lhs);
   freeV128(mask);
   pushV128(rhsDest);

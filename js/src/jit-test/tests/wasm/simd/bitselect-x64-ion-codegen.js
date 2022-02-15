@@ -31,3 +31,15 @@ codegenTestX64_adhoc(
       'f',
   `66 0f 3a 0e c1 c3         pblendw \\$0xC3, %xmm1, %xmm0`);
   
+// vpblendvp optimization when bitselect follows comparison.
+// Non-AVX pblendvb uses xmm0 as an implicit read-only operand.
+codegenTestX64_adhoc(
+  `(module
+      (func (export "f") (param v128) (param v128) (param v128) (param v128) (result v128)
+        (v128.bitselect (local.get 2) (local.get 3)
+           (i32x4.eq (local.get 0) (local.get 1)))))`,
+      'f', `
+66 0f 76 c1               pcmpeqd %xmm1, %xmm0
+66 0f 6f cb               movdqa %xmm3, %xmm1
+66 0f 38 10 ca            pblendvb %xmm2, %xmm1
+66 0f 6f c1               movdqa %xmm1, %xmm0`);
