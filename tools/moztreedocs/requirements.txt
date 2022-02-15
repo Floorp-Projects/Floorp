@@ -26,13 +26,13 @@ backports-abc==0.5 \
     --hash=sha256:033be54514a03e255df75c5aee8f9e672f663f93abb723444caec8fe43437bde \
     --hash=sha256:52089f97fe7a9aa0d3277b220c1d730a85aefd64e1b2664696fe35317c5470a7
     # via -r requirements.in
-boto3==1.15.6 \
-    --hash=sha256:87534080a5addad135fcd631fa8b57a12e1a234c23d86521e84fbbd9217fd6a5 \
-    --hash=sha256:c4c84c6647e84a9f270d86da7eea1a250c2529e26ddb39320546f235327f10e6
+boto3==1.16.63 \
+    --hash=sha256:1c0003609e63e8cff51dee7a49e904bcdb20e140b5f7a10a03006289fd8c8dc1 \
+    --hash=sha256:c919dac9773115025e1e2a7e462f60ca082e322bb6f4354247523e4226133b0b
     # via -r requirements.in
-botocore==1.18.6 \
-    --hash=sha256:31f04b68a6ebe8cfa97b4d70f54f29aef8b6a0bc9c4da7b8ee9b6a53fc69edae \
-    --hash=sha256:3de32a03679bb172a41c38e3c9af3f7259f3637f705aa2ac384b3233dc985b85
+botocore==1.19.63 \
+    --hash=sha256:ad4adfcc195b5401d84b0c65d3a89e507c1d54c201879c8761ff10ef5c361e21 \
+    --hash=sha256:d3694f6ef918def8082513e5ef309cd6cd83b612e9984e3a66e8adc98c650a92
     # via
     #   -r requirements.in
     #   boto3
