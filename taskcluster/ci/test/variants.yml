@@ -143,7 +143,6 @@ webrender-sw:
             extra-options:
                 - "--setpref=gfx.webrender.software=true"
 
-# TODO: After 2022-01-01, verify this variant is still needed.
 webgl-ipc:
     description: "{description} with WebGL IPC process enabled"
     contact: jgilbert
