@@ -758,7 +758,7 @@ TEST_F(TlsExtensionTest13Stream, AddServerSignatureAlgorithmsOnResumption) {
   DataBuffer empty;
   MakeTlsFilter<TlsExtensionInjector>(server_, ssl_signature_algorithms_xtn,
                                       empty);
-  client_->ExpectSendAlert(kTlsAlertUnsupportedExtension);
+  client_->ExpectSendAlert(kTlsAlertIllegalParameter);
   server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
   ConnectExpectFail();
   EXPECT_EQ(SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION, client_->error_code());
@@ -1247,19 +1247,6 @@ TEST_P(TlsBogusExtensionTest13, AddBogusExtensionHelloRetryRequest) {
   Run(kTlsHandshakeHelloRetryRequest);
 }
 
-TEST_P(TlsBogusExtensionTest13, AddVersionExtensionEncryptedExtensions) {
-  Run(kTlsHandshakeEncryptedExtensions, ssl_tls13_supported_versions_xtn);
-}
-
-TEST_P(TlsBogusExtensionTest13, AddVersionExtensionCertificate) {
-  Run(kTlsHandshakeCertificate, ssl_tls13_supported_versions_xtn);
-}
-
-TEST_P(TlsBogusExtensionTest13, AddVersionExtensionCertificateRequest) {
-  server_->RequestClientAuth(false);
-  Run(kTlsHandshakeCertificateRequest, ssl_tls13_supported_versions_xtn);
-}
-
 // NewSessionTicket allows unknown extensions AND it isn't protected by the
 // Finished.  So adding an unknown extension doesn't cause an error.
 TEST_P(TlsBogusExtensionTest13, AddBogusExtensionNewSessionTicket) {
@@ -1275,6 +1262,55 @@ TEST_P(TlsBogusExtensionTest13, AddBogusExtensionNewSessionTicket) {
   ExpectResumption(RESUME_TICKET);
   Connect();
   SendReceive();
+}
+
+class TlsDisallowedExtensionTest13 : public TlsBogusExtensionTest {
+ protected:
+  void ConnectAndFail(uint8_t message) override {
+    ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  }
+};
+
+TEST_P(TlsDisallowedExtensionTest13, AddVersionExtensionEncryptedExtensions) {
+  Run(kTlsHandshakeEncryptedExtensions, ssl_tls13_supported_versions_xtn);
+}
+
+TEST_P(TlsDisallowedExtensionTest13, AddVersionExtensionCertificate) {
+  Run(kTlsHandshakeCertificate, ssl_tls13_supported_versions_xtn);
+}
+
+TEST_P(TlsDisallowedExtensionTest13, AddVersionExtensionCertificateRequest) {
+  server_->RequestClientAuth(false);
+  Run(kTlsHandshakeCertificateRequest, ssl_tls13_supported_versions_xtn);
+}
+
+/* For unadvertised disallowed extensions an unsupported_extension alert is
+ * thrown since NSS checks for unadvertised extensions before its disallowed
+ * extension check. */
+class TlsDisallowedUnadvertisedExtensionTest13 : public TlsBogusExtensionTest {
+ protected:
+  void ConnectAndFail(uint8_t message) override {
+    uint8_t alert = kTlsAlertUnsupportedExtension;
+    if (message == kTlsHandshakeCertificateRequest) {
+      alert = kTlsAlertIllegalParameter;
+    }
+    ConnectExpectAlert(client_, alert);
+  }
+};
+
+TEST_P(TlsDisallowedUnadvertisedExtensionTest13,
+       AddPSKExtensionEncryptedExtensions) {
+  Run(kTlsHandshakeEncryptedExtensions, ssl_tls13_pre_shared_key_xtn);
+}
+
+TEST_P(TlsDisallowedUnadvertisedExtensionTest13, AddPSKExtensionCertificate) {
+  Run(kTlsHandshakeCertificate, ssl_tls13_pre_shared_key_xtn);
+}
+
+TEST_P(TlsDisallowedUnadvertisedExtensionTest13,
+       AddPSKExtensionCertificateRequest) {
+  server_->RequestClientAuth(false);
+  Run(kTlsHandshakeCertificateRequest, ssl_tls13_pre_shared_key_xtn);
 }
 
 TEST_P(TlsConnectStream, IncludePadding) {
@@ -1344,6 +1380,15 @@ INSTANTIATE_TEST_SUITE_P(
                        TlsConnectTestBase::kTlsV11V12));
 
 INSTANTIATE_TEST_SUITE_P(BogusExtension13, TlsBogusExtensionTest13,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV13));
+
+INSTANTIATE_TEST_SUITE_P(DisallowedExtension13, TlsDisallowedExtensionTest13,
+                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                            TlsConnectTestBase::kTlsV13));
+
+INSTANTIATE_TEST_SUITE_P(DisallowedUnadvertisedExtension13,
+                         TlsDisallowedUnadvertisedExtensionTest13,
                          ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                             TlsConnectTestBase::kTlsV13));
 
