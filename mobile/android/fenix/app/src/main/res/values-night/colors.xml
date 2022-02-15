@@ -59,6 +59,8 @@
     <color name="fx_mobile_text_color_disabled">@color/photonLightGrey05A40</color>
     <!-- Warning text -->
     <color name="fx_mobile_text_color_warning" tools:ignore="UnusedResources">@color/photonRed20</color>
+    <!-- Warning text on Secondary button -->
+    <color name="fx_mobile_text_color_warning_button" tools:ignore="UnusedResources">@color/photonRed70</color>
     <!-- Small heading, Text link -->
     <color name="fx_mobile_text_color_accent">@color/photonViolet20</color>
     <!-- Small heading, Text link -->
