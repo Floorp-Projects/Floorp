@@ -5,11 +5,11 @@
 package mozilla.components.support.ktx.android.view
 
 import android.app.Activity
-import android.os.Build
 import android.view.View
-import android.view.WindowInsets.Type.statusBars
 import android.view.WindowManager
 import androidx.annotation.VisibleForTesting
+import androidx.core.view.ViewCompat
+import androidx.core.view.ViewCompat.onApplyWindowInsets
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import mozilla.components.support.base.log.logger.Logger
@@ -45,21 +45,12 @@ internal fun Activity.setAsImmersive() {
  */
 @VisibleForTesting
 internal fun Activity.enableImmersiveModeRestore() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        window.decorView.setOnApplyWindowInsetsListener { view, insets ->
-            if (insets.isVisible(statusBars())) {
-                setAsImmersive()
-            }
-            // Allow the decor view to have a chance to process the incoming WindowInsets.
-            view.onApplyWindowInsets(insets)
+    ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, insetsCompat ->
+        if (insetsCompat.isVisible(WindowInsetsCompat.Type.statusBars())) {
+            setAsImmersive()
         }
-    } else {
-        @Suppress("DEPRECATION") // insets.isVisible(int) is available only starting with API 30
-        window.decorView.setOnSystemUiVisibilityChangeListener { newFlags ->
-            if (newFlags and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
-                setAsImmersive()
-            }
-        }
+        // Allow the decor view to have a chance to process the incoming WindowInsets.
+        onApplyWindowInsets(view, insetsCompat)
     }
 }
 
@@ -72,12 +63,7 @@ fun Activity.exitImmersiveModeIfNeeded() {
         return
     }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        window.decorView.setOnApplyWindowInsetsListener(null)
-    } else {
-        @Suppress("DEPRECATION")
-        window.decorView.setOnSystemUiVisibilityChangeListener(null)
-    }
+    ViewCompat.setOnApplyWindowInsetsListener(window.decorView, null)
 
     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     window.getWindowInsetsController().apply {

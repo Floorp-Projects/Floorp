@@ -44,12 +44,12 @@ import android.view.Surface
 import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.TextView
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat.getColor
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.LuminanceSource
@@ -725,10 +725,10 @@ internal fun WindowManager.getDisplaySize(): Point {
         // Tests for this branch will be added after
         // https://github.com/mozilla-mobile/android-components/issues/9684 is implemented.
         val windowMetrics = this.currentWindowMetrics
-        val windowInsets: WindowInsets = windowMetrics.windowInsets
+        val windowInsets: WindowInsetsCompat = WindowInsetsCompat.toWindowInsetsCompat(windowMetrics.windowInsets)
 
         val insets = windowInsets.getInsetsIgnoringVisibility(
-            WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout()
+            WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.displayCutout()
         )
         val insetsWidth = insets.right + insets.left
         val insetsHeight = insets.top + insets.bottom
