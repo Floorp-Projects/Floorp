@@ -93,6 +93,9 @@ class ContentDelegateChild extends GeckoViewActorChild {
         if (uri || isImage || isMedia) {
           const msg = {
             type: "GeckoView:ContextMenu",
+            // We don't have full zoom on Android, so using CSS coordinates
+            // here is fine, since the CSS coordinate spaces match between the
+            // child and parent processes.
             screenX: aEvent.screenX,
             screenY: aEvent.screenY,
             baseUri: (baseUri && baseUri.displaySpec) || null,
