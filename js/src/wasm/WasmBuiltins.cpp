@@ -563,6 +563,8 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
           continue;
         }
 
+        MOZ_ASSERT(iter.tls() == iter.instance()->tlsData());
+
         iter.tls()->pendingException = ref.get().asJSObject();
 
         rfe->kind = ResumeFromException::RESUME_WASM_CATCH;
