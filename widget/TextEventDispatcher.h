@@ -542,11 +542,11 @@ class TextEventDispatcher final {
    *                        Then, WillDispatchKeyboardEvent() is always called.
    * @return                true if an event is dispatched.  Otherwise, false.
    */
-  bool DispatchKeyboardEventInternal(EventMessage aMessage,
-                                     const WidgetKeyboardEvent& aKeyboardEvent,
-                                     nsEventStatus& aStatus, void* aData,
-                                     uint32_t aIndexOfKeypress = 0,
-                                     bool aNeedsCallback = false);
+  // TODO: Mark this as MOZ_CAN_RUN_SCRIPT instead.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool DispatchKeyboardEventInternal(
+      EventMessage aMessage, const WidgetKeyboardEvent& aKeyboardEvent,
+      nsEventStatus& aStatus, void* aData, uint32_t aIndexOfKeypress = 0,
+      bool aNeedsCallback = false);
 
   /**
    * ClearNotificationRequests() clears mIMENotificationRequests.

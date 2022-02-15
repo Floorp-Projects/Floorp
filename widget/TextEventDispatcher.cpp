@@ -5,6 +5,7 @@
 
 #include "TextEventDispatcher.h"
 
+#include "IMEData.h"
 #include "PuppetWidget.h"
 #include "TextEvents.h"
 
@@ -692,6 +693,14 @@ bool TextEventDispatcher::DispatchKeyboardEventInternal(
     // Note that even if we set it to true, this may be overwritten by
     // PresShell::DispatchEventToDOM().
     keyEvent.mFlags.mOnlySystemGroupDispatchInContent = true;
+  }
+
+  // If an editable element has focus and we're in the parent process, we should
+  // retrieve native key bindings right now because even if it matches with a
+  // reserved shortcut key, it should be handled by the editor.
+  if (XRE_IsParentProcess() && mHasFocus &&
+      (aMessage == eKeyDown || aMessage == eKeyPress)) {
+    keyEvent.InitAllEditCommands(mWritingMode);
   }
 
   DispatchInputEvent(mWidget, keyEvent, aStatus);

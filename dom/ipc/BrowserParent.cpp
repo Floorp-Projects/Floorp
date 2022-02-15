@@ -2011,16 +2011,24 @@ void BrowserParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent) {
   //       you also need to update
   //       TextEventDispatcher::DispatchKeyboardEventInternal().
   if (aEvent.mMessage == eKeyPress) {
-    // XXX Should we do this only when input context indicates an editor having
-    //     focus and the key event won't cause inputting text?
-    Maybe<WritingMode> writingMode;
-    if (aEvent.mWidget) {
-      if (RefPtr<widget::TextEventDispatcher> dispatcher =
-              aEvent.mWidget->GetTextEventDispatcher()) {
-        writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
+    // If current input context is editable, the edit commands are initialized
+    // by TextEventDispatcher::DispatchKeyboardEventInternal().  Otherwise,
+    // we need to do it here (they are not necessary for the parent process,
+    // therefore, we need to do it here for saving the runtime cost).
+    if (!aEvent.AreAllEditCommandsInitialized()) {
+      // XXX Is it good thing that the keypress event will be handled in an
+      //     editor even though the user pressed the key combination before the
+      //     focus change has not been completed in the parent process yet or
+      //     focus change will happen?  If no, we can stop doing this.
+      Maybe<WritingMode> writingMode;
+      if (aEvent.mWidget) {
+        if (RefPtr<widget::TextEventDispatcher> dispatcher =
+                aEvent.mWidget->GetTextEventDispatcher()) {
+          writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
+        }
       }
+      aEvent.InitAllEditCommands(writingMode);
     }
-    aEvent.InitAllEditCommands(writingMode);
   } else {
     aEvent.PreventNativeKeyBindings();
   }
