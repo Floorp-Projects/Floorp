@@ -51,24 +51,12 @@ SocketProcessBridgeChild::GetSingleton() {
   return child.forget();
 }
 
-static bool SocketProcessEnabled() {
-  static bool sInited = false;
-  static bool sSocketProcessEnabled = false;
-  if (!sInited) {
-    sSocketProcessEnabled =
-        StaticPrefs::network_process_enabled() && XRE_IsContentProcess();
-    sInited = true;
-  }
-
-  return sSocketProcessEnabled;
-}
-
 // static
 RefPtr<SocketProcessBridgeChild::GetPromise>
 SocketProcessBridgeChild::GetSocketProcessBridge() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!SocketProcessEnabled()) {
+  if (!StaticPrefs::network_process_enabled()) {
     return GetPromise::CreateAndReject(nsCString("Socket process disabled!"),
                                        __func__);
   }
