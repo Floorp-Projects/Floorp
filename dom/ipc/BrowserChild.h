@@ -61,6 +61,8 @@ template <typename T>
 class nsPtrHashKey;
 
 namespace mozilla {
+enum class NativeKeyBindingsType : uint8_t;
+
 class AbstractThread;
 class PresShell;
 
@@ -475,7 +477,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual mozilla::ipc::IPCResult RecvUpdateEffects(
       const EffectsInfo& aEffects);
 
-  void RequestEditCommands(nsIWidget::NativeKeyBindingsType aType,
+  void RequestEditCommands(NativeKeyBindingsType aType,
                            const WidgetKeyboardEvent& aEvent,
                            nsTArray<CommandInt>& aCommands);
 

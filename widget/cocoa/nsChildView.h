@@ -44,6 +44,8 @@ class GLPresenter;
 }  // namespace
 
 namespace mozilla {
+enum class NativeKeyBindingsType : uint8_t;
+
 class InputData;
 class PanGestureInput;
 class VibrancyManager;
@@ -371,7 +373,7 @@ class nsChildView final : public nsBaseWidget {
   [[nodiscard]] virtual nsresult AttachNativeKeyEvent(
       mozilla::WidgetKeyboardEvent& aEvent) override;
   MOZ_CAN_RUN_SCRIPT virtual bool GetEditCommands(
-      NativeKeyBindingsType aType, const mozilla::WidgetKeyboardEvent& aEvent,
+      mozilla::NativeKeyBindingsType aType, const mozilla::WidgetKeyboardEvent& aEvent,
       nsTArray<mozilla::CommandInt>& aCommands) override;
 
   virtual void SuppressAnimation(bool aSuppress) override;
