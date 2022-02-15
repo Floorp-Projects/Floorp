@@ -304,6 +304,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual bool HasPrimaryAction() const override;
 
+  nsAtom* GetPrimaryAction() const;
+
  private:
   uintptr_t mParent;
   static const uintptr_t kNoParent = UINTPTR_MAX;
