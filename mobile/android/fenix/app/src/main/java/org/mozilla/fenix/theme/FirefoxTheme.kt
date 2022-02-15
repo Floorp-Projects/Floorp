@@ -70,6 +70,7 @@ private val darkColorPalette = FirefoxColors(
     textAccent = PhotonColors.Violet20,
     textAccentDisabled = PhotonColors.Violet20A60,
     textOnColorPrimary = PhotonColors.LightGrey05,
+    textOnColorSecondary = PhotonColors.LightGrey40,
     textActionPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.DarkGrey90,
     textActionTertiary = PhotonColors.LightGrey05,
@@ -128,6 +129,7 @@ private val lightColorPalette = FirefoxColors(
     textAccent = PhotonColors.Violet70,
     textAccentDisabled = PhotonColors.Violet70A80,
     textOnColorPrimary = PhotonColors.LightGrey05,
+    textOnColorSecondary = PhotonColors.LightGrey40,
     textActionPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.DarkGrey90,
     textActionTertiary = PhotonColors.DarkGrey90,
@@ -191,6 +193,7 @@ class FirefoxColors(
     textAccent: Color,
     textAccentDisabled: Color,
     textOnColorPrimary: Color,
+    textOnColorSecondary: Color,
     textActionPrimary: Color,
     textActionSecondary: Color,
     textActionTertiary: Color,
@@ -310,6 +313,9 @@ class FirefoxColors(
     // Text Inverted/On Color
     var textOnColorPrimary by mutableStateOf(textOnColorPrimary)
         private set
+    // Text Inverted/On Color
+    var textOnColorSecondary by mutableStateOf(textOnColorSecondary)
+        private set
     // Action Primary text
     var textActionPrimary by mutableStateOf(textActionPrimary)
         private set
@@ -419,6 +425,7 @@ class FirefoxColors(
         textAccent = other.textAccent
         textAccentDisabled = other.textAccentDisabled
         textOnColorPrimary = other.textOnColorPrimary
+        textOnColorSecondary = other.textOnColorSecondary
         textActionPrimary = other.textActionPrimary
         textActionSecondary = other.textSecondary
         textActionTertiary = other.textActionTertiary
@@ -477,6 +484,7 @@ class FirefoxColors(
         textAccent = textAccent,
         textAccentDisabled = textAccentDisabled,
         textOnColorPrimary = textOnColorPrimary,
+        textOnColorSecondary = textOnColorSecondary,
         textActionPrimary = textActionPrimary,
         textActionSecondary = textActionSecondary,
         textActionTertiary = textActionTertiary,
