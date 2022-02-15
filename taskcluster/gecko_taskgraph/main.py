@@ -673,7 +673,7 @@ def action_callback(options):
 @argument("--input", default=None, help="Action input (.yml or .json)")
 @argument("callback", default=None, help="Action callback name (Python function name)")
 def test_action_callback(options):
-    import gecko_taskgraph.parameters
+    import taskgraph.parameters
     import gecko_taskgraph.actions
     from taskgraph.util import yaml
     from gecko_taskgraph.config import load_graph_config
@@ -700,7 +700,7 @@ def test_action_callback(options):
         trust_domain = graph_config["trust-domain"]
         graph_config.register()
 
-        parameters = gecko_taskgraph.parameters.load_parameters_file(
+        parameters = taskgraph.parameters.load_parameters_file(
             options["parameters"], strict=False, trust_domain=trust_domain
         )
         parameters.check()
