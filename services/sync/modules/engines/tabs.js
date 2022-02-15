@@ -51,6 +51,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "TABS_FILTERED_SCHEMES",
+  "services.sync.engine.tabs.filteredSchemes",
+  "",
+  null,
+  val => {
+    return new Set(val.split("|"));
+  }
+);
+
 function TabSetRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
@@ -152,11 +163,6 @@ TabStore.prototype = {
   },
 
   async getAllTabs(filter) {
-    let filteredUrls = new RegExp(
-      Svc.Prefs.get("engine.tabs.filteredUrls"),
-      "i"
-    );
-
     let allTabs = [];
 
     for (let win of this.getWindowEnumerator()) {
@@ -183,7 +189,8 @@ TabStore.prototype = {
 
         let acceptable = !filter
           ? url => url
-          : url => url && !filteredUrls.test(url);
+          : url =>
+              url && !TABS_FILTERED_SCHEMES.has(Services.io.extractScheme(url));
 
         let entries = tabState.entries;
         let index = tabState.index;
@@ -393,6 +400,31 @@ TabTracker.prototype = {
     }
 
     this._log.trace("onTab event: " + event.type);
+    this.callScheduleSync(SCORE_INCREMENT_SMALL);
+  },
+
+  // web progress listeners.
+  onLocationChange(webProgress, request, locationURI, flags) {
+    // We only care about top-level location changes which are not in the same
+    // document.
+    if (
+      flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT ||
+      !webProgress.isTopLevel ||
+      !locationURI
+    ) {
+      return;
+    }
+
+    // Synced tabs do not sync certain urls, we should ignore scheduling a sync
+    // if we have navigate to one of those urls
+    if (TABS_FILTERED_SCHEMES.has(locationURI.scheme)) {
+      return;
+    }
+
+    this.callScheduleSync();
+  },
+
+  callScheduleSync(scoreIncrement) {
     this.modified = true;
 
     const delayInMs = NimbusFeatures.syncAfterTabChange.getVariable(
@@ -409,20 +441,8 @@ TabTracker.prototype = {
       this.engine.service.scheduler.scheduleNextSync(delayInMs, {
         why: "tabschanged",
       });
-    } else {
-      this.score += SCORE_INCREMENT_SMALL;
-    }
-  },
-
-  // web progress listeners.
-  onLocationChange(webProgress, request, location, flags) {
-    // We only care about top-level location changes which are not in the same
-    // document.
-    if (
-      webProgress.isTopLevel &&
-      (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) == 0
-    ) {
-      this.modified = true;
+    } else if (scoreIncrement) {
+      this.score += scoreIncrement;
     }
   },
 };
