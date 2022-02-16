@@ -242,7 +242,6 @@ def build_one_stage(
         # libc++ doesn't build with MSVC because of the use of #include_next.
         if is_final_stage and os.path.basename(cc[0]).lower() != "cl.exe":
             cmake_args += [
-                "-DLLVM_FORCE_BUILD_RUNTIME=ON",
                 "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
                 # libc++abi has conflicting definitions between the shared and static
                 # library on Windows because of the import library for the dll having
@@ -252,13 +251,9 @@ def build_one_stage(
             ]
         if not is_final_stage:
             cmake_args += [
-                "-DLLVM_ENABLE_PROJECTS=clang;compiler-rt",
+                "-DLLVM_ENABLE_PROJECTS=clang",
                 "-DLLVM_INCLUDE_TESTS=OFF",
                 "-DLLVM_TOOL_LLI_BUILD=OFF",
-                "-DCOMPILER_RT_BUILD_SANITIZERS=OFF",
-                "-DCOMPILER_RT_BUILD_XRAY=OFF",
-                "-DCOMPILER_RT_BUILD_MEMPROF=OFF",
-                "-DCOMPILER_RT_BUILD_LIBFUZZER=OFF",
             ]
 
         # There is no libxml2 on Windows except if we build one ourselves.
@@ -512,7 +507,6 @@ def main():
     extra_source_dir = source_dir + "/clang-tools-extra"
     clang_source_dir = source_dir + "/clang"
     lld_source_dir = source_dir + "/lld"
-    compiler_rt_source_dir = source_dir + "/compiler-rt"
     libcxx_source_dir = source_dir + "/libcxx"
     libcxxabi_source_dir = source_dir + "/libcxxabi"
 
@@ -647,13 +641,10 @@ def main():
         for p in config.get("patches", []):
             patch(p, source_dir)
 
-    compiler_rt_source_link = llvm_source_dir + "/projects/compiler-rt"
-
     symlinks = [
         (clang_source_dir, llvm_source_dir + "/tools/clang"),
         (extra_source_dir, llvm_source_dir + "/tools/clang/tools/extra"),
         (lld_source_dir, llvm_source_dir + "/tools/lld"),
-        (compiler_rt_source_dir, compiler_rt_source_link),
         (libcxx_source_dir, llvm_source_dir + "/projects/libcxx"),
         (libcxxabi_source_dir, llvm_source_dir + "/projects/libcxxabi"),
         (source_dir + "/cmake", llvm_source_dir + "/projects/cmake"),
