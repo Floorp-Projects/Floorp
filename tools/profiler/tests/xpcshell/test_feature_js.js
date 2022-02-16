@@ -34,14 +34,16 @@ add_task(async () => {
       // The following regexes match a string similar to:
       //
       // "functionA (/gecko/obj/_tests/xpcshell/tools/profiler/tests/xpcshell/test_feature_js.js:47:0)"
+      // or
+      // "functionA (test_feature_js.js:47:0)"
       //
       //          this matches the script location
       //          |                       match the line number
       //          |                       |   match the column number
       //          v                       v   v
-      /^functionA \(.+test_feature_js\.js:\d+:\d+\)$/,
-      /^functionB \(.+test_feature_js\.js:\d+:\d+\)$/,
-      /^functionC \(.+test_feature_js\.js:\d+:\d+\)$/,
+      /^functionA \(.*test_feature_js\.js:\d+:\d+\)$/,
+      /^functionB \(.*test_feature_js\.js:\d+:\d+\)$/,
+      /^functionC \(.*test_feature_js\.js:\d+:\d+\)$/,
     ],
     "The stack contains a few frame labels, as well as the JS functions that we called."
   );
