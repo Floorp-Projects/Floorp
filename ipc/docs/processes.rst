@@ -131,9 +131,29 @@ Crash reporting
 - Add entry in `PROCESS_CRASH_SUBMIT_ATTEMPT <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/telemetry/Histograms.json#13403-13422>`_
 
 Memory reporting
-#################
+################
 
-- Add handling for your new process within `nsMemoryReporterManager::GetReportsExtended <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/xpcom/base/nsMemoryReporterManager.cpp#1786-1809>`
+Throughout the linked code, please consider those methods more as boilerplate code that will require some trivial modification to fit your exact usecase.
+
+- Add definition of memory reporter to your new :ref:`top-level actor <Top Level Actors>`
+
+  + Type inclusion `MemoryReportTypes <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#6>`_
+  + To parent-side `AddMemoryReport <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#32>`_
+  + To child-side `RequestMemoryReport <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#44-48>`_
+
+- Add handling for your new process within `nsMemoryReporterManager::GetReportsExtended <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/xpcom/base/nsMemoryReporterManager.cpp#1813-1819>`_
+- Provide a process manager level abstraction
+
+  + Implement a new class deriving ``MemoryReportingProcess`` such as `UtilityMemoryReporter <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessManager.cpp#253-292>`_
+  + Write a `GetProcessMemoryReport <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessManager.cpp#294-300>`_
+
+- On the child side, provide an implementation for `RequestMemoryReport <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessChild.cpp#153-166>`_
+- On the parent side
+
+  + Provide an implementation for `RequestMemoryReport <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessParent.cpp#41-69>`_
+  + Provide an implementation for `AddMemoryReport <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessParent.cpp#71-77>`_
+
+If you want to add a test that ensures proper behavior, you can have a look at the `utility process memory report test <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/test/browser/browser_utility_memoryReport.js>`_
 
 Process reporting
 #################
