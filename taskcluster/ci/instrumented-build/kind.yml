@@ -122,7 +122,7 @@ jobs:
             toolchain:
                 - linux64-binutils
                 - linux64-cctools-port
-                - linux64-clang-macosx-cross
+                - linux64-clang
                 - linux64-hfsplus
                 - linux64-libdmg
                 - linux64-rust-macos
@@ -181,7 +181,7 @@ jobs:
                 - linux64-jdk
                 # Workaround issues in binutils from the ndk with the compiler-rt from clang-13
                 - linux64-binutils
-                - linux64-clang-android-cross
+                - linux64-clang
                 - linux64-rust-android
                 - linux64-rust-size
                 - linux64-cbindgen
@@ -235,7 +235,7 @@ jobs:
                 - android-ndk-linux
                 - android-sdk-linux
                 - linux64-jdk
-                - linux64-clang-android-cross
+                - linux64-clang
                 - linux64-rust-android
                 - linux64-rust-size
                 - linux64-cbindgen
@@ -274,7 +274,7 @@ jobs:
         fetches:
             toolchain:
                 - linux64-binutils
-                - linux64-clang-win-cross
+                - linux64-clang
                 - linux64-rust-cross
                 - linux64-rust-size
                 - linux64-nasm
@@ -319,7 +319,7 @@ jobs:
         fetches:
             toolchain:
                 - linux64-binutils
-                - linux64-clang-win-cross
+                - linux64-clang
                 - linux64-rust-cross
                 - linux64-rust-size
                 - linux64-nasm

@@ -88,7 +88,7 @@ jobs:
             toolchain:
                 - linux64-binutils
                 - linux64-cctools-port
-                - linux64-clang-macosx-cross
+                - linux64-clang
                 - linux64-hfsplus
                 - linux64-libdmg
                 - linux64-nasm
@@ -135,7 +135,7 @@ jobs:
         fetches:
             toolchain:
                 - linux64-binutils
-                - linux64-clang-win-cross
+                - linux64-clang
                 - linux64-rust-cross
                 - linux64-rust-size
                 - linux64-nasm
