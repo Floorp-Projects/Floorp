@@ -743,7 +743,7 @@ nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* anOwner,
  *
  */
 NS_IMETHODIMP
-nsClipboard::GetSomeData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
+nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
   NS_ASSERTION(aTransferable, "clipboard given a null transferable");
 
   bool selectClipPresent;
