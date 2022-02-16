@@ -4,7 +4,7 @@
 
 const {
   getAllMessagesUiById,
-  getAllMessagesPayloadById,
+  getAllCssMessagesMatchingElements,
   getAllNetworkMessagesUpdateById,
   getAllRepeatById,
   getCurrentGroup,
@@ -25,7 +25,10 @@ const {
   stubPackets,
   stubPreparedMessages,
 } = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
-const { MESSAGE_TYPE } = require("devtools/client/webconsole/constants");
+const {
+  MESSAGE_TYPE,
+  CSS_MESSAGE_ADD_MATCHING_ELEMENTS,
+} = require("devtools/client/webconsole/constants");
 const {
   createWarningGroupMessage,
 } = require("devtools/client/webconsole/utils/messages");
@@ -314,7 +317,7 @@ describe("Message reducer:", () => {
       expect(getVisibleMessages(state).length).toBe(0);
       expect(getAllMessagesUiById(state).length).toBe(0);
       expect(getGroupsById(state).size).toBe(0);
-      expect(getAllMessagesPayloadById(state).size).toBe(0);
+      expect(getAllCssMessagesMatchingElements(state).size).toBe(0);
       expect(getCurrentGroup(state)).toBe(null);
       expect(getAllRepeatById(state)).toEqual({});
     });
@@ -1022,68 +1025,86 @@ describe("Message reducer:", () => {
     });
   });
 
-  describe("messagesPayloadById", () => {
-    it("resets messagesPayloadById in response to MESSAGES_CLEAR action", () => {
+  describe("cssMessagesMatchingElements", () => {
+    it("resets cssMessagesMatchingElements in response to MESSAGES_CLEAR action", () => {
       const { dispatch, getState } = setupStore([
-        "console.table(['a', 'b', 'c'])",
+        `Unknown property ‘such-unknown-property’.  Declaration dropped.`,
       ]);
 
-      const data = Symbol("tableData");
-      dispatch(
-        actions.messageUpdatePayload(getFirstMessage(getState()).id, data)
-      );
-      const table = getAllMessagesPayloadById(getState());
-      expect(table.size).toBe(1);
-      expect(table.get(getFirstMessage(getState()).id)).toBe(data);
+      const data = Symbol();
+      dispatch({
+        type: CSS_MESSAGE_ADD_MATCHING_ELEMENTS,
+        id: getFirstMessage(getState()).id,
+        elements: data,
+      });
+
+      const matchingElements = getAllCssMessagesMatchingElements(getState());
+      expect(matchingElements.size).toBe(1);
+      expect(matchingElements.get(getFirstMessage(getState()).id)).toBe(data);
 
       dispatch(actions.messagesClear());
 
-      expect(getAllMessagesPayloadById(getState()).size).toBe(0);
+      expect(getAllCssMessagesMatchingElements(getState()).size).toBe(0);
     });
 
-    it("cleans the messagesPayloadById property when messages are pruned", () => {
+    it("cleans the cssMessagesMatchingElements property when messages are pruned", () => {
       const { dispatch, getState } = setupStore([], {
         storeOptions: {
           logLimit: 2,
         },
       });
 
-      // Add 2 table message and their data.
+      // Add 2 css warnings message and their associated data.
       dispatch(
-        actions.messagesAdd([stubPackets.get("console.table(['a', 'b', 'c'])")])
+        actions.messagesAdd([
+          stubPackets.get(
+            `Unknown property ‘such-unknown-property’.  Declaration dropped.`
+          ),
+        ])
       );
       dispatch(
         actions.messagesAdd([
-          stubPackets.get("console.table(['red', 'green', 'blue']);"),
+          stubPackets.get(
+            `Error in parsing value for ‘padding-top’.  Declaration dropped.`
+          ),
         ])
       );
 
       const messages = getAllMessagesById(getState());
 
-      const tableData1 = Symbol();
-      const tableData2 = Symbol();
+      const data1 = Symbol();
+      const data2 = Symbol();
       const [id1, id2] = [...messages.keys()];
-      dispatch(actions.messageUpdatePayload(id1, tableData1));
-      dispatch(actions.messageUpdatePayload(id2, tableData2));
 
-      let table = getAllMessagesPayloadById(getState());
-      expect(table.size).toBe(2);
+      dispatch({
+        type: CSS_MESSAGE_ADD_MATCHING_ELEMENTS,
+        id: id1,
+        elements: data1,
+      });
+      dispatch({
+        type: CSS_MESSAGE_ADD_MATCHING_ELEMENTS,
+        id: id2,
+        elements: data2,
+      });
 
-      // This addition will remove the first table message.
+      let matchingElements = getAllCssMessagesMatchingElements(getState());
+      expect(matchingElements.size).toBe(2);
+
+      // This addition will remove the first css warning.
       dispatch(
         actions.messagesAdd([stubPackets.get("console.log(undefined)")])
       );
 
-      table = getAllMessagesPayloadById(getState());
-      expect(table.size).toBe(1);
-      expect(table.get(id2)).toBe(tableData2);
+      matchingElements = getAllCssMessagesMatchingElements(getState());
+      expect(matchingElements.size).toBe(1);
+      expect(matchingElements.get(id2)).toBe(data2);
 
-      // This addition will remove the second table message.
+      // This addition will remove the second css warning.
       dispatch(
         actions.messagesAdd([stubPackets.get("console.log('foobar', 'test')")])
       );
 
-      expect(getAllMessagesPayloadById(getState()).size).toBe(0);
+      expect(getAllCssMessagesMatchingElements(getState()).size).toBe(0);
     });
   });
 

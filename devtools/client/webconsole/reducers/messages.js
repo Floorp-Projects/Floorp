@@ -57,9 +57,9 @@ const MessageState = overrides =>
       {
         // List of all the messages added to the console.
         messagesById: new Map(),
-        // List of additional data associated with messages (populated async or on-demand at a
-        // later time after the message is received).
-        messagesPayloadById: new Map(),
+        // List of elements matching the selector of CSS Warning messages(populated
+        // on-demand via the UI).
+        cssMessagesMatchingElements: new Map(),
         // Array of the visible messages.
         visibleMessages: [],
         // Object for the filtered messages.
@@ -95,7 +95,7 @@ function cloneState(state) {
     visibleMessages: [...state.visibleMessages],
     filteredMessagesCount: { ...state.filteredMessagesCount },
     messagesUiById: [...state.messagesUiById],
-    messagesPayloadById: new Map(state.messagesPayloadById),
+    cssMessagesMatchingElements: new Map(state.cssMessagesMatchingElements),
     groupsById: new Map(state.groupsById),
     currentGroup: state.currentGroup,
     frontsToRelease: [...state.frontsToRelease],
@@ -353,7 +353,7 @@ function messages(
 ) {
   const {
     messagesById,
-    messagesPayloadById,
+    cssMessagesMatchingElements,
     messagesUiById,
     networkMessagesUpdateById,
     groupsById,
@@ -535,12 +535,12 @@ function messages(
       }
       return closeState;
 
-    case constants.MESSAGE_UPDATE_PAYLOAD:
+    case constants.CSS_MESSAGE_ADD_MATCHING_ELEMENTS:
       return {
         ...state,
-        messagesPayloadById: new Map(messagesPayloadById).set(
+        cssMessagesMatchingElements: new Map(cssMessagesMatchingElements).set(
           action.id,
-          action.data
+          action.elements
         ),
       };
 
@@ -958,8 +958,10 @@ function removeMessagesFromState(state, removedMessagesIds) {
     );
   }
 
-  if (mapHasRemovedIdKey(state.messagesPayloadById)) {
-    state.messagesPayloadById = cleanUpMap(state.messagesPayloadById);
+  if (mapHasRemovedIdKey(state.cssMessagesMatchingElements)) {
+    state.cssMessagesMatchingElements = cleanUpMap(
+      state.cssMessagesMatchingElements
+    );
   }
   if (mapHasRemovedIdKey(state.groupsById)) {
     state.groupsById = cleanUpMap(state.groupsById);
