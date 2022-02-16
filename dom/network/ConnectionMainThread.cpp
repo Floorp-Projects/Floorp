@@ -10,8 +10,9 @@
 
 namespace mozilla::dom::network {
 
-ConnectionMainThread::ConnectionMainThread(nsPIDOMWindowInner* aWindow)
-    : Connection(aWindow) {
+ConnectionMainThread::ConnectionMainThread(nsPIDOMWindowInner* aWindow,
+                                           bool aShouldResistFingerprinting)
+    : Connection(aWindow, aShouldResistFingerprinting) {
   hal::RegisterNetworkObserver(this);
 
   hal::NetworkInformation networkInfo;
