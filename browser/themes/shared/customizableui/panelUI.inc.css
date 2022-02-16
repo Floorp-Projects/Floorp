@@ -183,6 +183,7 @@ toolbarseparator + .panel-subview-body,
 
 .panel-info-button {
   appearance: none;
+  color: inherit;
   padding: 0;
   margin-inline-end: 4px;
   border-radius: var(--toolbarbutton-border-radius);
@@ -1959,8 +1960,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   color: #fff;
   /* Set custom hover/focus/active states on the info button,
      to make them more visible on the header background */
-  --arrowpanel-dimmed: #0003;
-  --arrowpanel-dimmed-further: #0005;
+  --panel-item-hover-bgcolor: #0005;
   --panel-item-active-bgcolor: #0007;
 }
 
