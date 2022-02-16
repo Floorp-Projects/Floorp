@@ -392,11 +392,13 @@ struct GfxDriverInfo {
   bool mGpu2;
 };
 
-#define GFX_DRIVER_VERSION(a, b, c, d)                               \
-  ((uint64_t(a) << 48) | (uint64_t(b) << 32) | (uint64_t(c) << 16) | \
-   uint64_t(d))
+inline uint64_t DriverVersion(uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
+  return (uint64_t(a) << 48) | (uint64_t(b) << 32) | (uint64_t(c) << 16) |
+         uint64_t(d);
+}
 
 inline uint64_t V(uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
+#ifdef XP_WIN
   // We make sure every driver number is padded by 0s, this will allow us the
   // easiest 'compare as if decimals' approach. See ParseDriverVersion for a
   // more extensive explanation of this approach.
@@ -409,7 +411,8 @@ inline uint64_t V(uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
   while (d > 0 && d < 1000) {
     d *= 10;
   }
-  return GFX_DRIVER_VERSION(a, b, c, d);
+#endif
+  return DriverVersion(a, b, c, d);
 }
 
 // All destination string storage needs to have at least 5 bytes available.
@@ -482,7 +485,7 @@ inline bool ParseDriverVersion(const nsAString& aVersion,
                                uint64_t* aNumericVersion) {
   *aNumericVersion = 0;
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+#ifndef ANDROID
   int a, b, c, d;
   char aStr[8], bStr[8], cStr[8], dStr[8];
   /* honestly, why do I even bother */
@@ -490,9 +493,11 @@ inline bool ParseDriverVersion(const nsAString& aVersion,
                           bStr, cStr, dStr))
     return false;
 
+#  ifdef XP_WIN
   PadDriverDecimal(bStr);
   PadDriverDecimal(cStr);
   PadDriverDecimal(dStr);
+#  endif
 
   a = atoi(aStr);
   b = atoi(bStr);
@@ -504,18 +509,14 @@ inline bool ParseDriverVersion(const nsAString& aVersion,
   if (c < 0 || c > 0xffff) return false;
   if (d < 0 || d > 0xffff) return false;
 
-  *aNumericVersion = GFX_DRIVER_VERSION(a, b, c, d);
-  MOZ_ASSERT(*aNumericVersion != GfxDriverInfo::allDriverVersions);
-  return true;
-#elif defined(ANDROID)
+  *aNumericVersion = DriverVersion(a, b, c, d);
+#else
   // Can't use aVersion.ToInteger() because that's not compiled into our code
   // unless we have XPCOM_GLUE_AVOID_NSPR disabled.
   *aNumericVersion = atoi(NS_LossyConvertUTF16toASCII(aVersion).get());
+#endif
   MOZ_ASSERT(*aNumericVersion != GfxDriverInfo::allDriverVersions);
   return true;
-#else
-  return false;
-#endif
 }
 
 }  // namespace widget
