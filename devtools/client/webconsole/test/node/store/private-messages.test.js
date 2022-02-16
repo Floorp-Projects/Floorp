@@ -6,12 +6,12 @@
 
 const {
   getAllMessagesUiById,
-  getAllMessagesPayloadById,
+  getAllCssMessagesMatchingElements,
   getAllNetworkMessagesUpdateById,
   getAllRepeatById,
   getCurrentGroup,
   getGroupsById,
-  getAllMessagesById,
+  getMutableMessagesById,
   getVisibleMessages,
 } = require("devtools/client/webconsole/selectors/messages");
 const {
@@ -24,6 +24,9 @@ const {
 const {
   stubPackets,
 } = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
+const {
+  CSS_MESSAGE_ADD_MATCHING_ELEMENTS,
+} = require("devtools/client/webconsole/constants");
 
 const expect = require("expect");
 
@@ -46,13 +49,13 @@ describe("private messages", () => {
     );
 
     let state = getState();
-    const messages = getAllMessagesById(state);
+    const messages = getMutableMessagesById(state);
     expect(messages.size).toBe(4);
 
     dispatch(actions.privateMessagesClear());
 
     state = getState();
-    expect(getAllMessagesById(state).size).toBe(1);
+    expect(getMutableMessagesById(state).size).toBe(1);
     expect(getVisibleMessages(state).length).toBe(1);
   });
 
@@ -102,41 +105,47 @@ describe("private messages", () => {
     });
   });
 
-  it("cleans messagesPayloadById on PRIVATE_MESSAGES_CLEAR action", () => {
+  it("cleans cssMessagesMatchingElements on PRIVATE_MESSAGES_CLEAR action", () => {
     const { dispatch, getState } = setupStore();
 
     dispatch(
       actions.messagesAdd([
-        getPrivatePacket("console.table(['a', 'b', 'c'])"),
-        stubPackets.get("console.table(['a', 'b', 'c'])"),
+        getPrivatePacket(
+          `Unknown property ‘such-unknown-property’.  Declaration dropped.`
+        ),
+        stubPackets.get(
+          `Error in parsing value for ‘padding-top’.  Declaration dropped.`
+        ),
       ])
     );
 
-    const privateTableData = Symbol("privateTableData");
-    const publicTableData = Symbol("publicTableData");
-    dispatch(
-      actions.messageUpdatePayload(
-        getFirstMessage(getState()).id,
-        privateTableData
-      )
-    );
-    dispatch(
-      actions.messageUpdatePayload(
-        getLastMessage(getState()).id,
-        publicTableData
-      )
-    );
+    const privateData = Symbol("privateData");
+    const publicData = Symbol("publicData");
+
+    dispatch({
+      type: CSS_MESSAGE_ADD_MATCHING_ELEMENTS,
+      id: getFirstMessage(getState()).id,
+      elements: privateData,
+    });
+
+    dispatch({
+      type: CSS_MESSAGE_ADD_MATCHING_ELEMENTS,
+      id: getLastMessage(getState()).id,
+      elements: publicData,
+    });
 
     let state = getState();
-    expect(getAllMessagesPayloadById(state).size).toBe(2);
+    expect(getAllCssMessagesMatchingElements(state).size).toBe(2);
 
     dispatch(actions.privateMessagesClear());
 
     state = getState();
-    expect(getAllMessagesPayloadById(state).size).toBe(1);
+    expect(getAllCssMessagesMatchingElements(state).size).toBe(1);
     expect(
-      getAllMessagesPayloadById(state).get(getFirstMessage(getState()).id)
-    ).toBe(publicTableData);
+      getAllCssMessagesMatchingElements(state).get(
+        getFirstMessage(getState()).id
+      )
+    ).toBe(publicData);
   });
 
   it("cleans group properties on PRIVATE_MESSAGES_CLEAR action", () => {

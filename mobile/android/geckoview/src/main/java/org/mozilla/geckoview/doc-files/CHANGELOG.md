@@ -47,8 +47,8 @@ exclude: true
 [97.4]: {{javadoc_uri}}/GeckoRuntime.html#CRASHED_PROCESS_TYPE_MAIN
 [97.5]: {{javadoc_uri}}/GeckoRuntime.html#EXTRA_CRASH_FATAL
 [97.6]: {{javadoc_uri}}/OrientationController.html
-[97.7]: {{javadoc_uri}}/GeckoSession.html#goBack-boolean-
-[97.8]: {{javadoc_uri}}/GeckoSession.html#goForward-boolean-
+[97.7]: {{javadoc_uri}}/GeckoSession.html#goBack(boolean)
+[97.8]: {{javadoc_uri}}/GeckoSession.html#goForward(boolean)
 
 ## v96
 - Added [`onLoginFetch`][96.1] which allows apps to provide all saved logins to
@@ -65,10 +65,10 @@ exclude: true
 - Removed deprecated Content Blocking APIs.
   ([bug 1743706]({{bugzilla}}1743706))
 
-[96.1]: {{javadoc_uri}}/Autocomplete.StorageDelegate.html#onLoginFetch--
-[96.2]: {{javadoc_uri}}/GeckoResult.html#finally_-java.lang.Runnable-
-[96.3]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_INVALID_DOMAIN-
-[96.4]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.Selection.html#pasteAsPlainText--
+[96.1]: {{javadoc_uri}}/Autocomplete.StorageDelegate.html#onLoginFetch()
+[96.2]: {{javadoc_uri}}/GeckoResult.html#finally_(java.lang.Runnable)
+[96.3]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_INVALID_DOMAIN
+[96.4]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.Selection.html#pasteAsPlainText()
 
 ## v95
 - Added [`GeckoSession.ContentDelegate.onPointerIconChange()`][95.1] to notify
@@ -92,15 +92,15 @@ exclude: true
   the application of a preview image URL.
   ([bug 1732219]({{bugzilla}}1732219))
 
-[95.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPointerIconChange-org.mozilla.geckoview.GeckoSession-android.view.PointerIcon-
+[95.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPointerIconChange(org.mozilla.geckoview.GeckoSession,android.view.PointerIcon)
 [95.2]: {{javadoc_uri}}/ContentBlockingController.html
 [95.3]: {{javadoc_uri}}/StorageController.java
 [95.4]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_TRACKING
-[95.5]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLocationChange-org.mozilla.geckoview.GeckoSession-java.lang.String-java.util.List-
-[95.6]: {{javadoc_uri}}/StorageController.html#setPrivateBrowsingPermanentPermission-org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission-int-
-[95.7]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#enterpiseRootsEnabled-boolean-
-[95.8]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#enterpriseRootsEnabled-boolean-
-[95.9]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPreviewImage-org.mozilla.geckoview.GeckoSession-java.lang.String-
+[95.5]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List)
+[95.6]: {{javadoc_uri}}/StorageController.html#setPrivateBrowsingPermanentPermission(org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission,int)
+[95.7]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#enterpiseRootsEnabled(boolean)
+[95.8]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#enterpriseRootsEnabled(boolean)
+[95.9]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPreviewImage(org.mozilla.geckoview.GeckoSession,java.lang.String)
 
 ## v94
 - Extended [`Autocomplete`][78.7] API to support credit card saving.
@@ -129,7 +129,7 @@ exclude: true
   Use [`GeckoResult.allow`][89.8] and [`GeckoResult.deny`][89.9] instead.
 
 [92.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_STORAGE_ACCESS
-[92.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onShowDynamicToolbar-org.mozilla.geckoview.GeckoSession-
+[92.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onShowDynamicToolbar(org.mozilla.geckoview.GeckoSession)
 
 ## v91
 - Extended [`Autocomplete`][78.7] API to support addresses.
@@ -139,7 +139,7 @@ exclude: true
   and data partitioned via [`State Partitioning`][91.3].
 - Removed deprecated `MediaElement` API.
 
-[91.1]: {{javadoc_uri}}/StorageController.html#clearDataFromBaseDomain-java.lang.String-long-
+[91.1]: {{javadoc_uri}}/StorageController.html#clearDataFromBaseDomain(java.lang.String,long)
 [91.2]: {{javadoc_uri}}/StorageController.html
 [91.3]: https://developer.mozilla.org/en-US/docs/Web/Privacy/State_Partitioning
 
@@ -166,13 +166,13 @@ exclude: true
 [90.2]: {{javadoc_uri}}/WebNotification.html#vibrate
 [90.3]: https://developer.mozilla.org/en-US/docs/Web/API/Notification/silent
 [90.4]: https://developer.mozilla.org/en-US/docs/Web/API/Notification/vibrate
-[90.5]: {{javadoc_uri}}/GeckoRuntime.html#getProfileDir--
-[90.6]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setForceEnableAccessibility-boolean-
-[90.7]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#onContentPermissionRequest-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission-
+[90.5]: {{javadoc_uri}}/GeckoRuntime.html#getProfileDir()
+[90.6]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setForceEnableAccessibility(boolean)
+[90.7]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#onContentPermissionRequest(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission)
 [90.8]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.ContentPermission.html
-[90.9]: {{javadoc_uri}}/StorageController.html#setPermission-org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission-int-
+[90.9]: {{javadoc_uri}}/StorageController.html#setPermission(org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission,int)
 [90.10]: {{javadoc_uri}}/StorageController.html
-[90.11]: {{javadoc_uri}}/ContentBlockingController.html#addException-org.mozilla.geckoview.GeckoSession-
+[90.11]: {{javadoc_uri}}/ContentBlockingController.html#addException(org.mozilla.geckoview.GeckoSession)
 
 ## v89
 - Added [`ContentPermission`][89.1], which is used to report what permissions content
@@ -205,19 +205,19 @@ exclude: true
   value as [`setCookieBehavior`][89.14] is set to.
 
 [89.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.ContentPermission.html
-[89.2]: {{javadoc_uri}}/StorageController.html#getPermissions-java.lang.String-
-[89.3]: {{javadoc_uri}}/StorageController.html#getAllPermissions--
-[89.4]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLocationChange-org.mozilla.geckoview.GeckoSession-java.lang.String-
-[89.5]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setEnterpriseRootsEnabled-boolean-
-[89.6]: {{javadoc_uri}}/GeckoSession.html#load-org.mozilla.geckoview.GeckoSession.Loader-
+[89.2]: {{javadoc_uri}}/StorageController.html#getPermissions(java.lang.String)
+[89.3]: {{javadoc_uri}}/StorageController.html#getAllPermissions()
+[89.4]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String)
+[89.5]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setEnterpriseRootsEnabled(boolean)
+[89.6]: {{javadoc_uri}}/GeckoSession.html#load(org.mozilla.geckoview.GeckoSession.Loader)
 [89.7]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html
-[89.8]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLoadError-org.mozilla.geckoview.GeckoSession-java.lang.String-org.mozilla.geckoview.WebRequestError-
+[89.8]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLoadError(org.mozilla.geckoview.GeckoSession,java.lang.String,org.mozilla.geckoview.WebRequestError)
 [89.9]: {{javadoc_uri}}/WebRequestError.html
 [89.10]: {{javadoc_uri}}/WebRequestError.html#ERROR_DATA_URI_TOO_LONG
 [89.11]: {{javadoc_uri}}/Autocomplete.StorageDelegate.html
 [89.12]: {{javadoc_uri}}/ContentBlockingController.Event.html#ALLOWED_TRACKING_CONTENT
-[89.13]: {{javadoc_uri}}/ContentBlocking.Settings.html#setCookieBehaviorPrivateMode-int-
-[89.14]: {{javadoc_uri}}/ContentBlocking.Settings.html#setCookieBehavior-int-
+[89.13]: {{javadoc_uri}}/ContentBlocking.Settings.html#setCookieBehaviorPrivateMode(int)
+[89.14]: {{javadoc_uri}}/ContentBlocking.Settings.html#setCookieBehavior(int)
 
 ## v88
 - Added [`WebExtension.Download#update`][88.1] that can be used to
@@ -243,15 +243,15 @@ exclude: true
 - ⚠️ Update [`SessionState`][88.10] to handle null states/strings more gracefully.
   ([bug 1685486]({{bugzilla}}1685486)).
 
-[88.1]: {{javadoc_uri}}/WebExtension.Download.html#update-org.mozilla.geckoview.WebExtension.Download.Info-
+[88.1]: {{javadoc_uri}}/WebExtension.Download.html#update(org.mozilla.geckoview.WebExtension.Download.Info)
 [88.2]: {{javadoc_uri}}/PanZoomController.html#onTouchEventForDetailResult
 [88.3]: {{javadoc_uri}}/GeckoView.html#onTouchEventForDetailResult
 [88.4]: {{javadoc_uri}}/PanZoomController.html#onTouchEventForResult
 [88.5]: {{javadoc_uri}}/GeckoView.html#onTouchEventForResult
 [88.6]: {{javadoc_uri}}/GeckoResult.html#ALLOW
 [88.7]: {{javadoc_uri}}/GeckoResult.html#DENY
-[88.8]: {{javadoc_uri}}/GeckoResult.html#allow--
-[88.9]: {{javadoc_uri}}/GeckoResult.html#deny--
+[88.8]: {{javadoc_uri}}/GeckoResult.html#allow()
+[88.9]: {{javadoc_uri}}/GeckoResult.html#deny()
 [88.10]: {{javadoc_uri}}/GeckoSession.SessionState.html
 
 ## v87
@@ -270,11 +270,11 @@ exclude: true
 
 [87.1]: {{javadoc_uri}}/WebExtension.DownloadInitData.html
 [87.2]: {{javadoc_uri}}/WebExtension.Download.Info.html
-[87.3]: {{javadoc_uri}}/Image.html#getBitmap-int-
+[87.3]: {{javadoc_uri}}/Image.html#getBitmap(int)
 [87.4]: {{javadoc_uri}}/Image.ImageProcessingException.html
 [87.5]: {{javadoc_uri}}/GeckoRuntimeSettings.html
-[87.6]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setAllowInsecureConnections-int-
-[87.7]: {{javadoc_uri}}/GeckoSession.SessionState.html#fromString-java.lang.String-
+[87.6]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setAllowInsecureConnections(int)
+[87.7]: {{javadoc_uri}}/GeckoSession.SessionState.html#fromString(java.lang.String)
 
 ## v86
 - Removed deprecated `ContentDelegate#onExternalResponse(GeckoSession, WebResponseInfo)`.
@@ -294,8 +294,8 @@ exclude: true
   ([bug 1687430]({{bugzilla}}1687430))
 
 [86.1]: {{javadoc_uri}}/WebExtension.DownloadDelegate.html
-[86.2]: {{javadoc_uri}}/WebRequest.Builder#body-java.lang.String-
-[86.3]: {{javadoc_uri}}/GeckoResult.html#map-org.mozilla.geckoview.GeckoResult.OnValueMapper-
+[86.2]: {{javadoc_uri}}/WebRequest.Builder#body(java.lang.String)
+[86.3]: {{javadoc_uri}}/GeckoResult.html#map(org.mozilla.geckoview.GeckoResult.OnValueMapper)
 [86.4]: {{javadoc_uri}}/PanZoomController.html#INPUT_RESULT_IGNORED
 
 ## v85
@@ -343,14 +343,14 @@ exclude: true
   ([bug 1667471]({{bugzilla}}1667471))
 
 [83.1]: {{javadoc_uri}}/WebExtension.MetaData.html#temporary
-[83.2]: {{javadoc_uri}}/MediaSession.Delegate.html#onMetadata-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.MediaSession-org.mozilla.geckoview.MediaSession.Metadata-
+[83.2]: {{javadoc_uri}}/MediaSession.Delegate.html#onMetadata(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.MediaSession,org.mozilla.geckoview.MediaSession.Metadata)
 [83.3]: {{javadoc_uri}}/ContentBlocking.SafeBrowsingProvider.html
 [83.4]: {{javadoc_uri}}/GeckoRuntime.ActivityDelegate.html
 [83.5]: {{javadoc_uri}}/GeckoWebExecutor.html#FETCH_FLAG_PRIVATE
-[83.6]: {{javadoc_uri}}/GeckoSession.html#loadUri-java.lang.String-org.mozilla.geckoview.GeckoSession-int-java.util.Map-
-[83.7]: {{javadoc_uri}}/GeckoSession.html#load-org.mozilla.geckoview.GeckoSession.Loader-
+[83.6]: {{javadoc_uri}}/GeckoSession.html#loadUri(java.lang.String,org.mozilla.geckoview.GeckoSession,int,java.util.Map)
+[83.7]: {{javadoc_uri}}/GeckoSession.html#load(org.mozilla.geckoview.GeckoSession.Loader)
 [83.8]: {{javadoc_uri}}/GeckoSession.Loader.html
-[83.9]: {{javadoc_uri}}/GeckoSession.Loader.html#headerFilter-int-
+[83.9]: {{javadoc_uri}}/GeckoSession.Loader.html#headerFilter(int)
 
 ## v82
 - ⚠️  [`WebNotification.source`][79.2] is now `@Nullable` to account for
@@ -376,11 +376,11 @@ exclude: true
 - Added [`REPLACED_TRACKING_CONTENT`][82.6] to content blocking API to indicate when unsafe content is shimmed.
   ([bug 1663756]({{bugzilla}}1663756))
 
-[82.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.WebResponseInfo-
-[82.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoResult-
+[82.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.WebResponseInfo)
+[82.2]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onExternalResponse(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoResult)
 [82.3]: {{javadoc_uri}}/Image.html
 [82.4]: {{javadoc_uri}}/GeckoSession.PromptDelegate.RepostConfirmPrompt.html
-[82.5]: {{javadoc_uri}}/GeckoSession.html#restoreState-org.mozilla.geckoview.GeckoSession.SessionState-
+[82.5]: {{javadoc_uri}}/GeckoSession.html#restoreState(org.mozilla.geckoview.GeckoSession.SessionState)
 [82.6]: {{javadoc_uri}}/ContentBlockingController.Event.html#REPLACED_TRACKING_CONTENT
 
 ## v81
@@ -396,9 +396,9 @@ the event is now considered.
 
 [81.1]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html
 [81.2]: {{javadoc_uri}}/ContentBlocking.Settings.html
-[81.3]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPaintStatusReset-org.mozilla.geckoview.GeckoSession-
-[81.4]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onFirstContentfulPaint-org.mozilla.geckoview.GeckoSession-
-[81.5]: {{javadoc_uri}}/GeckoView.html#onTouchEventForResult-android.view.MotionEvent-
+[81.3]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPaintStatusReset(org.mozilla.geckoview.GeckoSession)
+[81.4]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onFirstContentfulPaint(org.mozilla.geckoview.GeckoSession)
+[81.5]: {{javadoc_uri}}/GeckoView.html#onTouchEventForResult(android.view.MotionEvent)
 [81.6]: {{javadoc_uri}}/MediaSession.html
 
 ## v80
@@ -433,13 +433,13 @@ to allow adding gecko profiler markers.
   [`GeckoRuntimeSettings.getUseMultiprocess`][79.7] with the intention of removing
   them in GeckoView v82. ([bug 1649530]({{bugzilla}}1649530))
 
-[79.1]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onOpenOptionsPage-org.mozilla.geckoview.WebExtension-
+[79.1]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onOpenOptionsPage(org.mozilla.geckoview.WebExtension)
 [79.2]: {{javadoc_uri}}/WebNotification.html#source
-[79.3]: {{javadoc_uri}}/WebExtensionController.html#ensureBuiltIn-java.lang.String-java.lang.String-
+[79.3]: {{javadoc_uri}}/WebExtensionController.html#ensureBuiltIn(java.lang.String,java.lang.String)
 [79.4]: {{javadoc_uri}}/ProfilerController.html
-[79.5]: {{javadoc_uri}}/GeckoRuntime.html#getProfilerController--
-[79.6]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
-[79.7]: {{javadoc_uri}}/GeckoRuntimeSettings.html#getUseMultiprocess--
+[79.5]: {{javadoc_uri}}/GeckoRuntime.html#getProfilerController()
+[79.6]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess(boolean)
+[79.7]: {{javadoc_uri}}/GeckoRuntimeSettings.html#getUseMultiprocess()
 
 ## v78
 - Added [`WebExtensionController.installBuiltIn`][78.1] that allows installing an
@@ -466,17 +466,17 @@ to allow adding gecko profiler markers.
 - Added [`GeckoRuntimeSettings#setLoginAutofillEnabled`][78.11] to control
   whether login forms should be automatically filled in suitable situations.
 
-[78.1]: {{javadoc_uri}}/WebExtensionController.html#installBuiltIn-java.lang.String-
+[78.1]: {{javadoc_uri}}/WebExtensionController.html#installBuiltIn(java.lang.String)
 [78.2]: {{javadoc_uri}}/ContentBlocking.CookieBehavior.html#ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS
 [78.3]: {{javadoc_uri}}/WebExtension.CreateTabDetails.html
 [78.4]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/contextualIdentities
-[78.5]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onSubframeLoadRequest-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest-
+[78.5]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onSubframeLoadRequest(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest)
 [78.6]: {{javadoc_uri}}/GeckoSession.PromptDelegate.BeforeUnloadPrompt.html
 [78.7]: {{javadoc_uri}}/Autocomplete.html
 [78.8]: {{javadoc_uri}}/Autocomplete.LoginStorageDelegate.html
-[78.9]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onLoginSave-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PromptDelegate.AutocompleteRequest-
-[78.10]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onLoginSelect-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PromptDelegate.AutocompleteRequest-
-[78.11]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setLoginAutofillEnabled-boolean-
+[78.9]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onLoginSave(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.PromptDelegate.AutocompleteRequest)
+[78.10]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onLoginSelect(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.PromptDelegate.AutocompleteRequest)
+[78.11]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setLoginAutofillEnabled(boolean)
 
 ## v77
 - Added [`GeckoRuntime.appendAppNotesToCrashReport`][77.1] For adding app notes to the crash report.
@@ -484,7 +484,7 @@ to allow adding gecko profiler markers.
 - ⚠️ Remove the `DynamicToolbarAnimator` API along with accesors on `GeckoView` and `GeckoSession`.
   ([bug 1627716]({{bugzilla}}1627716))
 
-[77.1]: {{javadoc_uri}}/GeckoRuntime.html#appendAppNotesToCrashReport-java.lang.String-
+[77.1]: {{javadoc_uri}}/GeckoRuntime.html#appendAppNotesToCrashReport(java.lang.String)
 
 ## v76
 - Added [`GeckoSession.PermissionDelegate.PERMISSION_MEDIA_KEY_SYSTEM_ACCESS`][76.1] to control EME media key access.
@@ -498,7 +498,7 @@ to allow adding gecko profiler markers.
 
 [76.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_MEDIA_KEY_SYSTEM_ACCESS
 [76.2]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest.html#isDirectNavigation
-[76.3]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLoadRequest-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest-
+[76.3]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLoadRequest(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest)
 
 ## v75
 - ⚠️ Remove `GeckoRuntimeSettings.Builder#useContentProcessHint`. The content
@@ -550,10 +550,10 @@ to allow adding gecko profiler markers.
   browsing.
   ([bug 1599139]({{bugzilla}}1599139))
 
-[75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess-boolean-
-[75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated--
-[75.3]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#autoplayDefault-boolean-
-[75.4]: {{javadoc_uri}}/GeckoSession.html#reload-int-
+[75.1]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#useMultiprocess(boolean)
+[75.2]: {{javadoc_uri}}/WebExtensionController.DebuggerDelegate.html#onExtensionListUpdated()
+[75.3]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#autoplayDefault(boolean)
+[75.4]: {{javadoc_uri}}/GeckoSession.html#reload(int)
 [75.5]: {{javadoc_uri}}/GeckoSession.html#LOAD_FLAGS_NONE
 [75.6]: {{javadoc_uri}}/WebExtension.ActionDelegate.html
 [75.7]: {{javadoc_uri}}/WebExtension.MessageDelegate.html
@@ -561,22 +561,22 @@ to allow adding gecko profiler markers.
 [75.9]: {{javadoc_uri}}/WebExtension.SessionTabDelegate.html
 [75.10]: {{javadoc_uri}}/WebExtension.TabDelegate.html
 [75.11]: {{javadoc_uri}}/WebExtensionRuntime.TabDelegate.html
-[75.12]: {{javadoc_uri}}/WebExtension.SessionTabDelegate.html#onUpdateTab-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.WebExtension.UpdateTabDetails-
-[75.13]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onNewTab-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.WebExtension.CreateTabDetails-
+[75.12]: {{javadoc_uri}}/WebExtension.SessionTabDelegate.html#onUpdateTab(org.mozilla.geckoview.WebExtension,org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.WebExtension.UpdateTabDetails)
+[75.13]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onNewTab(org.mozilla.geckoview.WebExtension,org.mozilla.geckoview.WebExtension.CreateTabDetails)
 [75.14]: {{javadoc_uri}}/WebExtension.CreateTabDetails.html
-[75.15]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#setWebManifestEnabled-boolean-
-[75.16]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#webManifest-boolean-
-[75.17]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#getWebManifestEnabled--
-[75.18]: {{javadoc_uri}}/GeckoDisplay.html#safeAreaInsetsChanged-int-int-int-int-
+[75.15]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#setWebManifestEnabled(boolean)
+[75.16]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#webManifest(boolean)
+[75.17]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#getWebManifestEnabled()
+[75.18]: {{javadoc_uri}}/GeckoDisplay.html#safeAreaInsetsChanged(int,int,int,int)
 [75.19]: https://developer.mozilla.org/en-US/docs/Web/CSS/env
-[75.20]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_POSTPONED-
-[75.21]: {{javadoc_uri}}/GeckoResult.html#cancel--
-[75.22]: {{javadoc_uri}}/GeckoResult.html#setCancellationDelegate-CancellationDelegate-
+[75.20]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_POSTPONED
+[75.21]: {{javadoc_uri}}/GeckoResult.html#cancel()
+[75.22]: {{javadoc_uri}}/GeckoResult.html#setCancellationDelegate(CancellationDelegate)
 [75.23]: {{javadoc_uri}}/GeckoResult.CancellationDelegate.html
 [75.24]: {{javadoc_uri}}/WebExtension.MetaData.html#baseUrl
 [75.25]: {{javadoc_uri}}/WebExtension.MetaData.html
 [75.26]: {{javadoc_uri}}/WebExtension.MetaData.html#allowedInPrivateBrowsing
-[75.27]: {{javadoc_uri}}/WebExtensionController.html#setAllowedInPrivateBrowsing-org.mozilla.geckoview.WebExtension-boolean-
+[75.27]: {{javadoc_uri}}/WebExtensionController.html#setAllowedInPrivateBrowsing(org.mozilla.geckoview.WebExtension,boolean)
 
 ## v74
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
@@ -611,23 +611,23 @@ to allow adding gecko profiler markers.
 - Added [`WebExtensionController.update`][74.16] to update extensions. ([bug 1599581]({{bugzilla}}1599581))
 - ⚠️ Replaced `subscription` argument in [`WebPushDelegate.onSubscriptionChanged`][74.17] from a [`WebPushSubscription`][74.18] to the [`String`][74.19] `scope`.
 
-[74.1]: {{javadoc_uri}}/WebExtensionController.html#enable-org.mozilla.geckoview.WebExtension-int-
-[74.2]: {{javadoc_uri}}/WebExtensionController.html#disable-org.mozilla.geckoview.WebExtension-int-
+[74.1]: {{javadoc_uri}}/WebExtensionController.html#enable(org.mozilla.geckoview.WebExtension,int)
+[74.2]: {{javadoc_uri}}/WebExtensionController.html#disable(org.mozilla.geckoview.WebExtension,int)
 [74.3]: {{javadoc_uri}}/GeckoSession.ProgressDelegate.SecurityInformation.html#certificate
 [74.4]: {{javadoc_uri}}/WebResponse.html#isSecure
 [74.5]: {{javadoc_uri}}/WebResponse.html#certificate
 [74.6]: {{javadoc_uri}}/WebRequestError.html#certificate
 [74.7]: {{javadoc_uri}}/ContentBlockingController.html
 [74.8]: {{javadoc_uri}}/ContentBlockingController.ExceptionList.html
-[74.9]: {{javadoc_uri}}/ContentBlockingController.html#restoreExceptionList-org.mozilla.geckoview.ContentBlockingController.ExceptionList-
-[74.10]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onMetaViewportFitChange-org.mozilla.geckoview.GeckoSession-java.lang.String-
+[74.9]: {{javadoc_uri}}/ContentBlockingController.html#restoreExceptionList(org.mozilla.geckoview.ContentBlockingController.ExceptionList)
+[74.10]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onMetaViewportFitChange(org.mozilla.geckoview.GeckoSession,java.lang.String)
 [74.11]: {{javadoc_uri}}/LoginStorage.Delegate.html
-[74.12]: {{javadoc_uri}}/LoginStorage.Delegate.html#onLoginUsed-org.mozilla.geckoview.LoginStorage.LoginEntry-int-
+[74.12]: {{javadoc_uri}}/LoginStorage.Delegate.html#onLoginUsed(org.mozilla.geckoview.LoginStorage.LoginEntry,int)
 [74.13]: {{javadoc_uri}}/WebExtensionController.html#setTabActive
 [74.14]: {{javadoc_uri}}/WebExtension.MetaData.html#optionsUrl
 [74.15]: {{javadoc_uri}}/WebExtension.MetaData.html#openOptionsPageInTab
-[74.16]: {{javadoc_uri}}/WebExtensionController.html#update-org.mozilla.geckoview.WebExtension-int-
-[74.17]: {{javadoc_uri}}/WebPushController.html#onSubscriptionChange-org.mozilla.geckoview.WebPushSubscription-byte:A-
+[74.16]: {{javadoc_uri}}/WebExtensionController.html#update(org.mozilla.geckoview.WebExtension,int)
+[74.17]: {{javadoc_uri}}/WebPushController.html#onSubscriptionChange(org.mozilla.geckoview.WebPushSubscription,byte[])
 [74.18]: {{javadoc_uri}}/WebPushSubscription.html
 [74.19]: https://developer.android.com/reference/java/lang/String
 
@@ -657,21 +657,21 @@ to allow adding gecko profiler markers.
   login storage prompts.
   ([bug 1599873]({{bugzilla}}1599873))
 
-[73.1]: {{javadoc_uri}}/WebExtensionController.html#install-java.lang.String-
-[73.2]: {{javadoc_uri}}/WebExtensionController.html#uninstall-org.mozilla.geckoview.WebExtension-
+[73.1]: {{javadoc_uri}}/WebExtensionController.html#install(java.lang.String)
+[73.2]: {{javadoc_uri}}/WebExtensionController.html#uninstall(org.mozilla.geckoview.WebExtension)
 [73.3]: {{javadoc_uri}}/ScreenLength.html#VISUAL_VIEWPORT_WIDTH
 [73.4]: {{javadoc_uri}}/ScreenLength.html#VISUAL_VIEWPORT_HEIGHT
-[73.5]: {{javadoc_uri}}/ScreenLength.html#fromVisualViewportWidth-double-
-[73.6]: {{javadoc_uri}}/ScreenLength.html#fromVisualViewportHeight-double-
+[73.5]: {{javadoc_uri}}/ScreenLength.html#fromVisualViewportWidth(double)
+[73.6]: {{javadoc_uri}}/ScreenLength.html#fromVisualViewportHeight(double)
 [73.7]: {{javadoc_uri}}/LoginStorage.html
 [73.8]: {{javadoc_uri}}/LoginStorage.Delegate.html
-[73.9]: {{javadoc_uri}}/GeckoRuntime.html#setLoginStorageDelegate-org.mozilla.geckoview.LoginStorage.Delegate-
-[73.10]: {{javadoc_uri}}/GeckoResult.html#allOf-java.util.List-
-[73.11]: {{javadoc_uri}}/WebExtensionController.html#list--
+[73.9]: {{javadoc_uri}}/GeckoRuntime.html#setLoginStorageDelegate(org.mozilla.geckoview.LoginStorage.Delegate)
+[73.10]: {{javadoc_uri}}/GeckoResult.html#allOf(java.util.List)
+[73.11]: {{javadoc_uri}}/WebExtensionController.html#list()
 [73.12]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_AUTOPLAY_AUDIBLE
 [73.13]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_AUTOPLAY_INAUDIBLE
-[73.14]: {{javadoc_uri}}/LoginStorage.Delegate.html#onLoginSave-org.mozilla.geckoview.LoginStorage.LoginEntry-
-[73.15]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onLoginStoragePrompt-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PromptDelegate.LoginStoragePrompt-
+[73.14]: {{javadoc_uri}}/LoginStorage.Delegate.html#onLoginSave(org.mozilla.geckoview.LoginStorage.LoginEntry)
+[73.15]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onLoginStoragePrompt(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.PromptDelegate.LoginStoragePrompt)
 
 ## v72
 - Added [`GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture`][72.1]. This indicates
@@ -718,29 +718,29 @@ to allow adding gecko profiler markers.
 - Added WebXR device access permission support, [`PERMISSION_PERSISTENT_XR`][72.24].
   ([bug 1599927]({{bugzilla}}1599927))
 
-[72.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture-
+[72.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture
 [72.2]: {{javadoc_uri}}/Autofill.html
 [72.3]: {{javadoc_uri}}/WebResponse.html#body
-[72.4]: {{javadoc_uri}}/WebResponse.html#setReadTimeoutMillis-long-
+[72.4]: {{javadoc_uri}}/WebResponse.html#setReadTimeoutMillis(long)
 [72.5]: {{javadoc_uri}}/WebResponse.html#DEFAULT_READ_TIMEOUT_MS
-[72.6]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.html#onShowActionRequest-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.Selection-
-[72.7]: {{javadoc_uri}}/BasicSelectionActionDelegate.html#onShowActionRequest-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.Selection-
+[72.6]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.html#onShowActionRequest(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.Selection)
+[72.7]: {{javadoc_uri}}/BasicSelectionActionDelegate.html#onShowActionRequest(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.Selection)
 [72.8]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.Selection.html
-[72.9]: {{javadoc_uri}}/BasicSelectionActionDelegate.html#getSelection-
-[72.10]: {{javadoc_uri}}/BasicSelectionActionDelegate.html#clearSelection-
-[72.11]: {{javadoc_uri}}/GeckoView.html#setViewBackend-int-
+[72.9]: {{javadoc_uri}}/BasicSelectionActionDelegate.html#getSelection
+[72.10]: {{javadoc_uri}}/BasicSelectionActionDelegate.html#clearSelection
+[72.11]: {{javadoc_uri}}/GeckoView.html#setViewBackend(int)
 [72.12]: https://developer.android.com/reference/android/view/TextureView
 [72.13]: https://developer.android.com/reference/android/view/SurfaceView
 [72.14]: {{javadoc_uri}}/WebExtension.Action.html
 [72.15]: {{javadoc_uri}}/ContentBlockingController.Event.html#LOADED_TRACKING_CONTENT
 [72.16]: {{javadoc_uri}}/ContentBlockingController.Event.html#LOADED_LEVEL_1_TRACKING_CONTENT
 [72.17]: {{javadoc_uri}}/ContentBlockingController.Event.html#LOADED_LEVEL_2_TRACKING_CONTENT
-[72.18]: {{javadoc_uri}}/WebPushController.html#onPushEvent-org.mozilla.geckoview.WebPushSubscription-byte:A-
+[72.18]: {{javadoc_uri}}/WebPushController.html#onPushEvent(org.mozilla.geckoview.WebPushSubscription,byte[])
 [72.19]: {{javadoc_uri}}/WebPushSubscription.html
 [72.20]: https://developer.android.com/reference/java/lang/String
 [72.21]: {{javadoc_uri}}/WebExtension.Icon.html
 [72.22]: {{javadoc_uri}}/GeckoWebExecutor.html#FETCH_FLAGS_STREAM_FAILURE_TEST
-[72.23]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-java.io.File-org.json.JSONObject-
+[72.23]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,java.io.File,org.json.JSONObject)
 [72.24]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_PERSISTENT_XR
 
 ## v71
@@ -795,28 +795,28 @@ to allow adding gecko profiler markers.
 - Added `GeckoView.setDynamicToolbarMaxHeight` to make ICB size static, ICB doesn't include the dynamic toolbar region.
   ([bug 1586144]({{bugzilla}}1586144))
 
-[71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
-[71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
-[71.3]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onStringScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
-[71.4]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onHistogram-org.mozilla.geckoview.RuntimeTelemetry.Metric-
+[71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar(org.mozilla.geckoview.RuntimeTelemetry.Metric)
+[71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar(org.mozilla.geckoview.RuntimeTelemetry.Metric)
+[71.3]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onStringScalar(org.mozilla.geckoview.RuntimeTelemetry.Metric)
+[71.4]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onHistogram(org.mozilla.geckoview.RuntimeTelemetry.Metric)
 [71.5]: {{javadoc_uri}}/RuntimeTelemetry.Metric.html
-[71.6]: {{javadoc_uri}}/GeckoSession.html#loadUri-java.lang.String-java.io.File-java.util.Map-
+[71.6]: {{javadoc_uri}}/GeckoSession.html#loadUri(java.lang.String,java.io.File,java.util.Map)
 [71.7]: {{javadoc_uri}}/ContentBlockingController.html
-[71.8]: {{javadoc_uri}}/WebExtension.MessageDelegate.html#onMessage-java.lang.String-java.lang.Object-org.mozilla.geckoview.WebExtension.MessageSender-
+[71.8]: {{javadoc_uri}}/WebExtension.MessageDelegate.html#onMessage(java.lang.String,java.lang.Object,org.mozilla.geckoview.WebExtension.MessageSender)
 [71.9]: {{javadoc_uri}}/GeckoRuntime.ServiceWorkerDelegate.html
-[71.10]: {{javadoc_uri}}/GeckoRuntime#setServiceWorkerDelegate-org.mozilla.geckoview.GeckoRuntime.ServiceWorkerDelegate-
+[71.10]: {{javadoc_uri}}/GeckoRuntime#setServiceWorkerDelegate(org.mozilla.geckoview.GeckoRuntime.ServiceWorkerDelegate)
 [71.11]: https://developer.mozilla.org/en-US/docs/Web/API/Clients/openWindow
-[71.12]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#aboutConfigEnabled-boolean-
-[71.13]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onFirstContentfulPaint-org.mozilla.geckoview.GeckoSession-
-[71.15]: {{javadoc_uri}}/GeckoView.html#onTouchEventForResult-android.view.MotionEvent-
-[71.16]: {{javadoc_uri}}/PanZoomController.html#onTouchEvent-android.view.MotionEvent-
-[71.17]: {{javadoc_uri}}/GeckoSession.html#purgeHistory--
-[71.18]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#forceUserScalableEnabled-boolean-
-[71.19]: {{javadoc_uri}}/GeckoSession.html#getAutofillElements--
+[71.12]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#aboutConfigEnabled(boolean)
+[71.13]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onFirstContentfulPaint(org.mozilla.geckoview.GeckoSession)
+[71.15]: {{javadoc_uri}}/GeckoView.html#onTouchEventForResult(android.view.MotionEvent)
+[71.16]: {{javadoc_uri}}/PanZoomController.html#onTouchEvent(android.view.MotionEvent)
+[71.17]: {{javadoc_uri}}/GeckoSession.html#purgeHistory()
+[71.18]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#forceUserScalableEnabled(boolean)
+[71.19]: {{javadoc_uri}}/GeckoSession.html#getAutofillElements()
 [71.20]: {{javadoc_uri}}/AutofillElement.html
-[71.21]: {{javadoc_uri}}/GeckoView.html#setAutofillEnabled-boolean-
-[71.22]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onSharePrompt-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PromptDelegate.SharePrompt-
-[71.23]: {{javadoc_uri}}/GeckoDisplay.html#screenshot--
+[71.21]: {{javadoc_uri}}/GeckoView.html#setAutofillEnabled(boolean)
+[71.22]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onSharePrompt(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.PromptDelegate.SharePrompt)
+[71.23]: {{javadoc_uri}}/GeckoDisplay.html#screenshot()
 
 ## v70
 - Added API for session context assignment
@@ -868,34 +868,34 @@ to allow adding gecko profiler markers.
 - Added [`ContentBlockingController`][70.27], accessible via [`GeckoRuntime.getContentBlockingController`][70.28]
   to allow modification and inspection of a content blocking exception list.
 
-[70.1]: {{javadoc_uri}}/GeckoSessionSettings.Builder.html#contextId-java.lang.String-
-[70.2]: {{javadoc_uri}}/StorageController.html#clearDataForSessionContext-java.lang.String-
-[70.3]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-java.io.File-java.io.File-java.lang.String-
-[70.4]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-java.io.File-java.util.Map-java.lang.String-
+[70.1]: {{javadoc_uri}}/GeckoSessionSettings.Builder.html#contextId(java.lang.String)
+[70.2]: {{javadoc_uri}}/StorageController.html#clearDataForSessionContext(java.lang.String)
+[70.3]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,java.io.File,java.io.File,java.lang.String)
+[70.4]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,java.io.File,java.util.Map,java.lang.String)
 [70.5]: {{javadoc_uri}}/GeckoView.html
 [70.6]: {{javadoc_uri}}/GeckoSession.html
 [70.7]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#CAPTURE_TYPE_NONE
-[70.8]: {{javadoc_uri}}/GeckoSession.html#loadUri-java.lang.String-org.mozilla.geckoview.GeckoSession-int-
-[70.9]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onFilePrompt-org.mozilla.geckoview.GeckoSession-java.lang.String-int-java.lang.String:A-int-org.mozilla.geckoview.GeckoSession.PromptDelegate.FileCallback-
-[70.10]: {{javadoc_uri}}/GeckoView.html#setSession-org.mozilla.geckoview.GeckoSession-
+[70.8]: {{javadoc_uri}}/GeckoSession.html#loadUri(java.lang.String,org.mozilla.geckoview.GeckoSession,int)
+[70.9]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onFilePrompt(org.mozilla.geckoview.GeckoSession,java.lang.String,int,java.lang.String[],int,org.mozilla.geckoview.GeckoSession.PromptDelegate.FileCallback)
+[70.10]: {{javadoc_uri}}/GeckoView.html#setSession(org.mozilla.geckoview.GeckoSession)
 [70.11]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html
 [70.12]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html
 [70.13]: {{javadoc_uri}}/ContentBlocking.html
-[70.14]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#debugLogging-boolean-
+[70.14]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#debugLogging(boolean)
 [70.15]: {{javadoc_uri}}/WebNotification.html
 [70.16]: {{javadoc_uri}}/WebNotificationDelegate.html
 [70.17]: {{javadoc_uri}}/ContentBlocking.html
 [70.18]: {{javadoc_uri}}/WebExtensionController.html
 [70.19]: {{javadoc_uri}}/WebExtensionController.TabDelegate.html
 [70.20]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/create
-[70.21]: {{javadoc_uri}}/WebExtensionController.TabDelegate.html#onCloseTab-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.GeckoSession-
+[70.21]: {{javadoc_uri}}/WebExtensionController.TabDelegate.html#onCloseTab(org.mozilla.geckoview.WebExtension,org.mozilla.geckoview.GeckoSession)
 [70.22]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/remove
 [70.23]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html
 [70.24]: {{javadoc_uri}}/WebPushController.html
 [70.25]: {{javadoc_uri}}/WebPushDelegate.html
 [70.26]: {{javadoc_uri}}/WebPushSubscription.html
 [70.27]: {{javadoc_uri}}/ContentBlockingController.html
-[70.28]: {{javadoc_uri}}/GeckoRuntime.html#getContentBlockingController--
+[70.28]: {{javadoc_uri}}/GeckoRuntime.html#getContentBlockingController()
 
 ## v69
 - Modified behavior of [`setAutomaticFontSizeAdjustment`][69.1] so that it no
@@ -908,14 +908,14 @@ to allow adding gecko profiler markers.
   messages from.
 - Created [`onKill`][69.7] to [`ContentDelegate`][69.11] to differentiate from crashes.
 
-[69.1]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setAutomaticFontSizeAdjustment-boolean-
-[69.2]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setFontInflationEnabled-boolean-
-[69.3]: {{javadoc_uri}}/GeckoResult.html#accept-org.mozilla.geckoview.GeckoResult.Consumer-
+[69.1]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setAutomaticFontSizeAdjustment(boolean)
+[69.2]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setFontInflationEnabled(boolean)
+[69.3]: {{javadoc_uri}}/GeckoResult.html#accept(org.mozilla.geckoview.GeckoResult.Consumer)
 [69.4]: {{javadoc_uri}}/WebExtension.MessageDelegate.html
 [69.5]: {{javadoc_uri}}/WebExtension.html
-[69.7]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onKill-org.mozilla.geckoview.GeckoSession-
+[69.7]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onKill(org.mozilla.geckoview.GeckoSession)
 [69.11]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html
-[69.13]: {{javadoc_uri}}/GeckoSession.html#setMessageDelegate-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.WebExtension.MessageDelegate-java.lang.String-
+[69.13]: {{javadoc_uri}}/GeckoSession.html#setMessageDelegate(org.mozilla.geckoview.WebExtension,org.mozilla.geckoview.WebExtension.MessageDelegate,java.lang.String)
 [69.14]: {{javadoc_uri}}/GeckoSession.html#LOAD_FLAGS_FORCE_ALLOW_DATA_URI
 
 ## v68
@@ -958,38 +958,38 @@ to allow adding gecko profiler markers.
 - Added [`onRecordingStatusChanged`][68.26] to [`MediaDelegate`][68.27] to handle events related to the status of recording devices.
 - Removed redundant constants in [`MediaSource`][68.28]
 
-[68.1]: {{javadoc_uri}}/GeckoRuntime.html#configurationChanged-android.content.res.Configuration-
+[68.1]: {{javadoc_uri}}/GeckoRuntime.html#configurationChanged(android.content.res.Configuration)
 [68.2]: {{javadoc_uri}}/GeckoSession.ProgressDelegate.html
 [68.3]: {{javadoc_uri}}/ContentBlocking.html#AT_CRYPTOMINING
 [68.4]: {{javadoc_uri}}/ContentBlocking.html#AT_DEFAULT
 [68.5]: {{javadoc_uri}}/ContentBlocking.html#AT_STRICT
 [68.6]: {{javadoc_uri}}/ContentBlocking.html#CB_DEFAULT
 [68.7]: {{javadoc_uri}}/ContentBlocking.html#CB_STRICT
-[68.8]: {{javadoc_uri}}/GeckoSession.SessionState.html#fromString-java.lang.String-
-[68.9]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setPreferredColorScheme-int-
-[68.10]: {{javadoc_uri}}/RuntimeTelemetry.html#getSnapshots-boolean-
+[68.8]: {{javadoc_uri}}/GeckoSession.SessionState.html#fromString(java.lang.String)
+[68.9]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setPreferredColorScheme(int)
+[68.10]: {{javadoc_uri}}/RuntimeTelemetry.html#getSnapshots(boolean)
 [68.11]: {{javadoc_uri}}/ContentBlocking.html#AT_FINGERPRINTING
 [68.12]: {{javadoc_uri}}/GeckoSession.HistoryDelegate.html
 [68.13]: {{javadoc_uri}}/GeckoSession.html
-[68.16]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#configFilePath-java.lang.String-
-[68.17]: {{javadoc_uri}}/GeckoRuntime.html#unregisterWebExtension-org.mozilla.geckoview.WebExtension-
-[68.18]: {{javadoc_uri}}/WebExtension.html#setMessageDelegate-org.mozilla.geckoview.WebExtension.MessageDelegate-java.lang.String-
+[68.16]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#configFilePath(java.lang.String)
+[68.17]: {{javadoc_uri}}/GeckoRuntime.html#unregisterWebExtension(org.mozilla.geckoview.WebExtension)
+[68.18]: {{javadoc_uri}}/WebExtension.html#setMessageDelegate(org.mozilla.geckoview.WebExtension.MessageDelegate,java.lang.String)
 [68.19]: {{javadoc_uri}}/WebExtension.Port.html
-[68.20]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setAutoZoomEnabled-boolean-
-[68.21]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setDoubleTapZoomingEnabled-boolean-
-[68.22]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setGlMsaaLevel-int-
-[68.23]: {{javadoc_uri}}/GeckoView.html#setVerticalClipping-int-
-[68.24]: {{javadoc_uri}}/GeckoDisplay.html#setVerticalClipping-int-
+[68.20]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setAutoZoomEnabled(boolean)
+[68.21]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setDoubleTapZoomingEnabled(boolean)
+[68.22]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setGlMsaaLevel(int)
+[68.23]: {{javadoc_uri}}/GeckoView.html#setVerticalClipping(int)
+[68.24]: {{javadoc_uri}}/GeckoDisplay.html#setVerticalClipping(int)
 [68.25]: {{javadoc_uri}}/StorageController.html
-[68.26]: {{javadoc_uri}}/GeckoSession.MediaDelegate.html#onRecordingStatusChanged-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.MediaDelegate.RecordingDevice:A-
+[68.26]: {{javadoc_uri}}/GeckoSession.MediaDelegate.html#onRecordingStatusChanged(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.MediaDelegate.RecordingDevice[])
 [68.27]: {{javadoc_uri}}/GeckoSession.MediaDelegate.html
 [68.28]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.MediaSource.html
-[68.29]: {{javadoc_uri}}/GeckoSession.ProgressDelegate.html#onSessionStateChange-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.SessionState-
+[68.29]: {{javadoc_uri}}/GeckoSession.ProgressDelegate.html#onSessionStateChange(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.SessionState)
 [68.30]: https://developer.android.com/reference/org/json/JSONObject
 [68.31]: {{javadoc_uri}}/GeckoSession.HistoryDelegate.HistoryItem.html
 [68.32]: {{javadoc_uri}}/GeckoSession.HistoryDelegate.HistoryList.html
-[68.33]: {{javadoc_uri}}/GeckoSession.html#gotoHistoryIndex-int-
-[68.34]: {{javadoc_uri}}/GeckoSession.HistoryDelegate.html#onHistoryStateChange-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.HistoryDelegate.HistoryList-
+[68.33]: {{javadoc_uri}}/GeckoSession.html#gotoHistoryIndex(int)
+[68.34]: {{javadoc_uri}}/GeckoSession.HistoryDelegate.html#onHistoryStateChange(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.HistoryDelegate.HistoryList)
 [68.35]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_PERSISTENT_STORAGE
 
 ## v67
@@ -1026,34 +1026,34 @@ to allow adding gecko profiler markers.
 - Added [`ContentDelegate.onWebAppManifest`][67.22], which will deliver the contents of a parsed
   and validated Web App Manifest on pages that contain one.
 
-[67.1]: {{javadoc_uri}}/GeckoSession.html#getDefaultUserAgent--
+[67.1]: {{javadoc_uri}}/GeckoSession.html#getDefaultUserAgent()
 [67.2]: {{javadoc_uri}}/GeckoVRManager.html
 [67.3]: {{javadoc_uri}}/GeckoRuntimeSettings.html
-[67.4]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setFontSizeFactor-float-
+[67.4]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setFontSizeFactor(float)
 [67.5]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html
-[67.6]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setAutoplayDefault-int-
+[67.6]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setAutoplayDefault(int)
 [67.7]: {{javadoc_uri}}/ContentBlocking.html#AT_AD
 [67.8]: {{javadoc_uri}}/ContentBlocking.html#SB_ALL
 [67.9]: {{javadoc_uri}}/ContentBlocking.html
 [67.10]: {{javadoc_uri}}/RuntimeSettings.html
 [67.11]: {{javadoc_uri}}/GeckoSession.ContentDelegate.ContextElement.html#baseUri
 [67.12]: {{javadoc_uri}}/GeckoSession.ContentDelegate.ContextElement.html#linkUri
-[67.13]: {{javadoc_uri}}/PanZoomController.html#scrollBy-org.mozilla.geckoview.ScreenLength-org.mozilla.geckoview.ScreenLength-
-[67.14]: {{javadoc_uri}}/PanZoomController.html#scrollTo-org.mozilla.geckoview.ScreenLength-org.mozilla.geckoview.ScreenLength-
-[67.15]: {{javadoc_uri}}/GeckoRuntime.html#registerWebExtension-org.mozilla.geckoview.WebExtension-
-[67.16]: {{javadoc_uri}}/GeckoView.html#capturePixels--
+[67.13]: {{javadoc_uri}}/PanZoomController.html#scrollBy(org.mozilla.geckoview.ScreenLength,org.mozilla.geckoview.ScreenLength)
+[67.14]: {{javadoc_uri}}/PanZoomController.html#scrollTo(org.mozilla.geckoview.ScreenLength,org.mozilla.geckoview.ScreenLength)
+[67.15]: {{javadoc_uri}}/GeckoRuntime.html#registerWebExtension(org.mozilla.geckoview.WebExtension)
+[67.16]: {{javadoc_uri}}/GeckoView.html#capturePixels()
 [67.17]: https://developer.android.com/reference/android/graphics/Bitmap
 [67.18]: https://developer.android.com/reference/android/view/Surface
 [67.19]: https://developer.android.com/reference/java/lang/IllegalStateException
 [67.20]: {{javadoc_uri}}/GeckoDisplay.html
-[67.21]: {{javadoc_uri}}/GeckoDisplay.html#capturePixels--
-[67.22]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onWebAppManifest-org.mozilla.geckoview.GeckoSession-org.json.JSONObject-
-[67.23]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setAutomaticFontSizeAdjustment-boolean-
+[67.21]: {{javadoc_uri}}/GeckoDisplay.html#capturePixels()
+[67.22]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onWebAppManifest(org.mozilla.geckoview.GeckoSession,org.json.JSONObject)
+[67.23]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setAutomaticFontSizeAdjustment(boolean)
 [67.24]: {{javadoc_uri}}/WebResponse.html#body
 [67.25]: https://developer.android.com/reference/java/nio/ByteBuffer
 [67.26]: https://developer.android.com/reference/java/io/InputStream
 [67.27]: {{javadoc_uri}}/GeckoWebExecutor.html#FETCH_FLAGS_NO_REDIRECTS
-[67.28]: {{javadoc_uri}}/GeckoWebExecutor.html#fetch-org.mozilla.geckoview.WebRequest-int-
+[67.28]: {{javadoc_uri}}/GeckoWebExecutor.html#fetch(org.mozilla.geckoview.WebRequest,int)
 [67.29]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections
 [67.30]: {{javadoc_uri}}/GeckoSession.PromptDelegate.ChoiceCallback.html
 
@@ -1075,8 +1075,8 @@ to allow adding gecko profiler markers.
 [66.4]: {{javadoc_uri}}/GeckoSessionSettings.html
 [66.5]: {{javadoc_uri}}/GeckoSessionSettings.html#USER_AGENT_MODE_DESKTOP
 [66.6]: {{javadoc_uri}}/GeckoSession.ProgressDelegate.SecurityInformation.html
-[66.7]: {{javadoc_uri}}/GeckoView.html#releaseSession--
-[66.8]: {{javadoc_uri}}/GeckoView.html#setSession-org.mozilla.geckoview.GeckoSession-
+[66.7]: {{javadoc_uri}}/GeckoView.html#releaseSession()
+[66.8]: {{javadoc_uri}}/GeckoView.html#setSession(org.mozilla.geckoview.GeckoSession)
 
 ## v65
 - Added experimental ad-blocking category to `GeckoSession.TrackingProtectionDelegate`.
@@ -1120,23 +1120,23 @@ to allow adding gecko profiler markers.
 [65.5]: {{javadoc_uri}}/package-summary.html
 [65.6]: https://developer.android.com/reference/android/support/annotation/UiThread
 [65.7]: https://developer.android.com/reference/android/support/annotation/AnyThread
-[65.8]: {{javadoc_uri}}/GeckoRuntimeSettings.html#getLocales--
+[65.8]: {{javadoc_uri}}/GeckoRuntimeSettings.html#getLocales()
 [65.9]: {{javadoc_uri}}/GeckoSession.html
 [65.10]: {{javadoc_uri}}/GeckoSession.MediaDelegate.html
 [65.11]: {{javadoc_uri}}/MediaElement.html
-[65.12]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#onContentPermissionRequest-org.mozilla.geckoview.GeckoSession-java.lang.String-int-org.mozilla.geckoview.GeckoSession.PermissionDelegate.Callback-
+[65.12]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#onContentPermissionRequest(org.mozilla.geckoview.GeckoSession,java.lang.String,int,org.mozilla.geckoview.GeckoSession.PermissionDelegate.Callback)
 [65.13]: {{javadoc_uri}}/WebMessage.html
 [65.14]: {{javadoc_uri}}/WebRequest.html
 [65.15]: {{javadoc_uri}}/WebResponse.html
 [65.16]: {{javadoc_uri}}/GeckoWebExecutor.html
 [65.17]: {{javadoc_uri}}/GeckoSession.HistoryDelegate.html
-[65.18]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onFirstComposite-org.mozilla.geckoview.GeckoSession-
+[65.18]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onFirstComposite(org.mozilla.geckoview.GeckoSession)
 [65.19]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest.html#isRedirect
 [65.20]: {{javadoc_uri}}/GeckoSession.html#LOAD_FLAGS_BYPASS_CLASSIFIER
 [65.21]: {{javadoc_uri}}/GeckoSession.ContentDelegate.ContextElement.html
-[65.22]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onContextMenu-org.mozilla.geckoview.GeckoSession-int-int-org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement-
+[65.22]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onContextMenu(org.mozilla.geckoview.GeckoSession,int,int,org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement)
 [65.23]: {{javadoc_uri}}/GeckoSession.FinderResult.html
-[65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
+[65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
 [api-version]: 9a66c9bcb58ffd198b90bb4f1845efe26dbb244b

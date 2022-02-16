@@ -36,7 +36,7 @@ and
 specified in the ``manifest.json`` file.
 
 To install a bundled extension in GeckoView, simply call
-`WebExtensionController.installBuiltIn <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension.html>`_.
+`WebExtensionController.installBuiltIn <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/WebExtensionController.html#installBuiltIn(java.lang.String)>`_.
 
 .. code:: java
 
@@ -99,7 +99,7 @@ Messaging Example
 ~~~~~~~~~~~~~~~~~
 
 To receive messages from the background script, call
-`setMessageDelegate <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension.html#setMessageDelegate-org.mozilla.geckoview.WebExtension.MessageDelegate-java.lang.String->`_
+`setMessageDelegate <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension.html#setMessageDelegate(org.mozilla.geckoview.WebExtension.MessageDelegate,java.lang.String)>`_
 on the
 `WebExtension <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension.html>`_
 object.
@@ -108,7 +108,7 @@ object.
 
    extension.setMessageDelegate(messageDelegate, "browser");
 
-`SessionController.setMessageDelegate <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.html#setMessageDelegate-org.mozilla.geckoview.WebExtension.MessageDelegate-java.lang.String->`_
+`SessionController.setMessageDelegate <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension.SessionController.html#setMessageDelegate(org.mozilla.geckoview.WebExtension,org.mozilla.geckoview.WebExtension.MessageDelegate,java.lang.String)>`_
 allows the app to receive messages from content scripts.
 
 .. code:: java
@@ -284,7 +284,7 @@ is the appropriate API to use.
 `runtime.Port <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/Port>`_
 that can be used to send messages to the app. On the app side,
 implementing
-`MessageDelegate#onConnect <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension.MessageDelegate.html#onConnect-org.mozilla.geckoview.WebExtension.Port->`_
+`MessageDelegate#onConnect <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension.MessageDelegate.html#onConnect(org.mozilla.geckoview.WebExtension.Port)>`_
 will allow you to receive a
 `Port <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/WebExtension.Port.html>`_
 object that can be used to receive and send messages to the extension.

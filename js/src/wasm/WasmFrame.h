@@ -255,6 +255,10 @@ static_assert(!std::is_polymorphic_v<Frame>, "Frame doesn't need a vtable.");
 static_assert(sizeof(Frame) == 2 * sizeof(void*),
               "Frame is a two pointer structure");
 
+// Note that sizeof(FrameWithTls) does not account for ShadowStackSpace.  Use
+// FrameWithTls::sizeOf() if you are not incorporating ShadowStackSpace through
+// other means (eg the ABIArgIter).
+
 class FrameWithTls : public Frame {
   // `ShadowStackSpace` bytes will be allocated here on Win64, at higher
   // addresses than Frame and at lower addresses than the TLS fields.

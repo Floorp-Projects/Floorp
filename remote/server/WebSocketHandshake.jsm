@@ -109,14 +109,19 @@ function isIPAddress(uri) {
  * Sec-WebSocket-Accept response header.
  */
 function processRequest({ requestLine, headers }) {
-  const origin = headers.get("origin");
+  // Enable origin header checks only if BiDi is enabled to avoid regressions
+  // for existing CDP consumers.
+  // TODO: Remove after Bug 1750689 until we can specify custom hosts & origins.
+  if (RemoteAgent.webDriverBiDi) {
+    const origin = headers.get("origin");
 
-  // A "null" origin is exceptionally allowed in browser mochitests.
-  const isTestOrigin = origin === "null" && nullOriginAllowed;
-  if (headers.has("origin") && !isTestOrigin) {
-    throw new Error(
-      `The handshake request has incorrect Origin header ${origin}`
-    );
+    // A "null" origin is exceptionally allowed in browser mochitests.
+    const isTestOrigin = origin === "null" && nullOriginAllowed;
+    if (headers.has("origin") && !isTestOrigin) {
+      throw new Error(
+        `The handshake request has incorrect Origin header ${origin}`
+      );
+    }
   }
 
   const hostHeader = headers.get("host");
