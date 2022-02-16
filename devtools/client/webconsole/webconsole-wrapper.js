@@ -19,7 +19,7 @@ const {
   isPacketPrivate,
 } = require("devtools/client/webconsole/utils/messages");
 const {
-  getAllMessagesById,
+  getMutableMessagesById,
   getMessage,
 } = require("devtools/client/webconsole/selectors/messages");
 const Telemetry = require("devtools/client/shared/telemetry");
@@ -181,7 +181,7 @@ class WebConsoleWrapper {
 
     // For (network) message updates, we need to check both messages queue and the state
     // since we can receive updates even if the message isn't rendered yet.
-    const messages = [...getAllMessagesById(store.getState()).values()];
+    const messages = [...getMutableMessagesById(store.getState()).values()];
     this.queuedMessageUpdates = this.queuedMessageUpdates.filter(
       ({ actor }) => {
         const queuedNetworkMessage = this.queuedMessageAdds.find(

@@ -14,7 +14,7 @@ const {
 const { initialize } = require("devtools/client/webconsole/actions/ui");
 
 const {
-  getAllMessagesById,
+  getMutableMessagesById,
   getAllMessagesUiById,
   getAllCssMessagesMatchingElements,
   getAllNetworkMessagesUpdateById,
@@ -45,7 +45,8 @@ class ConsoleOutput extends Component {
   static get propTypes() {
     return {
       initialized: PropTypes.bool.isRequired,
-      messages: PropTypes.object.isRequired,
+      mutableMessages: PropTypes.object.isRequired,
+      messageCount: PropTypes.number.isRequired,
       messagesUi: PropTypes.array.isRequired,
       serviceContainer: PropTypes.shape({
         attachRefToWebConsoleUI: PropTypes.func.isRequired,
@@ -145,12 +146,12 @@ class ConsoleOutput extends Component {
 
     const visibleMessagesDelta =
       nextProps.visibleMessages.length - this.props.visibleMessages.length;
-    const messagesDelta = nextProps.messages.size - this.props.messages.size;
+    const messagesDelta = nextProps.messageCount - this.props.messageCount;
     // We can retrieve the last message id in visibleMessages as evaluation result are
     // always visible.
     const isNewMessageEvaluationResult =
       messagesDelta > 0 &&
-      nextProps.messages.get(nextProps.visibleMessages.at(-1))?.type ===
+      nextProps.mutableMessages.get(nextProps.visibleMessages.at(-1))?.type ===
         MESSAGE_TYPE.RESULT;
 
     const messagesUiDelta =
@@ -217,7 +218,7 @@ class ConsoleOutput extends Component {
     let {
       dispatch,
       visibleMessages,
-      messages,
+      mutableMessages,
       messagesUi,
       cssMatchingElements,
       messagesRepeat,
@@ -255,11 +256,14 @@ class ConsoleOutput extends Component {
           : null,
         inWarningGroup:
           warningGroups && warningGroups.size > 0
-            ? isMessageInWarningGroup(messages.get(messageId), visibleMessages)
+            ? isMessageInWarningGroup(
+                mutableMessages.get(messageId),
+                visibleMessages
+              )
             : false,
         networkMessageUpdate: networkMessagesUpdate[messageId],
         networkMessageActiveTabId,
-        getMessage: () => messages.get(messageId),
+        getMessage: () => mutableMessages.get(messageId),
         maybeScrollToBottom: this.maybeScrollToBottom,
       })
     );
@@ -279,9 +283,13 @@ class ConsoleOutput extends Component {
 }
 
 function mapStateToProps(state, props) {
+  const mutableMessages = getMutableMessagesById(state);
   return {
     initialized: state.ui.initialized,
-    messages: getAllMessagesById(state),
+    // We need to compute this so lifecycle methods can compare the global message count
+    // on state change (since we can't do it with mutableMessagesById).
+    messageCount: mutableMessages.size,
+    mutableMessages,
     visibleMessages: getVisibleMessages(state),
     messagesUi: getAllMessagesUiById(state),
     cssMatchingElements: getAllCssMessagesMatchingElements(state),
