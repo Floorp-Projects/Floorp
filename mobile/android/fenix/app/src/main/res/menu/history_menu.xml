@@ -7,7 +7,7 @@
     <item
         android:id="@+id/history_search"
         android:icon="@drawable/mozac_ic_search"
-        android:title="@string/history_search"
+        android:title="@string/history_search_1"
         app:iconTint="?primaryText"
         app:showAsAction="ifRoom" />
     <item

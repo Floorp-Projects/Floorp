@@ -706,7 +706,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Enter search terms</string>
+    <string name="history_search" moz:removedIn="99" tools:ignore="UnusedResources">Enter search term</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Enter search terms</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Delete history</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->

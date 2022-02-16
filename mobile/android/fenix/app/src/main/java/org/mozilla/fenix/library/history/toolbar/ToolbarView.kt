@@ -55,7 +55,7 @@ class ToolbarView(
                 context, context.theme.resolveAttribute(R.attr.foundation)
             )
 
-            edit.hint = context.getString(R.string.history_search)
+            edit.hint = context.getString(R.string.history_search_1)
 
             edit.colors = edit.colors.copy(
                 text = context.getColorFromAttr(R.attr.primaryText),
@@ -111,7 +111,7 @@ class ToolbarView(
         val historySearchIcon = AppCompatResources.getDrawable(context, R.drawable.ic_history)
 
         historySearchIcon?.let {
-            view.edit.setIcon(historySearchIcon, context.getString(R.string.history_search))
+            view.edit.setIcon(historySearchIcon, context.getString(R.string.history_search_1))
         }
     }
 }
