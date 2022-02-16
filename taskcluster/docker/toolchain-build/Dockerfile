@@ -19,6 +19,7 @@ RUN apt-get update && \
       bison \
       build-essential \
       curl \
+      clang-11 \
       cmake \
       flex \
       gawk \

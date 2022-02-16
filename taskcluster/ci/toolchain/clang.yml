@@ -123,6 +123,8 @@ linux64-clang-13-stage1:
     fetches:
         fetch:
             - clang-13
+        toolchain:
+            - linux64-toolchain-sysroot
 
 linux64-clang-13-profile:
     description: "Clang 13 toolchain build"
