@@ -2312,12 +2312,9 @@ bool WarpBuilder::buildSuspend(BytecodeLocation loc, MDefinition* gen,
   int32_t slotsToCopy = current->stackDepth() - info().firstLocalSlot();
   MOZ_ASSERT(slotsToCopy >= 0);
   if (slotsToCopy > 0) {
-    auto* arraySlot = MLoadFixedSlot::New(
-        alloc(), genObj, AbstractGeneratorObject::stackStorageSlot());
-    current->add(arraySlot);
-
-    auto* arrayObj = MUnbox::New(alloc(), arraySlot, MIRType::Object,
-                                 MUnbox::Mode::Infallible);
+    auto* arrayObj = MLoadFixedSlotAndUnbox::New(
+        alloc(), genObj, AbstractGeneratorObject::stackStorageSlot(),
+        MUnbox::Mode::Infallible, MIRType::Object);
     current->add(arrayObj);
 
     auto* stackStorage = MElements::New(alloc(), arrayObj);

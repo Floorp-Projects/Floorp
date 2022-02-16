@@ -515,8 +515,8 @@ proto.rejects = function(promise, expected, message) {
 };
 
 function compareNumbers(expression, lhs, rhs, message, operator) {
-  let lhsIsNumber = typeof lhs == "number";
-  let rhsIsNumber = typeof rhs == "number";
+  let lhsIsNumber = typeof lhs == "number" && !Number.isNaN(lhs);
+  let rhsIsNumber = typeof rhs == "number" && !Number.isNaN(rhs);
 
   if (lhsIsNumber && rhsIsNumber) {
     this.report(expression, lhs, rhs, message, operator);

@@ -55,11 +55,12 @@ const MessageState = overrides =>
   Object.freeze(
     Object.assign(
       {
-        // List of all the messages added to the console.
-        messagesById: new Map(),
-        // List of additional data associated with messages (populated async or on-demand at a
-        // later time after the message is received).
-        messagesPayloadById: new Map(),
+        // List of all the messages added to the console. Unlike other properties, this Map
+        // will be mutated on state changes for performance reasons.
+        mutableMessagesById: new Map(),
+        // List of elements matching the selector of CSS Warning messages(populated
+        // on-demand via the UI).
+        cssMessagesMatchingElements: new Map(),
         // Array of the visible messages.
         visibleMessages: [],
         // Object for the filtered messages.
@@ -91,17 +92,18 @@ const MessageState = overrides =>
 
 function cloneState(state) {
   return {
-    messagesById: new Map(state.messagesById),
     visibleMessages: [...state.visibleMessages],
     filteredMessagesCount: { ...state.filteredMessagesCount },
     messagesUiById: [...state.messagesUiById],
-    messagesPayloadById: new Map(state.messagesPayloadById),
+    cssMessagesMatchingElements: new Map(state.cssMessagesMatchingElements),
     groupsById: new Map(state.groupsById),
-    currentGroup: state.currentGroup,
     frontsToRelease: [...state.frontsToRelease],
     repeatById: { ...state.repeatById },
     networkMessagesUpdateById: { ...state.networkMessagesUpdateById },
     warningGroupsById: new Map(state.warningGroupsById),
+    // no need to mutate the properties below as they're not directly triggering re-render
+    mutableMessagesById: state.mutableMessagesById,
+    currentGroup: state.currentGroup,
     lastMessageId: state.lastMessageId,
   };
 }
@@ -118,7 +120,7 @@ function cloneState(state) {
  */
 // eslint-disable-next-line complexity
 function addMessage(newMessage, state, filtersState, prefsState, uiState) {
-  const { messagesById, groupsById, repeatById } = state;
+  const { mutableMessagesById, groupsById, repeatById } = state;
 
   if (newMessage.type === constants.MESSAGE_TYPE.NAVIGATION_MARKER) {
     // We set the state's currentGroup property to null after navigating
@@ -137,13 +139,13 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
     return state;
   }
 
-  const lastMessage = messagesById.get(state.lastMessageId);
+  const lastMessage = mutableMessagesById.get(state.lastMessageId);
   // It can happen that the new message was actually emitted earlier than the last message,
   // which means we need to insert it at the right position.
   const isUnsorted =
     lastMessage && lastMessage.timeStamp > newMessage.timeStamp;
 
-  if (lastMessage && messagesById.size > 0) {
+  if (lastMessage && mutableMessagesById.size > 0) {
     if (
       lastMessage.groupId === currentGroup &&
       areMessagesSimilar(lastMessage, newMessage)
@@ -168,7 +170,7 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   const removedIds = [];
 
   // Check if the current message could be placed in a Warning Group.
-  // This needs to be done before setting the new message in messagesById so we have a
+  // This needs to be done before setting the new message in mutableMessagesById so we have a
   // proper message.
   const warningGroupType = getWarningGroupType(newMessage);
 
@@ -178,7 +180,7 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
     const warningGroupMessageId = getParentWarningGroupMessageId(newMessage);
 
     // If there's no warning group for the type/innerWindowID yet
-    if (!state.messagesById.has(warningGroupMessageId)) {
+    if (!state.mutableMessagesById.has(warningGroupMessageId)) {
       // We create it and add it to the store.
       const groupMessage = createWarningGroupMessage(
         warningGroupMessageId,
@@ -200,12 +202,15 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
     // If the warningGroup message is not visible yet, but should be.
     if (
       !state.visibleMessages.includes(warningGroupMessageId) &&
-      getMessageVisibility(state.messagesById.get(warningGroupMessageId), {
-        messagesState: state,
-        filtersState,
-        prefsState,
-        uiState,
-      }).visible
+      getMessageVisibility(
+        state.mutableMessagesById.get(warningGroupMessageId),
+        {
+          messagesState: state,
+          filtersState,
+          prefsState,
+          uiState,
+        }
+      ).visible
     ) {
       // Then we put it in the visibleMessages properties, at the position of the first
       // warning message inside the warningGroup.
@@ -214,7 +219,9 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
       const firstWarningMessageId = state.warningGroupsById.get(
         warningGroupMessageId
       )[0];
-      const firstWarningMessage = state.messagesById.get(firstWarningMessageId);
+      const firstWarningMessage = state.mutableMessagesById.get(
+        firstWarningMessageId
+      );
       const outermostGroupId = getOutermostGroup(
         firstWarningMessage,
         groupsById
@@ -254,20 +261,20 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   // If the new message isn't the "oldest" one, then we need to insert it at the right
   // position in the message map.
   if (isUnsorted) {
-    const entries = Array.from(state.messagesById.entries());
+    const entries = Array.from(state.mutableMessagesById.entries());
     const newMessageIndex = entries.findIndex(
       entry => entry[1].timeStamp > addedMessage.timeStamp
     );
     // This shouldn't happen as `isUnsorted` would only be true if the last message is
     // younger than the added message.
     if (newMessageIndex === -1) {
-      state.messagesById.set(addedMessage.id, addedMessage);
+      state.mutableMessagesById.set(addedMessage.id, addedMessage);
     } else {
       entries.splice(newMessageIndex, 0, [addedMessage.id, addedMessage]);
-      state.messagesById = new Map(entries);
+      state.mutableMessagesById = new Map(entries);
     }
   } else {
-    state.messagesById.set(addedMessage.id, addedMessage);
+    state.mutableMessagesById.set(addedMessage.id, addedMessage);
   }
 
   if (newMessage.type === "trace") {
@@ -316,7 +323,7 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
       // If the new message wasn't the "oldest" one, then we need to insert its id at
       // the right position in the array.
       const index = state.visibleMessages.findIndex(
-        id => state.messagesById.get(id).timeStamp > newMessage.timeStamp
+        id => state.mutableMessagesById.get(id).timeStamp > newMessage.timeStamp
       );
       // If the index wasn't found, it means the new message is the oldest of the visible
       // messages, so we can directly push it into the array.
@@ -352,8 +359,8 @@ function messages(
   uiState
 ) {
   const {
-    messagesById,
-    messagesPayloadById,
+    mutableMessagesById,
+    cssMessagesMatchingElements,
     messagesUiById,
     networkMessagesUpdateById,
     groupsById,
@@ -412,18 +419,25 @@ function messages(
       return limitTopLevelMessageCount(newState, logLimit);
 
     case constants.MESSAGES_CLEAR:
+      const frontsToRelease = [];
+      for (const message of state.mutableMessagesById.values()) {
+        // We want to minimize time spent in reducer as much as we can, so we're using
+        // prototype.push.apply here as it seems faster than other solutions (e.g. the
+        // spread operator, Array#concat, …)
+        Array.prototype.push.apply(
+          frontsToRelease,
+          getAllFrontsInMessage(message)
+        );
+      }
       return MessageState({
         // Store all actors from removed messages. This array is used by
         // `releaseActorsEnhancer` to release all of those backend actors.
-        frontsToRelease: [...state.messagesById.values()].reduce((res, msg) => {
-          res.push(...getAllFrontsInMessage(msg));
-          return res;
-        }, []),
+        frontsToRelease,
       });
 
     case constants.PRIVATE_MESSAGES_CLEAR: {
       const removedIds = [];
-      for (const [id, message] of messagesById) {
+      for (const [id, message] of mutableMessagesById) {
         if (message.private === true) {
           removedIds.push(id);
         }
@@ -445,37 +459,33 @@ function messages(
     case constants.MESSAGE_OPEN:
       const openState = { ...state };
       openState.messagesUiById = [...messagesUiById, action.id];
-      const currMessage = messagesById.get(action.id);
+      const currMessage = mutableMessagesById.get(action.id);
 
       // If the message is a console.group/groupCollapsed or a warning group.
       if (isGroupType(currMessage.type) || isWarningGroup(currMessage)) {
         // We want to make its children visible
-        const messagesToShow = [...messagesById].reduce(
-          (res, [id, message]) => {
-            if (
-              !visibleMessages.includes(message.id) &&
-              ((isWarningGroup(currMessage) &&
-                !!getWarningGroupType(message)) ||
-                (isGroupType(currMessage.type) &&
-                  getParentGroups(message.groupId, groupsById).includes(
-                    action.id
-                  ))) &&
-              getMessageVisibility(message, {
-                messagesState: openState,
-                filtersState,
-                prefsState,
-                uiState,
-                // We want to check if the message is in an open group
-                // only if it is not a direct child of the group we're opening.
-                checkGroup: message.groupId !== action.id,
-              }).visible
-            ) {
-              res.push(id);
-            }
-            return res;
-          },
-          []
-        );
+        const messagesToShow = [];
+        for (const [id, message] of mutableMessagesById) {
+          if (
+            !visibleMessages.includes(message.id) &&
+            ((isWarningGroup(currMessage) && !!getWarningGroupType(message)) ||
+              (isGroupType(currMessage.type) &&
+                getParentGroups(message.groupId, groupsById).includes(
+                  action.id
+                ))) &&
+            getMessageVisibility(message, {
+              messagesState: openState,
+              filtersState,
+              prefsState,
+              uiState,
+              // We want to check if the message is in an open group
+              // only if it is not a direct child of the group we're opening.
+              checkGroup: message.groupId !== action.id,
+            }).visible
+          ) {
+            messagesToShow.push(id);
+          }
+        }
 
         // We can then insert the messages ids right after the one of the group.
         const insertIndex = visibleMessages.indexOf(action.id) + 1;
@@ -490,9 +500,12 @@ function messages(
       // so HTTP details are not fetched again the next time the user
       // opens the log.
       if (currMessage.source == "network") {
-        openState.messagesById = new Map(messagesById).set(action.id, {
-          ...currMessage,
-        });
+        openState.mutableMessagesById = new Map(mutableMessagesById).set(
+          action.id,
+          {
+            ...currMessage,
+          }
+        );
       }
       return openState;
 
@@ -504,11 +517,11 @@ function messages(
       closeState.messagesUiById = [...closeState.messagesUiById];
 
       // If the message is a group
-      if (isGroupType(messagesById.get(messageId).type)) {
+      if (isGroupType(mutableMessagesById.get(messageId).type)) {
         // Hide all its children, unless they're in a warningGroup.
         closeState.visibleMessages = visibleMessages.filter((id, i, arr) => {
-          const message = messagesById.get(id);
-          const warningGroupMessage = messagesById.get(
+          const message = mutableMessagesById.get(id);
+          const warningGroupMessage = mutableMessagesById.get(
             getParentWarningGroupMessageId(message)
           );
 
@@ -526,7 +539,7 @@ function messages(
           const parentGroups = getParentGroups(message.groupId, groupsById);
           return parentGroups.includes(messageId) === false;
         });
-      } else if (isWarningGroup(messagesById.get(messageId))) {
+      } else if (isWarningGroup(mutableMessagesById.get(messageId))) {
         // If the message was a warningGroup, we hide all the messages in the group.
         const groupMessages = closeState.warningGroupsById.get(messageId);
         closeState.visibleMessages = visibleMessages.filter(
@@ -535,20 +548,18 @@ function messages(
       }
       return closeState;
 
-    case constants.MESSAGE_UPDATE_PAYLOAD:
+    case constants.CSS_MESSAGE_ADD_MATCHING_ELEMENTS:
       return {
         ...state,
-        messagesPayloadById: new Map(messagesPayloadById).set(
+        cssMessagesMatchingElements: new Map(cssMessagesMatchingElements).set(
           action.id,
-          action.data
+          action.elements
         ),
       };
 
     case constants.NETWORK_MESSAGES_UPDATE:
       const updatedState = {
         ...state,
-        // Update messagesById since the nested object of message might be changed.
-        messagesById: new Map(messagesById),
         networkMessagesUpdateById: {
           ...networkMessagesUpdateById,
         },
@@ -556,7 +567,7 @@ function messages(
       let hasNetworkError = null;
       for (const message of action.messages) {
         const { id } = message;
-        updatedState.messagesById.set(id, message);
+        updatedState.mutableMessagesById.set(id, message);
         updatedState.networkMessagesUpdateById[id] = {
           ...(updatedState.networkMessagesUpdateById[id] || {}),
           ...message,
@@ -620,14 +631,13 @@ function messages(
       }
 
       let needSort = false;
-      const messageEntries = state.messagesById.entries();
-      for (const [msgId, message] of messageEntries) {
+      for (const [msgId, message] of state.mutableMessagesById) {
         const warningGroupType = getWarningGroupType(message);
         if (warningGroupType) {
           const warningGroupMessageId = getParentWarningGroupMessageId(message);
 
           // If there's no warning group for the type/innerWindowID yet.
-          if (!state.messagesById.has(warningGroupMessageId)) {
+          if (!state.mutableMessagesById.has(warningGroupMessageId)) {
             // We create it and add it to the store.
             const groupMessage = createWarningGroupMessage(
               warningGroupMessageId,
@@ -702,13 +712,17 @@ function setVisibleMessages({
   uiState,
   forceTimestampSort = false,
 }) {
-  const { messagesById, visibleMessages, messagesUiById } = messagesState;
+  const {
+    mutableMessagesById,
+    visibleMessages,
+    messagesUiById,
+  } = messagesState;
 
   const messagesToShow = new Set();
   const matchedGroups = new Set();
   const filtered = getDefaultFiltersCounter();
 
-  messagesById.forEach((message, msgId) => {
+  mutableMessagesById.forEach((message, msgId) => {
     const groupParentId = message.groupId;
     let hasMatchedAncestor = false;
     const ancestors = [];
@@ -727,7 +741,7 @@ function setVisibleMessages({
         if (!hasMatchedAncestor && matchedGroups.has(ancestorId)) {
           hasMatchedAncestor = true;
         }
-        ancestorId = messagesById.get(ancestorId).groupId;
+        ancestorId = mutableMessagesById.get(ancestorId).groupId;
       }
     }
 
@@ -853,7 +867,7 @@ function getOutermostGroup(message, groupsById) {
 function limitTopLevelMessageCount(newState, logLimit) {
   let topLevelCount =
     newState.groupsById.size === 0
-      ? newState.messagesById.size
+      ? newState.mutableMessagesById.size
       : getToplevelMessageCount(newState);
 
   if (topLevelCount <= logLimit) {
@@ -863,7 +877,7 @@ function limitTopLevelMessageCount(newState, logLimit) {
   const removedMessagesId = [];
 
   let cleaningGroup = false;
-  for (const [id, message] of newState.messagesById) {
+  for (const [id, message] of newState.mutableMessagesById) {
     // If we were cleaning a group and the current message does not have
     // a groupId, we're done cleaning.
     if (cleaningGroup === true && !message.groupId) {
@@ -913,7 +927,13 @@ function removeMessagesFromState(state, removedMessagesIds) {
       visibleMessages.splice(index, 1);
     }
 
-    frontsToRelease.push(...getAllFrontsInMessage(state.messagesById.get(id)));
+    // We want to minimize time spent in reducer as much as we can, so we're using
+    // prototype.push.apply here as it seems faster than other solutions (e.g. the
+    // spread operator, Array#concat, …)
+    Array.prototype.push.apply(
+      frontsToRelease,
+      getAllFrontsInMessage(state.mutableMessagesById.get(id))
+    );
   });
 
   if (state.visibleMessages.length > visibleMessages.length) {
@@ -942,7 +962,7 @@ function removeMessagesFromState(state, removedMessagesIds) {
       return res;
     }, {});
 
-  state.messagesById = cleanUpMap(state.messagesById);
+  removedMessagesIds.forEach(id => state.mutableMessagesById.delete(id));
 
   if (state.messagesUiById.find(isInRemovedId)) {
     state.messagesUiById = state.messagesUiById.filter(
@@ -958,11 +978,10 @@ function removeMessagesFromState(state, removedMessagesIds) {
     );
   }
 
-  if (mapHasRemovedIdKey(state.messagesPayloadById)) {
-    state.messagesPayloadById = cleanUpMap(state.messagesPayloadById);
-  }
-  if (mapHasRemovedIdKey(state.groupsById)) {
-    state.groupsById = cleanUpMap(state.groupsById);
+  if (mapHasRemovedIdKey(state.cssMessagesMatchingElements)) {
+    state.cssMessagesMatchingElements = cleanUpMap(
+      state.cssMessagesMatchingElements
+    );
   }
   if (mapHasRemovedIdKey(state.groupsById)) {
     state.groupsById = cleanUpMap(state.groupsById);
@@ -1015,7 +1034,7 @@ function getAllFrontsInMessage(message) {
  */
 function getToplevelMessageCount(state) {
   let count = 0;
-  state.messagesById.forEach(message => {
+  state.mutableMessagesById.forEach(message => {
     if (!message.groupId) {
       count++;
     }
@@ -1072,7 +1091,7 @@ function getMessageVisibility(
   }
 
   const warningGroupMessageId = getParentWarningGroupMessageId(message);
-  const parentWarningGroupMessage = messagesState.messagesById.get(
+  const parentWarningGroupMessage = messagesState.mutableMessagesById.get(
     warningGroupMessageId
   );
 
@@ -1119,7 +1138,7 @@ function getMessageVisibility(
     const hasVisibleChild =
       childrenMessages &&
       childrenMessages.some(id => {
-        const child = messagesState.messagesById.get(id);
+        const child = messagesState.mutableMessagesById.get(id);
         if (!child) {
           return false;
         }
@@ -1559,14 +1578,14 @@ function maybeSortVisibleMessages(
 ) {
   if (state.warningGroupsById.size > 0 && sortWarningGroupMessage) {
     state.visibleMessages.sort((a, b) => {
-      const messageA = state.messagesById.get(a);
-      const messageB = state.messagesById.get(b);
+      const messageA = state.mutableMessagesById.get(a);
+      const messageB = state.mutableMessagesById.get(b);
 
       const warningGroupIdA = getParentWarningGroupMessageId(messageA);
       const warningGroupIdB = getParentWarningGroupMessageId(messageB);
 
-      const warningGroupA = state.messagesById.get(warningGroupIdA);
-      const warningGroupB = state.messagesById.get(warningGroupIdB);
+      const warningGroupA = state.mutableMessagesById.get(warningGroupIdA);
+      const warningGroupB = state.mutableMessagesById.get(warningGroupIdB);
 
       const aFirst = -1;
       const bFirst = 1;
@@ -1607,8 +1626,8 @@ function maybeSortVisibleMessages(
 
   if (timeStampSort) {
     state.visibleMessages.sort((a, b) => {
-      const messageA = state.messagesById.get(a);
-      const messageB = state.messagesById.get(b);
+      const messageA = state.mutableMessagesById.get(a);
+      const messageB = state.mutableMessagesById.get(b);
       return getNaturalOrder(messageA, messageB);
     });
   }

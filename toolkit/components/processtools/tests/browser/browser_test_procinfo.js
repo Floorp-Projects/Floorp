@@ -11,13 +11,39 @@ const DUMMY_URL =
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const MAC = AppConstants.platform == "macosx";
 const HAS_THREAD_NAMES =
   AppConstants.platform != "win" ||
   AppConstants.isPlatformAndVersionAtLeast("win", 10);
 const isFissionEnabled = SpecialPowers.useRemoteSubframes;
 
 const SAMPLE_SIZE = 10;
+const NS_PER_MS = 1000000;
+
+function checkProcessCpuTime(proc) {
+  Assert.greater(proc.cpuTime, 0, "Got some cpu time");
+
+  let cpuThreads = 0;
+  for (let thread of proc.threads) {
+    cpuThreads += Math.floor(thread.cpuTime / NS_PER_MS);
+  }
+  Assert.greater(cpuThreads, 0, "Got some cpu time in the threads");
+  let processCpuTime = Math.ceil(proc.cpuTime / NS_PER_MS);
+  if (AppConstants.platform == "win" && processCpuTime < cpuThreads) {
+    // On Windows, our test jobs likely run in VMs without constant TSC,
+    // so we might have low precision CPU time measurements.
+    const MAX_DISCREPENCY = 100;
+    Assert.ok(
+      cpuThreads - processCpuTime < MAX_DISCREPENCY,
+      `on Windows, we accept a discrepency of up to ${MAX_DISCREPENCY}ms between the process CPU time and the sum of its threads' CPU time, process CPU time: ${processCpuTime}, sum of thread CPU time: ${cpuThreads}`
+    );
+  } else {
+    Assert.greaterOrEqual(
+      processCpuTime,
+      cpuThreads,
+      "The total CPU time of the process should be at least the sum of the CPU time spent by the still alive threads"
+    );
+  }
+}
 
 add_task(async function test_proc_info() {
   // Open a few `about:home` tabs, they'll end up in `privilegedabout`.
@@ -32,13 +58,9 @@ add_task(async function test_proc_info() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: DUMMY_URL },
     async function(browser) {
-      let cpuThreads = 0;
-      let cpuUser = 0;
-
       // We test `SAMPLE_SIZE` times to increase a tad the chance of encountering race conditions.
       for (let z = 0; z < SAMPLE_SIZE; z++) {
         let parentProc = await ChromeUtils.requestProcInfo();
-        cpuUser += parentProc.cpuUser;
 
         Assert.equal(
           parentProc.type,
@@ -46,9 +68,7 @@ add_task(async function test_proc_info() {
           "Parent proc type should be browser"
         );
 
-        for (var x = 0; x < parentProc.threads.length; x++) {
-          cpuThreads += parentProc.threads[x].cpuUser;
-        }
+        checkProcessCpuTime(parentProc);
 
         // Under Windows, thread names appeared with Windows 10.
         if (HAS_THREAD_NAMES) {
@@ -66,8 +86,7 @@ add_task(async function test_proc_info() {
         // that don't care whether we have a race condition and once to test that at
         // least one well-known process that should not be able to vanish during
         // the test respects all the invariants.
-        for (var i = 0; i < parentProc.children.length; i++) {
-          let childProc = parentProc.children[i];
+        for (let childProc of parentProc.children) {
           Assert.notEqual(
             childProc.type,
             "browser",
@@ -96,18 +115,14 @@ add_task(async function test_proc_info() {
             );
           }
 
-          for (var y = 0; y < childProc.threads.length; y++) {
-            cpuThreads += childProc.threads[y].cpuUser;
-          }
-          cpuUser += childProc.cpuUser;
+          checkProcessCpuTime(childProc);
         }
 
         // We only check other properties on the `privilegedabout` subprocess, which
         // as of this writing is always active and available.
         var hasPrivilegedAbout = false;
         var numberOfAboutTabs = 0;
-        for (i = 0; i < parentProc.children.length; i++) {
-          let childProc = parentProc.children[i];
+        for (let childProc of parentProc.children) {
           if (childProc.type != "privilegedabout") {
             continue;
           }
@@ -144,11 +159,6 @@ add_task(async function test_proc_info() {
           "We have found the privileged about process"
         );
       }
-      // see https://bugzilla.mozilla.org/show_bug.cgi?id=1529023
-      if (!MAC) {
-        Assert.greater(cpuThreads, 0, "Got some cpu time in the threads");
-      }
-      Assert.greater(cpuUser, 0, "Got some cpu time");
 
       for (let tab of tabsAboutHome) {
         BrowserTestUtils.removeTab(tab);
