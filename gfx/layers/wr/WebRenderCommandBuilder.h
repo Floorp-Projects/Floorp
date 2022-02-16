@@ -41,7 +41,6 @@ class WebRenderUserData;
 class WebRenderCommandBuilder final {
   typedef nsTHashSet<RefPtr<WebRenderUserData>> WebRenderUserDataRefTable;
   typedef nsTHashSet<RefPtr<WebRenderCanvasData>> CanvasDataSet;
-  typedef nsTHashSet<RefPtr<WebRenderLocalCanvasData>> LocalCanvasDataSet;
 
  public:
   explicit WebRenderCommandBuilder(WebRenderLayerManager* aManager);
