@@ -639,11 +639,12 @@ experiments_default_browser:
       - https://github.com/mozilla-mobile/fenix/pull/18982#pullrequestreview-635098629
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/21076#issuecomment-909237275
+      - https://github.com/mozilla-mobile/fenix/pull/23786#issuecomment-1042331298
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2022-04-01"
+    expires: "2023-03-31"
 toolbar_settings:
   changed_position:
     type: event
@@ -6656,11 +6657,12 @@ home_menu:
       - https://github.com/mozilla-mobile/fenix/pull/18987
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/21076#issuecomment-909237275
+      - https://github.com/mozilla-mobile/fenix/pull/23786#issuecomment-1042331298
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2022-04-01"
+    expires: "2023-03-31"
     metadata:
       tags:
         - Settings
@@ -6676,11 +6678,12 @@ home_screen:
       - https://github.com/mozilla-mobile/fenix/pull/19025
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/21076#issuecomment-909237275
+      - https://github.com/mozilla-mobile/fenix/pull/23786#issuecomment-1042331298
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2022-04-01"
+    expires: "2023-03-31"
     metadata:
       tags:
         - HomeScreen
@@ -6824,63 +6827,6 @@ android_keystore_experiment:
       - android-probes@mozilla.com
     expires: "2022-03-01"
 
-set_default_newtab_experiment:
-  set_default_browser_clicked:
-    type: event
-    description: |
-      Set default browser was clicked from new tab screen.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/18853
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/18895
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-      - https://github.com/mozilla-mobile/fenix/pull/21076#issuecomment-909237275
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2022-04-01"
-    metadata:
-      tags:
-        - Experiments
-  close_experiment_card_clicked:
-    type: event
-    description: |
-      Close experiment card was clicked from new tab screen.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/18853
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/18895
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-      - https://github.com/mozilla-mobile/fenix/pull/21076#issuecomment-909237275
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2022-04-01"
-
-    metadata:
-      tags:
-        - Experiments
-set_default_setting_experiment:
-  set_default_browser_clicked:
-    type: event
-    description: |
-      Set default browser was clicked from settings screen.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/18852
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/19047
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-      - https://github.com/mozilla-mobile/fenix/pull/21076#issuecomment-909237275
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: "2022-04-01"
-    metadata:
-      tags:
-        - Experiments
 start_on_home:
   enter_home_screen:
     type: event
@@ -7060,11 +7006,12 @@ recent_searches:
       - https://github.com/mozilla-mobile/fenix/issues/22175
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/22176#issuecomment-956421788
+      - https://github.com/mozilla-mobile/fenix/pull/23786#issuecomment-1042331298
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2022-04-01"
+    expires: "2023-03-31"
 
 credit_cards:
   saved:

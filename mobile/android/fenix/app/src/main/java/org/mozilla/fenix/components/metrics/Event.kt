@@ -271,11 +271,8 @@ sealed class Event {
     object OpenedTabSuggestionClicked : Event()
 
     // Set default browser experiment metrics
-    object SetDefaultBrowserNewTabClicked : Event()
-    object CloseExperimentCardClicked : Event()
     object ToolbarMenuShown : Event()
     object SetDefaultBrowserToolbarMenuClicked : Event()
-    object SetDefaultBrowserSettingsScreenClicked : Event()
 
     // Home menu interaction
     object HomeMenuSettingsItemClicked : Event()
