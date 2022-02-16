@@ -6540,7 +6540,6 @@ class MLoadElementAndUnbox : public MBinaryInstruction,
     if (mode_ == MUnbox::Fallible) {
       setGuard();
     }
-    setBailoutKind(BailoutKind::UnboxFolding);
   }
 
  public:
@@ -7214,7 +7213,6 @@ class MLoadDynamicSlotAndUnbox : public MUnaryInstruction,
     if (mode_ == MUnbox::Fallible) {
       setGuard();
     }
-    setBailoutKind(BailoutKind::UnboxFolding);
   }
 
  public:

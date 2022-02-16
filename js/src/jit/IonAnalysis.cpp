@@ -4044,7 +4044,6 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
           auto* loadIns = load->toLoadFixedSlot();
           replacement = MLoadFixedSlotAndUnbox::New(
               graph.alloc(), loadIns->object(), loadIns->slot(), mode, type);
-          replacement->setBailoutKind(BailoutKind::UnboxFolding);
           break;
         }
         case MDefinition::Opcode::LoadDynamicSlot: {
@@ -4063,6 +4062,7 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
         default:
           MOZ_CRASH("Unexpected instruction");
       }
+      replacement->setBailoutKind(BailoutKind::UnboxFolding);
 
       block->insertBefore(load, replacement);
       unbox->replaceAllUsesWith(replacement);
