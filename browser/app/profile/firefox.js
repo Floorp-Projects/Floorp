@@ -2455,6 +2455,8 @@ pref("devtools.netmonitor.features.serverSentEvents", true);
   pref("devtools.netmonitor.features.newEditAndResend", false);
 #endif
 
+pref("devtools.netmonitor.customRequest", '{}');
+
 // Enable the Storage Inspector
 pref("devtools.storage.enabled", true);
 
