@@ -1869,6 +1869,7 @@ STATIC_ATOMS = [
     Atom("countNonEmpty", "count-non-empty"),
     Atom("daysFromDate", "days-from-date"),
     Atom("secondsFromDateTime", "seconds-from-dateTime"),
+    Atom("tabbrowser_arrowscrollbox", "tabbrowser-arrowscrollbox"),
     # Simple gestures support
     Atom("onMozSwipeGestureMayStart", "onMozSwipeGestureMayStart"),
     Atom("onMozSwipeGestureStart", "onMozSwipeGestureStart"),
