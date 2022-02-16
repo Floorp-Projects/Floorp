@@ -118,7 +118,10 @@ var PrivacyFilter = Object.freeze({
     for (let i = winState.tabs.length - 1; i >= 0; i--) {
       let tab = winState.tabs[i];
 
-      if (tab.isPrivate) {
+      // Bug 1740261 - We end up with `null` entries in winState.tabs, which if
+      // we don't check for we end up throwing here. This does not fix the issue of
+      // how null tabs are getting into the state.
+      if (!tab || tab.isPrivate) {
         winState.tabs.splice(i, 1);
 
         if (winState.selected >= i) {
