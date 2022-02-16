@@ -53,11 +53,13 @@ esac
 case "$target" in
 *-apple-darwin)
   EXTRA_CMAKE_FLAGS="
-    -DCMAKE_LINKER=$MOZ_FETCHES_DIR/cctools/bin/$target-ld
-    -DCMAKE_LIPO=$MOZ_FETCHES_DIR/cctools/bin/lipo
+    -DCMAKE_LINKER=$MOZ_FETCHES_DIR/clang/bin/ld64.lld
+    -DCMAKE_LIPO=$MOZ_FETCHES_DIR/clang/bin/llvm-lipo
     -DCMAKE_SYSTEM_NAME=Darwin
     -DCMAKE_SYSTEM_VERSION=$MACOSX_DEPLOYMENT_TARGET
     -DCMAKE_OSX_SYSROOT=$MOZ_FETCHES_DIR/MacOSX11.0.sdk
+    -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld
+    -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld
     -DDARWIN_osx_ARCHS=$arch
     -DDARWIN_osx_SYSROOT=$MOZ_FETCHES_DIR/MacOSX11.0.sdk
     -DDARWIN_macosx_OVERRIDE_SDK_VERSION=11.0
@@ -68,7 +70,6 @@ case "$target" in
   # Give it a fake one.
   echo "#!/bin/sh" > codesign
   chmod +x codesign
-  PATH="$PWD:$MOZ_FETCHES_DIR/cctools/bin:$PATH"
   ;;
 *-linux-android)
   cflags="
