@@ -420,9 +420,8 @@ bool nsClipboard::FilterImportedFlavors(int32_t aWhichClipboard,
 }
 
 NS_IMETHODIMP
-nsClipboard::GetSomeData(nsITransferable* aTransferable,
-                         int32_t aWhichClipboard) {
-  LOGCLIP("nsClipboard::GetSomeData (%s)\n",
+nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
+  LOGCLIP("nsClipboard::GetData (%s)\n",
           aWhichClipboard == kSelectionClipboard ? "primary" : "clipboard");
 
   // TODO: Ensure we don't re-enter here.

@@ -3319,7 +3319,7 @@ mozilla::ipc::IPCResult ContentParent::RecvGetClipboard(
     trans->AddDataFlavor(aTypes[t].get());
   }
 
-  clipboard->GetSomeData(trans, aWhichClipboard);
+  clipboard->GetData(trans, aWhichClipboard);
   nsContentUtils::TransferableToIPCTransferable(trans, aDataTransfer, true,
                                                 nullptr, this);
   return IPC_OK();

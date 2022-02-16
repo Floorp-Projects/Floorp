@@ -33,16 +33,14 @@ interface nsIClipboard : nsISupports
                     in long aWhichClipboard ) ;
 
    /**
-    * Filters the flavors aTransferable can import (see
-    * `nsITransferable::flavorsTransferableCanImport`) and gets the data for the
-    * first flavor. That data is set for aTransferable.
+    * Given a transferable, get the clipboard data.
     *
     * @param  aTransferable The transferable
     * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
-    * @result NS_OK if no errors
+    * @result NS_Ok if no errors
     */
 
-    void getSomeData ( in nsITransferable aTransferable, in long aWhichClipboard ) ;
+    void getData ( in nsITransferable aTransferable, in long aWhichClipboard ) ;
 
    /**
     * This empties the clipboard and notifies the clipboard owner.

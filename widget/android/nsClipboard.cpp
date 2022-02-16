@@ -78,8 +78,7 @@ nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* anOwner,
 }
 
 NS_IMETHODIMP
-nsClipboard::GetSomeData(nsITransferable* aTransferable,
-                         int32_t aWhichClipboard) {
+nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
   if (aWhichClipboard != kGlobalClipboard) return NS_ERROR_NOT_IMPLEMENTED;
 
   if (!jni::IsAvailable()) {
