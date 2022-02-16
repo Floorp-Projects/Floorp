@@ -90,7 +90,7 @@ class LSDatabase final {
 
   nsresult BeginExplicitSnapshot(LSObject* aObject);
 
-  nsresult EndExplicitSnapshot(LSObject* aObject);
+  nsresult EndExplicitSnapshot();
 
  private:
   ~LSDatabase();
