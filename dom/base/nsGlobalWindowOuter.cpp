@@ -3728,34 +3728,19 @@ CSSIntPoint nsGlobalWindowOuter::GetScreenXY(CallerType aCallerType,
     return CSSIntPoint(0, 0);
   }
 
-  int32_t x = 0, y = 0;
-  aError = treeOwnerAsWin->GetPosition(&x, &y);  // LayoutDevice px values
+  LayoutDeviceIntPoint windowPos;
+  aError = treeOwnerAsWin->GetPosition(&windowPos.x, &windowPos.y);
 
   RefPtr<nsPresContext> presContext = mDocShell->GetPresContext();
   if (!presContext) {
-    return CSSIntPoint(x, y);
+    // XXX Fishy LayoutDevice to CSS conversion?
+    return CSSIntPoint(windowPos.x, windowPos.y);
   }
 
-  // Find the global desktop coordinate of the top-left of the screen.
-  // We'll use this as a "fake origin" when converting to CSS px units,
-  // to avoid overlapping coordinates in cases such as a hi-dpi screen
-  // placed to the right of a lo-dpi screen on Windows. (Instead, there
-  // may be "gaps" in the resulting CSS px coordinates in some cases.)
-  nsDeviceContext* dc = presContext->DeviceContext();
-  nsRect screenRect;
-  dc->GetRect(screenRect);
-  LayoutDeviceRect screenRectDev =
-      LayoutDevicePixel::FromAppUnits(screenRect, dc->AppUnitsPerDevPixel());
-
-  DesktopToLayoutDeviceScale scale = dc->GetDesktopToDeviceScale();
-  DesktopRect screenRectDesk = screenRectDev / scale;
-
-  CSSPoint cssPt = LayoutDevicePoint(x - screenRectDev.x, y - screenRectDev.y) /
-                   presContext->CSSToDevPixelScale();
-  cssPt.x += screenRectDesk.x;
-  cssPt.y += screenRectDesk.y;
-
-  return CSSIntPoint(NSToIntRound(cssPt.x), NSToIntRound(cssPt.y));
+  nsDeviceContext* context = presContext->DeviceContext();
+  auto windowPosAppUnits = LayoutDeviceIntPoint::ToAppUnits(
+      windowPos, context->AppUnitsPerDevPixel());
+  return CSSIntPoint::FromAppUnitsRounded(windowPosAppUnits);
 }
 
 int32_t nsGlobalWindowOuter::GetScreenXOuter(CallerType aCallerType,
@@ -5391,42 +5376,21 @@ void nsGlobalWindowOuter::MoveToOuter(int32_t aXPos, int32_t aYPos,
     return;
   }
 
-  nsCOMPtr<nsIScreenManager> screenMgr =
-      do_GetService("@mozilla.org/gfx/screenmanager;1");
-  nsCOMPtr<nsIScreen> screen;
-  if (screenMgr) {
-    CSSSize size;
-    GetInnerSize(size);
-    screenMgr->ScreenForRect(aXPos, aYPos, std::round(size.width),
-                             std::round(size.height), getter_AddRefs(screen));
+  // We need to do the same transformation GetScreenXY does.
+  RefPtr<nsPresContext> presContext = mDocShell->GetPresContext();
+  if (!presContext) {
+    return;
   }
 
-  if (screen) {
-    // On secondary displays, the "CSS px" coordinates are offset so that they
-    // share their origin with global desktop pixels, to avoid ambiguities in
-    // the coordinate space when there are displays with different DPIs.
-    // (See the corresponding code in GetScreenXY() above.)
-    int32_t screenLeftDeskPx, screenTopDeskPx, w, h;
-    screen->GetRectDisplayPix(&screenLeftDeskPx, &screenTopDeskPx, &w, &h);
-    CSSIntPoint cssPos(aXPos - screenLeftDeskPx, aYPos - screenTopDeskPx);
-    CheckSecurityLeftAndTop(&cssPos.x, &cssPos.y, aCallerType);
+  CSSIntPoint cssPos(aXPos, aYPos);
+  CheckSecurityLeftAndTop(&cssPos.x, &cssPos.y, aCallerType);
 
-    double scale;
-    screen->GetDefaultCSSScaleFactor(&scale);
-    LayoutDevicePoint devPos = cssPos * CSSToLayoutDeviceScale(scale);
+  nsDeviceContext* context = presContext->DeviceContext();
 
-    screen->GetContentsScaleFactor(&scale);
-    DesktopPoint deskPos = devPos / DesktopToLayoutDeviceScale(scale);
-    aError = treeOwnerAsWin->SetPositionDesktopPix(screenLeftDeskPx + deskPos.x,
-                                                   screenTopDeskPx + deskPos.y);
-  } else {
-    // We couldn't find a screen? Just assume a 1:1 mapping.
-    CSSIntPoint cssPos(aXPos, aXPos);
-    CheckSecurityLeftAndTop(&cssPos.x, &cssPos.y, aCallerType);
-    LayoutDevicePoint devPos = cssPos * CSSToLayoutDeviceScale(1.0);
-    aError = treeOwnerAsWin->SetPosition(devPos.x, devPos.y);
-  }
+  auto devPos = LayoutDeviceIntPoint::FromAppUnitsRounded(
+      CSSIntPoint::ToAppUnits(cssPos), context->AppUnitsPerDevPixel());
 
+  aError = treeOwnerAsWin->SetPosition(devPos.x, devPos.y);
   CheckForDPIChange();
 }
 
