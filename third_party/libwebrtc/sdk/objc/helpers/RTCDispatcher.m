@@ -12,6 +12,7 @@
 
 static dispatch_queue_t kAudioSessionQueue = nil;
 static dispatch_queue_t kCaptureSessionQueue = nil;
+static dispatch_queue_t kNetworkMonitorQueue = nil;
 
 @implementation RTC_OBJC_TYPE (RTCDispatcher)
 
@@ -24,6 +25,8 @@ static dispatch_queue_t kCaptureSessionQueue = nil;
     kCaptureSessionQueue = dispatch_queue_create(
         "org.webrtc.RTCDispatcherCaptureSession",
         DISPATCH_QUEUE_SERIAL);
+    kNetworkMonitorQueue =
+        dispatch_queue_create("org.webrtc.RTCDispatcherNetworkMonitor", DISPATCH_QUEUE_SERIAL);
   });
 }
 
@@ -54,6 +57,8 @@ static dispatch_queue_t kCaptureSessionQueue = nil;
       return kCaptureSessionQueue;
     case RTCDispatcherTypeAudioSession:
       return kAudioSessionQueue;
+    case RTCDispatcherTypeNetworkMonitor:
+      return kNetworkMonitorQueue;
   }
 }
 
