@@ -895,11 +895,6 @@ class alignas(8) Value {
 #endif
   }
 
-  uint32_t payloadAsRawUint32() const {
-    MOZ_ASSERT(!isDouble());
-    return uint32_t(asBits_);
-  }
-
   constexpr uint64_t asRawBits() const { return asBits_; }
 
   JSValueType extractNonDoubleType() const {
