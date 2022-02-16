@@ -216,6 +216,15 @@ The amount of changes required here are significant, `Bug 1740485: Improve Stati
 Glean telemetry
 ###############
 
+- Ensure your new IPDL includes on the child side
+
+  + `FlushFOGData <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#55>`_
+  + `TestTriggerMetrics <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#60>`_
+
+- Provide a parent-side implementation for `FOGData <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessParent.cpp#79-82>`_
+- Provide a child-side implementation for `FlushFOGData <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessChild.cpp#179-183>`_
+- Child-side should flush its FOG data at IPC `ActorDestroy <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessChild.cpp#199-201>`_
+- Child-side `test metrics <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessChild.cpp#185-191>`_
 - Within `FOGIPC <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/glean/ipc/FOGIPC.cpp>`_
 
   + Add handling of your new process type within ``FlushAllChildData()`` `here <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/glean/ipc/FOGIPC.cpp#106-121>`_ and ``SendFOGData()`` `here <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/glean/ipc/FOGIPC.cpp#165-182>`_
