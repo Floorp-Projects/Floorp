@@ -15,7 +15,7 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TransformStream, mGlobal)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TransformStream, mGlobal, mController)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TransformStream)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TransformStream)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransformStream)
@@ -111,7 +111,8 @@ already_AddRefed<TransformStream> TransformStream::Constructor(
   // Step 11. Perform ?
   // SetUpTransformStreamDefaultControllerFromTransformer(this, transformer,
   // transformerDict).
-  // TODO
+  SetUpTransformStreamDefaultControllerFromTransformer(
+      aGlobal.Context(), *transformStream, transformerObj, transformerDict);
 
   // Step 12. If transformerDict["start"] exists, then resolve startPromise with
   // the result of invoking transformerDict["start"] with argument list «
