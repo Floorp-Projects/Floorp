@@ -6464,7 +6464,6 @@ ZN11encoding_rs3mem17utf16_valid_up_to17h89dc8b8f218f8fa1E
 ?BroadcastStringBundle@ContentParent@dom@mozilla@@SAXAEBVStringBundleDescriptor@23@@Z
 ?Get@SharedStringMap@ipc@dom@mozilla@@QEAA_NAEBV?$nsTString@D@@AEAV?$nsTSubstring@_S@@@Z
 ?GetAndResetReleaseFence@RenderCompositor@wr@mozilla@@UEAA?AVFileDescriptor@ipc@3@XZ
-?RecvAudioSessionData@widget@mozilla@@YA?AW4nsresult@@AEBUnsID@@AEBV?$nsTString@_S@@1@Z
 ?Release@WakeLock@dom@mozilla@@UEAAKXZ
 ?GetInstance@PowerManagerService@power@dom@mozilla@@SA?AU?$already_AddRefed@VPowerManagerService@power@dom@mozilla@@@@XZ
 ?RegisterWakeLockObserver@hal@mozilla@@YAXPEAV?$Observer@VWakeLockInformation@hal@mozilla@@@2@@Z

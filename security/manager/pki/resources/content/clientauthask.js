@@ -141,12 +141,16 @@ async function setDetails() {
   let index = parseInt(document.getElementById("nicknames").value);
   let cert = certArray.queryElementAt(index, Ci.nsIX509Cert);
 
+  const formatter = new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "long",
+  });
   let detailLines = [
     bundle.getFormattedString("clientAuthIssuedTo", [cert.subjectName]),
     bundle.getFormattedString("clientAuthSerial", [cert.serialNumber]),
     bundle.getFormattedString("clientAuthValidityPeriod", [
-      cert.validity.notBeforeLocalTime,
-      cert.validity.notAfterLocalTime,
+      formatter.format(new Date(cert.validity.notBefore / 1000)),
+      formatter.format(new Date(cert.validity.notAfter / 1000)),
     ]),
   ];
   let parsedCert = await parse(pemToDER(cert.getBase64DERString()));

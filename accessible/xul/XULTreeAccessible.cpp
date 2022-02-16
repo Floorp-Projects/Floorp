@@ -707,6 +707,8 @@ Relation XULTreeItemAccessibleBase::RelationByType(RelationType aType) const {
   }
 }
 
+bool XULTreeItemAccessibleBase::HasPrimaryAction() const { return true; }
+
 uint8_t XULTreeItemAccessibleBase::ActionCount() const {
   // "activate" action is available for all treeitems, "expand/collapse" action
   // is avaible for treeitem which is container.

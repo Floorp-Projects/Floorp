@@ -1812,7 +1812,7 @@ nsAtom* LocalAccessible::LandmarkRole() const {
 role LocalAccessible::NativeRole() const { return roles::NOTHING; }
 
 uint8_t LocalAccessible::ActionCount() const {
-  return GetActionRule() == eNoAction ? 0 : 1;
+  return HasPrimaryAction() ? 1 : 0;
 }
 
 void LocalAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
@@ -1884,12 +1884,16 @@ void LocalAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
 bool LocalAccessible::DoAction(uint8_t aIndex) const {
   if (aIndex != 0) return false;
 
-  if (GetActionRule() != eNoAction) {
+  if (HasPrimaryAction()) {
     DoCommand();
     return true;
   }
 
   return false;
+}
+
+bool LocalAccessible::HasPrimaryAction() const {
+  return GetActionRule() != eNoAction;
 }
 
 nsIContent* LocalAccessible::GetAtomicRegion() const {
@@ -3255,12 +3259,8 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   }
 
   if (aCacheDomain & CacheDomain::Actions) {
-    uint8_t actionCount = ActionCount();
-    ImageAccessible* imgAcc = AsImage();
-    bool hasLongDesc = imgAcc && imgAcc->HasLongDesc();
-
-    if (actionCount && !(actionCount == 1 && hasLongDesc)) {
-      // We only cache the first action that is not showlongdesc.
+    if (HasPrimaryAction()) {
+      // Here we cache the primary action.
       nsAutoString actionName;
       ActionNameAt(0, actionName);
       RefPtr<nsAtom> actionAtom = NS_Atomize(actionName);
@@ -3269,8 +3269,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       fields->SetAttribute(nsGkAtoms::action, DeleteEntry());
     }
 
-    if (imgAcc) {
-      if (hasLongDesc) {
+    if (ImageAccessible* imgAcc = AsImage()) {
+      // Here we cache the showlongdesc action.
+      if (imgAcc->HasLongDesc()) {
         fields->SetAttribute(nsGkAtoms::longdesc, true);
       } else if (aUpdateType == CacheUpdateType::Update) {
         fields->SetAttribute(nsGkAtoms::longdesc, DeleteEntry());
@@ -3308,7 +3309,10 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
 }
 
 void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
-  if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  // mOldComputedStyle might be null if the initial cache hasn't been sent yet.
+  // In that case, there is nothing to do here.
+  if (!StaticPrefs::accessibility_cache_enabled_AtStartup() ||
+      !mOldComputedStyle) {
     return;
   }
 
