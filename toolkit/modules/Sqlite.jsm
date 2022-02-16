@@ -1160,24 +1160,25 @@ function openConnection(options) {
   log.debug("Opening database: " + path + " (" + identifier + ")");
 
   return new Promise((resolve, reject) => {
-    let dbOpenOptions = Ci.mozIStorageService.OPEN_DEFAULT;
-    if (sharedMemoryCache) {
-      dbOpenOptions |= Ci.mozIStorageService.OPEN_SHARED;
+    let dbOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+      Ci.nsIWritablePropertyBag
+    );
+    if (!sharedMemoryCache) {
+      dbOptions.setProperty("shared", false);
     }
     if (options.readOnly) {
-      dbOpenOptions |= Ci.mozIStorageService.OPEN_READONLY;
+      dbOptions.setProperty("readOnly", true);
     }
     if (options.ignoreLockingMode) {
-      dbOpenOptions |= Ci.mozIStorageService.OPEN_IGNORE_LOCKING_MODE;
-      dbOpenOptions |= Ci.mozIStorageService.OPEN_READONLY;
+      dbOptions.setProperty("ignoreLockingMode", true);
+      dbOptions.setProperty("readOnly", true);
     }
 
-    let dbConnectionOptions = Ci.mozIStorageService.CONNECTION_DEFAULT;
+    dbOptions = dbOptions.enumerator.hasMoreElements() ? dbOptions : null;
 
     Services.storage.openAsyncDatabase(
       file,
-      dbOpenOptions,
-      dbConnectionOptions,
+      dbOptions,
       (status, connection) => {
         if (!connection) {
           log.error(`Could not open connection to ${path}: ${status}`);
