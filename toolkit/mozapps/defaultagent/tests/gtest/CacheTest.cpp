@@ -10,29 +10,11 @@
 #include "Cache.h"
 #include "common.h"
 #include "Registry.h"
+#include "UtfConvert.h"
 
 #include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
-
-FilePathResult ToWideString(const char* narrowString) {
-  int wideLen = MultiByteToWideChar(CP_UTF8, 0, narrowString, -1, nullptr, 0);
-  if (wideLen == 0) {
-    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
-    LOG_ERROR(hr);
-    return mozilla::Err(mozilla::WindowsError::FromHResult(hr));
-  }
-  mozilla::UniquePtr<wchar_t[]> wideValue =
-      mozilla::MakeUnique<wchar_t[]>(wideLen);
-  int charsWritten = MultiByteToWideChar(CP_UTF8, 0, narrowString, -1,
-                                         wideValue.get(), wideLen);
-  if (charsWritten == 0) {
-    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
-    LOG_ERROR(hr);
-    return mozilla::Err(mozilla::WindowsError::FromHResult(hr));
-  }
-  return std::wstring(wideValue.get());
-}
 
 class WDBACacheTest : public ::testing::Test {
  protected:
@@ -42,11 +24,11 @@ class WDBACacheTest : public ::testing::Test {
     // Create a unique registry key to put the cache in for each test.
     const ::testing::TestInfo* const testInfo =
         ::testing::UnitTest::GetInstance()->current_test_info();
-    FilePathResult testCaseResult = ToWideString(testInfo->test_case_name());
+    Utf8ToUtf16Result testCaseResult = Utf8ToUtf16(testInfo->test_case_name());
     ASSERT_TRUE(testCaseResult.isOk());
     mCacheRegKey = testCaseResult.unwrap();
 
-    FilePathResult testNameResult = ToWideString(testInfo->name());
+    Utf8ToUtf16Result testNameResult = Utf8ToUtf16(testInfo->name());
     ASSERT_TRUE(testNameResult.isOk());
     mCacheRegKey += L'.';
     mCacheRegKey += testNameResult.unwrap();
