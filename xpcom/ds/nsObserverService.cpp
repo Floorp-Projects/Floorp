@@ -320,12 +320,6 @@ nsObserverService::UnmarkGrayStrongObservers() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsObserverService::HasObservers(const char* aTopic,
-                                              bool& aFound) {
-  aFound = mObserverTopicTable.Contains(aTopic);
-  return NS_OK;
-}
-
 namespace {
 
 class NotifyWhenScriptSafeRunnable : public mozilla::Runnable {
@@ -367,9 +361,4 @@ nsresult nsIObserverService::NotifyWhenScriptSafe(nsISupports* aSubject,
   nsContentUtils::AddScriptRunner(MakeAndAddRef<NotifyWhenScriptSafeRunnable>(
       this, aSubject, aTopic, aData));
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIObserverService::HasObservers(const char* aTopic, bool& aFound) {
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
