@@ -9,15 +9,14 @@
   content: "\A" !important;
   white-space: pre !important;
 }
-#aboutlegacy{
-  display: block !important;
+#floorp-legacy-main{
+  border-bottom: solid gray 0.1px;
 }
-
+#floorp-legacy-header{
+  margin-top: 20px !important;
+}
 #useService{
 display: none !important;
-}
-#about-legacy-sub{
-display: block !important;
 }
 
 #floorp-legacy-sub-sub{
