@@ -71,6 +71,7 @@ class CustomTabTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
+    @Ignore("Crashing, see: https://github.com/mozilla-mobile/focus-android/issues/6437")
     @SmokeTest
     @Test
     fun testCustomTabUI() {
