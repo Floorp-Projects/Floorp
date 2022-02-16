@@ -140,7 +140,9 @@ class NotifyRunnable : public WorkerRunnable {
 /* static */
 already_AddRefed<ConnectionWorker> ConnectionWorker::Create(
     WorkerPrivate* aWorkerPrivate, ErrorResult& aRv) {
-  RefPtr<ConnectionWorker> c = new ConnectionWorker();
+  bool shouldResistFingerprinting =
+      aWorkerPrivate->ShouldResistFingerprinting();
+  RefPtr<ConnectionWorker> c = new ConnectionWorker(shouldResistFingerprinting);
   c->mProxy = ConnectionProxy::Create(aWorkerPrivate, c);
   if (!c->mProxy) {
     aRv.ThrowTypeError("The Worker thread is shutting down.");
@@ -161,7 +163,8 @@ already_AddRefed<ConnectionWorker> ConnectionWorker::Create(
   return c.forget();
 }
 
-ConnectionWorker::ConnectionWorker() : Connection(nullptr) {
+ConnectionWorker::ConnectionWorker(bool aShouldResistFingerprinting)
+    : Connection(nullptr, aShouldResistFingerprinting) {
   MOZ_ASSERT(IsCurrentThreadRunningWorker());
 }
 
