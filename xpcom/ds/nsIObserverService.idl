@@ -81,6 +81,20 @@ interface nsIObserverService : nsISupports
     nsresult NotifyWhenScriptSafe(nsISupports* aSubject,
                                   const char* aTopic,
                                   const char16_t* aData = nullptr);
+
+    /**
+     * hasObservers
+     *
+     * Checks to see if there are registered listeners for the given topic.
+     *
+     * Implemented in "nsObserverService.cpp".
+     *
+     * @param aTopic   : The notification topic or subject.
+     * @param aFound : An out parameter; True if there are registered observers,
+     * False otherwise.
+     */
+    virtual nsresult HasObservers(const char* aTopic,
+                                  bool& aFound);
     %}
 
     /**
