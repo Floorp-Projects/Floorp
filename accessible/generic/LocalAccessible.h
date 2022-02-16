@@ -427,12 +427,12 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Selects the accessible within its container if applicable.
    */
-  virtual void SetSelected(bool aSelect);
+  virtual void SetSelected(bool aSelect) override;
 
   /**
    * Select the accessible within its container.
    */
-  void TakeSelection();
+  virtual void TakeSelection() override;
 
   /**
    * Focus the accessible.
@@ -571,42 +571,42 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Return an array of selected items.
    */
-  virtual void SelectedItems(nsTArray<LocalAccessible*>* aItems);
+  virtual void SelectedItems(nsTArray<Accessible*>* aItems) override;
 
   /**
    * Return the number of selected items.
    */
-  virtual uint32_t SelectedItemCount();
+  virtual uint32_t SelectedItemCount() override;
 
   /**
    * Return selected item at the given index.
    */
-  virtual LocalAccessible* GetSelectedItem(uint32_t aIndex);
+  virtual Accessible* GetSelectedItem(uint32_t aIndex) override;
 
   /**
    * Determine if item at the given index is selected.
    */
-  virtual bool IsItemSelected(uint32_t aIndex);
+  virtual bool IsItemSelected(uint32_t aIndex) override;
 
   /**
    * Add item at the given index the selection. Return true if success.
    */
-  virtual bool AddItemToSelection(uint32_t aIndex);
+  virtual bool AddItemToSelection(uint32_t aIndex) override;
 
   /**
    * Remove item at the given index from the selection. Return if success.
    */
-  virtual bool RemoveItemFromSelection(uint32_t aIndex);
+  virtual bool RemoveItemFromSelection(uint32_t aIndex) override;
 
   /**
    * Select all items. Return true if success.
    */
-  virtual bool SelectAll();
+  virtual bool SelectAll() override;
 
   /**
    * Unselect all items. Return true if success.
    */
-  virtual bool UnselectAll();
+  virtual bool UnselectAll() override;
 
   //////////////////////////////////////////////////////////////////////////////
   // Value (numeric value interface)

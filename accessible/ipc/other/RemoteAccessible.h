@@ -47,10 +47,17 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
   virtual int32_t LinkIndexAtOffset(uint32_t aOffset) override;
 
   virtual bool DoAction(uint8_t aIndex) const override;
-
   virtual uint8_t ActionCount() const override;
-
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+
+  virtual void SelectedItems(nsTArray<Accessible*>* aSelectedItems) override;
+  virtual uint32_t SelectedItemCount() override;
+  virtual Accessible* GetSelectedItem(uint32_t aIndex) override;
+  virtual bool IsItemSelected(uint32_t aIndex) override;
+  virtual bool AddItemToSelection(uint32_t aIndex) override;
+  virtual bool RemoveItemFromSelection(uint32_t aIndex) override;
+  virtual bool SelectAll() override;
+  virtual bool UnselectAll() override;
 
  protected:
   explicit RemoteAccessible(DocAccessibleParent* aThisAsDoc)

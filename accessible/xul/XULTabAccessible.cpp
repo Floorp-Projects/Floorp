@@ -150,7 +150,7 @@ void XULTabsAccessible::ApplyARIAState(uint64_t* aState) const {
 //  aria-selected by the a11y engine and we still want to be able to set the
 // primary selected item according to XUL.
 
-void XULTabsAccessible::SelectedItems(nsTArray<LocalAccessible*>* aItems) {
+void XULTabsAccessible::SelectedItems(nsTArray<Accessible*>* aItems) {
   if (nsAccUtils::IsARIAMultiSelectable(this)) {
     AccessibleWrap::SelectedItems(aItems);
   } else {
@@ -158,7 +158,7 @@ void XULTabsAccessible::SelectedItems(nsTArray<LocalAccessible*>* aItems) {
   }
 }
 
-LocalAccessible* XULTabsAccessible::GetSelectedItem(uint32_t aIndex) {
+Accessible* XULTabsAccessible::GetSelectedItem(uint32_t aIndex) {
   if (nsAccUtils::IsARIAMultiSelectable(this)) {
     return AccessibleWrap::GetSelectedItem(aIndex);
   }

@@ -234,6 +234,53 @@ class Accessible {
    */
   virtual bool DoAction(uint8_t aIndex) const = 0;
 
+  //////////////////////////////////////////////////////////////////////////////
+  // SelectAccessible
+
+  /**
+   * Return an array of selected items.
+   */
+  virtual void SelectedItems(nsTArray<Accessible*>* aItems) = 0;
+
+  /**
+   * Return the number of selected items.
+   */
+  virtual uint32_t SelectedItemCount() = 0;
+
+  /**
+   * Return selected item at the given index.
+   */
+  virtual Accessible* GetSelectedItem(uint32_t aIndex) = 0;
+
+  /**
+   * Determine if item at the given index is selected.
+   */
+  virtual bool IsItemSelected(uint32_t aIndex) = 0;
+
+  /**
+   * Add item at the given index the selection. Return true if success.
+   */
+  virtual bool AddItemToSelection(uint32_t aIndex) = 0;
+
+  /**
+   * Remove item at the given index from the selection. Return if success.
+   */
+  virtual bool RemoveItemFromSelection(uint32_t aIndex) = 0;
+
+  /**
+   * Select all items. Return true if success.
+   */
+  virtual bool SelectAll() = 0;
+
+  /**
+   * Unselect all items. Return true if success.
+   */
+  virtual bool UnselectAll() = 0;
+
+  virtual void TakeSelection() = 0;
+
+  virtual void SetSelected(bool aSelect) = 0;
+
   // Type "is" methods
 
   bool IsDoc() const { return HasGenericType(eDocument); }

@@ -52,9 +52,9 @@ class XULTabsAccessible : public XULSelectControlAccessible {
   virtual bool HasPrimaryAction() const override;
 
   // SelectAccessible
-  virtual void SelectedItems(nsTArray<LocalAccessible*>* aItems) override;
+  virtual void SelectedItems(nsTArray<Accessible*>* aItems) override;
   virtual uint32_t SelectedItemCount() override;
-  virtual LocalAccessible* GetSelectedItem(uint32_t aIndex) override;
+  virtual Accessible* GetSelectedItem(uint32_t aIndex) override;
   virtual bool IsItemSelected(uint32_t aIndex) override;
 
  protected:
