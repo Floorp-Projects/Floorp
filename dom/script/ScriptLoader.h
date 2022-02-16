@@ -626,7 +626,9 @@ class ScriptLoader final : public ScriptLoaderInterface {
   void AddAsyncRequest(ScriptLoadRequest* aRequest);
   bool MaybeRemovedDeferRequests();
 
-  bool ShouldFullParse(ScriptLoadRequest* aRequest);
+  bool ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest);
+  void ApplyDelazifyStrategy(JS::CompileOptions* aOptions);
+
   bool ShouldCompileOffThread(ScriptLoadRequest* aRequest);
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
