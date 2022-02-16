@@ -16,7 +16,6 @@ browser.jar:
 * skin/classic/browser/searchbar.css
 * skin/classic/browser/webRTC-indicator.css
   skin/classic/browser/webRTC-legacy-indicator.css  (../shared/webRTC-legacy-indicator.css)
-* skin/classic/browser/controlcenter/panel.css        (controlcenter/panel.css)
 * skin/classic/browser/customizableui/panelUI.css (customizableui/panelUI.css)
 * skin/classic/browser/downloads/allDownloadsView.css   (downloads/allDownloadsView.css)
 * skin/classic/browser/downloads/downloads.css        (downloads/downloads.css)

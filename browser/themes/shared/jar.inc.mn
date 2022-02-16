@@ -27,6 +27,7 @@
   skin/classic/browser/controlcenter/dashboard.svg             (../shared/controlcenter/dashboard.svg)
   skin/classic/browser/controlcenter/mcb-disabled.svg          (../shared/controlcenter/mcb-disabled.svg)
   skin/classic/browser/controlcenter/etp-milestone.svg         (../shared/controlcenter/etp-milestone.svg)
+  skin/classic/browser/controlcenter/panel.css                 (../shared/controlcenter/panel.css)
   skin/classic/browser/controlcenter/socialblock.svg           (../shared/controlcenter/socialblock.svg)
   skin/classic/browser/controlcenter/tracking-protection.svg   (../shared/controlcenter/tracking-protection.svg)
   skin/classic/browser/controlcenter/hero-message-background.svg   (../shared/controlcenter/hero-message-background.svg)

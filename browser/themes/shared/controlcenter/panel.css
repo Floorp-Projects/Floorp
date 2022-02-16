@@ -7,7 +7,6 @@
   display: none;
 }
 
-
 #identity-popup,
 #permission-popup,
 #protections-popup {
@@ -34,6 +33,63 @@
 #identity-popup.no-shadow,
 #permission-popup.no-shadow {
   -moz-window-shadow: none;
+}
+
+/* Fine-tune panel margins */
+:is(
+  #identity-popup,
+  #notification-popup
+)[type="arrow"]:is([side="top"], [side="bottom"]) {
+  margin-inline: -16px;
+}
+
+:is(
+  #identity-popup,
+  #notification-popup
+)[type="arrow"]:is([side="left"], [side="right"]) {
+  margin-block: -16px;
+}
+
+#permission-popup[type="arrow"]:is([side="top"], [side="bottom"]) {
+  margin-inline: calc(-24px - 2 * var(--urlbar-container-padding));
+}
+
+#permission-popup[type="arrow"]:is([side="left"], [side="right"]) {
+  margin-block: calc(-24px - 2 * var(--urlbar-container-padding));
+}
+
+#protections-popup[type="arrow"]:is([side="top"], [side="bottom"]) {
+  margin-inline: calc(-20px + 2 * var(--urlbar-container-padding));
+}
+
+#protections-popup[type="arrow"]:is([side="left"],[side="right"]) {
+  margin-block: calc(-20px + 2 * var(--urlbar-container-padding));
+}
+
+@media (-moz-platform: macos) {
+  :is(
+    #identity-popup,
+    #notification-popup,
+    #permission-popup
+  )[type="arrow"]:is([side="top"],[side="bottom"]) {
+    margin-inline: calc(-12px - 2 * var(--urlbar-container-padding));
+  }
+
+  :is(
+    #identity-popup,
+    #notification-popup,
+    #permission-popup
+  )[type="arrow"]:is([side="left"],[side="right"]) {
+    margin-block: calc(-12px - 2 * var(--urlbar-container-padding));
+  }
+
+  #protections-popup[type="arrow"]:is([side="top"], [side="bottom"]) {
+    margin-inline: calc(-16px + 2 * var(--urlbar-container-padding));
+  }
+
+  #protections-popup[type="arrow"]:is([side="left"],[side="right"]) {
+    margin-block: calc(-16px + 2 * var(--urlbar-container-padding));
+  }
 }
 
 /* Show the right elements for the right connection states. */
@@ -394,6 +450,16 @@ description#identity-popup-content-owner,
 description#identity-popup-content-verifier,
 #identity-popup-securityView-body > button {
   margin-top: 0.5em;
+}
+
+@media (-moz-platform: macos) {
+  #identity-popup-securityView-body > button {
+    min-height: 30px;
+  }
+
+  #identity-popup-securityView-body > button:focus-visible {
+    outline: var(--focus-outline);
+  }
 }
 
 /* CONTENT BLOCKING / TRACKING PROTECTION */
@@ -997,6 +1063,13 @@ description#identity-popup-content-verifier,
 .identity-popup-expander:focus-visible,
 .permission-popup-permission-remove-button:focus-visible {
   outline: var(--focus-outline);
+}
+
+@media (-moz-platform: linux) {
+  .identity-popup-expander > .button-box,
+  .permission-popup-permission-remove-button > .button-box {
+    appearance: none;
+  }
 }
 
 .protections-popup-category:focus-visible,
