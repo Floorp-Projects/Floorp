@@ -222,8 +222,8 @@ function TupleConcat() {
 // Tuple.prototype.includes()
 function TupleIncludes(valueToFind /* , fromIndex */) {
     var fromIndex = arguments.length > 1 ? arguments[1] : undefined;
-    return callContentFunction(ArrayIncludes, ThisTupleValue(this),
-                                   valueToFind, fromIndex);
+    return callFunction(std_Array_includes, ThisTupleValue(this), valueToFind,
+                        fromIndex);
 }
 
 // proposal-record-tuple

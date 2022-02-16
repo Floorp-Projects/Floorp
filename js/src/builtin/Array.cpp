@@ -3982,6 +3982,86 @@ bool js::array_lastIndexOf(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
+// 22.1.3.13 Array.prototype.includes ( searchElement [ , fromIndex ] )
+bool js::array_includes(JSContext* cx, unsigned argc, Value* vp) {
+  AutoGeckoProfilerEntry pseudoFrame(
+      cx, "Array.prototype.includes", JS::ProfilingCategoryPair::JS,
+      uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  RootedObject obj(cx, ToObject(cx, args.thisv()));
+  if (!obj) {
+    return false;
+  }
+
+  // Step 2.
+  uint64_t len;
+  if (!GetLengthPropertyInlined(cx, obj, &len)) {
+    return false;
+  }
+
+  // Step 3.
+  if (len == 0) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  // Steps 4-7.
+  uint64_t k = 0;
+  if (args.length() > 1) {
+    double n;
+    if (!ToInteger(cx, args[1], &n)) {
+      return false;
+    }
+
+    if (n >= double(len)) {
+      args.rval().setBoolean(false);
+      return true;
+    }
+
+    // Steps 6-7.
+    if (n >= 0) {
+      k = uint64_t(n);
+    } else {
+      double d = double(len) + n;
+      if (d >= 0) {
+        k = uint64_t(d);
+      }
+    }
+  }
+
+  MOZ_ASSERT(k < len);
+
+  HandleValue searchElement = args.get(0);
+
+  // Step 8.
+  RootedValue v(cx);
+  for (; k < len; k++) {
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
+
+    if (!GetArrayElement(cx, obj, k, &v)) {
+      return false;
+    }
+
+    bool equal;
+    if (!SameValueZero(cx, v, searchElement, &equal)) {
+      return false;
+    }
+    if (equal) {
+      args.rval().setBoolean(true);
+      return true;
+    }
+  }
+
+  // Step 9.
+  args.rval().setBoolean(false);
+  return true;
+}
+
 static const JSFunctionSpec array_methods[] = {
     JS_FN(js_toSource_str, array_toSource, 0, 0),
     JS_SELF_HOSTED_FN(js_toString_str, "ArrayToString", 0, 0),
@@ -4028,7 +4108,7 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_FN("values", "$ArrayValues", 0, 0),
 
     /* ES7 additions */
-    JS_SELF_HOSTED_FN("includes", "ArrayIncludes", 2, 0),
+    JS_FN("includes", array_includes, 1, 0),
 
     /* ES2020 */
     JS_SELF_HOSTED_FN("flatMap", "ArrayFlatMap", 1, 0),
