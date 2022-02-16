@@ -74,12 +74,6 @@ xul|separator.groove[orient="vertical"] {
   margin-inline: 0.4em;
 }
 
-/* Link focus outline */
-
-.text-link:focus-visible {
-  outline: var(--focus-outline);
-}
-
 /* Input margins */
 
 html|input {

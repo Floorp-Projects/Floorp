@@ -184,12 +184,6 @@ xul|separator.groove[orient="vertical"] {
   }
 }
 
-/* Link focus outline */
-
-.text-link:-moz-focusring {
-  outline: var(--default-focusring);
-}
-
 /* Input margins */
 
 html|input {
