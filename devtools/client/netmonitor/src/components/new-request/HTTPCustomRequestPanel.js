@@ -9,6 +9,7 @@ const {
   Component,
   createFactory,
 } = require("devtools/client/shared/vendor/react");
+const Services = require("Services");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
@@ -80,65 +81,71 @@ class HTTPCustomRequestPanel extends Component {
     };
   }
 
-  static createQueryParamsListFromURL(url) {
-    const queryArray = (url ? parseQueryString(getUrlQuery(url)) : []) || [];
-    return queryArray.map(({ name, value }) => {
-      return {
-        checked: true,
-        name,
-        value,
-      };
-    });
-  }
-
   constructor(props) {
     super(props);
 
-    const { request } = props;
+    let { request } = props;
+
+    request = request || this.getStateFromPref();
+
+    // We need this part because on the pref we are saving the request in one format
+    // and from the edit and resen it comes in a different form with different properties,
+    // so we need this to nomalize the request.
+    if (request.requestHeaders) {
+      request.headers = request.requestHeaders.headers;
+    }
+
+    if (request.requestPostData?.postData?.text) {
+      request.requestPostData = request.requestPostData.postData.text;
+    }
 
     this.URLTextareaRef = createRef();
 
+    const requestHeaders = request.headers
+      ?.map(({ name, value }) => {
+        return {
+          name,
+          value,
+          checked: true,
+          disabled: FIREFOX_DEFAULT_HEADERS.some(i => name.startsWith(i)),
+        };
+      })
+      .sort((a, b) => {
+        if (a.disabled && !b.disabled) {
+          return -1;
+        }
+        if (!a.disabled && b.disabled) {
+          return 1;
+        }
+        return 0;
+      });
+
     this.state = {
-      method: request ? request.method : "",
-      url: request ? request.url : "",
-      urlQueryParams: HTTPCustomRequestPanel.createQueryParamsListFromURL(
-        request?.url
-      ),
-      headers: request
-        ? request.requestHeaders.headers
-            .map(({ name, value }) => {
-              return {
-                name,
-                value,
-                checked: true,
-                disabled: !!FIREFOX_DEFAULT_HEADERS.find(i =>
-                  name.startsWith(i)
-                ),
-              };
-            })
-            .sort((a, b) => {
-              if (a.disabled && !b.disabled) {
-                return -1;
-              }
-              if (!a.disabled && b.disabled) {
-                return 1;
-              }
-              return 0;
-            })
-        : [],
-      requestPostData: request
-        ? request.requestPostData?.postData.text || ""
-        : "",
+      method: request.method || "",
+      url: request.url || "",
+      urlQueryParams: this.createQueryParamsListFromURL(request.url),
+      headers: requestHeaders || [],
+      requestPostData: request.requestPostData || "",
     };
 
+    Services.prefs.setCharPref(
+      "devtools.netmonitor.features.newEditAndResendState",
+      JSON.stringify(this.state)
+    );
+
+    this.updateStateAndPref = this.updateStateAndPref.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
-    this.onUpdateQueryParams = this.onUpdateQueryParams.bind(this);
     this.handleChangeURL = this.handleChangeURL.bind(this);
     this.updateInputMapItem = this.updateInputMapItem.bind(this);
     this.addInputMapItem = this.addInputMapItem.bind(this);
     this.deleteInputMapItem = this.deleteInputMapItem.bind(this);
     this.checkInputMapItem = this.checkInputMapItem.bind(this);
     this.handleClear = this.handleClear.bind(this);
+    this.createQueryParamsListFromURL = this.createQueryParamsListFromURL.bind(
+      this
+    );
+    this.onUpdateQueryParams = this.onUpdateQueryParams.bind(this);
+    this.getStateFromPref = this.getStateFromPref.bind(this);
   }
 
   componentDidMount() {
@@ -156,21 +163,42 @@ class HTTPCustomRequestPanel extends Component {
     }
   }
 
+  updateStateAndPref(nextState, cb) {
+    this.setState(nextState, cb);
+
+    const persistedState = this.getStateFromPref();
+
+    Services.prefs.setCharPref(
+      "devtools.netmonitor.features.newEditAndResendState",
+      JSON.stringify({ ...persistedState, ...nextState })
+    );
+  }
+
+  getStateFromPref() {
+    try {
+      return JSON.parse(
+        Services.prefs.getCharPref(
+          "devtools.netmonitor.features.newEditAndResendState"
+        )
+      );
+    } catch (_) {
+      return {};
+    }
+  }
+
   handleChangeURL(event) {
     const { value } = event.target;
 
-    this.setState({
+    this.updateStateAndPref({
       url: value,
-      urlQueryParams: HTTPCustomRequestPanel.createQueryParamsListFromURL(
-        value
-      ),
+      urlQueryParams: this.createQueryParamsListFromURL(value),
     });
   }
 
   handleInputChange(event) {
     const { name, value } = event.target;
 
-    this.setState({
+    this.updateStateAndPref({
       [name]: value,
     });
   }
@@ -184,13 +212,13 @@ class HTTPCustomRequestPanel extends Component {
 
     updatedList[Number(index)][prop] = value;
 
-    this.setState({
+    this.updateStateAndPref({
       [stateName]: updatedList,
     });
   }
 
   addInputMapItem(stateName, name, value) {
-    this.setState({
+    this.updateStateAndPref({
       [stateName]: [
         ...this.state[stateName],
         { name, value, checked: true, disabled: false },
@@ -199,13 +227,13 @@ class HTTPCustomRequestPanel extends Component {
   }
 
   deleteInputMapItem(stateName, index) {
-    this.setState({
+    this.updateStateAndPref({
       [stateName]: this.state[stateName].filter((_, i) => i !== index),
     });
   }
 
   checkInputMapItem(stateName, index, checked, cb) {
-    this.setState(
+    this.updateStateAndPref(
       {
         [stateName]: this.state[stateName].map((item, i) => {
           if (index === i) {
@@ -235,13 +263,24 @@ class HTTPCustomRequestPanel extends Component {
     if (queryString.length > 0) {
       finalURL += `?${queryString.substring(0, queryString.length - 1)}`;
     }
-    this.setState({
+    this.updateStateAndPref({
       url: finalURL,
     });
   }
 
+  createQueryParamsListFromURL(url) {
+    const queryArray = (url ? parseQueryString(getUrlQuery(url)) : []) || [];
+    return queryArray.map(({ name, value }) => {
+      return {
+        checked: true,
+        name,
+        value,
+      };
+    });
+  }
+
   handleClear() {
-    this.setState(
+    this.updateStateAndPref(
       {
         method: "",
         url: "",
