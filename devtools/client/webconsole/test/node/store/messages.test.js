@@ -9,7 +9,7 @@ const {
   getAllRepeatById,
   getCurrentGroup,
   getGroupsById,
-  getAllMessagesById,
+  getMutableMessagesById,
   getVisibleMessages,
 } = require("devtools/client/webconsole/selectors/messages");
 
@@ -42,7 +42,7 @@ describe("Message reducer:", () => {
     actions = setupActions();
   });
 
-  describe("messagesById", () => {
+  describe("mutableMessagesById", () => {
     it("adds a message to an empty store", () => {
       const { dispatch, getState } = setupStore();
 
@@ -66,7 +66,7 @@ describe("Message reducer:", () => {
       packet2.message.timeStamp = 2;
       dispatch(actions.messagesAdd([packet, packet2]));
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
 
       expect(messages.size).toBe(1);
       const repeat = getAllRepeatById(getState());
@@ -90,7 +90,7 @@ describe("Message reducer:", () => {
       packet.message.lineNumber = packet.message.lineNumber + 1;
       dispatch(actions.messagesAdd([packet]));
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
 
       expect(messages.size).toBe(3);
 
@@ -111,7 +111,7 @@ describe("Message reducer:", () => {
       packet.pageError.timeStamp = 2;
       dispatch(actions.messagesAdd([packet]));
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
 
       expect(messages.size).toBe(1);
 
@@ -137,7 +137,7 @@ describe("Message reducer:", () => {
       packet.pageError.lineNumber = packet.pageError.lineNumber + 1;
       dispatch(actions.messagesAdd([packet]));
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
 
       expect(messages.size).toBe(3);
 
@@ -157,7 +157,7 @@ describe("Message reducer:", () => {
       packet.pageError.timeStamp = 2;
       dispatch(actions.messagesAdd([packet]));
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
 
       expect(messages.size).toBe(1);
 
@@ -178,7 +178,7 @@ describe("Message reducer:", () => {
         logKey,
       ]);
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
 
       expect(messages.size).toBe(4);
       const repeat = getAllRepeatById(getState());
@@ -190,7 +190,7 @@ describe("Message reducer:", () => {
     it("doesn't increment undefined messages coming from different places", () => {
       const { getState } = setupStore(["console.log(undefined)", "undefined"]);
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       expect(messages.size).toBe(2);
 
       const repeat = getAllRepeatById(getState());
@@ -203,7 +203,7 @@ describe("Message reducer:", () => {
         { actions }
       );
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       expect(messages.size).toBe(3);
       const repeat = getAllRepeatById(getState());
       expect(Object.keys(repeat).length).toBe(0);
@@ -214,21 +214,21 @@ describe("Message reducer:", () => {
 
       const nanPacket = stubPackets.get("console.log(NaN)");
       dispatch(actions.messagesAdd([nanPacket, nanPacket]));
-      let messages = getAllMessagesById(getState());
+      let messages = getMutableMessagesById(getState());
       expect(messages.size).toBe(1);
       let repeat = getAllRepeatById(getState());
       expect(repeat[getLastMessage(getState()).id]).toBe(2);
 
       const undefinedPacket = stubPackets.get("console.log(undefined)");
       dispatch(actions.messagesAdd([undefinedPacket, undefinedPacket]));
-      messages = getAllMessagesById(getState());
+      messages = getMutableMessagesById(getState());
       expect(messages.size).toBe(2);
       repeat = getAllRepeatById(getState());
       expect(repeat[getLastMessage(getState()).id]).toBe(2);
 
       const nullPacket = stubPackets.get("console.log(null)");
       dispatch(actions.messagesAdd([nullPacket, nullPacket]));
-      messages = getAllMessagesById(getState());
+      messages = getMutableMessagesById(getState());
       expect(messages.size).toBe(3);
       repeat = getAllRepeatById(getState());
       expect(repeat[getLastMessage(getState()).id]).toBe(2);
@@ -244,7 +244,7 @@ describe("Message reducer:", () => {
       const packet2 = stubPackets.get("console.log(undefined)");
       dispatch(actions.messagesAdd([packet2]));
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       expect(messages.size).toBe(2);
 
       const repeat = getAllRepeatById(getState());
@@ -281,7 +281,7 @@ describe("Message reducer:", () => {
 
       dispatch(actions.messagesAdd([message1, message2]));
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       expect(messages.size).toBe(2);
 
       const repeat = getAllRepeatById(getState());
@@ -293,7 +293,7 @@ describe("Message reducer:", () => {
 
       dispatch(actions.messagesAdd([stubPackets.get("console.clear()")]));
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
 
       expect(messages.size).toBe(1);
       expect(getFirstMessage(getState()).parameters[0]).toBe(
@@ -313,7 +313,7 @@ describe("Message reducer:", () => {
       dispatch(actions.messagesClear());
 
       const state = getState();
-      expect(getAllMessagesById(state).size).toBe(0);
+      expect(getMutableMessagesById(state).size).toBe(0);
       expect(getVisibleMessages(state).length).toBe(0);
       expect(getAllMessagesUiById(state).length).toBe(0);
       expect(getGroupsById(state).size).toBe(0);
@@ -377,7 +377,7 @@ describe("Message reducer:", () => {
         dispatch(actions.messagesAdd([packet]));
       }
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       expect(messages.size).toBe(logLimit);
       expect(getFirstMessage(getState()).parameters[0]).toBe(`message num 3`);
       expect(getLastMessage(getState()).parameters[0]).toBe(
@@ -420,7 +420,7 @@ describe("Message reducer:", () => {
       }
 
       const visibleMessages = getVisibleMessages(getState());
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
 
       expect(messages.size).toBe(logLimit);
       expect(visibleMessages.length).toBe(logLimit);
@@ -454,7 +454,7 @@ describe("Message reducer:", () => {
       }
 
       const visibleMessages = getVisibleMessages(getState());
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       // We should have three times the logLimit since each group has one message inside.
       expect(messages.size).toBe(logLimit * 3);
 
@@ -492,7 +492,7 @@ describe("Message reducer:", () => {
         dispatch(actions.messagesAdd([packetGroupEnd]));
       }
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       // We should have three times the logLimit since each group has two message inside.
       expect(messages.size).toBe(logLimit * 3);
 
@@ -519,7 +519,7 @@ describe("Message reducer:", () => {
       const message = stubPackets.get("console.time('bar')");
       dispatch(actions.messagesAdd([message]));
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       expect(messages.size).toBe(0);
     });
 
@@ -539,7 +539,7 @@ describe("Message reducer:", () => {
       const message = stubPackets.get("console.group('bar')");
       dispatch(actions.messagesAdd([message]));
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       expect(messages.size).toBe(1);
     });
 
@@ -578,7 +578,7 @@ describe("Message reducer:", () => {
       const isNotGroupEnd = p => p !== groupEndPacket;
       const messageCount = packets.filter(isNotGroupEnd).length;
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       const visibleMessages = getVisibleMessages(getState());
       expect(messages.size).toBe(messageCount);
       expect(visibleMessages.length).toBe(messageCount);
@@ -594,7 +594,7 @@ describe("Message reducer:", () => {
         ])
       );
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       expect(messages.size).toBe(2);
       expect(getLastMessage(getState()).groupId).toBe(
         getFirstMessage(getState()).id
@@ -607,7 +607,7 @@ describe("Message reducer:", () => {
       const message = stubPackets.get("console.groupEnd('bar')");
       dispatch(actions.messagesAdd([message]));
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       expect(messages.size).toBe(0);
     });
 
@@ -644,7 +644,7 @@ describe("Message reducer:", () => {
 
       dispatch(actions.messagesAdd([packet]));
       // The message should not be added to the state.
-      expect(getAllMessagesById(getState()).size).toBe(0);
+      expect(getMutableMessagesById(getState()).size).toBe(0);
     });
   });
 
@@ -984,7 +984,7 @@ describe("Message reducer:", () => {
       dispatch(actions.networkMessageUpdates([updatePacket], null));
 
       // Check that we have the expected data.
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       const [
         firstNetworkMessageId,
         secondNetworkMessageId,
@@ -1070,7 +1070,7 @@ describe("Message reducer:", () => {
         ])
       );
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
 
       const data1 = Symbol();
       const data2 = Symbol();
@@ -1131,7 +1131,7 @@ describe("Message reducer:", () => {
       dispatch(actions.messagesAdd([packet1, packet2, packet3]));
 
       // There is still only two messages being logged,
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       expect(messages.size).toBe(2);
 
       // the second one being repeated 3 times
@@ -1156,7 +1156,7 @@ describe("Message reducer:", () => {
       const secondTraceMessage = getMessageAt(getState(), 2);
       dispatch(actions.messageRemove(secondTraceMessage.id));
 
-      const messages = getAllMessagesById(getState());
+      const messages = getMutableMessagesById(getState());
       // The messages was removed
       expect(messages.size).toBe(3);
 

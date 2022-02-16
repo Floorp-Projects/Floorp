@@ -11,7 +11,7 @@ const {
   getAllRepeatById,
   getCurrentGroup,
   getGroupsById,
-  getAllMessagesById,
+  getMutableMessagesById,
   getVisibleMessages,
 } = require("devtools/client/webconsole/selectors/messages");
 const {
@@ -49,13 +49,13 @@ describe("private messages", () => {
     );
 
     let state = getState();
-    const messages = getAllMessagesById(state);
+    const messages = getMutableMessagesById(state);
     expect(messages.size).toBe(4);
 
     dispatch(actions.privateMessagesClear());
 
     state = getState();
-    expect(getAllMessagesById(state).size).toBe(1);
+    expect(getMutableMessagesById(state).size).toBe(1);
     expect(getVisibleMessages(state).length).toBe(1);
   });
 
