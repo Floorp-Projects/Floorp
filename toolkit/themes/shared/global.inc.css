@@ -154,6 +154,15 @@ xul|label[disabled="true"] {
   text-decoration: underline;
 }
 
+.text-link:focus-visible {
+  outline: var(--focus-outline);
+  /* Not using --focus-outline-offset here because that's intended for elements
+     with a background, and we only want a slight offset here while not
+     overlapping adjacent text. */
+  outline-offset: 1px;
+  border-radius: 1px;
+}
+
 /* Textbox context menu */
 
 .textbox-contextmenu:-moz-locale-dir(rtl) {
