@@ -50,7 +50,6 @@ class WebRenderImageData;
 class WebRenderImageProviderData;
 class WebRenderInProcessImageData;
 class WebRenderFallbackData;
-class WebRenderLocalCanvasData;
 class RenderRootStateManager;
 class WebRenderGroupData;
 
@@ -89,7 +88,6 @@ class WebRenderUserData {
   }
   virtual WebRenderFallbackData* AsFallbackData() { return nullptr; }
   virtual WebRenderCanvasData* AsCanvasData() { return nullptr; }
-  virtual WebRenderLocalCanvasData* AsLocalCanvasData() { return nullptr; }
   virtual WebRenderGroupData* AsGroupData() { return nullptr; }
 
   enum class UserDataType {
@@ -98,7 +96,6 @@ class WebRenderUserData {
     eAPZAnimation,
     eAnimation,
     eCanvas,
-    eLocalCanvas,
     eRemote,
     eGroup,
     eMask,
@@ -333,31 +330,6 @@ class WebRenderCanvasData : public WebRenderUserData {
  protected:
   RefPtr<WebRenderCanvasRendererAsync> mCanvasRenderer;
   RefPtr<ImageContainer> mContainer;
-};
-
-// WebRender data assocatiated with canvases that don't need to
-// synchronize across content-GPU process barrier.
-class WebRenderLocalCanvasData : public WebRenderUserData {
- public:
-  WebRenderLocalCanvasData(RenderRootStateManager* aManager,
-                           nsDisplayItem* aItem);
-  virtual ~WebRenderLocalCanvasData();
-
-  WebRenderLocalCanvasData* AsLocalCanvasData() override { return this; }
-  UserDataType GetType() override { return UserDataType::eLocalCanvas; }
-  static UserDataType Type() { return UserDataType::eLocalCanvas; }
-
-  void RequestFrameReadback();
-  void RefreshExternalImage(const wr::ExternalImageId& aExternalImageId);
-
-  // TODO: introduce a CanvasRenderer derivative to store here?
-
-  WeakPtr<webgpu::WebGPUChild> mGpuBridge;
-  uint64_t mGpuTextureId = 0;
-  wr::ExternalImageId mExternalImageId = {0};
-  wr::ImageKey mImageKey = {};
-  wr::ImageDescriptor mDescriptor;
-  gfx::SurfaceFormat mFormat = gfx::SurfaceFormat::UNKNOWN;
 };
 
 class WebRenderRemoteData : public WebRenderUserData {
