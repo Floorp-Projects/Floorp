@@ -78,6 +78,40 @@ android-x64-compiler-rt-13:
             - linux64-clang-13-stage1
             - linux64-android-ndk-linux-repack
 
+linux64-x86-compiler-rt-13:
+    description: "Linux x86 Compiler-rt for Clang 13 toolchain build"
+    treeherder:
+        symbol: TL(x86-crt-13)
+    run:
+        arguments:
+            - build/build-clang/clang-13.json
+        resources:
+            - build/build-clang/clang-13.json
+        toolchain-artifact: public/build/compiler-rt-i686-unknown-linux-gnu.tar.zst
+    fetches:
+        fetch:
+            - clang-13
+        toolchain:
+            - linux64-clang-13-stage1
+            - sysroot-i686-linux-gnu
+
+linux64-x64-compiler-rt-13:
+    description: "Linux x64 Compiler-rt for Clang 13 toolchain build"
+    treeherder:
+        symbol: TL(x64-crt-13)
+    run:
+        arguments:
+            - build/build-clang/clang-13.json
+        resources:
+            - build/build-clang/clang-13.json
+        toolchain-artifact: public/build/compiler-rt-x86_64-unknown-linux-gnu.tar.zst
+    fetches:
+        fetch:
+            - clang-13
+        toolchain:
+            - linux64-clang-13-stage1
+            - sysroot-x86_64-linux-gnu
+
 linux64-aarch64-compiler-rt-13:
     description: "Linux aarch64 Compiler-rt for Clang 13 toolchain build"
     treeherder:
@@ -92,7 +126,6 @@ linux64-aarch64-compiler-rt-13:
         fetch:
             - clang-13
         toolchain:
-            - linux64-binutils
             - linux64-clang-13-stage1
             - sysroot-aarch64-linux-gnu
 
