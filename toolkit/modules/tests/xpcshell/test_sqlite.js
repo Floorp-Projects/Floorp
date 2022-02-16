@@ -541,18 +541,13 @@ add_task(async function test_wrapped_connection_transaction() {
     PathUtils.join(PROFILE_DIR, "test_wrapStorageConnection.sqlite")
   );
   let c = await new Promise((resolve, reject) => {
-    Services.storage.openAsyncDatabase(
-      file,
-      /* openFlags */ Ci.mozIStorageService.OPEN_DEFAULT,
-      /* connectionFlags */ Ci.mozIStorageService.CONNECTION_DEFAULT,
-      (status, db) => {
-        if (Components.isSuccessCode(status)) {
-          resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
-        } else {
-          reject(new Error(status));
-        }
+    Services.storage.openAsyncDatabase(file, null, (status, db) => {
+      if (Components.isSuccessCode(status)) {
+        resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
+      } else {
+        reject(new Error(status));
       }
-    );
+    });
   });
 
   let wrapper = await Sqlite.wrapStorageConnection({ connection: c });
@@ -1060,18 +1055,13 @@ add_task(async function test_cloneStorageConnection() {
     PathUtils.join(PROFILE_DIR, "test_cloneStorageConnection.sqlite")
   );
   let c = await new Promise((resolve, reject) => {
-    Services.storage.openAsyncDatabase(
-      file,
-      /* openFlags */ Ci.mozIStorageService.OPEN_DEFAULT,
-      /* connectionFlags */ Ci.mozIStorageService.CONNECTION_DEFAULT,
-      (status, db) => {
-        if (Components.isSuccessCode(status)) {
-          resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
-        } else {
-          reject(new Error(status));
-        }
+    Services.storage.openAsyncDatabase(file, null, (status, db) => {
+      if (Components.isSuccessCode(status)) {
+        resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
+      } else {
+        reject(new Error(status));
       }
-    );
+    });
   });
 
   let clone = await Sqlite.cloneStorageConnection({
@@ -1148,18 +1138,13 @@ add_task(async function test_wrapStorageConnection() {
     PathUtils.join(PROFILE_DIR, "test_wrapStorageConnection.sqlite")
   );
   let c = await new Promise((resolve, reject) => {
-    Services.storage.openAsyncDatabase(
-      file,
-      /* openFlags */ Ci.mozIStorageService.OPEN_DEFAULT,
-      /* connectionFlags */ Ci.mozIStorageService.CONNECTION_DEFAULT,
-      (status, db) => {
-        if (Components.isSuccessCode(status)) {
-          resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
-        } else {
-          reject(new Error(status));
-        }
+    Services.storage.openAsyncDatabase(file, null, (status, db) => {
+      if (Components.isSuccessCode(status)) {
+        resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
+      } else {
+        reject(new Error(status));
       }
-    );
+    });
   });
 
   let wrapper = await Sqlite.wrapStorageConnection({ connection: c });
@@ -1370,8 +1355,11 @@ add_task(async function test_interrupt() {
   // Testing the interrupt functionality is left to mozStorage unit tests, here
   // we'll just test error conditions.
   let c = await getDummyDatabase("interrupt");
-  await c.interrupt();
-  ok(true, "Sqlite.interrupt() should not throw on a writable connection");
+  Assert.throws(
+    () => c.interrupt(),
+    /NS_ERROR_ILLEGAL_VALUE/,
+    "Sqlite.interrupt() should throw on a writable connection"
+  );
   await c.close();
   Assert.throws(
     () => c.interrupt(),
