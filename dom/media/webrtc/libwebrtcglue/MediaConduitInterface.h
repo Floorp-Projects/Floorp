@@ -149,6 +149,8 @@ class MediaSessionConduit {
   virtual Maybe<Ssrc> GetRemoteSSRC() const = 0;
   virtual void UnsetRemoteSSRC(Ssrc aSsrc) = 0;
 
+  virtual void DisableSsrcChanges() = 0;
+
   virtual bool HasCodecPluginID(uint64_t aPluginID) const = 0;
 
   virtual MediaEventSource<void>& RtcpByeEvent() = 0;
@@ -360,8 +362,6 @@ class VideoSessionConduit : public MediaSessionConduit {
   virtual MediaConduitErrorCode AttachRenderer(
       RefPtr<mozilla::VideoRenderer> aRenderer) = 0;
   virtual void DetachRenderer() = 0;
-
-  virtual void DisableSsrcChanges() = 0;
 
   /**
    * Function to deliver a capture video frame for encoding and transport.
