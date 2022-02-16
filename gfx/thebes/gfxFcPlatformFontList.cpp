@@ -32,6 +32,7 @@
 
 #include <cairo-ft.h>
 #include <fontconfig/fcfreetype.h>
+#include <harfbuzz/hb.h>
 #include <dlfcn.h>
 #include <unistd.h>
 
@@ -251,6 +252,21 @@ static void GetFontProperties(FcPattern* aFontPattern, WeightRange* aWeight,
   }
 }
 
+void gfxFontconfigFontEntry::GetUserFontFeatures(FcPattern* aPattern) {
+  int fontFeaturesNum = 0;
+  char* s;
+  hb_feature_t tmpFeature;
+  while (FcResultMatch == FcPatternGetString(aPattern, "fontfeatures",
+                                             fontFeaturesNum, (FcChar8**)&s)) {
+    bool ret = hb_feature_from_string(s, -1, &tmpFeature);
+    if (ret) {
+      mFeatureSettings.AppendElement(
+          (gfxFontFeature){tmpFeature.tag, tmpFeature.value});
+    }
+    fontFeaturesNum++;
+  }
+}
+
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
                                                FcPattern* aFontPattern,
                                                bool aIgnoreFcCharmap)
@@ -260,6 +276,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
       mIgnoreFcCharmap(aIgnoreFcCharmap),
       mHasVariationsInitialized(false) {
   GetFontProperties(aFontPattern, &mWeightRange, &mStretchRange, &mStyleRange);
+  GetUserFontFeatures(mFontPattern);
 }
 
 gfxFontEntry* gfxFontconfigFontEntry::Clone() const {
@@ -351,6 +368,8 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
   // is called, at which point we'll look to see whether a 'cmap' is
   // actually present in the font.
   mIgnoreFcCharmap = true;
+
+  GetUserFontFeatures(mFontPattern);
 }
 
 typedef FT_Error (*GetVarFunc)(FT_Face, FT_MM_Var**);
