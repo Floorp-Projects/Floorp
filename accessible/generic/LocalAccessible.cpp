@@ -3309,7 +3309,10 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
 }
 
 void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
-  if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  // mOldComputedStyle might be null if the initial cache hasn't been sent yet.
+  // In that case, there is nothing to do here.
+  if (!StaticPrefs::accessibility_cache_enabled_AtStartup() ||
+      !mOldComputedStyle) {
     return;
   }
 

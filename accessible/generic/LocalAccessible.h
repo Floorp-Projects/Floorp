@@ -994,12 +994,16 @@ class LocalAccessible : public nsISupports, public Accessible {
    *
    * This RefPtr is initialised in BundleFieldsForCache to the ComputedStyle
    * for our initial frame.
-   * When a style change is observed in DidSetComputedStyle we call into
-   * MaybeQueueCacheUpdateForStyleChanges. There, we compare a11y-relevant
-   * properties in mOldComputedStyle with the current ComputedStyle fetched
-   * from GetFrame()->Style(). Finally, we send cache updates for attributes
-   * affected by the style change and update mOldComputedStyle to the style of
-   * our current frame.
+   * Style changes are observed in one of two ways:
+   * 1. Style changes on the same frame are observed in
+   * nsIFrame::DidSetComputedStyle.
+   * 2. Style changes for reconstructed frames are handled in
+   * DocAccessible::PruneOrInsertSubtree.
+   * In both cases, we call into MaybeQueueCacheUpdateForStyleChanges. There, we
+   * compare a11y-relevant properties in mOldComputedStyle with the current
+   * ComputedStyle fetched from GetFrame()->Style(). Finally, we send cache
+   * updates for attributes affected by the style change and update
+   * mOldComputedStyle to the style of our current frame.
    */
   RefPtr<const ComputedStyle> mOldComputedStyle;
 
