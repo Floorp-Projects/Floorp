@@ -77,11 +77,68 @@
     <string name="open_in_app_cfr_negative_button_text">Peida</string>
 
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Vajalik on ligipääs kaamerale. Mine Androidi sätetesse, puuduta õigusi ja seejärel puuduta lubamise valikut.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Mine sätetesse</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Peida</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Määra mitte vaadatud avatud kaardid sulguma päeva, nädala või kuu pärast.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Vaata valikuid</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Peida</string>
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">Kaardid, mida sa pole vaadanud 2 nädalat, liigutatakse siia.</string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">Lülita see sätetes välja</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Kas sulgeda automaatselt kuu aja pärast?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox saab sulgeda kaardid, mida sa pole viimase kuu jooksul vaadanud.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Sulge</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Lülita automaatne sulgemine sisse</string>
+
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Uus kaart</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Uus privaatne kaart</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Hiljutised kaardid</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Kuva kõiki</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">Kõigi hiljutiste kaartide kuvamise nupp</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Kuva kõiki hiljutisi kaarte</string>
+
+    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
+        The first parameter is the search term that the user used. (for example: your search for "cat")-->
+    <string name="recent_tabs_search_term">Sinu otsing fraasile \&quot;%1$s\&quot;</string>
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
+        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
+    <string name="recent_tabs_search_term_count_2">%d saiti</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Hiljuti külastatud</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Eemalda</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">Kuva varasemat ajalugu</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Varasema ajaloo kuvamise nupp</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -112,6 +169,10 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Lisa</string>
 
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Sünkroniseeritud kaardid</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Uuesti sünkroniseerimise nupp</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Otsi lehelt</string>
 
@@ -130,11 +191,25 @@
     <string name="browser_menu_powered_by2">%1$si kaart</string>
     <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Lugemisvaade</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Sulge lugemisvaade</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Ava äpis</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Kohanda lugemisvaadet</string>
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">Lisa</string>
+
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Muuda</string>
+    <!-- Browser menu button that opens the Customize menu -->
+    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Kohanda avalehte</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Kohanda avalehte</string>
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Avaleht</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -165,10 +240,43 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Rohkem teavet</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Otsi otsingumootoriga %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Otsi otse aadressiribalt</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_title_2">Mis on uut Firefoxis</string>
+    <!-- Onboarding home screen dialog description text. -->
+    <string name="onboarding_home_screen_description_2">Nüüd on lihtsam jätkata sealt, kus pooleli jäi.</string>
+    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_section_home_title_2">Isikupärastatud Firefoxi avaleht</string>
+
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">Liigu oma avatud kaartide, järjehoidjate ja lehitsemise ajaloo juurde.</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Puhtad, korrastatud kaardid</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Vabane kaartide segadusest täiustatud paigutuse ja automaatselt sulguvate kaartide abil.</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">Hiljutised otsingud</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">Külasta oma viimaseid otsinguid uuesti avalehelt või kaartidelt.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Isikupärastatud Firefoxi avaleht teeb lihtsamaks jätkamise sealt, kus pooleli jäi. Leia oma hiljutised kaardid, järjehoidjad ja otsingutulemused.</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Ava uus Firefoxi kaart</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Otsi</string>
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Otsi veebist</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Häälotsing</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -201,17 +309,31 @@
 
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Lingid avatakse privaatsel kaardil</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Privaatse veebilehitsemise režiimis lubatakse ekraanipildid</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Kui see on lubatud, siis on privaatsed kaardid nähtavad ka siis, kui mitu äppi on avatud</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Lisa privaatse lehitsemise otsetee</string>
 
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Hõlbustus</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Kohandatud Firefoxi konto server</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Kohandatud sünkroonimise server</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Firefoxi konto/sünkroniseerimise server muutus. Muudatuste rakendumiseks väljutakse äpist…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konto</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Tööriistariba</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Teema</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Avaleht</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Žestid</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Kohanda</string>
     <!-- Preference description for banner about signing in -->
@@ -229,8 +351,12 @@
     <string name="preferences_data_collection">Andmete kogumine</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Remote debugging via USB</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Kuvatakse otsingumootoreid</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Kuvatakse otsingu soovitusi</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Kuvatakse häälotsing</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Kuvatakse privaatses seansis</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -239,10 +365,16 @@
     <string name="preferences_search_browsing_history">Otsitakse lehitsemise ajaloost</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Otsitakse järjehoidjatest</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Otsitakse sünkroniseeritud kaartide seast</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Konto sätted</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">URLid lõpetatakse automaatselt</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Lingid avatakse äppides</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Kasutatakse välist allalaadimishaldurit</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Lisad</string>
 
