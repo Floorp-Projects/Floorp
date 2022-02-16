@@ -3816,6 +3816,109 @@ static const JSJitInfo array_splice_info = {
     JSVAL_TYPE_UNDEFINED,
 };
 
+enum class SearchKind {
+  // Specializes SearchElementDense for Array.prototype.indexOf/lastIndexOf.
+  // This means hole values are ignored and StrictlyEqual semantics are used.
+  IndexOf,
+  // Specializes SearchElementDense for Array.prototype.includes.
+  // This means hole values are treated as |undefined| and SameValueZero
+  // semantics are used.
+  Includes,
+};
+
+template <SearchKind Kind, typename Iter>
+static bool SearchElementDense(JSContext* cx, HandleValue val, Iter iterator,
+                               MutableHandleValue rval) {
+  // We assume here and in the iterator lambdas that nothing can trigger GC or
+  // move dense elements.
+  AutoCheckCannotGC nogc;
+
+  // Fast path for string values.
+  if (val.isString()) {
+    JSLinearString* str = val.toString()->ensureLinear(cx);
+    if (!str) {
+      return false;
+    }
+    const uint32_t strLen = str->length();
+    auto cmp = [str, strLen](JSContext* cx, const Value& element, bool* equal) {
+      if (!element.isString() || element.toString()->length() != strLen) {
+        *equal = false;
+        return true;
+      }
+      JSLinearString* s = element.toString()->ensureLinear(cx);
+      if (!s) {
+        return false;
+      }
+      *equal = EqualStrings(str, s);
+      return true;
+    };
+    return iterator(cx, cmp, rval);
+  }
+
+  // Fast path for numbers.
+  if (val.isNumber()) {
+    double dval = val.toNumber();
+    // For |includes|, two NaN values are considered equal, so we use a
+    // different implementation for NaN.
+    if (Kind == SearchKind::Includes && mozilla::IsNaN(dval)) {
+      auto cmp = [](JSContext*, const Value& element, bool* equal) {
+        *equal = (element.isDouble() && mozilla::IsNaN(element.toDouble()));
+        return true;
+      };
+      return iterator(cx, cmp, rval);
+    }
+    auto cmp = [dval](JSContext*, const Value& element, bool* equal) {
+      *equal = (element.isNumber() && element.toNumber() == dval);
+      return true;
+    };
+    return iterator(cx, cmp, rval);
+  }
+
+  // Fast path for values where we can use a simple bitwise comparison.
+  if (CanUseBitwiseCompareForStrictlyEqual(val)) {
+    // For |includes| we need to treat hole values as |undefined| so we use a
+    // different path if searching for |undefined|.
+    if (Kind == SearchKind::Includes && val.isUndefined()) {
+      auto cmp = [](JSContext*, const Value& element, bool* equal) {
+        *equal = (element.isUndefined() || element.isMagic(JS_ELEMENTS_HOLE));
+        return true;
+      };
+      return iterator(cx, cmp, rval);
+    }
+    uint64_t bits = val.asRawBits();
+    auto cmp = [bits](JSContext*, const Value& element, bool* equal) {
+      *equal = (bits == element.asRawBits());
+      return true;
+    };
+    return iterator(cx, cmp, rval);
+  }
+
+  // Generic implementation for the remaining types.
+  RootedValue elementRoot(cx);
+  auto cmp = [val, &elementRoot](JSContext* cx, const Value& element,
+                                 bool* equal) {
+    if (MOZ_UNLIKELY(element.isMagic(JS_ELEMENTS_HOLE))) {
+      // |includes| treats holes as |undefined|. For |indexOf| we have to ignore
+      // holes.
+      if constexpr (Kind == SearchKind::Includes) {
+        elementRoot.setUndefined();
+      } else {
+        static_assert(Kind == SearchKind::IndexOf);
+        *equal = false;
+        return true;
+      }
+    } else {
+      elementRoot = element;
+    }
+    // Note: |includes| uses SameValueZero, but that checks for NaN and then
+    // calls StrictlyEqual. Since we already handled NaN above, we can call
+    // StrictlyEqual directly.
+    MOZ_ASSERT(!val.isNumber());
+    return StrictlyEqual(cx, val, elementRoot, equal);
+  };
+  return iterator(cx, cmp, rval);
+}
+
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 22.1.3.14 Array.prototype.indexOf ( searchElement [ , fromIndex ] )
 bool js::array_indexOf(JSContext* cx, unsigned argc, Value* vp) {
@@ -3870,6 +3973,37 @@ bool js::array_indexOf(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(k < len);
 
   HandleValue searchElement = args.get(0);
+
+  // Steps 9 and 10 optimized for dense elements.
+  if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, len)) {
+    MOZ_ASSERT(len <= UINT32_MAX);
+
+    NativeObject* nobj = &obj->as<NativeObject>();
+    uint32_t start = uint32_t(k);
+    uint32_t length =
+        std::min(nobj->getDenseInitializedLength(), uint32_t(len));
+    const Value* elements = nobj->getDenseElements();
+
+    auto iterator = [elements, start, length](JSContext* cx, auto cmp,
+                                              MutableHandleValue rval) {
+      static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT <= INT32_MAX,
+                    "code assumes dense index fits in Int32Value");
+      for (uint32_t i = start; i < length; i++) {
+        bool equal;
+        if (MOZ_UNLIKELY(!cmp(cx, elements[i], &equal))) {
+          return false;
+        }
+        if (equal) {
+          rval.setInt32(int32_t(i));
+          return true;
+        }
+      }
+      rval.setInt32(-1);
+      return true;
+    };
+    return SearchElementDense<SearchKind::IndexOf>(cx, searchElement, iterator,
+                                                   args.rval());
+  }
 
   // Step 9.
   RootedValue v(cx);
@@ -3951,6 +4085,41 @@ bool js::array_lastIndexOf(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(k < len);
 
   HandleValue searchElement = args.get(0);
+
+  // Steps 7 and 8 optimized for dense elements.
+  if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, k + 1)) {
+    MOZ_ASSERT(k <= UINT32_MAX);
+
+    NativeObject* nobj = &obj->as<NativeObject>();
+    uint32_t initLen = nobj->getDenseInitializedLength();
+    if (initLen == 0) {
+      args.rval().setInt32(-1);
+      return true;
+    }
+
+    uint32_t end = std::min(uint32_t(k), initLen - 1);
+    const Value* elements = nobj->getDenseElements();
+
+    auto iterator = [elements, end](JSContext* cx, auto cmp,
+                                    MutableHandleValue rval) {
+      static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT <= INT32_MAX,
+                    "code assumes dense index fits in int32_t");
+      for (int32_t i = int32_t(end); i >= 0; i--) {
+        bool equal;
+        if (MOZ_UNLIKELY(!cmp(cx, elements[i], &equal))) {
+          return false;
+        }
+        if (equal) {
+          rval.setInt32(int32_t(i));
+          return true;
+        }
+      }
+      rval.setInt32(-1);
+      return true;
+    };
+    return SearchElementDense<SearchKind::IndexOf>(cx, searchElement, iterator,
+                                                   args.rval());
+  }
 
   // Step 7.
   RootedValue v(cx);
@@ -4035,6 +4204,35 @@ bool js::array_includes(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(k < len);
 
   HandleValue searchElement = args.get(0);
+
+  // Steps 8 and 9 optimized for dense elements.
+  if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, len)) {
+    MOZ_ASSERT(len <= UINT32_MAX);
+
+    NativeObject* nobj = &obj->as<NativeObject>();
+    uint32_t start = uint32_t(k);
+    uint32_t length =
+        std::min(nobj->getDenseInitializedLength(), uint32_t(len));
+    const Value* elements = nobj->getDenseElements();
+
+    auto iterator = [elements, start, length](JSContext* cx, auto cmp,
+                                              MutableHandleValue rval) {
+      for (uint32_t i = start; i < length; i++) {
+        bool equal;
+        if (MOZ_UNLIKELY(!cmp(cx, elements[i], &equal))) {
+          return false;
+        }
+        if (equal) {
+          rval.setBoolean(true);
+          return true;
+        }
+      }
+      rval.setBoolean(false);
+      return true;
+    };
+    return SearchElementDense<SearchKind::Includes>(cx, searchElement, iterator,
+                                                    args.rval());
+  }
 
   // Step 8.
   RootedValue v(cx);
