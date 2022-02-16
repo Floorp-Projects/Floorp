@@ -3,50 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
-// 22.1.3.14 Array.prototype.indexOf ( searchElement [ , fromIndex ] )
-function ArrayIndexOf(searchElement/*, fromIndex*/) {
-    // Step 1.
-    var O = ToObject(this);
-
-    // Step 2.
-    var len = ToLength(O.length);
-
-    // Step 3.
-    if (len === 0)
-        return -1;
-
-    // Steps 4-5.
-    var n = arguments.length > 1 ? ToInteger(arguments[1]) : 0;
-
-    // Step 6.
-    if (n >= len)
-        return -1;
-
-    // Steps 7-8.
-    var k;
-    if (n >= 0) {
-        // Step 7.a.
-        k = n;
-    } else {
-        // Step 8.a.
-        k = len + n;
-
-        // Step 8.b.
-        if (k < 0)
-            k = 0;
-    }
-
-    // Step 9.
-    for (; k < len; k++) {
-        if (k in O && O[k] === searchElement)
-            return k;
-    }
-
-    // Step 10.
-    return -1;
-}
-
-// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 22.1.3.17 Array.prototype.lastIndexOf ( searchElement [ , fromIndex ] )
 function ArrayLastIndexOf(searchElement/*, fromIndex*/) {
     // Step 1.

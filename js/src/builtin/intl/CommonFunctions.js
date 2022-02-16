@@ -208,7 +208,7 @@ function CanonicalizeLocaleList(locales) {
                    "ValidateAndCanonicalizeLanguageTag returns a string value");
 
             // Step 7.c.v.
-            if (callFunction(ArrayIndexOf, seen, tag) === -1)
+            if (callFunction(std_Array_indexOf, seen, tag) === -1)
                 DefineDataProperty(seen, seen.length, tag);
         }
 
@@ -431,7 +431,7 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
                 // Step 8.h.ii.1.
                 if (requestedValue !== "") {
                     // Step 8.h.ii.1.a.
-                    if (callFunction(ArrayIndexOf, keyLocaleData, requestedValue) !== -1) {
+                    if (callFunction(std_Array_indexOf, keyLocaleData, requestedValue) !== -1) {
                         value = requestedValue;
                         supportedExtensionAddition = "-" + key + "-" + value;
                     }
@@ -440,7 +440,7 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
 
                     // According to the LDML spec, if there's no type value,
                     // and true is an allowed value, it's used.
-                    if (callFunction(ArrayIndexOf, keyLocaleData, "true") !== -1) {
+                    if (callFunction(std_Array_indexOf, keyLocaleData, "true") !== -1) {
                         value = "true";
                         supportedExtensionAddition = "-" + key;
                     }
@@ -466,7 +466,7 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
                 keyLocaleData = callFunction(localeDataProvider[key], null, foundLocale);
 
             // Step 8.i.iii.
-            if (callFunction(ArrayIndexOf, keyLocaleData, optionsValue) !== -1) {
+            if (callFunction(std_Array_indexOf, keyLocaleData, optionsValue) !== -1) {
                 value = optionsValue;
                 supportedExtensionAddition = "";
             }
@@ -628,7 +628,7 @@ function GetOption(options, property, type, values, fallback) {
             assert(false, "GetOption");
 
         // Step 2.d.
-        if (values !== undefined && callFunction(ArrayIndexOf, values, value) === -1)
+        if (values !== undefined && callFunction(std_Array_indexOf, values, value) === -1)
             ThrowRangeError(JSMSG_INVALID_OPTION_VALUE, property, `"${value}"`);
 
         // Step 2.e.
@@ -666,7 +666,7 @@ function GetStringOrBooleanOption(options, property, values, trueValue, falsyVal
     value = ToString(value);
 
     // Step 7.
-    if (callFunction(ArrayIndexOf, values, value) === -1)
+    if (callFunction(std_Array_indexOf, values, value) === -1)
         ThrowRangeError(JSMSG_INVALID_OPTION_VALUE, property, `"${value}"`);
 
     // Step 8.
