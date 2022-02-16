@@ -100,7 +100,8 @@ describe("CSSWarning component:", () => {
         CSSWarning({
           message,
           open: false,
-          payload: {}, // fake the existence of a payload to test just MESSAGE_OPEN action
+          // fake the existence of cssMatchingElements to test just MESSAGE_OPEN action
+          cssMatchingElements: {},
           dispatch: store.dispatch,
           serviceContainer,
         })
