@@ -2,41 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
-// 22.1.3.17 Array.prototype.lastIndexOf ( searchElement [ , fromIndex ] )
-function ArrayLastIndexOf(searchElement/*, fromIndex*/) {
-    // Step 1.
-    var O = ToObject(this);
-
-    // Step 2.
-    var len = ToLength(O.length);
-
-    // Step 3.
-    if (len === 0)
-        return -1;
-
-    // Step 4.
-    var n = arguments.length > 1 ? ToInteger(arguments[1]) : len - 1;
-
-    // Steps 5-6.
-    var k;
-    if (n > len - 1)
-        k = len - 1;
-    else if (n < 0)
-        k = len + n;
-    else
-        k = n;
-
-    // Step 7.
-    for (; k >= 0; k--) {
-        if (k in O && O[k] === searchElement)
-            return k;
-    }
-
-    // Step 8.
-    return -1;
-}
-
 /* ES5 15.4.4.16. */
 function ArrayEvery(callbackfn/*, thisArg*/) {
     /* Step 1. */

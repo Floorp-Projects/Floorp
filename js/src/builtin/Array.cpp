@@ -3901,6 +3901,87 @@ bool js::array_indexOf(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
+// 22.1.3.17 Array.prototype.lastIndexOf ( searchElement [ , fromIndex ] )
+bool js::array_lastIndexOf(JSContext* cx, unsigned argc, Value* vp) {
+  AutoGeckoProfilerEntry pseudoFrame(
+      cx, "Array.prototype.lastIndexOf", JS::ProfilingCategoryPair::JS,
+      uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  RootedObject obj(cx, ToObject(cx, args.thisv()));
+  if (!obj) {
+    return false;
+  }
+
+  // Step 2.
+  uint64_t len;
+  if (!GetLengthPropertyInlined(cx, obj, &len)) {
+    return false;
+  }
+
+  // Step 3.
+  if (len == 0) {
+    args.rval().setInt32(-1);
+    return true;
+  }
+
+  // Steps 4-6.
+  uint64_t k = len - 1;
+  if (args.length() > 1) {
+    double n;
+    if (!ToInteger(cx, args[1], &n)) {
+      return false;
+    }
+
+    // Steps 5-6.
+    if (n < 0) {
+      double d = double(len) + n;
+      if (d < 0) {
+        args.rval().setInt32(-1);
+        return true;
+      }
+      k = uint64_t(d);
+    } else if (n < double(k)) {
+      k = uint64_t(n);
+    }
+  }
+
+  MOZ_ASSERT(k < len);
+
+  HandleValue searchElement = args.get(0);
+
+  // Step 7.
+  RootedValue v(cx);
+  for (int64_t i = int64_t(k); i >= 0; i--) {
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
+
+    bool hole;
+    if (!HasAndGetElement(cx, obj, uint64_t(i), &hole, &v)) {
+      return false;
+    }
+    if (hole) {
+      continue;
+    }
+
+    bool equal;
+    if (!StrictlyEqual(cx, v, searchElement, &equal)) {
+      return false;
+    }
+    if (equal) {
+      args.rval().setNumber(uint64_t(i));
+      return true;
+    }
+  }
+
+  // Step 8.
+  args.rval().setInt32(-1);
+  return true;
+}
+
 static const JSFunctionSpec array_methods[] = {
     JS_FN(js_toSource_str, array_toSource, 0, 0),
     JS_SELF_HOSTED_FN(js_toString_str, "ArrayToString", 0, 0),
@@ -3920,7 +4001,7 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_FN("concat", "ArrayConcat", 1, 0),
     JS_INLINABLE_FN("slice", array_slice, 2, 0, ArraySlice),
 
-    JS_SELF_HOSTED_FN("lastIndexOf", "ArrayLastIndexOf", 1, 0),
+    JS_FN("lastIndexOf", array_lastIndexOf, 1, 0),
     JS_FN("indexOf", array_indexOf, 1, 0),
     JS_SELF_HOSTED_FN("forEach", "ArrayForEach", 1, 0),
     JS_SELF_HOSTED_FN("map", "ArrayMap", 1, 0),
