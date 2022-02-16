@@ -419,16 +419,20 @@ function messages(
       return limitTopLevelMessageCount(newState, logLimit);
 
     case constants.MESSAGES_CLEAR:
+      const frontsToRelease = [];
+      for (const message of state.mutableMessagesById.values()) {
+        // We want to minimize time spent in reducer as much as we can, so we're using
+        // prototype.push.apply here as it seems faster than other solutions (e.g. the
+        // spread operator, Array#concat, …)
+        Array.prototype.push.apply(
+          frontsToRelease,
+          getAllFrontsInMessage(message)
+        );
+      }
       return MessageState({
         // Store all actors from removed messages. This array is used by
         // `releaseActorsEnhancer` to release all of those backend actors.
-        frontsToRelease: [...state.mutableMessagesById.values()].reduce(
-          (res, msg) => {
-            res.push(...getAllFrontsInMessage(msg));
-            return res;
-          },
-          []
-        ),
+        frontsToRelease,
       });
 
     case constants.PRIVATE_MESSAGES_CLEAR: {
@@ -460,32 +464,28 @@ function messages(
       // If the message is a console.group/groupCollapsed or a warning group.
       if (isGroupType(currMessage.type) || isWarningGroup(currMessage)) {
         // We want to make its children visible
-        const messagesToShow = [...mutableMessagesById].reduce(
-          (res, [id, message]) => {
-            if (
-              !visibleMessages.includes(message.id) &&
-              ((isWarningGroup(currMessage) &&
-                !!getWarningGroupType(message)) ||
-                (isGroupType(currMessage.type) &&
-                  getParentGroups(message.groupId, groupsById).includes(
-                    action.id
-                  ))) &&
-              getMessageVisibility(message, {
-                messagesState: openState,
-                filtersState,
-                prefsState,
-                uiState,
-                // We want to check if the message is in an open group
-                // only if it is not a direct child of the group we're opening.
-                checkGroup: message.groupId !== action.id,
-              }).visible
-            ) {
-              res.push(id);
-            }
-            return res;
-          },
-          []
-        );
+        const messagesToShow = [];
+        for (const [id, message] of mutableMessagesById) {
+          if (
+            !visibleMessages.includes(message.id) &&
+            ((isWarningGroup(currMessage) && !!getWarningGroupType(message)) ||
+              (isGroupType(currMessage.type) &&
+                getParentGroups(message.groupId, groupsById).includes(
+                  action.id
+                ))) &&
+            getMessageVisibility(message, {
+              messagesState: openState,
+              filtersState,
+              prefsState,
+              uiState,
+              // We want to check if the message is in an open group
+              // only if it is not a direct child of the group we're opening.
+              checkGroup: message.groupId !== action.id,
+            }).visible
+          ) {
+            messagesToShow.push(id);
+          }
+        }
 
         // We can then insert the messages ids right after the one of the group.
         const insertIndex = visibleMessages.indexOf(action.id) + 1;
@@ -631,8 +631,7 @@ function messages(
       }
 
       let needSort = false;
-      const messageEntries = state.mutableMessagesById.entries();
-      for (const [msgId, message] of messageEntries) {
+      for (const [msgId, message] of state.mutableMessagesById) {
         const warningGroupType = getWarningGroupType(message);
         if (warningGroupType) {
           const warningGroupMessageId = getParentWarningGroupMessageId(message);
@@ -928,8 +927,12 @@ function removeMessagesFromState(state, removedMessagesIds) {
       visibleMessages.splice(index, 1);
     }
 
-    frontsToRelease.push(
-      ...getAllFrontsInMessage(state.mutableMessagesById.get(id))
+    // We want to minimize time spent in reducer as much as we can, so we're using
+    // prototype.push.apply here as it seems faster than other solutions (e.g. the
+    // spread operator, Array#concat, …)
+    Array.prototype.push.apply(
+      frontsToRelease,
+      getAllFrontsInMessage(state.mutableMessagesById.get(id))
     );
   });
 
