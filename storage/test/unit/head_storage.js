@@ -111,9 +111,9 @@ function asyncCleanup() {
  *
  * @returns the mozIStorageConnection for the file.
  */
-function getOpenedDatabase(connectionFlags = 0) {
+function getOpenedDatabase() {
   if (!gDBConn) {
-    gDBConn = Services.storage.openDatabase(getTestDB(), connectionFlags);
+    gDBConn = Services.storage.openDatabase(getTestDB());
 
     // Clear out counts for any queries that occured while opening the database.
     TelemetryTestUtils.getAndClearKeyedHistogram(OPEN_HISTOGRAM);
@@ -305,49 +305,24 @@ function asyncClose(db) {
   });
 }
 
-function mapOptionsToFlags(aOptions, aMapping) {
-  let result = aMapping.default;
-  Object.entries(aOptions || {}).forEach(([optionName, isTrue]) => {
-    if (aMapping.hasOwnProperty(optionName) && isTrue) {
-      result |= aMapping[optionName];
-    }
-  });
-  return result;
-}
-
-function getOpenFlagsMap() {
-  return {
-    default: Ci.mozIStorageService.OPEN_DEFAULT,
-    shared: Ci.mozIStorageService.OPEN_SHARED,
-    readOnly: Ci.mozIStorageService.OPEN_READONLY,
-    ignoreLockingMode: Ci.mozIStorageService.OPEN_IGNORE_LOCKING_MODE,
-  };
-}
-
-function getConnectionFlagsMap() {
-  return {
-    default: Ci.mozIStorageService.CONNECTION_DEFAULT,
-    interruptible: Ci.mozIStorageService.CONNECTION_INTERRUPTIBLE,
-  };
-}
-
 function openAsyncDatabase(file, options) {
   return new Promise((resolve, reject) => {
-    const openFlags = mapOptionsToFlags(options, getOpenFlagsMap());
-    const connectionFlags = mapOptionsToFlags(options, getConnectionFlagsMap());
-
-    Services.storage.openAsyncDatabase(
-      file,
-      openFlags,
-      connectionFlags,
-      function(status, db) {
-        if (Components.isSuccessCode(status)) {
-          resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
-        } else {
-          reject(status);
-        }
+    let properties;
+    if (options) {
+      properties = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+        Ci.nsIWritablePropertyBag
+      );
+      for (let k in options) {
+        properties.setProperty(k, options[k]);
       }
-    );
+    }
+    Services.storage.openAsyncDatabase(file, properties, function(status, db) {
+      if (Components.isSuccessCode(status)) {
+        resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
+      } else {
+        reject(status);
+      }
+    });
   });
 }
 

@@ -11,23 +11,17 @@ function getProfileFile(name) {
   return file;
 }
 
-function promiseAsyncDatabase(name, openOptions = 0) {
+function promiseAsyncDatabase(name, options = null) {
   return new Promise((resolve, reject) => {
     let file = getProfileFile(name);
-    const connOptions = Ci.mozIStorageService.CONNECTION_DEFAULT;
-    Services.storage.openAsyncDatabase(
-      file,
-      openOptions,
-      connOptions,
-      (status, connection) => {
-        if (!Components.isSuccessCode(status)) {
-          reject(new Error(`Failed to open database: ${status}`));
-        } else {
-          connection.QueryInterface(Ci.mozIStorageAsyncConnection);
-          resolve(connection);
-        }
+    Services.storage.openAsyncDatabase(file, options, (status, connection) => {
+      if (!Components.isSuccessCode(status)) {
+        reject(new Error(`Failed to open database: ${status}`));
+      } else {
+        connection.QueryInterface(Ci.mozIStorageAsyncConnection);
+        resolve(connection);
       }
-    );
+    });
   });
 }
 
