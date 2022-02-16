@@ -59,7 +59,6 @@ add_task(async function test_profile_feature_preferencereads() {
     {
       const { contentThread } = await stopProfilerNowAndGetThreads(contentPid);
 
-
       Assert.greater(
         countPrefReadsInThread(kContentPref, contentThread),
         0,
