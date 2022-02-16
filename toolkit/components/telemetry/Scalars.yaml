@@ -307,27 +307,6 @@ browser.engagement:
       - 'main'
       - 'account-ecosystem'
 
-  mirror_for_uri_count:
-    bug_numbers:
-      - 1741674
-      - 1752890
-    description: >
-      The count of the total non-unique http(s) URIs visited in a subsession, including
-      page reloads, after the session has been restored. URIs on minimized or background
-      tabs may also be counted towards this. Private browsing is included in this count.
-      Used for comparing with browser.engagement.total_uri_count_normal_and_private_mode
-      as a mirror of Glean's browser.engagement.uri_count.
-    expires: '100'
-    kind: uint
-    notification_emails:
-      - chutten@mozilla.com
-      - loines@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-
   unfiltered_uri_count:
     bug_numbers:
       - 1304647
