@@ -15,6 +15,7 @@
 
 #include "common.h"
 #include "DefaultBrowser.h"
+#include "DefaultPDF.h"
 #include "EventLog.h"
 #include "Notification.h"
 #include "Registry.h"
@@ -387,10 +388,16 @@ int wmain(int argc, wchar_t** argv) {
     }
     DefaultBrowserInfo browserInfo = defaultBrowserResult.unwrap();
 
+    DefaultPdfResult defaultPdfResult = GetDefaultPdfInfo();
+    if (defaultPdfResult.isErr()) {
+      return defaultPdfResult.unwrapErr().AsHResult();
+    }
+    DefaultPdfInfo pdfInfo = defaultPdfResult.unwrap();
+
     NotificationActivities activitiesPerformed =
         MaybeShowNotification(browserInfo, argv[2]);
 
-    return SendDefaultBrowserPing(browserInfo, activitiesPerformed);
+    return SendDefaultBrowserPing(browserInfo, pdfInfo, activitiesPerformed);
   } else if (!wcscmp(argv[1], L"set-default-browser-user-choice")) {
     if (argc < 3 || !argv[2]) {
       return E_INVALIDARG;
