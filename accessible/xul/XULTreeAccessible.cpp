@@ -210,7 +210,7 @@ void XULTreeAccessible::SetCurrentItem(const LocalAccessible* aItem) {
   NS_ERROR("XULTreeAccessible::SetCurrentItem not implemented");
 }
 
-void XULTreeAccessible::SelectedItems(nsTArray<LocalAccessible*>* aItems) {
+void XULTreeAccessible::SelectedItems(nsTArray<Accessible*>* aItems) {
   if (!mTreeView) return;
 
   nsCOMPtr<nsITreeSelection> selection;
@@ -297,7 +297,7 @@ bool XULTreeAccessible::UnselectAll() {
   return true;
 }
 
-LocalAccessible* XULTreeAccessible::GetSelectedItem(uint32_t aIndex) {
+Accessible* XULTreeAccessible::GetSelectedItem(uint32_t aIndex) {
   if (!mTreeView) return nullptr;
 
   nsCOMPtr<nsITreeSelection> selection;

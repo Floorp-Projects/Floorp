@@ -1668,7 +1668,8 @@ void LocalAccessible::Value(nsString& aValue) const {
       for (uint32_t idx = 0; idx < childCount; idx++) {
         LocalAccessible* child = mChildren.ElementAt(idx);
         if (child->IsListControl()) {
-          option = child->GetSelectedItem(0);
+          Accessible* acc = child->GetSelectedItem(0);
+          option = acc ? acc->AsLocal() : nullptr;
           break;
         }
       }
@@ -2775,7 +2776,7 @@ void LocalAccessible::ToTextPoint(HyperTextAccessible** aContainer,
 ////////////////////////////////////////////////////////////////////////////////
 // SelectAccessible
 
-void LocalAccessible::SelectedItems(nsTArray<LocalAccessible*>* aItems) {
+void LocalAccessible::SelectedItems(nsTArray<Accessible*>* aItems) {
   AccIterator iter(this, filters::GetSelected);
   LocalAccessible* selected = nullptr;
   while ((selected = iter.Next())) aItems->AppendElement(selected);
@@ -2790,7 +2791,7 @@ uint32_t LocalAccessible::SelectedItemCount() {
   return count;
 }
 
-LocalAccessible* LocalAccessible::GetSelectedItem(uint32_t aIndex) {
+Accessible* LocalAccessible::GetSelectedItem(uint32_t aIndex) {
   AccIterator iter(this, filters::GetSelected);
   LocalAccessible* selected = nullptr;
 

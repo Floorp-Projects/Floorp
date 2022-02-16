@@ -40,8 +40,7 @@ void XULSelectControlAccessible::Shutdown() {
 ////////////////////////////////////////////////////////////////////////////////
 // XULSelectControlAccessible: SelectAccessible
 
-void XULSelectControlAccessible::SelectedItems(
-    nsTArray<LocalAccessible*>* aItems) {
+void XULSelectControlAccessible::SelectedItems(nsTArray<Accessible*>* aItems) {
   // For XUL multi-select control
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> xulMultiSelect =
       mSelectControl->AsXULMultiSelectControl();
@@ -66,7 +65,7 @@ void XULSelectControlAccessible::SelectedItems(
   }
 }
 
-LocalAccessible* XULSelectControlAccessible::GetSelectedItem(uint32_t aIndex) {
+Accessible* XULSelectControlAccessible::GetSelectedItem(uint32_t aIndex) {
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelectControl =
       mSelectControl->AsXULMultiSelectControl();
 
