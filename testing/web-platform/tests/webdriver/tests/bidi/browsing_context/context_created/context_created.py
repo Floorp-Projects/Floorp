@@ -2,6 +2,9 @@ import asyncio
 
 import pytest
 
+from webdriver.error import TimeoutException
+
+from tests.support.sync import AsyncPoll
 from . import assert_browsing_context
 
 pytestmark = pytest.mark.asyncio
@@ -21,9 +24,11 @@ async def test_not_unsubscribed(bidi_session, current_session):
 
     remove_listener = bidi_session.add_event_listener(CONTEXT_CREATED_EVENT, on_event)
 
-    handle = current_session.new_window(type_hint="tab")
-    await asyncio.sleep(0.5)
-    assert len(events) == 0
+    current_session.new_window(type_hint="tab")
+
+    wait = AsyncPoll(current_session, timeout=.5)
+    with pytest.raises(TimeoutException):
+        await wait.until(lambda _: len(events) > 0)
 
     remove_listener()
 
@@ -104,8 +109,6 @@ async def test_navigate_creates_iframes(bidi_session, current_session, wait_for_
     # Unsubscribe in case a previous tests subscribed to the event
     await bidi_session.session.unsubscribe(events=[CONTEXT_CREATED_EVENT])
 
-    events = []
-
     top_level_context_id = current_session.window_handle
 
     url_iframe1 = inline("<div>foo</div>")
@@ -113,6 +116,8 @@ async def test_navigate_creates_iframes(bidi_session, current_session, wait_for_
     url_page = inline(
         f"<iframe src='{url_iframe1}'></iframe><iframe src='{url_iframe2}'></iframe>"
     )
+
+    events = []
 
     async def on_event(method, data):
         events.append(data)
@@ -122,25 +127,27 @@ async def test_navigate_creates_iframes(bidi_session, current_session, wait_for_
 
     current_session.url = url_page
 
-    frame1_info = await wait_for_event(CONTEXT_CREATED_EVENT)
+    wait = AsyncPoll(
+        current_session,
+        message="Didn't receive context created events for frames")
+    await wait.until(lambda _: len(events) >= 2)
+    assert len(events) == 2
+
     assert_browsing_context(
-        frame1_info,
+        events[0],
         children=None,
         context=None,
         url=url_iframe1,
         parent=top_level_context_id,
     )
 
-    frame2_info = await wait_for_event(CONTEXT_CREATED_EVENT)
     assert_browsing_context(
-        frame2_info,
+        events[1],
         children=None,
         context=None,
         url=url_iframe2,
         parent=top_level_context_id,
     )
-
-    assert len(events) == 2
 
     remove_listener()
     await bidi_session.session.unsubscribe(events=[CONTEXT_CREATED_EVENT])
@@ -152,13 +159,13 @@ async def test_navigate_creates_nested_iframes(
     # Unsubscribe in case a previous tests subscribed to the event
     await bidi_session.session.unsubscribe(events=[CONTEXT_CREATED_EVENT])
 
-    events = []
-
     top_level_context_id = current_session.window_handle
 
     url_nested_iframe = inline("<div>foo</div>")
     url_iframe = inline(f"<iframe src='{url_nested_iframe}'></iframe")
     url_page = inline(f"<iframe src='{url_iframe}'></iframe>")
+
+    events = []
 
     async def on_event(method, data):
         events.append(data)
@@ -168,25 +175,27 @@ async def test_navigate_creates_nested_iframes(
 
     current_session.url = url_page
 
-    frame_info = await wait_for_event(CONTEXT_CREATED_EVENT)
+    wait = AsyncPoll(
+        current_session,
+        message="Didn't receive context created events for frames")
+    await wait.until(lambda _: len(events) >= 2)
+    assert len(events) == 2
+
     assert_browsing_context(
-        frame_info,
+        events[0],
         children=None,
         context=None,
         url=url_iframe,
         parent=top_level_context_id,
     )
 
-    nested_frame_info = await wait_for_event(CONTEXT_CREATED_EVENT)
     assert_browsing_context(
-        nested_frame_info,
+        events[1],
         children=None,
         context=None,
         url=url_nested_iframe,
-        parent=frame_info["context"],
+        parent=events[0]["context"],
     )
-
-    assert len(events) == 2
 
     remove_listener()
     await bidi_session.session.unsubscribe(events=[CONTEXT_CREATED_EVENT])
