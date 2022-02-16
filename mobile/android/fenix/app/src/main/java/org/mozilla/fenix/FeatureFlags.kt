@@ -110,4 +110,9 @@ object FeatureFlags {
             listOf("en-US", "es-US").contains(langTag) && Config.channel.isNightlyOrDebug
         }
     }
+
+    /**
+     * Enables the Task Continuity enhancements.
+     */
+    val taskContinuityFeature = Config.channel.isDebug
 }

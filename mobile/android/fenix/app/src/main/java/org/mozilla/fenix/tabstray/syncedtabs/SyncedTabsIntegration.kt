@@ -20,6 +20,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.FloatingActionButtonBinding
 import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.tabstray.TabsTrayStore
+import org.mozilla.fenix.tabstray.ext.toComposeList
 
 /**
  * TabsTrayFragment delegate to handle all layout updates needed to display synced tabs and any errors.

@@ -13,10 +13,10 @@ import mozilla.components.concept.sync.DeviceType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mozilla.fenix.tabstray.ext.toComposeList
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
-import org.mozilla.fenix.tabstray.syncedtabs.toComposeList
 
-class SyncedTabsListItemTest {
+class SyncedDeviceTabsTest {
     private val noTabDevice = SyncedDeviceTabs(
         device = mockk {
             every { displayName } returns "Charcoal"
@@ -80,25 +80,24 @@ class SyncedTabsListItemTest {
     )
 
     @Test
-    fun `verify ordering of list items`() {
+    fun `GIVEN two synced devices WHEN the compose list is generated THEN two device section is returned`() {
         val syncedDeviceList = listOf(oneTabDevice, twoTabDevice)
         val listData = syncedDeviceList.toComposeList()
 
-        assertEquals(5, listData.count())
-        assertTrue(listData[0] is SyncedTabsListItem.Device)
-        assertTrue(listData[1] is SyncedTabsListItem.Tab)
-        assertTrue(listData[2] is SyncedTabsListItem.Device)
-        assertTrue(listData[3] is SyncedTabsListItem.Tab)
-        assertTrue(listData[4] is SyncedTabsListItem.Tab)
+        assertEquals(2, listData.count())
+        assertTrue(listData[0] is SyncedTabsListItem.DeviceSection)
+        assertEquals(oneTabDevice.tabs.size, (listData[0] as SyncedTabsListItem.DeviceSection).tabs.size)
+        assertTrue(listData[1] is SyncedTabsListItem.DeviceSection)
+        assertEquals(twoTabDevice.tabs.size, (listData[1] as SyncedTabsListItem.DeviceSection).tabs.size)
     }
 
     @Test
-    fun `verify no tabs displayed`() {
+    fun `GIVEN one synced device with no tabs WHEN the compose list is generated THEN one device with an empty tabs list is returned`() {
         val syncedDeviceList = listOf(noTabDevice)
-        val adapterData = syncedDeviceList.toComposeList()
+        val listData = syncedDeviceList.toComposeList()
 
-        assertEquals(2, adapterData.count())
-        assertTrue(adapterData[0] is SyncedTabsListItem.Device)
-        assertTrue(adapterData[1] is SyncedTabsListItem.NoTabs)
+        assertEquals(1, listData.count())
+        assertTrue(listData[0] is SyncedTabsListItem.DeviceSection)
+        assertEquals(0, (listData[0] as SyncedTabsListItem.DeviceSection).tabs.size)
     }
 }

@@ -19,6 +19,14 @@ sealed class SyncedTabsListItem {
     data class Device(val displayName: String) : SyncedTabsListItem()
 
     /**
+     * A section for displaying a synced device and its tabs.
+     *
+     * @param displayName The user's custom name of their synced device.
+     * @param tabs The user's tabs from their synced device.
+     */
+    data class DeviceSection(val displayName: String, val tabs: List<Tab>) : SyncedTabsListItem()
+
+    /**
      * A tab that was synced.
      *
      * @param displayTitle The title of the tab's web page.
