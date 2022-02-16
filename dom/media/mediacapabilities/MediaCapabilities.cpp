@@ -63,11 +63,10 @@ static nsCString VideoConfigurationToStr(const VideoConfiguration* aConfig) {
 
   auto str = nsPrintfCString(
       "[contentType:%s width:%d height:%d bitrate:%" PRIu64
-      " framerate:%s hasAlphaChannel:%s hdrMetadataType:%s colorGamut:%s "
+      " framerate:%lf hasAlphaChannel:%s hdrMetadataType:%s colorGamut:%s "
       "transferFunction:%s scalabilityMode:%s]",
       NS_ConvertUTF16toUTF8(aConfig->mContentType).get(), aConfig->mWidth,
-      aConfig->mHeight, aConfig->mBitrate,
-      NS_ConvertUTF16toUTF8(aConfig->mFramerate).get(),
+      aConfig->mHeight, aConfig->mBitrate, aConfig->mFramerate,
       aConfig->mHasAlphaChannel.WasPassed()
           ? aConfig->mHasAlphaChannel.Value() ? "true" : "false"
           : "?",
