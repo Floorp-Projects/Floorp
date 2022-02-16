@@ -2353,12 +2353,6 @@ pref("bidi.numeral", 0);
 // expose it for bidi-associated system locales.
 pref("bidi.browser.ui", false);
 
-// Override DPI. A value of -1 means use the maximum of 96 and the system DPI.
-// A value of 0 means use the system DPI. A positive value is used as the DPI.
-// This sets the physical size of a device pixel and thus controls the
-// interpretation of physical units such as "pt".
-pref("layout.css.dpi", -1);
-
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction
