@@ -2171,7 +2171,8 @@ void XMLHttpRequestWorker::GetResponse(JSContext* aCx,
             Blob::Create(GetOwnerGlobal(), mResponseData->mResponseBlobImpl);
       }
 
-      if (!GetOrCreateDOMReflector(aCx, mResponseBlob, aResponse)) {
+      if (!mResponseBlob ||
+          !GetOrCreateDOMReflector(aCx, mResponseBlob, aResponse)) {
         aResponse.setNull();
       }
 
