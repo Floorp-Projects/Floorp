@@ -6047,12 +6047,12 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/pull/18071
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/21076#issuecomment-909237275
+      - https://github.com/mozilla-mobile/fenix/pull/23783#issuecomment-1041863879
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-      - erichards@mozilla.com
-    expires: "2022-03-01"
+    expires: "2023-03-31"
     metadata:
       tags:
         - PWA
@@ -6067,64 +6067,16 @@ progressive_web_app:
       - https://github.com/mozilla-mobile/fenix/pull/18071
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/21076#issuecomment-909237275
+      - https://github.com/mozilla-mobile/fenix/pull/23783#issuecomment-1041863879
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-      - erichards@mozilla.com
-    expires: "2022-03-01"
+    expires: "2023-03-31"
     metadata:
       tags:
         - PWA
-  foreground:
-    type: event
-    description: |
-      A user brings the PWA into the foreground.
-    extra_keys:
-      time_ms:
-        description: |
-          The current time in ms when the PWA was brought to the foreground.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/10261
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/11859
-      - https://github.com/mozilla-mobile/fenix/pull/18071
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-      - https://github.com/mozilla-mobile/fenix/pull/21076#issuecomment-909237275
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-      - erichards@mozilla.com
-    expires: "2022-03-01"
-    metadata:
-      tags:
-        - PWA
-  background:
-    type: event
-    description: |
-      A user puts the PWA into the background.
-    extra_keys:
-      time_ms:
-        description: |
-          The current time in ms when the PWA was backgrounded.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/10261
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/11859
-      - https://github.com/mozilla-mobile/fenix/pull/18071
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-      - https://github.com/mozilla-mobile/fenix/pull/21076#issuecomment-909237275
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-      - erichards@mozilla.com
-    expires: "2022-03-01"
 
-    metadata:
-      tags:
-        - PWA
 tabs:
   setting_opened:
     type: event

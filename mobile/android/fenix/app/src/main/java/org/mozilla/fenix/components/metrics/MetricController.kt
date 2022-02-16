@@ -26,7 +26,6 @@ import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
 import mozilla.components.feature.search.telemetry.incontent.InContentTelemetry
 import mozilla.components.feature.syncedtabs.facts.SyncedTabsFacts
 import mozilla.components.feature.top.sites.facts.TopSitesFacts
-import mozilla.components.lib.dataprotect.SecurePrefsReliabilityExperiment
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
@@ -287,28 +286,6 @@ internal class ReleaseMetricController(
         Component.FEATURE_AWESOMEBAR == component && AwesomeBarFacts.Items.OPENED_TAB_SUGGESTION_CLICKED == item -> {
             Event.OpenedTabSuggestionClicked
         }
-
-        Component.LIB_DATAPROTECT == component && SecurePrefsReliabilityExperiment.Companion.Actions.EXPERIMENT == item -> {
-            Event.SecurePrefsExperimentFailure(metadata?.get("javaClass") as String? ?: "null")
-        }
-        Component.LIB_DATAPROTECT == component && SecurePrefsReliabilityExperiment.Companion.Actions.GET == item -> {
-            if (SecurePrefsReliabilityExperiment.Companion.Values.FAIL.v == value?.toInt()) {
-                Event.SecurePrefsGetFailure(metadata?.get("javaClass") as String? ?: "null")
-            } else {
-                Event.SecurePrefsGetSuccess(value ?: "")
-            }
-        }
-        Component.LIB_DATAPROTECT == component && SecurePrefsReliabilityExperiment.Companion.Actions.WRITE == item -> {
-            if (SecurePrefsReliabilityExperiment.Companion.Values.FAIL.v == value?.toInt()) {
-                Event.SecurePrefsWriteFailure(metadata?.get("javaClass") as String? ?: "null")
-            } else {
-                Event.SecurePrefsWriteSuccess
-            }
-        }
-        Component.LIB_DATAPROTECT == component && SecurePrefsReliabilityExperiment.Companion.Actions.RESET == item -> {
-            Event.SecurePrefsReset
-        }
-
         Component.FEATURE_SEARCH == component && AdsTelemetry.SERP_ADD_CLICKED == item -> {
             Event.SearchAdClicked(value!!)
         }

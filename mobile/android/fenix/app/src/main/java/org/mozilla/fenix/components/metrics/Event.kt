@@ -9,7 +9,6 @@ import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.GleanMetrics.Addons
-import org.mozilla.fenix.GleanMetrics.AndroidKeystoreExperiment
 import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Collections
@@ -21,7 +20,6 @@ import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.Preferences
-import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.TabsTray
@@ -332,38 +330,9 @@ sealed class Event {
             get() = hashMapOf(TopSites.swipeCarouselKeys.page to page.toString())
     }
 
-    data class SecurePrefsExperimentFailure(val failureException: String) : Event() {
-        override val extras =
-            mapOf(AndroidKeystoreExperiment.experimentFailureKeys.failureException to failureException)
-    }
-    data class SecurePrefsGetFailure(val failureException: String) : Event() {
-        override val extras =
-            mapOf(AndroidKeystoreExperiment.getFailureKeys.failureException to failureException)
-    }
-    data class SecurePrefsGetSuccess(val successCode: String) : Event() {
-        override val extras =
-            mapOf(AndroidKeystoreExperiment.getResultKeys.result to successCode)
-    }
-    data class SecurePrefsWriteFailure(val failureException: String) : Event() {
-        override val extras =
-            mapOf(AndroidKeystoreExperiment.writeFailureKeys.failureException to failureException)
-    }
-    object SecurePrefsWriteSuccess : Event()
-    object SecurePrefsReset : Event()
-
     data class TopSiteLongPress(val topSite: TopSite) : Event() {
         override val extras: Map<TopSites.longPressKeys, String>?
             get() = hashMapOf(TopSites.longPressKeys.type to topSite.name())
-    }
-
-    data class ProgressiveWebAppForeground(val timeForegrounded: Long) : Event() {
-        override val extras: Map<ProgressiveWebApp.foregroundKeys, String>?
-            get() = mapOf(ProgressiveWebApp.foregroundKeys.timeMs to timeForegrounded.toString())
-    }
-
-    data class ProgressiveWebAppBackground(val timeBackgrounded: Long) : Event() {
-        override val extras: Map<ProgressiveWebApp.backgroundKeys, String>?
-            get() = mapOf(ProgressiveWebApp.backgroundKeys.timeMs to timeBackgrounded.toString())
     }
 
     data class OnboardingToolbarPosition(val position: Position) : Event() {

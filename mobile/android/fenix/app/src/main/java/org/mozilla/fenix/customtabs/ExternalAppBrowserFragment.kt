@@ -6,7 +6,6 @@ package org.mozilla.fenix.customtabs
 
 import android.content.Context
 import android.content.Intent
-import android.os.SystemClock
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
@@ -30,7 +29,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BaseBrowserFragment
 import org.mozilla.fenix.browser.CustomTabContextMenuCandidate
 import org.mozilla.fenix.browser.FenixSnackbarDelegate
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -154,22 +152,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 )
             )
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        val currTimeMs = SystemClock.elapsedRealtimeNanos() / MS_PRECISION
-        requireComponents.analytics.metrics.track(
-            Event.ProgressiveWebAppForeground(currTimeMs)
-        )
-    }
-
-    override fun onPause() {
-        super.onPause()
-        val currTimeMs = SystemClock.elapsedRealtimeNanos() / MS_PRECISION
-        requireComponents.analytics.metrics.track(
-            Event.ProgressiveWebAppBackground(currTimeMs)
-        )
     }
 
     override fun removeSessionIfNeeded(): Boolean {

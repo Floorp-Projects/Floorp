@@ -17,7 +17,6 @@ import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
 import mozilla.components.feature.pwa.ProgressiveWebAppFacts
 import mozilla.components.feature.syncedtabs.facts.SyncedTabsFacts
 import mozilla.components.feature.top.sites.facts.TopSitesFacts
-import mozilla.components.lib.dataprotect.SecurePrefsReliabilityExperiment
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
@@ -528,7 +527,6 @@ class MetricControllerTest {
             Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.SEARCH_ACTION_CLICKED, Event.SearchActionClicked),
             Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.SEARCH_SUGGESTION_CLICKED, Event.SearchSuggestionClicked),
             Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.OPENED_TAB_SUGGESTION_CLICKED, Event.OpenedTabSuggestionClicked),
-            Triple(Component.LIB_DATAPROTECT, SecurePrefsReliabilityExperiment.Companion.Actions.RESET, Event.SecurePrefsReset),
         )
 
         simpleMappings.forEach { (component, item, expectedEvent) ->
