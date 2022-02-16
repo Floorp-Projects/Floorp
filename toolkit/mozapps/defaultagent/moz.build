@@ -25,6 +25,7 @@ UNIFIED_SOURCES += [
     "ScheduledTask.cpp",
     "SetDefaultBrowser.cpp",
     "Telemetry.cpp",
+    "UtfConvert.cpp",
 ]
 
 SOURCES += [

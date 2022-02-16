@@ -12,6 +12,7 @@
 
 #include "common.h"
 #include "Registry.h"
+#include "UtfConvert.h"
 
 #include "json/json.h"
 #include "mozilla/HelperMacros.h"
@@ -87,22 +88,14 @@ static PolicyState FindPolicyInFile(const char* policyName) {
 
   // We need a narrow string-based std::ifstream because that's all jsoncpp can
   // use; that means we need to supply it the file path as a narrow string.
-  int policiesFilePathLen = WideCharToMultiByte(
-      CP_UTF8, 0, policiesFilePath, -1, nullptr, 0, nullptr, nullptr);
-  if (policiesFilePathLen == 0) {
+  Utf16ToUtf8Result policiesFilePathToUtf8 = Utf16ToUtf8(policiesFilePath);
+  if (policiesFilePathToUtf8.isErr()) {
     return PolicyState::NoPolicy;
   }
-  mozilla::UniquePtr<char[]> policiesFilePathA =
-      mozilla::MakeUnique<char[]>(policiesFilePathLen);
-  policiesFilePathLen = WideCharToMultiByte(
-      CP_UTF8, 0, policiesFilePath, -1, policiesFilePathA.get(),
-      policiesFilePathLen, nullptr, nullptr);
-  if (policiesFilePathLen == 0) {
-    return PolicyState::NoPolicy;
-  }
+  std::string policiesFilePathA = policiesFilePathToUtf8.unwrap();
 
   Json::Value jsonRoot;
-  std::ifstream stream(policiesFilePathA.get());
+  std::ifstream stream(policiesFilePathA);
   Json::Reader().parse(stream, jsonRoot);
 
   if (jsonRoot.isObject() && jsonRoot.isMember("Policies") &&
