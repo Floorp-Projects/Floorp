@@ -2037,6 +2037,8 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
                                      uint32_t funcImportIndex,
                                      Label* throwLabel,
                                      CallableOffsets* offsets) {
+  AutoCreatedBy acb(masm, "GenerateImportInterpExit");
+
   AssertExpectedSP(masm);
   masm.setFramePushed(0);
 
@@ -2066,6 +2068,10 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
                        offsets);
 
   // Fill the argument array.
+  //
+  // sizeof(FrameWithTls), not FrameWithTls::sizeOf(), is confusing but correct.
+  // The only user of this value is FillArgumentArrayForExit, and it
+  // incorporates the ShadowStackArea by way of its use of the ABIArgIter.
   unsigned offsetFromFPToCallerStackArgs = sizeof(FrameWithTls);
   Register scratch = ABINonArgReturnReg0;
   Register scratch2 = ABINonArgReturnReg1;
@@ -2215,6 +2221,8 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
 static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
                                   unsigned funcImportIndex, Label* throwLabel,
                                   JitExitOffsets* offsets) {
+  AutoCreatedBy acb(masm, "GenerateImportJitExit");
+
   AssertExpectedSP(masm);
   masm.setFramePushed(0);
 
@@ -2273,6 +2281,10 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   argOffset += sizeof(Value);
 
   // 5. Fill the arguments.
+  //
+  // sizeof(FrameWithTls), not FrameWithTls::sizeOf(), is confusing but correct.
+  // The only user of this value is FillArgumentArrayForExit, and it
+  // incorporates the ShadowStackArea by way of its use of the ABIArgIter.
   const uint32_t offsetFromFPToCallerStackArgs = sizeof(FrameWithTls);
   Register scratch = ABINonArgReturnReg1;   // Repeatedly clobbered
   Register scratch2 = ABINonArgReturnReg0;  // Reused as callee below
