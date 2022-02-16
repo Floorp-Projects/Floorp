@@ -907,6 +907,13 @@ void DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
 
 bool DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
     nsIFrame* aFrame, nsDisplayListBuilder* aBuilder) {
+  // Don't descend into the tab bar in chrome, it can be very large and does not
+  // contain any async scrollable elements.
+  if (XRE_IsParentProcess() && aFrame->GetContent() &&
+      aFrame->GetContent()->GetID() == nsGkAtoms::tabbrowser_arrowscrollbox) {
+    return false;
+  }
+
   nsIScrollableFrame* sf = do_QueryFrame(aFrame);
   if (sf) {
     if (MaybeCreateDisplayPort(aBuilder, aFrame, RepaintMode::Repaint)) {
