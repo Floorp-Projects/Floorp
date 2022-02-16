@@ -173,19 +173,12 @@ role XULLinkAccessible::NativeRole() const { return roles::LINK; }
 
 uint64_t XULLinkAccessible::NativeLinkState() const { return states::LINKED; }
 
-uint8_t XULLinkAccessible::ActionCount() const { return 1; }
+bool XULLinkAccessible::HasPrimaryAction() const { return true; }
 
 void XULLinkAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   aName.Truncate();
 
   if (aIndex == eAction_Jump) aName.AssignLiteral("jump");
-}
-
-bool XULLinkAccessible::DoAction(uint8_t aIndex) const {
-  if (aIndex != eAction_Jump) return false;
-
-  DoCommand();
-  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

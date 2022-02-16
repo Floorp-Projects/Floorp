@@ -31,7 +31,7 @@ XULTabAccessible::XULTabAccessible(nsIContent* aContent, DocAccessible* aDoc)
 ////////////////////////////////////////////////////////////////////////////////
 // XULTabAccessible: LocalAccessible
 
-uint8_t XULTabAccessible::ActionCount() const { return 1; }
+bool XULTabAccessible::HasPrimaryAction() const { return true; }
 
 void XULTabAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex == eAction_Switch) aName.AssignLiteral("switch");
@@ -123,7 +123,7 @@ XULTabsAccessible::XULTabsAccessible(nsIContent* aContent, DocAccessible* aDoc)
 
 role XULTabsAccessible::NativeRole() const { return roles::PAGETABLIST; }
 
-uint8_t XULTabsAccessible::ActionCount() const { return 0; }
+bool XULTabsAccessible::HasPrimaryAction() const { return false; }
 
 void XULTabsAccessible::Value(nsString& aValue) const { aValue.Truncate(); }
 

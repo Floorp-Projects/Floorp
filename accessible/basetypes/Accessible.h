@@ -344,7 +344,7 @@ class Accessible {
   virtual bool IsRemote() const = 0;
   RemoteAccessible* AsRemote();
 
-  bool IsLocal() { return !IsRemote(); }
+  bool IsLocal() const { return !IsRemote(); }
   LocalAccessible* AsLocal();
 
   virtual HyperTextAccessibleBase* AsHyperTextBase() { return nullptr; }
@@ -389,6 +389,21 @@ class Accessible {
    * @param  aSetSize   [out] the group size
    */
   virtual void GetPositionAndSetSize(int32_t* aPosInSet, int32_t* aSetSize);
+
+
+  /**
+   * Return the nearest ancestor that has a primary action, or null.
+   */
+  const Accessible* ActionAncestor() const;
+
+  /**
+   * Return true if accessible has a primary action directly related to it, like
+   * "click", "activate", "press", "jump", "open", "close", etc. A non-primary
+   * action would be a complementary one like "showlongdesc".
+   * If an accessible has an action that is associated with an ancestor, it is
+   * not a primary action either.
+   */
+  virtual bool HasPrimaryAction() const = 0;
 
  private:
   static const uint8_t kTypeBits = 6;
