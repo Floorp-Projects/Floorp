@@ -128,6 +128,9 @@ add_task(async () => {
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
       ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
       ["widget.disable-swipe-tracker", false],
+      ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
+      ["widget.swipe.success-threshold", 0.25],
+      ["widget.swipe.success-velocity-contribution", 0.5],
     ],
   });
 
