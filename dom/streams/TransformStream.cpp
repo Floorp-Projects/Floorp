@@ -15,7 +15,7 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TransformStream, mGlobal, mController)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TransformStream, mGlobal)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TransformStream)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TransformStream)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransformStream)
@@ -40,85 +40,8 @@ already_AddRefed<TransformStream> TransformStream::Constructor(
     const Optional<JS::Handle<JSObject*>>& aTransformer,
     const QueuingStrategy& aWritableStrategy,
     const QueuingStrategy& aReadableStrategy, ErrorResult& aRv) {
-  // Step 1. If transformer is missing, set it to null.
-  JS::Rooted<JSObject*> transformerObj(
-      aGlobal.Context(),
-      aTransformer.WasPassed() ? aTransformer.Value() : nullptr);
-
-  // Step 2. Let transformerDict be transformer, converted to an IDL value of
-  // type Transformer.
-  Transformer transformerDict;
-  if (transformerObj) {
-    JS::Rooted<JS::Value> objValue(aGlobal.Context(),
-                                   JS::ObjectValue(*transformerObj));
-    dom::BindingCallContext callCx(aGlobal.Context(),
-                                   "TransformStream.constructor");
-    aRv.MightThrowJSException();
-    if (!transformerDict.Init(callCx, objValue)) {
-      aRv.StealExceptionFromJSContext(aGlobal.Context());
-      return nullptr;
-    }
-  }
-
-  // Step 3. If transformerDict["readableType"] exists, throw a RangeError
-  // exception.
-  if (!transformerDict.mReadableType.isUndefined()) {
-    aRv.ThrowRangeError(
-        "`readableType` is unsupported and preserved for future use");
-    return nullptr;
-  }
-
-  // Step 4. If transformerDict["writableType"] exists, throw a RangeError
-  // exception.
-  if (!transformerDict.mWritableType.isUndefined()) {
-    aRv.ThrowRangeError(
-        "`writableType` is unsupported and preserved for future use");
-    return nullptr;
-  }
-
-  // Step 5. Let readableHighWaterMark be ?
-  // ExtractHighWaterMark(readableStrategy, 0).
-  // TODO
-
-  // Step 6. Let readableSizeAlgorithm be !
-  // ExtractSizeAlgorithm(readableStrategy).
-  // TODO
-
-  // Step 7. Let writableHighWaterMark be ?
-  // ExtractHighWaterMark(writableStrategy, 1).
-  // TODO
-
-  // Step 8. Let writableSizeAlgorithm be !
-  // ExtractSizeAlgorithm(writableStrategy).
-  // TODO
-
-  // Step 9. Let startPromise be a new promise.
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<Promise> startPromise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // Step 10. Perform ! InitializeTransformStream(this, startPromise,
-  // writableHighWaterMark, writableSizeAlgorithm, readableHighWaterMark,
-  // readableSizeAlgorithm).
   RefPtr<TransformStream> transformStream = new TransformStream(global);
-  // TODO: Init()
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // Step 11. Perform ?
-  // SetUpTransformStreamDefaultControllerFromTransformer(this, transformer,
-  // transformerDict).
-  SetUpTransformStreamDefaultControllerFromTransformer(
-      aGlobal.Context(), *transformStream, transformerObj, transformerDict);
-
-  // Step 12. If transformerDict["start"] exists, then resolve startPromise with
-  // the result of invoking transformerDict["start"] with argument list «
-  // this.[[controller]] » and callback this value transformer.
-  // TODO
-
   return transformStream.forget();
 }
 
