@@ -204,18 +204,6 @@ bool TableIsProbablyForLayout();
 RemoteAccessible* AtkTableColumnHeader(int32_t aCol);
 RemoteAccessible* AtkTableRowHeader(int32_t aRow);
 
-void SelectedItems(nsTArray<RemoteAccessible*>* aSelectedItems);
-uint32_t SelectedItemCount();
-RemoteAccessible* GetSelectedItem(uint32_t aIndex);
-bool IsItemSelected(uint32_t aIndex);
-bool AddItemToSelection(uint32_t aIndex);
-bool RemoveItemFromSelection(uint32_t aIndex);
-bool SelectAll();
-bool UnselectAll();
-
-void TakeSelection();
-void SetSelected(bool aSelect);
-
 KeyBinding AccessKey();
 KeyBinding KeyboardShortcut();
 void AtkKeyBinding(nsString& aBinding);

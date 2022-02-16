@@ -100,6 +100,19 @@ class PivotRoleRule : public PivotRule {
 };
 
 /**
+ * This rule matches accessibles with a given state.
+ */
+class PivotStateRule : public PivotRule {
+ public:
+  explicit PivotStateRule(uint64_t aState);
+
+  virtual uint16_t Match(Accessible* aAcc) override;
+
+ protected:
+  uint64_t mState;
+};
+
+/**
  * This rule matches any local LocalAccessible (i.e. not RemoteAccessible) in
  * the same document as the anchor. That is, it includes any descendant
  * OuterDocAccessible, but not its descendants.

@@ -120,6 +120,8 @@ child:
   async RestoreFocus();
 
   async TakeFocus(uint64_t aID);
+  async TakeSelection(uint64_t aID);
+  async SetSelected(uint64_t aID, bool aSelected);
 
   /*
    * Verify the cache. Used for testing purposes.

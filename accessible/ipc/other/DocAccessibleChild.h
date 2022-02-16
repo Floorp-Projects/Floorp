@@ -389,11 +389,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   virtual mozilla::ipc::IPCResult RecvUnselectAll(const uint64_t& aID,
                                                   bool* aSuccess) override;
 
-  virtual mozilla::ipc::IPCResult RecvTakeSelection(
-      const uint64_t& aID) override;
-  virtual mozilla::ipc::IPCResult RecvSetSelected(const uint64_t& aID,
-                                                  const bool& aSelect) override;
-
   virtual mozilla::ipc::IPCResult RecvDoAction(const uint64_t& aID,
                                                const uint8_t& aIndex,
                                                bool* aSuccess) override;
