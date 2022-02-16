@@ -42,8 +42,8 @@ nsClipboardProxy::SetData(nsITransferable* aTransferable,
 }
 
 NS_IMETHODIMP
-nsClipboardProxy::GetData(nsITransferable* aTransferable,
-                          int32_t aWhichClipboard) {
+nsClipboardProxy::GetSomeData(nsITransferable* aTransferable,
+                              int32_t aWhichClipboard) {
   nsTArray<nsCString> types;
   aTransferable->FlavorsTransferableCanImport(types);
 

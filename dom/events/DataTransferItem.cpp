@@ -162,7 +162,8 @@ void DataTransferItem::FillInExternalData() {
         return;
       }
 
-      nsresult rv = clipboard->GetData(trans, mDataTransfer->ClipboardType());
+      nsresult rv =
+          clipboard->GetSomeData(trans, mDataTransfer->ClipboardType());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return;
       }
