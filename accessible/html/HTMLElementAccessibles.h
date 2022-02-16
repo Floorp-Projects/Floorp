@@ -58,9 +58,8 @@ class HTMLLabelAccessible : public HyperTextAccessibleWrap {
   virtual Relation RelationByType(RelationType aType) const override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) const override;
+  virtual bool HasPrimaryAction() const override;
 
  protected:
   virtual ~HTMLLabelAccessible() {}
@@ -107,9 +106,8 @@ class HTMLSummaryAccessible : public HyperTextAccessibleWrap {
   virtual uint64_t NativeState() const override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) const override;
+  virtual bool HasPrimaryAction() const override;
 
   // Widgets
   virtual bool IsWidget() const override;

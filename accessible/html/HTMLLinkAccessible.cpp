@@ -74,8 +74,9 @@ void HTMLLinkAccessible::Value(nsString& aValue) const {
   }
 }
 
-uint8_t HTMLLinkAccessible::ActionCount() const {
-  return IsLinked() ? 1 : HyperTextAccessible::ActionCount();
+bool HTMLLinkAccessible::HasPrimaryAction() const {
+  return IsLinked() || HyperTextAccessible::HasPrimaryAction();
+  ;
 }
 
 void HTMLLinkAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
@@ -88,16 +89,6 @@ void HTMLLinkAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
 
   // Action 0 (default action): Jump to link
   if (aIndex == eAction_Jump) aName.AssignLiteral("jump");
-}
-
-bool HTMLLinkAccessible::DoAction(uint8_t aIndex) const {
-  if (!IsLinked()) return HyperTextAccessible::DoAction(aIndex);
-
-  // Action 0 (default action): Jump to link
-  if (aIndex != eAction_Jump) return false;
-
-  DoCommand();
-  return true;
 }
 
 bool HTMLLinkAccessible::AttributeChangesState(nsAtom* aAttribute) {
