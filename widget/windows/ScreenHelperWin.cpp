@@ -56,13 +56,18 @@ BOOL CALLBACK CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam) {
   }
 
   float dpi = WinUtils::MonitorDPI(aMon);
+
+  hal::ScreenOrientation orientation;
+  uint16_t angle;
+  WinUtils::GetDisplayOrientation(info.szDevice, orientation, angle);
+
   MOZ_LOG(sScreenLog, LogLevel::Debug,
-          ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f %f]", rect.X(),
-           rect.Y(), rect.Width(), rect.Height(), availRect.X(), availRect.Y(),
-           availRect.Width(), availRect.Height(), pixelDepth,
-           contentsScaleFactor.scale, defaultCssScaleFactor.scale, dpi));
-  auto screen = new Screen(rect, availRect, pixelDepth, pixelDepth,
-                           contentsScaleFactor, defaultCssScaleFactor, dpi);
+          ("New screen [%s (%s) %d %f %f %f %d %d]", ToString(rect).c_str(),
+           ToString(availRect).c_str(), pixelDepth, contentsScaleFactor.scale,
+           defaultCssScaleFactor.scale, dpi, orientation, angle));
+  auto screen =
+      new Screen(rect, availRect, pixelDepth, pixelDepth, contentsScaleFactor,
+                 defaultCssScaleFactor, dpi, orientation, angle);
   if (info.dwFlags & MONITORINFOF_PRIMARY) {
     // The primary monitor must be the first element of the screen list.
     screens->InsertElementAt(0, std::move(screen));

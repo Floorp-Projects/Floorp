@@ -3070,9 +3070,22 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
           }
         }
 
+        // We do not need the timeouts any more, they have been canceled
+        // by NotifyInternal(Killing) above if they were active.
+        UnlinkTimeouts();
+
         // Unroot the globals
-        data->mScope = nullptr;
-        data->mDebuggerScope = nullptr;
+        RefPtr<WorkerDebuggerGlobalScope> debugScope =
+            data->mDebuggerScope.forget();
+        RefPtr<WorkerGlobalScope> scope = data->mScope.forget();
+        if (debugScope) {
+          MOZ_ASSERT(debugScope->mWorkerPrivate == this);
+          debugScope->mWorkerPrivate = nullptr;
+        }
+        if (scope) {
+          MOZ_ASSERT(scope->mWorkerPrivate == this);
+          scope->mWorkerPrivate = nullptr;
+        }
 
         return;
       }

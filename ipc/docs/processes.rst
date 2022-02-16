@@ -127,13 +127,35 @@ You might want to talk with `#geckoview` maintainers to ensure if this is requir
 Crash reporting
 ###############
 
+- Add ``InitCrashReporter`` message to the parent-side `InitCrashReporter <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#30>`_
+- Ensure your parent class inherits `public ipc::CrashReporterHelper<GeckoProcessType_Xxx> <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessParent.h#23>`_
 - Add new ``Xxx*Status`` `annotations <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/crashreporter/CrashAnnotations.yaml#968-971>`_ entry for your new process type description. The link here points to `UtilityProcessStatus` so you can see the similar description you have to write, but you might want to respect ordering in that file and put your new code at the appropriate place.
 - Add entry in `PROCESS_CRASH_SUBMIT_ATTEMPT <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/telemetry/Histograms.json#13403-13422>`_
 
 Memory reporting
-#################
+################
 
-- Add handling for your new process within `nsMemoryReporterManager::GetReportsExtended <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/xpcom/base/nsMemoryReporterManager.cpp#1786-1809>`
+Throughout the linked code, please consider those methods more as boilerplate code that will require some trivial modification to fit your exact usecase.
+
+- Add definition of memory reporter to your new :ref:`top-level actor <Top Level Actors>`
+
+  + Type inclusion `MemoryReportTypes <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#6>`_
+  + To parent-side `AddMemoryReport <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#32>`_
+  + To child-side `RequestMemoryReport <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#44-48>`_
+
+- Add handling for your new process within `nsMemoryReporterManager::GetReportsExtended <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/xpcom/base/nsMemoryReporterManager.cpp#1813-1819>`_
+- Provide a process manager level abstraction
+
+  + Implement a new class deriving ``MemoryReportingProcess`` such as `UtilityMemoryReporter <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessManager.cpp#253-292>`_
+  + Write a `GetProcessMemoryReport <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessManager.cpp#294-300>`_
+
+- On the child side, provide an implementation for `RequestMemoryReport <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessChild.cpp#153-166>`_
+- On the parent side
+
+  + Provide an implementation for `RequestMemoryReport <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessParent.cpp#41-69>`_
+  + Provide an implementation for `AddMemoryReport <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessParent.cpp#71-77>`_
+
+If you want to add a test that ensures proper behavior, you can have a look at the `utility process memory report test <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/test/browser/browser_utility_memoryReport.js>`_
 
 Process reporting
 #################
@@ -142,6 +164,17 @@ Those elements will be used for exposing processes to users in some `about:` pag
 
 - Add a `user-facing localizable name <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/locales/en-US/toolkit/global/processTypes.ftl#39-57>`_ for your process, if needed
 - Hashmap from process type to user-facing string above in `const ProcessType <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/modules/ProcessType.jsm#14-20>`_
+
+Profiler
+########
+
+- Add definition of ``PProfiler`` to your new IPDL
+
+  + Type inclusion `protocol PProfiler <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#9>`_
+  + Child-side `InitProfiler <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#42>`_
+
+- Make sure your initialization path contains a `SendInitProfiler <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessHost.cpp#222-223>`_. You will want to perform the call once a ``OnChannelConnected`` is issued, thus ensuring your new process is connected to IPC.
+- Provide an implementation for `InitProfiler <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessChild.cpp#147-151>`_
 
 Static Components
 #################
@@ -183,6 +216,15 @@ The amount of changes required here are significant, `Bug 1740485: Improve Stati
 Glean telemetry
 ###############
 
+- Ensure your new IPDL includes on the child side
+
+  + `FlushFOGData <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#55>`_
+  + `TestTriggerMetrics <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#60>`_
+
+- Provide a parent-side implementation for `FOGData <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessParent.cpp#79-82>`_
+- Provide a child-side implementation for `FlushFOGData <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessChild.cpp#179-183>`_
+- Child-side should flush its FOG data at IPC `ActorDestroy <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessChild.cpp#199-201>`_
+- Child-side `test metrics <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessChild.cpp#185-191>`_
 - Within `FOGIPC <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/glean/ipc/FOGIPC.cpp>`_
 
   + Add handling of your new process type within ``FlushAllChildData()`` `here <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/glean/ipc/FOGIPC.cpp#106-121>`_ and ``SendFOGData()`` `here <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/glean/ipc/FOGIPC.cpp#165-182>`_

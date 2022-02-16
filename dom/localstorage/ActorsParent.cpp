@@ -4923,7 +4923,8 @@ void Datastore::Clear(Database* aDatabase) {
 
 void Datastore::BeginUpdateBatch(int64_t aSnapshotInitialUsage) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aSnapshotInitialUsage >= 0);
+  // Don't assert `aSnapshotInitialUsage >= 0`, it can be negative when multiple
+  // snapshots are operating in parallel.
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(mUpdateBatchUsage == -1);
   MOZ_ASSERT(!mInUpdateBatch);
@@ -5637,7 +5638,8 @@ mozilla::ipc::IPCResult Snapshot::RecvDeleteMe() {
 mozilla::ipc::IPCResult Snapshot::RecvCheckpoint(
     nsTArray<LSWriteInfo>&& aWriteInfos) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mUsage >= 0);
+  // Don't assert `mUsage >= 0`, it can be negative when multiple snapshots are
+  // operating in parallel.
   MOZ_ASSERT(mPeakUsage >= mUsage);
 
   if (NS_WARN_IF(aWriteInfos.IsEmpty())) {
@@ -5691,7 +5693,8 @@ mozilla::ipc::IPCResult Snapshot::RecvCheckpoint(
 mozilla::ipc::IPCResult Snapshot::RecvCheckpointAndNotify(
     nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mUsage >= 0);
+  // Don't assert `mUsage >= 0`, it can be negative when multiple snapshots are
+  // operating in parallel.
   MOZ_ASSERT(mPeakUsage >= mUsage);
 
   if (NS_WARN_IF(aWriteAndNotifyInfos.IsEmpty())) {

@@ -1364,9 +1364,7 @@ inline void js::GCMarker::eagerlyMarkChildren(JSLinearString* linearStr) {
     }
 
     MOZ_ASSERT(linearStr->JSString::isLinear());
-    if (linearStr->isPermanentAtom()) {
-      break;
-    }
+    MOZ_ASSERT(!linearStr->isPermanentAtom());
     AssertShouldMarkInZone(linearStr);
     if (!mark(static_cast<JSString*>(linearStr))) {
       break;
@@ -1397,7 +1395,8 @@ inline void js::GCMarker::eagerlyMarkChildren(JSRope* rope) {
     JSRope* next = nullptr;
 
     JSString* right = rope->rightChild();
-    if (!right->isPermanentAtom() && mark(right)) {
+    if (mark(right)) {
+      MOZ_ASSERT(!right->isPermanentAtom());
       if (right->isLinear()) {
         eagerlyMarkChildren(&right->asLinear());
       } else {
@@ -1406,7 +1405,8 @@ inline void js::GCMarker::eagerlyMarkChildren(JSRope* rope) {
     }
 
     JSString* left = rope->leftChild();
-    if (!left->isPermanentAtom() && mark(left)) {
+    if (mark(left)) {
+      MOZ_ASSERT(!left->isPermanentAtom());
       if (left->isLinear()) {
         eagerlyMarkChildren(&left->asLinear());
       } else {

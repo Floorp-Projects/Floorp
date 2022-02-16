@@ -768,6 +768,8 @@ Consider actors to be like normal reference-counted objects, but where IPDL hold
 
 The dual of IPDL holding the only reference is to have client code hold the only reference.  A common pattern to achieve this has been to override the actor's ``AddRef`` to have it send ``__delete__`` only when it's count is down to one reference (which must be IPDL if ``actor.CanSend()`` is true).  A better approach would be to create a reference-counted delegate for your actor that can send ``__delete__`` from its destructor.  IPDL does not guarantee that it will not hold more than one reference to your actor.
 
+.. _Top Level Actors:
+
 Top Level Actors
 ----------------
 
