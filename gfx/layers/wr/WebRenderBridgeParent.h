@@ -378,7 +378,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
 
   void AddPipelineIdForCompositable(const wr::PipelineId& aPipelineIds,
                                     const CompositableHandle& aHandle,
-                                    const bool& aAsync,
+                                    const CompositableHandleOwner& aOwner,
                                     wr::TransactionBuilder& aTxn,
                                     wr::TransactionBuilder& aTxnForImageBridge);
   void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId,

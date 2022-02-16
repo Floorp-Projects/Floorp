@@ -229,7 +229,7 @@ void GPUParent::NotifyDeviceReset() {
 mozilla::ipc::IPCResult GPUParent::RecvInit(
     nsTArray<GfxVarUpdate>&& vars, const DevicePrefs& devicePrefs,
     nsTArray<LayerTreeIdMapping>&& aMappings,
-    nsTArray<GfxInfoFeatureStatus>&& aFeatures) {
+    nsTArray<GfxInfoFeatureStatus>&& aFeatures, uint32_t aWrNamespace) {
   for (const auto& var : vars) {
     gfxVars::ApplyUpdate(var);
   }
@@ -346,7 +346,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
 
   // Make sure to do this *after* we update gfxVars above.
   if (gfxVars::UseWebRender()) {
-    wr::RenderThread::Start();
+    wr::RenderThread::Start(aWrNamespace);
     image::ImageMemoryReporter::InitForWebRender();
   }
 #ifdef XP_WIN
@@ -549,7 +549,8 @@ mozilla::ipc::IPCResult GPUParent::RecvNewContentVRManager(
 
 mozilla::ipc::IPCResult GPUParent::RecvNewContentRemoteDecoderManager(
     Endpoint<PRemoteDecoderManagerParent>&& aEndpoint) {
-  if (!RemoteDecoderManagerParent::CreateForContent(std::move(aEndpoint), /* AllowHardwareDecoding */ true)) {
+  if (!RemoteDecoderManagerParent::CreateForContent(
+          std::move(aEndpoint), /* AllowHardwareDecoding */ true)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();

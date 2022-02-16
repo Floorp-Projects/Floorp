@@ -207,6 +207,13 @@ struct ParamTraits<mozilla::layers::CompositableHandle> {
 };
 
 template <>
+struct ParamTraits<mozilla::layers::CompositableHandleOwner>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::layers::CompositableHandleOwner,
+          mozilla::layers::CompositableHandleOwner::WebRenderBridge,
+          mozilla::layers::CompositableHandleOwner::InProcessManager> {};
+
+template <>
 struct ParamTraits<mozilla::layers::FrameMetrics>
     : BitfieldHelper<mozilla::layers::FrameMetrics> {
   typedef mozilla::layers::FrameMetrics paramType;
