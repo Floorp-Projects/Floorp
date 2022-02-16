@@ -83,18 +83,6 @@ enum class AsmJSOption : uint8_t {
   _(ConcurrentDepthFirst)                                                      \
                                                                                \
   /*                                                                           \
-   * Delazify functions in a breath first traversal of the code. (not          \
-   * implemented yet)                                                          \
-   */                                                                          \
-  _(ConcurrentBreathFirst)                                                     \
-                                                                               \
-  /*                                                                           \
-   * Delazify functions based on the frequency of names across all scripts     \
-   * pending for delazifications. (not implemented yet)                        \
-   */                                                                          \
-  _(ConcurrentMostFrequentNameFirst)                                           \
-                                                                               \
-  /*                                                                           \
    * Parse everything eagerly, from the first parse.                           \
    *                                                                           \
    * NOTE: Either the Realm configuration or specialized VM operating modes    \
