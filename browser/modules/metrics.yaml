@@ -37,7 +37,6 @@ browser.engagement:
     send_in_pings:
       - baseline
       - metrics
-    telemetry_mirror: BROWSER_ENGAGEMENT_MIRROR_FOR_ACTIVE_TICKS
     no_lint:
       - BASELINE_PING
 
