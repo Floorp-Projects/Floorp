@@ -517,7 +517,7 @@ nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   }
 
   // Get the Data from the clipboard
-  clipboard->GetSomeData(trans, aClipboardType);
+  clipboard->GetData(trans, aClipboardType);
 
   // Now we ask the transferable for the data
   // it still owns the data, we just have a pointer to it.
