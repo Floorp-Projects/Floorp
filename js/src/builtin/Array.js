@@ -651,50 +651,6 @@ function ArrayFill(value, start = 0, end = undefined) {
     return O;
 }
 
-// ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
-// 22.1.3.13 Array.prototype.includes ( searchElement [ , fromIndex ] )
-function ArrayIncludes(searchElement, fromIndex = 0) {
-    // Step 1.
-    var O = ToObject(this);
-
-    // Step 2.
-    var len = ToLength(O.length);
-
-    // Step 3.
-    if (len === 0)
-        return false;
-
-    // Steps 4-5.
-    var n = ToInteger(fromIndex);
-
-    // Steps 6-7.
-    var k;
-    if (n >= 0) {
-        // Step 6.a.
-        k = n;
-    } else {
-        // Step 7.a.
-        k = len + n;
-
-        // Step 7.b.
-        if (k < 0)
-            k = 0;
-    }
-
-    // Step 8.
-    while (k < len) {
-        // Steps 8.a-c.
-        if (SameValueZero(searchElement, O[k]))
-            return true;
-
-        // Step 8.d.
-        k++;
-    }
-
-    // Step 9.
-    return false;
-}
-
 // ES6 draft specification, section 22.1.5.1, version 2013-09-05.
 function CreateArrayIterator(obj, kind) {
     var iteratedObject = ToObject(obj);

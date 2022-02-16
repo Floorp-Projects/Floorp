@@ -108,6 +108,7 @@ extern bool GetElements(JSContext* cx, HandleObject aobj, uint32_t length,
 extern bool intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc,
                                       js::Value* vp);
 
+extern bool array_includes(JSContext* cx, unsigned argc, js::Value* vp);
 extern bool array_indexOf(JSContext* cx, unsigned argc, js::Value* vp);
 extern bool array_lastIndexOf(JSContext* cx, unsigned argc, js::Value* vp);
 
