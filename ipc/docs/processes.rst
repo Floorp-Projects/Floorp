@@ -163,6 +163,17 @@ Those elements will be used for exposing processes to users in some `about:` pag
 - Add a `user-facing localizable name <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/locales/en-US/toolkit/global/processTypes.ftl#39-57>`_ for your process, if needed
 - Hashmap from process type to user-facing string above in `const ProcessType <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/modules/ProcessType.jsm#14-20>`_
 
+Profiler
+########
+
+- Add definition of ``PProfiler`` to your new IPDL
+
+  + Type inclusion `protocol PProfiler <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#9>`_
+  + Child-side `InitProfiler <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#42>`_
+
+- Make sure your initialization path contains a `SendInitProfiler <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessHost.cpp#222-223>`_. You will want to perform the call once a ``OnChannelConnected`` is issued, thus ensuring your new process is connected to IPC.
+- Provide an implementation for `InitProfiler <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessChild.cpp#147-151>`_
+
 Static Components
 #################
 
