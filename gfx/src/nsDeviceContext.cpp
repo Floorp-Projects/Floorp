@@ -76,15 +76,17 @@ void nsDeviceContext::SetDPI(double* aScale) {
     mAppUnitsPerDevPixelAtUnitFullZoom =
         NS_lround((AppUnitsPerCSSPixel() * 96) / dpi);
   } else {
-    RefPtr<widget::Screen> primaryScreen =
-        ScreenManager::GetSingleton().GetPrimaryScreen();
+    nsCOMPtr<nsIScreen> primaryScreen;
+    ScreenManager& screenManager = ScreenManager::GetSingleton();
+    screenManager.GetPrimaryScreen(getter_AddRefs(primaryScreen));
     MOZ_ASSERT(primaryScreen);
 
     // A value of -1 means use the maximum of 96 and the system DPI.
     // A value of 0 means use the system DPI. A positive value is used as the
     // DPI. This sets the physical size of a device pixel and thus controls the
     // interpretation of physical units.
-    int32_t prefDPI = StaticPrefs::layout_css_dpi();
+    int32_t prefDPI = Preferences::GetInt("layout.css.dpi", -1);
+
     if (prefDPI > 0) {
       dpi = prefDPI;
     } else if (mWidget) {
@@ -93,7 +95,7 @@ void nsDeviceContext::SetDPI(double* aScale) {
       // In case that the widget returns -1, use the primary screen's
       // value as default.
       if (dpi < 0) {
-        dpi = primaryScreen->GetDPI();
+        primaryScreen->GetDpi(&dpi);
       }
       if (prefDPI < 0) {
         dpi = std::max(96.0f, dpi);
