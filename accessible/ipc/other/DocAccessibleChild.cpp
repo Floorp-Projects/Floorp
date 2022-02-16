@@ -1238,6 +1238,16 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvAtkTableRowHeader(
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvSelectedItems(
     const uint64_t& aID, nsTArray<uint64_t>* aSelectedItemIDs) {
+  LocalAccessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    AutoTArray<Accessible*, 10> selectedItems;
+    acc->SelectedItems(&selectedItems);
+    aSelectedItemIDs->SetCapacity(selectedItems.Length());
+    for (Accessible* item : selectedItems) {
+      aSelectedItemIDs->AppendElement(
+          reinterpret_cast<uint64_t>(item->AsLocal()->UniqueID()));
+    }
+  }
 
   return IPC_OK();
 }
@@ -1256,6 +1266,13 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvSelectedItemCount(
 mozilla::ipc::IPCResult DocAccessibleChild::RecvGetSelectedItem(
     const uint64_t& aID, const uint32_t& aIndex, uint64_t* aSelected,
     bool* aOk) {
+  LocalAccessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    Accessible* selected = acc->GetSelectedItem(aIndex);
+    *aSelected = reinterpret_cast<uint64_t>(selected->AsLocal()->UniqueID());
+  }
+
+  *aOk = !!acc;
 
   return IPC_OK();
 }
