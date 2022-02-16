@@ -286,10 +286,7 @@ nsresult LSDatabase::BeginExplicitSnapshot(LSObject* aObject) {
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
-
-  if (mSnapshot) {
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
+  MOZ_ASSERT(!mSnapshot);
 
   nsresult rv = EnsureSnapshot(aObject, VoidString(), /* aExplicit */ true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -299,16 +296,11 @@ nsresult LSDatabase::BeginExplicitSnapshot(LSObject* aObject) {
   return NS_OK;
 }
 
-nsresult LSDatabase::EndExplicitSnapshot(LSObject* aObject) {
+nsresult LSDatabase::EndExplicitSnapshot() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
-
-  if (!mSnapshot) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
+  MOZ_ASSERT(mSnapshot);
   MOZ_ASSERT(mSnapshot->Explicit());
 
   nsresult rv = mSnapshot->End();
