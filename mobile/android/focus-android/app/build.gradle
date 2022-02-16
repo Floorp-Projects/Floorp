@@ -332,6 +332,8 @@ android.applicationVariants.all { variant ->
 
     if (buildType == "release" || buildType == "nightly" || buildType == "beta") {
         def baseVersionCode = generatedVersionCode
+        def versionName = buildType == "nightly" ? Config.nightlyVersionName() : Config.releaseVersionName(project)
+        println("versionName override: $versionName")
 
         // The Google Play Store does not allow multiple APKs for the same app that all have the
         // same version code. Therefore we need to have different version codes for our ARM and x86
@@ -360,6 +362,7 @@ android.applicationVariants.all { variant ->
                 throw new RuntimeException("Unknown ABI: " + abi)
             }
 
+            output.versionNameOverride = versionName
             output.versionCodeOverride = versionCodeOverride
 
             println("versionCode for $abi = $versionCodeOverride")
