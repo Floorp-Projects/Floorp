@@ -10,12 +10,12 @@ loader.lazyRequireGetter(
   true
 );
 
-function getAllMessagesById(state) {
-  return state.messages.messagesById;
+function getMutableMessagesById(state) {
+  return state.messages.mutableMessagesById;
 }
 
 function getMessage(state, id) {
-  return getAllMessagesById(state).get(id);
+  return getMutableMessagesById(state).get(id);
 }
 
 function getAllMessagesUiById(state) {
@@ -68,7 +68,7 @@ function isMessageInWarningGroup(message, visibleMessages = []) {
 module.exports = {
   getAllGroupsById,
   getAllWarningGroupsById,
-  getAllMessagesById,
+  getMutableMessagesById,
   getAllCssMessagesMatchingElements,
   getAllMessagesUiById,
   getAllNetworkMessagesUpdateById,
