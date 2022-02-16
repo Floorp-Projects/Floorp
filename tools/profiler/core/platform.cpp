@@ -2888,7 +2888,7 @@ static void CollectJavaThreadProfileData(ProfileBuffer& aProfileBuffer) {
 
   // Pass the samples
   // FIXME(bug 1618560): We are currently only profiling the Android UI thread.
-  constexpr ProfilerThreadId threadId;
+  constexpr ProfilerThreadId threadId = ProfilerThreadId::FromNumber(1);
   int sampleId = 0;
   while (true) {
     // Gets the data from the Android UI thread only.
@@ -3150,9 +3150,9 @@ static void locked_profiler_stream_json_for_this_process(
       // tid that doesn't conflict with it for the Java side. So we just use 0.
       // Once we add support for profiling of other java threads, we'll have to
       // get their thread id and name via JNI.
-      ProfiledThreadData profiledThreadData(
-          ThreadRegistrationInfo{"AndroidUI (JVM)", ProfilerThreadId{}, false,
-                                 CorePS::ProcessStartTime()});
+      ProfiledThreadData profiledThreadData(ThreadRegistrationInfo{
+          "AndroidUI (JVM)", ProfilerThreadId::FromNumber(1), false,
+          CorePS::ProcessStartTime()});
       profiledThreadData.StreamJSON(
           javaBuffer, nullptr, aWriter, CorePS::ProcessName(aLock),
           CorePS::ETLDplus1(aLock), CorePS::ProcessStartTime(), aSinceTime,
