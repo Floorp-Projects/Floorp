@@ -145,43 +145,6 @@ MediaExtendedMIMEType::MediaExtendedMIMEType(const MediaMIMEType& aType)
 MediaExtendedMIMEType::MediaExtendedMIMEType(MediaMIMEType&& aType)
     : mOriginalString(aType.AsString()), mMIMEType(std::move(aType)) {}
 
-/* static */
-Maybe<double> MediaExtendedMIMEType::ComputeFractionalString(
-    const nsAString& aFrac) {
-  nsAutoString frac(aFrac);
-  nsresult error;
-  double result = frac.ToDouble(&error);
-  if (NS_SUCCEEDED(error)) {
-    if (result <= 0) {
-      return Nothing();
-    }
-    return Some(result);
-  }
-
-  int32_t slashPos = frac.Find(u"/"_ns);
-  if (slashPos == kNotFound) {
-    return Nothing();
-  }
-
-  nsAutoString firstPart(Substring(frac, 0, slashPos - 1));
-  double first = firstPart.ToDouble(&error);
-  if (NS_FAILED(error)) {
-    return Nothing();
-  }
-  nsAutoString secondPart(Substring(frac, slashPos + 1));
-  double second = secondPart.ToDouble(&error);
-  if (NS_FAILED(error) || second == 0) {
-    return Nothing();
-  }
-
-  result = first / second;
-  if (result <= 0) {
-    return Nothing();
-  }
-
-  return Some(result);
-}
-
 Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(const nsAString& aType) {
   nsContentTypeParser parser(aType);
   nsAutoString mime;
@@ -230,15 +193,13 @@ Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(
   rv = parser.GetParameter("codecs", codecs);
   bool haveCodecs = NS_SUCCEEDED(rv);
 
-  auto framerate =
-      MediaExtendedMIMEType::ComputeFractionalString(aConfig.mFramerate);
-  if (!framerate) {
+  if (!IsFinite(aConfig.mFramerate) || aConfig.mFramerate <= 0.0) {
     return Nothing();
   }
 
   return Some(MediaExtendedMIMEType(
       NS_ConvertUTF16toUTF8(aConfig.mContentType), mime8, haveCodecs, codecs,
-      aConfig.mWidth, aConfig.mHeight, framerate.ref(), aConfig.mBitrate));
+      aConfig.mWidth, aConfig.mHeight, aConfig.mFramerate, aConfig.mBitrate));
 }
 
 Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(
