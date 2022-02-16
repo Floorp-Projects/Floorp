@@ -4,6 +4,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const {
   Component,
   createFactory,
@@ -124,6 +125,7 @@ class HeadersPanel extends Component {
       openLink: PropTypes.func,
       targetSearchResult: PropTypes.object,
       openRequestBlockingAndAddUrl: PropTypes.func.isRequired,
+      openHTTPCustomRequestTab: PropTypes.func.isRequired,
       cloneRequest: PropTypes.func,
       sendCustomRequest: PropTypes.func,
       shouldExpandPreview: PropTypes.bool,
@@ -542,6 +544,7 @@ class HeadersPanel extends Component {
         transferredSize,
       },
       openRequestBlockingAndAddUrl,
+      openHTTPCustomRequestTab,
       shouldExpandPreview,
       setHeadersUrlPreviewExpanded,
     } = this.props;
@@ -743,6 +746,10 @@ class HeadersPanel extends Component {
       trackingProtectionDetails,
     ].filter(summaryItem => summaryItem !== null);
 
+    const newEditAndResendPref = Services.prefs.getBoolPref(
+      "devtools.netmonitor.features.newEditAndResend"
+    );
+
     return div(
       { className: "headers-panel-container" },
       div(
@@ -764,15 +771,27 @@ class HeadersPanel extends Component {
           L10N.getStr("netmonitor.headers.toolbar.block")
         ),
         span({ className: "devtools-separator" }),
-        button(
-          {
-            id: "edit-resend-button",
-            className: "devtools-button devtools-dropdown-button",
-            title: RESEND,
-            onClick: this.onShowResendMenu,
-          },
-          span({ className: "title" }, RESEND)
-        )
+        newEditAndResendPref
+          ? button(
+              {
+                id: "edit-resend-button",
+                className: "devtools-button",
+                title: EDIT_AND_RESEND,
+                onClick: () => {
+                  openHTTPCustomRequestTab();
+                },
+              },
+              span({ className: "title" }, EDIT_AND_RESEND)
+            )
+          : button(
+              {
+                id: "edit-resend-button",
+                className: "devtools-button devtools-dropdown-button",
+                title: RESEND,
+                onClick: this.onShowResendMenu,
+              },
+              span({ className: "title" }, RESEND)
+            )
       ),
       div(
         { className: "panel-container" },
@@ -810,6 +829,8 @@ module.exports = connect(
       dispatch(Actions.setHeadersUrlPreviewExpanded(expanded)),
     openRequestBlockingAndAddUrl: url =>
       dispatch(Actions.openRequestBlockingAndAddUrl(url)),
+    openHTTPCustomRequestTab: () =>
+      dispatch(Actions.openHTTPCustomRequest(true)),
     cloneRequest: id => dispatch(Actions.cloneRequest(id)),
     sendCustomRequest: () =>
       dispatch(Actions.sendCustomRequest(props.connector)),
