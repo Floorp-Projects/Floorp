@@ -2,5 +2,6 @@
     "build_wasm": true,
     "cc": "cl.exe",
     "cxx": "cl.exe",
-    "ml": "ml64.exe"
+    "ml": "ml64.exe",
+    "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt"
 }
