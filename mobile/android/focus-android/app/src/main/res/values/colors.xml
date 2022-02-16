@@ -127,7 +127,6 @@
     <color name="mozac_additional_note_text_color">@color/secondaryText</color>
 
     <!-- CFR colors -->
-    <color name="cfr_tint_color">#592ACB</color>
     <color name="cfr_text_color">#FBFBFE</color>
     <color name="cfr_pop_up_shape_end_color">#AB71FF</color>
     <color name="cfr_pop_up_shape_start_color">#592ACB</color>

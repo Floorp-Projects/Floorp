@@ -18,7 +18,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import android.webkit.MimeTypeMap
-import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.preference.PreferenceManager
@@ -63,9 +62,9 @@ import org.mozilla.focus.browser.integration.BrowserMenuController
 import org.mozilla.focus.browser.integration.BrowserToolbarIntegration
 import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
+import org.mozilla.focus.compose.CFRPopup
 import org.mozilla.focus.contextmenu.ContextMenuCandidates
 import org.mozilla.focus.databinding.FragmentBrowserBinding
-import org.mozilla.focus.databinding.ToolbarShieldIconCfrBinding
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.ext.accessibilityManager
@@ -87,7 +86,7 @@ import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX_LIMIT
 import org.mozilla.focus.topsites.DefaultTopSitesView
-import org.mozilla.focus.utils.CfrUtils
+import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.FocusSnackbar
 import org.mozilla.focus.utils.FocusSnackbarDelegate
 import org.mozilla.focus.utils.IntentUtils
@@ -104,8 +103,6 @@ class BrowserFragment :
 
     private var _binding: FragmentBrowserBinding? = null
     private val binding get() = _binding!!
-    private var _toolbarShieldIconCfrBinding: ToolbarShieldIconCfrBinding? = null
-    private var toolbarShieldIconCfrPopupWindow: PopupWindow? = null
 
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val fullScreenIntegration = ViewBoundFeatureWrapper<FullScreenIntegration>()
@@ -334,12 +331,21 @@ class BrowserFragment :
     }
 
     private fun showCfrForShieldToolbarIcon() {
-        val cfrForShieldToolbarIcon = CfrUtils.showCFRForShieldToolbarIconIfNeeded(
-            rootView = binding.browserToolbar.rootView, context = requireContext(),
-            isContentSecure = tab.content.securityInfo.secure
-        )
-        _toolbarShieldIconCfrBinding = cfrForShieldToolbarIcon?.toolbarShieldIconCfrBinding
-        toolbarShieldIconCfrPopupWindow = cfrForShieldToolbarIcon?.toolbarShieldIconCfrPopupWindow
+        if (Features.SHOULD_SHOW_CFR_FOR_SHIELD_TOOLBAR_ICON &&
+            requireContext().settings.shouldShowCfrForShieldToolbarIcon &&
+            tab.content.securityInfo.secure
+        ) {
+            CFRPopup(
+                container = binding.root,
+                text = getString(R.string.cfr_for_toolbar_shield_icon),
+                anchor = binding.browserToolbar.rootView.findViewById(
+                    R.id.mozac_browser_toolbar_tracking_protection_indicator
+                ),
+                onDismiss = { requireContext().settings.shouldShowCfrForShieldToolbarIcon = false }
+            ).apply {
+                show()
+            }
+        }
     }
 
     private fun setSitePermissions(rootView: View) {
@@ -454,13 +460,6 @@ class BrowserFragment :
         super.onDestroyView()
         requireContext().accessibilityManager.removeAccessibilityStateChangeListener(this)
         _binding = null
-        _toolbarShieldIconCfrBinding = null
-        // PopupWindow should be dismissed because it causes Static Field Leaked
-        if (toolbarShieldIconCfrPopupWindow != null && toolbarShieldIconCfrPopupWindow?.isShowing == true) {
-            // DismissListener from CfrUtils should not be called when user exits the screen
-            toolbarShieldIconCfrPopupWindow?.setOnDismissListener(null)
-            toolbarShieldIconCfrPopupWindow?.dismiss()
-        }
     }
 
     override fun onDestroy() {

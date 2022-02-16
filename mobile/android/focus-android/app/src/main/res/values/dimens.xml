@@ -84,8 +84,4 @@
     <dimen name="radio_button_preference_start_margin">18dp</dimen>
     <dimen name="radio_button_preference_title_margins">16dp</dimen>
 
-    <!-- Dimensions for the CFR (Contextual Feature Recommendation) tooltip triangle. -->
-    <dimen name="cfr_triangle_height">16dp</dimen>
-    <dimen name="cfr_triangle_width">16dp</dimen>
-    <dimen name="cfr_triangle_margin_edge">16dp</dimen>
 </resources>
