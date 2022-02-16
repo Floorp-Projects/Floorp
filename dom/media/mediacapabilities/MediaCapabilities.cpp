@@ -232,9 +232,8 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
     tracks.AppendElements(std::move(audioTracks));
   }
 
-  typedef MozPromise<MediaCapabilitiesInfo, MediaResult,
-                     /* IsExclusive = */ true>
-      CapabilitiesPromise;
+  using CapabilitiesPromise = MozPromise<MediaCapabilitiesInfo, MediaResult,
+                                         /* IsExclusive = */ true>;
   nsTArray<RefPtr<CapabilitiesPromise>> promises;
 
   RefPtr<TaskQueue> taskQueue =
@@ -273,7 +272,8 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
     // to create such decoder and perform initialization.
 
     RefPtr<layers::KnowsCompositor> compositor = GetCompositor();
-    double frameRate = videoContainer->ExtendedType().GetFramerate().ref();
+    float frameRate =
+        static_cast<float>(videoContainer->ExtendedType().GetFramerate().ref());
     // clang-format off
     promises.AppendElement(InvokeAsync(
         taskQueue, __func__,
@@ -335,8 +335,7 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
                               bool powerEfficient =
                                   decoder->IsHardwareAccelerated(reason);
 
-                              int32_t videoFrameRate =
-                                  frameRate < 1 ? 1 : frameRate;
+                              int32_t videoFrameRate = std::clamp<int32_t>(frameRate, 1, INT32_MAX);
 
                               DecoderBenchmarkInfo benchmarkInfo{
                                   config->mMimeType,
