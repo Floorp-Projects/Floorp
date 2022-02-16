@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   60
 );
 
-add_setup(async function global_setup() {
+add_task(async function global_setup() {
   // Disable idle management because it interacts with our code, causing
   // unexpected intermittent failures, we'll fake idle notifications when
   // we need to test it.
