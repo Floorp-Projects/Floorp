@@ -674,7 +674,6 @@ def main():
     stage1_inst_dir = stage1_dir + "/" + package_name
 
     final_stage_dir = stage1_dir
-    final_inst_dir = stage1_inst_dir
 
     if is_darwin():
         extra_cflags = []
@@ -775,7 +774,6 @@ def main():
         stage2_dir = build_dir + "/stage2"
         stage2_inst_dir = stage2_dir + "/" + package_name
         final_stage_dir = stage2_dir
-        final_inst_dir = stage2_inst_dir
         if skip_stages < 1:
             cc = stage1_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
             cxx = stage1_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)
@@ -805,7 +803,6 @@ def main():
         stage3_dir = build_dir + "/stage3"
         stage3_inst_dir = stage3_dir + "/" + package_name
         final_stage_dir = stage3_dir
-        final_inst_dir = stage3_inst_dir
         if skip_stages < 2:
             cc = stage2_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
             cxx = stage2_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)
@@ -843,9 +840,7 @@ def main():
 
     if stages >= 4 and skip_stages < 4:
         stage4_dir = build_dir + "/stage4"
-        stage4_inst_dir = stage4_dir + "/" + package_name
         final_stage_dir = stage4_dir
-        final_inst_dir = stage4_inst_dir
         profile = None
         if pgo:
             if skip_stages == 3:
@@ -882,21 +877,6 @@ def main():
         prune_final_dir_for_clang_tidy(
             os.path.join(final_stage_dir, package_name), osx_cross_compile
         )
-
-    # Copy the wasm32 builtins to the final_inst_dir if the archive is present.
-    if "wasi-compiler-rt" in config:
-        compiler_rt = config["wasi-compiler-rt"].format(**os.environ)
-        if os.path.isdir(compiler_rt):
-            for libdir in glob.glob(
-                os.path.join(final_inst_dir, "lib", "clang", "*", "lib")
-            ):
-                srcdir = os.path.join(compiler_rt, "lib", "wasi")
-                print("Copying from wasi-compiler-rt srcdir %s" % srcdir)
-                # Copy the contents of the "lib/wasi" subdirectory to the
-                # appropriate location in final_inst_dir.
-                destdir = os.path.join(libdir, "wasi")
-                mkdir_p(destdir)
-                copy_tree(srcdir, destdir)
 
     if not args.skip_tar:
         build_tar_package("%s.tar.zst" % package_name, final_stage_dir, package_name)
