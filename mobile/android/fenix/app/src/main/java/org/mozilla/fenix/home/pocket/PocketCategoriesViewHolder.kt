@@ -84,7 +84,7 @@ private fun PocketTopics(
                 .wrapContentHeight(align = Alignment.Top)
         )
 
-        Spacer(Modifier.height(17.dp))
+        Spacer(Modifier.height(16.dp))
 
         PocketStoriesCategories(
             categories = categories,

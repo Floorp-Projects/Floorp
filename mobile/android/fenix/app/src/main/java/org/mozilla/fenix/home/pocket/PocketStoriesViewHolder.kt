@@ -76,7 +76,7 @@ class PocketStoriesViewHolder(
                     .wrapContentHeight(align = Alignment.Top)
             )
 
-            Spacer(Modifier.height(17.dp))
+            Spacer(Modifier.height(16.dp))
 
             PocketStories(
                 stories ?: emptyList(),
@@ -101,7 +101,7 @@ fun PocketStoriesViewHolderPreview() {
                     .wrapContentHeight(align = Alignment.Top)
             )
 
-            Spacer(Modifier.height(17.dp))
+            Spacer(Modifier.height(16.dp))
 
             PocketStories(
                 stories = getFakePocketStories(POCKET_STORIES_TO_SHOW_COUNT),
