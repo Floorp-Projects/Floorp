@@ -41,6 +41,7 @@ import mozilla.components.feature.downloads.manager.FetchDownloadManager
 import mozilla.components.feature.downloads.share.ShareDownloadFeature
 import mozilla.components.feature.media.fullscreen.MediaSessionFullscreenFeature
 import mozilla.components.feature.prompts.PromptFeature
+import mozilla.components.feature.session.PictureInPictureFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.tabs.WindowFeature
@@ -48,6 +49,7 @@ import mozilla.components.feature.top.sites.TopSitesConfig
 import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.lib.crash.Crash
 import mozilla.components.service.glean.private.NoExtras
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.utils.Browsers
 import org.mozilla.focus.GleanMetrics.Browser
@@ -99,6 +101,7 @@ import java.net.URLEncoder
 @Suppress("LargeClass", "TooManyFunctions")
 class BrowserFragment :
     BaseFragment(),
+    UserInteractionHandler,
     AccessibilityManager.AccessibilityStateChangeListener {
 
     private var _binding: FragmentBrowserBinding? = null
@@ -106,6 +109,7 @@ class BrowserFragment :
 
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val fullScreenIntegration = ViewBoundFeatureWrapper<FullScreenIntegration>()
+    private var pictureInPictureFeature: PictureInPictureFeature? = null
 
     internal val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val promptFeature = ViewBoundFeatureWrapper<PromptFeature>()
@@ -172,6 +176,13 @@ class BrowserFragment :
                 binding.engineView
             ),
             this, view
+        )
+
+        pictureInPictureFeature = PictureInPictureFeature(
+            store = components.store,
+            activity = requireActivity(),
+            crashReporting = components.crashReporter,
+            tabId = tabId
         )
 
         contextMenuFeature.set(
@@ -633,8 +644,10 @@ class BrowserFragment :
         }
     }
 
+    override fun onHomePressed() = pictureInPictureFeature?.onHomePressed() ?: false
+
     @Suppress("ComplexMethod", "ReturnCount")
-    fun onBackPressed(): Boolean {
+    override fun onBackPressed(): Boolean {
         if (findInPageIntegration.onBackPressed()) {
             return true
         } else if (fullScreenIntegration.onBackPressed()) {

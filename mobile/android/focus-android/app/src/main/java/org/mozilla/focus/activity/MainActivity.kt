@@ -19,6 +19,7 @@ import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.lib.crash.Crash
 import mozilla.components.service.glean.private.NoExtras
+import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.getWindowInsetsController
 import mozilla.components.support.locale.LocaleAwareAppCompatActivity
@@ -43,7 +44,7 @@ import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.SupportUtils
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 open class MainActivity : LocaleAwareAppCompatActivity() {
     private val intentProcessor by lazy {
         IntentProcessor(this, components.tabsUseCases, components.customTabsUseCases)
@@ -108,6 +109,15 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         lifecycle.addObserver(navigator)
 
         AppReviewUtils.showAppReview(this)
+    }
+
+    final override fun onUserLeaveHint() {
+        val browserFragment =
+            supportFragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
+        if (browserFragment is UserInteractionHandler && browserFragment.onHomePressed()) {
+            return
+        }
+        super.onUserLeaveHint()
     }
 
     override fun onResume() {
