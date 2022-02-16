@@ -43,7 +43,6 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "nsAboutProtocolUtils.h"
 #include "nsGkAtoms.h"
@@ -1839,8 +1838,6 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 
   if (aRequest->IsTextSource()) {
     if (!JS::CanCompileOffThread(cx, options, aRequest->ScriptTextLength())) {
-      TRACE_FOR_TEST(aRequest->GetScriptElement(),
-                     "scriptloader_main_thread_compile");
       return NS_OK;
     }
   } else {
@@ -1896,16 +1893,16 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
   } else {
     MOZ_ASSERT(aRequest->IsTextSource());
 
-    if (ShouldApplyDelazifyStrategy(aRequest)) {
-      ApplyDelazifyStrategy(&options);
+    if (ShouldFullParse(aRequest)) {
+      options.setForceFullParse();
       mTotalFullParseSize +=
           aRequest->ScriptTextLength() > 0
               ? static_cast<uint32_t>(aRequest->ScriptTextLength())
               : 0;
 
       LOG(
-          ("ScriptLoadRequest (%p): non-on-demand-only Parsing Enabled for "
-           "url=%s mTotalFullParseSize=%u",
+          ("ScriptLoadRequest (%p): Full Parsing Enabled for url=%s "
+           "mTotalFullParseSize=%u",
            aRequest, aRequest->mURI->GetSpecOrDefault().get(),
            mTotalFullParseSize));
     }
@@ -1913,23 +1910,6 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
     MaybeSourceText maybeSource;
     nsresult rv = aRequest->GetScriptSource(cx, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    if (StaticPrefs::dom_expose_test_interfaces()) {
-      switch (options.eagerDelazificationStrategy()) {
-        case JS::DelazificationOption::OnDemandOnly:
-          TRACE_FOR_TEST(aRequest->GetScriptElement(),
-                         "delazification_on_demand_only");
-          break;
-        case JS::DelazificationOption::ConcurrentDepthFirst:
-          TRACE_FOR_TEST(aRequest->GetScriptElement(),
-                         "delazification_concurrent_depth_first");
-          break;
-        case JS::DelazificationOption::ParseEverythingEagerly:
-          TRACE_FOR_TEST(aRequest->GetScriptElement(),
-                         "delazification_parse_everything_eagerly");
-          break;
-      }
-    }
 
     aRequest->mOffThreadToken =
         maybeSource.constructed<SourceText<char16_t>>()
@@ -3303,20 +3283,20 @@ static bool IsInternalURIScheme(nsIURI* uri) {
          uri->SchemeIs("chrome");
 }
 
-bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest) {
+bool ScriptLoader::ShouldFullParse(ScriptLoadRequest* aRequest) {
   // Full parse everything if negative.
-  if (StaticPrefs::dom_script_loader_delazification_max_size() < 0) {
+  if (StaticPrefs::dom_script_loader_full_parse_max_size() < 0) {
     return true;
   }
 
   // Be conservative on machines with 2GB or less of memory.
   if (PhysicalSizeOfMemoryInGB() <=
-      StaticPrefs::dom_script_loader_delazification_min_mem()) {
+      StaticPrefs::dom_script_loader_full_parse_min_mem()) {
     return false;
   }
 
   uint32_t max_size = static_cast<uint32_t>(
-      StaticPrefs::dom_script_loader_delazification_max_size());
+      StaticPrefs::dom_script_loader_full_parse_max_size());
   uint32_t script_size =
       aRequest->ScriptTextLength() > 0
           ? static_cast<uint32_t>(aRequest->ScriptTextLength())
@@ -3329,43 +3309,12 @@ bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest) {
   if (LOG_ENABLED()) {
     nsCString url = aRequest->mURI->GetSpecOrDefault();
     LOG(
-        ("ScriptLoadRequest (%p): non-on-demand-only Parsing Disabled for (%s) "
-         "with size=%u because mTotalFullParseSize=%u would exceed max_size=%u",
+        ("ScriptLoadRequest (%p): Full Parsing Disabled for (%s) with size=%u"
+         " because mTotalFullParseSize=%u would exceed max_size=%u",
          aRequest, url.get(), script_size, mTotalFullParseSize, max_size));
   }
 
   return false;
-}
-
-void ScriptLoader::ApplyDelazifyStrategy(JS::CompileOptions* aOptions) {
-  JS::DelazificationOption strategy =
-      JS::DelazificationOption::ParseEverythingEagerly;
-  uint32_t strategyIndex =
-      StaticPrefs::dom_script_loader_delazification_strategy();
-
-  // Assert that all enumerated values of DelazificationOption are between
-  // OnDemandOnly and ParseEverythingEagerly.
-#ifdef DEBUG
-  MOZ_ASSERT(uint32_t(JS::DelazificationOption::OnDemandOnly) == 0);
-  uint32_t count = 0;
-#  define _COUNT_ENTRIES(Name) count++;
-#  define _ASSERT_INCLUDED_ENUM(Name) \
-    MOZ_ASSERT(uint32_t(JS::DelazificationOption::Name) <= uint32_t(strategy));
-
-  FOREACH_DELAZIFICATION_STRATEGY(_ASSERT_INCLUDED_ENUM);
-  FOREACH_DELAZIFICATION_STRATEGY(_COUNT_ENTRIES);
-  MOZ_ASSERT(count == uint32_t(strategy) + 1);
-#  undef _COUNT_ENTRIES
-#  undef _ASSERT_INCLUDED_ENUM
-#endif
-
-  // Any strategy index larger than ParseEverythingEagerly would default to
-  // ParseEverythingEagerly.
-  if (strategyIndex <= uint32_t(strategy)) {
-    strategy = JS::DelazificationOption(uint8_t(strategyIndex));
-  }
-
-  aOptions->setEagerDelazificationStrategy(strategy);
 }
 
 bool ScriptLoader::ShouldCompileOffThread(ScriptLoadRequest* aRequest) {
