@@ -126,8 +126,7 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
   void SetStream(ReadableStream* aStream);
 
  private:
-  // Internal Slots: Public for ease of prototyping because
-  // of the reams of static methods that access internal slots.
+  // Internal Slots:
   RefPtr<UnderlyingSourceCancelCallbackHelper> mCancelAlgorithm;
   bool mCloseRequested = false;
   bool mPullAgain = false;
