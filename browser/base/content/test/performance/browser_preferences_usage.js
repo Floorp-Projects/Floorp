@@ -109,7 +109,7 @@ add_task(async function startup() {
       max: 350,
     },
     "layout.css.dpi": {
-      min: 45,
+      min: 37,
       max: 81,
     },
     "network.loadinfo.skip_type_assertion": {
