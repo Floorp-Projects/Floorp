@@ -467,3 +467,78 @@ add_task(async function() {
 
   clearOrigin();
 });
+
+/**
+ * Verify that snapshots are able to work with negative usage. This can happen
+ * when there's an item stored in localStorage with given size and then two
+ * snaphots (created at the same time) mutate the item. The first one replases
+ * it with something bigger and the other one removes it.
+ */
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Force multiple web and webIsolated content processes so that the
+      // multi-e10s logic works correctly.
+      ["dom.ipc.processCount", 4],
+      ["dom.ipc.processCount.webIsolated", 2],
+      // Disable snapshot peak usage pre-incrementation to make the testing
+      // easier.
+      ["dom.storage.snapshot_peak_usage.initial_preincrement", 0],
+      ["dom.storage.snapshot_peak_usage.reduced_initial_preincrement", 0],
+      ["dom.storage.snapshot_peak_usage.gradual_preincrement", 0],
+      ["dom.storage.snapshot_peak_usage.reuced_gradual_preincrement", 0],
+      // Enable LocalStorage's testing API so we can explicitly create
+      // snapshots when needed.
+      ["dom.storage.testing", true],
+    ],
+  });
+
+  // Ensure that there is no localstorage data by forcing the origin to be
+  // cleared prior to the start of our test.
+  await clearOriginStorageEnsuringNoPreload(HELPER_PAGE_ORIGIN);
+
+  // Open tabs.  Don't configure any of them yet.
+  const knownTabs = new KnownTabs();
+  const writerTab1 = await openTestTab(
+    HELPER_PAGE_URL,
+    "writer1",
+    knownTabs,
+    true
+  );
+  const writerTab2 = await openTestTab(
+    HELPER_PAGE_URL,
+    "writer2",
+    knownTabs,
+    true
+  );
+
+  // Apply the initial mutation using an explicit snapshot. The explicit
+  // snapshot here ensures that the parent process have received the changes.
+  await beginExplicitSnapshot(writerTab1);
+  await applyMutations(writerTab1, [["key", "something"]]);
+  await endExplicitSnapshot(writerTab1);
+
+  // Begin explicit snapshots in both tabs. Both tabs should see the initial
+  // state.
+  await beginExplicitSnapshot(writerTab1);
+  await beginExplicitSnapshot(writerTab2);
+
+  // Apply the first mutation in writerTab1 and end the explicit snapshot.
+  await applyMutations(writerTab1, [["key", "somethingBigger"]]);
+  await endExplicitSnapshot(writerTab1);
+
+  // Apply the second mutation in writerTab2 and end the explicit snapshot.
+  await applyMutations(writerTab2, [["key", null]]);
+  await endExplicitSnapshot(writerTab2);
+
+  // Verify the final state, it should match the state after the second
+  // mutation has been applied and "commited". An explicit snapshot is used.
+  await beginExplicitSnapshot(writerTab1);
+  await verifyState(writerTab1, {});
+  await endExplicitSnapshot(writerTab1);
+
+  // Clean up.
+  await cleanupTabs(knownTabs);
+
+  clearOriginStorageEnsuringNoPreload(HELPER_PAGE_ORIGIN);
+});
