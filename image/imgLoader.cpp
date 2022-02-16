@@ -1905,24 +1905,15 @@ void imgLoader::NotifyObserversForCachedImage(
   if (aEntry->HasNotified()) {
     return;
   }
-
-  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
-
-  bool found;
-  nsresult rv = obsService->HasObservers("http-on-image-cache-response", found);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  if (!found) {
-    return;
-  }
-
   aEntry->SetHasNotified();
 
   nsCOMPtr<nsIChannel> newChannel;
   bool forcePrincipalCheck;
-  rv = NewImageChannel(getter_AddRefs(newChannel), &forcePrincipalCheck, aURI,
-                       nullptr, aCORSMode, aReferrerInfo, nullptr, 0,
-                       nsIContentPolicy::TYPE_INTERNAL_IMAGE,
-                       aTriggeringPrincipal, aLoadingDocument, mRespectPrivacy);
+  nsresult rv =
+      NewImageChannel(getter_AddRefs(newChannel), &forcePrincipalCheck, aURI,
+                      nullptr, aCORSMode, aReferrerInfo, nullptr, 0,
+                      nsIContentPolicy::TYPE_INTERNAL_IMAGE,
+                      aTriggeringPrincipal, aLoadingDocument, mRespectPrivacy);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1935,6 +1926,7 @@ void imgLoader::NotifyObserversForCachedImage(
     if (image) {
       newChannel->SetContentLength(aEntry->GetDataSize());
     }
+    nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
     obsService->NotifyObservers(newChannel, "http-on-image-cache-response",
                                 nullptr);
   }
