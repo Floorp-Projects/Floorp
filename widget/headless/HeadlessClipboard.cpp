@@ -46,8 +46,8 @@ HeadlessClipboard::SetData(nsITransferable* aTransferable,
 }
 
 NS_IMETHODIMP
-HeadlessClipboard::GetData(nsITransferable* aTransferable,
-                           int32_t aWhichClipboard) {
+HeadlessClipboard::GetSomeData(nsITransferable* aTransferable,
+                               int32_t aWhichClipboard) {
   if (aWhichClipboard != kGlobalClipboard) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
