@@ -683,11 +683,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 :root {
-  --avatar-image-url: url(chrome://browser/skin/fxa/avatar.svg);
+  --avatar-image-url: url(chrome://browser/skin/fxa/avatar-color.svg);
 }
 
 :root[fxastatus="not_configured"] {
-  --avatar-image-url: url(chrome://browser/skin/fxa/avatar-empty.svg);
+  --avatar-image-url: url(chrome://browser/skin/fxa/avatar-color.svg);
 }
 
 :root:not([fxatoolbarmenu]) #fxa-toolbar-menu-button {
