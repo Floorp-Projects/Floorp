@@ -127,6 +127,8 @@ You might want to talk with `#geckoview` maintainers to ensure if this is requir
 Crash reporting
 ###############
 
+- Add ``InitCrashReporter`` message to the parent-side `InitCrashReporter <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/PUtilityProcess.ipdl#30>`_
+- Ensure your parent class inherits `public ipc::CrashReporterHelper<GeckoProcessType_Xxx> <https://searchfox.org/mozilla-central/rev/fc4d4a8d01b0e50d20c238acbb1739ccab317ebc/ipc/glue/UtilityProcessParent.h#23>`_
 - Add new ``Xxx*Status`` `annotations <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/crashreporter/CrashAnnotations.yaml#968-971>`_ entry for your new process type description. The link here points to `UtilityProcessStatus` so you can see the similar description you have to write, but you might want to respect ordering in that file and put your new code at the appropriate place.
 - Add entry in `PROCESS_CRASH_SUBMIT_ATTEMPT <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/telemetry/Histograms.json#13403-13422>`_
 
