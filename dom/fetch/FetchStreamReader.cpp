@@ -271,7 +271,7 @@ FetchStreamReader::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
   AutoEntryScript aes(mGlobal, "ReadableStreamReader.read", !mWorkerRef);
 
 #ifdef MOZ_DOM_STREAMS
-  ErrorResult rv;
+  IgnoredErrorResult rv;
 
   // The below very loosely tries to implement the incrementally-read-loop from
   // the fetch spec: However, because of the structure of the surrounding code,
@@ -291,10 +291,6 @@ FetchStreamReader::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
 
   ReadableStreamDefaultReaderRead(aes.cx(), MOZ_KnownLive(mReader), readRequest,
                                   rv);
-
-  // We report the (potential) JS Exception via the AutoEntryScript above, as
-  // was done in the JS Streams implementation as well.
-  rv.WouldReportJSException();
 
   if (NS_WARN_IF(rv.Failed())) {
     // Let's close the stream.
