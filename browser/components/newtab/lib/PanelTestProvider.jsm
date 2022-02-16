@@ -222,7 +222,9 @@ const MESSAGES = () => [
     groups: ["panel-test-provider"],
     content: {
       template: "logo-and-content",
-      logoImageURL: "chrome://browser/content/logos/vpn-promo-logo.svg",
+      logo: {
+        imageURL: "chrome://browser/content/logos/vpn-promo-logo.svg",
+      },
       body: {
         title: {
           label: {
@@ -307,6 +309,82 @@ const MESSAGES = () => [
           size: "13px",
         },
       },
+    },
+    frequency: { lifetime: 3 },
+    trigger: { id: "defaultBrowserCheck" },
+  },
+  {
+    id: "MULTISTAGE_SPOTLIGHT_MESSAGE",
+    groups: ["panel-test-provider"],
+    template: "spotlight",
+    content: {
+      template: "multistage",
+      backdrop: "transparent",
+      screens: [
+        {
+          id: "AW_PIN_FIREFOX",
+          order: 0,
+          content: {
+            title: {
+              string_id: "mr1-onboarding-pin-header",
+            },
+            hero_text: {
+              string_id: "mr1-welcome-screen-hero-text",
+            },
+            help_text: {
+              text: {
+                string_id: "mr1-onboarding-welcome-image-caption",
+              },
+            },
+            primary_button: {
+              label: {
+                string_id: "mr1-onboarding-pin-primary-button-label",
+              },
+              action: {
+                navigate: true,
+                type: "PIN_FIREFOX_TO_TASKBAR",
+              },
+            },
+            secondary_button: {
+              label: {
+                string_id: "mr1-onboarding-set-default-secondary-button-label",
+              },
+              action: {
+                navigate: true,
+              },
+            },
+          },
+        },
+        {
+          id: "AW_SET_DEFAULT",
+          order: 1,
+          content: {
+            title: {
+              string_id: "mr1-onboarding-default-header",
+            },
+            subtitle: {
+              string_id: "mr1-onboarding-default-subtitle",
+            },
+            primary_button: {
+              label: {
+                string_id: "mr1-onboarding-default-primary-button-label",
+              },
+              action: {
+                navigate: true,
+                type: "SET_DEFAULT_BROWSER",
+              },
+            },
+            secondary_button: {
+              label: {
+                string_id: "mr1-onboarding-set-default-secondary-button-label",
+              },
+              action: {
+                navigate: true,
+              },
+            },
+          },
+        },
+      ],
     },
     frequency: { lifetime: 3 },
     trigger: { id: "defaultBrowserCheck" },

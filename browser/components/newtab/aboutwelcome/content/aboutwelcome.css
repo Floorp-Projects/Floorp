@@ -47,6 +47,19 @@ body[lwt-newtab-brighttext] {
   --newtab-button-secondary-color: #FFF;
 }
 
+:root[dialogroot] {
+  background-color: transparent;
+}
+:root[dialogroot] body {
+  padding: 0;
+}
+:root[dialogroot] .onboardingContainer {
+  overflow: visible;
+}
+:root[dialogroot] .onboardingContainer .screen {
+  background-color: transparent;
+}
+
 .onboardingContainer {
   text-align: center;
   overflow-x: auto;
@@ -94,6 +107,7 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .main-content {
   background-color: var(--in-content-page-background);
   border-radius: 20px;
+  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -111,6 +125,7 @@ body[lwt-newtab-brighttext] {
   justify-content: space-around;
 }
 .onboardingContainer .screen {
+  background-color: rgba(21, 20, 26, 0.5);
   display: flex;
   position: relative;
   flex-flow: row nowrap;
@@ -666,6 +681,7 @@ body[lwt-newtab-brighttext] {
   fill: #FFA437;
 }
 .onboardingContainer [pos=corner] {
+  background-color: transparent;
   min-width: 700px;
 }
 .onboardingContainer [pos=corner] .section-left {
@@ -712,6 +728,7 @@ body[lwt-newtab-brighttext] {
 }
 .onboardingContainer [pos=corner] .section-main .main-content {
   background: transparent;
+  box-shadow: none;
   display: block;
   position: absolute;
   height: 350px;
@@ -755,9 +772,6 @@ body[lwt-newtab-brighttext] {
   inset-inline-end: 125px;
   transform: rotate(-75deg);
   transition-delay: 0.8s;
-}
-.onboardingContainer .screen-1 {
-  background-color: rgba(21, 20, 26, 0.5);
 }
 .onboardingContainer .screen-1 .section-main {
   z-index: 1;
@@ -850,9 +864,6 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .primary,
 .onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .secondary-cta {
   transition-delay: 0.4s;
-}
-.onboardingContainer .screen-2 {
-  background-color: rgba(21, 20, 26, 0.5);
 }
 .onboardingContainer .screen-2 .section-main {
   z-index: 1;

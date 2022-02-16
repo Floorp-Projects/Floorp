@@ -30,6 +30,25 @@ body {
   }
 }
 
+// Styling for content rendered in a Spotlight messaging surface.
+:root {
+  &[dialogroot] {
+    background-color: transparent;
+
+    body {
+      padding: 0;
+    }
+
+    .onboardingContainer {
+      overflow: visible;
+
+      .screen {
+        background-color: transparent;
+      }
+    }
+  }
+}
+
 .onboardingContainer {
   text-align: center;
   overflow-x: auto;
@@ -85,6 +104,7 @@ body {
   .main-content {
     background-color: var(--in-content-page-background);
     border-radius: 20px;
+    box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -105,6 +125,7 @@ body {
   }
 
   .screen {
+    background-color: rgba(21, 20, 26, 0.5);
     display: flex;
     position: relative;
     flex-flow: row nowrap;
@@ -787,6 +808,7 @@ body {
   }
 
   [pos='corner'] {
+    background-color: transparent;
     min-width: 700px;
 
     .section-left {
@@ -839,6 +861,7 @@ body {
 
       .main-content {
         background: transparent;
+        box-shadow: none;
         display: block;
         position: absolute;
         height: 350px;
@@ -895,8 +918,6 @@ body {
   }
 
   .screen-1 {
-    background-color: rgba(21, 20, 26, 0.5);
-
     .section-main {
       z-index: 1;
       margin: auto;
@@ -1005,8 +1026,6 @@ body {
   }
 
   .screen-2 {
-    background-color: rgba(21, 20, 26, 0.5);
-
     .section-main {
       z-index: 1;
       margin: auto;
