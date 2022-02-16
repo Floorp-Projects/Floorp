@@ -42,8 +42,6 @@ class Screen final : public nsIScreen {
     return mScreenOrientation;
   }
 
-  float GetDPI() const { return mDPI; }
-
  private:
   virtual ~Screen() = default;
 
