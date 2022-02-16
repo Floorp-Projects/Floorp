@@ -493,7 +493,10 @@ class ModuleInfo {
 function createBrowser() {
   const browser = (window.browser = document.createXULElement("browser"));
   // Identify this `<browser>` element uniquely to Marionette, devtools, etc.
-  browser.permanentKey = {};
+  // Use the JSM global to create the permanentKey, so that if the
+  // permanentKey is held by something after this window closes, it
+  // doesn't keep the window alive. See also Bug 1501789.
+  browser.permanentKey = new (Cu.getGlobalForObject(Services).Object)();
 
   browser.setAttribute("nodefaultsrc", "true");
   browser.setAttribute("type", "content");
