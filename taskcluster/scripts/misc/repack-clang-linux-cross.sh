@@ -6,14 +6,10 @@ set -x -e -v
 cd $MOZ_FETCHES_DIR
 
 # We have a native linux64 toolchain in $MOZ_FETCHES_DIR/clang
-# We have some linux compiler-rts in $MOZ_FETCHES_DIR/compiler-rt if no argument
-# is given to the script, or $MOZ_FETCHES_DIR/*/compiler-rt otherwise. The
-# subdirectories are given as arguments.
+# We have some linux compiler-rts in $MOZ_FETCHES_DIR/compiler-rt*
 clang_lib=$(echo $PWD/clang/lib/clang/*/lib)
-for dir in ${*:-.}; do
-  find $dir/compiler-rt/lib/linux -type f | while read f; do
-    cp -n $f $clang_lib/linux
-  done
+find compiler-rt-*/lib/linux -type f | while read f; do
+  cp -n $f $clang_lib/linux
 done
 
 tar -caf clang.tar.zst clang
