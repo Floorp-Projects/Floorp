@@ -7,9 +7,9 @@
 #ifndef mozilla_dom_ModuleLoader_h
 #define mozilla_dom_ModuleLoader_h
 
-#include "ModuleLoaderBase.h"
 #include "mozilla/dom/ScriptLoadContext.h"
-#include "mozilla/dom/ScriptLoadRequest.h"
+#include "js/loader/ModuleLoaderBase.h"
+#include "js/loader/ScriptLoadRequest.h"
 #include "ScriptLoader.h"
 
 class nsIURI;
@@ -18,19 +18,24 @@ namespace JS {
 
 class CompileOptions;
 
+namespace loader {
+
+class ModuleLoadRequest;
+
+}  // namespace loader
 }  // namespace JS
 
 namespace mozilla {
 namespace dom {
 
-class ModuleLoadRequest;
+class ScriptLoader;
 class SRIMetadata;
 
 //////////////////////////////////////////////////////////////
 // DOM Module loader implementation
 //////////////////////////////////////////////////////////////
 
-class ModuleLoader final : public ModuleLoaderBase {
+class ModuleLoader final : public JS::loader::ModuleLoaderBase {
  private:
   virtual ~ModuleLoader();
 
