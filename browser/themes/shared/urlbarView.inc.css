@@ -330,7 +330,7 @@
 }
 
 .urlbarView-button-block {
-  background-image: url("chrome://global/skin/icons/close.svg");
+  background-image: url("chrome://browser/skin/thumb-down.svg");
 }
 
 .urlbarView-button-help {
