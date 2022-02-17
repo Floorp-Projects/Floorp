@@ -329,6 +329,28 @@ struct SizeSpec {
   bool HeightSpecified() const {
     return mOuterHeight.isSome() || mInnerHeight.isSome();
   }
+
+  void ScaleBy(float aOpenerZoom) {
+    if (aOpenerZoom == 1.0f) {
+      return;
+    }
+    auto Scale = [&aOpenerZoom](auto& aValue) {
+      if (aValue) {
+        *aValue = NSToIntRound(*aValue * aOpenerZoom);
+      }
+    };
+    // Scaling the position is needed to make sure that the window position is
+    // what the caller expects.
+    Scale(mLeft);
+    Scale(mTop);
+
+    // Scaling these CSS sizes by the zoom factor might be a bit dubious, as the
+    // created window should not be zoomed, but we've done that historically...
+    Scale(mOuterWidth);
+    Scale(mOuterHeight);
+    Scale(mInnerWidth);
+    Scale(mInnerHeight);
+  }
 };
 
 static void SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
@@ -519,9 +541,8 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
   if (nsCOMPtr<nsIBaseWindow> win = do_QueryInterface(parentTreeOwner)) {
     cssToDesktopScale = win->GetCSSToDesktopScale();
   }
-  cssToDesktopScale.scale *= aOpenerFullZoom;
-
   SizeSpec sizeSpec = CalcSizeSpec(features, false, cssToDesktopScale);
+  sizeSpec.ScaleBy(aOpenerFullZoom);
 
   // This is not initiated by window.open call in content context, and we
   // don't need to propagate isPopupRequested out-parameter to the resulting
@@ -704,11 +725,9 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   if (nsCOMPtr<nsIBaseWindow> win = do_QueryInterface(parentDocShell)) {
     cssToDesktopScale = win->GetCSSToDesktopScale();
   }
-  if (parentBC) {
-    cssToDesktopScale.scale *= parentBC->FullZoom();
-  }
   SizeSpec sizeSpec =
       CalcSizeSpec(features, hasChromeParent, cssToDesktopScale);
+  sizeSpec.ScaleBy(parentBC ? parentBC->FullZoom() : 1.0f);
 
   bool isPopupRequested = false;
 
