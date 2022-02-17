@@ -29,6 +29,11 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TransformStream)
 
+  TransformStreamDefaultController* Controller() { return mController; }
+  void SetController(TransformStreamDefaultController* aController) {
+    mController = aController;
+  }
+
  protected:
   ~TransformStream();
   explicit TransformStream(nsIGlobalObject* aGlobal);
@@ -51,6 +56,9 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
 
  private:
   nsCOMPtr<nsIGlobalObject> mGlobal;
+
+  // Internal slots
+  RefPtr<TransformStreamDefaultController> mController;
 };
 
 }  // namespace mozilla::dom

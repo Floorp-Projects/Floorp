@@ -62,4 +62,67 @@ void TransformStreamDefaultController::Terminate(ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
+// https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller
+void SetUpTransformStreamDefaultController(
+    JSContext* aCx, TransformStream& aStream,
+    TransformStreamDefaultController& aController) {
+  // Step 1. Assert: stream implements TransformStream.
+  // Step 2. Assert: stream.[[controller]] is undefined.
+  MOZ_ASSERT(!aStream.Controller());
+
+  // Step 3. Set controller.[[stream]] to stream.
+  // TODO
+
+  // Step 4. Set stream.[[controller]] to controller.
+  aStream.SetController(&aController);
+
+  // Step 5. Set controller.[[transformAlgorithm]] to transformAlgorithm.
+  // TODO
+
+  // Step 6. Set controller.[[flushAlgorithm]] to flushAlgorithm.
+  // TODO
+}
+
+// https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller-from-transformer
+void SetUpTransformStreamDefaultControllerFromTransformer(
+    JSContext* aCx, TransformStream& aStream, JS::HandleObject aTransformer,
+    Transformer& aTransformerDict) {
+  // Step 1. Let controller be a new TransformStreamDefaultController.
+  RefPtr<TransformStreamDefaultController> controller =
+      new TransformStreamDefaultController(aStream.GetParentObject());
+
+  // Step 2. Let transformAlgorithm be the following steps, taking a chunk
+  // argument:
+
+  // Step 2.1. Let result be TransformStreamDefaultControllerEnqueue(controller,
+  // chunk).
+  // TODO
+
+  // Step 2.2. If result is an abrupt completion, return a promise rejected with
+  // result.[[Value]].
+  // TODO
+
+  // Step 2.3. Otherwise, return a promise resolved with undefined.
+  // TODO
+
+  // Step 3. Let flushAlgorithm be an algorithm which returns a promise resolved
+  // with undefined.
+  // TODO
+
+  // Step 4. If transformerDict["transform"] exists, set transformAlgorithm to
+  // an algorithm which takes an argument chunk and returns the result of
+  // invoking transformerDict["transform"] with argument list « chunk,
+  // controller » and callback this value transformer.
+  // TODO
+
+  // Step 5. If transformerDict["flush"] exists, set flushAlgorithm to an
+  // algorithm which returns the result of invoking transformerDict["flush"]
+  // with argument list « controller » and callback this value transformer.
+  // TODO
+
+  // Perform ! SetUpTransformStreamDefaultController(stream, controller,
+  // transformAlgorithm, flushAlgorithm).
+  SetUpTransformStreamDefaultController(aCx, aStream, *controller);
+}
+
 }  // namespace mozilla::dom
