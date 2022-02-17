@@ -378,6 +378,60 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Lisad</string>
 
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Teavitused</string>
+
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Kohandatud lisade kollektsioon</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">Olgu</string>
+
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Loobu</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Kollektsiooni nimi</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Kollektsiooni omanik (kasutaja ID)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Lisade kollektsiooni on muudetud. Muudatuste rakendamiseks väljutakse äpist…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Hiljutised kaardid</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Hiljutised järjehoidjad</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Hiljuti külastatud</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Taustapildid</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Sponsitud otseteed</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Taustapilt: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Taustpilt uuendatud!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Vaata</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label">Taustapildi vahetamiseks puuduta logo</string>
+    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_description">Sirvi läbi ja uuenda pilti avalehelt lahkumata.</string>
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">Firefoxi logo - taustapildi muutmise nupp</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Lisa pole toetatud</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Lisa on juba paigaldatud</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sünkroniseeri kohe</string>
@@ -389,6 +443,8 @@
     <string name="preferences_sync_bookmarks">Järjehoidjad</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Kasutajakontod</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Avatud kaardid</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Logi välja</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -405,6 +461,16 @@
     <string name="sync_last_synced_summary">Viimane sünkroniseerimine: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Viimane sünkroniseerimine: mitte kunagi</string>
+
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s seadmes %2$s %3$s</string>
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Krediitkaardid</string>
+
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Aadressid</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
