@@ -1295,11 +1295,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     rv = NS_GetFinalChannelURI(channel, getter_AddRefs(finalURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool isSameOrigin = false;
-    rv = principal->IsSameOrigin(finalURI, false, &isSameOrigin);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (isSameOrigin) {
+    if (principal->IsSameOrigin(finalURI)) {
       nsCString filename;
       rv = finalURI->GetSpec(filename);
       NS_ENSURE_SUCCESS(rv, rv);
