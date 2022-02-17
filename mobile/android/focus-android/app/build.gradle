@@ -261,6 +261,7 @@ dependencies {
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
+    debugImplementation Dependencies.leakcanary
 
     focusImplementation 'com.adjust.sdk:adjust-android:4.11.4'
     focusImplementation 'com.android.installreferrer:installreferrer:1.1' // Required by Adjust

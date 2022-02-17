@@ -15,4 +15,9 @@
     <!-- Allows changing locales for FastLane screenshots -->
     <uses-permission android:name="android.permission.CHANGE_CONFIGURATION"
         tools:ignore="ProtectedPermissions" />
+    <application
+        tools:replace="android:name"
+        android:name="org.mozilla.focus.DebugFocusApplication"
+        android:icon="@mipmap/ic_launcher">
+    </application>
 </manifest>

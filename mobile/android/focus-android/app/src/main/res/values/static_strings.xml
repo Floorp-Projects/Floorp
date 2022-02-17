@@ -15,4 +15,7 @@
     <string name="about_debug_menu_toast_progress" translatable="false">Debug menu: %1$d click(s) left to enable</string>
     <string name="about_debug_menu_toast_done" translatable="false">Debug menu enabled</string>
 
+    <!-- Label for LeakCanary Toggle. It's used in Advanced Settings. -->
+    <string name="preference_leakcanary" translatable="false">LeakCanary</string>
+
 </resources>

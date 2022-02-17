@@ -9,12 +9,14 @@ import android.os.Bundle
 import androidx.preference.Preference
 import org.mozilla.focus.GleanMetrics.AdvancedSettings
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.application
 import org.mozilla.focus.ext.getPreferenceKey
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.AppConstants.isDevBuild
 
 class AdvancedSettingsFragment :
     BaseSettingsFragment(),
@@ -24,6 +26,8 @@ class AdvancedSettingsFragment :
         addPreferencesFromResource(R.xml.advanced_settings)
         findPreference<Preference>(getPreferenceKey(R.string.pref_key_secret_settings))?.isVisible =
             requireComponents.appStore.state.secretSettingsEnabled
+        findPreference<Preference>(getPreferenceKey(R.string.pref_key_leakcanary))?.isVisible =
+            isDevBuild
     }
 
     override fun onResume() {
@@ -55,6 +59,9 @@ class AdvancedSettingsFragment :
                 AdvancedSettings.openLinksSettingChanged.record(
                     AdvancedSettings.OpenLinksSettingChangedExtra(sharedPreferences.all[key] as Boolean)
                 )
+            getString(R.string.pref_key_leakcanary) -> {
+                context?.application?.updateLeakCanaryState(sharedPreferences.all[key] as Boolean)
+            }
         }
     }
 

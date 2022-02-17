@@ -20,7 +20,6 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import okhttp3.mockwebserver.MockResponse
 import okio.Buffer
-import okio.Okio
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.junit.Assert
@@ -342,7 +341,7 @@ object TestHelper {
     @Throws(IOException::class)
     fun readStreamFile(file: InputStream?): Buffer {
         val buffer = Buffer()
-        buffer.writeAll(Okio.source(file!!))
+        buffer.write(file!!.readBytes())
         return buffer
     }
 

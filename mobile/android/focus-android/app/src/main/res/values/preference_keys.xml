@@ -27,6 +27,7 @@
     <string name="pref_key_performance_block_images" translatable="false"><xliff:g id="preference_key">pref_performance_block_images</xliff:g></string>
 
     <string name="pref_key_default_browser" translatable="false"><xliff:g id="preference_key">pref_default_browser</xliff:g></string>
+    <string name="pref_key_leakcanary" translatable="false"><xliff:g id="preference_key">pref_key_leakcanary</xliff:g></string>
 
     <string name="pref_key_telemetry" translatable="false"><xliff:g id="preference_key">pref_telemetry</xliff:g></string>
 
