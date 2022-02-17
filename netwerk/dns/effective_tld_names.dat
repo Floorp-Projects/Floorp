@@ -865,6 +865,7 @@ gov.cx
 
 // cy : http://www.nic.cy/
 // Submitted by registry Panayiotou Fotia <cydns@ucy.ac.cy>
+// namespace policies URL https://www.nic.cy/portal//sites/default/files/symfonia_gia_eggrafi.pdf
 cy
 ac.cy
 biz.cy
@@ -872,10 +873,9 @@ com.cy
 ekloges.cy
 gov.cy
 ltd.cy
-name.cy
+mil.cy
 net.cy
 org.cy
-parliament.cy
 press.cy
 pro.cy
 tm.cy
