@@ -50,13 +50,21 @@ NS_INTERFACE_MAP_BEGIN(DnsAndConnectSocket)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(DnsAndConnectSocket)
 NS_INTERFACE_MAP_END
 
-static void NotifyActivity(nsHttpConnectionInfo* aConnInfo, uint32_t aSubtype) {
+static void NotifyActivity(nsIHttpActivityObserver* aActivityDistributor,
+                           nsHttpConnectionInfo* aConnInfo, uint32_t aSubtype) {
+  nsCOMPtr<nsIHttpActivityObserver> activityDistributor(aActivityDistributor);
   HttpConnectionActivity activity(
       aConnInfo->HashKey(), aConnInfo->GetOrigin(), aConnInfo->OriginPort(),
       aConnInfo->EndToEndSSL(), !aConnInfo->GetEchConfig().IsEmpty(),
       aConnInfo->IsHttp3());
-  gHttpHandler->ObserveHttpActivityWithArgs(
-      activity, NS_ACTIVITY_TYPE_HTTP_CONNECTION, aSubtype, PR_Now(), 0, ""_ns);
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "ObserveActivityWithArgs",
+      [activityDistributor, activity = std::move(activity),
+       subType(aSubtype)]() {
+        Unused << activityDistributor->ObserveActivityWithArgs(
+            HttpActivityArgs(activity), NS_ACTIVITY_TYPE_HTTP_CONNECTION,
+            subType, PR_Now(), 0, ""_ns);
+      }));
 }
 
 DnsAndConnectSocket::DnsAndConnectSocket(nsHttpConnectionInfo* ci,
@@ -87,10 +95,27 @@ DnsAndConnectSocket::DnsAndConnectSocket(nsHttpConnectionInfo* ci,
   }
 
   MOZ_ASSERT(mConnInfo);
-  NotifyActivity(mConnInfo,
-                 mSpeculative
-                     ? NS_HTTP_ACTIVITY_SUBTYPE_SPECULATIVE_DNSANDSOCKET_CREATED
-                     : NS_HTTP_ACTIVITY_SUBTYPE_DNSANDSOCKET_CREATED);
+
+  mActivityDistributor = components::HttpActivityDistributor::Service();
+  if (mActivityDistributor) {
+    bool activityDistributorActive = false;
+    Unused << mActivityDistributor->GetIsActive(&activityDistributorActive);
+    bool observeConnection = false;
+    nsCOMPtr<nsIHttpActivityDistributor> distributor =
+        do_QueryInterface(mActivityDistributor);
+    if (distributor) {
+      Unused << distributor->GetObserveConnection(&observeConnection);
+    }
+    if (!activityDistributorActive || !observeConnection) {
+      mActivityDistributor = nullptr;
+    } else {
+      NotifyActivity(
+          mActivityDistributor, mConnInfo,
+          mSpeculative
+              ? NS_HTTP_ACTIVITY_SUBTYPE_SPECULATIVE_DNSANDSOCKET_CREATED
+              : NS_HTTP_ACTIVITY_SUBTYPE_DNSANDSOCKET_CREATED);
+    }
+  }
 }
 
 void DnsAndConnectSocket::CheckIsDone() {
@@ -559,10 +584,10 @@ nsresult DnsAndConnectSocket::SetupConn(bool isPrimary, nsresult status) {
 
   nsresult rv = NS_OK;
   if (isPrimary) {
-    rv = mPrimaryTransport.SetupConn(mTransaction, ent, status, mCaps,
+    rv = mPrimaryTransport.SetupConn(mTransaction, ent, status, mCaps, this,
                                      getter_AddRefs(conn));
   } else {
-    rv = mBackupTransport.SetupConn(mTransaction, ent, status, mCaps,
+    rv = mBackupTransport.SetupConn(mTransaction, ent, status, mCaps, this,
                                     getter_AddRefs(conn));
   }
 
@@ -996,7 +1021,8 @@ nsresult DnsAndConnectSocket::TransportSetup::CheckConnectedResult(
 
 nsresult DnsAndConnectSocket::TransportSetup::SetupConn(
     nsAHttpTransaction* transaction, ConnectionEntry* ent, nsresult status,
-    uint32_t cap, HttpConnectionBase** connection) {
+    uint32_t cap, DnsAndConnectSocket* dnsAndSock,
+    HttpConnectionBase** connection) {
   RefPtr<HttpConnectionBase> conn;
   if (!ent->mConnInfo->IsHttp3()) {
     conn = new nsHttpConnection();
@@ -1004,7 +1030,10 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupConn(
     conn = new HttpConnectionUDP();
   }
 
-  NotifyActivity(ent->mConnInfo, NS_HTTP_ACTIVITY_SUBTYPE_CONNECTION_CREATED);
+  if (dnsAndSock->mActivityDistributor) {
+    NotifyActivity(dnsAndSock->mActivityDistributor, ent->mConnInfo,
+                   NS_HTTP_ACTIVITY_SUBTYPE_CONNECTION_CREATED);
+  }
 
   LOG(
       ("DnsAndConnectSocket::SocketTransport::SetupConn "
@@ -1220,8 +1249,10 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
     LOG(("Setting ECH"));
     rv = socketTransport->SetEchConfig(ci->GetEchConfig());
     NS_ENSURE_SUCCESS(rv, rv);
-
-    NotifyActivity(dnsAndSock->mConnInfo, NS_HTTP_ACTIVITY_SUBTYPE_ECH_SET);
+    if (dnsAndSock->mActivityDistributor) {
+      NotifyActivity(dnsAndSock->mActivityDistributor, dnsAndSock->mConnInfo,
+                     NS_HTTP_ACTIVITY_SUBTYPE_ECH_SET);
+    }
   }
 
   RefPtr<ConnectionEntry> ent =
