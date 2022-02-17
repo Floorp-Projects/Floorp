@@ -428,6 +428,8 @@ class ContentChild final : public PContentChild,
                                                const uint32_t& aChangeType,
                                                nsIURI* aDomain);
 
+  mozilla::ipc::IPCResult RecvShutdownConfirmedHP();
+
   mozilla::ipc::IPCResult RecvShutdown();
 
   mozilla::ipc::IPCResult RecvInvokeDragSession(

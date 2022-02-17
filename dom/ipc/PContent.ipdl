@@ -778,6 +778,12 @@ child:
     async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, nsIURI aDomain);
 
     /**
+     * Notify the child that it will soon be asked to shutdown.
+     * This is sent with high priority right before the normal shutdown.
+     */
+    [Priority=control] async ShutdownConfirmedHP();
+
+    /**
      * Notify the child to shutdown. The child will in turn call FinishShutdown
      * and let the parent close the channel.
      */
