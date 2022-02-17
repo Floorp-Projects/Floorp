@@ -493,7 +493,6 @@ static bool PaintMaskSurface(const PaintFramesParams& aParams,
                              DrawTarget* aMaskDT, float aOpacity,
                              ComputedStyle* aSC,
                              const nsTArray<SVGMaskFrame*>& aMaskFrames,
-                             const Matrix& aMaskSurfaceMatrix,
                              const nsPoint& aOffsetToUserSpace) {
   MOZ_ASSERT(aMaskFrames.Length() > 0);
   MOZ_ASSERT(aMaskDT->GetFormat() == SurfaceFormat::A8);
@@ -622,7 +621,7 @@ static MaskPaintResult CreateAndPaintMaskSurface(
 
   bool isMaskComplete = PaintMaskSurface(
       aParams, maskDT, paintResult.opacityApplied ? aOpacity : 1.0, aSC,
-      aMaskFrames, maskSurfaceMatrix, aOffsetToUserSpace);
+      aMaskFrames, aOffsetToUserSpace);
 
   if (!isMaskComplete ||
       (aParams.imgParams.result != ImgDrawResult::SUCCESS &&
@@ -779,8 +778,7 @@ bool SVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
     EffectOffsets offsets = MoveContextOriginToUserSpace(frame, aParams);
     aOutIsMaskComplete = PaintMaskSurface(
         aParams, maskTarget, shouldPushOpacity ? 1.0 : maskUsage.opacity,
-        firstFrame->Style(), maskFrames, ctx.CurrentMatrix(),
-        offsets.offsetToUserSpace);
+        firstFrame->Style(), maskFrames, offsets.offsetToUserSpace);
   }
 
   // Paint clip-path onto ctx.
