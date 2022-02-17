@@ -203,3 +203,36 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true, iframe: false, remoteIframe: false }
 );
+
+/**
+ * Test caching of the display attribute.
+ */
+addAccessibleTask(
+  `
+<div id="div">
+  <ins id="ins">a</ins>
+  <button id="button">b</button>
+</div>
+  `,
+  async function(browser, docAcc) {
+    const div = findAccessibleChildByID(docAcc, "div");
+    testAttrs(div, { display: "block" }, true);
+    const ins = findAccessibleChildByID(docAcc, "ins");
+    testAttrs(ins, { display: "inline" }, true);
+    const textLeaf = ins.firstChild;
+    testAbsentAttrs(textLeaf, { display: "" });
+    const button = findAccessibleChildByID(docAcc, "button");
+    testAttrs(button, { display: "inline-block" }, true);
+
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("ins").style.display = "block";
+      content.document.body.offsetTop; // Flush layout.
+    });
+    await untilCacheIs(
+      () => ins.attributes.getStringProperty("display"),
+      "block",
+      "ins display attribute changed to block"
+    );
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);

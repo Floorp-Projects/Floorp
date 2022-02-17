@@ -3280,6 +3280,12 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
+  if (aCacheDomain & CacheDomain::Style) {
+    if (RefPtr<nsAtom> display = DisplayStyle()) {
+      fields->SetAttribute(nsGkAtoms::display, display);
+    }
+  }
+
   if (aUpdateType == CacheUpdateType::Initial) {
     // Add fields which never change and thus only need to be included in the
     // initial cache push.
@@ -3321,9 +3327,12 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
     const ComputedStyle* newStyle = frame->Style();
     MOZ_ASSERT(newStyle != mOldComputedStyle, "New style matches old style!");
 
-    // TODO: comparison on a11y-relevant style attributes
-
-    // TODO: Queue cache update, schedule processing on document
+    nsAutoCString oldVal, newVal;
+    mOldComputedStyle->GetComputedPropertyValue(eCSSProperty_display, oldVal);
+    newStyle->GetComputedPropertyValue(eCSSProperty_display, newVal);
+    if (oldVal != newVal) {
+      mDoc->QueueCacheUpdate(this, CacheDomain::Style);
+    }
 
     mOldComputedStyle = newStyle;
   }
@@ -3332,6 +3341,14 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
 nsAtom* LocalAccessible::TagName() const {
   return mContent && mContent->IsElement() ? mContent->NodeInfo()->NameAtom()
                                            : nullptr;
+}
+
+already_AddRefed<nsAtom> LocalAccessible::DisplayStyle() const {
+  if (dom::Element* elm = Elm()) {
+    StyleInfo info(elm);
+    return info.Display();
+  }
+  return nullptr;
 }
 
 void LocalAccessible::StaticAsserts() const {

@@ -505,6 +505,10 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
             nsGkAtoms::textInputType)) {
       attributes->SetAttribute(nsGkAtoms::textInputType, *inputType);
     }
+
+    if (RefPtr<nsAtom> display = DisplayStyle()) {
+      attributes->SetAttribute(nsGkAtoms::display, display);
+    }
   }
 
   return attributes.forget();
@@ -519,6 +523,18 @@ nsAtom* RemoteAccessibleBase<Derived>::TagName() const {
     }
   }
 
+  return nullptr;
+}
+
+template <class Derived>
+already_AddRefed<nsAtom> RemoteAccessibleBase<Derived>::DisplayStyle() const {
+  if (mCachedFields) {
+    if (auto display =
+            mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::display)) {
+      RefPtr<nsAtom> result = *display;
+      return result.forget();
+    }
+  }
   return nullptr;
 }
 
