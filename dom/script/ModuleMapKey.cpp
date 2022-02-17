@@ -4,7 +4,7 @@
 
 #include "ModuleMapKey.h"
 
-using namespace JS::loader;
+using namespace mozilla::dom;
 
 ModuleMapKey::ModuleMapKey(const nsIURI* aURI, nsIGlobalObject* aWebExtGlobal)
     : nsURIHashKey(aURI), mWebExtGlobal(aWebExtGlobal) {}
@@ -32,7 +32,7 @@ bool ModuleMapKey::KeyEquals(KeyTypePointer aOther) const {
 PLDHashNumber ModuleMapKey::HashKey(KeyTypePointer aKey) {
   PLDHashNumber hash = nsURIHashKey::HashKey(aKey->mKey);
   // XXX This seems wrong.
-  hash = mozilla::AddToHash(
-      hash, reinterpret_cast<uintptr_t>(aKey->mWebExtGlobal.get()));
+  hash =
+      AddToHash(hash, reinterpret_cast<uintptr_t>(aKey->mWebExtGlobal.get()));
   return hash;
 }

@@ -75,8 +75,8 @@ PreloadHashKey& PreloadHashKey::operator=(const PreloadHashKey& aOther) {
 }
 
 // static
-PreloadHashKey PreloadHashKey::CreateAsScript(
-    nsIURI* aURI, CORSMode aCORSMode, JS::loader::ScriptKind aScriptKind) {
+PreloadHashKey PreloadHashKey::CreateAsScript(nsIURI* aURI, CORSMode aCORSMode,
+                                              dom::ScriptKind aScriptKind) {
   PreloadHashKey key(aURI, ResourceType::SCRIPT);
   key.mCORSMode = aCORSMode;
 
@@ -89,9 +89,9 @@ PreloadHashKey PreloadHashKey::CreateAsScript(
 PreloadHashKey PreloadHashKey::CreateAsScript(nsIURI* aURI,
                                               const nsAString& aCrossOrigin,
                                               const nsAString& aType) {
-  JS::loader::ScriptKind scriptKind = JS::loader::ScriptKind::eClassic;
+  dom::ScriptKind scriptKind = dom::ScriptKind::eClassic;
   if (aType.LowerCaseEqualsASCII("module")) {
-    scriptKind = JS::loader::ScriptKind::eModule;
+    scriptKind = dom::ScriptKind::eModule;
   }
   CORSMode crossOrigin = dom::Element::StringToCORSMode(aCrossOrigin);
   return CreateAsScript(aURI, crossOrigin, scriptKind);

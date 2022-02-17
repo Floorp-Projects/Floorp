@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_UnderlyingSourceCallbackHelpers_h
 #define mozilla_dom_UnderlyingSourceCallbackHelpers_h
 
-#include "js/loader/ModuleMapKey.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/dom/ModuleMapKey.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
