@@ -8,6 +8,9 @@
 
 #include "mozilla/dom/MimeTypeArrayBinding.h"
 #include "mozilla/dom/MimeTypeBinding.h"
+#include "nsPluginArray.h"
+#include "mozilla/StaticPrefs_pdfjs.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -19,10 +22,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsMimeTypeArray)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeTypeArray, mWindow)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeTypeArray, mWindow, mMimeTypes[0],
+                                      mMimeTypes[1])
 
-nsMimeTypeArray::nsMimeTypeArray(nsPIDOMWindowInner* aWindow)
-    : mWindow(aWindow) {}
+nsMimeTypeArray::nsMimeTypeArray(
+    nsPIDOMWindowInner* aWindow,
+    const mozilla::Array<RefPtr<nsMimeType>, 2>& aMimeTypes)
+    : mWindow(aWindow), mMimeTypes(aMimeTypes) {}
 
 nsMimeTypeArray::~nsMimeTypeArray() = default;
 
@@ -36,7 +42,62 @@ nsPIDOMWindowInner* nsMimeTypeArray::GetParentObject() const {
   return mWindow;
 }
 
+nsMimeType* nsMimeTypeArray::IndexedGetter(uint32_t aIndex, bool& aFound) {
+  if (!ForceNoPlugins() && aIndex < ArrayLength(mMimeTypes)) {
+    aFound = true;
+    return mMimeTypes[aIndex];
+  }
+
+  aFound = false;
+  return nullptr;
+}
+
+nsMimeType* nsMimeTypeArray::NamedGetter(const nsAString& aName, bool& aFound) {
+  if (ForceNoPlugins()) {
+    aFound = false;
+    return nullptr;
+  }
+
+  for (const auto& mimeType : mMimeTypes) {
+    if (mimeType->Name().Equals(aName)) {
+      aFound = true;
+      return mimeType;
+    }
+  }
+
+  aFound = false;
+  return nullptr;
+}
+
+void nsMimeTypeArray::GetSupportedNames(nsTArray<nsString>& retval) {
+  if (ForceNoPlugins()) {
+    return;
+  }
+
+  for (auto& mimeType : mMimeTypes) {
+    retval.AppendElement(mimeType->Name());
+  }
+}
+
+/* static */
+bool nsMimeTypeArray::ForceNoPlugins() {
+  return StaticPrefs::pdfjs_disabled() ||
+         nsContentUtils::ShouldResistFingerprinting();
+}
+
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsMimeType, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsMimeType, Release)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeType)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeType, mPluginElement)
+
+nsMimeType::nsMimeType(nsPluginElement* aPluginElement, const nsAString& aName)
+    : mPluginElement(aPluginElement), mName(aName) {
+  MOZ_ASSERT(aPluginElement);
+}
+
+nsMimeType::~nsMimeType() = default;
+
+JSObject* nsMimeType::WrapObject(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) {
+  return MimeType_Binding::Wrap(aCx, this, aGivenProto);
+}
