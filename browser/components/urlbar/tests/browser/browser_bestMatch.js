@@ -114,7 +114,10 @@ async function checkBestMatchRow({
     );
   }
 
-  let helpButton = row._elements.get("helpButton");
+  let blockButton = row._buttons.get("block");
+  Assert.ok(blockButton, "Row has a block button");
+
+  let helpButton = row._buttons.get("help");
   Assert.equal(
     !!result.payload.helpUrl,
     hasHelpButton,

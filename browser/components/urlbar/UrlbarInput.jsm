@@ -741,7 +741,7 @@ class UrlbarInput {
     }
 
     let urlOverride;
-    if (element?.classList.contains("urlbarView-help")) {
+    if (element?.classList.contains("urlbarView-button-help")) {
       urlOverride = result.payload.helpUrl;
     }
 
@@ -924,7 +924,7 @@ class UrlbarInput {
       }
       case UrlbarUtils.RESULT_TYPE.TIP: {
         let scalarName;
-        if (element.classList.contains("urlbarView-help")) {
+        if (element.classList.contains("urlbarView-button-help")) {
           url = result.payload.helpUrl;
           if (!url) {
             Cu.reportError("helpUrl not specified");
@@ -1992,6 +1992,11 @@ class UrlbarInput {
         return result.payload.content;
       case UrlbarUtils.RESULT_TYPE.DYNAMIC:
         return result.payload.input || "";
+    }
+
+    if (urlOverride === "") {
+      // Allow callers to clear the input.
+      return "";
     }
 
     try {
