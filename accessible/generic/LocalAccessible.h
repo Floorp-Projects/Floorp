@@ -790,6 +790,8 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   virtual nsAtom* TagName() const override;
 
+  virtual already_AddRefed<nsAtom> DisplayStyle() const override;
+
  protected:
   virtual ~LocalAccessible();
 
