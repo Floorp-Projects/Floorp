@@ -5,6 +5,7 @@
 package mozilla.components.service.pocket
 
 import mozilla.components.concept.fetch.Client
+import mozilla.components.support.base.worker.Frequency
 import java.util.concurrent.TimeUnit
 
 internal const val DEFAULT_REFRESH_INTERVAL = 4L
@@ -24,11 +25,3 @@ class PocketStoriesConfig(
         DEFAULT_REFRESH_TIMEUNIT
     )
 )
-
-/**
- * Indicates how often the pocket stories should be refreshed.
- *
- * @param repeatInterval Integer indicating how often the update should happen.
- * @param repeatIntervalTimeUnit The time unit of the [repeatInterval].
- */
-class Frequency(val repeatInterval: Long, val repeatIntervalTimeUnit: TimeUnit)

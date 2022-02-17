@@ -12,10 +12,10 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import mozilla.components.service.pocket.Frequency
 import mozilla.components.service.pocket.PocketStoriesConfig
 import mozilla.components.service.pocket.logger
 import mozilla.components.service.pocket.stories.update.RefreshPocketWorker.Companion.REFRESH_WORK_TAG
+import mozilla.components.support.base.worker.Frequency
 
 /**
  * Class used to schedule Pocket recommended stories refresh.

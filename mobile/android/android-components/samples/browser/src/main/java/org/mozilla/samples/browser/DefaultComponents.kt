@@ -37,8 +37,6 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
-import mozilla.components.feature.addons.migration.SupportedAddonsChecker
-import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import mozilla.components.feature.app.links.AppLinksInterceptor
 import mozilla.components.feature.app.links.AppLinksUseCases
@@ -78,6 +76,7 @@ import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
 import mozilla.components.service.location.LocationService
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
+import mozilla.components.support.base.worker.Frequency
 import org.mozilla.samples.browser.addons.AddonsActivity
 import org.mozilla.samples.browser.autofill.AutofillConfirmActivity
 import org.mozilla.samples.browser.autofill.AutofillSearchActivity
@@ -129,7 +128,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     val addonUpdater =
-        DefaultAddonUpdater(applicationContext, AddonUpdater.Frequency(1, TimeUnit.DAYS))
+        DefaultAddonUpdater(applicationContext, Frequency(1, TimeUnit.DAYS))
 
     // Engine
     open val engine: Engine by lazy {
@@ -190,7 +189,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     val supportedAddonsChecker by lazy {
-        DefaultSupportedAddonsChecker(applicationContext, SupportedAddonsChecker.Frequency(1, TimeUnit.DAYS))
+        DefaultSupportedAddonsChecker(applicationContext, Frequency(1, TimeUnit.DAYS))
     }
 
     val searchUseCases by lazy {

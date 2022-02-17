@@ -35,12 +35,12 @@ import mozilla.components.concept.engine.webextension.WebExtensionException
 import mozilla.components.concept.engine.webextension.isUnsupported
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
-import mozilla.components.feature.addons.update.AddonUpdater.Frequency
 import mozilla.components.feature.addons.update.db.UpdateAttemptsDatabase
 import mozilla.components.feature.addons.update.db.toEntity
 import mozilla.components.feature.addons.worker.shouldReport
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.base.worker.Frequency
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
 import mozilla.components.support.utils.PendingIntentUtils
@@ -133,13 +133,6 @@ interface AddonUpdater {
          */
         data class Error(val message: String, val exception: Throwable) : Status()
     }
-
-    /**
-     * Indicates how often an extension should be updated.
-     * @property repeatInterval Integer indicating how often the update should happen.
-     * @property repeatIntervalTimeUnit The time unit of the [repeatInterval].
-     */
-    class Frequency(val repeatInterval: Long, val repeatIntervalTimeUnit: TimeUnit)
 
     /**
      * Represents an attempt to update an add-on.

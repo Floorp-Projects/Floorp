@@ -12,6 +12,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.base.worker.Frequency
 import java.util.concurrent.TimeUnit
 
 /**
@@ -78,14 +79,3 @@ class ContileTopSitesUpdater(
         internal const val PERIODIC_WORK_TAG = "mozilla.components.service.contile.periodicWork"
     }
 }
-
-/**
- * Indicates how often Contile top sites should be updated.
- *
- * @property repeatInterval Long indicating how often the update should happen.
- * @property repeatIntervalTimeUnit The time unit of the [repeatInterval].
- */
-data class Frequency(
-    val repeatInterval: Long,
-    val repeatIntervalTimeUnit: TimeUnit
-)

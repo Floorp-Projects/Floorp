@@ -25,12 +25,12 @@ import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
-import mozilla.components.feature.addons.migration.SupportedAddonsChecker.Frequency
 import mozilla.components.feature.addons.ui.translateName
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.feature.addons.worker.shouldReport
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.base.worker.Frequency
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
@@ -50,13 +50,6 @@ interface SupportedAddonsChecker {
      * Unregisters for periodic checks for new available add-ons.
      */
     fun unregisterForChecks()
-
-    /**
-     * Indicates how often checks for newly supported add-ons should happen.
-     * @property repeatInterval Integer indicating how often the update should happen.
-     * @property repeatIntervalTimeUnit The time unit of the [repeatInterval].
-     */
-    data class Frequency(val repeatInterval: Long, val repeatIntervalTimeUnit: TimeUnit)
 }
 
 /**

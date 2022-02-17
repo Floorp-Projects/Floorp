@@ -6,6 +6,7 @@ package mozilla.components.service.pocket
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.service.pocket.helpers.assertClassVisibility
+import mozilla.components.support.base.worker.Frequency
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test

@@ -127,6 +127,7 @@ dependencies {
     implementation project(':service-digitalassetlinks')
     implementation project(':service-sync-logins')
 
+    implementation project(':support-base')
     implementation project(':support-utils')
     implementation project(':support-ktx')
     implementation project(':support-webextensions')
