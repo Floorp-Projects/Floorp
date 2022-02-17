@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<script type="text/javascript">
+  window.parent.parent.postMessage({
+    element: location.hash.substr(1),
+    domain: document.domain,
+  }, '*');
+</script>
+</body>
+</html>
