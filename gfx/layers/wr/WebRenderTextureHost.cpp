@@ -36,7 +36,7 @@ class ScheduleHandleRenderTextureOps : public wr::NotificationHandler {
 
 WebRenderTextureHost::WebRenderTextureHost(
     const SurfaceDescriptor& aDesc, TextureFlags aFlags, TextureHost* aTexture,
-    const wr::ExternalImageId& aExternalImageId)
+    wr::ExternalImageId& aExternalImageId)
     : TextureHost(aFlags), mWrappedTextureHost(aTexture) {
   // The wrapped textureHost will be used in WebRender, and the WebRender could
   // run at another thread. It's hard to control the life-time when gecko

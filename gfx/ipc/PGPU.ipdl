@@ -57,8 +57,7 @@ parent:
   async Init(GfxVarUpdate[] vars,
              DevicePrefs devicePrefs,
              LayerTreeIdMapping[] mapping,
-             GfxInfoFeatureStatus[] features,
-             uint32_t wrNamespace);
+             GfxInfoFeatureStatus[] features);
 
   async InitCompositorManager(Endpoint<PCompositorManagerParent> endpoint);
   async InitVsyncBridge(Endpoint<PVsyncBridgeParent> endpoint);

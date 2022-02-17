@@ -11,9 +11,12 @@
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 
-namespace mozilla::webgpu {
+namespace mozilla {
+namespace dom {
+class HTMLCanvasElement;
+}  // namespace dom
+namespace webgpu {
 
-class CanvasContext;
 class Device;
 
 class CommandBuffer final : public ObjectBase, public ChildOf<Device> {
@@ -22,7 +25,7 @@ class CommandBuffer final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_JS_WRAP(CommandBuffer)
 
   CommandBuffer(Device* const aParent, RawId aId,
-                nsTArray<WeakPtr<CanvasContext>>&& aTargetContexts);
+                nsTArray<WeakPtr<dom::HTMLCanvasElement>>&& aTargetCanvases);
 
   Maybe<RawId> Commit();
 
@@ -32,9 +35,10 @@ class CommandBuffer final : public ObjectBase, public ChildOf<Device> {
   void Cleanup();
 
   const RawId mId;
-  const nsTArray<WeakPtr<CanvasContext>> mTargetContexts;
+  const nsTArray<WeakPtr<dom::HTMLCanvasElement>> mTargetCanvases;
 };
 
-}  // namespace mozilla::webgpu
+}  // namespace webgpu
+}  // namespace mozilla
 
 #endif  // GPU_CommandBuffer_H_

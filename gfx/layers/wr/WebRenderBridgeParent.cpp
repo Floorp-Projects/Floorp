@@ -25,7 +25,6 @@
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/APZSampler.h"
 #include "mozilla/layers/APZUpdater.h"
-#include "mozilla/layers/CompositableInProcessManager.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorAnimationStorage.h"
@@ -1514,7 +1513,7 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
       case WebRenderParentCommand::TOpAddPipelineIdForCompositable: {
         const OpAddPipelineIdForCompositable& op =
             cmd.get_OpAddPipelineIdForCompositable();
-        AddPipelineIdForCompositable(op.pipelineId(), op.handle(), op.owner(),
+        AddPipelineIdForCompositable(op.pipelineId(), op.handle(), op.isAsync(),
                                      aTxn, txnForImageBridge);
         break;
       }
@@ -1802,7 +1801,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
 
 void WebRenderBridgeParent::AddPipelineIdForCompositable(
     const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle,
-    const CompositableHandleOwner& aOwner, wr::TransactionBuilder& aTxn,
+    const bool& aAsync, wr::TransactionBuilder& aTxn,
     wr::TransactionBuilder& aTxnForImageBridge) {
   if (mDestroyed) {
     return;
@@ -1812,24 +1811,16 @@ void WebRenderBridgeParent::AddPipelineIdForCompositable(
              mAsyncCompositables.end());
 
   RefPtr<CompositableHost> host;
-  switch (aOwner) {
-    case CompositableHandleOwner::WebRenderBridge:
-      host = FindCompositable(aHandle);
-      break;
-    case CompositableHandleOwner::ImageBridge: {
-      RefPtr<ImageBridgeParent> imageBridge =
-          ImageBridgeParent::GetInstance(OtherPid());
-      if (!imageBridge) {
-        return;
-      }
-      host = imageBridge->FindCompositable(aHandle);
-      break;
+  if (aAsync) {
+    RefPtr<ImageBridgeParent> imageBridge =
+        ImageBridgeParent::GetInstance(OtherPid());
+    if (!imageBridge) {
+      return;
     }
-    case CompositableHandleOwner::InProcessManager:
-      host = CompositableInProcessManager::Find(aHandle, OtherPid());
-      break;
+    host = imageBridge->FindCompositable(aHandle);
+  } else {
+    host = FindCompositable(aHandle);
   }
-
   if (!host) {
     return;
   }
