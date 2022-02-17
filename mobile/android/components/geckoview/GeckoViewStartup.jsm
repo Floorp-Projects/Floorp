@@ -34,6 +34,7 @@ const JSWINDOWACTORS = {
     child: {
       moduleURI: "resource:///actors/LoadURIDelegateChild.jsm",
     },
+    messageManagerGroups: ["browsers"],
   },
   GeckoViewPrompt: {
     child: {
@@ -47,6 +48,7 @@ const JSWINDOWACTORS = {
       },
     },
     allFrames: true,
+    messageManagerGroups: ["browsers"],
   },
   GeckoViewFormValidation: {
     child: {
@@ -56,6 +58,7 @@ const JSWINDOWACTORS = {
       },
     },
     allFrames: true,
+    messageManagerGroups: ["browsers"],
   },
 };
 
