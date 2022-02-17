@@ -250,6 +250,8 @@ class nsWindow final : public nsWindowBase {
       const LayoutDeviceIntRegion& aOpaqueRegion) override;
   virtual nsresult SetNonClientMargins(
       LayoutDeviceIntMargin& aMargins) override;
+  virtual void SetResizeMargin(
+      mozilla::LayoutDeviceIntCoord aResizeMargin) override;
   void SetDrawsInTitlebar(bool aState) override;
   virtual void UpdateWindowDraggingRegion(
       const LayoutDeviceIntRegion& aRegion) override;
@@ -640,8 +642,11 @@ class nsWindow final : public nsWindowBase {
 
   // Indicates custom frames are enabled
   bool mCustomNonClient;
-  // Cached copy of L&F's resize border
+  // Indicates custom resize margins are in effect
+  bool mUseResizeMarginOverrides;
+  // Width of the left and right portions of the resize region
   int32_t mHorResizeMargin;
+  // Height of the top and bottom portions of the resize region
   int32_t mVertResizeMargin;
   // Height of the caption plus border
   int32_t mCaptionHeight;
