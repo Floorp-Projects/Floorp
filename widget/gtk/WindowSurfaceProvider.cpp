@@ -39,6 +39,7 @@ using namespace mozilla::layers;
 
 WindowSurfaceProvider::WindowSurfaceProvider()
     : mWindowSurface(nullptr),
+      mMutex("WindowSurfaceProvider"),
       mWindowSurfaceValid(false)
 #ifdef MOZ_WAYLAND
       ,
@@ -52,11 +53,6 @@ WindowSurfaceProvider::WindowSurfaceProvider()
       mXVisual(nullptr)
 #endif
 {
-}
-
-WindowSurfaceProvider::~WindowSurfaceProvider() {
-  CleanupResources();
-  CleanupWindowSurface();
 }
 
 #ifdef MOZ_WAYLAND
@@ -77,6 +73,7 @@ void WindowSurfaceProvider::Initialize(Window aWindow, Visual* aVisual,
 #endif
 
 void WindowSurfaceProvider::CleanupResources() {
+  MutexAutoLock lock(mMutex);
   mWindowSurfaceValid = false;
 #ifdef MOZ_WAYLAND
   mWidget = nullptr;
@@ -87,11 +84,6 @@ void WindowSurfaceProvider::CleanupResources() {
   mXDepth = 0;
   mIsShaped = false;
 #endif
-}
-
-void WindowSurfaceProvider::CleanupWindowSurface() {
-  mWindowSurface = nullptr;
-  mWindowSurfaceValid = true;
 }
 
 RefPtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
@@ -137,8 +129,11 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
     return nullptr;
   }
 
+  MutexAutoLock lock(mMutex);
+
   if (!mWindowSurfaceValid) {
-    CleanupWindowSurface();
+    mWindowSurface = nullptr;
+    mWindowSurfaceValid = true;
   }
 
   if (!mWindowSurface) {
@@ -166,6 +161,7 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
 
 void WindowSurfaceProvider::EndRemoteDrawingInRegion(
     gfx::DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
+  MutexAutoLock lock(mMutex);
   // Commit to mWindowSurface only when we have a valid one.
   if (mWindowSurface && mWindowSurfaceValid) {
     mWindowSurface->Commit(aInvalidRegion);
