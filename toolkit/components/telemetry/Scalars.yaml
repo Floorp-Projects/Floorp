@@ -4253,9 +4253,10 @@ pdf.viewer:
   is_attachment:
     bug_numbers:
       - 1736864
+      - 1754659
     description: >
       How many times a PDF that sends Content-Disposition: attachment is opened.
-    expires: "100"
+    expires: "103"
     kind: uint
     notification_emails:
       - rtestard@mozilla.com
