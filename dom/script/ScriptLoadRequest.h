@@ -297,7 +297,6 @@ class ScriptLoadRequest
   nsCOMPtr<nsIPrincipal> mOriginPrincipal;
   nsAutoCString
       mURL;  // Keep the URI's filename alive during off thread parsing.
-  int32_t mLineNo;
 
   // The base URL used for resolving relative module imports.
   nsCOMPtr<nsIURI> mBaseURL;
@@ -369,7 +368,7 @@ class DOMScriptLoadContext : public PreloaderBase {
     bool isInlineClassicScript = mIsInline && !mRequest->IsModuleRequest();
     GetScriptElement()->ScriptAvailable(aResult, GetScriptElement(),
                                         isInlineClassicScript, mRequest->mURI,
-                                        mRequest->mLineNo);
+                                        mLineNo);
   }
 
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
@@ -474,9 +473,12 @@ class DOMScriptLoadContext : public PreloaderBase {
                                 // compile. Tracked here so that it can be
                                 // properly released during cancellation.
 
+  int32_t mLineNo;
+
   // Set on scripts and top level modules.
   bool mIsPreload;
   nsCOMPtr<Element> mElement;
+
   // Global that initiated this request, when using a WebExtension
   // content-script.
   nsCOMPtr<nsIGlobalObject> mWebExtGlobal;
