@@ -728,12 +728,11 @@ bool SVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
     // Create one extra draw target for drawing positioned mask, so that we do
     // not have to copy the content of maskTarget before painting
     // clip-path into it.
-    if (!maskTarget->CanCreateSimilarDrawTarget(maskTarget->GetSize(),
-                                                SurfaceFormat::A8)) {
-      return false;
-    }
-    maskTarget = maskTarget->CreateSimilarDrawTarget(maskTarget->GetSize(),
-                                                     SurfaceFormat::A8);
+    maskTarget = maskTarget->CreateClippedDrawTarget(Rect(), SurfaceFormat::A8);
+    // XXX: We set the transform to identity because that's what the code that
+    // previously used CreateSimilarSurface was implicitly doing. However, it's
+    // not obvious to me why that's the right thing to do.
+    maskTarget->SetTransform(Matrix());
   }
 
   nsIFrame* firstFrame =
