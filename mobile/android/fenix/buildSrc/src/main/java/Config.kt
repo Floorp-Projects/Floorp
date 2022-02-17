@@ -42,6 +42,18 @@ object Config {
         return "$majorVersion.0a1"
     }
 
+    @JvmStatic
+    fun majorVersion(project: Project): String {
+        val releaseVersion = releaseVersionName(project)
+        val version = if (releaseVersion.isBlank()) {
+            nightlyVersionName()
+        } else {
+            releaseVersion
+        }
+
+        return version.split(".")[0]
+    }
+
     /**
      * Generate a build date that follows the ISO-8601 format
      */

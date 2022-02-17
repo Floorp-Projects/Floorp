@@ -836,3 +836,6 @@ android.applicationVariants.all { variant ->
         dependsOn "package${variant.name.capitalize()}"
     }
 }
+
+// Enable expiration by major version.
+ext.gleanExpireByVersion = Config.majorVersion(project)
