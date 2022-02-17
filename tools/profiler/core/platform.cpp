@@ -5553,6 +5553,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
           aLock, MakeUnique<ProfiledThreadData>(info));
       lockedThreadData->SetProfilingFeaturesAndData(threadProfilingFeatures,
                                                     profiledThreadData, aLock);
+      lockedThreadData->GetNewCpuTimeInNs();
       if (ActivePS::FeatureJS(aLock)) {
         lockedThreadData->StartJSSampling(ActivePS::JSFlags(aLock));
         if (ThreadRegistration::LockedRWOnThread* lockedRWOnThread =
@@ -6261,6 +6262,7 @@ struct CPUAwakeMarker {
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyFormat("CPU Time", MS::Format::Duration);
 #ifndef GP_PLAT_arm64_darwin
     schema.AddKeyFormat("CPU Id", MS::Format::Integer);
     schema.SetTableLabel("Awake - CPU Id = {marker.data.CPU Id}");
@@ -6278,10 +6280,34 @@ struct CPUAwakeMarker {
   }
 };
 
+struct CPUAwakeMarkerEnd : public CPUAwakeMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("AwakeEnd");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   int64_t aCPUTimeNs) {
+    if (aCPUTimeNs) {
+      constexpr double NS_PER_MS = 1'000'000;
+      aWriter.DoubleProperty("CPU Time", double(aCPUTimeNs) / NS_PER_MS);
+    }
+  }
+};
+
 }  // namespace geckoprofiler::markers
 
 void profiler_mark_thread_asleep() {
-  PROFILER_MARKER_UNTYPED("Awake", OTHER, MarkerTiming::IntervalEnd());
+  if (!profiler_thread_is_being_profiled_for_markers()) {
+    return;
+  }
+
+  uint64_t cpuTimeNs = ThreadRegistration::WithOnThreadRefOr(
+      [](ThreadRegistration::OnThreadRef aOnThreadRef) {
+        return aOnThreadRef.UnlockedConstReaderAndAtomicRWRef()
+            .GetNewCpuTimeInNs();
+      },
+      0);
+  PROFILER_MARKER("Awake", OTHER, MarkerTiming::IntervalEnd(),
+                  CPUAwakeMarkerEnd, cpuTimeNs);
 }
 
 void profiler_thread_sleep() {
