@@ -20,14 +20,13 @@ XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
 });
 
 const CONTAINER_ID = "firefoxSuggestContainer";
-const BEST_MATCH_OPTION_BOX_ID = "firefoxSuggestBestMatchOptionBox";
-const BEST_MATCH_CHECKBOX_ID = "firefoxSuggestBestMatchToggle";
 const NONSPONSORED_CHECKBOX_ID = "firefoxSuggestNonsponsoredToggle";
 const SPONSORED_CHECKBOX_ID = "firefoxSuggestSponsoredToggle";
 const DATA_COLLECTION_CHECKBOX_ID = "firefoxSuggestDataCollectionToggle";
 const INFO_BOX_ID = "firefoxSuggestInfoBox";
 const INFO_TEXT_ID = "firefoxSuggestInfoText";
 const LEARN_MORE_CLASS = "firefoxSuggestLearnMore";
+const BEST_MATCH_CHECKBOX_ID = "firefoxSuggestBestMatch";
 
 // Maps text element IDs to `{ enabled, disabled }`, where `enabled` is the
 // expected l10n ID when the Firefox Suggest feature is enabled, and `disabled`
@@ -540,11 +539,11 @@ async function doBestMatchVisibilityTest(initialEnabled, newEnabled) {
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
 
   let doc = gBrowser.selectedBrowser.contentDocument;
-  let container = doc.getElementById(BEST_MATCH_OPTION_BOX_ID);
+  let checkbox = doc.getElementById(BEST_MATCH_CHECKBOX_ID);
   Assert.equal(
-    BrowserTestUtils.is_visible(container),
+    BrowserTestUtils.is_visible(checkbox),
     initialEnabled,
-    "The option box has the expected initial visibility"
+    "The checkbox has the expected initial visibility"
   );
 
   // Set the new enabled status.
@@ -554,9 +553,9 @@ async function doBestMatchVisibilityTest(initialEnabled, newEnabled) {
 
   // Check visibility again.
   Assert.equal(
-    BrowserTestUtils.is_visible(container),
+    BrowserTestUtils.is_visible(checkbox),
     newEnabled,
-    "The option box has the expected visibility after setting enabled status"
+    "The checkbox has the expected visibility after setting enabled status"
   );
 
   // Clean up.
@@ -565,7 +564,7 @@ async function doBestMatchVisibilityTest(initialEnabled, newEnabled) {
   await SpecialPowers.popPrefEnv();
 }
 
-// Tests the visibility of the best match toggle when the best match feature is
+// Tests the visibility of the best match checkbox when the best match feature is
 // enabled via a Nimbus experiment before about:preferences is opened.
 add_task(async function bestMatchVisibility_experiment_beforeOpen() {
   await QuickSuggestTestUtils.withExperiment({
@@ -577,26 +576,26 @@ add_task(async function bestMatchVisibility_experiment_beforeOpen() {
         leaveOpen: true,
       });
       let doc = gBrowser.selectedBrowser.contentDocument;
-      let container = doc.getElementById(BEST_MATCH_OPTION_BOX_ID);
+      let checkbox = doc.getElementById(BEST_MATCH_CHECKBOX_ID);
       Assert.ok(
-        BrowserTestUtils.is_visible(container),
-        "The option box is visible"
+        BrowserTestUtils.is_visible(checkbox),
+        "The checkbox is visible"
       );
       gBrowser.removeCurrentTab();
     },
   });
 });
 
-// Tests the visibility of the best match toggle when the best match feature is
+// Tests the visibility of the best match checkbox when the best match feature is
 // enabled via a Nimbus experiment after about:preferences is opened.
 add_task(async function bestMatchVisibility_experiment_afterOpen() {
   // Open prefs and check the initial visibility.
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   let doc = gBrowser.selectedBrowser.contentDocument;
-  let container = doc.getElementById(BEST_MATCH_OPTION_BOX_ID);
+  let checkbox = doc.getElementById(BEST_MATCH_CHECKBOX_ID);
   Assert.ok(
-    BrowserTestUtils.is_hidden(container),
-    "The option box is hidden initially"
+    BrowserTestUtils.is_hidden(checkbox),
+    "The checkbox is hidden initially"
   );
 
   // Install an experiment with best match enabled.
@@ -606,15 +605,15 @@ add_task(async function bestMatchVisibility_experiment_afterOpen() {
     },
     callback: () => {
       Assert.ok(
-        BrowserTestUtils.is_visible(container),
-        "The option box is visible after installing the experiment"
+        BrowserTestUtils.is_visible(checkbox),
+        "The checkbox is visible after installing the experiment"
       );
     },
   });
 
   Assert.ok(
-    BrowserTestUtils.is_hidden(container),
-    "The option box is hidden again after the experiment is uninstalled"
+    BrowserTestUtils.is_hidden(checkbox),
+    "The checkbox is hidden again after the experiment is uninstalled"
   );
 
   gBrowser.removeCurrentTab();

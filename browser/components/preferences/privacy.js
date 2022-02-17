@@ -2008,9 +2008,9 @@ var gPrivacyPane = {
         .getElementById("openSearchEnginePreferences")
         .classList.add("extraMargin");
 
-      // Show the best match toggle as appropriate.
+      // Show the best match checkbox as appropriate.
       document.getElementById(
-        "firefoxSuggestBestMatchOptionBox"
+        "firefoxSuggestBestMatch"
       ).hidden = !UrlbarPrefs.get("bestMatchEnabled");
 
       // Show the container.
