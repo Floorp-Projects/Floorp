@@ -96,6 +96,7 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/scache/StartupCache.h"
 #include "gfxPlatform.h"
+#include "PDMFactory.h"
 #ifdef XP_MACOSX
 #  include "gfxPlatformMac.h"
 #endif
@@ -632,7 +633,9 @@ static bool Win32kRequirementsUnsatisfied(
          aStatus ==
              nsIXULRuntime::ContentWin32kLockdownState::MissingWebRender ||
          aStatus ==
-             nsIXULRuntime::ContentWin32kLockdownState::MissingRemoteWebGL;
+             nsIXULRuntime::ContentWin32kLockdownState::MissingRemoteWebGL ||
+         aStatus ==
+             nsIXULRuntime::ContentWin32kLockdownState::DecodersArentRemote;
 }
 
 static void Win32kExperimentDisqualify() {
@@ -735,6 +738,11 @@ nsIXULRuntime::ContentWin32kLockdownState GetLiveWin32kLockdownState() {
   // certain hardware or virtual machines.
   if (!gfx::gfxVars::AllowWebglOop() || !StaticPrefs::webgl_out_of_process()) {
     return nsIXULRuntime::ContentWin32kLockdownState::MissingRemoteWebGL;
+  }
+
+  // Some (not sure exactly which) decoders are not compatible
+  if (!PDMFactory::AllDecodersAreRemote()) {
+    return nsIXULRuntime::ContentWin32kLockdownState::DecodersArentRemote;
   }
 
   bool prefSetByUser =
