@@ -77,7 +77,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
                                      ScriptFetchOptions* aFetchOptions,
                                      const SRIMetadata& aIntegrity,
-                                     nsIURI* aReferrer)
+                                     nsIURI* aReferrer,
+                                     DOMScriptLoadContext* aContext)
     : mKind(aKind),
       mIsCanceled(false),
       mProgress(Progress::eLoading),
@@ -88,8 +89,12 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
       mScriptTextLength(0),
       mScriptBytecode(),
       mBytecodeOffset(0),
-      mURI(aURI) {
+      mURI(aURI),
+      mLoadContext(aContext) {
   MOZ_ASSERT(mFetchOptions);
+  if (mLoadContext) {
+    mLoadContext->SetRequest(this);
+  }
 }
 
 //////////////////////////////////////////////////////////////
@@ -105,8 +110,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMScriptLoadContext)
 NS_IMPL_CYCLE_COLLECTION_CLASS(DOMScriptLoadContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMScriptLoadContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement, mWebExtGlobal)
-  // XXX missing mLoadBlockedDocument ?
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoadBlockedDocument, mRequest, mElement,
+                                  mWebExtGlobal)
   if (Runnable* runnable = tmp->mRunnable.exchange(nullptr)) {
     runnable->Release();
   }
@@ -122,7 +127,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMScriptLoadContext)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 DOMScriptLoadContext::DOMScriptLoadContext(Element* aElement,
-                                           ScriptLoadRequest* aRequest,
                                            nsIGlobalObject* aWebExtGlobal)
     : mScriptMode(ScriptMode::eBlocking),
       mScriptFromHead(false),
@@ -140,7 +144,7 @@ DOMScriptLoadContext::DOMScriptLoadContext(Element* aElement,
       mIsPreload(false),
       mElement(aElement),
       mWebExtGlobal(aWebExtGlobal),
-      mRequest(aRequest),
+      mRequest(nullptr),
       mUnreportedPreloadError(NS_OK) {}
 
 ScriptLoadRequest::~ScriptLoadRequest() {
@@ -227,6 +231,11 @@ void ScriptLoadRequest::DropBytecodeCacheReferences() {
 ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {
   MOZ_ASSERT(IsModuleRequest());
   return static_cast<ModuleLoadRequest*>(this);
+}
+
+void DOMScriptLoadContext::SetRequest(ScriptLoadRequest* aRequest) {
+  MOZ_ASSERT(!mRequest);
+  mRequest = aRequest;
 }
 
 void DOMScriptLoadContext::SetScriptMode(bool aDeferAttr, bool aAsyncAttr,

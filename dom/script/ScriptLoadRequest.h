@@ -138,7 +138,8 @@ class ScriptLoadRequest
  public:
   ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
                     ScriptFetchOptions* aFetchOptions,
-                    const SRIMetadata& aIntegrity, nsIURI* aReferrer);
+                    const SRIMetadata& aIntegrity, nsIURI* aReferrer,
+                    DOMScriptLoadContext* aContext);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ScriptLoadRequest)
@@ -354,11 +355,13 @@ class DOMScriptLoadContext : public PreloaderBase {
   virtual ~DOMScriptLoadContext();
 
  public:
-  explicit DOMScriptLoadContext(Element* aElement, ScriptLoadRequest* aRequest,
+  explicit DOMScriptLoadContext(Element* aElement,
                                 nsIGlobalObject* aWebExtGlobal = nullptr);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMScriptLoadContext)
+
+  void SetRequest(ScriptLoadRequest* aRequest);
 
   // PreloaderBase
   static void PrioritizeAsPreload(nsIChannel* aChannel);
@@ -479,8 +482,10 @@ class DOMScriptLoadContext : public PreloaderBase {
   bool mIsPreload;
   nsCOMPtr<Element> mElement;
 
-  // Global that initiated this request, when using a WebExtension
-  // content-script.
+  /* The Web Extension global -- Only used on DOM Modules.
+   *     Specifies a SandBox global with which to associate and run this script.
+   *     Propagated throughout the module tree if present.
+   */
   nsCOMPtr<nsIGlobalObject> mWebExtGlobal;
 
   RefPtr<ScriptLoadRequest> mRequest;
