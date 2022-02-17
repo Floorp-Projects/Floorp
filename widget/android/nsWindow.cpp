@@ -1476,7 +1476,7 @@ void GeckoViewSupport::Open(
     jni::Object::Param aQueue, jni::Object::Param aCompositor,
     jni::Object::Param aDispatcher, jni::Object::Param aSessionAccessibility,
     jni::Object::Param aInitData, jni::String::Param aId,
-    jni::String::Param aChromeURI, int32_t aScreenId, bool aPrivateMode) {
+    jni::String::Param aChromeURI, bool aPrivateMode) {
   MOZ_ASSERT(NS_IsMainThread());
 
   AUTO_PROFILER_LABEL("mozilla::widget::GeckoViewSupport::Open", OTHER);
@@ -1512,7 +1512,6 @@ void GeckoViewSupport::Open(
   nsCOMPtr<nsPIDOMWindowOuter> pdomWindow = nsPIDOMWindowOuter::From(domWindow);
   const RefPtr<nsWindow> window = nsWindow::From(pdomWindow);
   MOZ_ASSERT(window);
-  window->SetScreenId(aScreenId);
 
   // Attach a new GeckoView support object to the new window.
   GeckoSession::Window::LocalRef sessionWindow(aCls.Env(), aWindow);
@@ -1764,7 +1763,6 @@ void nsWindow::DumpWindows(const nsTArray<nsWindow*>& wins, int indent) {
 
 nsWindow::nsWindow()
     : mWidgetId(++sWidgetId),
-      mScreenId(0),  // Use 0 (primary screen) as the default value.
       mIsVisible(false),
       mParent(nullptr),
       mDynamicToolbarMaxHeight(0),
@@ -2691,12 +2689,6 @@ void nsWindow::UpdateZoomConstraints(
 CompositorBridgeChild* nsWindow::GetCompositorBridgeChild() const {
   return mCompositorSession ? mCompositorSession->GetCompositorBridgeChild()
                             : nullptr;
-}
-
-already_AddRefed<nsIScreen> nsWindow::GetWidgetScreen() {
-  RefPtr<nsIScreen> screen =
-      ScreenHelperAndroid::GetSingleton()->ScreenForId(mScreenId);
-  return screen.forget();
 }
 
 void nsWindow::SetContentDocumentDisplayed(bool aDisplayed) {

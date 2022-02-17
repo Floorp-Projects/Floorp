@@ -1758,6 +1758,15 @@ nsresult nsObjectLoadingContent::CloseChannel() {
   return NS_OK;
 }
 
+bool nsObjectLoadingContent::IsAboutBlankLoadOntoInitialAboutBlank(
+    nsIURI* aURI, bool aInheritPrincipal, nsIPrincipal* aPrincipalToInherit) {
+  return NS_IsAboutBlank(aURI) && aInheritPrincipal &&
+         (!mFrameLoader || !mFrameLoader->GetExistingDocShell() ||
+          mFrameLoader->GetExistingDocShell()
+              ->IsAboutBlankLoadOntoInitialAboutBlank(aURI, aInheritPrincipal,
+                                                      aPrincipalToInherit));
+}
+
 nsresult nsObjectLoadingContent::OpenChannel() {
   nsCOMPtr<nsIContent> thisContent =
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
@@ -1830,7 +1839,9 @@ nsresult nsObjectLoadingContent::OpenChannel() {
     loadInfo->SetCSPToInherit(cspToInherit);
   }
 
-  if (DocumentChannel::CanUseDocumentChannel(mURI)) {
+  if (DocumentChannel::CanUseDocumentChannel(mURI) &&
+      !IsAboutBlankLoadOntoInitialAboutBlank(mURI, inheritPrincipal,
+                                             thisContent->NodePrincipal())) {
     // --- Create LoadState
     RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(mURI);
     loadState->SetPrincipalToInherit(thisContent->NodePrincipal());

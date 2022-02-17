@@ -29,7 +29,7 @@ stacktrace = "first\nsecond"
 class TestErrors(marionette_test.MarionetteTestCase):
     def test_defaults(self):
         exc = errors.MarionetteException()
-        self.assertEquals(str(exc), "None")
+        self.assertEqual(str(exc), "None")
         self.assertIsNone(exc.cause)
         self.assertIsNone(exc.stacktrace)
 
@@ -37,9 +37,9 @@ class TestErrors(marionette_test.MarionetteTestCase):
         exc = errors.MarionetteException(
             message=message, cause=cause, stacktrace=stacktrace
         )
-        self.assertEquals(exc.message, message)
-        self.assertEquals(exc.cause, cause)
-        self.assertEquals(exc.stacktrace, stacktrace)
+        self.assertEqual(exc.message, message)
+        self.assertEqual(exc.cause, cause)
+        self.assertEqual(exc.stacktrace, stacktrace)
 
     def test_str_message(self):
         exc = errors.MarionetteException(

@@ -817,7 +817,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void SetActiveSessionHistoryEntry(const Maybe<nsPoint>& aPreviousScrollPos,
                                     SessionHistoryInfo* aInfo,
                                     uint32_t aLoadType,
-                                    uint32_t aUpdatedCacheKey);
+                                    uint32_t aUpdatedCacheKey,
+                                    bool aUpdateLength = true);
 
   // Replace the active entry for this browsing context. This is used for
   // implementing history.replaceState and same document navigations.

@@ -143,6 +143,10 @@ void LSDatabase::NoteFinishedSnapshot(LSSnapshot* aSnapshot) {
   }
 }
 
+// All these methods assert `!mAllowedToClose` because they shoudn't be called
+// if the database is being closed. Callers should first check the state by
+// calling `IsAlloweToClose` and eventually obtain a new database.
+
 nsresult LSDatabase::GetLength(LSObject* aObject, uint32_t* aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObject);
@@ -309,6 +313,14 @@ nsresult LSDatabase::EndExplicitSnapshot() {
   }
 
   return NS_OK;
+}
+
+bool LSDatabase::HasSnapshot() const {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
+
+  return !!mSnapshot;
 }
 
 nsresult LSDatabase::EnsureSnapshot(LSObject* aObject, const nsAString& aKey,

@@ -218,6 +218,8 @@ struct LoadingSessionHistoryInfo {
   // Initializes mInfo using aEntry and otherwise copies the values from aInfo.
   LoadingSessionHistoryInfo(SessionHistoryEntry* aEntry,
                             LoadingSessionHistoryInfo* aInfo);
+  // For about:blank only.
+  explicit LoadingSessionHistoryInfo(const SessionHistoryInfo& aInfo);
 
   already_AddRefed<nsDocShellLoadState> CreateLoadInfo() const;
 

@@ -259,9 +259,4 @@ mozilla::ipc::IPCResult RemoteLazyInputStreamParent::Recv__delete__() {
   return IPC_OK();
 }
 
-bool RemoteLazyInputStreamParent::HasValidStream() const {
-  auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
-  return storage ? storage->HasStream(mID) : false;
-}
-
 }  // namespace mozilla

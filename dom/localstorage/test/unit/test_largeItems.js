@@ -84,5 +84,5 @@ async function testSteps() {
 
   await returnToEventLoop();
 
-  ok(!storage.hasActiveSnapshot, "Snapshot successfully finished");
+  ok(!storage.hasSnapshot, "Snapshot successfully finished");
 }
