@@ -32,7 +32,7 @@ namespace dom {
 // ScriptFetchOptions
 //////////////////////////////////////////////////////////////
 
-NS_IMPL_CYCLE_COLLECTION(ScriptFetchOptions, mElement, mTriggeringPrincipal,
+NS_IMPL_CYCLE_COLLECTION(ScriptFetchOptions, mTriggeringPrincipal,
                          mWebExtGlobal)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ScriptFetchOptions, AddRef)
@@ -40,13 +40,11 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ScriptFetchOptions, Release)
 
 ScriptFetchOptions::ScriptFetchOptions(mozilla::CORSMode aCORSMode,
                                        ReferrerPolicy aReferrerPolicy,
-                                       Element* aElement,
                                        nsIPrincipal* aTriggeringPrincipal,
                                        nsIGlobalObject* aWebExtGlobal)
     : mCORSMode(aCORSMode),
       mReferrerPolicy(aReferrerPolicy),
       mIsPreload(false),
-      mElement(aElement),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mWebExtGlobal(aWebExtGlobal) {
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -112,6 +110,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMScriptLoadContext)
 NS_IMPL_CYCLE_COLLECTION_CLASS(DOMScriptLoadContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMScriptLoadContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)
   // XXX missing mLoadBlockedDocument ?
   if (Runnable* runnable = tmp->mRunnable.exchange(nullptr)) {
     runnable->Release();
@@ -120,13 +119,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMScriptLoadContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMScriptLoadContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoadBlockedDocument, mRequest)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoadBlockedDocument, mRequest, mElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMScriptLoadContext)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-DOMScriptLoadContext::DOMScriptLoadContext(ScriptLoadRequest* aRequest)
+DOMScriptLoadContext::DOMScriptLoadContext(Element* aElement,
+                                           ScriptLoadRequest* aRequest)
     : mScriptMode(ScriptMode::eBlocking),
       mScriptFromHead(false),
       mIsInline(true),
@@ -139,6 +139,7 @@ DOMScriptLoadContext::DOMScriptLoadContext(ScriptLoadRequest* aRequest)
       mWasCompiledOMT(false),
       mOffThreadToken(nullptr),
       mRunnable(nullptr),
+      mElement(aElement),
       mRequest(aRequest),
       mUnreportedPreloadError(NS_OK) {}
 
@@ -277,8 +278,7 @@ void DOMScriptLoadContext::PrioritizeAsPreload() {
 }
 
 nsIScriptElement* DOMScriptLoadContext::GetScriptElement() const {
-  nsCOMPtr<nsIScriptElement> scriptElement =
-      do_QueryInterface(mRequest->mFetchOptions->mElement);
+  nsCOMPtr<nsIScriptElement> scriptElement = do_QueryInterface(mElement);
   return scriptElement;
 }
 
@@ -286,7 +286,8 @@ void DOMScriptLoadContext::SetIsLoadRequest(nsIScriptElement* aElement) {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(!GetScriptElement());
   MOZ_ASSERT(IsPreload());
-  mRequest->mFetchOptions->mElement = do_QueryInterface(aElement);
+  // TODO: How to allow both to access fetch options
+  mElement = do_QueryInterface(aElement);
   mRequest->mFetchOptions->mIsPreload = false;
 }
 
