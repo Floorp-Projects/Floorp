@@ -8,7 +8,7 @@
 #include "nsURIHashKey.h"
 #include "nsIGlobalObject.h"
 
-namespace JS::loader {
+namespace mozilla::dom {
 
 class ModuleMapKey : public nsURIHashKey {
  public:
@@ -42,6 +42,6 @@ inline void ImplCycleCollectionTraverse(
   ImplCycleCollectionTraverse(aCallback, aField.mWebExtGlobal, aName, aFlags);
 }
 
-}  // namespace JS::loader
+}  // namespace mozilla::dom
 
 #endif
