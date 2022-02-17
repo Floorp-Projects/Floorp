@@ -73,9 +73,10 @@ partial interface Storage {
   void endExplicitSnapshot();
 
   /**
-   * Returns true if the underlying database has been opened and it has an
-   * active snapshot (initialized implicitly or explicitly).
+   * Returns true if the underlying database has been opened, the database is
+   * not being closed and it has a snapshot (initialized implicitly or
+   * explicitly).
    */
   [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
-  readonly attribute boolean hasActiveSnapshot;
+  readonly attribute boolean hasSnapshot;
 };
