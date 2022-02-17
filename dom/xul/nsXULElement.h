@@ -355,9 +355,6 @@ class nsXULElement : public nsStyledElement {
                            bool aDumpAll) const override {}
 #endif
 
-  MOZ_CAN_RUN_SCRIPT int32_t ScreenX();
-  MOZ_CAN_RUN_SCRIPT int32_t ScreenY();
-
   MOZ_CAN_RUN_SCRIPT bool HasMenu();
   MOZ_CAN_RUN_SCRIPT void OpenMenu(bool aOpenFlag);
 

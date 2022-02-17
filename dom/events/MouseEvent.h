@@ -36,6 +36,7 @@ class MouseEvent : public UIEvent {
 
   int32_t ScreenX(CallerType aCallerType);
   int32_t ScreenY(CallerType aCallerType);
+  already_AddRefed<nsIScreen> GetScreen();
   int32_t PageX() const;
   int32_t PageY() const;
   int32_t ClientX();

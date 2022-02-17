@@ -870,11 +870,7 @@
 
       // screen.availLeft et. al. only check the screen that this window is on,
       // but we want to look at the screen the tab is being dropped onto.
-      let cssToDesktopScale =
-        window.devicePixelRatio / window.desktopToDeviceScale;
-      var screen = Cc["@mozilla.org/gfx/screenmanager;1"]
-        .getService(Ci.nsIScreenManager)
-        .screenForRect(eX * cssToDesktopScale, eY * cssToDesktopScale, 1, 1);
+      var screen = event.screen;
       var fullX = {},
         fullY = {},
         fullWidth = {},

@@ -817,6 +817,9 @@ var PictureInPicture = {
     // use screenForRect to get screen
     // this returns the default screen if left and top are not
     // on any screen
+    //
+    // FIXME(emilio, bug 1755686): Callers mix coordinate spaces, this is
+    // supposed to be in desktop pixels, not CSS pixels.
     let screen = screenManager.screenForRect(left, top, width, height);
 
     return screen;
