@@ -62,7 +62,6 @@ login-item[data-editing="true"] + login-intro,
   display: none;
 }
 
-
 .heading-wrapper {
   display: flex;
   justify-content: center;
@@ -90,4 +89,11 @@ login-item[data-editing="true"] + login-intro,
   width: 100vw;
   height: 100vh;
   background-color: rgba(0,0,0,0.2);
+}
+
+body > section {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow-y: hidden;
+  overflow-x: auto;
 }
