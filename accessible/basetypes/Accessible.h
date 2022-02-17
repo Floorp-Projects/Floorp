@@ -198,6 +198,8 @@ class Accessible {
    */
   virtual already_AddRefed<AccAttributes> Attributes() = 0;
 
+  virtual already_AddRefed<nsAtom> DisplayStyle() const = 0;
+
   // Methods that interact with content.
 
   virtual void TakeFocus() const = 0;
