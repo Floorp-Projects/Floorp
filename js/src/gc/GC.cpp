@@ -269,6 +269,7 @@
 using namespace js;
 using namespace js::gc;
 
+using mozilla::MakeScopeExit;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
@@ -3833,9 +3834,15 @@ struct MOZ_RAII AutoSetZoneSliceThresholds {
 void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
                         JS::GCReason reason) {
   mozilla::TimeStamp startTime = TimeStamp::Now();
-  auto timer = mozilla::MakeScopeExit([&] {
+  auto timer = MakeScopeExit([&] {
     if (Realm* realm = rt->mainContextFromOwnThread()->realm()) {
       realm->timers.gcTime += TimeStamp::Now() - startTime;
+    }
+  });
+
+  auto clearGCOptions = MakeScopeExit([&] {
+    if (!isIncrementalGCInProgress()) {
+      maybeGcOptions = Nothing();
     }
   });
 
@@ -3895,10 +3902,6 @@ void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
 
   if (reason == JS::GCReason::COMPARTMENT_REVIVED) {
     maybeDoCycleCollection();
-  }
-
-  if (!isIncrementalGCInProgress()) {
-    maybeGcOptions = Nothing();
   }
 
 #ifdef JS_GC_ZEAL

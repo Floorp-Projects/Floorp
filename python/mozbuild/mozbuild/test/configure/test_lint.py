@@ -42,7 +42,7 @@ class TestLint(unittest.TestCase):
             yield e
 
         _, _, tb = sys.exc_info()
-        self.assertEquals(
+        self.assertEqual(
             traceback.extract_tb(tb)[-1][:2],
             (mozpath.join(test_data_path, "moz.configure"), line),
         )
@@ -82,7 +82,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(str(e.exception), "The dependency on `--help` is unused")
+        self.assertEqual(str(e.exception), "The dependency on `--help` is unused")
 
         with self.assertRaisesFromLine(ConfigureError, 3) as e:
             with self.moz_configure(
@@ -101,7 +101,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception),
             "Missing '--help' dependency because `bar` depends on '--help' and `foo`",
         )
@@ -128,7 +128,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception),
             "Missing '--help' dependency because `bar` depends on '--help' and `foo`",
         )
@@ -159,7 +159,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(str(e.exception), "Missing '--help' dependency")
+        self.assertEqual(str(e.exception), "Missing '--help' dependency")
 
         with self.assertRaisesFromLine(ConfigureError, 3) as e:
             with self.moz_configure(
@@ -179,7 +179,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(str(e.exception), "Missing '--help' dependency")
+        self.assertEqual(str(e.exception), "Missing '--help' dependency")
 
         with self.assertRaisesFromLine(ConfigureError, 3) as e:
             with self.moz_configure(
@@ -195,7 +195,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(str(e.exception), "Missing '--help' dependency")
+        self.assertEqual(str(e.exception), "Missing '--help' dependency")
 
         # This would have failed with "Missing '--help' dependency"
         # in the past, because of the reference to the builtin False.
@@ -231,7 +231,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(str(e.exception), "Missing '--help' dependency")
+        self.assertEqual(str(e.exception), "Missing '--help' dependency")
 
         # There is a default restricted `os` module when there is no explicit
         # @imports, and it's fine to use it without a dependency on --help.
@@ -261,7 +261,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(str(e.exception), "The dependency on `--foo` is unused")
+        self.assertEqual(str(e.exception), "The dependency on `--foo` is unused")
 
         with self.assertRaisesFromLine(ConfigureError, 5) as e:
             with self.moz_configure(
@@ -278,7 +278,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(str(e.exception), "The dependency on `bar` is unused")
+        self.assertEqual(str(e.exception), "The dependency on `bar` is unused")
 
         with self.assertRaisesFromLine(ConfigureError, 2) as e:
             with self.moz_configure(
@@ -292,7 +292,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(str(e.exception), "The dependency on `<lambda>` is unused")
+        self.assertEqual(str(e.exception), "The dependency on `<lambda>` is unused")
 
         with self.assertRaisesFromLine(ConfigureError, 9) as e:
             with self.moz_configure(
@@ -313,7 +313,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(str(e.exception), "The dependency on `qux` is unused")
+        self.assertEqual(str(e.exception), "The dependency on `qux` is unused")
 
     def test_default_enable(self):
         # --enable-* with default=True is not allowed.
@@ -330,7 +330,7 @@ class TestLint(unittest.TestCase):
             """
             ):
                 self.lint_test()
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception),
             "--disable-foo should be used instead of " "--enable-foo with default=True",
         )
@@ -350,7 +350,7 @@ class TestLint(unittest.TestCase):
             """
             ):
                 self.lint_test()
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception),
             "--enable-foo should be used instead of "
             "--disable-foo with default=False",
@@ -371,7 +371,7 @@ class TestLint(unittest.TestCase):
             """
             ):
                 self.lint_test()
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception),
             "--without-foo should be used instead of " "--with-foo with default=True",
         )
@@ -391,7 +391,7 @@ class TestLint(unittest.TestCase):
             """
             ):
                 self.lint_test()
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception),
             "--with-foo should be used instead of " "--without-foo with default=False",
         )
@@ -416,7 +416,7 @@ class TestLint(unittest.TestCase):
             """
             ):
                 self.lint_test()
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception),
             '`help` should contain "{Enable|Disable}" because of '
             "non-constant default",
@@ -450,7 +450,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(str(e.exception), "global name 'unknown' is not defined")
+        self.assertEqual(str(e.exception), "global name 'unknown' is not defined")
 
         # Ideally, this would raise on line 4, where `unknown` is used, but
         # python disassembly doesn't give use the information.
@@ -469,7 +469,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(str(e.exception), "global name 'unknown' is not defined")
+        self.assertEqual(str(e.exception), "global name 'unknown' is not defined")
 
     def test_unnecessary_imports(self):
         with self.assertRaisesFromLine(NameError, 3) as e:
@@ -486,9 +486,7 @@ class TestLint(unittest.TestCase):
             ):
                 self.lint_test()
 
-        self.assertEquals(
-            str(e.exception), "builtin 'list' doesn't need to be imported"
-        )
+        self.assertEqual(str(e.exception), "builtin 'list' doesn't need to be imported")
 
 
 if __name__ == "__main__":

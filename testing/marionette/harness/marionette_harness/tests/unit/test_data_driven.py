@@ -38,7 +38,7 @@ class TestDataDriven(MarionetteTestCase):
         test.test_1()
         test.test_2()
 
-        self.assertEquals(test.parameters, [("thing", 43), ("thing2", None)])
+        self.assertEqual(test.parameters, [("thing", 43), ("thing2", None)])
 
     def test_with_parameters(self):
         DATA = [("1", ("thing",), {"named": 43}), ("2", ("thing2",), {"named": None})]
@@ -59,7 +59,7 @@ class TestDataDriven(MarionetteTestCase):
         test.test_1()
         test.test_2()
 
-        self.assertEquals(test.parameters, [("thing", 43), ("thing2", None)])
+        self.assertEqual(test.parameters, [("thing", 43), ("thing2", None)])
 
     def test_parameterized_same_name_raises_error(self):
         with self.assertRaises(KeyError):

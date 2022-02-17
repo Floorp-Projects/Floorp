@@ -158,6 +158,85 @@ add_task(async function() {
   }
 });
 
+/**
+ * Tests if Open in new tab works by middle click RequestItem.
+ */
+
+add_task(async function() {
+  const { tab, monitor } = await initNetMonitor(OPEN_REQUEST_IN_TAB_URL, {
+    requestCount: 1,
+  });
+  const MIDDLE_MOUSE_BUTTON = 1;
+  info("Starting test...");
+
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  let newTab;
+
+  store.dispatch(Actions.batchEnable(false));
+
+  // Post data may be fetched by the Header panel,
+  // so set the Timings panel as the new default.
+  store.getState().ui.detailsPanelSelectedTab = "timings";
+
+  // Open GET request in new tab
+  await performRequest(monitor, tab, "GET");
+  newTab = await openLastRequestInTab();
+  await checkTabResponse(newTab, "GET");
+  gBrowser.removeCurrentTab();
+
+  // Open POST request in new tab
+  await performRequest(
+    monitor,
+    tab,
+    "POST",
+    "application/x-www-form-urlencoded",
+    "foo=bar&baz=42"
+  );
+  newTab = await openLastRequestInTab();
+  await checkTabResponse(
+    newTab,
+    "POST",
+    "application/x-www-form-urlencoded",
+    "foo=bar&amp;baz=42"
+  );
+  gBrowser.removeCurrentTab();
+
+  // Open POST application/json request in new tab
+  await performRequest(
+    monitor,
+    tab,
+    "POST",
+    "application/json",
+    '{"foo":"bar"}'
+  );
+  newTab = await openLastRequestInTab();
+  await checkTabResponse(newTab, "POST", "application/json", '{"foo":"bar"}');
+  gBrowser.removeCurrentTab();
+
+  await teardown(monitor);
+
+  // OpenLastRequestInTab by middle click
+  async function openLastRequestInTab() {
+    const requestItems = document.querySelectorAll(".request-list-item");
+    const lastRequest = requestItems[requestItems.length - 1];
+
+    const onTabOpen = once(gBrowser.tabContainer, "TabOpen", false);
+    EventUtils.sendMouseEvent(
+      { type: "mousedown", button: MIDDLE_MOUSE_BUTTON },
+      lastRequest
+    );
+    await onTabOpen;
+    info("A new tab has been opened");
+
+    const awaitedTab = gBrowser.selectedTab;
+    await BrowserTestUtils.browserLoaded(awaitedTab.linkedBrowser);
+    info("The tab load completed");
+
+    return awaitedTab;
+  }
+});
+
 async function performRequest(monitor, tab, method, contentType, payload) {
   const wait = waitForNetworkEvents(monitor, 1);
   await SpecialPowers.spawn(

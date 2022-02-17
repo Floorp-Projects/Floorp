@@ -2036,5 +2036,9 @@ nsIOService::GetSocketProcessLaunched(bool* aResult) {
   return NS_OK;
 }
 
+bool nsIOService::HasObservers(const char* aTopic) {
+  MOZ_ASSERT(false, "Calling this method is unexpected");
+  return false;
+}
 }  // namespace net
 }  // namespace mozilla

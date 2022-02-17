@@ -28,101 +28,101 @@ class Option(Option):
 class TestOption(unittest.TestCase):
     def test_option(self):
         option = Option("--option")
-        self.assertEquals(option.prefix, "")
-        self.assertEquals(option.name, "option")
-        self.assertEquals(option.env, None)
+        self.assertEqual(option.prefix, "")
+        self.assertEqual(option.name, "option")
+        self.assertEqual(option.env, None)
         self.assertFalse(option.default)
 
         option = Option("--enable-option")
-        self.assertEquals(option.prefix, "enable")
-        self.assertEquals(option.name, "option")
-        self.assertEquals(option.env, None)
+        self.assertEqual(option.prefix, "enable")
+        self.assertEqual(option.name, "option")
+        self.assertEqual(option.env, None)
         self.assertFalse(option.default)
 
         option = Option("--disable-option")
-        self.assertEquals(option.prefix, "disable")
-        self.assertEquals(option.name, "option")
-        self.assertEquals(option.env, None)
+        self.assertEqual(option.prefix, "disable")
+        self.assertEqual(option.name, "option")
+        self.assertEqual(option.env, None)
         self.assertTrue(option.default)
 
         option = Option("--with-option")
-        self.assertEquals(option.prefix, "with")
-        self.assertEquals(option.name, "option")
-        self.assertEquals(option.env, None)
+        self.assertEqual(option.prefix, "with")
+        self.assertEqual(option.name, "option")
+        self.assertEqual(option.env, None)
         self.assertFalse(option.default)
 
         option = Option("--without-option")
-        self.assertEquals(option.prefix, "without")
-        self.assertEquals(option.name, "option")
-        self.assertEquals(option.env, None)
+        self.assertEqual(option.prefix, "without")
+        self.assertEqual(option.name, "option")
+        self.assertEqual(option.env, None)
         self.assertTrue(option.default)
 
         option = Option("--without-option-foo", env="MOZ_OPTION")
-        self.assertEquals(option.env, "MOZ_OPTION")
+        self.assertEqual(option.env, "MOZ_OPTION")
 
         option = Option(env="MOZ_OPTION")
-        self.assertEquals(option.prefix, "")
-        self.assertEquals(option.name, None)
-        self.assertEquals(option.env, "MOZ_OPTION")
+        self.assertEqual(option.prefix, "")
+        self.assertEqual(option.name, None)
+        self.assertEqual(option.env, "MOZ_OPTION")
         self.assertFalse(option.default)
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--option", nargs=0, default=("a",))
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The given `default` doesn't satisfy `nargs`"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--option", nargs=1, default=())
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "default must be a bool, a string or a tuple of strings"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--option", nargs=1, default=True)
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The given `default` doesn't satisfy `nargs`"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--option", nargs=1, default=("a", "b"))
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The given `default` doesn't satisfy `nargs`"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--option", nargs=2, default=())
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "default must be a bool, a string or a tuple of strings"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--option", nargs=2, default=True)
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The given `default` doesn't satisfy `nargs`"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--option", nargs=2, default=("a",))
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The given `default` doesn't satisfy `nargs`"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--option", nargs="?", default=("a", "b"))
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The given `default` doesn't satisfy `nargs`"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--option", nargs="+", default=())
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "default must be a bool, a string or a tuple of strings"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--option", nargs="+", default=True)
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The given `default` doesn't satisfy `nargs`"
         )
 
@@ -130,46 +130,46 @@ class TestOption(unittest.TestCase):
         # argument need to be given a default.
         with self.assertRaises(InvalidOptionError) as e:
             Option("--disable-option", nargs=1)
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The given `default` doesn't satisfy `nargs`"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--disable-option", nargs="+")
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The given `default` doesn't satisfy `nargs`"
         )
 
         # Test nargs inference from default value
         option = Option("--with-foo", default=True)
-        self.assertEquals(option.nargs, 0)
+        self.assertEqual(option.nargs, 0)
 
         option = Option("--with-foo", default=False)
-        self.assertEquals(option.nargs, 0)
+        self.assertEqual(option.nargs, 0)
 
         option = Option("--with-foo", default="a")
-        self.assertEquals(option.nargs, "?")
+        self.assertEqual(option.nargs, "?")
 
         option = Option("--with-foo", default=("a",))
-        self.assertEquals(option.nargs, "?")
+        self.assertEqual(option.nargs, "?")
 
         option = Option("--with-foo", default=("a", "b"))
-        self.assertEquals(option.nargs, "*")
+        self.assertEqual(option.nargs, "*")
 
         option = Option(env="FOO", default=True)
-        self.assertEquals(option.nargs, 0)
+        self.assertEqual(option.nargs, 0)
 
         option = Option(env="FOO", default=False)
-        self.assertEquals(option.nargs, 0)
+        self.assertEqual(option.nargs, 0)
 
         option = Option(env="FOO", default="a")
-        self.assertEquals(option.nargs, "?")
+        self.assertEqual(option.nargs, "?")
 
         option = Option(env="FOO", default=("a",))
-        self.assertEquals(option.nargs, "?")
+        self.assertEqual(option.nargs, "?")
 
         option = Option(env="FOO", default=("a", "b"))
-        self.assertEquals(option.nargs, "*")
+        self.assertEqual(option.nargs, "*")
 
     def test_option_option(self):
         for option in (
@@ -179,43 +179,43 @@ class TestOption(unittest.TestCase):
             "--with-option",
             "--without-option",
         ):
-            self.assertEquals(Option(option).option, option)
-            self.assertEquals(Option(option, env="FOO").option, option)
+            self.assertEqual(Option(option).option, option)
+            self.assertEqual(Option(option, env="FOO").option, option)
 
             opt = Option(option, default=False)
-            self.assertEquals(
+            self.assertEqual(
                 opt.option,
                 option.replace("-disable-", "-enable-").replace("-without-", "-with-"),
             )
 
             opt = Option(option, default=True)
-            self.assertEquals(
+            self.assertEqual(
                 opt.option,
                 option.replace("-enable-", "-disable-").replace("-with-", "-without-"),
             )
 
-        self.assertEquals(Option(env="FOO").option, "FOO")
+        self.assertEqual(Option(env="FOO").option, "FOO")
 
     def test_option_choices(self):
         with self.assertRaises(InvalidOptionError) as e:
             Option("--option", nargs=3, choices=("a", "b"))
-        self.assertEquals(str(e.exception), "Not enough `choices` for `nargs`")
+        self.assertEqual(str(e.exception), "Not enough `choices` for `nargs`")
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--without-option", nargs=1, choices=("a", "b"))
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "A `default` must be given along with `choices`"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--without-option", nargs="+", choices=("a", "b"))
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "A `default` must be given along with `choices`"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--without-option", default="c", choices=("a", "b"))
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The `default` value must be one of 'a', 'b'"
         )
 
@@ -228,33 +228,33 @@ class TestOption(unittest.TestCase):
                 ),
                 choices=("a", "b"),
             )
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The `default` value must be one of 'a', 'b'"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--without-option", default=("c",), choices=("a", "b"))
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The `default` value must be one of 'a', 'b'"
         )
 
         option = Option("--with-option", nargs="+", choices=("a", "b"))
         with self.assertRaises(InvalidOptionError) as e:
             option.get_value("--with-option=c")
-        self.assertEquals(str(e.exception), "'c' is not one of 'a', 'b'")
+        self.assertEqual(str(e.exception), "'c' is not one of 'a', 'b'")
 
         value = option.get_value("--with-option=b,a")
         self.assertTrue(value)
-        self.assertEquals(PositiveOptionValue(("b", "a")), value)
+        self.assertEqual(PositiveOptionValue(("b", "a")), value)
 
         option = Option("--without-option", nargs="*", default="a", choices=("a", "b"))
         with self.assertRaises(InvalidOptionError) as e:
             option.get_value("--with-option=c")
-        self.assertEquals(str(e.exception), "'c' is not one of 'a', 'b'")
+        self.assertEqual(str(e.exception), "'c' is not one of 'a', 'b'")
 
         value = option.get_value("--with-option=b,a")
         self.assertTrue(value)
-        self.assertEquals(PositiveOptionValue(("b", "a")), value)
+        self.assertEqual(PositiveOptionValue(("b", "a")), value)
 
         # Test nargs inference from choices
         option = Option("--with-option", choices=("a", "b"))
@@ -266,35 +266,35 @@ class TestOption(unittest.TestCase):
         )
 
         value = option.get_value("--with-option=+d")
-        self.assertEquals(PositiveOptionValue(("b", "c", "d")), value)
+        self.assertEqual(PositiveOptionValue(("b", "c", "d")), value)
 
         value = option.get_value("--with-option=-b")
-        self.assertEquals(PositiveOptionValue(("c",)), value)
+        self.assertEqual(PositiveOptionValue(("c",)), value)
 
         value = option.get_value("--with-option=-b,+d")
-        self.assertEquals(PositiveOptionValue(("c", "d")), value)
+        self.assertEqual(PositiveOptionValue(("c", "d")), value)
 
         # Adding something that is in the default is fine
         value = option.get_value("--with-option=+b")
-        self.assertEquals(PositiveOptionValue(("b", "c")), value)
+        self.assertEqual(PositiveOptionValue(("b", "c")), value)
 
         # Removing something that is not in the default is fine, as long as it
         # is one of the choices
         value = option.get_value("--with-option=-a")
-        self.assertEquals(PositiveOptionValue(("b", "c")), value)
+        self.assertEqual(PositiveOptionValue(("b", "c")), value)
 
         with self.assertRaises(InvalidOptionError) as e:
             option.get_value("--with-option=-e")
-        self.assertEquals(str(e.exception), "'e' is not one of 'a', 'b', 'c', 'd'")
+        self.assertEqual(str(e.exception), "'e' is not one of 'a', 'b', 'c', 'd'")
 
         # Other "not a choice" errors.
         with self.assertRaises(InvalidOptionError) as e:
             option.get_value("--with-option=+e")
-        self.assertEquals(str(e.exception), "'e' is not one of 'a', 'b', 'c', 'd'")
+        self.assertEqual(str(e.exception), "'e' is not one of 'a', 'b', 'c', 'd'")
 
         with self.assertRaises(InvalidOptionError) as e:
             option.get_value("--with-option=e")
-        self.assertEquals(str(e.exception), "'e' is not one of 'a', 'b', 'c', 'd'")
+        self.assertEqual(str(e.exception), "'e' is not one of 'a', 'b', 'c', 'd'")
 
     def test_option_value_compare(self):
         # OptionValue are tuple and equivalence should compare as tuples.
@@ -332,36 +332,36 @@ class TestOption(unittest.TestCase):
 
     def test_option_value_format(self):
         val = PositiveOptionValue()
-        self.assertEquals("--with-value", val.format("--with-value"))
-        self.assertEquals("--with-value", val.format("--without-value"))
-        self.assertEquals("--enable-value", val.format("--enable-value"))
-        self.assertEquals("--enable-value", val.format("--disable-value"))
-        self.assertEquals("--value", val.format("--value"))
-        self.assertEquals("VALUE=1", val.format("VALUE"))
+        self.assertEqual("--with-value", val.format("--with-value"))
+        self.assertEqual("--with-value", val.format("--without-value"))
+        self.assertEqual("--enable-value", val.format("--enable-value"))
+        self.assertEqual("--enable-value", val.format("--disable-value"))
+        self.assertEqual("--value", val.format("--value"))
+        self.assertEqual("VALUE=1", val.format("VALUE"))
 
         val = PositiveOptionValue(("a",))
-        self.assertEquals("--with-value=a", val.format("--with-value"))
-        self.assertEquals("--with-value=a", val.format("--without-value"))
-        self.assertEquals("--enable-value=a", val.format("--enable-value"))
-        self.assertEquals("--enable-value=a", val.format("--disable-value"))
-        self.assertEquals("--value=a", val.format("--value"))
-        self.assertEquals("VALUE=a", val.format("VALUE"))
+        self.assertEqual("--with-value=a", val.format("--with-value"))
+        self.assertEqual("--with-value=a", val.format("--without-value"))
+        self.assertEqual("--enable-value=a", val.format("--enable-value"))
+        self.assertEqual("--enable-value=a", val.format("--disable-value"))
+        self.assertEqual("--value=a", val.format("--value"))
+        self.assertEqual("VALUE=a", val.format("VALUE"))
 
         val = PositiveOptionValue(("a", "b"))
-        self.assertEquals("--with-value=a,b", val.format("--with-value"))
-        self.assertEquals("--with-value=a,b", val.format("--without-value"))
-        self.assertEquals("--enable-value=a,b", val.format("--enable-value"))
-        self.assertEquals("--enable-value=a,b", val.format("--disable-value"))
-        self.assertEquals("--value=a,b", val.format("--value"))
-        self.assertEquals("VALUE=a,b", val.format("VALUE"))
+        self.assertEqual("--with-value=a,b", val.format("--with-value"))
+        self.assertEqual("--with-value=a,b", val.format("--without-value"))
+        self.assertEqual("--enable-value=a,b", val.format("--enable-value"))
+        self.assertEqual("--enable-value=a,b", val.format("--disable-value"))
+        self.assertEqual("--value=a,b", val.format("--value"))
+        self.assertEqual("VALUE=a,b", val.format("VALUE"))
 
         val = NegativeOptionValue()
-        self.assertEquals("--without-value", val.format("--with-value"))
-        self.assertEquals("--without-value", val.format("--without-value"))
-        self.assertEquals("--disable-value", val.format("--enable-value"))
-        self.assertEquals("--disable-value", val.format("--disable-value"))
-        self.assertEquals("", val.format("--value"))
-        self.assertEquals("VALUE=", val.format("VALUE"))
+        self.assertEqual("--without-value", val.format("--with-value"))
+        self.assertEqual("--without-value", val.format("--without-value"))
+        self.assertEqual("--disable-value", val.format("--enable-value"))
+        self.assertEqual("--disable-value", val.format("--disable-value"))
+        self.assertEqual("", val.format("--value"))
+        self.assertEqual("VALUE=", val.format("VALUE"))
 
     def test_option_value(self, name="option", nargs=0, default=None):
         disabled = name.startswith(("disable-", "without-"))
@@ -377,27 +377,25 @@ class TestOption(unittest.TestCase):
 
         if nargs in (0, "?", "*") or disabled:
             value = option.get_value("--%s" % name, "option")
-            self.assertEquals(value, posOptionValue())
-            self.assertEquals(value.origin, "option")
+            self.assertEqual(value, posOptionValue())
+            self.assertEqual(value.origin, "option")
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value("--%s" % name)
             if nargs == 1:
-                self.assertEquals(str(e.exception), "--%s takes 1 value" % name)
+                self.assertEqual(str(e.exception), "--%s takes 1 value" % name)
             elif nargs == "+":
-                self.assertEquals(
-                    str(e.exception), "--%s takes 1 or more values" % name
-                )
+                self.assertEqual(str(e.exception), "--%s takes 1 or more values" % name)
             else:
-                self.assertEquals(str(e.exception), "--%s takes 2 values" % name)
+                self.assertEqual(str(e.exception), "--%s takes 2 values" % name)
 
         value = option.get_value("")
-        self.assertEquals(value, defaultValue)
-        self.assertEquals(value.origin, "default")
+        self.assertEqual(value, defaultValue)
+        self.assertEqual(value.origin, "default")
 
         value = option.get_value(None)
-        self.assertEquals(value, defaultValue)
-        self.assertEquals(value.origin, "default")
+        self.assertEqual(value, defaultValue)
+        self.assertEqual(value.origin, "default")
 
         with self.assertRaises(AssertionError):
             value = option.get_value("MOZ_OPTION=", "environment")
@@ -410,51 +408,45 @@ class TestOption(unittest.TestCase):
 
         if nargs in (1, "?", "*", "+") and not disabled:
             value = option.get_value("--%s=" % name, "option")
-            self.assertEquals(value, PositiveOptionValue(("",)))
-            self.assertEquals(value.origin, "option")
+            self.assertEqual(value, PositiveOptionValue(("",)))
+            self.assertEqual(value.origin, "option")
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value("--%s=" % name)
             if disabled:
-                self.assertEquals(
-                    str(e.exception), "Cannot pass a value to --%s" % name
-                )
+                self.assertEqual(str(e.exception), "Cannot pass a value to --%s" % name)
             else:
-                self.assertEquals(
+                self.assertEqual(
                     str(e.exception), "--%s takes %d values" % (name, nargs)
                 )
 
         if nargs in (1, "?", "*", "+") and not disabled:
             value = option.get_value("--%s=foo" % name, "option")
-            self.assertEquals(value, PositiveOptionValue(("foo",)))
-            self.assertEquals(value.origin, "option")
+            self.assertEqual(value, PositiveOptionValue(("foo",)))
+            self.assertEqual(value.origin, "option")
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value("--%s=foo" % name)
             if disabled:
-                self.assertEquals(
-                    str(e.exception), "Cannot pass a value to --%s" % name
-                )
+                self.assertEqual(str(e.exception), "Cannot pass a value to --%s" % name)
             else:
-                self.assertEquals(
+                self.assertEqual(
                     str(e.exception), "--%s takes %d values" % (name, nargs)
                 )
 
         if nargs in (2, "*", "+") and not disabled:
             value = option.get_value("--%s=foo,bar" % name, "option")
-            self.assertEquals(value, PositiveOptionValue(("foo", "bar")))
-            self.assertEquals(value.origin, "option")
+            self.assertEqual(value, PositiveOptionValue(("foo", "bar")))
+            self.assertEqual(value.origin, "option")
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value("--%s=foo,bar" % name, "option")
             if disabled:
-                self.assertEquals(
-                    str(e.exception), "Cannot pass a value to --%s" % name
-                )
+                self.assertEqual(str(e.exception), "Cannot pass a value to --%s" % name)
             elif nargs == "?":
-                self.assertEquals(str(e.exception), "--%s takes 0 or 1 values" % name)
+                self.assertEqual(str(e.exception), "--%s takes 0 or 1 values" % name)
             else:
-                self.assertEquals(
+                self.assertEqual(
                     str(e.exception),
                     "--%s takes %d value%s" % (name, nargs, "s" if nargs != 1 else ""),
                 )
@@ -462,63 +454,57 @@ class TestOption(unittest.TestCase):
         option = Option("--%s" % name, env="MOZ_OPTION", nargs=nargs, default=default)
         if nargs in (0, "?", "*") or disabled:
             value = option.get_value("--%s" % name, "option")
-            self.assertEquals(value, posOptionValue())
-            self.assertEquals(value.origin, "option")
+            self.assertEqual(value, posOptionValue())
+            self.assertEqual(value.origin, "option")
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value("--%s" % name)
             if disabled:
-                self.assertEquals(
-                    str(e.exception), "Cannot pass a value to --%s" % name
-                )
+                self.assertEqual(str(e.exception), "Cannot pass a value to --%s" % name)
             elif nargs == "+":
-                self.assertEquals(
-                    str(e.exception), "--%s takes 1 or more values" % name
-                )
+                self.assertEqual(str(e.exception), "--%s takes 1 or more values" % name)
             else:
-                self.assertEquals(
+                self.assertEqual(
                     str(e.exception),
                     "--%s takes %d value%s" % (name, nargs, "s" if nargs != 1 else ""),
                 )
 
         value = option.get_value("")
-        self.assertEquals(value, defaultValue)
-        self.assertEquals(value.origin, "default")
+        self.assertEqual(value, defaultValue)
+        self.assertEqual(value.origin, "default")
 
         value = option.get_value(None)
-        self.assertEquals(value, defaultValue)
-        self.assertEquals(value.origin, "default")
+        self.assertEqual(value, defaultValue)
+        self.assertEqual(value.origin, "default")
 
         value = option.get_value("MOZ_OPTION=", "environment")
-        self.assertEquals(value, NegativeOptionValue())
-        self.assertEquals(value.origin, "environment")
+        self.assertEqual(value, NegativeOptionValue())
+        self.assertEqual(value.origin, "environment")
 
         if nargs in (0, "?", "*"):
             value = option.get_value("MOZ_OPTION=1", "environment")
-            self.assertEquals(value, PositiveOptionValue())
-            self.assertEquals(value.origin, "environment")
+            self.assertEqual(value, PositiveOptionValue())
+            self.assertEqual(value.origin, "environment")
         elif nargs in (1, "+"):
             value = option.get_value("MOZ_OPTION=1", "environment")
-            self.assertEquals(value, PositiveOptionValue(("1",)))
-            self.assertEquals(value.origin, "environment")
+            self.assertEqual(value, PositiveOptionValue(("1",)))
+            self.assertEqual(value.origin, "environment")
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value("MOZ_OPTION=1", "environment")
-            self.assertEquals(str(e.exception), "MOZ_OPTION takes 2 values")
+            self.assertEqual(str(e.exception), "MOZ_OPTION takes 2 values")
 
         if nargs in (1, "?", "*", "+") and not disabled:
             value = option.get_value("--%s=" % name, "option")
-            self.assertEquals(value, PositiveOptionValue(("",)))
-            self.assertEquals(value.origin, "option")
+            self.assertEqual(value, PositiveOptionValue(("",)))
+            self.assertEqual(value.origin, "option")
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value("--%s=" % name, "option")
             if disabled:
-                self.assertEquals(
-                    str(e.exception), "Cannot pass a value to --%s" % name
-                )
+                self.assertEqual(str(e.exception), "Cannot pass a value to --%s" % name)
             else:
-                self.assertEquals(
+                self.assertEqual(
                     str(e.exception), "--%s takes %d values" % (name, nargs)
                 )
 
@@ -527,24 +513,24 @@ class TestOption(unittest.TestCase):
 
         if nargs in (1, "?", "*", "+"):
             value = option.get_value("MOZ_OPTION=foo", "environment")
-            self.assertEquals(value, PositiveOptionValue(("foo",)))
-            self.assertEquals(value.origin, "environment")
+            self.assertEqual(value, PositiveOptionValue(("foo",)))
+            self.assertEqual(value.origin, "environment")
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value("MOZ_OPTION=foo", "environment")
-            self.assertEquals(str(e.exception), "MOZ_OPTION takes %d values" % nargs)
+            self.assertEqual(str(e.exception), "MOZ_OPTION takes %d values" % nargs)
 
         if nargs in (2, "*", "+"):
             value = option.get_value("MOZ_OPTION=foo,bar", "environment")
-            self.assertEquals(value, PositiveOptionValue(("foo", "bar")))
-            self.assertEquals(value.origin, "environment")
+            self.assertEqual(value, PositiveOptionValue(("foo", "bar")))
+            self.assertEqual(value.origin, "environment")
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value("MOZ_OPTION=foo,bar", "environment")
             if nargs == "?":
-                self.assertEquals(str(e.exception), "MOZ_OPTION takes 0 or 1 values")
+                self.assertEqual(str(e.exception), "MOZ_OPTION takes 0 or 1 values")
             else:
-                self.assertEquals(
+                self.assertEqual(
                     str(e.exception),
                     "MOZ_OPTION takes %d value%s" % (nargs, "s" if nargs != 1 else ""),
                 )
@@ -557,26 +543,26 @@ class TestOption(unittest.TestCase):
             env_option.get_value("--%s" % name)
 
         value = env_option.get_value("")
-        self.assertEquals(value, defaultValue)
-        self.assertEquals(value.origin, "default")
+        self.assertEqual(value, defaultValue)
+        self.assertEqual(value.origin, "default")
 
         value = env_option.get_value("MOZ_OPTION=", "environment")
-        self.assertEquals(value, negOptionValue())
-        self.assertEquals(value.origin, "environment")
+        self.assertEqual(value, negOptionValue())
+        self.assertEqual(value.origin, "environment")
 
         if nargs in (0, "?", "*"):
             value = env_option.get_value("MOZ_OPTION=1", "environment")
-            self.assertEquals(value, posOptionValue())
+            self.assertEqual(value, posOptionValue())
             self.assertTrue(value)
-            self.assertEquals(value.origin, "environment")
+            self.assertEqual(value.origin, "environment")
         elif nargs in (1, "+"):
             value = env_option.get_value("MOZ_OPTION=1", "environment")
-            self.assertEquals(value, PositiveOptionValue(("1",)))
-            self.assertEquals(value.origin, "environment")
+            self.assertEqual(value, PositiveOptionValue(("1",)))
+            self.assertEqual(value.origin, "environment")
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 env_option.get_value("MOZ_OPTION=1", "environment")
-            self.assertEquals(str(e.exception), "MOZ_OPTION takes 2 values")
+            self.assertEqual(str(e.exception), "MOZ_OPTION takes 2 values")
 
         with self.assertRaises(AssertionError) as e:
             env_option.get_value("--%s" % name)
@@ -586,24 +572,24 @@ class TestOption(unittest.TestCase):
 
         if nargs in (1, "?", "*", "+"):
             value = env_option.get_value("MOZ_OPTION=foo", "environment")
-            self.assertEquals(value, PositiveOptionValue(("foo",)))
-            self.assertEquals(value.origin, "environment")
+            self.assertEqual(value, PositiveOptionValue(("foo",)))
+            self.assertEqual(value.origin, "environment")
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 env_option.get_value("MOZ_OPTION=foo", "environment")
-            self.assertEquals(str(e.exception), "MOZ_OPTION takes %d values" % nargs)
+            self.assertEqual(str(e.exception), "MOZ_OPTION takes %d values" % nargs)
 
         if nargs in (2, "*", "+"):
             value = env_option.get_value("MOZ_OPTION=foo,bar", "environment")
-            self.assertEquals(value, PositiveOptionValue(("foo", "bar")))
-            self.assertEquals(value.origin, "environment")
+            self.assertEqual(value, PositiveOptionValue(("foo", "bar")))
+            self.assertEqual(value.origin, "environment")
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 env_option.get_value("MOZ_OPTION=foo,bar", "environment")
             if nargs == "?":
-                self.assertEquals(str(e.exception), "MOZ_OPTION takes 0 or 1 values")
+                self.assertEqual(str(e.exception), "MOZ_OPTION takes 0 or 1 values")
             else:
-                self.assertEquals(
+                self.assertEqual(
                     str(e.exception),
                     "MOZ_OPTION takes %d value%s" % (nargs, "s" if nargs != 1 else ""),
                 )
@@ -618,8 +604,8 @@ class TestOption(unittest.TestCase):
         )
 
         value = option.get_value("--%s-option" % disable, "option")
-        self.assertEquals(value, NegativeOptionValue())
-        self.assertEquals(value.origin, "option")
+        self.assertEqual(value, NegativeOptionValue())
+        self.assertEqual(value.origin, "option")
 
         option = self.test_option_value(
             "%s-option" % disable, nargs=nargs, default=default
@@ -627,21 +613,19 @@ class TestOption(unittest.TestCase):
 
         if nargs in (0, "?", "*"):
             value = option.get_value("--%s-option" % enable, "option")
-            self.assertEquals(value, PositiveOptionValue())
-            self.assertEquals(value.origin, "option")
+            self.assertEqual(value, PositiveOptionValue())
+            self.assertEqual(value.origin, "option")
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value("--%s-option" % enable, "option")
             if nargs == 1:
-                self.assertEquals(
-                    str(e.exception), "--%s-option takes 1 value" % enable
-                )
+                self.assertEqual(str(e.exception), "--%s-option takes 1 value" % enable)
             elif nargs == "+":
-                self.assertEquals(
+                self.assertEqual(
                     str(e.exception), "--%s-option takes 1 or more values" % enable
                 )
             else:
-                self.assertEquals(
+                self.assertEqual(
                     str(e.exception), "--%s-option takes 2 values" % enable
                 )
 
@@ -651,13 +635,13 @@ class TestOption(unittest.TestCase):
     def test_option_value_invalid_nargs(self):
         with self.assertRaises(InvalidOptionError) as e:
             Option("--option", nargs="foo")
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "nargs must be a positive integer, '?', '*' or '+'"
         )
 
         with self.assertRaises(InvalidOptionError) as e:
             Option("--option", nargs=-2)
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "nargs must be a positive integer, '?', '*' or '+'"
         )
 
@@ -669,7 +653,7 @@ class TestOption(unittest.TestCase):
         # A default is required
         with self.assertRaises(InvalidOptionError) as e:
             Option("--disable-option", nargs=1)
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The given `default` doesn't satisfy `nargs`"
         )
 
@@ -681,7 +665,7 @@ class TestOption(unittest.TestCase):
         # A default is required
         with self.assertRaises(InvalidOptionError) as e:
             Option("--disable-option", nargs=2)
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The given `default` doesn't satisfy `nargs`"
         )
 
@@ -709,7 +693,7 @@ class TestOption(unittest.TestCase):
         # A default is required
         with self.assertRaises(InvalidOptionError) as e:
             Option("--disable-option", nargs="+")
-        self.assertEquals(
+        self.assertEqual(
             str(e.exception), "The given `default` doesn't satisfy `nargs`"
         )
 
@@ -718,21 +702,21 @@ class TestCommandLineHelper(unittest.TestCase):
     def test_basic(self):
         helper = CommandLineHelper({}, ["cmd", "--foo", "--bar"])
 
-        self.assertEquals(["--foo", "--bar"], list(helper))
+        self.assertEqual(["--foo", "--bar"], list(helper))
 
         helper.add("--enable-qux")
 
-        self.assertEquals(["--foo", "--bar", "--enable-qux"], list(helper))
+        self.assertEqual(["--foo", "--bar", "--enable-qux"], list(helper))
 
         value, option = helper.handle(Option("--bar"))
-        self.assertEquals(["--foo", "--enable-qux"], list(helper))
-        self.assertEquals(PositiveOptionValue(), value)
-        self.assertEquals("--bar", option)
+        self.assertEqual(["--foo", "--enable-qux"], list(helper))
+        self.assertEqual(PositiveOptionValue(), value)
+        self.assertEqual("--bar", option)
 
         value, option = helper.handle(Option("--baz"))
-        self.assertEquals(["--foo", "--enable-qux"], list(helper))
-        self.assertEquals(NegativeOptionValue(), value)
-        self.assertEquals(None, option)
+        self.assertEqual(["--foo", "--enable-qux"], list(helper))
+        self.assertEqual(NegativeOptionValue(), value)
+        self.assertEqual(None, option)
 
         with self.assertRaises(AssertionError):
             CommandLineHelper({}, ["--foo", "--bar"])
@@ -741,87 +725,87 @@ class TestCommandLineHelper(unittest.TestCase):
         foo = Option("--with-foo", nargs="*")
         helper = CommandLineHelper({}, ["cmd", "--with-foo=a,b"])
         value, option = helper.handle(foo)
-        self.assertEquals(PositiveOptionValue(("a", "b")), value)
-        self.assertEquals("command-line", value.origin)
-        self.assertEquals("--with-foo=a,b", option)
+        self.assertEqual(PositiveOptionValue(("a", "b")), value)
+        self.assertEqual("command-line", value.origin)
+        self.assertEqual("--with-foo=a,b", option)
 
         helper = CommandLineHelper({}, ["cmd", "--with-foo=a,b", "--without-foo"])
         value, option = helper.handle(foo)
-        self.assertEquals(NegativeOptionValue(), value)
-        self.assertEquals("command-line", value.origin)
-        self.assertEquals("--without-foo", option)
+        self.assertEqual(NegativeOptionValue(), value)
+        self.assertEqual("command-line", value.origin)
+        self.assertEqual("--without-foo", option)
 
         helper = CommandLineHelper({}, ["cmd", "--without-foo", "--with-foo=a,b"])
         value, option = helper.handle(foo)
-        self.assertEquals(PositiveOptionValue(("a", "b")), value)
-        self.assertEquals("command-line", value.origin)
-        self.assertEquals("--with-foo=a,b", option)
+        self.assertEqual(PositiveOptionValue(("a", "b")), value)
+        self.assertEqual("command-line", value.origin)
+        self.assertEqual("--with-foo=a,b", option)
 
         foo = Option("--with-foo", env="FOO", nargs="*")
         helper = CommandLineHelper({"FOO": ""}, ["cmd", "--with-foo=a,b"])
         value, option = helper.handle(foo)
-        self.assertEquals(PositiveOptionValue(("a", "b")), value)
-        self.assertEquals("command-line", value.origin)
-        self.assertEquals("--with-foo=a,b", option)
+        self.assertEqual(PositiveOptionValue(("a", "b")), value)
+        self.assertEqual("command-line", value.origin)
+        self.assertEqual("--with-foo=a,b", option)
 
         helper = CommandLineHelper({"FOO": "a,b"}, ["cmd", "--without-foo"])
         value, option = helper.handle(foo)
-        self.assertEquals(NegativeOptionValue(), value)
-        self.assertEquals("command-line", value.origin)
-        self.assertEquals("--without-foo", option)
+        self.assertEqual(NegativeOptionValue(), value)
+        self.assertEqual("command-line", value.origin)
+        self.assertEqual("--without-foo", option)
 
         helper = CommandLineHelper({"FOO": ""}, ["cmd", "--with-bar=a,b"])
         value, option = helper.handle(foo)
-        self.assertEquals(NegativeOptionValue(), value)
-        self.assertEquals("environment", value.origin)
-        self.assertEquals("FOO=", option)
+        self.assertEqual(NegativeOptionValue(), value)
+        self.assertEqual("environment", value.origin)
+        self.assertEqual("FOO=", option)
 
         helper = CommandLineHelper({"FOO": "a,b"}, ["cmd", "--without-bar"])
         value, option = helper.handle(foo)
-        self.assertEquals(PositiveOptionValue(("a", "b")), value)
-        self.assertEquals("environment", value.origin)
-        self.assertEquals("FOO=a,b", option)
+        self.assertEqual(PositiveOptionValue(("a", "b")), value)
+        self.assertEqual("environment", value.origin)
+        self.assertEqual("FOO=a,b", option)
 
         helper = CommandLineHelper({}, ["cmd", "--with-foo=a,b", "FOO="])
         value, option = helper.handle(foo)
-        self.assertEquals(NegativeOptionValue(), value)
-        self.assertEquals("command-line", value.origin)
-        self.assertEquals("FOO=", option)
+        self.assertEqual(NegativeOptionValue(), value)
+        self.assertEqual("command-line", value.origin)
+        self.assertEqual("FOO=", option)
 
         helper = CommandLineHelper({}, ["cmd", "--without-foo", "FOO=a,b"])
         value, option = helper.handle(foo)
-        self.assertEquals(PositiveOptionValue(("a", "b")), value)
-        self.assertEquals("command-line", value.origin)
-        self.assertEquals("FOO=a,b", option)
+        self.assertEqual(PositiveOptionValue(("a", "b")), value)
+        self.assertEqual("command-line", value.origin)
+        self.assertEqual("FOO=a,b", option)
 
         helper = CommandLineHelper({}, ["cmd", "FOO=", "--with-foo=a,b"])
         value, option = helper.handle(foo)
-        self.assertEquals(PositiveOptionValue(("a", "b")), value)
-        self.assertEquals("command-line", value.origin)
-        self.assertEquals("--with-foo=a,b", option)
+        self.assertEqual(PositiveOptionValue(("a", "b")), value)
+        self.assertEqual("command-line", value.origin)
+        self.assertEqual("--with-foo=a,b", option)
 
         helper = CommandLineHelper({}, ["cmd", "FOO=a,b", "--without-foo"])
         value, option = helper.handle(foo)
-        self.assertEquals(NegativeOptionValue(), value)
-        self.assertEquals("command-line", value.origin)
-        self.assertEquals("--without-foo", option)
+        self.assertEqual(NegativeOptionValue(), value)
+        self.assertEqual("command-line", value.origin)
+        self.assertEqual("--without-foo", option)
 
     def test_extra_args(self):
         foo = Option("--with-foo", env="FOO", nargs="*")
         helper = CommandLineHelper({}, ["cmd"])
         helper.add("FOO=a,b,c", "other-origin")
         value, option = helper.handle(foo)
-        self.assertEquals(PositiveOptionValue(("a", "b", "c")), value)
-        self.assertEquals("other-origin", value.origin)
-        self.assertEquals("FOO=a,b,c", option)
+        self.assertEqual(PositiveOptionValue(("a", "b", "c")), value)
+        self.assertEqual("other-origin", value.origin)
+        self.assertEqual("FOO=a,b,c", option)
 
         helper = CommandLineHelper({}, ["cmd"])
         helper.add("FOO=a,b,c", "other-origin")
         helper.add("--with-foo=a,b,c", "other-origin")
         value, option = helper.handle(foo)
-        self.assertEquals(PositiveOptionValue(("a", "b", "c")), value)
-        self.assertEquals("other-origin", value.origin)
-        self.assertEquals("--with-foo=a,b,c", option)
+        self.assertEqual(PositiveOptionValue(("a", "b", "c")), value)
+        self.assertEqual("other-origin", value.origin)
+        self.assertEqual("--with-foo=a,b,c", option)
 
         # Adding conflicting options is not allowed.
         helper = CommandLineHelper({}, ["cmd"])
@@ -841,9 +825,9 @@ class TestCommandLineHelper(unittest.TestCase):
         # But adding the same is allowed.
         helper.add("FOO=a,b,c", "other-origin")
         value, option = helper.handle(foo)
-        self.assertEquals(PositiveOptionValue(("a", "b", "c")), value)
-        self.assertEquals("other-origin", value.origin)
-        self.assertEquals("FOO=a,b,c", option)
+        self.assertEqual(PositiveOptionValue(("a", "b", "c")), value)
+        self.assertEqual("other-origin", value.origin)
+        self.assertEqual("FOO=a,b,c", option)
 
         # The same rule as above applies when using the option form vs. the
         # variable form. But we can't detect it when .add is called.
@@ -869,9 +853,9 @@ class TestCommandLineHelper(unittest.TestCase):
         helper.add("FOO=a,b,c", "other-origin")
         helper.add("--with-foo=a,b,c", "other-origin")
         value, option = helper.handle(foo)
-        self.assertEquals(PositiveOptionValue(("a", "b", "c")), value)
-        self.assertEquals("other-origin", value.origin)
-        self.assertEquals("--with-foo=a,b,c", option)
+        self.assertEqual(PositiveOptionValue(("a", "b", "c")), value)
+        self.assertEqual("other-origin", value.origin)
+        self.assertEqual("--with-foo=a,b,c", option)
 
         # Conflicts are also not allowed against what is in the
         # environment/on the command line.
@@ -900,9 +884,9 @@ class TestCommandLineHelper(unittest.TestCase):
         helper = CommandLineHelper({"BAZ": "1"}, ["cmd", "--foo", "--bar"])
         foo = Option("--foo", possible_origins=("command-line",))
         value, option = helper.handle(foo)
-        self.assertEquals(PositiveOptionValue(), value)
-        self.assertEquals("command-line", value.origin)
-        self.assertEquals("--foo", option)
+        self.assertEqual(PositiveOptionValue(), value)
+        self.assertEqual("command-line", value.origin)
+        self.assertEqual("--foo", option)
 
         bar = Option("--bar", possible_origins=("mozconfig",))
         with self.assertRaisesRegexp(
