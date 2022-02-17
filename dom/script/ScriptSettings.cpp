@@ -57,13 +57,9 @@ JSObject* SourceElementCallback(JSContext* aCx, JS::HandleValue aPrivateValue) {
 
   LoadedScript* script = static_cast<LoadedScript*>(aPrivateValue.toPrivate());
 
-  if (!script->GetFetchOptions()) {
-    return nullptr;
-  }
-
   JS::Rooted<JS::Value> elementValue(aCx);
   {
-    nsCOMPtr<Element> domElement = script->GetFetchOptions()->mElement;
+    nsCOMPtr<Element> domElement = script->GetScriptElement();
     if (!domElement) {
       return nullptr;
     }
