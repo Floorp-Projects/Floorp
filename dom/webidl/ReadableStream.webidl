@@ -16,8 +16,8 @@ interface ReadableStream {
   // Bug 1734243
   // ReadableStream pipeThrough(ReadableWritablePair transform, optional StreamPipeOptions options = {});
 
-  // Bug 1734241
-  // Promise<undefined> pipeTo(WritableStream destination, optional StreamPipeOptions options = {});
+  [Pref="dom.streams.pipeTo.enabled", Throws]
+  Promise<void> pipeTo(WritableStream destination, optional StreamPipeOptions options = {});
 
   [Throws]
   sequence<ReadableStream> tee();
@@ -30,4 +30,11 @@ enum ReadableStreamReaderMode { "byob" };
 
 dictionary ReadableStreamGetReaderOptions {
   ReadableStreamReaderMode mode;
+};
+
+dictionary StreamPipeOptions {
+  boolean preventClose = false;
+  boolean preventAbort = false;
+  boolean preventCancel = false;
+  AbortSignal signal;
 };
