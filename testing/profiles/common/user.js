@@ -28,6 +28,8 @@ user_pref("browser.pagethumbnails.capturing_disabled", true);
 // Tell the search service we are running in the US.  This also has the desired
 // side-effect of preventing our geoip lookup.
 user_pref("browser.search.region", "US");
+// disable infobar for tests
+user_pref("browser.search.removeEngineInfobar.enabled", false);
 // Disable webapp updates.  Yes, it is supposed to be an integer.
 user_pref("browser.webapps.checkForUpdates", 0);
 // We do not wish to display datareporting policy notifications as it might

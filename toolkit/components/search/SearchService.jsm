@@ -600,7 +600,8 @@ SearchService.prototype = {
       newCurrentEngine !== prevCurrentEngine &&
       prevMetaData &&
       settings.metaData &&
-      !this._hasUserMetaDataChanged(prevMetaData)
+      !this._hasUserMetaDataChanged(prevMetaData) &&
+      Services.prefs.getBoolPref("browser.search.removeEngineInfobar.enabled")
     ) {
       this._showRemovalOfSearchEngineNotificationBox(
         prevCurrentEngine,
@@ -837,7 +838,8 @@ SearchService.prototype = {
       if (
         prevMetaData &&
         settings.metaData &&
-        !this._hasUserMetaDataChanged(prevMetaData)
+        !this._hasUserMetaDataChanged(prevMetaData) &&
+        Services.prefs.getBoolPref("browser.search.removeEngineInfobar.enabled")
       ) {
         this._showRemovalOfSearchEngineNotificationBox(
           prevCurrentEngine.name,
