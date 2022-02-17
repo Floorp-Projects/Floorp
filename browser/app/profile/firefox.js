@@ -2070,6 +2070,8 @@ pref("extensions.pocket.loggedOutVariant", "control");
 pref("extensions.pocket.refresh.layout.enabled", false);
 // Just for the new Pocket panels, enables the email signup button.
 pref("extensions.pocket.refresh.emailButton.enabled", false);
+// Hides the recently saved section in the home panel.
+pref("extensions.pocket.refresh.hideRecentSaves.enabled", false);
 
 pref("signon.management.page.fileImport.enabled", false);
 

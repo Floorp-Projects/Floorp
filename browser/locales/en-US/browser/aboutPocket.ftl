@@ -52,6 +52,7 @@ pocket-panel-home-discover-more = Discover More
 pocket-panel-home-explore-more = Explore
 
 pocket-panel-home-most-recent-saves = Here are your most recent saves:
+pocket-panel-home-most-recent-saves-loading = Recent saves loading…
 pocket-panel-home-new-user-cta = Click the { -pocket-brand-name } button to save articles, videos, and links.
 pocket-panel-home-new-user-message = See your recent saves here.
 
