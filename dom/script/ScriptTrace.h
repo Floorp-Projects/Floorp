@@ -7,8 +7,6 @@
 #ifndef mozilla_dom_ScriptTrace_h
 #define mozilla_dom_ScriptTrace_h
 
-#include "ScriptLoader.h"
-
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/StaticPrefs_dom.h"
 
