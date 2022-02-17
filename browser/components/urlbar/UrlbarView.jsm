@@ -2284,12 +2284,18 @@ class UrlbarView {
 
     if (UrlbarPrefs.get("groupLabels.enabled")) {
       idArgs.push({ id: "urlbar-group-firefox-suggest" });
-      if (UrlbarPrefs.get("bestMatchEnabled")) {
+      if (
+        UrlbarPrefs.get("bestMatchEnabled") &&
+        UrlbarPrefs.get("suggest.bestmatch")
+      ) {
         idArgs.push({ id: "urlbar-group-best-match" });
       }
     }
 
-    if (UrlbarPrefs.get("quickSuggestEnabled")) {
+    if (
+      UrlbarPrefs.get("quickSuggestEnabled") &&
+      UrlbarPrefs.get("suggest.quicksuggest.sponsored")
+    ) {
       idArgs.push({ id: "urlbar-result-action-sponsored" });
     }
 
