@@ -657,6 +657,22 @@
     <html:form id="firefoxSuggestForm" autocomplete="off" hidden="true"/>
     <vbox class="firefoxSuggestOptionBox">
       <hbox align="center">
+        <label id="firefoxSuggestBestMatchLabel"
+               flex="1"
+               data-l10n-id="addressbar-firefox-suggest-best-match"/>
+        <html:input id="firefoxSuggestBestMatchToggle"
+                    type="checkbox"
+                    class="toggle-button firefoxSuggestToggle"
+                    preference="browser.urlbar.bestMatch.enabled"
+                    form="firefoxSuggestForm"
+                    aria-labelledby="firefoxSuggestBestMatchLabel" />
+      </hbox>
+      <description id="firefoxSuggestBestMatchDescription"
+                   class="tip-caption firefoxSuggestOptionDescription"
+                   data-l10n-id="addressbar-firefox-suggest-best-match-description"/>
+    </vbox>
+    <vbox class="firefoxSuggestOptionBox">
+      <hbox align="center">
         <label id="firefoxSuggestNonsponsoredLabel"
                flex="1"
                data-l10n-id="addressbar-firefox-suggest-nonsponsored"/>

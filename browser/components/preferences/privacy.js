@@ -112,6 +112,7 @@ Preferences.addAll([
   { id: "browser.urlbar.suggest.quicksuggest.nonsponsored", type: "bool" },
   { id: "browser.urlbar.suggest.quicksuggest.sponsored", type: "bool" },
   { id: "browser.urlbar.quicksuggest.dataCollection.enabled", type: "bool" },
+  { id: "browser.urlbar.bestMatch.enabled", type: "bool" },
 
   // History
   { id: "places.history.enabled", type: "bool" },

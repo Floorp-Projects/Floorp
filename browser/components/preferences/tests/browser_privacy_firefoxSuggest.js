@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
 });
 
 const CONTAINER_ID = "firefoxSuggestContainer";
+const BEST_MATCH_CHECKBOX_ID = "firefoxSuggestBestMatchToggle";
 const NONSPONSORED_CHECKBOX_ID = "firefoxSuggestNonsponsoredToggle";
 const SPONSORED_CHECKBOX_ID = "firefoxSuggestSponsoredToggle";
 const DATA_COLLECTION_CHECKBOX_ID = "firefoxSuggestDataCollectionToggle";
@@ -496,6 +497,42 @@ add_task(async function clickLearnMore() {
 
   gBrowser.removeCurrentTab();
   await SpecialPowers.popPrefEnv();
+});
+
+// Check the pref and the checkbox for best match.
+add_task(async function bestMatch() {
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  const doc = gBrowser.selectedBrowser.contentDocument;
+  const checkbox = doc.getElementById(BEST_MATCH_CHECKBOX_ID);
+  checkbox.scrollIntoView();
+
+  info("Check if the checkbox stauts reflects the pref value");
+  for (const isEnabled of [true, false]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.bestMatch.enabled", isEnabled]],
+    });
+    assertCheckboxes({ [BEST_MATCH_CHECKBOX_ID]: isEnabled });
+    await SpecialPowers.popPrefEnv();
+  }
+
+  info("Check if the pref value reflects the checkbox status");
+  for (let i = 0; i < 2; i++) {
+    const initialValue = checkbox.checked;
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#" + BEST_MATCH_CHECKBOX_ID,
+      {},
+      gBrowser.selectedBrowser
+    );
+    Assert.ok(initialValue !== checkbox.checked);
+    Assert.equal(
+      Services.prefs.getBoolPref("browser.urlbar.bestMatch.enabled"),
+      checkbox.checked
+    );
+  }
+
+  // Clean up.
+  Services.prefs.clearUserPref("browser.urlbar.bestMatch.enabled");
+  gBrowser.removeCurrentTab();
 });
 
 /**
