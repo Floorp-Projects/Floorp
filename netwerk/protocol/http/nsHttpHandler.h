@@ -36,6 +36,7 @@
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 
+class nsIHttpActivityDistributor;
 class nsIHttpUpgradeListener;
 class nsIPrefBranch;
 class nsICancelable;
@@ -499,6 +500,13 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // avoid first-use overhead
   static void PresetAcceptLanguages();
 
+  bool HttpActivityDistributorActivated();
+  void ObserveHttpActivityWithArgs(const HttpActivityArgs& aArgs,
+                                   uint32_t aActivityType,
+                                   uint32_t aActivitySubtype, PRTime aTimestamp,
+                                   uint64_t aExtraSizeData,
+                                   const nsACString& aExtraStringData);
+
  private:
   nsHttpHandler();
 
@@ -849,6 +857,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // The pref set artificial altSvc-s for origin for testing.
   // This maps an origin to an altSvc.
   nsClassHashtable<nsCStringHashKey, nsCString> mAltSvcMappingTemptativeMap;
+
+  nsCOMPtr<nsIHttpActivityDistributor> mActivityDistributor;
 };
 
 extern StaticRefPtr<nsHttpHandler> gHttpHandler;

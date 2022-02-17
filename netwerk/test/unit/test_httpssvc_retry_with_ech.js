@@ -300,6 +300,13 @@ async function H3ECHTest(echConfig) {
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
 
+  let observerService = Cc[
+    "@mozilla.org/network/http-activity-distributor;1"
+  ].getService(Ci.nsIHttpActivityDistributor);
+  let observer = new ActivityObserver();
+  observerService.addObserver(observer);
+  observerService.observeConnection = true;
+
   // Only the last record is valid to use.
   await trrServer.registerDoHAnswers("public.example.com", "HTTPS", {
     answers: [
@@ -351,6 +358,14 @@ async function H3ECHTest(echConfig) {
   Assert.ok(securityInfo.isAcceptedEch, "This host should have accepted ECH");
 
   await trrServer.stop();
+
+  observerService.removeObserver(observer);
+  observerService.observeConnection = false;
+
+  let filtered = observer.activites.filter(
+    activity => activity.host === "public.example.com"
+  );
+  checkHttpActivities(filtered);
 }
 
 add_task(async function testH3ConnectWithECH() {
