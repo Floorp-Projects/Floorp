@@ -85,7 +85,6 @@ case "$target" in
   "
   EXTRA_CMAKE_FLAGS="
     -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/android-ndk/platforms/android-$api_level/arch-$ndk_arch
-    -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld
     -DCMAKE_LINKER=$MOZ_FETCHES_DIR/clang/bin/ld.lld
     -DCMAKE_C_FLAGS='-fPIC $cflags'
     -DCMAKE_ASM_FLAGS='$cflags'
@@ -99,12 +98,13 @@ case "$target" in
     -DCOMPILER_RT_BUILD_ORC=OFF
   "
   ;;
-aarch64-unknown-linux-gnu)
+*-unknown-linux-gnu)
   EXTRA_CMAKE_FLAGS="
-    -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/sysroot-aarch64-linux-gnu
+    -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/sysroot-${target%-unknown-linux-gnu}-linux-gnu
     -DCMAKE_LINKER=$MOZ_FETCHES_DIR/clang/bin/ld.lld
+    -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld
+    -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld
   "
-  PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
   ;;
 *-pc-windows-msvc)
   VSPATH="$MOZ_FETCHES_DIR/vs2017_15.9.6"
