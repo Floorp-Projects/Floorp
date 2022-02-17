@@ -1219,16 +1219,17 @@ security:
       - 1558870
       - 1630155
       - 1689269
+      - 1754650
     description: >
       Counts of how often Web Authentication was used in this session, keyed
       by authenticator protocol, method and result. Currently: U2FRegisterFinish,
       U2FRegisterAbort, U2FSignFinish, U2FSignAbort.
-    expires: "100"
+    expires: "112"
     kind: uint
     keyed: true
     notification_emails:
       - seceng-telemetry@mozilla.com
-      - jjones@mozilla.com
+      - rmf@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'

@@ -755,6 +755,8 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
   MOZ_LOG(gSHLog, LogLevel::Verbose,
           ("CanonicalBrowsingContext::SessionHistoryCommit %p %" PRIu64, this,
            aLoadId));
+  MOZ_ASSERT(aLoadId != UINT64_MAX,
+             "Must not send special about:blank loadinfo to parent.");
   for (size_t i = 0; i < mLoadingEntries.Length(); ++i) {
     if (mLoadingEntries[i].mLoadId == aLoadId) {
       nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());

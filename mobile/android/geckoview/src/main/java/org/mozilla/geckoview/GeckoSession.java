@@ -998,7 +998,6 @@ public class GeckoSession {
         GeckoBundle initData,
         String id,
         String chromeUri,
-        int screenId,
         boolean privateMode);
 
     @Override // JNIObject
@@ -1321,7 +1320,6 @@ public class GeckoSession {
     }
 
     final String chromeUri = mSettings.getChromeUri();
-    final int screenId = mSettings.getScreenId();
     final boolean isPrivate = mSettings.getUsePrivateMode();
 
     mId = id;
@@ -1340,7 +1338,6 @@ public class GeckoSession {
           createInitData(),
           mId,
           chromeUri,
-          screenId,
           isPrivate);
     } else {
       GeckoThread.queueNativeCallUntil(
@@ -1363,7 +1360,6 @@ public class GeckoSession {
           mId,
           String.class,
           chromeUri,
-          screenId,
           isPrivate);
     }
 

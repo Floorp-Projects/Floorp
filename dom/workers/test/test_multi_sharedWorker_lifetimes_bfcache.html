@@ -23,44 +23,46 @@
         const suffix = "?3";
         const storedData = "0123456789abcdefghijklmnopqrstuvwxyz";
         var bc, bc2, bc3;
-        bc = new BroadcastChannel("bugSharedWorkerLiftetime");
-        bc3 = new BroadcastChannel("bugSharedWorkerLiftetime" + suffix);
-        bc.onmessage = (event) => {
-          var msg = event.data;
-          var command = msg.command;
-          if (command == "debug") {
-            info(msg.message);
-          } else if (command == "fromWorker" || command == "loaded") {
-            sendToGenerator(msg.workerMessage);
-          }
-        }
-        bc3.onmessage = (event) => {
-          var msg = event.data;
-          var command = msg.command;
-          if (command == "finished") {
-            bc.close();
-            bc3.close();
-            bc2.close();
-            SimpleTest.finish();
-          } else if (command == "debug") {
-            info(msg.message);
-          } else if (command == "fromWorker" || command == "loaded") {
-            sendToGenerator(msg.workerMessage);
-          }
-        }
-        bc2 = new BroadcastChannel("navigate");
-        bc2.onmessage = (event) => {
-          if (event.data.command == "loaded") {
-            sendToGenerator();
-          }
-        }
+        SimpleTest.waitForExplicitFinish();
+
 
         function postToWorker(aBc, workerMessage) {
           aBc.postMessage({command: "postToWorker", workerMessage});
         }
 
         let testGenerator = (function*() {
-          SimpleTest.waitForExplicitFinish();
+
+          bc = new BroadcastChannel("bugSharedWorkerLiftetime");
+          bc3 = new BroadcastChannel("bugSharedWorkerLiftetime" + suffix);
+          bc.onmessage = (event) => {
+            var msg = event.data;
+            var command = msg.command;
+            if (command == "debug") {
+              info(msg.message);
+            } else if (command == "fromWorker" || command == "loaded") {
+              sendToGenerator(msg.workerMessage);
+            }
+          }
+          bc3.onmessage = (event) => {
+            var msg = event.data;
+            var command = msg.command;
+            if (command == "finished") {
+              bc.close();
+              bc3.close();
+              bc2.close();
+              SimpleTest.finish();
+            } else if (command == "debug") {
+              info(msg.message);
+            } else if (command == "fromWorker" || command == "loaded") {
+              sendToGenerator(msg.workerMessage);
+            }
+          }
+          bc2 = new BroadcastChannel("navigate");
+          bc2.onmessage = (event) => {
+            if (event.data.command == "loaded") {
+              sendToGenerator();
+            }
+          }
 
           // Open the window
           window.open(windowRelativeURL, "testWin", "noopener");
@@ -116,10 +118,27 @@
         let sendToGenerator = testGenerator.next.bind(testGenerator);
 
         function runTest() {
-          // If Fission is disabled, the pref is no-op.
-          SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
-            testGenerator.next();
-          });
+          if (isXOrigin) {
+            // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+            // Acquire storage access permission here so that the BroadcastChannel used to
+            // communicate with the opened windows works in xorigin tests. Otherwise,
+            // the iframe containing this page is isolated from first-party storage access,
+            // which isolates BroadcastChannel communication.
+            SpecialPowers.wrap(document).notifyUserGestureActivation();
+            SpecialPowers.addPermission("storageAccessAPI", true, window.location.href).then(() =>{
+              SpecialPowers.wrap(document).requestStorageAccess().then(() => {
+                // If Fission is disabled, the pref is no-op.
+                SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+                  testGenerator.next();
+                });
+              });
+            });
+          } else {
+            // If Fission is disabled, the pref is no-op.
+            SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+              testGenerator.next();
+            });
+          }
         }
       </script>
   </head>

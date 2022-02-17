@@ -361,6 +361,10 @@ LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
              SessionHistoryEntry::sLoadIdToEntry->Get(mLoadId) == aEntry);
 }
 
+LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
+    const SessionHistoryInfo& aInfo)
+    : mInfo(aInfo), mLoadId(UINT64_MAX) {}
+
 already_AddRefed<nsDocShellLoadState>
 LoadingSessionHistoryInfo::CreateLoadInfo() const {
   RefPtr<nsDocShellLoadState> loadState(
@@ -1215,7 +1219,7 @@ void SessionHistoryEntry::AddChild(SessionHistoryEntry* aChild, int32_t aOffset,
       // This should ideally stop being an issue once the Fission-aware
       // session history rewrite is complete.
       NS_ASSERTION(
-          aUseRemoteSubframes,
+          aUseRemoteSubframes || NS_IsAboutBlank(oldChild->Info().GetURI()),
           "Adding a child where we already have a child? This may misbehave");
       oldChild->SetParent(nullptr);
     }

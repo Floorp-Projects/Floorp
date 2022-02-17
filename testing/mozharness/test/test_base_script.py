@@ -743,16 +743,16 @@ class TestRetry(unittest.TestCase):
         """Tests that retry() doesn't call the action again after success"""
         self.s.retry(self._alwaysPass, attempts=3, sleeptime=0)
         # self.ATTEMPT_N gets increased regardless of pass/fail
-        self.assertEquals(2, self.ATTEMPT_N)
+        self.assertEqual(2, self.ATTEMPT_N)
 
     def testRetryReturns(self):
         ret = self.s.retry(self._alwaysPass, sleeptime=0)
-        self.assertEquals(ret, True)
+        self.assertEqual(ret, True)
 
     def testRetryCleanupIsCalled(self):
         cleanup = mock.Mock()
         self.s.retry(self._succeedOnSecondAttempt, cleanup=cleanup, sleeptime=0)
-        self.assertEquals(cleanup.call_count, 1)
+        self.assertEqual(cleanup.call_count, 1)
 
     def testRetryArgsPassed(self):
         args = (1, "two", 3)

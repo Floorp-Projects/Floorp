@@ -1286,6 +1286,20 @@ async function getEditorLineEl(dbg, line) {
   return el;
 }
 
+/**
+ * Assert the text content on the line matches what is
+ * expected.
+ *
+ * @param {Object} dbg
+ * @param {Number} line
+ * @param {String} expectedTextContent
+ */
+function assertTextContentOnLine(dbg, line, expectedTextContent) {
+  const lineInfo = getCM(dbg).lineInfo(line - 1);
+  const textContent = lineInfo.text.trim();
+  is(textContent, expectedTextContent, `Expected text content on line ${line}`);
+}
+
 /*
  * Assert that no breakpoint is set on a given line of
  * the currently selected source in the editor.
