@@ -19,6 +19,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/PreloaderBase.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
@@ -40,6 +41,7 @@ namespace dom {
 class Element;
 class ModuleLoadRequest;
 class ScriptLoadRequestList;
+class DOMScriptLoadContext;
 
 /*
  * Some options used when fetching script resources. This only loosely
@@ -72,11 +74,36 @@ class ScriptFetchOptions {
 };
 
 /*
- * A class that handles loading and evaluation of <script> elements.
+ * ScriptLoadRequest
+ *
+ * ScriptLoadRequest is a generic representation of a JavaScript script that
+ * will be loaded by a Script/Module loader. This representation is used by the
+ * DOM ScriptLoader and will be used by workers and MOZJSComponentLoader.
+ *
+ * The ScriptLoadRequest contains information about the kind of script (classic
+ * or module), the URI, and the ScriptFetchOptions associated with the script.
+ * It is responsible for holding the script data once the fetch is complete, or
+ * if the request is cached, the bytecode.
+ *
+ * Relationship to ScriptLoadContext:
+ *
+ * ScriptLoadRequest and ScriptLoadContexts have a circular pointer.  A
+ * ScriptLoadContext augments the loading of a ScriptLoadRequest by providing
+ * additional information regarding the loading and evaluation behavior (see
+ * the DOMScriptLoadContext class for details).  In terms of responsibility,
+ * the ScriptLoadRequest represents "What" is being loaded, and the
+ * ScriptLoadContext represents "How".
+ *
+ * TODO: see if we can use it in the jsshell script loader. We need to either
+ * remove ISUPPORTS or find a way to encorporate that in the jsshell. We would
+ * then only have one implementation of the script loader, and it would be
+ * tested whenever jsshell tests are run. This would mean finding another way to
+ * create ScriptLoadRequest lists.
+ *
  */
 
 class ScriptLoadRequest
-    : public PreloaderBase,
+    : public nsISupports,
       private mozilla::LinkedListElement<ScriptLoadRequest> {
   using super = LinkedListElement<ScriptLoadRequest>;
 
@@ -95,52 +122,22 @@ class ScriptLoadRequest
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ScriptLoadRequest)
 
-  // PreloaderBase
-  static void PrioritizeAsPreload(nsIChannel* aChannel);
-  virtual void PrioritizeAsPreload() override;
+  using super::getNext;
+  using super::isInList;
+  using MaybeSourceText =
+      mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
 
   bool IsModuleRequest() const { return mKind == ScriptKind::eModule; }
 
   ModuleLoadRequest* AsModuleRequest();
 
-  TimeStamp mOffThreadParseStartTime;
-  TimeStamp mOffThreadParseStopTime;
-
-  void FireScriptAvailable(nsresult aResult) {
-    bool isInlineClassicScript = mIsInline && !IsModuleRequest();
-    GetScriptElement()->ScriptAvailable(aResult, GetScriptElement(),
-                                        isInlineClassicScript, mURI, mLineNo);
-  }
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FireScriptEvaluated(nsresult aResult) {
-    RefPtr<nsIScriptElement> scriptElement = GetScriptElement();
-    scriptElement->ScriptEvaluated(aResult, scriptElement, mIsInline);
-  }
-
-  bool IsPreload() const {
-    MOZ_ASSERT_IF(mFetchOptions->mIsPreload, !GetScriptElement());
-    return mFetchOptions->mIsPreload;
-  }
+  virtual bool IsTopLevel() const { return true; };
 
   virtual void Cancel();
 
   bool IsCanceled() const { return mIsCanceled; }
 
   virtual void SetReady();
-
-  JS::OffThreadToken** OffThreadTokenPtr() {
-    return mOffThreadToken ? &mOffThreadToken : nullptr;
-  }
-
-  bool IsTracking() const { return mIsTracking; }
-  void SetIsTracking() {
-    MOZ_ASSERT(!mIsTracking);
-    mIsTracking = true;
-  }
-
-  void BlockOnload(Document* aDocument);
-
-  void MaybeUnblockOnload();
 
   enum class Progress : uint8_t {
     eLoading,         // Request either source or bytecode
@@ -155,13 +152,12 @@ class ScriptLoadRequest
     return mProgress == Progress::eLoading ||
            mProgress == Progress::eLoading_Source;
   }
+
   bool IsLoadingSource() const {
     return mProgress == Progress::eLoading_Source;
   }
-  bool InCompilingStage() const {
-    return mProgress == Progress::eCompiling ||
-           (IsReadyToRun() && mWasCompiledOMT);
-  }
+
+  bool InCompilingStage() const { return mProgress == Progress::eCompiling; }
 
   // Type of data provided by the nsChannel.
   enum class DataType : uint8_t { eUnknown, eTextSource, eBytecode };
@@ -169,11 +165,21 @@ class ScriptLoadRequest
   bool IsUnknownDataType() const { return mDataType == DataType::eUnknown; }
   bool IsTextSource() const { return mDataType == DataType::eTextSource; }
   bool IsSource() const { return IsTextSource(); }
-  bool IsBytecode() const { return mDataType == DataType::eBytecode; }
 
-  void SetUnknownDataType();
-  void SetTextSource();
-  void SetBytecode();
+  void SetUnknownDataType() {
+    mDataType = DataType::eUnknown;
+    mScriptData.reset();
+  }
+  void SetTextSource() {
+    MOZ_ASSERT(IsUnknownDataType());
+    mDataType = DataType::eTextSource;
+    if (StaticPrefs::
+            dom_script_loader_external_scripts_utf8_parsing_enabled()) {
+      mScriptData.emplace(VariantType<ScriptTextBuffer<Utf8Unit>>());
+    } else {
+      mScriptData.emplace(VariantType<ScriptTextBuffer<char16_t>>());
+    }
+  }
 
   // Use a vector backed by the JS allocator for script text so that contents
   // can be transferred in constant time to the JS engine, not copied in linear
@@ -205,11 +211,181 @@ class ScriptLoadRequest
                          : ScriptText<Utf8Unit>().length();
   }
 
+  // Get source text.  On success |aMaybeSource| will contain either UTF-8 or
+  // UTF-16 source; on failure it will remain in its initial state.
+  nsresult GetScriptSource(JSContext* aCx, MaybeSourceText* aMaybeSource);
+
   void ClearScriptText() {
     MOZ_ASSERT(IsTextSource());
     return IsUTF16Text() ? ScriptText<char16_t>().clearAndFree()
                          : ScriptText<Utf8Unit>().clearAndFree();
   }
+
+  enum ReferrerPolicy ReferrerPolicy() const {
+    return mFetchOptions->mReferrerPolicy;
+  }
+
+  nsIPrincipal* TriggeringPrincipal() const {
+    return mFetchOptions->mTriggeringPrincipal;
+  }
+
+  // This will return nullptr in most cases,
+  // unless this is a module being imported by a WebExtension content script.
+  // In that case it's the Sandbox global executing that code.
+  nsIGlobalObject* GetWebExtGlobal() const {
+    return mFetchOptions->mWebExtGlobal;
+  }
+
+  void ClearScriptSource();
+
+  void SetScript(JSScript* aScript);
+
+  bool IsBytecode() const { return mDataType == DataType::eBytecode; }
+
+  void SetBytecode();
+
+  mozilla::CORSMode CORSMode() const { return mFetchOptions->mCORSMode; }
+
+  void DropBytecodeCacheReferences();
+
+  bool HasLoadContext() { return mLoadContext; }
+
+  DOMScriptLoadContext* GetLoadContext() {
+    MOZ_ASSERT(mLoadContext);
+    return mLoadContext;
+  }
+
+  const ScriptKind mKind;  // Whether this is a classic script or a module
+                           // script.
+
+  bool mIsCanceled;    // True if we have been explicitly canceled.
+  Progress mProgress;  // Are we still waiting for a load to complete?
+  DataType mDataType;  // Does this contain Source or Bytecode?
+  RefPtr<ScriptFetchOptions> mFetchOptions;
+  const SRIMetadata mIntegrity;
+  const nsCOMPtr<nsIURI> mReferrer;
+  Maybe<nsString> mSourceMapURL;  // Holds source map url for loaded scripts
+
+  // Holds script source data for non-inline scripts.
+  Maybe<Variant<ScriptTextBuffer<char16_t>, ScriptTextBuffer<Utf8Unit>>>
+      mScriptData;
+
+  // The length of script source text, set when reading completes. This is used
+  // since mScriptData is cleared when the source is passed to the JS engine.
+  size_t mScriptTextLength;
+
+  // Holds the SRI serialized hash and the script bytecode for non-inline
+  // scripts.
+  mozilla::Vector<uint8_t> mScriptBytecode;
+  uint32_t mBytecodeOffset;  // Offset of the bytecode in mScriptBytecode
+
+  const nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIPrincipal> mOriginPrincipal;
+  nsAutoCString
+      mURL;  // Keep the URI's filename alive during off thread parsing.
+  int32_t mLineNo;
+
+  // The base URL used for resolving relative module imports.
+  nsCOMPtr<nsIURI> mBaseURL;
+
+  // Holds the top-level JSScript that corresponds to the current source, once
+  // it is parsed, and planned to be saved in the bytecode cache.
+  JS::Heap<JSScript*> mScript;
+
+  // Holds the Cache information, which is used to register the bytecode
+  // on the cache entry, such that we can load it the next time.
+  nsCOMPtr<nsICacheInfoChannel> mCacheInfo;
+
+  // ScriptLoadContext for augmenting the load depending on the loading
+  // context (DOM, Worker, etc.)
+  RefPtr<DOMScriptLoadContext> mLoadContext;
+};
+
+/*
+ * DOM specific ScriptLoadContext.
+ *
+ * ScriptLoadContexts augment the loading of a ScriptLoadRequest. They
+ * describe how a ScriptLoadRequests loading and evaluation needs to be
+ * augmented, based on the information provided by the loading context. In
+ * the case of the DOM, the ScriptLoadContext is used to identify how a script
+ * should be loaded according to information found in the HTML document into
+ * which it will be loaded. The following fields describe how the
+ * ScriptLoadRequest will be loaded.
+ *
+ *    * mScriptMode
+ *        stores the mode (Async, Sync, Deferred), and preload, which
+ *        allows the ScriptLoader to decide if the script should be pushed
+ *        offThread, or if the preloaded request should be used.
+ *    * mScriptFromHead
+ *        Set when the script tag is in the head, and should be treated as
+ *        a blocking script
+ *    * mIsInline
+ *        Set for scripts whose bodies are inline in the html. In this case,
+ *        the script does not need to be fetched first.
+ *    * mIsXSLT
+ *        Set if we are in an XSLT request.
+ *    * TODO: mIsPreload (will be moved from ScriptFetchOptions)
+ *        Set for scripts that are preloaded in a
+ *        <link rel="preload" as="script"> element.
+ *
+ * In addition to describing how the ScriptLoadRequest will be loaded by the
+ * DOM ScriptLoader, the ScriptLoadContext contains fields that facilitate
+ * those custom behaviors, including support for offthread parsing, pointers
+ * to runnables (for cancellation and cleanup if a script is parsed offthread)
+ * and preload element specific controls.
+ *
+ */
+
+class DOMScriptLoadContext : public PreloaderBase {
+ protected:
+  virtual ~DOMScriptLoadContext();
+
+ public:
+  explicit DOMScriptLoadContext(ScriptLoadRequest* aRequest);
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMScriptLoadContext)
+
+  // PreloaderBase
+  static void PrioritizeAsPreload(nsIChannel* aChannel);
+  virtual void PrioritizeAsPreload() override;
+
+  void FireScriptAvailable(nsresult aResult) {
+    bool isInlineClassicScript = mIsInline && !mRequest->IsModuleRequest();
+    GetScriptElement()->ScriptAvailable(aResult, GetScriptElement(),
+                                        isInlineClassicScript, mRequest->mURI,
+                                        mRequest->mLineNo);
+  }
+
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FireScriptEvaluated(nsresult aResult) {
+    RefPtr<nsIScriptElement> scriptElement = GetScriptElement();
+    scriptElement->ScriptEvaluated(aResult, scriptElement, mIsInline);
+  }
+
+  bool IsPreload() const {
+    MOZ_ASSERT_IF(mRequest->mFetchOptions->mIsPreload, !GetScriptElement());
+    return mRequest->mFetchOptions->mIsPreload;
+  }
+
+  bool CompileStarted() const {
+    return mRequest->InCompilingStage() ||
+           (mRequest->IsReadyToRun() && mWasCompiledOMT);
+  }
+
+  JS::OffThreadToken** OffThreadTokenPtr() {
+    return mOffThreadToken ? &mOffThreadToken : nullptr;
+  }
+
+  bool IsTracking() const { return mIsTracking; }
+  void SetIsTracking() {
+    MOZ_ASSERT(!mIsTracking);
+    mIsTracking = true;
+  }
+
+  void BlockOnload(Document* aDocument);
+
+  void MaybeUnblockOnload();
 
   enum class ScriptMode : uint8_t {
     eBlocking,
@@ -231,42 +407,13 @@ class ScriptLoadRequest
 
   bool IsAsyncScript() const { return mScriptMode == ScriptMode::eAsync; }
 
-  virtual bool IsTopLevel() const {
-    // Classic scripts are always top level.
-    return true;
-  }
-
-  mozilla::CORSMode CORSMode() const { return mFetchOptions->mCORSMode; }
-  enum ReferrerPolicy ReferrerPolicy() const {
-    return mFetchOptions->mReferrerPolicy;
-  }
   nsIScriptElement* GetScriptElement() const;
-  nsIPrincipal* TriggeringPrincipal() const {
-    return mFetchOptions->mTriggeringPrincipal;
-  }
-
-  // This will return nullptr in most cases,
-  // unless this is a module being imported by a WebExtension content script.
-  // In that case it's the Sandbox global executing that code.
-  nsIGlobalObject* GetWebExtGlobal() const {
-    return mFetchOptions->mWebExtGlobal;
-  }
-
-  using MaybeSourceText =
-      mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
-
-  // Get source text.  On success |aMaybeSource| will contain either UTF-8 or
-  // UTF-16 source; on failure it will remain in its initial state.
-  nsresult GetScriptSource(JSContext* aCx, MaybeSourceText* aMaybeSource);
-
-  // Used to output a string for the Gecko Profiler.
-  void GetProfilerLabel(nsACString& aOutString);
 
   // Make this request a preload (speculative) request.
   void SetIsPreloadRequest() {
     MOZ_ASSERT(!GetScriptElement());
     MOZ_ASSERT(!IsPreload());
-    mFetchOptions->mIsPreload = true;
+    mRequest->mFetchOptions->mIsPreload = true;
   }
 
   // Make a preload request into an actual load request for the given element.
@@ -280,21 +427,15 @@ class ScriptLoadRequest
     return element->GetParserCreated();
   }
 
-  void ClearScriptSource();
-
-  void SetScript(JSScript* aScript);
+  // Used to output a string for the Gecko Profiler.
+  void GetProfilerLabel(nsACString& aOutString);
 
   void MaybeCancelOffThreadScript();
-  void DropBytecodeCacheReferences();
 
-  using super::getNext;
-  using super::isInList;
+  TimeStamp mOffThreadParseStartTime;
+  TimeStamp mOffThreadParseStopTime;
 
-  const ScriptKind mKind;  // Whether this is a classic script or a module
-                           // script.
   ScriptMode mScriptMode;  // Whether this is a blocking, defer or async script.
-  Progress mProgress;      // Are we still waiting for a load to complete?
-  DataType mDataType;      // Does this contain Source or Bytecode?
   bool mScriptFromHead;    // Synchronous head script block loading of other non
                            // js/css content.
   bool mIsInline;          // Is the script inline or loaded?
@@ -305,55 +446,20 @@ class ScriptLoadRequest
                                    // mNonAsyncExternalScriptInsertedRequests
   bool mIsXSLT;                    // True if we live in mXSLTRequests.
   bool mInCompilingList;  // True if we are in mOffThreadCompilingRequests.
-  bool mIsCanceled;       // True if we have been explicitly canceled.
-  bool mWasCompiledOMT;   // True if the script has been compiled off main
-                          // thread.
   bool mIsTracking;       // True if the script comes from a source on our
                           // tracking protection list.
-
-  RefPtr<ScriptFetchOptions> mFetchOptions;
+  bool mWasCompiledOMT;   // True if the script has been compiled off main
+                          // thread.
 
   JS::OffThreadToken* mOffThreadToken;  // Off-thread parsing token.
-  Maybe<nsString> mSourceMapURL;  // Holds source map url for loaded scripts
 
   Atomic<Runnable*> mRunnable;  // Runnable created when dispatching off thread
                                 // compile. Tracked here so that it can be
                                 // properly released during cancellation.
-
-  // Holds the top-level JSScript that corresponds to the current source, once
-  // it is parsed, and planned to be saved in the bytecode cache.
-  JS::Heap<JSScript*> mScript;
-
-  // Holds script source data for non-inline scripts.
-  Maybe<Variant<ScriptTextBuffer<char16_t>, ScriptTextBuffer<Utf8Unit>>>
-      mScriptData;
-
-  // The length of script source text, set when reading completes. This is used
-  // since mScriptData is cleared when the source is passed to the JS engine.
-  size_t mScriptTextLength;
-
-  // Holds the SRI serialized hash and the script bytecode for non-inline
-  // scripts.
-  mozilla::Vector<uint8_t> mScriptBytecode;
-  uint32_t mBytecodeOffset;  // Offset of the bytecode in mScriptBytecode
-
-  const nsCOMPtr<nsIURI> mURI;
-  nsCOMPtr<nsIPrincipal> mOriginPrincipal;
-  nsAutoCString
-      mURL;  // Keep the URI's filename alive during off thread parsing.
-  int32_t mLineNo;
-  const SRIMetadata mIntegrity;
-  const nsCOMPtr<nsIURI> mReferrer;
+  RefPtr<ScriptLoadRequest> mRequest;
 
   // Non-null if there is a document that this request is blocking from loading.
   RefPtr<Document> mLoadBlockedDocument;
-
-  // Holds the Cache information, which is used to register the bytecode
-  // on the cache entry, such that we can load it the next time.
-  nsCOMPtr<nsICacheInfoChannel> mCacheInfo;
-
-  // The base URL used for resolving relative module imports.
-  nsCOMPtr<nsIURI> mBaseURL;
 
   // For preload requests, we defer reporting errors to the console until the
   // request is used.
