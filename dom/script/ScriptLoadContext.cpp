@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ScriptLoadRequest.h"
 #include "GeckoProfiler.h"
 
 #include "mozilla/dom/Document.h"
@@ -15,15 +14,13 @@
 
 #include "js/OffThreadScriptCompilation.h"
 #include "js/SourceText.h"
+#include "js/loader/ScriptLoadRequest.h"
 
 #include "ModuleLoadRequest.h"
 #include "nsContentUtils.h"
 #include "nsICacheInfoChannel.h"
 #include "nsIClassOfService.h"
 #include "nsISupportsPriority.h"
-#include "ScriptSettings.h"
-
-using JS::SourceText;
 
 namespace mozilla {
 namespace dom {
@@ -134,7 +131,7 @@ void ScriptLoadContext::MaybeCancelOffThreadScript() {
   mOffThreadToken = nullptr;
 }
 
-void ScriptLoadContext::SetRequest(ScriptLoadRequest* aRequest) {
+void ScriptLoadContext::SetRequest(JS::loader::ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(!mRequest);
   mRequest = aRequest;
 }
@@ -172,7 +169,8 @@ void ScriptLoadContext::PrioritizeAsPreload() {
 
 bool ScriptLoadContext::IsPreload() const {
   if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
-    ModuleLoadRequest* root = mRequest->AsModuleRequest()->GetRootModule();
+    JS::loader::ModuleLoadRequest* root =
+        mRequest->AsModuleRequest()->GetRootModule();
     return root->GetLoadContext()->IsPreload();
   }
 
@@ -182,7 +180,8 @@ bool ScriptLoadContext::IsPreload() const {
 
 nsIGlobalObject* ScriptLoadContext::GetWebExtGlobal() const {
   if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
-    ModuleLoadRequest* root = mRequest->AsModuleRequest()->GetRootModule();
+    JS::loader::ModuleLoadRequest* root =
+        mRequest->AsModuleRequest()->GetRootModule();
     return root->GetLoadContext()->GetWebExtGlobal();
   }
 
@@ -196,7 +195,8 @@ bool ScriptLoadContext::CompileStarted() const {
 
 nsIScriptElement* ScriptLoadContext::GetScriptElement() const {
   if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
-    ModuleLoadRequest* root = mRequest->AsModuleRequest()->GetRootModule();
+    JS::loader::ModuleLoadRequest* root =
+        mRequest->AsModuleRequest()->GetRootModule();
     return root->GetLoadContext()->GetScriptElement();
   }
   nsCOMPtr<nsIScriptElement> scriptElement = do_QueryInterface(mElement);
