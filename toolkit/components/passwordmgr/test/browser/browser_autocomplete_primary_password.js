@@ -9,7 +9,7 @@ const BRAND_BUNDLE = Services.strings.createBundle(
 );
 const BRAND_FULL_NAME = BRAND_BUNDLE.GetStringFromName("brandFullName");
 
-// Waits for the master password prompt and cancels it when close() is called on the return value.
+// Waits for the primary password prompt and cancels it when close() is called on the return value.
 async function waitForDialog() {
   let [subject] = await TestUtils.topicObserved("common-dialog-loaded");
   let dialog = subject.Dialog;
@@ -31,21 +31,21 @@ add_task(async function setup() {
     password: "password",
   });
   Services.logins.addLogin(login);
-  LoginTestUtils.masterPassword.enable();
+  LoginTestUtils.primaryPassword.enable();
 
   registerCleanupFunction(function() {
-    LoginTestUtils.masterPassword.disable();
+    LoginTestUtils.primaryPassword.disable();
   });
 
-  // Set master password prompt timeout to 3s.
+  // Set primary password prompt timeout to 3s.
   // If this test goes intermittent, you likely have to increase this value.
   await SpecialPowers.pushPrefEnv({ set: [[TIMEOUT_PREF, 3000]] });
 });
 
-// Test that autocomplete does not trigger a master password prompt
+// Test that autocomplete does not trigger a primary password prompt
 // for a certain time after it was cancelled.
 add_task(async function test_mpAutocompleteTimeout() {
-  // Wait for initial master password dialog after opening the tab.
+  // Wait for initial primary password dialog after opening the tab.
   let dialogShown = waitForDialog();
 
   await BrowserTestUtils.withNewTab(URL, async function(browser) {
@@ -74,10 +74,10 @@ add_task(async function test_mpAutocompleteTimeout() {
   await new Promise(c => setTimeout(c, 4000));
 });
 
-// Test that autocomplete does not trigger a master password prompt
+// Test that autocomplete does not trigger a primary password prompt
 // if one is already showing.
 add_task(async function test_mpAutocompleteUIBusy() {
-  // Wait for initial master password dialog after adding the login.
+  // Wait for initial primary password dialog after adding the login.
   let dialogShown = waitForDialog();
 
   let win = await BrowserTestUtils.openNewBrowserWindow();

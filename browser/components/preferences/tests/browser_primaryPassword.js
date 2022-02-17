@@ -23,15 +23,15 @@ add_task(async function() {
     open(aDialogURL, { closingCallback: aCallback }) {
       dialogOpened = true;
       dialogURL = aDialogURL;
-      masterPasswordSet = masterPasswordNextState;
+      primaryPasswordSet = primaryPasswordNextState;
       aCallback();
     },
   }));
 
-  let masterPasswordSet = false;
+  let primaryPasswordSet = false;
   win.LoginHelper = {
-    isMasterPasswordSet() {
-      return masterPasswordSet;
+    isPrimaryPasswordSet() {
+      return primaryPasswordSet;
     },
   };
 
@@ -39,12 +39,12 @@ add_task(async function() {
   checkbox.scrollIntoView();
   ok(
     !checkbox.checked,
-    "master password checkbox should be unchecked by default"
+    "primary password checkbox should be unchecked by default"
   );
   let button = doc.getElementById("changeMasterPassword");
-  ok(button.disabled, "master password button should be disabled by default");
+  ok(button.disabled, "primary password button should be disabled by default");
 
-  let masterPasswordNextState = false;
+  let primaryPasswordNextState = false;
   if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin() && OSKeyStore.canReauth()) {
     let osAuthDialogShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(false);
     checkbox.click();
@@ -61,12 +61,12 @@ add_task(async function() {
     );
     ok(
       !checkbox.checked,
-      "master password checkbox should be unchecked after canceling os auth dialog"
+      "primary password checkbox should be unchecked after canceling os auth dialog"
     );
     ok(button.disabled, "button should be disabled after canceling os auth");
   }
 
-  masterPasswordNextState = true;
+  primaryPasswordNextState = true;
   if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin() && OSKeyStore.canReauth()) {
     let osAuthDialogShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
     checkbox.click();
@@ -80,18 +80,18 @@ add_task(async function() {
     is(
       dialogURL,
       "chrome://mozapps/content/preferences/changemp.xhtml",
-      "clicking on the checkbox should open the masterpassword dialog"
+      "clicking on the checkbox should open the primary password dialog"
     );
   } else {
-    masterPasswordSet = true;
+    primaryPasswordSet = true;
     doc.defaultView.gPrivacyPane._initMasterPasswordUI();
     await TestUtils.waitForCondition(
       () => !button.disabled,
-      "waiting for master password button to get enabled"
+      "waiting for primary password button to get enabled"
     );
   }
-  ok(!button.disabled, "master password button should now be enabled");
-  ok(checkbox.checked, "master password checkbox should be checked now");
+  ok(!button.disabled, "primary password button should now be enabled");
+  ok(checkbox.checked, "primary password checkbox should be checked now");
 
   dialogURL = "";
   button.doCommand();
@@ -102,10 +102,10 @@ add_task(async function() {
   is(
     dialogURL,
     "chrome://mozapps/content/preferences/changemp.xhtml",
-    "clicking on the button should open the masterpassword dialog"
+    "clicking on the button should open the primary password dialog"
   );
-  ok(!button.disabled, "master password button should still be enabled");
-  ok(checkbox.checked, "master password checkbox should be checked still");
+  ok(!button.disabled, "primary password button should still be enabled");
+  ok(checkbox.checked, "primary password checkbox should be checked still");
 
   // Confirm that we won't automatically respond to the dialog,
   // since we don't expect a dialog here, we want the test to fail if one appears.
@@ -118,16 +118,16 @@ add_task(async function() {
     "Pref should be set to an empty string"
   );
 
-  masterPasswordNextState = false;
+  primaryPasswordNextState = false;
   dialogURL = "";
   checkbox.click();
   is(
     dialogURL,
     "chrome://mozapps/content/preferences/removemp.xhtml",
-    "clicking on the checkbox to uncheck master password should show the removal dialog"
+    "clicking on the checkbox to uncheck primary password should show the removal dialog"
   );
-  ok(button.disabled, "master password button should now be disabled");
-  ok(!checkbox.checked, "master password checkbox should now be unchecked");
+  ok(button.disabled, "primary password button should now be disabled");
+  ok(!checkbox.checked, "primary password checkbox should now be unchecked");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
