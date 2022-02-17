@@ -320,6 +320,10 @@ nsObserverService::UnmarkGrayStrongObservers() {
   return NS_OK;
 }
 
+bool nsObserverService::HasObservers(const char* aTopic) {
+  return mObserverTopicTable.Contains(aTopic);
+}
+
 namespace {
 
 class NotifyWhenScriptSafeRunnable : public mozilla::Runnable {
