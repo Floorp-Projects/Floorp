@@ -2103,9 +2103,9 @@ void nsWindow::NativeMoveResizeWaylandPopup(bool aMove, bool aResize) {
       mNewBoundsAfterMoveToRect.height = mBounds.height;
     }
     return;
-  } else {
-    mNewBoundsAfterMoveToRect = LayoutDeviceIntRect(0, 0, 0, 0);
   }
+
+  mNewBoundsAfterMoveToRect = LayoutDeviceIntRect(0, 0, 0, 0);
 
   if (!WaylandPopupNeedsTrackInHierarchy()) {
     WaylandPopupSetDirectPosition();
