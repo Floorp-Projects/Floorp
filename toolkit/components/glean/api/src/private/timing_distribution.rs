@@ -24,7 +24,7 @@ pub enum TimingDistributionMetric {
     Parent {
         /// The metric's ID.
         ///
-        /// **TEST-ONLY** - Do not use unless gated with `#[cfg(test)]`.
+        /// No longer test-only, is also used for GIFFT.
         id: MetricId,
         inner: glean::private::TimingDistributionMetric,
     },
@@ -95,7 +95,20 @@ impl TimingDistribution for TimingDistributionMetric {
     /// A unique [`TimerId`] for the new timer.
     fn start(&self) -> TimerId {
         match self {
-            TimingDistributionMetric::Parent { inner, .. } => inner.start(),
+            TimingDistributionMetric::Parent { id: _id, inner } => {
+                let timer_id = inner.start();
+                #[cfg(feature = "with_gecko")]
+                {
+                    extern "C" {
+                        fn GIFFT_TimingDistributionStart(metric_id: u32, timer_id: u64);
+                    }
+                    // SAFETY: using only primitives, no return value.
+                    unsafe {
+                        GIFFT_TimingDistributionStart(_id.0, timer_id);
+                    }
+                }
+                timer_id
+            }
             TimingDistributionMetric::Child(c) => {
                 // There is no glean-core on this process to give us a TimerId,
                 // so we'll have to make our own and do our own bookkeeping.
@@ -129,7 +142,20 @@ impl TimingDistribution for TimingDistributionMetric {
     ///   same timespan metric.
     fn stop_and_accumulate(&self, id: TimerId) {
         match self {
-            TimingDistributionMetric::Parent { inner, .. } => {
+            TimingDistributionMetric::Parent {
+                id: _metric_id,
+                inner,
+            } => {
+                #[cfg(feature = "with_gecko")]
+                {
+                    extern "C" {
+                        fn GIFFT_TimingDistributionStopAndAccumulate(metric_id: u32, timer_id: u64);
+                    }
+                    // SAFETY: using only primitives, no return value.
+                    unsafe {
+                        GIFFT_TimingDistributionStopAndAccumulate(_metric_id.0, id);
+                    }
+                }
                 inner.stop_and_accumulate(id);
             }
             TimingDistributionMetric::Child(c) => {
@@ -179,7 +205,20 @@ impl TimingDistribution for TimingDistributionMetric {
     ///   same timing distribution metric.
     fn cancel(&self, id: TimerId) {
         match self {
-            TimingDistributionMetric::Parent { inner, .. } => {
+            TimingDistributionMetric::Parent {
+                id: _metric_id,
+                inner,
+            } => {
+                #[cfg(feature = "with_gecko")]
+                {
+                    extern "C" {
+                        fn GIFFT_TimingDistributionCancel(metric_id: u32, timer_id: u64);
+                    }
+                    // SAFETY: using only primitives, no return value.
+                    unsafe {
+                        GIFFT_TimingDistributionCancel(_metric_id.0, id);
+                    }
+                }
                 inner.cancel(id);
             }
             TimingDistributionMetric::Child(c) => {
