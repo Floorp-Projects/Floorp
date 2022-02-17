@@ -27,7 +27,6 @@
 #include "nsScriptSecurityManager.h"
 #include "pratom.h"
 #include "nsIObjectInputStream.h"
-#include "mozilla/GkRustUtils.h"
 
 #include "json/json.h"
 
