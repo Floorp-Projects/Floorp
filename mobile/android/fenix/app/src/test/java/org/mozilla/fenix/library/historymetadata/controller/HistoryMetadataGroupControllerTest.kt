@@ -11,6 +11,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
+import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.prompt.ShareData
@@ -76,7 +77,8 @@ class HistoryMetadataGroupControllerTest {
 
     private lateinit var controller: DefaultHistoryMetadataGroupController
 
-    private fun getMetadataItemsList() = listOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem)
+    private fun getMetadataItemsList() =
+        listOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem)
 
     @Before
     fun setUp() {
@@ -166,7 +168,25 @@ class HistoryMetadataGroupControllerTest {
     }
 
     @Test
-    fun handleDelete() = testDispatcher.runBlockingTest {
+    fun handleDeleteSingle() = testDispatcher.runBlockingTest {
+        controller.handleDelete(setOf(mozillaHistoryMetadataItem))
+
+        coVerify {
+            store.dispatch(HistoryMetadataGroupFragmentAction.Delete(mozillaHistoryMetadataItem))
+            historyStorage.deleteVisitsFor(mozillaHistoryMetadataItem.url)
+            metrics.track(Event.HistorySearchTermGroupRemoveTab)
+        }
+        // Here we don't expect the action to be dispatched, because items inside the store
+        // we provided by getMetadataItemsList(), but only one item has been removed
+        verify(exactly = 0) {
+            browserStore.dispatch(
+                HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = searchTerm)
+            )
+        }
+    }
+
+    @Test
+    fun handleDeleteMultiple() = testDispatcher.runBlockingTest {
         controller.handleDelete(getMetadataItemsList().toSet())
 
         coVerify {
@@ -175,6 +195,40 @@ class HistoryMetadataGroupControllerTest {
                 historyStorage.deleteVisitsFor(it.url)
             }
             metrics.track(Event.HistorySearchTermGroupRemoveTab)
+        }
+        // Here we expect the action to be dispatched, because both deleted items and items inside
+        // the store were provided by the same method getMetadataItemsList()
+        verify {
+            browserStore.dispatch(
+                HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = searchTerm)
+            )
+        }
+    }
+
+    @Test
+    fun handleDeleteAbnormal() = testDispatcher.runBlockingTest {
+        val abnormalList = listOf(
+            mozillaHistoryMetadataItem,
+            firefoxHistoryMetadataItem,
+            mozillaHistoryMetadataItem.copy(title = "Pocket", url = "https://getpocket.com"),
+            mozillaHistoryMetadataItem.copy(title = "BBC", url = "https://www.bbc.com/"),
+            mozillaHistoryMetadataItem.copy(title = "Stackoverflow", url = "https://stackoverflow.com/")
+        )
+        controller.handleDelete(abnormalList.toSet())
+        coVerify {
+            getMetadataItemsList().forEach {
+                store.dispatch(HistoryMetadataGroupFragmentAction.Delete(it))
+                historyStorage.deleteVisitsFor(it.url)
+            }
+            metrics.track(Event.HistorySearchTermGroupRemoveTab)
+        }
+        // Here we expect the action to be dispatched, because deleted items include the items
+        // provided by getMetadataItemsList(), so that the store becomes empty and the event
+        // should be sent
+        verify {
+            browserStore.dispatch(
+                HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = searchTerm)
+            )
         }
     }
 
@@ -187,6 +241,9 @@ class HistoryMetadataGroupControllerTest {
             getMetadataItemsList().forEach {
                 historyStorage.deleteVisitsFor(it.url)
             }
+            browserStore.dispatch(
+                HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = searchTerm)
+            )
             metrics.track(Event.HistorySearchTermGroupRemoveAll)
         }
     }

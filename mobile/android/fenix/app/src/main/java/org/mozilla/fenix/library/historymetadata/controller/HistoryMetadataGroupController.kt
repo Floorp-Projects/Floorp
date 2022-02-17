@@ -119,7 +119,7 @@ class DefaultHistoryMetadataGroupController(
 
     override fun handleDelete(items: Set<History.Metadata>) {
         scope.launch {
-            val isDeletingLastItem = store.state.items.size == items.size
+            val isDeletingLastItem = items.containsAll(store.state.items)
             items.forEach {
                 store.dispatch(HistoryMetadataGroupFragmentAction.Delete(it))
                 historyStorage.deleteVisitsFor(it.url)
