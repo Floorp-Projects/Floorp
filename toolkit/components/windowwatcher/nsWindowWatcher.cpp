@@ -327,7 +327,7 @@ struct SizeSpec {
   }
 
   bool HeightSpecified() const {
-    return mOuterHeight.isSome() || mOuterHeight.isSome();
+    return mOuterHeight.isSome() || mInnerHeight.isSome();
   }
 };
 
