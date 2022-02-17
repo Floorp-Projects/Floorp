@@ -16,6 +16,9 @@ if [ -d "$MOZ_FETCHES_DIR/binutils/bin" ]; then
   export PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
 fi
 
+# Make the installed compiler-rt(s) available to clang.
+UPLOAD_DIR= taskcluster/scripts/misc/repack-clang.sh
+
 case "$CONFIGS" in
 *macosx64*)
   # these variables are used in build-clang.py
