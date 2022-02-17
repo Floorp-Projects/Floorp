@@ -664,7 +664,7 @@ description#identity-popup-content-verifier,
 }
 
 .socialblock-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/socialblock.svg);
+  list-style-image: url(chrome://browser/skin/thumb-down.svg);
 }
 
 .thirdpartycookies-icon {

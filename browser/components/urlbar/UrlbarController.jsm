@@ -899,7 +899,7 @@ class TelemetryEvent {
     let row = element.closest(".urlbarView-row");
     if (row.result && row.result.providerName != "UrlbarProviderTopSites") {
       // Element handlers go here.
-      if (element.classList.contains("urlbarView-help")) {
+      if (element.classList.contains("urlbarView-button-help")) {
         return row.result.type == UrlbarUtils.RESULT_TYPE.TIP
           ? "tiphelp"
           : "help";

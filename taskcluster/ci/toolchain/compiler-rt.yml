@@ -9,7 +9,6 @@ job-defaults:
     run:
         using: toolchain-script
         script: build-compiler-rt.sh
-        toolchain-artifact: public/build/compiler-rt.tar.zst
 
 android-aarch64-compiler-rt-13:
     description: "android aarch64 Compiler-rt for Clang 13 toolchain build"
@@ -17,10 +16,10 @@ android-aarch64-compiler-rt-13:
         symbol: TA(aarch64-crt-13)
     run:
         arguments:
-            - aarch64-linux-android
             - build/build-clang/clang-13.json
         resources:
             - build/build-clang/clang-13.json
+        toolchain-artifact: public/build/compiler-rt-aarch64-linux-android.tar.zst
     fetches:
         fetch:
             - clang-13
@@ -34,10 +33,10 @@ android-arm-compiler-rt-13:
         symbol: TA(arm-crt-13)
     run:
         arguments:
-            - armv7-linux-android
             - build/build-clang/clang-13.json
         resources:
             - build/build-clang/clang-13.json
+        toolchain-artifact: public/build/compiler-rt-armv7-linux-android.tar.zst
     fetches:
         fetch:
             - clang-13
@@ -51,10 +50,10 @@ android-x86-compiler-rt-13:
         symbol: TA(x86-crt-13)
     run:
         arguments:
-            - i686-linux-android
             - build/build-clang/clang-13.json
         resources:
             - build/build-clang/clang-13.json
+        toolchain-artifact: public/build/compiler-rt-i686-linux-android.tar.zst
     fetches:
         fetch:
             - clang-13
@@ -68,10 +67,10 @@ android-x64-compiler-rt-13:
         symbol: TA(x64-crt-13)
     run:
         arguments:
-            - x86_64-linux-android
             - build/build-clang/clang-13.json
         resources:
             - build/build-clang/clang-13.json
+        toolchain-artifact: public/build/compiler-rt-x86_64-linux-android.tar.zst
     fetches:
         fetch:
             - clang-13
@@ -79,21 +78,54 @@ android-x64-compiler-rt-13:
             - linux64-clang-13-stage1
             - linux64-android-ndk-linux-repack
 
+linux64-x86-compiler-rt-13:
+    description: "Linux x86 Compiler-rt for Clang 13 toolchain build"
+    treeherder:
+        symbol: TL(x86-crt-13)
+    run:
+        arguments:
+            - build/build-clang/clang-13.json
+        resources:
+            - build/build-clang/clang-13.json
+        toolchain-artifact: public/build/compiler-rt-i686-unknown-linux-gnu.tar.zst
+    fetches:
+        fetch:
+            - clang-13
+        toolchain:
+            - linux64-clang-13-stage1
+            - sysroot-i686-linux-gnu
+
+linux64-x64-compiler-rt-13:
+    description: "Linux x64 Compiler-rt for Clang 13 toolchain build"
+    treeherder:
+        symbol: TL(x64-crt-13)
+    run:
+        arguments:
+            - build/build-clang/clang-13.json
+        resources:
+            - build/build-clang/clang-13.json
+        toolchain-artifact: public/build/compiler-rt-x86_64-unknown-linux-gnu.tar.zst
+    fetches:
+        fetch:
+            - clang-13
+        toolchain:
+            - linux64-clang-13-stage1
+            - sysroot-x86_64-linux-gnu
+
 linux64-aarch64-compiler-rt-13:
     description: "Linux aarch64 Compiler-rt for Clang 13 toolchain build"
     treeherder:
         symbol: TL(aarch64-crt-13)
     run:
         arguments:
-            - aarch64-unknown-linux-gnu
             - build/build-clang/clang-13.json
         resources:
             - build/build-clang/clang-13.json
+        toolchain-artifact: public/build/compiler-rt-aarch64-unknown-linux-gnu.tar.zst
     fetches:
         fetch:
             - clang-13
         toolchain:
-            - linux64-binutils
             - linux64-clang-13-stage1
             - sysroot-aarch64-linux-gnu
 
@@ -103,15 +135,14 @@ macosx64-x64-compiler-rt-13:
         symbol: TM(x64-crt-13)
     run:
         arguments:
-            - x86_64-apple-darwin
             - build/build-clang/clang-13.json
         resources:
             - build/build-clang/clang-13.json
+        toolchain-artifact: public/build/compiler-rt-x86_64-apple-darwin.tar.zst
     fetches:
         fetch:
             - clang-13
         toolchain:
-            - linux64-cctools-port
             - linux64-clang-13-stage1
             - macosx64-sdk-11.0
 
@@ -121,15 +152,14 @@ macosx64-aarch64-compiler-rt-13:
         symbol: TM(aarch64-crt-13)
     run:
         arguments:
-            - aarch64-apple-darwin
             - build/build-clang/clang-13.json
         resources:
             - build/build-clang/clang-13.json
+        toolchain-artifact: public/build/compiler-rt-aarch64-apple-darwin.tar.zst
     fetches:
         fetch:
             - clang-13
         toolchain:
-            - linux64-cctools-port
             - linux64-clang-13-stage1
             - macosx64-sdk-11.0
 
@@ -142,11 +172,11 @@ win32-compiler-rt-13:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         arguments:
-            - i686-pc-windows-msvc
             - build/build-clang/clang-13.json
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
             - build/build-clang/clang-13.json
+        toolchain-artifact: public/build/compiler-rt-i686-pc-windows-msvc.tar.zst
         tooltool-downloads: internal
     fetches:
         fetch:
@@ -164,11 +194,11 @@ win64-compiler-rt-13:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         arguments:
-            - x86_64-pc-windows-msvc
             - build/build-clang/clang-13.json
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
             - build/build-clang/clang-13.json
+        toolchain-artifact: public/build/compiler-rt-x86_64-pc-windows-msvc.tar.zst
         tooltool-downloads: internal
     fetches:
         fetch:
@@ -184,6 +214,7 @@ wasm32-wasi-compiler-rt-13:
     worker-type: b-linux-xlarge
     run:
         script: build-compiler-rt-wasi.sh
+        toolchain-artifact: public/build/compiler-rt-wasm32-wasi.tar.zst
         toolchain-alias: wasm32-wasi-compiler-rt
     fetches:
         fetch:

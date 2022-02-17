@@ -101,14 +101,16 @@
   min-height: 20px; /* row min-height 32px - (2 * padding-block 6px) */
 }
 
-.urlbarView-row[has-help] > .urlbarView-row-inner {
+.urlbarView-row[has-buttons] > .urlbarView-row-inner {
   display: inline-flex;
   vertical-align: middle;
-  /* For rows with a help button, row-inner is the main selectable part of the
-     row, and it takes up the entire row width except for the help button. */
-  width: calc(100% - 56px);
+  /* For rows with buttons, row-inner is the main selectable part of the row,
+     and it takes up the entire row width except for the buttons.
+     28px = 24px button width + 4px margin-inline between buttons
+     12px = row-inner padding
+      2px = horizontally align last button with the one-off settings button */
+  width: calc(100% - (var(--button-count, 0) * 28px) - 12px - 2px);
 }
-
 
 .urlbarView-row[type=tip] {
   padding-block-start: 18px;
@@ -224,8 +226,8 @@
   text-align: right;
 }
 
-.urlbarView-row:not([type=tip], [type=dynamic], [has-help]):hover > .urlbarView-row-inner,
-.urlbarView-row[has-help] > .urlbarView-row-inner:not([selected]):hover {
+.urlbarView-row:not([type=tip], [type=dynamic], [has-buttons]):hover > .urlbarView-row-inner,
+.urlbarView-row[has-buttons] > .urlbarView-row-inner:not([selected]):hover {
   background-color: var(--autocomplete-popup-hover-background);
 }
 
@@ -300,37 +302,39 @@
   fill: rgb(251,251,254);
 }
 
-/* Help button */
+/* Buttons */
 
-/* Help buttons are ghost buttons. */
-.urlbarView-help {
+.urlbarView-button {
   display: inline-block;
-  min-width: 16px;
-  min-height: 16px;
+  min-width: 24px;
+  min-height: 24px;
   vertical-align: middle;
-  background-image: url("chrome://global/skin/icons/help.svg");
   background-size: 16px;
   background-position: center;
   background-repeat: no-repeat;
-  padding: 8px;
-  margin-inline-start: 8px;
-  margin-inline-end: 4px;
-  fill-opacity: 1;
+  margin-inline: 4px;
   -moz-context-properties: fill, fill-opacity;
   border-radius: var(--toolbarbutton-border-radius);
 }
 
-.urlbarView-help[selected] {
+.urlbarView-button[selected] {
   outline: var(--focus-outline);
-  outline-offset: 2px;
 }
 
-.urlbarView-help:hover {
-  background-color: var(--button-hover-bgcolor);
+.urlbarView-button:hover {
+  background-color: var(--autocomplete-popup-hover-background);
 }
 
-.urlbarView-help:hover:active {
-  background-color: var(--button-active-bgcolor);
+.urlbarView-button + .urlbarView-button {
+  margin-inline-start: 0;
+}
+
+.urlbarView-button-block {
+  background-image: url("chrome://browser/skin/thumb-down.svg");
+}
+
+.urlbarView-button-help {
+  background-image: url("chrome://global/skin/icons/help.svg");
 }
 
 /* Tip rows */
@@ -358,13 +362,13 @@
    they all remain vertically aligned. */
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon,
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-title,
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-help,
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-button-help,
 .urlbarView-tip-button {
   margin-block-end: 16px;
 }
 
 .urlbarView-tip-button,
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-help {
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-button-help {
   min-height: 16px;
   padding: 7px;
 }
@@ -411,6 +415,24 @@
   flex-basis: 48px;
   flex-grow: 1;
   flex-shrink: 1;
+}
+
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-button-help {
+  min-width: 16px;
+  min-height: 16px;
+  margin-inline: 8px 4px;
+}
+
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-button-help[selected] {
+  outline-offset: var(--focus-outline-offset);
+}
+
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-button-help:hover {
+  background-color: var(--button-hover-bgcolor);
+}
+
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-button-help:hover:active {
+  background-color: var(--button-active-bgcolor);
 }
 
 .urlbarView-row[label]::before {
