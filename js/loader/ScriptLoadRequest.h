@@ -14,6 +14,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/dom/ScriptLoadContext.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
@@ -28,7 +29,6 @@
 #include "nsIGlobalObject.h"
 #include "nsIScriptElement.h"
 #include "ScriptKind.h"
-#include "ScriptLoadContext.h"
 
 class nsICacheInfoChannel;
 
