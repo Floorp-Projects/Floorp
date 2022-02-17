@@ -264,6 +264,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   LayoutDeviceIntPoint GetClientOffset() override;
   void EnableDragDrop(bool aEnable) override{};
   nsresult AsyncEnableDragDrop(bool aEnable) override;
+  void SetResizeMargin(mozilla::LayoutDeviceIntCoord aResizeMargin) override;
   [[nodiscard]] nsresult GetAttention(int32_t aCycleCount) override {
     return NS_OK;
   }

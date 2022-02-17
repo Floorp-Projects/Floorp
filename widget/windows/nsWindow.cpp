@@ -684,6 +684,7 @@ nsWindow::nsWindow(bool aIsChildWindow)
   mCachedHitTestPoint.y = 0;
   mCachedHitTestTime = TimeStamp::Now();
   mCachedHitTestResult = 0;
+  mUseResizeMarginOverrides = false;
   mTransparencyMode = eTransparencyOpaque;
   memset(&mGlassMargins, 0, sizeof mGlassMargins);
   DWORD background = ::GetSysColor(COLOR_BTNFACE);
@@ -2864,33 +2865,34 @@ bool nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow) {
       (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CYCAPTION, dpi) +
                         WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
                   : 0);
+  if (!mUseResizeMarginOverrides) {
+    // mHorResizeMargin is the size of the default NC areas on the
+    // left and right sides of our window.  It is calculated as
+    // the sum of:
+    //      SM_CXFRAME        - The thickness of the sizing border
+    //      SM_CXPADDEDBORDER - The amount of border padding
+    //                          for captioned windows
+    //
+    // If the window does not have a caption, mHorResizeMargin will be equal to
+    // `WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi)`
+    mHorResizeMargin =
+        WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi) +
+        (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
+                    : 0);
 
-  // mHorResizeMargin is the size of the default NC areas on the
-  // left and right sides of our window.  It is calculated as
-  // the sum of:
-  //      SM_CXFRAME        - The thickness of the sizing border
-  //      SM_CXPADDEDBORDER - The amount of border padding
-  //                          for captioned windows
-  //
-  // If the window does not have a caption, mHorResizeMargin will be equal to
-  // `WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi)`
-  mHorResizeMargin =
-      WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi) +
-      (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
-                  : 0);
-
-  // mVertResizeMargin is the size of the default NC area at the
-  // bottom of the window. It is calculated as the sum of:
-  //      SM_CYFRAME        - The thickness of the sizing border
-  //      SM_CXPADDEDBORDER - The amount of border padding
-  //                          for captioned windows.
-  //
-  // If the window does not have a caption, mVertResizeMargin will be equal to
-  // `WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi)`
-  mVertResizeMargin =
-      WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi) +
-      (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
-                  : 0);
+    // mVertResizeMargin is the size of the default NC area at the
+    // bottom of the window. It is calculated as the sum of:
+    //      SM_CYFRAME        - The thickness of the sizing border
+    //      SM_CXPADDEDBORDER - The amount of border padding
+    //                          for captioned windows.
+    //
+    // If the window does not have a caption, mVertResizeMargin will be equal to
+    // `WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi)`
+    mVertResizeMargin =
+        WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi) +
+        (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
+                    : 0);
+  }
 
   if (aSizeMode == nsSizeMode_Minimized) {
     // Use default frame size for minimized windows
@@ -3043,6 +3045,13 @@ nsresult nsWindow::SetNonClientMargins(LayoutDeviceIntMargin& margins) {
   }
 
   return NS_OK;
+}
+
+void nsWindow::SetResizeMargin(mozilla::LayoutDeviceIntCoord aResizeMargin) {
+  mUseResizeMarginOverrides = true;
+  mHorResizeMargin = aResizeMargin;
+  mVertResizeMargin = aResizeMargin;
+  UpdateNonClientMargins();
 }
 
 void nsWindow::InvalidateNonClientRegion() {
@@ -6406,6 +6415,7 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
     right = true;
   }
 
+  bool inResizeRegion = false;
   if (isResizable) {
     if (top) {
       testResult = HTTOP;
@@ -6423,6 +6433,7 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
       if (left) testResult = HTLEFT;
       if (right) testResult = HTRIGHT;
     }
+    inResizeRegion = (testResult != HTCLIENT);
   } else {
     if (top)
       testResult = HTCAPTION;
@@ -6443,19 +6454,24 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
     mCachedHitTestPoint = {pt.x, pt.y};
     mCachedHitTestTime = TimeStamp::Now();
 
-    if (mDraggableRegion.Contains(pt.x, pt.y)) {
-      testResult = HTCAPTION;
-    } else if (mWindowBtnRect[WindowButtonType::Minimize].Contains(pt.x,
-                                                                   pt.y)) {
+    if (mWindowBtnRect[WindowButtonType::Minimize].Contains(pt.x, pt.y)) {
       testResult = HTMINBUTTON;
     } else if (mWindowBtnRect[WindowButtonType::Maximize].Contains(pt.x,
                                                                    pt.y)) {
       testResult = HTMAXBUTTON;
     } else if (mWindowBtnRect[WindowButtonType::Close].Contains(pt.x, pt.y)) {
       testResult = HTCLOSE;
-    } else {
-      testResult = HTCLIENT;
+    } else if (!inResizeRegion) {
+      // If we're in the resize region, avoid overriding that with either a
+      // drag or a client result; resize takes priority over either (but not
+      // over the window controls, which is why we check this after those).
+      if (mDraggableRegion.Contains(pt.x, pt.y)) {
+        testResult = HTCAPTION;
+      } else {
+        testResult = HTCLIENT;
+      }
     }
+
     mCachedHitTestResult = testResult;
   }
 
