@@ -186,7 +186,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
     };
 
     let isBestMatch =
-      suggestion.is_best_match && UrlbarPrefs.get("bestMatchEnabled");
+      suggestion.is_best_match &&
+      UrlbarPrefs.get("bestMatchEnabled") &&
+      UrlbarPrefs.get("suggest.bestmatch");
     if (isBestMatch) {
       // Show the result as a best match. Best match titles don't include the
       // `full_keyword`, and the user's search string is highlighted.

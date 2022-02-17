@@ -126,9 +126,10 @@ const EXPECTED_BEST_MATCH_POSITION_RESULT = {
 
 add_task(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
+  UrlbarPrefs.set("bestMatch.enabled", true);
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
-  UrlbarPrefs.set("bestMatch.enabled", true);
+  UrlbarPrefs.set("suggest.bestmatch", true);
 
   // Disable search suggestions so we don't hit the network.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
@@ -267,11 +268,25 @@ add_task(async function tabToSearch() {
   UrlbarPrefs.clear("tabToSearch.onboard.interactionsLeft");
 });
 
+// When the best match feature gate is disabled, quick suggest results should be
+// shown as the usual non-best match results.
+add_task(async function disabled_featureGate() {
+  UrlbarPrefs.set("bestMatch.enabled", false);
+  await doDisabledTest();
+  UrlbarPrefs.set("bestMatch.enabled", true);
+});
+
+// When the best match suggestions are disabled, quick suggest results should be
+// shown as the usual non-best match results.
+add_task(async function disabled_suggestions() {
+  UrlbarPrefs.set("suggest.bestmatch", false);
+  await doDisabledTest();
+  UrlbarPrefs.set("suggest.bestmatch", true);
+});
+
 // When best match is disabled, quick suggest results should be shown as the
 // usual, non-best match results.
-add_task(async function disabled() {
-  UrlbarPrefs.set("bestMatch.enabled", false);
-
+async function doDisabledTest() {
   // Since best match is disabled, the "best match" suggestion will not actually
   // be a best match here, so modify a copy of it accordingly.
   let expectedResult = { ...EXPECTED_BEST_MATCH_RESULT };
@@ -312,9 +327,7 @@ add_task(async function disabled() {
     true,
     "result.isSuggestedIndexRelativeToGroup"
   );
-
-  UrlbarPrefs.set("bestMatch.enabled", true);
-});
+}
 
 // `suggestion.position` should be ignored when the suggestion is a best match.
 add_task(async function position() {
