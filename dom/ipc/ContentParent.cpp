@@ -6351,7 +6351,7 @@ ContentParent::RecvStorageAccessPermissionGrantedForOrigin(
 
   ContentBlocking::SaveAccessForOriginOnParentProcess(
       aTopLevelWindowId, aParentContext.get_canonical(), aTrackingPrincipal,
-      aTrackingOrigin, aAllowMode)
+      aAllowMode)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [aResolver = std::move(aResolver)](
