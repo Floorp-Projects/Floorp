@@ -155,9 +155,3 @@ add_task(async function testBreakpointInFunctionRelocation() {
   info("Check that the breakpoint has been removed");
   is(dbg.selectors.getBreakpointCount(), 0, "No breakpoint exists");
 });
-
-function assertTextContentOnLine(dbg, line, expectedTextContent) {
-  const lineInfo = getCM(dbg).lineInfo(line - 1);
-  const textContent = lineInfo.text.trim();
-  is(textContent, expectedTextContent, `Expected text content on line ${line}`);
-}
