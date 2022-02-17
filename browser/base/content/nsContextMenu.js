@@ -980,7 +980,7 @@ class nsContextMenu {
       }
       showManage = true;
 
-      // Disable the fill option if the user hasn't unlocked with their master password
+      // Disable the fill option if the user hasn't unlocked with their primary password
       // or if the password field or target field are disabled.
       // XXX: Bug 1529025 to maybe respect signon.rememberSignons.
       let loginFillInfo = this.contentData?.loginFillInfo;

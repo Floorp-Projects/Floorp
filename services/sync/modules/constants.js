@@ -118,7 +118,7 @@ for (let [key, val] of Object.entries({
   ENGINE_BATCH_INTERRUPTED: "error.engine.reason.batch_interrupted",
 
   // Ways that a sync can be disabled (messages only to be printed in debug log)
-  kSyncMasterPasswordLocked: "User elected to leave Master Password locked",
+  kSyncMasterPasswordLocked: "User elected to leave Primary Password locked",
   kSyncWeaveDisabled: "Weave is disabled",
   kSyncNetworkOffline: "Network is offline",
   kSyncBackoffNotMet: "Trying to sync before the server said it's okay",

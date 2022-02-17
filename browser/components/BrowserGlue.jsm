@@ -2828,7 +2828,7 @@ BrowserGlue.prototype = {
   _scheduleBestEffortUserIdleTasks() {
     const idleTasks = [
       () => {
-        // Telemetry for master-password - we do this after a delay as it
+        // Telemetry for primary-password - we do this after a delay as it
         // can cause IO if NSS/PSM has not already initialized.
         let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
           Ci.nsIPK11TokenDB

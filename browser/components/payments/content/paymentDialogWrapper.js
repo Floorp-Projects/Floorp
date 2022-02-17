@@ -209,7 +209,7 @@ var paymentDialogWrapper = {
    * @param {string} cardSecurityCode The associated card security code (CVV/CCV/etc.)
    * @throws If there is an error decrypting
    * @returns {nsIBasicCardResponseData?} returns response data or null (if the
-   *                                      master password dialog was cancelled);
+   *                                      primary password dialog was cancelled);
    */
   async _convertProfileBasicCardToPaymentMethodData(guid, cardSecurityCode) {
     let cardData =
@@ -229,7 +229,7 @@ var paymentDialogWrapper = {
       if (ex.result != Cr.NS_ERROR_ABORT) {
         throw ex;
       }
-      // User canceled master password entry
+      // User canceled primary password entry
       return null;
     }
 
@@ -657,7 +657,7 @@ var paymentDialogWrapper = {
 
     if (!methodData) {
       // TODO (Bug 1429265/Bug 1429205): Handle when a user hits cancel on the
-      // Master Password dialog.
+      // Primary Password dialog.
       Cu.reportError(
         "Bug 1429265/Bug 1429205: User canceled master password entry"
       );

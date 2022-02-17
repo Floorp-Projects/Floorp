@@ -23,7 +23,7 @@ interface nsILoginManagerCrypto : nsISupports {
    * "Secret Decoder Ring" service. It is not recommended for general
    * purpose encryption/decryption.
    *
-   * Can throw if the user cancels entry of their master password.
+   * Can throw if the user cancels entry of their primary password.
    */
   AString encrypt(in AString plainText);
 
@@ -46,7 +46,7 @@ interface nsILoginManagerCrypto : nsISupports {
    *
    * Decrypts the specified string, returning the plaintext value.
    *
-   * Can throw if the user cancels entry of their master password, or if the
+   * Can throw if the user cancels entry of their primary password, or if the
    * cipherText value can not be successfully decrypted (eg, if it was
    * encrypted with some other key).
    */
@@ -58,7 +58,7 @@ interface nsILoginManagerCrypto : nsISupports {
    *
    * Decrypts the specified strings, returning the plaintext values.
    *
-   * Can throw if the user cancels entry of their master password, or if the
+   * Can throw if the user cancels entry of their primary password, or if the
    * cipherText value can not be successfully decrypted (eg, if it was
    * encrypted with some other key).
    */
@@ -67,7 +67,7 @@ interface nsILoginManagerCrypto : nsISupports {
   /**
    * uiBusy
    *
-   * True when a master password prompt is being displayed.
+   * True when a primary password prompt is being displayed.
    */
   readonly attribute boolean uiBusy;
 
@@ -75,7 +75,7 @@ interface nsILoginManagerCrypto : nsISupports {
    * isLoggedIn
    *
    * Current login state of the token used for encryption. If the user is
-   * not logged in, performing a crypto operation will result in a master
+   * not logged in, performing a crypto operation will result in a primary
    * password prompt.
    */
   readonly attribute boolean isLoggedIn;

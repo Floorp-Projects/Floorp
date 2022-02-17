@@ -2253,7 +2253,7 @@ var gPrivacyPane = {
    * the UI for it can't be controlled by the normal preference bindings.
    */
   _initMasterPasswordUI() {
-    var noMP = !LoginHelper.isMasterPasswordSet();
+    var noMP = !LoginHelper.isPrimaryPasswordSet();
 
     var button = document.getElementById("changeMasterPassword");
     button.disabled = noMP;
@@ -2317,13 +2317,13 @@ var gPrivacyPane = {
   },
 
   /**
-   * Displays a dialog in which the master password may be changed.
+   * Displays a dialog in which the primary password may be changed.
    */
   async changeMasterPassword() {
-    // Require OS authentication before the user can set a Master Password.
+    // Require OS authentication before the user can set a Primary Password.
     // OS reauthenticate functionality is not available on Linux yet (bug 1527745)
     if (
-      !LoginHelper.isMasterPasswordSet() &&
+      !LoginHelper.isPrimaryPasswordSet() &&
       OS_AUTH_ENABLED &&
       OSKeyStore.canReauth()
     ) {

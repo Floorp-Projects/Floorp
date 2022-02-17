@@ -3650,7 +3650,7 @@ pref("signon.relatedRealms.enabled", false);
 
 pref("signon.schemeUpgrades",                     true);
 pref("signon.includeOtherSubdomainsInLookup",     true);
-// This temporarily prevents the master password to reprompt for autocomplete.
+// This temporarily prevents the primary password to reprompt for autocomplete.
 pref("signon.masterPasswordReprompt.timeout_ms", 900000); // 15 Minutes
 pref("signon.showAutoCompleteFooter",             false);
 pref("signon.showAutoCompleteOrigins",            true);
