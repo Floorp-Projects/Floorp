@@ -559,6 +559,12 @@ class ScriptLoader final : public ScriptLoaderInterface {
   // Implements https://html.spec.whatwg.org/#execute-the-script-block
   nsresult EvaluateScriptElement(ScriptLoadRequest* aRequest);
 
+  // Handles both offthread and synchronous modules
+  nsresult CompileOrFinishModuleScript(
+      JSContext* aCx, JS::Handle<JSObject*> aGlobal,
+      JS::CompileOptions& aOptions, ModuleLoadRequest* aRequest,
+      JS::MutableHandle<JSObject*> aModule) override;
+
   // Handles both bytecode and text source scripts; populates exec with a
   // compiled script
   nsresult CompileOrDecodeClassicScript(JSContext* aCx,
