@@ -4,7 +4,7 @@
 "use strict";
 
 // Tests exporting a certificate and key as a PKCS#12 blob if the user has a
-// master password set.
+// primary password set.
 
 do_get_profile();
 
@@ -66,7 +66,7 @@ function run_test() {
     MockRegistrar.unregister(promptFactoryCID);
   });
 
-  // Set a master password.
+  // Set a primary password.
   let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
     Ci.nsIPK11TokenDB
   );

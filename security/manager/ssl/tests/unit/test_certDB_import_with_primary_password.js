@@ -3,7 +3,7 @@
 // http://creativecommons.org/publicdomain/zero/1.0/
 "use strict";
 
-// Tests that a CA certificate can still be imported if the user has a master
+// Tests that a CA certificate can still be imported if the user has a primary
 // password set.
 
 do_get_profile();
@@ -106,7 +106,7 @@ function run_test() {
     MockRegistrar.unregister(certificateDialogsCID);
   });
 
-  // Set a master password.
+  // Set a primary password.
   let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
     Ci.nsIPK11TokenDB
   );

@@ -82,8 +82,8 @@ let gGeneratedPasswordsByPrincipalOrigin = new Map();
 let gRecipeManager = null;
 
 /**
- * Tracks the last time the user cancelled the master password prompt,
- *  to avoid spamming master password prompts on autocomplete searches.
+ * Tracks the last time the user cancelled the primary password prompt,
+ *  to avoid spamming primary password prompts on autocomplete searches.
  */
 let gLastMPLoginCancelled = Number.NEGATIVE_INFINITY;
 
@@ -232,7 +232,7 @@ class LoginManagerParent extends JSWindowActorParent {
       // Record the last time the user cancelled the MP prompt
       // to avoid spamming them with MP prompts for autocomplete.
       if (e.result == Cr.NS_ERROR_ABORT) {
-        log("User cancelled master password prompt.");
+        log("User cancelled primary password prompt.");
         gLastMPLoginCancelled = Date.now();
         return [];
       }
@@ -506,7 +506,7 @@ class LoginManagerParent extends JSWindowActorParent {
   async sendLoginDataToChild(
     formOrigin,
     actionOrigin,
-    { guid, showMasterPassword }
+    { guid, showPrimaryPassword }
   ) {
     let recipes = [];
     let formHost;
@@ -518,11 +518,11 @@ class LoginManagerParent extends JSWindowActorParent {
       // Some schemes e.g. chrome aren't supported by URL
     }
 
-    if (!showMasterPassword && !Services.logins.isLoggedIn) {
+    if (!showPrimaryPassword && !Services.logins.isLoggedIn) {
       return { logins: [], recipes };
     }
 
-    // If we're currently displaying a master password prompt, defer
+    // If we're currently displaying a primary password prompt, defer
     // processing this form until the user handles the prompt.
     if (Services.logins.uiBusy) {
       log("deferring sendLoginDataToChild for", formOrigin);
@@ -550,7 +550,7 @@ class LoginManagerParent extends JSWindowActorParent {
           }
 
           let result = self.sendLoginDataToChild(formOrigin, actionOrigin, {
-            showMasterPassword,
+            showPrimaryPassword,
           });
           uiBusyPromiseResolve(result);
         },
@@ -621,11 +621,11 @@ class LoginManagerParent extends JSWindowActorParent {
     // Note: previousResult is a regular object, not an
     // nsIAutoCompleteResult.
 
-    // Cancel if the master password prompt is already showing or we unsuccessfully prompted for it too recently.
+    // Cancel if the primary password prompt is already showing or we unsuccessfully prompted for it too recently.
     if (!Services.logins.isLoggedIn) {
       if (Services.logins.uiBusy) {
         log(
-          "Not searching logins for autocomplete since the master password prompt is already showing"
+          "Not searching logins for autocomplete since the primary password prompt is already showing"
         );
         // Return an empty array to make LoginManagerChild clear the
         // outstanding request it has temporarily saved.
@@ -635,7 +635,7 @@ class LoginManagerParent extends JSWindowActorParent {
       let timeDiff = Date.now() - gLastMPLoginCancelled;
       if (timeDiff < LoginManagerParent._repromptTimeout) {
         log(
-          "Not searching logins for autocomplete since the master password " +
+          "Not searching logins for autocomplete since the primary password " +
             `prompt was last cancelled ${Math.round(
               timeDiff / 1000
             )} seconds ago.`
