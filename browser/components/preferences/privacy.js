@@ -104,6 +104,7 @@ Preferences.addAll([
   },
 
   // Location Bar
+  { id: "browser.urlbar.suggest.bestmatch", type: "bool" },
   { id: "browser.urlbar.suggest.bookmark", type: "bool" },
   { id: "browser.urlbar.suggest.history", type: "bool" },
   { id: "browser.urlbar.suggest.openpage", type: "bool" },
@@ -112,7 +113,6 @@ Preferences.addAll([
   { id: "browser.urlbar.suggest.quicksuggest.nonsponsored", type: "bool" },
   { id: "browser.urlbar.suggest.quicksuggest.sponsored", type: "bool" },
   { id: "browser.urlbar.quicksuggest.dataCollection.enabled", type: "bool" },
-  { id: "browser.urlbar.bestMatch.enabled", type: "bool" },
 
   // History
   { id: "places.history.enabled", type: "bool" },
@@ -1952,20 +1952,11 @@ var gPrivacyPane = {
    * Initializes the address bar section.
    */
   _initAddressBar() {
-    // Update the Firefox Suggest section when Firefox Suggest's enabled status
-    // or scenario changes.
-    this._urlbarPrefObserver = {
-      onPrefChanged: pref => {
-        if (pref == "quicksuggest.enabled") {
-          this._updateFirefoxSuggestSection();
-        }
-      },
-    };
-    UrlbarPrefs.addObserver(this._urlbarPrefObserver);
+    // Update the Firefox Suggest section when its Nimbus config changes.
+    let onNimbus = () => this._updateFirefoxSuggestSection();
+    NimbusFeatures.urlbar.onUpdate(onNimbus);
     window.addEventListener("unload", () => {
-      // UrlbarPrefs holds a weak reference to our observer, which is why we
-      // don't remove it on unload.
-      this._urlbarPrefObserver = null;
+      NimbusFeatures.urlbar.off(onNimbus);
     });
 
     // The Firefox Suggest info box potentially needs updating when any of the
@@ -2011,10 +2002,17 @@ var gPrivacyPane = {
         element.dataset.l10nIdOriginal ??= element.dataset.l10nId;
         element.dataset.l10nId = l10nId;
       }
+
       // Add the extraMargin class to the engine-prefs link.
       document
         .getElementById("openSearchEnginePreferences")
         .classList.add("extraMargin");
+
+      // Show the best match toggle as appropriate.
+      document.getElementById(
+        "firefoxSuggestBestMatchOptionBox"
+      ).hidden = !UrlbarPrefs.get("bestMatchEnabled");
+
       // Show the container.
       this._updateFirefoxSuggestInfoBox();
       container.removeAttribute("hidden");
