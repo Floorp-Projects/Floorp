@@ -314,6 +314,11 @@ void FinalizationRegistryGlobalData::removeRecord(JSObject* record) {
 
 void FinalizationRegistryGlobalData::trace(JSTracer* trc,
                                            GlobalObject* global) {
+  // Disable compartment checks. We trace potentially cross-compartment edges
+  // here that are not in the CCW map. This is only OK because we ensure the
+  // source and destination zones are always swept in the same sweep group.
+  AutoDisableCompartmentCheckTracer adcct;
+
   for (RecordSet::Enum e(recordSet); !e.empty(); e.popFront()) {
     HeapPtrObject& obj = e.mutableFront();
     TraceCrossCompartmentEdge(trc, global, &obj,

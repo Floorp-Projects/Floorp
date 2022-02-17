@@ -231,6 +231,22 @@ struct MOZ_RAII AutoStopVerifyingBarriers {
 };
 #endif /* JS_GC_ZEAL */
 
+class MOZ_RAII AutoDisableCompartmentCheckTracer {
+#ifdef DEBUG
+  JSContext* cx_;
+  bool prev_;
+
+ public:
+  AutoDisableCompartmentCheckTracer()
+      : cx_(TlsContext.get()), prev_(cx_->disableCompartmentCheckTracer) {
+    cx_->disableCompartmentCheckTracer = true;
+  }
+  ~AutoDisableCompartmentCheckTracer() {
+    cx_->disableCompartmentCheckTracer = prev_;
+  }
+#endif
+};
+
 #ifdef JSGC_HASH_TABLE_CHECKS
 void CheckHashTablesAfterMovingGC(JSRuntime* rt);
 void CheckHeapAfterGC(JSRuntime* rt);

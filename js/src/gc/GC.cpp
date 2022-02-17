@@ -2113,6 +2113,7 @@ bool GCRuntime::shouldPreserveJITCode(Realm* realm,
 #ifdef DEBUG
 class CompartmentCheckTracer final : public JS::CallbackTracer {
   void onChild(JS::GCCellPtr thing) override;
+  bool edgeIsInCrossCompartmentMap(JS::GCCellPtr dst);
 
  public:
   explicit CompartmentCheckTracer(JSRuntime* rt)
@@ -2154,16 +2155,19 @@ void CompartmentCheckTracer::onChild(JS::GCCellPtr thing) {
   Compartment* comp =
       MapGCThingTyped(thing, [](auto t) { return t->maybeCompartment(); });
   if (comp && compartment) {
-    MOZ_ASSERT(
-        comp == compartment ||
-        runtime()->mainContextFromOwnThread()->disableCompartmentCheckTracer ||
-        (srcKind == JS::TraceKind::Object &&
-         InCrossCompartmentMap(runtime(), static_cast<JSObject*>(src), thing)));
+    if (!runtime()->mainContextFromOwnThread()->disableCompartmentCheckTracer) {
+      MOZ_ASSERT(comp == compartment || edgeIsInCrossCompartmentMap(thing));
+    }
   } else {
     TenuredCell* tenured = &thing.asCell()->asTenured();
     Zone* thingZone = tenured->zoneFromAnyThread();
     MOZ_ASSERT(thingZone == zone || thingZone->isAtomsZone());
   }
+}
+
+bool CompartmentCheckTracer::edgeIsInCrossCompartmentMap(JS::GCCellPtr dst) {
+  return srcKind == JS::TraceKind::Object &&
+         InCrossCompartmentMap(runtime(), static_cast<JSObject*>(src), dst);
 }
 
 void GCRuntime::checkForCompartmentMismatches() {
