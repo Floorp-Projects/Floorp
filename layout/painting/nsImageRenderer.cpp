@@ -461,9 +461,8 @@ ImgDrawResult nsImageRenderer::Draw(nsPresContext* aPresContext,
     if (tmpDTRect.IsEmpty()) {
       return ImgDrawResult::SUCCESS;
     }
-    RefPtr<DrawTarget> tempDT =
-        gfxPlatform::GetPlatform()->CreateSimilarSoftwareDrawTarget(
-            ctx->GetDrawTarget(), tmpDTRect.Size(), SurfaceFormat::B8G8R8A8);
+    RefPtr<DrawTarget> tempDT = ctx->GetDrawTarget()->CreateSimilarDrawTarget(
+        tmpDTRect.Size(), SurfaceFormat::B8G8R8A8);
     if (!tempDT || !tempDT->IsValid()) {
       gfxDevCrash(LogReason::InvalidContext)
           << "ImageRenderer::Draw problem " << gfx::hexa(tempDT);
