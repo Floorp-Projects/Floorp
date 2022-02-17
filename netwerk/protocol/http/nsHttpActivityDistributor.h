@@ -8,6 +8,7 @@
 #include "nsIHttpActivityObserver.h"
 #include "nsTArray.h"
 #include "nsProxyRelease.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
@@ -28,9 +29,9 @@ class nsHttpActivityDistributor : public nsIHttpActivityDistributor {
 
   ObserverArray mObservers;
   Mutex mLock{"nsHttpActivityDistributor.mLock"};
-  bool mActivated{false};
-  bool mObserveProxyResponse{false};
-  bool mObserveConnection{false};
+  Atomic<bool, Relaxed> mActivated{false};
+  Atomic<bool, Relaxed> mObserveProxyResponse{false};
+  Atomic<bool, Relaxed> mObserveConnection{false};
 };
 
 }  // namespace net
