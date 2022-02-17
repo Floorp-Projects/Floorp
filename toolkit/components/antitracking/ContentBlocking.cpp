@@ -684,6 +684,13 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
   MOZ_ASSERT(aTopLevelWindowId != 0);
   MOZ_ASSERT(aTrackingPrincipal);
 
+  if (!aTrackingPrincipal || aTrackingPrincipal->IsSystemPrincipal() ||
+      aTrackingPrincipal->GetIsNullPrincipal() ||
+      aTrackingPrincipal->GetIsExpandedPrincipal()) {
+    LOG(("aTrackingPrincipal is of invalid principal type"));
+    return ParentAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
   nsAutoCString trackingOrigin;
   nsresult rv = aTrackingPrincipal->GetOriginNoSuffix(trackingOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -720,6 +727,13 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
     LOG(("Invalid input arguments passed"));
     return ParentAccessGrantPromise::CreateAndReject(false, __func__);
   };
+
+  if (aTrackingPrincipal->IsSystemPrincipal() ||
+      aTrackingPrincipal->GetIsNullPrincipal() ||
+      aTrackingPrincipal->GetIsExpandedPrincipal()) {
+    LOG(("aTrackingPrincipal is of invalid principal type"));
+    return ParentAccessGrantPromise::CreateAndReject(false, __func__);
+  }
 
   nsAutoCString trackingOrigin;
   nsresult rv = aTrackingPrincipal->GetOriginNoSuffix(trackingOrigin);
