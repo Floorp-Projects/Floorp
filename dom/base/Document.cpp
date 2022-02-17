@@ -17089,11 +17089,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
   // Only enforce third-party checks when there is a reason to enforce them.
   if (!CookieJarSettings()->GetRejectThirdPartyContexts()) {
     // If the the thrid party origin is equal to the window's, resolve.
-    bool isSameOrigin = false;
-    NodePrincipal()->IsSameOrigin(thirdPartyURI,
-                                  nsContentUtils::IsInPrivateBrowsing(this),
-                                  &isSameOrigin);
-    if (isSameOrigin) {
+    if (NodePrincipal()->IsSameOrigin(thirdPartyURI)) {
       promise->MaybeResolveWithUndefined();
       return promise.forget();
     }
