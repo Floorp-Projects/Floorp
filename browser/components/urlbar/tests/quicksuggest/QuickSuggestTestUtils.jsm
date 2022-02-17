@@ -234,7 +234,7 @@ class QSTestUtils {
       "Result action text"
     );
 
-    let helpButton = details.element.row._elements.get("helpButton");
+    let helpButton = details.element.row._buttons.get("help");
     this.Assert.ok(helpButton, "The help button should be present");
     this.Assert.equal(
       details.result.payload.helpUrl,

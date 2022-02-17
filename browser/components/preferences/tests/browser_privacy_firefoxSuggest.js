@@ -26,6 +26,7 @@ const DATA_COLLECTION_CHECKBOX_ID = "firefoxSuggestDataCollectionToggle";
 const INFO_BOX_ID = "firefoxSuggestInfoBox";
 const INFO_TEXT_ID = "firefoxSuggestInfoText";
 const LEARN_MORE_CLASS = "firefoxSuggestLearnMore";
+const BEST_MATCH_CHECKBOX_ID = "firefoxSuggestBestMatch";
 
 // Maps text element IDs to `{ enabled, disabled }`, where `enabled` is the
 // expected l10n ID when the Firefox Suggest feature is enabled, and `disabled`
@@ -494,6 +495,168 @@ add_task(async function clickLearnMore() {
     gBrowser.selectedTab = prefsTab;
   }
 
+  gBrowser.removeCurrentTab();
+  await SpecialPowers.popPrefEnv();
+});
+
+// Tests the visibility of the best match toggle when the best match feature is
+// initially disabled and is then enabled via preferences.
+add_task(async function bestMatchVisibility_falseToTrue() {
+  await doBestMatchVisibilityTest(false, true);
+});
+
+// Tests the visibility of the best match toggle when the best match feature is
+// initially enabled and is then disabled via preferences.
+add_task(async function bestMatchVisibility_trueToFalse() {
+  await doBestMatchVisibilityTest(true, false);
+});
+
+/**
+ * Runs a test that checks the visibility of the Firefox Suggest best match
+ * toggle. It sets the best match feature pref, opens about:preferences and
+ * checks the visibility of the toggle, sets the feature pref again, and checks
+ * the visibility of the toggle again.
+ *
+ * @param {boolean} initialEnabled
+ *   Whether to enable the best match feature before about:preferences is
+ *   opened.
+ * @param {boolean} newEnabled
+ *   Whether to enable the best match feature after about:preferences is
+ *   opened.
+ */
+async function doBestMatchVisibilityTest(initialEnabled, newEnabled) {
+  info(
+    "Running best match visibility test: " +
+      JSON.stringify({ initialEnabled, newEnabled })
+  );
+
+  // Set the initial enabled status.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.bestMatch.enabled", initialEnabled]],
+  });
+
+  // Open prefs and check the initial visibility.
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let checkbox = doc.getElementById(BEST_MATCH_CHECKBOX_ID);
+  Assert.equal(
+    BrowserTestUtils.is_visible(checkbox),
+    initialEnabled,
+    "The checkbox has the expected initial visibility"
+  );
+
+  // Set the new enabled status.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.bestMatch.enabled", newEnabled]],
+  });
+
+  // Check visibility again.
+  Assert.equal(
+    BrowserTestUtils.is_visible(checkbox),
+    newEnabled,
+    "The checkbox has the expected visibility after setting enabled status"
+  );
+
+  // Clean up.
+  gBrowser.removeCurrentTab();
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
+}
+
+// Tests the visibility of the best match checkbox when the best match feature is
+// enabled via a Nimbus experiment before about:preferences is opened.
+add_task(async function bestMatchVisibility_experiment_beforeOpen() {
+  await QuickSuggestTestUtils.withExperiment({
+    valueOverrides: {
+      bestMatchEnabled: true,
+    },
+    callback: async () => {
+      await openPreferencesViaOpenPreferencesAPI("privacy", {
+        leaveOpen: true,
+      });
+      let doc = gBrowser.selectedBrowser.contentDocument;
+      let checkbox = doc.getElementById(BEST_MATCH_CHECKBOX_ID);
+      Assert.ok(
+        BrowserTestUtils.is_visible(checkbox),
+        "The checkbox is visible"
+      );
+      gBrowser.removeCurrentTab();
+    },
+  });
+});
+
+// Tests the visibility of the best match checkbox when the best match feature is
+// enabled via a Nimbus experiment after about:preferences is opened.
+add_task(async function bestMatchVisibility_experiment_afterOpen() {
+  // Open prefs and check the initial visibility.
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let checkbox = doc.getElementById(BEST_MATCH_CHECKBOX_ID);
+  Assert.ok(
+    BrowserTestUtils.is_hidden(checkbox),
+    "The checkbox is hidden initially"
+  );
+
+  // Install an experiment with best match enabled.
+  await QuickSuggestTestUtils.withExperiment({
+    valueOverrides: {
+      bestMatchEnabled: true,
+    },
+    callback: () => {
+      Assert.ok(
+        BrowserTestUtils.is_visible(checkbox),
+        "The checkbox is visible after installing the experiment"
+      );
+    },
+  });
+
+  Assert.ok(
+    BrowserTestUtils.is_hidden(checkbox),
+    "The checkbox is hidden again after the experiment is uninstalled"
+  );
+
+  gBrowser.removeCurrentTab();
+});
+
+// Check the pref and the checkbox for best match.
+add_task(async function bestMatchToggle() {
+  // Enable the feature so that the toggle appears.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.bestMatch.enabled", true]],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  const doc = gBrowser.selectedBrowser.contentDocument;
+  const checkbox = doc.getElementById(BEST_MATCH_CHECKBOX_ID);
+  checkbox.scrollIntoView();
+
+  info("Check if the checkbox stauts reflects the pref value");
+  for (const isEnabled of [true, false]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.suggest.bestmatch", isEnabled]],
+    });
+    assertCheckboxes({ [BEST_MATCH_CHECKBOX_ID]: isEnabled });
+    await SpecialPowers.popPrefEnv();
+  }
+
+  info("Check if the pref value reflects the checkbox status");
+  for (let i = 0; i < 2; i++) {
+    const initialValue = checkbox.checked;
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#" + BEST_MATCH_CHECKBOX_ID,
+      {},
+      gBrowser.selectedBrowser
+    );
+    Assert.ok(initialValue !== checkbox.checked);
+    Assert.equal(
+      Services.prefs.getBoolPref("browser.urlbar.suggest.bestmatch"),
+      checkbox.checked
+    );
+  }
+
+  // Clean up.
+  Services.prefs.clearUserPref("browser.urlbar.suggest.bestmatch");
   gBrowser.removeCurrentTab();
   await SpecialPowers.popPrefEnv();
 });

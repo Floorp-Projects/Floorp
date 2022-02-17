@@ -72,7 +72,7 @@ add_task(async function tipIsSecondResult() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
-      "urlbarView-help"
+      "urlbarView-button-help"
     ),
     "The selected element should be the tip help button."
   );
@@ -112,7 +112,7 @@ add_task(async function tipIsSecondResult() {
   EventUtils.synthesizeKey("KEY_ArrowUp");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
-      "urlbarView-help"
+      "urlbarView-button-help"
     ),
     "The selected element should be the tip help button."
   );
@@ -173,7 +173,7 @@ add_task(async function tipIsOnlyResult() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
-      "urlbarView-help"
+      "urlbarView-button-help"
     ),
     "The selected element should be the tip help button."
   );
@@ -193,7 +193,7 @@ add_task(async function tipIsOnlyResult() {
   EventUtils.synthesizeKey("KEY_ArrowUp");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
-      "urlbarView-help"
+      "urlbarView-button-help"
     ),
     "The selected element should be the tip help button."
   );
