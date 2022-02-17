@@ -17,7 +17,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
-#include "mozilla/layers/CompositableInProcessManager.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorManagerParent.h"
@@ -86,7 +85,7 @@ RenderThread::~RenderThread() { MOZ_ASSERT(mRenderTexturesDeferred.empty()); }
 RenderThread* RenderThread::Get() { return sRenderThread; }
 
 // static
-void RenderThread::Start(uint32_t aNamespace) {
+void RenderThread::Start() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sRenderThread);
 
@@ -117,7 +116,6 @@ void RenderThread::Start(uint32_t aNamespace) {
 #ifdef XP_WIN
   widget::WinCompositorWindowThread::Start();
 #endif
-  layers::CompositableInProcessManager::Initialize(aNamespace);
   layers::SharedSurfacesParent::Initialize();
 
   RefPtr<Runnable> runnable = WrapRunnable(
@@ -143,7 +141,6 @@ void RenderThread::ShutDown() {
   task.Wait();
 
   layers::SharedSurfacesParent::Shutdown();
-  layers::CompositableInProcessManager::Shutdown();
 
   sRenderThread = nullptr;
 #ifdef XP_WIN

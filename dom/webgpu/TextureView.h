@@ -10,9 +10,12 @@
 #include "ObjectModel.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
 
-namespace mozilla::webgpu {
+namespace mozilla {
+namespace dom {
+class HTMLCanvasElement;
+}  // namespace dom
+namespace webgpu {
 
-class CanvasContext;
 class Texture;
 
 class TextureView final : public ObjectBase, public ChildOf<Texture> {
@@ -21,7 +24,7 @@ class TextureView final : public ObjectBase, public ChildOf<Texture> {
   GPU_DECL_JS_WRAP(TextureView)
 
   TextureView(Texture* const aParent, RawId aId);
-  CanvasContext* GetTargetContext() const;
+  dom::HTMLCanvasElement* GetTargetCanvasElement() const;
 
   const RawId mId;
 
@@ -30,6 +33,7 @@ class TextureView final : public ObjectBase, public ChildOf<Texture> {
   void Cleanup();
 };
 
-}  // namespace mozilla::webgpu
+}  // namespace webgpu
+}  // namespace mozilla
 
 #endif  // GPU_TextureView_H_
