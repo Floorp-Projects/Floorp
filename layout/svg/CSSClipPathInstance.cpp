@@ -35,14 +35,12 @@ void CSSClipPathInstance::ApplyBasicShapeOrPathClip(
 
   CSSClipPathInstance instance(aFrame, clipPathStyle);
 
-  aContext.NewPath();
   RefPtr<Path> path =
       instance.CreateClipPath(aContext.GetDrawTarget(), aTransform);
   if (!path) {
     return;
   }
-  aContext.SetPath(path);
-  aContext.Clip();
+  aContext.Clip(path);
 }
 
 /* static*/
