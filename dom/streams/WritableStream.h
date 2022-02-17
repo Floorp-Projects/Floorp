@@ -194,6 +194,9 @@ MOZ_CAN_RUN_SCRIPT extern already_AddRefed<Promise> WritableStreamClose(
 extern already_AddRefed<Promise> WritableStreamAddWriteRequest(
     WritableStream* aStream, ErrorResult& aRv);
 
+extern already_AddRefed<WritableStreamDefaultWriter>
+AcquireWritableStreamDefaultWriter(WritableStream* aStream, ErrorResult& aRv);
+
 }  // namespace mozilla::dom
 
 #endif  // mozilla_dom_WritableStream_h
