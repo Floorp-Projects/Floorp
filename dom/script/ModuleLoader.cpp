@@ -114,9 +114,9 @@ void ModuleLoader::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
   // Update the module map to indicate that a module is currently being fetched.
 
   MOZ_ASSERT(aRequest->IsLoading());
-  MOZ_ASSERT(
-      !ModuleMapContainsURL(aRequest->mURI, aRequest->GetWebExtGlobal()));
-  ModuleMapKey key(aRequest->mURI, aRequest->GetWebExtGlobal());
+  MOZ_ASSERT(!ModuleMapContainsURL(aRequest->mURI,
+                                   aRequest->mLoadContext->GetWebExtGlobal()));
+  ModuleMapKey key(aRequest->mURI, aRequest->mLoadContext->GetWebExtGlobal());
   mFetchingModules.InsertOrUpdate(
       key, RefPtr<GenericNonExclusivePromise::Private>{});
 }
@@ -134,7 +134,7 @@ void ModuleLoader::SetModuleFetchFinishedAndResumeWaitingRequests(
        "%u)",
        aRequest, aRequest->mModuleScript.get(), unsigned(aResult)));
 
-  ModuleMapKey key(aRequest->mURI, aRequest->GetWebExtGlobal());
+  ModuleMapKey key(aRequest->mURI, aRequest->mLoadContext->GetWebExtGlobal());
   RefPtr<GenericNonExclusivePromise::Private> promise;
   if (!mFetchingModules.Remove(key, getter_AddRefs(promise))) {
     LOG(
