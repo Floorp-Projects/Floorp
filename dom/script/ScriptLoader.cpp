@@ -681,8 +681,8 @@ bool HostImportModuleDynamically(JSContext* aCx,
           xpc::IsWebExtensionContentScriptSandbox(global->GetGlobalJSObject()));
     }
 
-    options = new ScriptFetchOptions(
-        mozilla::CORS_NONE, document->GetReferrerPolicy(), principal, global);
+    options = new ScriptFetchOptions(mozilla::CORS_NONE,
+                                     document->GetReferrerPolicy(), principal);
     baseURL = document->GetDocBaseURI();
   }
 
@@ -860,11 +860,12 @@ nsresult ScriptLoader::StartModuleLoad(ScriptLoadRequest* aRequest) {
   // Check whether the module has been fetched or is currently being fetched,
   // and if so wait for it rather than starting a new fetch.
   ModuleLoadRequest* request = aRequest->AsModuleRequest();
-  if (mModuleLoader->ModuleMapContainsURL(request->mURI,
-                                          aRequest->GetWebExtGlobal())) {
+  if (mModuleLoader->ModuleMapContainsURL(
+          request->mURI, aRequest->GetLoadContext()->GetWebExtGlobal())) {
     LOG(("ScriptLoadRequest (%p): Waiting for module fetch", aRequest));
     mModuleLoader
-        ->WaitForModuleFetch(request->mURI, aRequest->GetWebExtGlobal())
+        ->WaitForModuleFetch(request->mURI,
+                             aRequest->GetLoadContext()->GetWebExtGlobal())
         ->Then(GetMainThreadSerialEventTarget(), __func__, request,
                &ModuleLoadRequest::ModuleLoaded,
                &ModuleLoadRequest::LoadFailed);
@@ -956,7 +957,7 @@ nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
   if (cic && StaticPrefs::dom_script_loader_bytecode_cache_enabled() &&
       // Bug 1436400: no bytecode cache support for modules yet.
       !aRequest->IsModuleRequest()) {
-    MOZ_ASSERT(!aRequest->GetWebExtGlobal(),
+    MOZ_ASSERT(!aRequest->GetLoadContext()->GetWebExtGlobal(),
                "Can not bytecode cache WebExt code");
     if (!aRequest->IsLoadingSource()) {
       // Inform the HTTP cache that we prefer to have information coming from
@@ -1143,8 +1144,8 @@ already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
     const SRIMetadata& aIntegrity, ReferrerPolicy aReferrerPolicy) {
   nsIURI* referrer = mDocument->GetDocumentURIAsReferrer();
   nsCOMPtr<Element> domElement = do_QueryInterface(aElement);
-  ScriptFetchOptions* fetchOptions = new ScriptFetchOptions(
-      aCORSMode, aReferrerPolicy, aTriggeringPrincipal, nullptr);
+  ScriptFetchOptions* fetchOptions =
+      new ScriptFetchOptions(aCORSMode, aReferrerPolicy, aTriggeringPrincipal);
 
   if (aKind == ScriptKind::eClassic) {
     RefPtr<ScriptLoadRequest> aRequest =
@@ -2137,8 +2138,9 @@ void ScriptLoader::FireScriptEvaluated(nsresult aResult,
 
 already_AddRefed<nsIGlobalObject> ScriptLoader::GetGlobalForRequest(
     ScriptLoadRequest* aRequest) {
-  if (aRequest->GetWebExtGlobal()) {
-    nsCOMPtr<nsIGlobalObject> global = aRequest->GetWebExtGlobal();
+  if (aRequest->GetLoadContext()->GetWebExtGlobal()) {
+    nsCOMPtr<nsIGlobalObject> global =
+        aRequest->GetLoadContext()->GetWebExtGlobal();
     return global.forget();
   }
 
@@ -2362,9 +2364,9 @@ nsresult ScriptLoader::EvaluateScriptElement(ScriptLoadRequest* aRequest) {
 
   nsCOMPtr<nsIGlobalObject> globalObject;
   nsCOMPtr<nsIScriptContext> context;
-  if (aRequest->GetWebExtGlobal()) {
+  if (aRequest->GetLoadContext()->GetWebExtGlobal()) {
     // Executing a module from a WebExtension content-script.
-    globalObject = aRequest->GetWebExtGlobal();
+    globalObject = aRequest->GetLoadContext()->GetWebExtGlobal();
   } else {
     // Otherwise we have to ensure that there is a nsIScriptContext.
     nsCOMPtr<nsIScriptGlobalObject> scriptGlobal =
@@ -2530,7 +2532,7 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
   // Create a ClassicScript object and associate it with the JSScript.
   RefPtr<ClassicScript> classicScript =
       new ClassicScript(aRequest->mFetchOptions, aRequest->mBaseURL,
-                        aRequest->mLoadContext->mElement);
+                        aRequest->GetLoadContext()->mElement);
   JS::RootedValue classicScriptValue(cx, JS::PrivateValue(classicScript));
 
   JS::CompileOptions options(cx);
@@ -2689,7 +2691,8 @@ void ScriptLoader::EncodeBytecode() {
   while (!mBytecodeEncodingQueue.isEmpty()) {
     request = mBytecodeEncodingQueue.StealFirst();
     MOZ_ASSERT(!request->IsModuleRequest());
-    MOZ_ASSERT(!request->GetWebExtGlobal(), "Not handling global above");
+    MOZ_ASSERT(!request->GetLoadContext()->GetWebExtGlobal(),
+               "Not handling global above");
     EncodeRequestBytecode(aes.cx(), request);
     request->mScriptBytecode.clearAndFree();
     request->DropBytecodeCacheReferences();
@@ -2791,7 +2794,7 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
     TRACE_FOR_TEST_NONE(request->GetLoadContext()->GetScriptElement(),
                         "scriptloader_bytecode_failed");
     MOZ_ASSERT(!request->IsModuleRequest());
-    MOZ_ASSERT(!request->GetWebExtGlobal());
+    MOZ_ASSERT(!request->GetLoadContext()->GetWebExtGlobal());
 
     if (aes.isSome()) {
       JS::RootedScript script(aes->cx(), request->mScript);

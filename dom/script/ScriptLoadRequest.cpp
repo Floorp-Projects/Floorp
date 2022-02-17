@@ -32,20 +32,17 @@ namespace dom {
 // ScriptFetchOptions
 //////////////////////////////////////////////////////////////
 
-NS_IMPL_CYCLE_COLLECTION(ScriptFetchOptions, mTriggeringPrincipal,
-                         mWebExtGlobal)
+NS_IMPL_CYCLE_COLLECTION(ScriptFetchOptions, mTriggeringPrincipal)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ScriptFetchOptions, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ScriptFetchOptions, Release)
 
 ScriptFetchOptions::ScriptFetchOptions(mozilla::CORSMode aCORSMode,
                                        ReferrerPolicy aReferrerPolicy,
-                                       nsIPrincipal* aTriggeringPrincipal,
-                                       nsIGlobalObject* aWebExtGlobal)
+                                       nsIPrincipal* aTriggeringPrincipal)
     : mCORSMode(aCORSMode),
       mReferrerPolicy(aReferrerPolicy),
-      mTriggeringPrincipal(aTriggeringPrincipal),
-      mWebExtGlobal(aWebExtGlobal) {
+      mTriggeringPrincipal(aTriggeringPrincipal) {
   MOZ_ASSERT(mTriggeringPrincipal);
 }
 
@@ -109,7 +106,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMScriptLoadContext)
 NS_IMPL_CYCLE_COLLECTION_CLASS(DOMScriptLoadContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMScriptLoadContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement, mWebExtGlobal)
   // XXX missing mLoadBlockedDocument ?
   if (Runnable* runnable = tmp->mRunnable.exchange(nullptr)) {
     runnable->Release();
@@ -118,14 +115,16 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMScriptLoadContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMScriptLoadContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoadBlockedDocument, mRequest, mElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoadBlockedDocument, mRequest, mElement,
+                                    mWebExtGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMScriptLoadContext)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 DOMScriptLoadContext::DOMScriptLoadContext(Element* aElement,
-                                           ScriptLoadRequest* aRequest)
+                                           ScriptLoadRequest* aRequest,
+                                           nsIGlobalObject* aWebExtGlobal)
     : mScriptMode(ScriptMode::eBlocking),
       mScriptFromHead(false),
       mIsInline(true),
@@ -140,6 +139,7 @@ DOMScriptLoadContext::DOMScriptLoadContext(Element* aElement,
       mRunnable(nullptr),
       mIsPreload(false),
       mElement(aElement),
+      mWebExtGlobal(aWebExtGlobal),
       mRequest(aRequest),
       mUnreportedPreloadError(NS_OK) {}
 
@@ -280,17 +280,26 @@ void DOMScriptLoadContext::PrioritizeAsPreload() {
 bool DOMScriptLoadContext::IsPreload() const {
   if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
     ModuleLoadRequest* root = mRequest->AsModuleRequest()->GetRootModule();
-    return root->mLoadContext->IsPreload();
+    return root->GetLoadContext()->IsPreload();
   }
 
   MOZ_ASSERT_IF(mIsPreload, !GetScriptElement());
   return mIsPreload;
 }
 
+nsIGlobalObject* DOMScriptLoadContext::GetWebExtGlobal() const {
+  if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
+    ModuleLoadRequest* root = mRequest->AsModuleRequest()->GetRootModule();
+    return root->GetLoadContext()->GetWebExtGlobal();
+  }
+
+  return mWebExtGlobal;
+}
+
 nsIScriptElement* DOMScriptLoadContext::GetScriptElement() const {
   if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
     ModuleLoadRequest* root = mRequest->AsModuleRequest()->GetRootModule();
-    return root->mLoadContext->GetScriptElement();
+    return root->GetLoadContext()->GetScriptElement();
   }
   nsCOMPtr<nsIScriptElement> scriptElement = do_QueryInterface(mElement);
   return scriptElement;
