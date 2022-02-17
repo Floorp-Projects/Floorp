@@ -6,14 +6,15 @@ package org.mozilla.fenix.tabstray.ext
 
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.browser.toolbar.MAX_URI_LENGTH
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
 
 /**
  * Converts a list of [SyncedDeviceTabs] into a list of [SyncedTabsListItem].
  */
-fun List<SyncedDeviceTabs>.toComposeList(): List<SyncedTabsListItem> = asSequence().flatMap { (device, tabs) ->
-    if (FeatureFlags.taskContinuityFeature) {
+fun List<SyncedDeviceTabs>.toComposeList(
+    taskContinuityEnabled: Boolean,
+): List<SyncedTabsListItem> = asSequence().flatMap { (device, tabs) ->
+    if (taskContinuityEnabled) {
         val deviceTabs = if (tabs.isEmpty()) {
             emptyList()
         } else {

@@ -8,6 +8,7 @@ import android.view.View
 import androidx.compose.ui.platform.ComposeView
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.tabstray.NavigationInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.TabsTrayState
@@ -33,7 +34,8 @@ class SyncedTabsPageViewHolder(
             FirefoxTheme {
                 SyncedTabsList(
                     syncedTabs = tabs ?: emptyList(),
-                    onTabClick = navigationInteractor::onSyncedTabClicked
+                    taskContinuityEnabled = composeView.context.settings().enableTaskContinuityEnhancements,
+                    onTabClick = navigationInteractor::onSyncedTabClicked,
                 )
             }
         }

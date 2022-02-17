@@ -1299,4 +1299,13 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false,
         featureFlag = FeatureFlags.contileFeature,
     )
+
+    /**
+     * Indicates if the Task Continuity enhancements are enabled.
+     */
+    var enableTaskContinuityEnhancements by featureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_task_continuity),
+        default = false,
+        featureFlag = FeatureFlags.taskContinuityFeature,
+    )
 }
