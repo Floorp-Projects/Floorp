@@ -454,7 +454,7 @@ downloads:
     description: >
       Sent when a content type is handed off the external helper app service for handling because it cannot
       be displayed directly.
-    bug_numbers: [1736864]
+    bug_numbers: [1736864, 1754636]
     extra_keys:
       reason: The value "attachment", "sniffed" or "other"
       type: The value "pdf", "octetstream" or "other"
@@ -464,7 +464,7 @@ downloads:
       - "firefox"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
-    expiry_version: "100"
+    expiry_version: "103"
 
 form_autocomplete:
   show:
