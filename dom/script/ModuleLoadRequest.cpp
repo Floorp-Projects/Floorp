@@ -56,7 +56,7 @@ VisitedURLSet* ModuleLoadRequest::NewVisitedSetForTopLevelImport(nsIURI* aURI) {
 ModuleLoadRequest::ModuleLoadRequest(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
     const SRIMetadata& aIntegrity, nsIURI* aReferrer,
-    DOMScriptLoadContext* aContext, bool aIsTopLevel, bool aIsDynamicImport,
+    ScriptLoadContext* aContext, bool aIsTopLevel, bool aIsDynamicImport,
     ModuleLoaderBase* aLoader, VisitedURLSet* aVisitedSet,
     ModuleLoadRequest* aRootModule)
     : ScriptLoadRequest(ScriptKind::eModule, aURI, aFetchOptions, aIntegrity,

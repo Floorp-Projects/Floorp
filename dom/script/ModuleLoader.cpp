@@ -257,13 +257,13 @@ bool HostImportModuleDynamically(JSContext* aCx,
   RefPtr<ScriptFetchOptions> options;
   nsIURI* baseURL = nullptr;
   nsCOMPtr<Element> element;
-  RefPtr<DOMScriptLoadContext> context;
+  RefPtr<ScriptLoadContext> context;
   // This will be null in all cases except WebExtensions.
   if (script) {
     options = script->GetFetchOptions();
     baseURL = script->BaseURL();
     nsCOMPtr<Element> element = script->GetScriptElement();
-    context = new DOMScriptLoadContext(element);
+    context = new ScriptLoadContext(element);
   } else {
     // We don't have a referencing script so fall back on using
     // options from the document. This can happen when the user
@@ -288,7 +288,7 @@ bool HostImportModuleDynamically(JSContext* aCx,
     options = new ScriptFetchOptions(mozilla::CORS_NONE,
                                      document->GetReferrerPolicy(), principal);
     baseURL = document->GetDocBaseURI();
-    context = new DOMScriptLoadContext(nullptr, global);
+    context = new ScriptLoadContext(nullptr, global);
   }
 
   RefPtr<ModuleLoadRequest> request = ModuleLoader::CreateDynamicImport(
@@ -473,7 +473,7 @@ nsresult ModuleLoader::CompileOrFinishModuleScript(
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
     const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader,
-    DOMScriptLoadContext* aContext) {
+    ScriptLoadContext* aContext) {
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aFetchOptions, aIntegrity, aReferrer, aContext, true,
       /* is top level */ false, /* is dynamic import */
@@ -486,9 +486,9 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
 /* static */
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {
-  RefPtr<DOMScriptLoadContext> newContext =
-      new DOMScriptLoadContext(aParent->GetLoadContext()->mElement,
-                               aParent->GetLoadContext()->mWebExtGlobal);
+  RefPtr<ScriptLoadContext> newContext =
+      new ScriptLoadContext(aParent->GetLoadContext()->mElement,
+                            aParent->GetLoadContext()->mWebExtGlobal);
   newContext->mIsInline = false;
   // Propagated Parent values. TODO: allow child modules to use root module's
   // script mode.
@@ -506,14 +506,14 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
 /* static */
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-    DOMScriptLoadContext* aContext, ScriptLoader* aLoader,
+    ScriptLoadContext* aContext, ScriptLoader* aLoader,
     JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
     JS::Handle<JSObject*> aPromise) {
   MOZ_ASSERT(aSpecifier);
   MOZ_ASSERT(aPromise);
 
   aContext->mIsInline = false;
-  aContext->mScriptMode = DOMScriptLoadContext::ScriptMode::eAsync;
+  aContext->mScriptMode = ScriptLoadContext::ScriptMode::eAsync;
 
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aFetchOptions, SRIMetadata(), aBaseURL, aContext, true,
