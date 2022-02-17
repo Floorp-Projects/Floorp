@@ -7,6 +7,8 @@
 #include "nsISupports.idl"
 
 %{C++
+#include "Units.h"
+
 /**
  * The display type of nsIScreen belongs to.
  */
@@ -17,7 +19,7 @@ enum class DisplayType: int32_t {
 };
 %}
 
-[scriptable, uuid(826e80c8-d70f-42e2-8aa9-82c05f2a370a)]
+[scriptable, builtinclass, uuid(826e80c8-d70f-42e2-8aa9-82c05f2a370a)]
 interface nsIScreen : nsISupports
 {
   /**
@@ -26,11 +28,39 @@ interface nsIScreen : nsISupports
   void GetRect(out long left, out long top, out long width, out long height);
   void GetAvailRect(out long left, out long top, out long width, out long height);
 
+%{C++
+  mozilla::LayoutDeviceIntRect GetRect() {
+    int32_t left = 0, top = 0, width = 0, height = 0;
+    GetRect(&left, &top, &width, &height);
+    return {left, top, width, height};
+  }
+
+  mozilla::LayoutDeviceIntRect GetAvailRect() {
+    int32_t left = 0, top = 0, width = 0, height = 0;
+    GetAvailRect(&left, &top, &width, &height);
+    return {left, top, width, height};
+  }
+%}
+
   /**
    * And these report in desktop pixels
    */
   void GetRectDisplayPix(out long left, out long top, out long width, out long height);
   void GetAvailRectDisplayPix(out long left, out long top, out long width, out long height);
+
+%{C++
+  mozilla::DesktopIntRect GetRectDisplayPix() {
+    int32_t left = 0, top = 0, width = 0, height = 0;
+    GetRectDisplayPix(&left, &top, &width, &height);
+    return {left, top, width, height};
+  }
+
+  mozilla::DesktopIntRect GetAvailRectDisplayPix() {
+    int32_t left = 0, top = 0, width = 0, height = 0;
+    GetAvailRectDisplayPix(&left, &top, &width, &height);
+    return {left, top, width, height};
+  }
+%}
 
   readonly attribute long pixelDepth;
   readonly attribute long colorDepth;
@@ -50,15 +80,30 @@ interface nsIScreen : nsISupports
    * GTK/X11). Per-monitor DPI is available in Windows 8.1+, GTK/Wayland or
    * macOS.
    */
-  readonly attribute double contentsScaleFactor;
+  [infallible] readonly attribute double contentsScaleFactor;
 
   /**
    * The default number of device pixels per unscaled CSS pixel for this
    * screen. This is probably what contentsScaleFactor originally meant
    * to be, prior to confusion between CSS pixels and desktop pixel units.
    */
-  readonly attribute double defaultCSSScaleFactor;
+  [infallible] readonly attribute double defaultCSSScaleFactor;
 
+%{C++
+
+  mozilla::DesktopToLayoutDeviceScale GetDesktopToLayoutDeviceScale() {
+    return mozilla::DesktopToLayoutDeviceScale(GetContentsScaleFactor());
+  }
+
+  mozilla::CSSToLayoutDeviceScale GetCSSToLayoutDeviceScale() {
+    return mozilla::CSSToLayoutDeviceScale(GetDefaultCSSScaleFactor());
+  }
+
+  mozilla::CSSToDesktopScale GetCSSToDesktopScale() {
+    return GetCSSToLayoutDeviceScale() / GetDesktopToLayoutDeviceScale();
+  }
+
+%}
   /**
    * The DPI of the screen.
    */
