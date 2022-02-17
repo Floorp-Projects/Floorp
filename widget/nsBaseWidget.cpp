@@ -1509,6 +1509,8 @@ nsresult nsBaseWidget::SetNonClientMargins(LayoutDeviceIntMargin& margins) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void nsBaseWidget::SetResizeMargin(LayoutDeviceIntCoord aResizeMargin) {}
+
 uint32_t nsBaseWidget::GetMaxTouchPoints() const { return 0; }
 
 bool nsBaseWidget::HasPendingInputEvent() { return false; }

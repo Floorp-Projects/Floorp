@@ -4140,6 +4140,26 @@ nsDOMWindowUtils::SetChromeMargin(int32_t aTop, int32_t aRight, int32_t aBottom,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SetResizeMargin(int32_t aResizeMargin) {
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
+  if (window) {
+    nsCOMPtr<nsIBaseWindow> baseWindow =
+        do_QueryInterface(window->GetDocShell());
+    if (baseWindow) {
+      nsCOMPtr<nsIWidget> widget;
+      baseWindow->GetMainWidget(getter_AddRefs(widget));
+      if (widget) {
+        CSSToLayoutDeviceScale scaleFactor = widget->GetDefaultScale();
+        widget->SetResizeMargin(
+            (CSSCoord(float(aResizeMargin)) * scaleFactor).Rounded());
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetFrameUniformityTestData(
     JSContext* aContext, JS::MutableHandleValue aOutFrameUniformity) {
   nsIWidget* widget = GetWidget();

@@ -955,6 +955,11 @@ class nsIWidget : public nsISupports {
   virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) = 0;
 
   /**
+   * Sets the region around the edges of the window that can be dragged to
+   * resize the window. All four sides of the window will get the same margin.
+   */
+  virtual void SetResizeMargin(mozilla::LayoutDeviceIntCoord aResizeMargin) = 0;
+  /**
    * Get the client offset from the window origin.
    *
    * @return the x and y of the offset.
