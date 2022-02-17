@@ -655,7 +655,9 @@
          participating in session restore. autocomplete="off" is ignored on the
          inputs themselves. -->
     <html:form id="firefoxSuggestForm" autocomplete="off" hidden="true"/>
-    <vbox class="firefoxSuggestOptionBox">
+    <vbox id="firefoxSuggestBestMatchOptionBox"
+          class="firefoxSuggestOptionBox"
+          hidden="true">
       <hbox align="center">
         <label id="firefoxSuggestBestMatchLabel"
                flex="1"
@@ -663,7 +665,7 @@
         <html:input id="firefoxSuggestBestMatchToggle"
                     type="checkbox"
                     class="toggle-button firefoxSuggestToggle"
-                    preference="browser.urlbar.bestMatch.enabled"
+                    preference="browser.urlbar.suggest.bestmatch"
                     form="firefoxSuggestForm"
                     aria-labelledby="firefoxSuggestBestMatchLabel" />
       </hbox>
