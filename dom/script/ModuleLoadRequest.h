@@ -42,9 +42,9 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   ModuleLoadRequest(nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
                     const SRIMetadata& aIntegrity, nsIURI* aReferrer,
-                    bool aIsTopLevel, bool aIsDynamicImport,
-                    ModuleLoader* aLoader, VisitedURLSet* aVisitedSet,
-                    ModuleLoadRequest* aRootModule);
+                    DOMScriptLoadContext* aContext, bool aIsTopLevel,
+                    bool aIsDynamicImport, ModuleLoader* aLoader,
+                    VisitedURLSet* aVisitedSet, ModuleLoadRequest* aRootModule);
 
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -53,8 +53,9 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   // Create a top-level module load request.
   static already_AddRefed<ModuleLoadRequest> CreateTopLevel(
-      nsIURI* aURI, ScriptFetchOptions* aFetchOptions, Element* aElement,
-      const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader);
+      nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
+      const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader,
+      DOMScriptLoadContext* aContext);
 
   // Create a module load request for a static module import.
   static already_AddRefed<ModuleLoadRequest> CreateStaticImport(
@@ -63,7 +64,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   // Create a module load request for dynamic module import.
   static already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
       nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-      Element* aElement, ScriptLoader* aLoader,
+      DOMScriptLoadContext* aContext, ScriptLoader* aLoader,
       JS::Handle<JS::Value> aReferencingPrivate,
       JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise);
 
