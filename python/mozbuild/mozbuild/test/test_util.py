@@ -757,11 +757,11 @@ class TestTypedNamedTuple(unittest.TestCase):
         FooBar = TypedNamedTuple("FooBar", [("foo", six.text_type), ("bar", int)])
 
         t = FooBar(foo="foo", bar=2)
-        self.assertEquals(type(t), FooBar)
-        self.assertEquals(t.foo, "foo")
-        self.assertEquals(t.bar, 2)
-        self.assertEquals(t[0], "foo")
-        self.assertEquals(t[1], 2)
+        self.assertEqual(type(t), FooBar)
+        self.assertEqual(t.foo, "foo")
+        self.assertEqual(t.bar, 2)
+        self.assertEqual(t[0], "foo")
+        self.assertEqual(t[1], 2)
 
         FooBar("foo", 2)
 
@@ -774,7 +774,7 @@ class TestTypedNamedTuple(unittest.TestCase):
         # arguments.
         t1 = ("foo", 3)
         t2 = FooBar(t1)
-        self.assertEquals(type(t2), FooBar)
+        self.assertEqual(type(t2), FooBar)
         self.assertEqual(FooBar(t1), FooBar("foo", 3))
 
 
@@ -841,17 +841,17 @@ class TestEnumString(unittest.TestCase):
         CompilerType = EnumString.subclass("gcc", "clang", "clang-cl")
 
         type = CompilerType("gcc")
-        self.assertEquals(type, "gcc")
-        self.assertNotEquals(type, "clang")
-        self.assertNotEquals(type, "clang-cl")
+        self.assertEqual(type, "gcc")
+        self.assertNotEqual(type, "clang")
+        self.assertNotEqual(type, "clang-cl")
         self.assertIn(type, ("gcc", "clang-cl"))
         self.assertNotIn(type, ("clang", "clang-cl"))
 
         with self.assertRaises(EnumStringComparisonError):
-            self.assertEquals(type, "foo")
+            self.assertEqual(type, "foo")
 
         with self.assertRaises(EnumStringComparisonError):
-            self.assertNotEquals(type, "foo")
+            self.assertNotEqual(type, "foo")
 
         with self.assertRaises(EnumStringComparisonError):
             self.assertIn(type, ("foo", "gcc"))
