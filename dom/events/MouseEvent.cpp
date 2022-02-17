@@ -8,6 +8,7 @@
 #include "mozilla/MouseEvents.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
+#include "nsIScreenManager.h"
 #include "prtime.h"
 
 namespace mozilla::dom {
@@ -252,6 +253,27 @@ int32_t MouseEvent::ScreenY(CallerType aCallerType) {
   }
 
   return Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint).y;
+}
+
+already_AddRefed<nsIScreen> MouseEvent::GetScreen() {
+  if (mEvent->mFlags.mIsPositionless) {
+    return nullptr;
+  }
+  if (!mPresContext) {
+    return nullptr;
+  }
+  nsCOMPtr<nsIScreenManager> screenMgr =
+      do_GetService("@mozilla.org/gfx/screenmanager;1");
+  if (!screenMgr) {
+    return nullptr;
+  }
+  const CSSIntPoint point =
+      Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint);
+  DesktopPoint desktopPoint =
+      point * mPresContext->CSSToDevPixelScale() /
+      mPresContext->DeviceContext()->GetDesktopToDeviceScale();
+  return screenMgr->ScreenForRect(DesktopIntRect(
+      DesktopIntPoint::Round(desktopPoint), DesktopIntSize(1, 1)));
 }
 
 int32_t MouseEvent::PageX() const {
