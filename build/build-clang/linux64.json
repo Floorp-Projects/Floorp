@@ -3,5 +3,5 @@
     "cc": "/usr/lib/llvm-11/bin/clang",
     "cxx": "/usr/lib/llvm-11/bin/clang++",
     "as": "/usr/lib/llvm-11/bin/clang",
-    "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt"
+    "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt-wasm32-wasi"
 }

@@ -2,8 +2,9 @@
 
 set -e -x
 
-target=$1
-shift
+artifact=$(basename $TOOLCHAIN_ARTIFACT)
+dir=${artifact%.tar.*}
+target=${dir#compiler-rt-}
 
 clang=$MOZ_FETCHES_DIR/clang/bin/clang
 
@@ -51,7 +52,6 @@ esac
 
 case "$target" in
 *-apple-darwin)
-  libdir=lib/darwin
   EXTRA_CMAKE_FLAGS="
     -DCMAKE_LINKER=$MOZ_FETCHES_DIR/cctools/bin/$target-ld
     -DCMAKE_LIPO=$MOZ_FETCHES_DIR/cctools/bin/lipo
@@ -71,7 +71,6 @@ case "$target" in
   PATH="$PWD:$MOZ_FETCHES_DIR/cctools/bin:$PATH"
   ;;
 *-linux-android)
-  libdir=lib/linux
   cflags="
     --gcc-toolchain=$MOZ_FETCHES_DIR/android-ndk/toolchains/$ndk_prefix-4.9/prebuilt/linux-x86_64
     -isystem $MOZ_FETCHES_DIR/android-ndk/sysroot/usr/include/$ndk_target
@@ -101,7 +100,6 @@ case "$target" in
   "
   ;;
 aarch64-unknown-linux-gnu)
-  libdir=lib/linux
   EXTRA_CMAKE_FLAGS="
     -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/sysroot-aarch64-linux-gnu
     -DCMAKE_LINKER=$MOZ_FETCHES_DIR/clang/bin/ld.lld
@@ -177,16 +175,22 @@ eval cmake \
   -DCMAKE_AR=$MOZ_FETCHES_DIR/clang/bin/llvm-${ar:-ar} \
   -DCMAKE_RANLIB=$MOZ_FETCHES_DIR/clang/bin/llvm-ranlib \
   -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=${PWD}/${dir} \
   -DLLVM_ENABLE_ASSERTIONS=OFF \
   -DLLVM_CONFIG_PATH=$MOZ_FETCHES_DIR/clang/bin/llvm-config \
   -DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON \
   $EXTRA_CMAKE_FLAGS
 
-ninja -v
+ninja install -v
 
-cd ..
+# ninja install doesn't copy the PDBs
+case "$target" in
+*-pc-windows-msvc)
+  cp lib/windows/*pdb $dir/lib/windows/
+  ;;
+esac
 
-tar caf compiler-rt.tar.zst compiler-rt/$libdir
+tar caf "$artifact" "$dir"
 
 mkdir -p "$UPLOAD_DIR"
-mv "compiler-rt.tar.zst" "$UPLOAD_DIR"
+mv "$artifact" "$UPLOAD_DIR"
