@@ -7,8 +7,10 @@ package org.mozilla.fenix.home.recentbookmarks.view
 import android.view.View
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.compose.ComposeViewHolder
@@ -37,7 +39,13 @@ class RecentBookmarksViewHolder(
 
         RecentBookmarks(
             bookmarks = recentBookmarks.value ?: emptyList(),
-            onRecentBookmarkClick = interactor::onRecentBookmarkClicked
+            onRecentBookmarkClick = interactor::onRecentBookmarkClicked,
+            menuItems = listOf(
+                RecentBookmarksMenuItem(
+                    stringResource(id = R.string.recently_saved_menu_item_remove),
+                    onClick = { bookmark -> interactor.onRecentBookmarkRemoved(bookmark) }
+                )
+            )
         )
     }
 }

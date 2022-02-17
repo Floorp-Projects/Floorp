@@ -7,6 +7,7 @@ package org.mozilla.fenix.ext
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.home.HomeFragmentState
+import org.mozilla.fenix.home.blocklist.BlocklistHandler
 import org.mozilla.fenix.home.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.recenttabs.RecentTab.SearchGroup
@@ -100,3 +101,17 @@ internal fun getFilteredStoriesCount(
  */
 internal val HomeFragmentState.recentSearchGroup: SearchGroup?
     get() = recentTabs.find { it is SearchGroup } as SearchGroup?
+
+/**
+ * Filter a [HomeFragmentState] by the blocklist.
+ *
+ * @param blocklistHandler The handler that will filter the state.
+ */
+fun HomeFragmentState.filterState(blocklistHandler: BlocklistHandler): HomeFragmentState =
+    with(blocklistHandler) {
+        copy(
+            recentBookmarks = recentBookmarks.filteredByBlocklist(),
+            recentTabs = recentTabs.filteredByBlocklist(),
+            recentHistory = recentHistory.filteredByBlocklist()
+        )
+    }

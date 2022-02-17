@@ -27,6 +27,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragmentDirections
+import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.recentbookmarks.controller.DefaultRecentBookmarksController
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -38,6 +39,7 @@ class DefaultRecentBookmarksControllerTest {
     private val activity: HomeActivity = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxUnitFun = true)
     private val metrics: MetricController = mockk(relaxed = true)
+    private val homeStore: HomeFragmentStore = mockk()
 
     private lateinit var controller: DefaultRecentBookmarksController
 
@@ -54,8 +56,9 @@ class DefaultRecentBookmarksControllerTest {
         controller = spyk(
             DefaultRecentBookmarksController(
                 activity = activity,
-                navController = navController
-            )
+                navController = navController,
+                homeStore = mockk()
+            ),
         )
     }
 

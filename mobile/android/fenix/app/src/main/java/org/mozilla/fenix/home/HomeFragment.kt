@@ -97,6 +97,7 @@ import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.datastore.pocketStoriesSelectedCategoriesDataStore
 import org.mozilla.fenix.ext.asRecentTabs
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.filterState
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
@@ -104,6 +105,8 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.sort
+import org.mozilla.fenix.home.blocklist.BlocklistHandler
+import org.mozilla.fenix.home.blocklist.BlocklistMiddleware
 import org.mozilla.fenix.home.mozonline.showPrivacyPopWindow
 import org.mozilla.fenix.home.pocket.DefaultPocketStoriesController
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
@@ -234,9 +237,10 @@ class HomeFragment : Fragment() {
             ::dispatchModeChanges
         )
 
+        val blocklistHandler = BlocklistHandler(components.settings)
         homeFragmentStore = StoreProvider.get(this) {
             HomeFragmentStore(
-                HomeFragmentState(
+                initialState = HomeFragmentState(
                     collections = components.core.tabCollectionStorage.cachedTabCollections,
                     expandedCollections = emptySet(),
                     mode = currentMode.getCurrentMode(),
@@ -260,8 +264,9 @@ class HomeFragment : Fragment() {
                     //  to some state.
                     recentTabs = getRecentTabs(components),
                     recentHistory = emptyList()
-                ),
-                listOf(
+                ).run { filterState(blocklistHandler) },
+                middlewares = listOf(
+                    BlocklistMiddleware(blocklistHandler),
                     PocketUpdatesMiddleware(
                         lifecycleScope,
                         requireComponents.core.pocketStoriesService,
@@ -358,11 +363,13 @@ class HomeFragment : Fragment() {
                 selectTabUseCase = components.useCases.tabsUseCases.selectTab,
                 navController = findNavController(),
                 metrics = requireComponents.analytics.metrics,
-                store = components.core.store
+                store = components.core.store,
+                homeStore = homeFragmentStore,
             ),
             recentBookmarksController = DefaultRecentBookmarksController(
                 activity = activity,
-                navController = findNavController()
+                navController = findNavController(),
+                homeStore = homeFragmentStore,
             ),
             recentVisitsController = DefaultRecentVisitsController(
                 navController = findNavController(),

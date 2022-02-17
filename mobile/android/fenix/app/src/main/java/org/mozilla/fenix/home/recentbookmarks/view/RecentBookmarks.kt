@@ -4,15 +4,17 @@
 
 package org.mozilla.fenix.home.recentbookmarks.view
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -21,8 +23,14 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,12 +52,14 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * A list of recent bookmarks.
  *
  * @param bookmarks List of [RecentBookmark]s to display.
+ * @param menuItems List of [RecentBookmarksMenuItem] shown when long clicking a [RecentBookmarkItem]
  * @param onRecentBookmarkClick Invoked when the user clicks on a recent bookmark.
  */
 @Composable
 fun RecentBookmarks(
     bookmarks: List<RecentBookmark>,
-    onRecentBookmarkClick: (RecentBookmark) -> Unit = {}
+    menuItems: List<RecentBookmarksMenuItem>,
+    onRecentBookmarkClick: (RecentBookmark) -> Unit = {},
 ) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
@@ -58,7 +68,8 @@ fun RecentBookmarks(
         items(bookmarks) { bookmark ->
             RecentBookmarkItem(
                 bookmark = bookmark,
-                onRecentBookmarkClick = onRecentBookmarkClick
+                menuItems = menuItems,
+                onRecentBookmarkClick = onRecentBookmarkClick,
             )
         }
     }
@@ -70,15 +81,23 @@ fun RecentBookmarks(
  * @param bookmark The [RecentBookmark] to display.
  * @param onRecentBookmarkClick Invoked when the user clicks on the recent bookmark item.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun RecentBookmarkItem(
     bookmark: RecentBookmark,
+    menuItems: List<RecentBookmarksMenuItem>,
     onRecentBookmarkClick: (RecentBookmark) -> Unit = {}
 ) {
+    var isMenuExpanded by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .width(156.dp)
-            .clickable { onRecentBookmarkClick(bookmark) }
+            .combinedClickable(
+                enabled = true,
+                onClick = { onRecentBookmarkClick(bookmark) },
+                onLongClick = { isMenuExpanded = true }
+            )
     ) {
         Card(
             modifier = Modifier
@@ -97,6 +116,13 @@ private fun RecentBookmarkItem(
             fontSize = 12.sp,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1
+        )
+
+        RecentBookmarksMenu(
+            showMenu = isMenuExpanded,
+            menuItems = menuItems,
+            recentBookmark = bookmark,
+            onDismissRequest = { isMenuExpanded = false }
         )
     }
 }
@@ -146,6 +172,49 @@ private fun RecentBookmarkImage(bookmark: RecentBookmark) {
     }
 }
 
+/**
+ * Menu shown for a [RecentBookmark].
+ *
+ * @see [DropdownMenu]
+ *
+ * @param showMenu Whether this is currently open and visible to the user.
+ * @param menuItems List of options shown.
+ * @param recentBookmark The [RecentBookmark] for which this menu is shown.
+ * @param onDismissRequest Called when the user chooses a menu option or requests to dismiss the menu.
+ */
+@Composable
+private fun RecentBookmarksMenu(
+    showMenu: Boolean,
+    menuItems: List<RecentBookmarksMenuItem>,
+    recentBookmark: RecentBookmark,
+    onDismissRequest: () -> Unit,
+) {
+    DropdownMenu(
+        expanded = showMenu,
+        onDismissRequest = { onDismissRequest() },
+        modifier = Modifier
+            .background(color = FirefoxTheme.colors.layer2)
+    ) {
+        for (item in menuItems) {
+            DropdownMenuItem(
+                onClick = {
+                    onDismissRequest()
+                    item.onClick(recentBookmark)
+                },
+            ) {
+                Text(
+                    text = item.title,
+                    color = FirefoxTheme.colors.textPrimary,
+                    maxLines = 1,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .align(Alignment.CenterVertically)
+                )
+            }
+        }
+    }
+}
+
 @Composable
 @Preview
 private fun RecentBookmarksPreview() {
@@ -172,7 +241,8 @@ private fun RecentBookmarksPreview() {
                     url = "https://www.example.com",
                     previewImageUrl = null
                 )
-            )
+            ),
+            menuItems = listOf()
         )
     }
 }

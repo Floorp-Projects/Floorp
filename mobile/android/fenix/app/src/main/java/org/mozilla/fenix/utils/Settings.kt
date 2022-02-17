@@ -25,6 +25,7 @@ import mozilla.components.support.ktx.android.content.floatPreference
 import mozilla.components.support.ktx.android.content.intPreference
 import mozilla.components.support.ktx.android.content.longPreference
 import mozilla.components.support.ktx.android.content.stringPreference
+import mozilla.components.support.ktx.android.content.stringSetPreference
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
@@ -1307,5 +1308,13 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         key = appContext.getPreferenceKey(R.string.pref_key_enable_task_continuity),
         default = false,
         featureFlag = FeatureFlags.taskContinuityFeature,
+    )
+
+    /**
+     * Blocklist used to filter items from the home screen that have previously been removed.
+     */
+    var homescreenBlocklist by stringSetPreference(
+        appContext.getPreferenceKey(R.string.pref_key_home_blocklist),
+        default = setOf()
     )
 }

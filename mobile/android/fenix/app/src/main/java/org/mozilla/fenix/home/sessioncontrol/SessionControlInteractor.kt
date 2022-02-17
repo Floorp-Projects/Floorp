@@ -17,6 +17,7 @@ import org.mozilla.fenix.home.pocket.PocketStoriesInteractor
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
+import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
@@ -393,12 +394,20 @@ class SessionControlInteractor(
         recentTabController.handleRecentTabShowAllClicked()
     }
 
+    override fun onRemoveRecentTab(tab: RecentTab.Tab) {
+        recentTabController.handleRecentTabRemoved(tab)
+    }
+
     override fun onRecentBookmarkClicked(bookmark: RecentBookmark) {
         recentBookmarksController.handleBookmarkClicked(bookmark)
     }
 
     override fun onShowAllBookmarksClicked() {
         recentBookmarksController.handleShowAllBookmarksClicked()
+    }
+
+    override fun onRecentBookmarkRemoved(bookmark: RecentBookmark) {
+        recentBookmarksController.handleBookmarkRemoved(bookmark)
     }
 
     override fun onHistoryShowAllClicked() {

@@ -15,7 +15,9 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
+import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
 
@@ -34,6 +36,11 @@ interface RecentBookmarksController {
      * @see [RecentBookmarksInteractor.onShowAllBookmarksClicked]
      */
     fun handleShowAllBookmarksClicked()
+
+    /**
+     * @see [RecentBookmarksInteractor.onRecentBookmarkRemoved]
+     */
+    fun handleBookmarkRemoved(bookmark: RecentBookmark)
 }
 
 /**
@@ -41,7 +48,8 @@ interface RecentBookmarksController {
  */
 class DefaultRecentBookmarksController(
     private val activity: HomeActivity,
-    private val navController: NavController
+    private val navController: NavController,
+    private val homeStore: HomeFragmentStore,
 ) : RecentBookmarksController {
 
     override fun handleBookmarkClicked(bookmark: RecentBookmark) {
@@ -61,6 +69,10 @@ class DefaultRecentBookmarksController(
         navController.navigate(
             HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
         )
+    }
+
+    override fun handleBookmarkRemoved(bookmark: RecentBookmark) {
+        homeStore.dispatch(HomeFragmentAction.RemoveRecentBookmark(bookmark))
     }
 
     @VisibleForTesting(otherwise = PRIVATE)

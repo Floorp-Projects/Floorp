@@ -25,4 +25,12 @@ interface RecentBookmarksInteractor {
      * recently saved bookmarks on the home screen.
      */
     fun onShowAllBookmarksClicked()
+
+    /**
+     * Removes a bookmark from the recent bookmark list. Called when a user clicks the "Remove"
+     * button for recently saved bookmarks on the home screen.
+     *
+     * @param bookmark The bookmark that has been removed.
+     */
+    fun onRecentBookmarkRemoved(bookmark: RecentBookmark)
 }

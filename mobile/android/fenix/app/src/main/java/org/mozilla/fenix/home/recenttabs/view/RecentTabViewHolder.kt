@@ -7,6 +7,7 @@ package org.mozilla.fenix.home.recenttabs.view
 import android.view.View
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
@@ -45,7 +46,13 @@ class RecentTabViewHolder(
         RecentTabs(
             recentTabs = recentTabs.value ?: emptyList(),
             onRecentTabClick = { interactor.onRecentTabClicked(it) },
-            onRecentSearchGroupClicked = { interactor.onRecentSearchGroupClicked(it) }
+            onRecentSearchGroupClicked = { interactor.onRecentSearchGroupClicked(it) },
+            menuItems = listOf(
+                RecentTabMenuItem(
+                    title = stringResource(id = R.string.recent_tab_menu_item_remove),
+                    onClick = { tab -> interactor.onRemoveRecentTab(tab) }
+                )
+            )
         )
     }
 }
