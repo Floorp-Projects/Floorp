@@ -26,11 +26,6 @@ class LoadURIDelegateChild extends GeckoViewActorChild {
     debug`loadURI: uri=${aUri && aUri.spec}
                     where=${aWhere} flags=0x${aFlags.toString(16)}
                     tp=${aTriggeringPrincipal && aTriggeringPrincipal.spec}`;
-    if (!this.isContentWindow) {
-      debug`loadURI: not a content window`;
-      // This is an internal Gecko window, nothing to do
-      return false;
-    }
 
     // Ignore any load going to the extension process
     // TODO: Remove workaround after Bug 1619798
@@ -62,12 +57,6 @@ class LoadURIDelegateChild extends GeckoViewActorChild {
     debug`handleLoadError: uri=${aUri && aUri.spec}
                              displaySpec=${aUri && aUri.displaySpec}
                              error=${aError}`;
-    if (!this.isContentWindow) {
-      // This is an internal Gecko window, nothing to do
-      debug`handleLoadError: not a content window`;
-      return null;
-    }
-
     if (aUri && LoadURIDelegate.isSafeBrowsingError(aError)) {
       const message = {
         type: "GeckoView:ContentBlocked",

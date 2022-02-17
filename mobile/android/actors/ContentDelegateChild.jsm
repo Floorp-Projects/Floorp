@@ -44,10 +44,6 @@ class ContentDelegateChild extends GeckoViewActorChild {
   // eslint-disable-next-line complexity
   handleEvent(aEvent) {
     debug`handleEvent: ${aEvent.type}`;
-    if (!this.isContentWindow) {
-      // This not a GeckoView-controlled window
-      return;
-    }
 
     switch (aEvent.type) {
       case "contextmenu": {
