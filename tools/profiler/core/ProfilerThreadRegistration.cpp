@@ -9,7 +9,12 @@
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ProfilerThreadRegistry.h"
 #include "nsString.h"
-#include "platform.h"
+#ifdef MOZ_GECKO_PROFILER
+#  include "platform.h"
+#else MOZ_GECKO_PROFILER
+#  define profiler_mark_thread_awake()
+#  define profiler_mark_thread_asleep()
+#endif
 
 namespace mozilla::profiler {
 
