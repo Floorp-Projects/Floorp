@@ -880,6 +880,8 @@ bool ContentCacheInParent::HandleQueryContentEvent(
               ("0x%p HandleQueryContentEvent(aEvent={ "
                "mMessage=eQueryEditorRect }, aWidget=0x%p)",
                this, aWidget));
+      // XXX This query should fail if no editable elmenet has focus.  Or,
+      //     perhaps, should return rect of the window instead.
       aEvent.EmplaceReply();
       aEvent.mReply->mFocusedWidget = aWidget;
       aEvent.mReply->mRect = mEditorRect;
@@ -968,8 +970,13 @@ bool ContentCacheInParent::GetTextRect(uint32_t aOffset,
 
   if (mTextRectArray.isNothing() || !mTextRectArray->HasRects()) {
     // If there are no rects in mTextRectArray, we should refer the start of
-    // the selection because IME must query a char rect around it if there is
-    // no composition.
+    // the selection if there is because IME must query a char rect around it if
+    // there is no composition.
+    if (mSelection.isNothing()) {
+      // Unfortunately, there is no data about text rect...
+      aTextRect.SetEmpty();
+      return false;
+    }
     aTextRect = mSelection->StartCharRect();
     return !aTextRect.IsEmpty();
   }
