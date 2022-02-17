@@ -650,29 +650,14 @@
             preference="browser.urlbar.suggest.topsites"/>
   <checkbox id="enginesSuggestion" data-l10n-id="addressbar-locbar-engines-option"
             preference="browser.urlbar.suggest.engines"/>
+  <checkbox id="firefoxSuggestBestMatch"
+            data-l10n-id="addressbar-firefox-suggest-best-match-option"
+            preference="browser.urlbar.suggest.bestmatch"/>
   <vbox id="firefoxSuggestContainer" hidden="true">
     <!-- This form[autocomplete="off"] is necessary to prevent the inputs from
          participating in session restore. autocomplete="off" is ignored on the
          inputs themselves. -->
     <html:form id="firefoxSuggestForm" autocomplete="off" hidden="true"/>
-    <vbox id="firefoxSuggestBestMatchOptionBox"
-          class="firefoxSuggestOptionBox"
-          hidden="true">
-      <hbox align="center">
-        <label id="firefoxSuggestBestMatchLabel"
-               flex="1"
-               data-l10n-id="addressbar-firefox-suggest-best-match"/>
-        <html:input id="firefoxSuggestBestMatchToggle"
-                    type="checkbox"
-                    class="toggle-button firefoxSuggestToggle"
-                    preference="browser.urlbar.suggest.bestmatch"
-                    form="firefoxSuggestForm"
-                    aria-labelledby="firefoxSuggestBestMatchLabel" />
-      </hbox>
-      <description id="firefoxSuggestBestMatchDescription"
-                   class="tip-caption firefoxSuggestOptionDescription"
-                   data-l10n-id="addressbar-firefox-suggest-best-match-description"/>
-    </vbox>
     <vbox class="firefoxSuggestOptionBox">
       <hbox align="center">
         <label id="firefoxSuggestNonsponsoredLabel"

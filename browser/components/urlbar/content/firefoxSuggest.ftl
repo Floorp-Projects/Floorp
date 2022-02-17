@@ -32,22 +32,22 @@ addressbar-header-firefox-suggest = Address Bar — { -firefox-suggest-brand-nam
 # the address bar section in the preferences UI.
 addressbar-suggest-firefox-suggest = Choose the type of suggestions that appear in the address bar:
 
-# First Firefox Suggest toggle button main label and description. This toggle
-# controls best match suggestions related to the user's search string.
-addressbar-firefox-suggest-best-match = Top pick
-addressbar-firefox-suggest-best-match-description = Get featured suggestions from sponsors and { -brand-product-name } related to your search.
+# The best match checkbox label. This toggle controls best match suggestions
+# related to the user's search string.
+addressbar-firefox-suggest-best-match-option =
+  .label = Top pick
 
-# Second Firefox Suggest toggle button main label and description. This toggle
+# First Firefox Suggest toggle button main label and description. This toggle
 # controls non-sponsored suggestions related to the user's search string.
 addressbar-firefox-suggest-nonsponsored = Suggestions from the web
 addressbar-firefox-suggest-nonsponsored-description = Get suggestions from { -brand-product-name } related to your search.
 
-# Third Firefox Suggest toggle button main label and description. This toggle
+# Second Firefox Suggest toggle button main label and description. This toggle
 # controls sponsored suggestions related to the user's search string.
 addressbar-firefox-suggest-sponsored = Suggestions from sponsors
 addressbar-firefox-suggest-sponsored-description = Support the development of { -brand-short-name } with occasional sponsored suggestions.
 
-# Fourth Firefox Suggest toggle button main label and description. This toggle
+# Third Firefox Suggest toggle button main label and description. This toggle
 # controls data collection related to the user's search string.
 addressbar-firefox-suggest-data-collection = Improve the { -firefox-suggest-brand-name } experience
 addressbar-firefox-suggest-data-collection-description = Help create a richer search experience by allowing { -vendor-short-name } to process your search queries.
