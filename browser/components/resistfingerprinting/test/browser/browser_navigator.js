@@ -195,8 +195,16 @@ async function testNavigator() {
     expectedResults.userAgentNavigator,
     `Checking ${testDesc} navigator.userAgent.`
   );
-  is(result.mimeTypesLength, 0, "Navigator.mimeTypes has a length of 0.");
-  is(result.pluginsLength, 0, "Navigator.plugins has a length of 0.");
+  is(
+    result.mimeTypesLength,
+    expectedResults.mimeTypesLength,
+    `Navigator.mimeTypes has a length of ${expectedResults.mimeTypesLength}.`
+  );
+  is(
+    result.pluginsLength,
+    expectedResults.pluginsLength,
+    `Navigator.plugins has a length of ${expectedResults.pluginsLength}.`
+  );
   is(
     result.oscpu,
     expectedResults.oscpu,
@@ -336,8 +344,10 @@ add_task(async function setupDefaultUserAgent() {
     testDesc: "default",
     appVersion: DEFAULT_APPVERSION[AppConstants.platform],
     hardwareConcurrency: navigator.hardwareConcurrency,
+    mimeTypesLength: 2,
     oscpu: DEFAULT_OSCPU[AppConstants.platform],
     platform: DEFAULT_PLATFORM[AppConstants.platform],
+    pluginsLength: 5,
     userAgentNavigator: defaultUserAgent,
     userAgentHeader: defaultUserAgent,
   };
@@ -368,8 +378,10 @@ add_task(async function setupResistFingerprinting() {
     testDesc: "spoofed",
     appVersion: SPOOFED_APPVERSION[AppConstants.platform],
     hardwareConcurrency: SPOOFED_HW_CONCURRENCY,
+    mimeTypesLength: 0,
     oscpu: SPOOFED_OSCPU[AppConstants.platform],
     platform: SPOOFED_PLATFORM[AppConstants.platform],
+    pluginsLength: 0,
     userAgentNavigator: spoofedUserAgentNavigator,
     userAgentHeader: spoofedUserAgentHeader,
   };
@@ -428,8 +440,10 @@ if (AppConstants.platform != "android") {
       testDesc: "forceVersion100",
       appVersion: DEFAULT_APPVERSION[AppConstants.platform],
       hardwareConcurrency: navigator.hardwareConcurrency,
+      mimeTypesLength: 2,
       oscpu: DEFAULT_OSCPU[AppConstants.platform],
       platform: DEFAULT_PLATFORM[AppConstants.platform],
+      pluginsLength: 5,
       userAgentNavigator: VERSION_100_UA,
       userAgentHeader: VERSION_100_UA,
     };
@@ -468,8 +482,10 @@ if (AppConstants.platform != "android") {
       testDesc: "FirefoxVersionExperimentTest",
       appVersion: DEFAULT_APPVERSION[AppConstants.platform],
       hardwareConcurrency: navigator.hardwareConcurrency,
+      mimeTypesLength: 2,
       oscpu: DEFAULT_OSCPU[AppConstants.platform],
       platform: DEFAULT_PLATFORM[AppConstants.platform],
+      pluginsLength: 5,
       userAgentNavigator: VERSION_100_UA,
       userAgentHeader: VERSION_100_UA,
     };
