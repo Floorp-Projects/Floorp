@@ -43,7 +43,8 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   ModuleLoadRequest(nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
                     const SRIMetadata& aIntegrity, nsIURI* aReferrer,
                     bool aIsTopLevel, bool aIsDynamicImport,
-                    ModuleLoader* aLoader, VisitedURLSet* aVisitedSet);
+                    ModuleLoader* aLoader, VisitedURLSet* aVisitedSet,
+                    ModuleLoadRequest* aRootModule);
 
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -51,16 +52,16 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
                                                          ScriptLoadRequest)
 
   // Create a top-level module load request.
-  static ModuleLoadRequest* CreateTopLevel(
+  static already_AddRefed<ModuleLoadRequest> CreateTopLevel(
       nsIURI* aURI, ScriptFetchOptions* aFetchOptions, Element* aElement,
       const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader);
 
   // Create a module load request for a static module import.
-  static ModuleLoadRequest* CreateStaticImport(nsIURI* aURI,
-                                               ModuleLoadRequest* aParent);
+  static already_AddRefed<ModuleLoadRequest> CreateStaticImport(
+      nsIURI* aURI, ModuleLoadRequest* aParent);
 
   // Create a module load request for dynamic module import.
-  static ModuleLoadRequest* CreateDynamicImport(
+  static already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
       nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
       Element* aElement, ScriptLoader* aLoader,
       JS::Handle<JS::Value> aReferencingPrivate,
@@ -79,6 +80,13 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   void DependenciesLoaded();
   void LoadFailed();
 
+  ModuleLoadRequest* GetRootModule() {
+    if (!mRootModule) {
+      return this;
+    }
+    return mRootModule;
+  }
+
  private:
   void LoadFinished();
   void CancelImports();
@@ -94,6 +102,10 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   // Pointer to the script loader, used to trigger actions when the module load
   // finishes.
   RefPtr<ModuleLoader> mLoader;
+
+  // Pointer to the top level module of this module tree, nullptr if this is
+  // a top level module
+  RefPtr<ModuleLoadRequest> mRootModule;
 
   // Set to a module script object after a successful load or nullptr on
   // failure.
