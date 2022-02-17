@@ -13,7 +13,7 @@
 
 # A label shown above the top pick group in the urlbar results.
 urlbar-group-best-match =
-  .label = { -firefox-suggest-brand-name } · Top pick
+  .label = Top pick
 
 # Tooltip text for the block button shown in top pick rows.
 firefox-suggest-urlbar-block =
