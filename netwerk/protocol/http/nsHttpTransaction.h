@@ -27,6 +27,7 @@
 
 //-----------------------------------------------------------------------------
 
+class nsIHttpActivityObserver;
 class nsIDNSHTTPSSVCRecord;
 class nsIEventTarget;
 class nsIInputStream;
@@ -311,6 +312,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsCOMPtr<nsIRequestContext> mRequestContext;
 
   uint64_t mChannelId{0};
+  nsCOMPtr<nsIHttpActivityObserver> mActivityDistributor;
 
   nsCString mReqHeaderBuf;  // flattened request headers
   nsCOMPtr<nsIInputStream> mRequestStream;
