@@ -31,6 +31,7 @@
 #include "js/CompileOptions.h"
 #include "js/friend/PerformanceHint.h"
 #include "js/Id.h"
+#include "js/loader/LoadedScript.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetProperty
 #include "js/PropertyDescriptor.h"
 #include "js/RealmOptions.h"
@@ -135,7 +136,6 @@
 #include "mozilla/dom/IntlUtils.h"
 #include "mozilla/dom/JSExecutionContext.h"
 #include "mozilla/dom/LSObject.h"
-#include "mozilla/dom/LoadedScript.h"
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/Location.h"
@@ -6126,7 +6126,7 @@ class WindowScriptTimeoutHandler final : public ScriptTimeoutHandler {
   virtual ~WindowScriptTimeoutHandler() = default;
 
   // Initiating script for use when evaluating mExpr on the main thread.
-  RefPtr<LoadedScript> mInitiatingScript;
+  RefPtr<JS::loader::LoadedScript> mInitiatingScript;
 };
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowScriptTimeoutHandler,

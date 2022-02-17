@@ -11,6 +11,8 @@
 #include "js/RootingAPI.h"
 #include "js/SourceText.h"
 #include "js/TypeDecls.h"
+#include "js/loader/ScriptKind.h"
+#include "js/loader/ScriptLoadRequest.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CORSMode.h"
@@ -27,19 +29,21 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
 #include "nsIScriptElement.h"
-#include "ScriptKind.h"
+#include "js/loader/ScriptKind.h"
 
 class nsICacheInfoChannel;
 
 namespace JS {
 class OffThreadToken;
+namespace loader {
+class ScriptLoadRequest;
 }
+}  // namespace JS
 
 namespace mozilla {
 namespace dom {
 
 class Element;
-class ScriptLoadRequest;
 
 /*
  * DOM specific ScriptLoadContext.
@@ -87,7 +91,7 @@ class ScriptLoadContext : public PreloaderBase {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ScriptLoadContext)
 
-  void SetRequest(ScriptLoadRequest* aRequest);
+  void SetRequest(JS::loader::ScriptLoadRequest* aRequest);
 
   // PreloaderBase
   static void PrioritizeAsPreload(nsIChannel* aChannel);
@@ -198,7 +202,7 @@ class ScriptLoadContext : public PreloaderBase {
    */
   nsCOMPtr<nsIGlobalObject> mWebExtGlobal;
 
-  RefPtr<ScriptLoadRequest> mRequest;
+  RefPtr<JS::loader::ScriptLoadRequest> mRequest;
 
   // Non-null if there is a document that this request is blocking from loading.
   RefPtr<Document> mLoadBlockedDocument;
