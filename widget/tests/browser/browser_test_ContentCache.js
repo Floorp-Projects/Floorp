@@ -247,6 +247,56 @@ add_task(async function() {
           );
         }
       })();
+
+      /**
+       * Test when no editable element has focus.
+       */
+      notifications = [];
+      await SpecialPowers.spawn(browser, [], () => {
+        content.document.body.innerHTML = "abcdef";
+      });
+
+      await waitForSendingIMENotificationsInContent();
+
+      (function() {
+        checkNotifications(
+          [
+            { type: "notify-focus", expected: false },
+            { type: "notify-blur", expected: true },
+          ],
+          "removing editor should make ContentCacheInParent not have any data"
+        );
+        const text = EventUtils.synthesizeQueryTextContent(0, 1000);
+        ok(
+          !text?.succeeded,
+          "query text content should fail because no editable element has focus"
+        );
+        const selection = EventUtils.synthesizeQuerySelectedText();
+        ok(
+          !selection?.succeeded,
+          "query selected text should fail because no editable element has focus"
+        );
+        const caret = EventUtils.synthesizeQueryCaretRect(0);
+        ok(
+          !caret?.succeeded,
+          "query caret rect should fail because no editable element has focus"
+        );
+        const textRect = EventUtils.synthesizeQueryTextRect(0, 5, false);
+        ok(
+          !textRect?.succeeded,
+          "query text rect should fail because no editable element has focus"
+        );
+        const textRectArray = EventUtils.synthesizeQueryTextRectArray(0, 5);
+        ok(
+          !textRectArray?.succeeded,
+          "query text rect array should fail because no editable element has focus"
+        );
+        const editorRect = EventUtils.synthesizeQueryEditorRect();
+        todo(
+          !editorRect?.succeeded,
+          "query editor rect should fail because no editable element has focus"
+        );
+      })();
     }
   );
 });
