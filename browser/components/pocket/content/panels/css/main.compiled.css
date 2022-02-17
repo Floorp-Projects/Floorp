@@ -2022,13 +2022,11 @@ button {
   text-decoration: none;
   background-color: #ECECEE;
 }
-.stp_article_list .stp_article_list_thumb,
-.stp_article_list .stp_article_list_thumb_placeholder {
+.stp_article_list .stp_article_list_thumb {
   width: 40px;
   height: 40px;
   border-radius: 4px;
   margin-inline-end: 8px;
-  background-color: #ECECEE;
 }
 .stp_article_list .stp_article_list_header {
   font-style: normal;
@@ -2036,7 +2034,7 @@ button {
   font-size: 0.85em;
   line-height: 1.27em;
   color: #15141A;
-  margin: 0 0 4px;
+  margin: 4px 0px;
 }
 .stp_article_list .stp_article_list_publisher {
   font-style: normal;
@@ -2044,7 +2042,7 @@ button {
   font-size: 0.85em;
   line-height: 1.27em;
   color: #52525E;
-  margin: 4px 0 0;
+  margin: 4px 0px;
 }
 
 .stp_header {
@@ -2111,12 +2109,6 @@ button {
 .stp_button_wide .stp_button.stp_button_secondary {
   font-size: 0.85em;
   line-height: 1.07em;
-}
-
-.stp_button_wide .stp_button {
-  display: block;
-  margin: 12px 0;
-  text-align: center;
 }
 
 /*# sourceMappingURL=main.compiled.css.map */
