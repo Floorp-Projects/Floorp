@@ -47,6 +47,10 @@ const char* ContentWin32kLockdownStateToString(
     case nsIXULRuntime::ContentWin32kLockdownState::MissingNonNativeTheming:
       return "Win32k Lockdown disabled -- Missing Non-Native Theming";
 
+    case nsIXULRuntime::ContentWin32kLockdownState::DecodersArentRemote:
+      return "Win32k Lockdown disabled -- Not all media decoders are remoted "
+             "to Utility Process";
+
     case nsIXULRuntime::ContentWin32kLockdownState::DisabledByEnvVar:
       return "Win32k Lockdown disabled -- MOZ_ENABLE_WIN32K is set";
 
