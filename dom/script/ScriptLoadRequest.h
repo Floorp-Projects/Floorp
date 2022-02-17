@@ -59,7 +59,7 @@ class ScriptFetchOptions {
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ScriptFetchOptions)
 
   ScriptFetchOptions(mozilla::CORSMode aCORSMode,
-                     enum ReferrerPolicy aReferrerPolicy, Element* aElement,
+                     enum ReferrerPolicy aReferrerPolicy,
                      nsIPrincipal* aTriggeringPrincipal,
                      nsIGlobalObject* aWebExtGlobal);
 
@@ -341,7 +341,7 @@ class DOMScriptLoadContext : public PreloaderBase {
   virtual ~DOMScriptLoadContext();
 
  public:
-  explicit DOMScriptLoadContext(ScriptLoadRequest* aRequest);
+  explicit DOMScriptLoadContext(Element* aElement, ScriptLoadRequest* aRequest);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMScriptLoadContext)
@@ -456,6 +456,9 @@ class DOMScriptLoadContext : public PreloaderBase {
   Atomic<Runnable*> mRunnable;  // Runnable created when dispatching off thread
                                 // compile. Tracked here so that it can be
                                 // properly released during cancellation.
+
+  nsCOMPtr<Element> mElement;
+
   RefPtr<ScriptLoadRequest> mRequest;
 
   // Non-null if there is a document that this request is blocking from loading.

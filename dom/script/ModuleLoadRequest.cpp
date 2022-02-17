@@ -52,13 +52,13 @@ static VisitedURLSet* NewVisitedSetForTopLevelImport(nsIURI* aURI) {
 
 /* static */
 ModuleLoadRequest* ModuleLoadRequest::CreateTopLevel(
-    nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
+    nsIURI* aURI, ScriptFetchOptions* aFetchOptions, Element* aElement,
     const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader) {
   auto* request = new ModuleLoadRequest(
       aURI, aFetchOptions, aIntegrity, aReferrer, true, /* is top level */
       false,                                            /* is dynamic import */
       aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI));
-  DOMScriptLoadContext* context = new DOMScriptLoadContext(request);
+  DOMScriptLoadContext* context = new DOMScriptLoadContext(aElement, request);
   request->mLoadContext = context;
   return request;
 }
@@ -71,7 +71,8 @@ ModuleLoadRequest* ModuleLoadRequest::CreateStaticImport(
                             aParent->mURI, false, /* is top level */
                             false,                /* is dynamic import */
                             aParent->mLoader, aParent->mVisitedSet);
-  DOMScriptLoadContext* context = new DOMScriptLoadContext(request);
+  DOMScriptLoadContext* context =
+      new DOMScriptLoadContext(aParent->mLoadContext->mElement, request);
   context->mIsInline = false;
   context->mScriptMode = aParent->GetLoadContext()->mScriptMode;
 
@@ -83,8 +84,9 @@ ModuleLoadRequest* ModuleLoadRequest::CreateStaticImport(
 /* static */
 ModuleLoadRequest* ModuleLoadRequest::CreateDynamicImport(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-    ScriptLoader* aLoader, JS::Handle<JS::Value> aReferencingPrivate,
-    JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise) {
+    Element* aElement, ScriptLoader* aLoader,
+    JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
+    JS::Handle<JSObject*> aPromise) {
   MOZ_ASSERT(aSpecifier);
   MOZ_ASSERT(aPromise);
 
@@ -93,7 +95,7 @@ ModuleLoadRequest* ModuleLoadRequest::CreateDynamicImport(
       true, /* is dynamic import */
       aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI));
 
-  DOMScriptLoadContext* context = new DOMScriptLoadContext(request);
+  DOMScriptLoadContext* context = new DOMScriptLoadContext(aElement, request);
   context->mIsInline = false;
   context->mScriptMode = DOMScriptLoadContext::ScriptMode::eAsync;
   request->mLoadContext = context;
