@@ -444,6 +444,7 @@ Specific keys are:
   - EnabledByTreatmentGroup = 13 - The user is in the Treatment Group, so it is enabled
   - DisabledByDefault = 14 - The default value of the pref is false
   - EnabledByDefault = 15 - The default value of the pref is true
+  - DecodersArentRemote = 16 - Some decoder is not remoted to RDD Process (checks PDMFactory::AllDecodersAreRemote)
 
 
 profile
