@@ -160,13 +160,6 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
 
   if (gHttpHandler->EchConfigEnabled(true)) {
     mSocketControl->SetEchConfig(mConnInfo->GetEchConfig());
-    HttpConnectionActivity activity(
-        mConnInfo->HashKey(), mConnInfo->GetOrigin(), mConnInfo->OriginPort(),
-        mConnInfo->EndToEndSSL(), !mConnInfo->GetEchConfig().IsEmpty(),
-        mConnInfo->IsHttp3());
-    gHttpHandler->ObserveHttpActivityWithArgs(
-        activity, NS_ACTIVITY_TYPE_HTTP_CONNECTION,
-        NS_HTTP_ACTIVITY_SUBTYPE_ECH_SET, PR_Now(), 0, ""_ns);
   }
 
   // After this line, Http3Session and HttpConnectionUDP become a cycle. We put

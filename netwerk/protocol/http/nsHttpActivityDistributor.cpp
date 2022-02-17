@@ -139,26 +139,16 @@ nsHttpActivityDistributor::ObserveActivityWithArgs(
   return NS_OK;
 }
 
-bool nsHttpActivityDistributor::Activated() { return mActivated; }
-
-bool nsHttpActivityDistributor::ObserveProxyResponseEnabled() {
-  return mObserveProxyResponse;
-}
-
-bool nsHttpActivityDistributor::ObserveConnectionEnabled() {
-  return mObserveConnection;
-}
-
 NS_IMETHODIMP
 nsHttpActivityDistributor::GetIsActive(bool* isActive) {
   NS_ENSURE_ARG_POINTER(isActive);
+  MutexAutoLock lock(mLock);
   if (XRE_IsSocketProcess()) {
     *isActive = mActivated;
     return NS_OK;
   }
 
-  MutexAutoLock lock(mLock);
-  *isActive = mActivated = !!mObservers.Length();
+  *isActive = !!mObservers.Length();
   return NS_OK;
 }
 
@@ -172,10 +162,6 @@ NS_IMETHODIMP nsHttpActivityDistributor::SetIsActive(bool aActived) {
 NS_IMETHODIMP
 nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver* aObserver) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (!NS_IsMainThread()) {
-    // We only support calling this from the main thread.
-    return NS_ERROR_FAILURE;
-  }
 
   ObserverHandle observer(
       new ObserverHolder("nsIHttpActivityObserver", aObserver));
@@ -189,17 +175,14 @@ nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver* aObserver) {
     mObservers.AppendElement(observer);
   }
 
-  if (wasEmpty) {
-    mActivated = true;
-    if (nsIOService::UseSocketProcess()) {
-      auto task = []() {
-        SocketProcessParent* parent = SocketProcessParent::GetSingleton();
-        if (parent && parent->CanSend()) {
-          Unused << parent->SendOnHttpActivityDistributorActivated(true);
-        }
-      };
-      gIOService->CallOrWaitForSocketProcess(task);
-    }
+  if (nsIOService::UseSocketProcess() && wasEmpty) {
+    auto task = []() {
+      SocketProcessParent* parent = SocketProcessParent::GetSingleton();
+      if (parent && parent->CanSend()) {
+        Unused << parent->SendOnHttpActivityDistributorActivated(true);
+      }
+    };
+    gIOService->CallOrWaitForSocketProcess(task);
   }
   return NS_OK;
 }
@@ -207,23 +190,18 @@ nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver* aObserver) {
 NS_IMETHODIMP
 nsHttpActivityDistributor::RemoveObserver(nsIHttpActivityObserver* aObserver) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (!NS_IsMainThread()) {
-    // We only support calling this from the main thread.
-    return NS_ERROR_FAILURE;
-  }
 
   ObserverHandle observer(
       new ObserverHolder("nsIHttpActivityObserver", aObserver));
 
+  bool isEmpty = false;
   {
     MutexAutoLock lock(mLock);
-    if (!mObservers.RemoveElement(observer)) {
-      return NS_ERROR_FAILURE;
-    }
-    mActivated = mObservers.IsEmpty();
+    if (!mObservers.RemoveElement(observer)) return NS_ERROR_FAILURE;
+    isEmpty = mObservers.IsEmpty();
   }
 
-  if (nsIOService::UseSocketProcess() && !mActivated) {
+  if (nsIOService::UseSocketProcess() && isEmpty) {
     auto task = []() {
       SocketProcessParent* parent = SocketProcessParent::GetSingleton();
       if (parent && parent->CanSend()) {
@@ -239,18 +217,15 @@ NS_IMETHODIMP
 nsHttpActivityDistributor::GetObserveProxyResponse(
     bool* aObserveProxyResponse) {
   NS_ENSURE_ARG_POINTER(aObserveProxyResponse);
-  bool result = mObserveProxyResponse;
-  *aObserveProxyResponse = result;
+
+  MutexAutoLock lock(mLock);
+  *aObserveProxyResponse = mObserveProxyResponse;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHttpActivityDistributor::SetObserveProxyResponse(bool aObserveProxyResponse) {
-  if (!NS_IsMainThread()) {
-    // We only support calling this from the main thread.
-    return NS_ERROR_FAILURE;
-  }
-
+  MutexAutoLock lock(mLock);
   mObserveProxyResponse = aObserveProxyResponse;
   if (nsIOService::UseSocketProcess()) {
     auto task = [aObserveProxyResponse]() {
@@ -269,17 +244,14 @@ NS_IMETHODIMP
 nsHttpActivityDistributor::GetObserveConnection(bool* aObserveConnection) {
   NS_ENSURE_ARG_POINTER(aObserveConnection);
 
+  MutexAutoLock lock(mLock);
   *aObserveConnection = mObserveConnection;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHttpActivityDistributor::SetObserveConnection(bool aObserveConnection) {
-  if (!NS_IsMainThread()) {
-    // We only support calling this from the main thread.
-    return NS_ERROR_FAILURE;
-  }
-
+  MutexAutoLock lock(mLock);
   mObserveConnection = aObserveConnection;
   if (nsIOService::UseSocketProcess()) {
     auto task = [aObserveConnection]() {
