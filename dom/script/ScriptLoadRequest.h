@@ -65,8 +65,6 @@ class ScriptFetchOptions {
 
   const mozilla::CORSMode mCORSMode;
   const enum ReferrerPolicy mReferrerPolicy;
-  bool mIsPreload;
-  nsCOMPtr<Element> mElement;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   // Global that initiated this request, when using a WebExtension
   // content-script.
@@ -363,10 +361,7 @@ class DOMScriptLoadContext : public PreloaderBase {
     scriptElement->ScriptEvaluated(aResult, scriptElement, mIsInline);
   }
 
-  bool IsPreload() const {
-    MOZ_ASSERT_IF(mRequest->mFetchOptions->mIsPreload, !GetScriptElement());
-    return mRequest->mFetchOptions->mIsPreload;
-  }
+  bool IsPreload() const;
 
   bool CompileStarted() const {
     return mRequest->InCompilingStage() ||
@@ -413,7 +408,7 @@ class DOMScriptLoadContext : public PreloaderBase {
   void SetIsPreloadRequest() {
     MOZ_ASSERT(!GetScriptElement());
     MOZ_ASSERT(!IsPreload());
-    mRequest->mFetchOptions->mIsPreload = true;
+    mIsPreload = true;
   }
 
   // Make a preload request into an actual load request for the given element.
@@ -457,6 +452,8 @@ class DOMScriptLoadContext : public PreloaderBase {
                                 // compile. Tracked here so that it can be
                                 // properly released during cancellation.
 
+  // Set on scripts and top level modules.
+  bool mIsPreload;
   nsCOMPtr<Element> mElement;
 
   RefPtr<ScriptLoadRequest> mRequest;
