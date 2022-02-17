@@ -25,7 +25,7 @@ class WebRenderTextureHost : public TextureHost {
  public:
   WebRenderTextureHost(const SurfaceDescriptor& aDesc, TextureFlags aFlags,
                        TextureHost* aTexture,
-                       const wr::ExternalImageId& aExternalImageId);
+                       wr::ExternalImageId& aExternalImageId);
   virtual ~WebRenderTextureHost();
 
   void DeallocateDeviceData() override {}

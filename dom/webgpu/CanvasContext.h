@@ -9,7 +9,6 @@
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
-#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 
 namespace mozilla {
@@ -18,6 +17,9 @@ class Promise;
 struct GPUCanvasConfiguration;
 enum class GPUTextureFormat : uint8_t;
 }  // namespace dom
+namespace layers {
+class WebRenderLocalCanvasData;
+};
 namespace webgpu {
 class Adapter;
 class Texture;
@@ -38,7 +40,14 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  layers::CompositableHandle mHandle;
+  Maybe<wr::ImageKey> GetImageKey() const;
+  wr::ImageKey CreateImageKey(layers::RenderRootStateManager* aManager);
+  bool UpdateWebRenderLocalCanvasData(
+      layers::WebRenderLocalCanvasData* aCanvasData);
+
+  wr::ImageDescriptor MakeImageDescriptor() const;
+
+  Maybe<wr::ExternalImageId> mExternalImageId;
 
  public:  // nsICanvasRenderingContextInternal
   int32_t GetWidth() override { return mWidth; }
@@ -72,6 +81,8 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   void SetOpaqueValueFromOpaqueAttr(bool aOpaqueAttrValue) override {}
   bool GetIsOpaque() override { return true; }
   NS_IMETHOD Reset() override { return NS_OK; }
+  bool UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
+                                 WebRenderCanvasData* aCanvasData) override;
   void MarkContextClean() override {}
 
   NS_IMETHOD Redraw(const gfxRect& aDirty) override { return NS_OK; }
@@ -90,17 +101,16 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
 
   dom::GPUTextureFormat GetPreferredFormat(Adapter& aAdapter) const;
   RefPtr<Texture> GetCurrentTexture(ErrorResult& aRv);
-  void MaybeQueueSwapChainPresent();
-  void SwapChainPresent();
 
  private:
   uint32_t mWidth = 0, mHeight = 0;
-  bool mPendingSwapChainPresent = false;
 
   RefPtr<WebGPUChild> mBridge;
   RefPtr<Texture> mTexture;
   gfx::SurfaceFormat mGfxFormat = gfx::SurfaceFormat::R8G8B8A8;
   gfx::IntSize mGfxSize;
+  RefPtr<layers::RenderRootStateManager> mRenderRootStateManager;
+  Maybe<wr::ImageKey> mImageKey;
 };
 
 }  // namespace webgpu

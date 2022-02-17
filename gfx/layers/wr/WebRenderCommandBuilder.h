@@ -41,6 +41,7 @@ class WebRenderUserData;
 class WebRenderCommandBuilder final {
   typedef nsTHashSet<RefPtr<WebRenderUserData>> WebRenderUserDataRefTable;
   typedef nsTHashSet<RefPtr<WebRenderCanvasData>> CanvasDataSet;
+  typedef nsTHashSet<RefPtr<WebRenderLocalCanvasData>> LocalCanvasDataSet;
 
  public:
   explicit WebRenderCommandBuilder(WebRenderLayerManager* aManager);
@@ -91,13 +92,6 @@ class WebRenderCommandBuilder final {
                          mozilla::wr::IpcResourceUpdateQueue& aResources,
                          const LayoutDeviceRect& aRect,
                          const LayoutDeviceRect& aClip);
-
-  void PushInProcessImage(nsDisplayItem* aItem,
-                          const CompositableHandle& aHandle,
-                          mozilla::wr::DisplayListBuilder& aBuilder,
-                          mozilla::wr::IpcResourceUpdateQueue& aResources,
-                          const StackingContextHelper& aSc,
-                          const LayoutDeviceRect& aAsyncImageBounds);
 
   Maybe<wr::ImageMask> BuildWrMaskImage(
       nsDisplayMasksAndClipPaths* aMaskItem, wr::DisplayListBuilder& aBuilder,
