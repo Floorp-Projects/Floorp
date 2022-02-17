@@ -3465,7 +3465,7 @@
 
 - name: dom.workers.requestAnimationFrame
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: dom.workers.serialized-sab-access
@@ -5495,13 +5495,13 @@
 # Enable OffscreenCanvas based on the domain allowlist.
 - name: gfx.offscreencanvas.domain-enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Domains included in the allowlist.
 - name: gfx.offscreencanvas.domain-allowlist
   type: String
-  value: ""
+  value: "*.zoom.us"
   mirror: never
 
 - name: gfx.omta.background-color
