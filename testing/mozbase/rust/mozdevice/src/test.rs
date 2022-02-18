@@ -86,11 +86,15 @@ where
         .expect("device_or_default");
 
     let tmp_dir = tempdir().expect("create temp dir");
-    let remote_path = UnixPath::new("/data/local/tmp/mozdevice/");
+    let response = device
+        .execute_host_shell_command("echo $EXTERNAL_STORAGE")
+        .unwrap();
+    let mut test_root = UnixPathBuf::from(response.trim_end_matches('\n'));
+    test_root.push("mozdevice");
 
-    let _ = device.remove(remote_path);
+    let _ = device.remove(&test_root);
 
-    let result = panic::catch_unwind(|| test(&device, &tmp_dir, &remote_path));
+    let result = panic::catch_unwind(|| test(&device, &tmp_dir, &test_root));
 
     let _ = device.kill_forward_all_ports();
     // let _ = device.kill_reverse_all_ports();
