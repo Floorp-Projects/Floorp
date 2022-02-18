@@ -88,8 +88,7 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
       mScriptTextLength(0),
       mScriptBytecode(),
       mBytecodeOffset(0),
-      mURI(aURI),
-      mLineNo(1) {
+      mURI(aURI) {
   MOZ_ASSERT(mFetchOptions);
 }
 
@@ -137,6 +136,7 @@ DOMScriptLoadContext::DOMScriptLoadContext(Element* aElement,
       mWasCompiledOMT(false),
       mOffThreadToken(nullptr),
       mRunnable(nullptr),
+      mLineNo(1),
       mIsPreload(false),
       mElement(aElement),
       mWebExtGlobal(aWebExtGlobal),
@@ -399,7 +399,7 @@ void DOMScriptLoadContext::GetProfilerLabel(nsACString& aOutString) {
   if (mIsInline) {
     if (GetParserCreated() != NOT_FROM_PARSER) {
       aOutString.Append("> inline at line ");
-      aOutString.AppendInt(mRequest->mLineNo);
+      aOutString.AppendInt(mLineNo);
       aOutString.Append(" of ");
     } else {
       aOutString.Append("> inline (dynamically created) in ");
