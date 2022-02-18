@@ -876,8 +876,12 @@ bool MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg) {
       // other side
       mChannelState = ChannelClosing;
       if (LoggingEnabled()) {
-        printf("NOTE: %s process received `Goodbye', closing down\n",
-               (mSide == ChildSide) ? "child" : "parent");
+        printf(
+            "[%s %u] NOTE: %s actor received `Goodbye' message.  Closing "
+            "channel.\n",
+            XRE_GeckoProcessTypeToString(XRE_GetProcessType()),
+            static_cast<uint32_t>(base::GetCurrentProcId()),
+            (mSide == ChildSide) ? "child" : "parent");
       }
       return true;
     } else if (CANCEL_MESSAGE_TYPE == aMsg.type()) {
