@@ -53,55 +53,56 @@ static VisitedURLSet* NewVisitedSetForTopLevelImport(nsIURI* aURI) {
 
 /* static */
 already_AddRefed<ModuleLoadRequest> ModuleLoadRequest::CreateTopLevel(
-    nsIURI* aURI, ScriptFetchOptions* aFetchOptions, Element* aElement,
-    const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader) {
+    nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
+    const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader,
+    DOMScriptLoadContext* aContext) {
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aFetchOptions, aIntegrity, aReferrer, true, /* is top level */
-      false,                                            /* is dynamic import */
+      aURI, aFetchOptions, aIntegrity, aReferrer, aContext, true,
+      /* is top level */ false, /* is dynamic import */
       aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI),
       nullptr);
-  DOMScriptLoadContext* context = new DOMScriptLoadContext(aElement, request);
-  request->mLoadContext = context;
+
   return request.forget();
 }
 
 /* static */
 already_AddRefed<ModuleLoadRequest> ModuleLoadRequest::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {
+  RefPtr<DOMScriptLoadContext> newContext =
+      new DOMScriptLoadContext(aParent->GetLoadContext()->mElement,
+                               aParent->GetLoadContext()->mWebExtGlobal);
+  newContext->mIsInline = false;
+  // Propagated Parent values. TODO: allow child modules to use root module's
+  // script mode.
+  newContext->mScriptMode = aParent->GetLoadContext()->mScriptMode;
+
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aParent->mFetchOptions, SRIMetadata(), aParent->mURI,
+      aURI, aParent->mFetchOptions, SRIMetadata(), aParent->mURI, newContext,
       false, /* is top level */
       false, /* is dynamic import */
       aParent->mLoader, aParent->mVisitedSet, aParent->GetRootModule());
-  DOMScriptLoadContext* context = new DOMScriptLoadContext(nullptr, request);
-  context->mIsInline = false;
-  // Propagated Parent values. TODO: allow child modules to use root module's
-  // script mode.
-  context->mScriptMode = aParent->GetLoadContext()->mScriptMode;
 
-  request->mLoadContext = context;
   return request.forget();
 }
 
 /* static */
 already_AddRefed<ModuleLoadRequest> ModuleLoadRequest::CreateDynamicImport(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-    Element* aElement, ScriptLoader* aLoader,
+    DOMScriptLoadContext* aContext, ScriptLoader* aLoader,
     JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
     JS::Handle<JSObject*> aPromise) {
   MOZ_ASSERT(aSpecifier);
   MOZ_ASSERT(aPromise);
 
+  aContext->mIsInline = false;
+  aContext->mScriptMode = DOMScriptLoadContext::ScriptMode::eAsync;
+
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, aFetchOptions, SRIMetadata(), aBaseURL, true, /* is top level */
-      true, /* is dynamic import */
+      aURI, aFetchOptions, SRIMetadata(), aBaseURL, aContext, true,
+      /* is top level */ true, /* is dynamic import */
       aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI),
       nullptr);
 
-  DOMScriptLoadContext* context = new DOMScriptLoadContext(aElement, request);
-  context->mIsInline = false;
-  context->mScriptMode = DOMScriptLoadContext::ScriptMode::eAsync;
-  request->mLoadContext = context;
   request->mDynamicReferencingPrivate = aReferencingPrivate;
   request->mDynamicSpecifier = aSpecifier;
   request->mDynamicPromise = aPromise;
@@ -113,11 +114,12 @@ already_AddRefed<ModuleLoadRequest> ModuleLoadRequest::CreateDynamicImport(
 
 ModuleLoadRequest::ModuleLoadRequest(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
-    const SRIMetadata& aIntegrity, nsIURI* aReferrer, bool aIsTopLevel,
-    bool aIsDynamicImport, ModuleLoader* aLoader, VisitedURLSet* aVisitedSet,
+    const SRIMetadata& aIntegrity, nsIURI* aReferrer,
+    DOMScriptLoadContext* aContext, bool aIsTopLevel, bool aIsDynamicImport,
+    ModuleLoader* aLoader, VisitedURLSet* aVisitedSet,
     ModuleLoadRequest* aRootModule)
     : ScriptLoadRequest(ScriptKind::eModule, aURI, aFetchOptions, aIntegrity,
-                        aReferrer),
+                        aReferrer, aContext),
       mIsTopLevel(aIsTopLevel),
       mIsDynamicImport(aIsDynamicImport),
       mLoader(aLoader),
@@ -163,8 +165,9 @@ void ModuleLoadRequest::ModuleLoaded() {
 
   LOG(("ScriptLoadRequest (%p): Module loaded", this));
 
-  mModuleScript =
-      mLoader->GetFetchedModule(mURI, GetLoadContext()->GetWebExtGlobal());
+  nsIGlobalObject* global =
+      HasLoadContext() ? GetLoadContext()->GetWebExtGlobal() : nullptr;
+  mModuleScript = mLoader->GetFetchedModule(mURI, global);
   if (!mModuleScript || mModuleScript->HasParseError()) {
     ModuleErrored();
     return;
