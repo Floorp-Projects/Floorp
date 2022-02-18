@@ -201,34 +201,33 @@ ScriptLoader::~ScriptLoader() {
   mObservers.Clear();
 
   if (mParserBlockingRequest) {
-    mParserBlockingRequest->GetLoadContext()->FireScriptAvailable(
-        NS_ERROR_ABORT);
+    FireScriptAvailable(NS_ERROR_ABORT, mParserBlockingRequest);
   }
 
   for (ScriptLoadRequest* req = mXSLTRequests.getFirst(); req;
        req = req->getNext()) {
-    req->GetLoadContext()->FireScriptAvailable(NS_ERROR_ABORT);
+    FireScriptAvailable(NS_ERROR_ABORT, req);
   }
 
   for (ScriptLoadRequest* req = mDeferRequests.getFirst(); req;
        req = req->getNext()) {
-    req->GetLoadContext()->FireScriptAvailable(NS_ERROR_ABORT);
+    FireScriptAvailable(NS_ERROR_ABORT, req);
   }
 
   for (ScriptLoadRequest* req = mLoadingAsyncRequests.getFirst(); req;
        req = req->getNext()) {
-    req->GetLoadContext()->FireScriptAvailable(NS_ERROR_ABORT);
+    FireScriptAvailable(NS_ERROR_ABORT, req);
   }
 
   for (ScriptLoadRequest* req = mLoadedAsyncRequests.getFirst(); req;
        req = req->getNext()) {
-    req->GetLoadContext()->FireScriptAvailable(NS_ERROR_ABORT);
+    FireScriptAvailable(NS_ERROR_ABORT, req);
   }
 
   for (ScriptLoadRequest* req =
            mNonAsyncExternalScriptInsertedRequests.getFirst();
        req; req = req->getNext()) {
-    req->GetLoadContext()->FireScriptAvailable(NS_ERROR_ABORT);
+    FireScriptAvailable(NS_ERROR_ABORT, req);
   }
 
   // Unblock the kids, in case any of them moved to a different document
@@ -2123,11 +2122,18 @@ void ScriptLoader::FireScriptAvailable(nsresult aResult,
                          aRequest->GetLoadContext()->mLineNo);
   }
 
-  aRequest->GetLoadContext()->FireScriptAvailable(aResult);
+  bool isInlineClassicScript =
+      aRequest->GetLoadContext()->mIsInline && !aRequest->IsModuleRequest();
+  RefPtr<nsIScriptElement> scriptElement =
+      aRequest->GetLoadContext()->GetScriptElement();
+  scriptElement->ScriptAvailable(aResult, scriptElement, isInlineClassicScript,
+                                 aRequest->mURI,
+                                 aRequest->GetLoadContext()->mLineNo);
 }
 
-void ScriptLoader::FireScriptEvaluated(nsresult aResult,
-                                       ScriptLoadRequest* aRequest) {
+// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void ScriptLoader::FireScriptEvaluated(
+    nsresult aResult, ScriptLoadRequest* aRequest) {
   for (int32_t i = 0; i < mObservers.Count(); i++) {
     nsCOMPtr<nsIScriptLoaderObserver> obs = mObservers[i];
     RefPtr<nsIScriptElement> scriptElement =
@@ -2136,7 +2142,10 @@ void ScriptLoader::FireScriptEvaluated(nsresult aResult,
                          aRequest->GetLoadContext()->mIsInline);
   }
 
-  aRequest->GetLoadContext()->FireScriptEvaluated(aResult);
+  RefPtr<nsIScriptElement> scriptElement =
+      aRequest->GetLoadContext()->GetScriptElement();
+  scriptElement->ScriptEvaluated(aResult, scriptElement,
+                                 aRequest->GetLoadContext()->mIsInline);
 }
 
 already_AddRefed<nsIGlobalObject> ScriptLoader::GetGlobalForRequest(
