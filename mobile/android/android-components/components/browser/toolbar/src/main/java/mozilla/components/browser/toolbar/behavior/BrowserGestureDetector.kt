@@ -48,7 +48,6 @@ internal class BrowserGestureDetector(
     )
 
     @VisibleForTesting
-    @Suppress("SoonBlockedPrivateApi") // https://github.com/mozilla-mobile/android-components/issues/10638
     internal var scaleGestureDetector = ScaleGestureDetector(
         applicationContext,
         CustomScaleDetectorListener(
@@ -56,24 +55,7 @@ internal class BrowserGestureDetector(
             listener.onScale ?: {},
             listener.onScaleEnd ?: {}
         )
-    ).apply {
-        // Use reflection to modify two fields controlling the sensitivity of our scale detector.
-        // The lower the values the higher the sensitivity.
-        // Values of 0 here would mean all swipe events will be treated as pinch/spread to zoom gestures,
-        // in our context effectively meaning no scrolling, only zooming.
-        try {
-            listOf(
-                javaClass.getDeclaredField("mSpanSlop"),
-                javaClass.getDeclaredField("mMinSpan")
-            ).forEach { field ->
-                field.isAccessible = true
-                field.set(this, (field.get(this) as Int) / 2)
-            }
-        } catch (e: ReflectiveOperationException) {
-            // Seems like some OEMs made some breaking changes in the framework.
-            // no-op
-        }
-    }
+    )
 
     /**
      * Accepts MotionEvents and dispatches zoom / scroll events to the registered listener when appropriate.

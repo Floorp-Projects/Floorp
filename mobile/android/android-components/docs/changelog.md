@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **browser-toolbar**
+  * Removed reflective access to non-public SDK APIs controlling the sensitivity of the gesture detector following which sparingly and for very short time a pinch/spread to zoom gesture might be identified first as a scroll gesture and move the toolbar a little before snapping to it's original position.
+
 * **feature-session**
    * 🆕 New `ScreenOrientationFeature` to enable support for setting a requested screen orientation as part of supporting the ScreenOrientation web APIs.
 
