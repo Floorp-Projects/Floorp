@@ -4,13 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_loader_ScriptKind_h
-#define js_loader_ScriptKind_h
+#ifndef mozilla_dom_ScriptKind_h
+#define mozilla_dom_ScriptKind_h
 
-namespace JS::loader {
+namespace mozilla {
+namespace dom {
 
 enum class ScriptKind { eClassic, eModule, eEvent };
 
-}  // namespace JS::loader
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

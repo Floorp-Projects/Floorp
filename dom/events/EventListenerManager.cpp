@@ -7,7 +7,6 @@
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
 
-#include "js/loader/LoadedScript.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -26,6 +25,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTargetBinding.h"
+#include "mozilla/dom/LoadedScript.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -1234,13 +1234,11 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<JS::loader::ScriptFetchOptions> fetchOptions =
-      new JS::loader::ScriptFetchOptions(
-          CORS_NONE, aElement->OwnerDoc()->GetReferrerPolicy(),
-          aElement->OwnerDoc()->NodePrincipal());
+  RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
+      CORS_NONE, aElement->OwnerDoc()->GetReferrerPolicy(), aElement,
+      aElement->OwnerDoc()->NodePrincipal(), nullptr);
 
-  RefPtr<JS::loader::EventScript> eventScript =
-      new JS::loader::EventScript(fetchOptions, uri, aElement);
+  RefPtr<EventScript> eventScript = new EventScript(fetchOptions, uri);
 
   JS::CompileOptions options(cx);
   // Use line 0 to make the function body starts from line 1.
