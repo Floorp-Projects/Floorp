@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::*;
-
 // Currently the mozdevice API is not safe for multiple requests at the same
 // time. It is recommended to run each of the unit tests on its own. Also adb
 // specific tests cannot be run in CI yet. To check those locally, also run
@@ -13,7 +11,8 @@ use crate::*;
 //
 //     $ cargo test -- --ignored --test-threads=1
 
-use crate::{append_components, AndroidStorage, AndroidStorageInput};
+use crate::*;
+
 use std::collections::BTreeSet;
 use std::panic;
 use std::path::PathBuf;
@@ -86,11 +85,15 @@ where
         .expect("device_or_default");
 
     let tmp_dir = tempdir().expect("create temp dir");
-    let remote_path = UnixPath::new("/data/local/tmp/mozdevice/");
+    let response = device
+        .execute_host_shell_command("echo $EXTERNAL_STORAGE")
+        .unwrap();
+    let mut test_root = UnixPathBuf::from(response.trim_end_matches('\n'));
+    test_root.push("mozdevice");
 
-    let _ = device.remove(remote_path);
+    let _ = device.remove(&test_root);
 
-    let result = panic::catch_unwind(|| test(&device, &tmp_dir, &remote_path));
+    let result = panic::catch_unwind(|| test(&device, &tmp_dir, &test_root));
 
     let _ = device.kill_forward_all_ports();
     // let _ = device.kill_reverse_all_ports();
@@ -399,7 +402,77 @@ fn device_kill_reverse_all_ports_twice() {
 
 #[test]
 #[ignore]
-fn device_push() {
+fn device_push_pull_text_file() {
+    run_device_test(
+        |device: &Device, _: &TempDir, remote_root_path: &UnixPath| {
+            let content = "test";
+            let remote_path = remote_root_path.join("foo.txt");
+
+            device
+                .push(
+                    &mut io::BufReader::new(content.as_bytes()),
+                    &remote_path,
+                    0o777,
+                )
+                .expect("file has been pushed");
+
+            let file_content = device
+                .execute_host_shell_command(&format!("cat {}", remote_path.display()))
+                .expect("host shell command for 'cat' to succeed");
+
+            assert_eq!(file_content, content);
+
+            // And as second step pull it off the device.
+            let mut buffer = Vec::new();
+            device
+                .pull(&remote_path, &mut buffer)
+                .expect("file has been pulled");
+            assert_eq!(buffer, content.as_bytes());
+        },
+    );
+}
+
+#[test]
+#[ignore]
+fn device_push_pull_large_binary_file() {
+    run_device_test(
+        |device: &Device, _: &TempDir, remote_root_path: &UnixPath| {
+            let remote_path = remote_root_path.join("foo.binary");
+
+            let mut content = Vec::new();
+
+            // Needs to be larger than 64kB to test multiple chunks.
+            for i in 0..100000u32 {
+                content.push('0' as u8 + (i % 10) as u8);
+            }
+
+            device
+                .push(
+                    &mut std::io::Cursor::new(content.clone()),
+                    &remote_path,
+                    0o777,
+                )
+                .expect("large file has been pushed");
+
+            let output = device
+                .execute_host_shell_command(&format!("ls -l {}", remote_path.display()))
+                .expect("host shell command for 'ls' to succeed");
+
+            assert!(output.contains(remote_path.to_str().unwrap()));
+
+            let mut buffer = Vec::new();
+
+            device
+                .pull(&remote_path, &mut buffer)
+                .expect("large binary file has been pulled");
+            assert_eq!(buffer, content);
+        },
+    );
+}
+
+#[test]
+#[ignore]
+fn device_push_permission() {
     run_device_test(
         |device: &Device, _: &TempDir, remote_root_path: &UnixPath| {
             fn adjust_mode(mode: u32) -> u32 {
@@ -431,6 +504,7 @@ fn device_push() {
             let content = "test";
             let remote_path = remote_root_path.join("foo.bar");
 
+            // First push the file to the device
             let modes = vec![0o421, 0o644, 0o666, 0o777];
             for mode in modes {
                 let adjusted_mode = adjust_mode(mode);
@@ -457,19 +531,147 @@ fn device_push() {
 
             assert!(output.contains(remote_root_path.to_str().unwrap()));
             assert!(output.starts_with("drwxrwxrwx"));
-
-            let file_content = device
-                .execute_host_shell_command(&format!("cat {}", remote_path.display()))
-                .expect("host shell command for 'cat' to succeed");
-
-            assert_eq!(file_content, content);
         },
     );
 }
 
 #[test]
 #[ignore]
-fn device_push_dir() {
+fn device_pull_fails_for_missing_file() {
+    run_device_test(
+        |device: &Device, _: &TempDir, remote_root_path: &UnixPath| {
+            let mut buffer = Vec::new();
+
+            device
+                .pull(&remote_root_path.join("missing"), &mut buffer)
+                .expect_err("missing file should not be pulled");
+        },
+    );
+}
+
+#[test]
+#[ignore]
+fn device_push_and_list_dir() {
+    run_device_test(
+        |device: &Device, tmp_dir: &TempDir, remote_root_path: &UnixPath| {
+            let files = ["foo1.bar", "foo2.bar", "bar/foo3.bar", "bar/more/foo3.bar"];
+
+            for file in files.iter() {
+                let path = tmp_dir.path().join(Path::new(file));
+                let _ = std::fs::create_dir_all(path.parent().unwrap());
+
+                let f = File::create(path).expect("to create file");
+                let mut f = io::BufWriter::new(f);
+                f.write_all(file.as_bytes()).expect("to write data");
+            }
+
+            device
+                .push_dir(tmp_dir.path(), &remote_root_path, 0o777)
+                .expect("to push_dir");
+
+            for file in files.iter() {
+                let path = append_components(remote_root_path, Path::new(file)).unwrap();
+                let output = device
+                    .execute_host_shell_command(&format!("ls {}", path.display()))
+                    .expect("host shell command for 'ls' to succeed");
+
+                assert!(output.contains(path.to_str().unwrap()));
+            }
+
+            let mut listings = device.list_dir(&remote_root_path).expect("to list_dir");
+            listings.sort();
+            assert_eq!(
+                listings,
+                vec![
+                    RemoteDirEntry {
+                        depth: 0,
+                        name: "foo1.bar".to_string(),
+                        metadata: RemoteMetadata::RemoteFile(RemoteFileMetadata {
+                            mode: 0b110110000,
+                            size: 8
+                        })
+                    },
+                    RemoteDirEntry {
+                        depth: 0,
+                        name: "foo2.bar".to_string(),
+                        metadata: RemoteMetadata::RemoteFile(RemoteFileMetadata {
+                            mode: 0b110110000,
+                            size: 8
+                        })
+                    },
+                    RemoteDirEntry {
+                        depth: 0,
+                        name: "bar".to_string(),
+                        metadata: RemoteMetadata::RemoteDir
+                    },
+                    RemoteDirEntry {
+                        depth: 1,
+                        name: "bar/foo3.bar".to_string(),
+                        metadata: RemoteMetadata::RemoteFile(RemoteFileMetadata {
+                            mode: 0b110110000,
+                            size: 12
+                        })
+                    },
+                    RemoteDirEntry {
+                        depth: 1,
+                        name: "bar/more".to_string(),
+                        metadata: RemoteMetadata::RemoteDir
+                    },
+                    RemoteDirEntry {
+                        depth: 2,
+                        name: "bar/more/foo3.bar".to_string(),
+                        metadata: RemoteMetadata::RemoteFile(RemoteFileMetadata {
+                            mode: 0b110110000,
+                            size: 17
+                        })
+                    }
+                ]
+            );
+        },
+    );
+}
+
+#[test]
+#[ignore]
+fn device_push_and_pull_dir() {
+    run_device_test(
+        |device: &Device, tmp_dir: &TempDir, remote_root_path: &UnixPath| {
+            let files = ["foo1.bar", "foo2.bar", "bar/foo3.bar", "bar/more/foo3.bar"];
+
+            let src_dir = tmp_dir.path().join(Path::new("src"));
+            let dest_dir = tmp_dir.path().join(Path::new("src"));
+
+            for file in files.iter() {
+                let path = src_dir.join(Path::new(file));
+                let _ = std::fs::create_dir_all(path.parent().unwrap());
+
+                let f = File::create(path).expect("to create file");
+                let mut f = io::BufWriter::new(f);
+                f.write_all(file.as_bytes()).expect("to write data");
+            }
+
+            device
+                .push_dir(&src_dir, &remote_root_path, 0o777)
+                .expect("to push_dir");
+
+            device
+                .pull_dir(remote_root_path, &dest_dir)
+                .expect("to pull_dir");
+
+            for file in files.iter() {
+                let path = dest_dir.join(Path::new(file));
+                let mut f = File::open(path).expect("to open file");
+                let mut buf = String::new();
+                f.read_to_string(&mut buf).expect("to read content");
+                assert_eq!(buf, *file);
+            }
+        },
+    )
+}
+
+#[test]
+#[ignore]
+fn device_push_and_list_dir_flat() {
     run_device_test(
         |device: &Device, tmp_dir: &TempDir, remote_root_path: &UnixPath| {
             let content = "test";
@@ -478,11 +680,6 @@ fn device_push_dir() {
                 PathBuf::from("foo1.bar"),
                 PathBuf::from("foo2.bar"),
                 PathBuf::from("bar").join("foo3.bar"),
-                PathBuf::from("bar")
-                    .join("more")
-                    .join("baz")
-                    .join("moar")
-                    .join("foo3.bar"),
             ];
 
             for file in files.iter() {
@@ -506,6 +703,37 @@ fn device_push_dir() {
 
                 assert!(output.contains(path.to_str().unwrap()));
             }
+
+            let mut listings = device
+                .list_dir_flat(&remote_root_path, 7, "prefix".to_string())
+                .expect("to list_dir_flat");
+            listings.sort();
+            assert_eq!(
+                listings,
+                vec![
+                    RemoteDirEntry {
+                        depth: 7,
+                        metadata: RemoteMetadata::RemoteFile(RemoteFileMetadata {
+                            mode: 0b110110000,
+                            size: 4
+                        }),
+                        name: "prefix/foo1.bar".to_string(),
+                    },
+                    RemoteDirEntry {
+                        depth: 7,
+                        metadata: RemoteMetadata::RemoteFile(RemoteFileMetadata {
+                            mode: 0b110110000,
+                            size: 4
+                        }),
+                        name: "prefix/foo2.bar".to_string(),
+                    },
+                    RemoteDirEntry {
+                        depth: 7,
+                        metadata: RemoteMetadata::RemoteDir,
+                        name: "prefix/bar".to_string(),
+                    },
+                ]
+            );
         },
     );
 }

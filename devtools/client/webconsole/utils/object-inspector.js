@@ -105,14 +105,12 @@ function getObjectInspector(
           ? serviceContainer.sourceMapURLService
           : null,
       }),
-  };
-
-  Object.assign(objectInspectorProps, {
     onDOMNodeMouseOver,
     onDOMNodeMouseOut,
     onInspectIconClick,
     defaultRep: REPS.Grip,
-  });
+    ...override,
+  };
 
   if (override.autoFocusRoot) {
     Object.assign(objectInspectorProps, {
@@ -120,7 +118,7 @@ function getObjectInspector(
     });
   }
 
-  return ObjectInspector({ ...objectInspectorProps, ...override });
+  return ObjectInspector(objectInspectorProps);
 }
 
 function createRoots(frontOrPrimitiveGrip, pathPrefix = "") {

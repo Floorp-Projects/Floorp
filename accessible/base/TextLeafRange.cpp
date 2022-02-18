@@ -355,6 +355,22 @@ static bool IsAcceptableWordStart(Accessible* aAcc, const nsAutoString& aText,
   return true;
 }
 
+class BlockRule : public PivotRule {
+ public:
+  virtual uint16_t Match(Accessible* aAcc) override {
+    if (RefPtr<nsAtom>(aAcc->DisplayStyle()) == nsGkAtoms::block ||
+        aAcc->IsHTMLListItem() ||
+        // XXX Bullets are inline-block, but the old local implementation treats
+        // them as block because IsBlockFrame() returns true. Semantically,
+        // they shouldn't be treated as blocks, so this should be removed once
+        // we only have a single implementation to deal with.
+        (aAcc->IsText() && aAcc->Role() == roles::LISTITEM_MARKER)) {
+      return nsIAccessibleTraversalRule::FILTER_MATCH;
+    }
+    return nsIAccessibleTraversalRule::FILTER_IGNORE;
+  }
+};
+
 /*** TextLeafPoint ***/
 
 TextLeafPoint::TextLeafPoint(Accessible* aAcc, int32_t aOffset) {
@@ -375,39 +391,7 @@ bool TextLeafPoint::operator<(const TextLeafPoint& aPoint) const {
   if (mAcc == aPoint.mAcc) {
     return mOffset < aPoint.mOffset;
   }
-
-  // Build the chain of parents.
-  Accessible* thisP = mAcc;
-  Accessible* otherP = aPoint.mAcc;
-  AutoTArray<Accessible*, 30> thisParents, otherParents;
-  do {
-    thisParents.AppendElement(thisP);
-    thisP = thisP->Parent();
-  } while (thisP);
-  do {
-    otherParents.AppendElement(otherP);
-    otherP = otherP->Parent();
-  } while (otherP);
-
-  // Find where the parent chain differs.
-  uint32_t thisPos = thisParents.Length(), otherPos = otherParents.Length();
-  for (uint32_t len = std::min(thisPos, otherPos); len > 0; --len) {
-    Accessible* thisChild = thisParents.ElementAt(--thisPos);
-    Accessible* otherChild = otherParents.ElementAt(--otherPos);
-    if (thisChild != otherChild) {
-      return thisChild->IndexInParent() < otherChild->IndexInParent();
-    }
-  }
-
-  // If the ancestries are the same length (both thisPos and otherPos are 0),
-  // we should have returned by now.
-  MOZ_ASSERT(thisPos != 0 || otherPos != 0);
-  // At this point, one of the ancestries is a superset of the other, so one of
-  // thisPos or otherPos should be 0.
-  MOZ_ASSERT(thisPos != otherPos);
-  // If the other Accessible is deeper than this one (otherPos > 0), this
-  // Accessible comes before the other.
-  return otherPos > 0;
+  return mAcc->IsBefore(aPoint.mAcc);
 }
 
 bool TextLeafPoint::IsEmptyLastLine() const {
@@ -756,7 +740,8 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
   if (aBoundaryType == nsIAccessibleText::BOUNDARY_WORD_END) {
     return FindWordEnd(aDirection, aIncludeOrigin);
   }
-  if (aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_START &&
+  if ((aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_START ||
+       aBoundaryType == nsIAccessibleText::BOUNDARY_PARAGRAPH) &&
       aIncludeOrigin && aDirection == eDirPrevious && IsEmptyLastLine()) {
     // If we're at an empty line at the end of an Accessible,  we don't want to
     // walk into the previous line. For example, this can happen if the caret
@@ -798,6 +783,9 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
         break;
       case nsIAccessibleText::BOUNDARY_LINE_START:
         boundary = searchFrom.FindLineStartSameAcc(aDirection, includeOrigin);
+        break;
+      case nsIAccessibleText::BOUNDARY_PARAGRAPH:
+        boundary = searchFrom.FindParagraphSameAcc(aDirection, includeOrigin);
         break;
       default:
         MOZ_ASSERT_UNREACHABLE();
@@ -931,6 +919,74 @@ TextLeafPoint TextLeafPoint::FindWordEnd(nsDirection aDirection,
     boundary = prev;
   }
   return boundary;
+}
+
+TextLeafPoint TextLeafPoint::FindParagraphSameAcc(nsDirection aDirection,
+                                                  bool aIncludeOrigin) const {
+  if (mAcc->IsTextLeaf() &&
+      // We don't want to copy strings unnecessarily. See below for the context
+      // of these individual conditions.
+      ((aIncludeOrigin && mOffset > 0) || aDirection == eDirNext ||
+       mOffset >= 2)) {
+    // If there is a line feed, a new paragraph begins after it.
+    nsAutoString text;
+    mAcc->AppendTextTo(text);
+    if (aIncludeOrigin && mOffset > 0 && text.CharAt(mOffset - 1) == '\n') {
+      return TextLeafPoint(mAcc, mOffset);
+    }
+    int32_t lfOffset = -1;
+    if (aDirection == eDirNext) {
+      lfOffset = text.FindChar('\n', mOffset);
+    } else if (mOffset >= 2) {
+      // A line feed at mOffset - 1 means the origin begins a new paragraph,
+      // but we already handled aIncludeOrigin above. Therefore, we search from
+      // mOffset - 2.
+      lfOffset = text.RFindChar('\n', mOffset - 2);
+    }
+    if (lfOffset != -1 && lfOffset + 1 < static_cast<int32_t>(text.Length())) {
+      return TextLeafPoint(mAcc, lfOffset + 1);
+    }
+  }
+
+  // Check whether this Accessible begins a paragraph.
+  if ((!aIncludeOrigin && mOffset == 0) ||
+      (aDirection == eDirNext && mOffset > 0)) {
+    // The caller isn't interested in whether this Accessible begins a
+    // paragraph.
+    return TextLeafPoint();
+  }
+  Accessible* prevLeaf = PrevLeaf(mAcc);
+  BlockRule blockRule;
+  Pivot pivot(DocumentFor(mAcc));
+  Accessible* prevBlock = pivot.Prev(mAcc, blockRule);
+  // Check if we're the first leaf after a block element.
+  if (prevBlock &&
+      // If there's no previous leaf, we must be the first leaf after the block.
+      (!prevLeaf ||
+       // A block can be a leaf; e.g. an empty div or paragraph.
+       prevBlock == prevLeaf ||
+       // If we aren't inside the block, the block must be before us. This
+       // check is important because a block causes a paragraph break both
+       // before and after it.
+       !prevBlock->IsAncestorOf(mAcc) ||
+       // If we are inside the block and the previous leaf isn't, we must be
+       // the first leaf in the block.
+       !prevBlock->IsAncestorOf(prevLeaf))) {
+    return TextLeafPoint(mAcc, 0);
+  }
+  if (!prevLeaf || prevLeaf->IsHTMLBr()) {
+    // We're the first leaf after a line break or the start of the document.
+    return TextLeafPoint(mAcc, 0);
+  }
+  if (prevLeaf->IsTextLeaf()) {
+    // There's a text leaf before us. Check if it ends with a line feed.
+    nsAutoString text;
+    prevLeaf->AppendTextTo(text, nsAccUtils::TextLength(prevLeaf) - 1, 1);
+    if (text.CharAt(0) == '\n') {
+      return TextLeafPoint(mAcc, 0);
+    }
+  }
+  return TextLeafPoint();
 }
 
 already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributesLocalAcc(

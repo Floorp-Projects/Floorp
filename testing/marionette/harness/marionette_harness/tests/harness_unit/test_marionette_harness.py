@@ -21,7 +21,7 @@ def harness_class(request):
     Mock based on MarionetteHarness whose run method just returns a number of
     failures according to the supplied test parameter
     """
-    if "num_fails_crashed" in request.funcargnames:
+    if "num_fails_crashed" in request.fixturenames:
         num_fails_crashed = request.getfixturevalue("num_fails_crashed")
     else:
         num_fails_crashed = (0, 0)
@@ -40,7 +40,7 @@ def runner_class(request):
     Mock based on MarionetteTestRunner, wherein the runner.failed,
     runner.crashed attributes are provided by a test parameter
     """
-    if "num_fails_crashed" in request.funcargnames:
+    if "num_fails_crashed" in request.fixturenames:
         failures, crashed = request.getfixturevalue("num_fails_crashed")
     else:
         failures = 0

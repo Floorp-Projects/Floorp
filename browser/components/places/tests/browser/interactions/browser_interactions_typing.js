@@ -23,9 +23,10 @@ const sentenceFragments = [
 const longSentence =
   "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ut purus a libero cursus scelerisque. In hac habitasse platea dictumst. Quisque posuere ante sed consequat volutpat.";
 
-// A delay that's long enough to trigger the end of typing timeout.
-// Note that the typing timeout has been reduced for the tests.
-const POST_TYPING_DELAY = 100;
+// For tests where it matters reduces the maximum time between keypresses to a length that we can
+// afford to delay the test by.
+const PREF_TYPING_DELAY = "browser.places.interactions.typing_timeout_ms";
+const POST_TYPING_DELAY = 150;
 
 async function sendTextToInput(browser, text) {
   await SpecialPowers.spawn(browser, [], function() {
@@ -36,9 +37,7 @@ async function sendTextToInput(browser, text) {
     input.value = ""; // Reset to later verify that the provided text matches the value
   });
 
-  for (let char of text) {
-    await EventUtils.sendString(char);
-  }
+  EventUtils.sendString(text);
 
   await SpecialPowers.spawn(browser, [{ text }], async function(args) {
     await ContentTaskUtils.waitForCondition(
@@ -148,18 +147,25 @@ add_task(async function test_typing_close_tab() {
 
 add_task(async function test_single_key_typing_and_delay() {
   await Interactions.reset();
-  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    // Single keystrokes with a delay between each, are not considered typing
-    const text = ["T", "h", "e"];
 
-    for (let i = 0; i < text.length; i++) {
-      await sendTextToInput(browser, text[i]);
+  Services.prefs.setIntPref(PREF_TYPING_DELAY, POST_TYPING_DELAY);
 
-      // We do need to wait here because typing is defined as a series of keystrokes followed by a delay.
-      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-      await new Promise(r => setTimeout(r, POST_TYPING_DELAY));
-    }
-  });
+  try {
+    await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+      // Single keystrokes with a delay between each, are not considered typing
+      const text = ["T", "h", "e"];
+
+      for (let i = 0; i < text.length; i++) {
+        await sendTextToInput(browser, text[i]);
+
+        // We do need to wait here because typing is defined as a series of keystrokes followed by a delay.
+        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+        await new Promise(r => setTimeout(r, POST_TYPING_DELAY * 2));
+      }
+    });
+  } finally {
+    Services.prefs.clearUserPref(PREF_TYPING_DELAY);
+  }
 
   // Since we typed single keys with delays between each, there should be no typing added to the database
   await assertDatabaseValues([
@@ -179,15 +185,21 @@ add_task(async function test_double_key_typing_and_delay() {
 
   const testStartTime = Cu.now();
 
-  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    for (let i = 0; i < text.length; i++) {
-      await sendTextToInput(browser, text[i]);
+  Services.prefs.setIntPref(PREF_TYPING_DELAY, POST_TYPING_DELAY);
 
-      // We do need to wait here because typing is defined as a series of keystrokes followed by a delay.
-      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-      await new Promise(r => setTimeout(r, POST_TYPING_DELAY));
-    }
-  });
+  try {
+    await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+      for (let i = 0; i < text.length; i++) {
+        await sendTextToInput(browser, text[i]);
+
+        // We do need to wait here because typing is defined as a series of keystrokes followed by a delay.
+        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+        await new Promise(r => setTimeout(r, POST_TYPING_DELAY * 2));
+      }
+    });
+  } finally {
+    Services.prefs.clearUserPref(PREF_TYPING_DELAY);
+  }
 
   // All keys should be recorded
   await assertDatabaseValues([
@@ -207,15 +219,21 @@ add_task(async function test_typing_and_delay() {
 
   const testStartTime = Cu.now();
 
-  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    for (let i = 0; i < sentenceFragments.length; i++) {
-      await sendTextToInput(browser, sentenceFragments[i]);
+  Services.prefs.setIntPref(PREF_TYPING_DELAY, POST_TYPING_DELAY);
 
-      // We do need to wait here because typing is defined as a series of keystrokes followed by a delay.
-      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-      await new Promise(r => setTimeout(r, POST_TYPING_DELAY));
-    }
-  });
+  try {
+    await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+      for (let i = 0; i < sentenceFragments.length; i++) {
+        await sendTextToInput(browser, sentenceFragments[i]);
+
+        // We do need to wait here because typing is defined as a series of keystrokes followed by a delay.
+        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+        await new Promise(r => setTimeout(r, POST_TYPING_DELAY * 2));
+      }
+    });
+  } finally {
+    Services.prefs.clearUserPref(PREF_TYPING_DELAY);
+  }
 
   await assertDatabaseValues([
     {

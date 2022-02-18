@@ -196,60 +196,23 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         webgpu::CanvasContext* canvasContext =
             canvasElement->GetWebGPUContext();
 
-        if (!canvasContext) {
+        if (!canvasContext || !canvasContext->mHandle) {
           return true;
         }
 
-        bool isRecycled;
-        RefPtr<WebRenderLocalCanvasData> canvasData =
-            aManager->CommandBuilder()
-                .CreateOrRecycleWebRenderUserData<WebRenderLocalCanvasData>(
-                    this, &isRecycled);
-        if (!canvasContext->UpdateWebRenderLocalCanvasData(canvasData)) {
-          return true;
-        }
-
-        const wr::ImageDescriptor imageDesc =
-            canvasContext->MakeImageDescriptor();
-
-        wr::ImageKey imageKey;
-        auto imageKeyMaybe = canvasContext->GetImageKey();
-        // Check that the key exists, and its namespace matches the active
-        // bridge. It will mismatch if there was a GPU reset.
-        if (imageKeyMaybe &&
-            aManager->WrBridge()->GetNamespace() == imageKeyMaybe->mNamespace) {
-          imageKey = imageKeyMaybe.value();
-        } else {
-          imageKey = canvasContext->CreateImageKey(aManager);
-          aResources.AddPrivateExternalImage(
-              canvasContext->mExternalImageId.ref(), imageKey, imageDesc);
-        }
-
-        {
-          nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
-          IntrinsicSize intrinsicSize =
-              IntrinsicSizeFromCanvasSize(canvasSizeInPx);
-          AspectRatio intrinsicRatio =
-              IntrinsicRatioFromCanvasSize(canvasSizeInPx);
-          nsRect area =
-              mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
-          nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
-              area, intrinsicSize, intrinsicRatio, mFrame->StylePosition());
-          LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
-              dest, mFrame->PresContext()->AppUnitsPerDevPixel());
-          auto rendering = wr::ToImageRendering(mFrame->UsedImageRendering());
-          aBuilder.PushImage(wr::ToLayoutRect(bounds), wr::ToLayoutRect(bounds),
-                             !BackfaceIsHidden(), rendering, imageKey);
-        }
-
-        canvasData->mDescriptor = imageDesc;
-        canvasData->mImageKey = imageKey;
-
-        // When the caller calls webgpu::Queue::Submit, we request a frame
-        // readback to update the external image, but when we create the
-        // WebRenderLocalCanvasData for the first time, it hasn't had a chance
-        // to yet, so we need to explicitly do so here.
-        canvasData->RequestFrameReadback();
+        nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
+        IntrinsicSize intrinsicSize =
+            IntrinsicSizeFromCanvasSize(canvasSizeInPx);
+        AspectRatio intrinsicRatio =
+            IntrinsicRatioFromCanvasSize(canvasSizeInPx);
+        nsRect area =
+            mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
+        nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
+            area, intrinsicSize, intrinsicRatio, mFrame->StylePosition());
+        LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
+            dest, mFrame->PresContext()->AppUnitsPerDevPixel());
+        aManager->CommandBuilder().PushInProcessImage(
+            this, canvasContext->mHandle, aBuilder, aResources, aSc, bounds);
         break;
       }
       case CanvasContextType::ImageBitmap: {

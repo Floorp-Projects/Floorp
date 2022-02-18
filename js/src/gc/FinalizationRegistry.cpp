@@ -13,6 +13,7 @@
 #include "mozilla/ScopeExit.h"
 
 #include "builtin/FinalizationRegistryObject.h"
+#include "gc/GCInternals.h"
 #include "gc/GCRuntime.h"
 #include "gc/Zone.h"
 #include "vm/JSContext.h"
@@ -314,6 +315,11 @@ void FinalizationRegistryGlobalData::removeRecord(JSObject* record) {
 
 void FinalizationRegistryGlobalData::trace(JSTracer* trc,
                                            GlobalObject* global) {
+  // Disable compartment checks. We trace potentially cross-compartment edges
+  // here that are not in the CCW map. This is only OK because we ensure the
+  // source and destination zones are always swept in the same sweep group.
+  AutoDisableCompartmentCheckTracer adcct;
+
   for (RecordSet::Enum e(recordSet); !e.empty(); e.popFront()) {
     HeapPtrObject& obj = e.mutableFront();
     TraceCrossCompartmentEdge(trc, global, &obj,

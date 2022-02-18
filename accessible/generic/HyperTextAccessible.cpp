@@ -1015,7 +1015,8 @@ void HyperTextAccessible::TextAtOffset(int32_t aOffset,
       (aBoundaryType == nsIAccessibleText::BOUNDARY_WORD_START ||
        aBoundaryType == nsIAccessibleText::BOUNDARY_WORD_END ||
        aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_START ||
-       aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_END)) {
+       aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_END ||
+       aBoundaryType == nsIAccessibleText::BOUNDARY_PARAGRAPH)) {
     // This isn't strictly related to caching, but this new text implementation
     // is being developed to make caching feasible. We put it behind this pref
     // to make it easy to test while it's still under development.
@@ -1424,26 +1425,6 @@ already_AddRefed<AccAttributes> HyperTextAccessible::NativeAttributes() {
   }
 
   return attributes.forget();
-}
-
-nsAtom* HyperTextAccessible::LandmarkRole() const {
-  if (!HasOwnContent()) return nullptr;
-
-  // For the html landmark elements we expose them like we do ARIA landmarks to
-  // make AT navigation schemes "just work".
-  if (mContent->IsHTMLElement(nsGkAtoms::nav)) {
-    return nsGkAtoms::navigation;
-  }
-
-  if (mContent->IsHTMLElement(nsGkAtoms::aside)) {
-    return nsGkAtoms::complementary;
-  }
-
-  if (mContent->IsHTMLElement(nsGkAtoms::main)) {
-    return nsGkAtoms::main;
-  }
-
-  return AccessibleWrap::LandmarkRole();
 }
 
 int32_t HyperTextAccessible::OffsetAtPoint(int32_t aX, int32_t aY,

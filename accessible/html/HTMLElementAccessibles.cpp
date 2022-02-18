@@ -208,23 +208,6 @@ role HTMLHeaderOrFooterAccessible::NativeRole() const {
   return roles::SECTION;
 }
 
-nsAtom* HTMLHeaderOrFooterAccessible::LandmarkRole() const {
-  if (!HasOwnContent()) return nullptr;
-
-  a11y::role r = const_cast<HTMLHeaderOrFooterAccessible*>(this)->Role();
-  if (r == roles::LANDMARK) {
-    if (mContent->IsHTMLElement(nsGkAtoms::header)) {
-      return nsGkAtoms::banner;
-    }
-
-    if (mContent->IsHTMLElement(nsGkAtoms::footer)) {
-      return nsGkAtoms::contentinfo;
-    }
-  }
-
-  return HyperTextAccessibleWrap::LandmarkRole();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLSectionAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -233,16 +216,4 @@ role HTMLSectionAccessible::NativeRole() const {
   nsAutoString name;
   const_cast<HTMLSectionAccessible*>(this)->Name(name);
   return name.IsEmpty() ? roles::SECTION : roles::REGION;
-}
-
-nsAtom* HTMLSectionAccessible::LandmarkRole() const {
-  if (!HasOwnContent()) {
-    return nullptr;
-  }
-
-  // Only return xml-roles "region" if the section has an accessible name.
-  nsAutoString name;
-  const_cast<HTMLSectionAccessible*>(this)->Name(name);
-  return name.IsEmpty() ? HyperTextAccessibleWrap::LandmarkRole()
-                        : nsGkAtoms::region;
 }

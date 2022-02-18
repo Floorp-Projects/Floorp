@@ -291,7 +291,7 @@ already_AddRefed<dom::Promise> Device::CreateRenderPipelineAsync(
 
 already_AddRefed<Texture> Device::InitSwapChain(
     const dom::GPUCanvasConfiguration& aDesc,
-    wr::ExternalImageId aExternalImageId, gfx::SurfaceFormat aFormat,
+    const layers::CompositableHandle& aHandle, gfx::SurfaceFormat aFormat,
     gfx::IntSize* aCanvasSize) {
   gfx::IntSize size = *aCanvasSize;
   if (aDesc.mSize.WasPassed()) {
@@ -314,8 +314,7 @@ already_AddRefed<Texture> Device::InitSwapChain(
   const layers::RGBDescriptor rgbDesc(size, aFormat);
   // buffer count doesn't matter much, will be created on demand
   const size_t maxBufferCount = 10;
-  mBridge->DeviceCreateSwapChain(mId, rgbDesc, maxBufferCount,
-                                 aExternalImageId);
+  mBridge->DeviceCreateSwapChain(mId, rgbDesc, maxBufferCount, aHandle);
 
   dom::GPUTextureDescriptor desc;
   desc.mDimension = dom::GPUTextureDimension::_2d;

@@ -952,7 +952,7 @@
    fun:wr_thread_pool_new
    fun:WebRenderThreadPool
    fun:RenderThread
-   fun:_ZN7mozilla2wr12RenderThread5StartEv
+   fun:_ZN7mozilla2wr12RenderThread5StartEj
 }
 
 {
