@@ -114,7 +114,7 @@ var gMoreFromMozillaPane = {
             },
             actionURL: AppConstants.isChinaRepack()
               ? "https://www.firefox.com.cn/mobile/get-app/"
-              : "https://www.mozilla.org/firefox/mobile/get-app",
+              : "https://www.mozilla.org/firefox/mobile/get-app/?v=mfm",
           },
         },
       },
