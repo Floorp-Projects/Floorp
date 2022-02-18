@@ -1972,6 +1972,15 @@ var gPrivacyPane = {
       );
     }
 
+    // Set the URL of the learn-more link for Firefox Suggest best match.
+    const bestMatchLearnMoreLink = document.getElementById(
+      "firefoxSuggestBestMatchLearnMore"
+    );
+    bestMatchLearnMoreLink.setAttribute(
+      "href",
+      UrlbarProviderQuickSuggest.bestMatchHelpUrl
+    );
+
     // Set the URL of the Firefox Suggest learn-more links.
     let links = document.querySelectorAll(".firefoxSuggestLearnMore");
     for (let link of links) {
@@ -2008,9 +2017,9 @@ var gPrivacyPane = {
         .getElementById("openSearchEnginePreferences")
         .classList.add("extraMargin");
 
-      // Show the best match checkbox as appropriate.
+      // Show the best match checkbox container as appropriate.
       document.getElementById(
-        "firefoxSuggestBestMatch"
+        "firefoxSuggestBestMatchContainer"
       ).hidden = !UrlbarPrefs.get("bestMatchEnabled");
 
       // Show the container.
