@@ -633,6 +633,44 @@ fn device_push_and_list_dir() {
 
 #[test]
 #[ignore]
+fn device_push_and_pull_dir() {
+    run_device_test(
+        |device: &Device, tmp_dir: &TempDir, remote_root_path: &UnixPath| {
+            let files = ["foo1.bar", "foo2.bar", "bar/foo3.bar", "bar/more/foo3.bar"];
+
+            let src_dir = tmp_dir.path().join(Path::new("src"));
+            let dest_dir = tmp_dir.path().join(Path::new("src"));
+
+            for file in files.iter() {
+                let path = src_dir.join(Path::new(file));
+                let _ = std::fs::create_dir_all(path.parent().unwrap());
+
+                let f = File::create(path).expect("to create file");
+                let mut f = io::BufWriter::new(f);
+                f.write_all(file.as_bytes()).expect("to write data");
+            }
+
+            device
+                .push_dir(&src_dir, &remote_root_path, 0o777)
+                .expect("to push_dir");
+
+            device
+                .pull_dir(remote_root_path, &dest_dir)
+                .expect("to pull_dir");
+
+            for file in files.iter() {
+                let path = dest_dir.join(Path::new(file));
+                let mut f = File::open(path).expect("to open file");
+                let mut buf = String::new();
+                f.read_to_string(&mut buf).expect("to read content");
+                assert_eq!(buf, *file);
+            }
+        },
+    )
+}
+
+#[test]
+#[ignore]
 fn device_push_and_list_dir_flat() {
     run_device_test(
         |device: &Device, tmp_dir: &TempDir, remote_root_path: &UnixPath| {
