@@ -24,6 +24,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -207,6 +208,40 @@ class CreditCardEditorViewTest {
                 )
             )
         }
+    }
+
+    @Test
+    fun `GIVEN invalid credit card values WHEN valid values are entered and the save button is clicked THEN error messages are cleared`() {
+        creditCardEditorView.bind(getInitialCreditCardEditorState())
+
+        var billingName = ""
+        var cardNumber = "1234567891234567"
+        val expiryMonth = 5
+
+        fragmentCreditCardEditorBinding.cardNumberInput.text = cardNumber.toEditable()
+        fragmentCreditCardEditorBinding.nameOnCardInput.text = billingName.toEditable()
+        fragmentCreditCardEditorBinding.expiryMonthDropDown.setSelection(expiryMonth - 1)
+
+        fragmentCreditCardEditorBinding.saveButton.performClick()
+
+        verify {
+            creditCardEditorView.validateForm()
+        }
+
+        billingName = "Banana Apple"
+        cardNumber = "2720994326581252"
+        fragmentCreditCardEditorBinding.nameOnCardInput.text = billingName.toEditable()
+        fragmentCreditCardEditorBinding.cardNumberInput.text = cardNumber.toEditable()
+
+        fragmentCreditCardEditorBinding.saveButton.performClick()
+
+        verify {
+            creditCardEditorView.validateForm()
+        }
+
+        assertTrue(creditCardEditorView.validateForm())
+        assertNull(fragmentCreditCardEditorBinding.cardNumberLayout.error)
+        assertNull(fragmentCreditCardEditorBinding.nameOnCardLayout.error)
     }
 
     @Test

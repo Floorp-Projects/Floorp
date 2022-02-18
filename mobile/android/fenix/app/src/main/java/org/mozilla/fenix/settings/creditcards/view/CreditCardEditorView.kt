@@ -132,7 +132,7 @@ class CreditCardEditorView(
         }
 
         if (binding.nameOnCardInput.text.toString().isNotBlank()) {
-            binding.nameOnCardInput.error = null
+            binding.nameOnCardLayout.error = null
             binding.nameOnCardTitle.setTextColor(binding.root.context.getColorFromAttr(R.attr.textPrimary))
         } else {
             isValid = false
