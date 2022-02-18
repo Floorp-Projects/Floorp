@@ -23,7 +23,7 @@ public class GeckoServiceGpuProcess extends GeckoServiceChildProcess {
     }
 
     @Override
-    public ISurfaceAllocator getSurfaceAllocator() {
+    public ISurfaceAllocator getSurfaceAllocatorFromGpuProcess() {
       return RemoteSurfaceAllocator.getInstance();
     }
   }
