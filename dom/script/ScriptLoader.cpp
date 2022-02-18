@@ -1441,7 +1441,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
                         SRIMetadata(),  // SRI doesn't apply
                         referrerPolicy);
   request->GetLoadContext()->mIsInline = true;
-  request->mLineNo = aElement->GetScriptLineNumber();
+  request->GetLoadContext()->mLineNo = aElement->GetScriptLineNumber();
   request->mProgress = ScriptLoadRequest::Progress::eLoading_Source;
   request->SetTextSource();
   TRACE_FOR_TEST_BOOL(request->GetLoadContext()->GetScriptElement(),
@@ -2117,7 +2117,7 @@ void ScriptLoader::FireScriptAvailable(nsresult aResult,
     obs->ScriptAvailable(aResult,
                          aRequest->GetLoadContext()->GetScriptElement(),
                          aRequest->GetLoadContext()->mIsInline, aRequest->mURI,
-                         aRequest->mLineNo);
+                         aRequest->GetLoadContext()->mLineNo);
   }
 
   aRequest->GetLoadContext()->FireScriptAvailable(aResult);
@@ -2200,7 +2200,8 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
   }
   aOptions->setIntroductionInfoToCaller(aCx, introductionType,
                                         aIntroductionScript);
-  aOptions->setFileAndLine(aRequest->mURL.get(), aRequest->mLineNo);
+  aOptions->setFileAndLine(aRequest->mURL.get(),
+                           aRequest->GetLoadContext()->mLineNo);
   aOptions->setIsRunOnce(true);
   aOptions->setNoScriptRval(true);
   if (aRequest->mSourceMapURL) {
