@@ -217,4 +217,3 @@ role HTMLSectionAccessible::NativeRole() const {
   const_cast<HTMLSectionAccessible*>(this)->Name(name);
   return name.IsEmpty() ? roles::SECTION : roles::REGION;
 }
-
