@@ -655,9 +655,11 @@ bool HostImportModuleDynamically(JSContext* aCx,
   // Create a new top-level load request.
   ScriptFetchOptions* options;
   nsIURI* baseURL;
+  nsCOMPtr<Element> element;
   if (script) {
     options = script->GetFetchOptions();
     baseURL = script->BaseURL();
+    element = script->GetScriptElement();
   } else {
     // We don't have a referencing script so fall back on using
     // options from the document. This can happen when the user
@@ -679,15 +681,14 @@ bool HostImportModuleDynamically(JSContext* aCx,
           xpc::IsWebExtensionContentScriptSandbox(global->GetGlobalJSObject()));
     }
 
-    options = new ScriptFetchOptions(mozilla::CORS_NONE,
-                                     document->GetReferrerPolicy(), nullptr,
-                                     principal, global);
+    options = new ScriptFetchOptions(
+        mozilla::CORS_NONE, document->GetReferrerPolicy(), principal, global);
     baseURL = document->GetDocBaseURI();
   }
 
   RefPtr<ModuleLoadRequest> request = ModuleLoadRequest::CreateDynamicImport(
-      uri, options, baseURL, loader, aReferencingPrivate, specifierString,
-      aPromise);
+      uri, options, baseURL, element, loader, aReferencingPrivate,
+      specifierString, aPromise);
 
   loader->GetModuleLoader()->StartDynamicImport(request);
   return true;
@@ -1143,19 +1144,20 @@ ScriptLoadRequest* ScriptLoader::CreateLoadRequest(
   nsIURI* referrer = mDocument->GetDocumentURIAsReferrer();
   nsCOMPtr<Element> domElement = do_QueryInterface(aElement);
   ScriptFetchOptions* fetchOptions = new ScriptFetchOptions(
-      aCORSMode, aReferrerPolicy, domElement, aTriggeringPrincipal, nullptr);
+      aCORSMode, aReferrerPolicy, aTriggeringPrincipal, nullptr);
 
   if (aKind == ScriptKind::eClassic) {
     ScriptLoadRequest* aRequest =
         new ScriptLoadRequest(aKind, aURI, fetchOptions, aIntegrity, referrer);
-    DOMScriptLoadContext* aContext = new DOMScriptLoadContext(aRequest);
+    DOMScriptLoadContext* aContext =
+        new DOMScriptLoadContext(domElement, aRequest);
     aRequest->mLoadContext = aContext;
     return aRequest;
   }
 
   MOZ_ASSERT(aKind == ScriptKind::eModule);
-  return ModuleLoadRequest::CreateTopLevel(aURI, fetchOptions, aIntegrity,
-                                           referrer, this);
+  return ModuleLoadRequest::CreateTopLevel(aURI, fetchOptions, domElement,
+                                           aIntegrity, referrer, this);
 }
 
 bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement) {
@@ -2526,7 +2528,8 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
 
   // Create a ClassicScript object and associate it with the JSScript.
   RefPtr<ClassicScript> classicScript =
-      new ClassicScript(aRequest->mFetchOptions, aRequest->mBaseURL);
+      new ClassicScript(aRequest->mFetchOptions, aRequest->mBaseURL,
+                        aRequest->mLoadContext->mElement);
   JS::RootedValue classicScriptValue(cx, JS::PrivateValue(classicScript));
 
   JS::CompileOptions options(cx);
