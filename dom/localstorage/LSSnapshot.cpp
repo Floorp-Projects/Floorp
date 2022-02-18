@@ -510,7 +510,16 @@ nsresult LSSnapshot::Clear(LSNotifyInfo& aNotifyInfo) {
   } else {
     changed = true;
 
-    DebugOnly<nsresult> rv = UpdateUsage(-mExactUsage);
+    int64_t delta = 0;
+    for (const auto& entry : mValues) {
+      const nsAString& key = entry.GetKey();
+      const nsString& value = entry.GetData();
+
+      delta += -static_cast<int64_t>(key.Length()) -
+               static_cast<int64_t>(value.Length());
+    }
+
+    DebugOnly<nsresult> rv = UpdateUsage(delta);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     mValues.Clear();
@@ -582,6 +591,15 @@ nsresult LSSnapshot::End() {
   }
 
   return NS_OK;
+}
+
+int64_t LSSnapshot::GetUsage() const {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(!mSentFinish);
+
+  return mExactUsage;
 }
 
 void LSSnapshot::ScheduleStableStateCallback() {
