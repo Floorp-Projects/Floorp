@@ -1015,7 +1015,8 @@ void HyperTextAccessible::TextAtOffset(int32_t aOffset,
       (aBoundaryType == nsIAccessibleText::BOUNDARY_WORD_START ||
        aBoundaryType == nsIAccessibleText::BOUNDARY_WORD_END ||
        aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_START ||
-       aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_END)) {
+       aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_END ||
+       aBoundaryType == nsIAccessibleText::BOUNDARY_PARAGRAPH)) {
     // This isn't strictly related to caching, but this new text implementation
     // is being developed to make caching feasible. We put it behind this pref
     // to make it easy to test while it's still under development.
