@@ -108,7 +108,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
         val engineIcon = BitmapDrawable(res, engine.icon)
         engineIcon.setBounds(0, 0, iconSize, iconSize)
         val drawables = buttonItem.compoundDrawables
-        buttonItem.setCompoundDrawables(engineIcon, null, drawables[2], null)
+        buttonItem.setCompoundDrawablesRelative(engineIcon, null, drawables[2], null)
         return buttonItem
     }
 }

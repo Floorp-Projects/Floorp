@@ -14,4 +14,5 @@
     android:paddingBottom="@dimen/preference_padding_vertical"
     android:paddingEnd="@dimen/preference_padding_horizontal"
     android:paddingStart="@dimen/preference_padding_horizontal"
-    android:paddingTop="@dimen/preference_padding_vertical" />
+    android:paddingTop="@dimen/preference_padding_vertical"
+    android:textAlignment="viewStart"/>
