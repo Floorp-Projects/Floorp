@@ -485,7 +485,7 @@ bool ReadableByteStreamControllerShouldCallPull(
 // MG:XXX: There's a template hiding here for handling the difference between
 // default and byte stream, eventually?
 class ByteStreamPullIfNeededPromiseHandler final : public PromiseNativeHandler {
-  ~ByteStreamPullIfNeededPromiseHandler() = default;
+  ~ByteStreamPullIfNeededPromiseHandler() override = default;
 
   // Virtually const, but cycle collected
   RefPtr<ReadableByteStreamController> mController;
@@ -1874,7 +1874,7 @@ void ReadableByteStreamControllerPullInto(
 }
 
 class ByteStreamStartPromiseNativeHandler final : public PromiseNativeHandler {
-  ~ByteStreamStartPromiseNativeHandler() = default;
+  ~ByteStreamStartPromiseNativeHandler() override = default;
 
   RefPtr<ReadableByteStreamController> mController;
 

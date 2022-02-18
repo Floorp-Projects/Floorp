@@ -46,7 +46,7 @@ struct Read_ReadRequest : public ReadRequest {
                   ErrorResult& aRv) override;
 
  protected:
-  virtual ~Read_ReadRequest() = default;
+  ~Read_ReadRequest() override = default;
 };
 
 class ReadableStreamDefaultReader final : public ReadableStreamGenericReader,
@@ -62,7 +62,7 @@ class ReadableStreamDefaultReader final : public ReadableStreamGenericReader,
   explicit ReadableStreamDefaultReader(nsISupports* aGlobal);
 
  protected:
-  ~ReadableStreamDefaultReader();
+  ~ReadableStreamDefaultReader() override;
 
  public:
   bool IsDefault() override { return true; }

@@ -31,7 +31,7 @@ class CountQueuingStrategy final : public BaseQueuingStrategy,
       : BaseQueuingStrategy(aGlobal, aHighWaterMark) {}
 
  protected:
-  ~CountQueuingStrategy() = default;
+  ~CountQueuingStrategy() override = default;
 
  public:
   JSObject* WrapObject(JSContext* aCx,
