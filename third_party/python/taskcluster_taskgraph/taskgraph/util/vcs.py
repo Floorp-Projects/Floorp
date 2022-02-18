@@ -25,10 +25,10 @@ class Repository(ABC):
 
         self._env = os.environ.copy()
 
-    def run(self, *args: str):
+    def run(self, *args: str, **kwargs):
         cmd = (self.binary,) + args
         return subprocess.check_output(
-            cmd, cwd=self.path, env=self._env, universal_newlines=True
+            cmd, cwd=self.path, env=self._env, encoding="utf-8", **kwargs
         )
 
     @abstractproperty
