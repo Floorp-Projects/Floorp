@@ -2708,7 +2708,6 @@ HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
        aNewTarget));
 
   MOZ_ASSERT(NS_IsMainThread(), "Should be called on main thread only");
-  MOZ_ASSERT(!mODATarget);
   MOZ_ASSERT(aNewTarget);
 
   NS_ENSURE_ARG(aNewTarget);
@@ -2746,6 +2745,7 @@ HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
 
   {
     MutexAutoLock lock(mEventTargetMutex);
+    MOZ_ASSERT(!mODATarget);
     mODATarget = aNewTarget;
   }
 
@@ -3016,7 +3016,11 @@ void HttpChannelChild::MaybeConnectToSocketProcess() {
     return;
   }
 
-  RefPtr<HttpBackgroundChannelChild> bgChild = mBgChild;
+  RefPtr<HttpBackgroundChannelChild> bgChild;
+  {
+    MutexAutoLock lock(mBgChildMutex);
+    bgChild = mBgChild;
+  }
   SocketProcessBridgeChild::GetSocketProcessBridge()->Then(
       GetCurrentSerialEventTarget(), __func__,
       [bgChild]() {

@@ -13,6 +13,7 @@ include LayersMessages;
 include protocol PTexture;
 
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::CompositableHandleOwner from "mozilla/layers/LayersTypes.h";
 using mozilla::wr::LayoutSize from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::ImageDescriptor from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::ImageRendering from "mozilla/webrender/webrender_ffi.h";
@@ -66,7 +67,7 @@ struct OpAddCompositorAnimations {
 struct OpAddPipelineIdForCompositable {
   PipelineId pipelineId;
   CompositableHandle handle;
-  bool isAsync;
+  CompositableHandleOwner owner;
 };
 
 struct OpRemovePipelineIdForCompositable {

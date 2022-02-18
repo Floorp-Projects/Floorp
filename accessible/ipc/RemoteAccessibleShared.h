@@ -31,7 +31,7 @@ ENameValueFlag Name(nsString& aName) const override;
 /*
  * Set aValue to the value of the proxied accessible.
  */
-void Value(nsString& aValue) const;
+void Value(nsString& aValue) const override;
 
 /*
  * Set aHelp to the help string of the proxied accessible.
@@ -60,8 +60,6 @@ void Relations(nsTArray<RelationType>* aTypes,
                nsTArray<nsTArray<RemoteAccessible*>>* aTargetSets) const;
 
 bool IsSearchbox() const;
-
-nsAtom* LandmarkRole() const;
 
 nsStaticAtom* ARIARoleAtom() const;
 

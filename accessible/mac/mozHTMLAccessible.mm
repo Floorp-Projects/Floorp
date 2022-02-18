@@ -48,11 +48,7 @@ using namespace mozilla::a11y;
 
 - (NSURL*)moxURL {
   nsAutoString value;
-  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-    acc->Value(value);
-  } else if (RemoteAccessible* proxy = mGeckoAccessible->AsRemote()) {
-    proxy->Value(value);
-  }
+  mGeckoAccessible->Value(value);
 
   NSString* urlString = value.IsEmpty() ? nil : nsCocoaUtils::ToNSString(value);
   if (!urlString) return nil;

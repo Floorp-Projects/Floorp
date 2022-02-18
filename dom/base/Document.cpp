@@ -1380,7 +1380,6 @@ Document::Document(const char* aContentType)
       mPendingFullscreenRequests(0),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
-      mAsyncOnloadBlockCount(0),
       mWriteLevel(0),
       mLazyLoadImageCount(0),
       mLazyLoadImageStarted(0),
@@ -11420,13 +11419,6 @@ void Document::EnsureOnloadBlocker() {
   }
 }
 
-void Document::AsyncBlockOnload() {
-  while (mAsyncOnloadBlockCount) {
-    --mAsyncOnloadBlockCount;
-    BlockOnload();
-  }
-}
-
 void Document::BlockOnload() {
   if (mDisplayDocument) {
     mDisplayDocument->BlockOnload();
@@ -11436,18 +11428,7 @@ void Document::BlockOnload() {
   // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
   // -- it's not ours.
   if (mOnloadBlockCount == 0 && mScriptGlobalObject) {
-    if (!nsContentUtils::IsSafeToRunScript()) {
-      // Because AddRequest may lead to OnStateChange calls in chrome,
-      // block onload only when there are no script blockers.
-      ++mAsyncOnloadBlockCount;
-      if (mAsyncOnloadBlockCount == 1) {
-        nsContentUtils::AddScriptRunner(NewRunnableMethod(
-            "Document::AsyncBlockOnload", this, &Document::AsyncBlockOnload));
-      }
-      return;
-    }
-    nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
-    if (loadGroup) {
+    if (nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup()) {
       loadGroup->AddRequest(mOnloadBlocker, nullptr);
     }
   }
@@ -11460,20 +11441,13 @@ void Document::UnblockOnload(bool aFireSync) {
     return;
   }
 
-  if (mOnloadBlockCount == 0 && mAsyncOnloadBlockCount == 0) {
-    MOZ_ASSERT_UNREACHABLE(
-        "More UnblockOnload() calls than BlockOnload() "
-        "calls; dropping call");
-    return;
-  }
-
   --mOnloadBlockCount;
 
   if (mOnloadBlockCount == 0) {
     if (mScriptGlobalObject) {
       // Only manipulate the loadgroup in this case, because if
       // mScriptGlobalObject is null, it's not ours.
-      if (aFireSync && mAsyncOnloadBlockCount == 0) {
+      if (aFireSync) {
         // Increment mOnloadBlockCount, since DoUnblockOnload will decrement it
         ++mOnloadBlockCount;
         DoUnblockOnload();
@@ -11534,18 +11508,10 @@ void Document::DoUnblockOnload() {
     return;
   }
 
-  if (mAsyncOnloadBlockCount != 0) {
-    // We need to wait until the async onload block has been handled.
-    //
-    // FIXME(emilio): Shouldn't we return here??
-    PostUnblockOnloadEvent();
-  }
-
   // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
   // -- it's not ours.
   if (mScriptGlobalObject) {
-    nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
-    if (loadGroup) {
+    if (nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup()) {
       loadGroup->RemoveRequest(mOnloadBlocker, nullptr, NS_OK);
     }
   }

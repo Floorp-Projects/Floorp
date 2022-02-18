@@ -102,6 +102,21 @@ class Accessible {
   }
 
   /**
+   * Return true if this Accessible is before another Accessible in the tree.
+   */
+  bool IsBefore(const Accessible* aAcc) const;
+
+  bool IsAncestorOf(const Accessible* aAcc) const {
+    for (const Accessible* parent = aAcc->Parent(); parent;
+         parent = parent->Parent()) {
+      if (parent == this) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Used by ChildAtPoint() method to get direct or deepest child at point.
    */
   enum class EWhichChildAtPoint { DirectChild, DeepestChild };
@@ -152,6 +167,11 @@ class Accessible {
    * Get the description of this accessible.
    */
   virtual void Description(nsString& aDescription) const = 0;
+
+  /**
+   * Get the value of this accessible.
+   */
+  virtual void Value(nsString& aValue) const = 0;
 
   virtual double CurValue() const = 0;
   virtual double MinValue() const = 0;
@@ -208,6 +228,11 @@ class Accessible {
    * Return tag name of associated DOM node.
    */
   virtual nsAtom* TagName() const = 0;
+
+  /**
+   * Return a landmark role if applied.
+   */
+  virtual nsAtom* LandmarkRole() const;
 
   //////////////////////////////////////////////////////////////////////////////
   // ActionAccessible

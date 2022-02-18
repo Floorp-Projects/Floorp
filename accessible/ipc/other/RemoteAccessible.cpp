@@ -46,6 +46,11 @@ ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
 }
 
 void RemoteAccessible::Value(nsString& aValue) const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    RemoteAccessibleBase<RemoteAccessible>::Value(aValue);
+    return;
+  }
+
   Unused << mDoc->SendValue(mID, &aValue);
 }
 
@@ -124,6 +129,10 @@ bool RemoteAccessible::IsSearchbox() const {
 }
 
 nsAtom* RemoteAccessible::LandmarkRole() const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::LandmarkRole();
+  }
+
   nsString landmark;
   Unused << mDoc->SendLandmarkRole(mID, &landmark);
   return NS_GetStaticAtom(landmark);
