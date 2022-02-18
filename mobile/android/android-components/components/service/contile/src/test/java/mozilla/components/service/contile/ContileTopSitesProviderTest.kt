@@ -15,6 +15,8 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -93,11 +95,16 @@ class ContileTopSitesProviderTest {
             )
         )
 
+        assertNull(provider.diskCacheLastModified)
+        assertNull(cachingProvider.diskCacheLastModified)
+
         provider.getTopSites()
         verify(provider, never()).writeToDiskCache(jsonResponse)
+        assertNull(provider.diskCacheLastModified)
 
         cachingProvider.getTopSites()
         verify(cachingProvider).writeToDiskCache(jsonResponse)
+        assertNotNull(cachingProvider.diskCacheLastModified)
     }
 
     @Test
@@ -144,6 +151,63 @@ class ContileTopSitesProviderTest {
 
         whenever(provider.getCacheLastModified()).thenReturn(Date().time + 60 * MINUTE_IN_MS)
         assertFalse(provider.isCacheExpired())
+    }
+
+    @Test
+    fun `WHEN the cache last modified time is fetched THEN the returned value is cached`() {
+        val provider = spy(ContileTopSitesProvider(testContext, prepareClient()))
+        val file = File(testContext.filesDir, CACHE_FILE_NAME)
+
+        assertNull(provider.diskCacheLastModified)
+
+        file.createNewFile()
+
+        assertTrue(file.exists())
+
+        var cacheLastModified = provider.getCacheLastModified()
+
+        assertEquals(cacheLastModified, provider.diskCacheLastModified)
+        assertTrue(file.delete())
+
+        cacheLastModified = provider.getCacheLastModified()
+
+        assertEquals(cacheLastModified, provider.diskCacheLastModified)
+    }
+
+    @Test
+    fun `GIVEN cache is not expired WHEN top sites are refreshed THEN do nothing`() = runBlocking {
+        val provider = spy(
+            ContileTopSitesProvider(
+                testContext,
+                client = prepareClient(),
+                maxCacheAgeInMinutes = 10
+            )
+        )
+
+        whenever(provider.isCacheExpired()).thenReturn(false)
+        provider.refreshTopSitesIfCacheExpired()
+        verify(provider, never()).getTopSites(allowCache = false)
+
+        Unit
+    }
+
+    @Test
+    fun `GIVEN cache is expired WHEN top sites are refreshed THEN fetch and write new response to cache`() = runBlocking {
+        val jsonResponse = loadResourceAsString("/contile/contile.json")
+        val provider = spy(
+            ContileTopSitesProvider(
+                testContext,
+                client = prepareClient(jsonResponse),
+                maxCacheAgeInMinutes = 10
+            )
+        )
+
+        whenever(provider.isCacheExpired()).thenReturn(true)
+
+        provider.refreshTopSitesIfCacheExpired()
+
+        verify(provider).getTopSites(allowCache = false)
+        verify(provider).writeToDiskCache(jsonResponse)
     }
 
     private fun prepareClient(
