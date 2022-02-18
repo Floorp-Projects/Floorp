@@ -612,11 +612,7 @@ struct RoleDescrComparator {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsAutoString value;
-  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-    acc->Value(value);
-  } else {
-    mGeckoAccessible->AsRemote()->Value(value);
-  }
+  mGeckoAccessible->Value(value);
 
   return nsCocoaUtils::ToNSString(value);
 
