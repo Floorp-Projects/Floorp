@@ -24,16 +24,6 @@ COMMON_ARGUMENT_GROUPS = {
             },
         ],
         [
-            ["--no-push"],
-            {
-                "dest": "push",
-                "action": "store_false",
-                "help": "Do not push to try as a result of running this command (if "
-                "specified this command will only print calculated try "
-                "syntax and selection info).",
-            },
-        ],
-        [
             ["--closed-tree"],
             {
                 "action": "store_true",
@@ -99,6 +89,28 @@ COMMON_ARGUMENT_GROUPS = {
     ],
 }
 
+NO_PUSH_ARGUMENT_GROUP = [
+    [
+        ["--stage-changes"],
+        {
+            "dest": "stage_changes",
+            "action": "store_true",
+            "help": "Locally stage changes created by this command but do not "
+            "push to try.",
+        },
+    ],
+    [
+        ["--no-push"],
+        {
+            "dest": "dry_run",
+            "action": "store_true",
+            "help": "Do not push to try as a result of running this command (if "
+            "specified this command will only print calculated try "
+            "syntax and selection info and not change files).",
+        },
+    ],
+]
+
 
 class BaseTryParser(ArgumentParser):
     name = "try"
@@ -123,6 +135,12 @@ class BaseTryParser(ArgumentParser):
 
             for cli, kwargs in arguments:
                 group.add_argument(*cli, **kwargs)
+
+            if name == "push":
+                group_no_push = group.add_mutually_exclusive_group()
+                arguments = NO_PUSH_ARGUMENT_GROUP
+                for cli, kwargs in arguments:
+                    group_no_push.add_argument(*cli, **kwargs)
 
         group = self.add_argument_group("task configuration arguments")
         self.task_configs = {c: all_task_configs[c]() for c in self.task_configs}
