@@ -31,22 +31,19 @@ class UnrestrictedDoubleOrKeyframeAnimationOptions;
 struct TimingParams {
   constexpr TimingParams() = default;
 
-  constexpr TimingParams(float aDuration, float aDelay, float aIterationCount,
-                         dom::PlaybackDirection aDirection,
-                         dom::FillMode aFillMode)
+  TimingParams(float aDuration, float aDelay, float aIterationCount,
+               dom::PlaybackDirection aDirection, dom::FillMode aFillMode)
       : mIterations(aIterationCount), mDirection(aDirection), mFill(aFillMode) {
     mDuration.emplace(StickyTimeDuration::FromMilliseconds(aDuration));
     mDelay = TimeDuration::FromMilliseconds(aDelay);
     Update();
   }
 
-  constexpr TimingParams(const TimeDuration& aDuration,
-                         const TimeDuration& aDelay,
-                         const TimeDuration& aEndDelay, float aIterations,
-                         float aIterationStart,
-                         dom::PlaybackDirection aDirection,
-                         dom::FillMode aFillMode,
-                         Maybe<ComputedTimingFunction>&& aFunction)
+  TimingParams(const TimeDuration& aDuration, const TimeDuration& aDelay,
+               const TimeDuration& aEndDelay, float aIterations,
+               float aIterationStart, dom::PlaybackDirection aDirection,
+               dom::FillMode aFillMode,
+               Maybe<ComputedTimingFunction>&& aFunction)
       : mDelay(aDelay),
         mEndDelay(aEndDelay),
         mIterations(aIterations),
