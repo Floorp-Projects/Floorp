@@ -32,7 +32,7 @@ class ByteLengthQueuingStrategy final : public BaseQueuingStrategy,
       : BaseQueuingStrategy(aGlobal, aHighWaterMark) {}
 
  protected:
-  ~ByteLengthQueuingStrategy() = default;
+  ~ByteLengthQueuingStrategy() override = default;
 
  public:
   JSObject* WrapObject(JSContext* aCx,

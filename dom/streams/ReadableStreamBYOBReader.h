@@ -62,7 +62,7 @@ class ReadableStreamBYOBReader final : public ReadableStreamGenericReader,
   }
 
  private:
-  virtual ~ReadableStreamBYOBReader() = default;
+  ~ReadableStreamBYOBReader() override = default;
 
   LinkedList<RefPtr<ReadIntoRequest>> mReadIntoRequests = {};
 };

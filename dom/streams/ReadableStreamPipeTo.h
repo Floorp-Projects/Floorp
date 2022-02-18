@@ -69,7 +69,7 @@ class PipeToPump final : public AbortFollower {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void RunAbortAlgorithm() override;
 
  private:
-  virtual ~PipeToPump() = default;
+  ~PipeToPump() override = default;
 
   MOZ_CAN_RUN_SCRIPT void PerformAbortAlgorithm(JSContext* aCx,
                                                 AbortSignalImpl* aSignal);

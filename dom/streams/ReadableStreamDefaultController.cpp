@@ -410,7 +410,7 @@ void ReadableStreamDefaultControllerError(
 // MG:XXX: Probably can find base class between this and
 // StartPromiseNativeHandler
 class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
-  ~PullIfNeededNativePromiseHandler() = default;
+  ~PullIfNeededNativePromiseHandler() override = default;
 
   // Virtually const, but cycle collected
   RefPtr<ReadableStreamDefaultController> mController;
@@ -501,7 +501,7 @@ static void ReadableStreamDefaultControllerCallPullIfNeeded(
 }
 
 class StartPromiseNativeHandler final : public PromiseNativeHandler {
-  ~StartPromiseNativeHandler() = default;
+  ~StartPromiseNativeHandler() override = default;
 
   RefPtr<ReadableStreamDefaultController> mController;
 
