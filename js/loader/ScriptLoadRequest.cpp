@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScriptLoadRequest.h"
-#include "ScriptLoadContext.h"
+#include "mozilla/dom/ScriptLoadContext.h"
 #include "GeckoProfiler.h"
 
 #include "mozilla/dom/Document.h"
@@ -22,7 +22,8 @@
 #include "nsICacheInfoChannel.h"
 #include "nsIClassOfService.h"
 #include "nsISupportsPriority.h"
-#include "ScriptSettings.h"
+#include "ScriptLoadRequest.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 using JS::SourceText;
 

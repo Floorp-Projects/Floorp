@@ -7,7 +7,7 @@
 #include "GeckoProfiler.h"
 #include "LoadedScript.h"
 #include "ScriptLoadRequest.h"
-#include "ScriptTrace.h"
+#include "mozilla/dom/ScriptTrace.h"
 #include "ModuleLoadRequest.h"
 
 #include "js/Array.h"  // JS::GetArrayLength
