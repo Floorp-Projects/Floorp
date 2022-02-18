@@ -27,6 +27,7 @@
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Components.h"
 #include "mozilla/Printf.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_general.h"
@@ -47,6 +48,7 @@
 #include "nsCRT.h"
 #include "nsIParentalControlsService.h"
 #include "nsPIDOMWindow.h"
+#include "nsIHttpActivityObserver.h"
 #include "nsHttpChannelAuthProvider.h"
 #include "nsINetworkLinkService.h"
 #include "nsNetUtil.h"
@@ -393,6 +395,7 @@ nsresult nsHttpHandler::Init() {
     usageOfHTTPSRRPrefs[2] = StaticPrefs::network_dns_echconfig_enabled();
     Telemetry::ScalarSet(Telemetry::ScalarID::NETWORKING_HTTPS_RR_PREFS_USAGE,
                          static_cast<uint32_t>(usageOfHTTPSRRPrefs.to_ulong()));
+    mActivityDistributor = components::HttpActivityDistributor::Service();
   }
 
   auto initQLogDir = [&]() {
@@ -2222,6 +2225,8 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
         Telemetry::Accumulate(Telemetry::DNT_USAGE, 1);
       }
     }
+
+    mActivityDistributor = nullptr;
   } else if (!strcmp(topic, "profile-change-net-restore")) {
     // initialize connection manager
     rv = InitConnectionMgr();
@@ -2992,6 +2997,37 @@ bool nsHttpHandler::Is0RttTcpExcluded(const nsHttpConnectionInfo* ci) {
   }
 
   return mExcluded0RttTcpOrigins.Contains(ci->GetOrigin());
+}
+
+bool nsHttpHandler::HttpActivityDistributorActivated() {
+  if (!mActivityDistributor) {
+    return false;
+  }
+
+  return mActivityDistributor->Activated();
+}
+
+void nsHttpHandler::ObserveHttpActivityWithArgs(
+    const HttpActivityArgs& aArgs, uint32_t aActivityType,
+    uint32_t aActivitySubtype, PRTime aTimestamp, uint64_t aExtraSizeData,
+    const nsACString& aExtraStringData) {
+  if (!HttpActivityDistributorActivated()) {
+    return;
+  }
+
+  if (aActivitySubtype == NS_HTTP_ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER &&
+      !mActivityDistributor->ObserveProxyResponseEnabled()) {
+    return;
+  }
+
+  if (aActivityType == NS_ACTIVITY_TYPE_HTTP_CONNECTION &&
+      !mActivityDistributor->ObserveConnectionEnabled()) {
+    return;
+  }
+
+  Unused << mActivityDistributor->ObserveActivityWithArgs(
+      aArgs, aActivityType, aActivitySubtype, aTimestamp, aExtraSizeData,
+      aExtraStringData);
 }
 
 }  // namespace mozilla::net
