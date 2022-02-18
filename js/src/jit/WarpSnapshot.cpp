@@ -149,12 +149,6 @@ void WarpGetImport::dumpData(GenericPrinter& out) const {
   out.printf("    needsLexicalCheck: %u\n", needsLexicalCheck());
 }
 
-void WarpLambda::dumpData(GenericPrinter& out) const {
-  out.printf("    baseScript: 0x%p\n", baseScript());
-  out.printf("    flags: 0x%x\n", unsigned(flags().toRaw()));
-  out.printf("    nargs: %u\n", unsigned(nargs_));
-}
-
 void WarpRest::dumpData(GenericPrinter& out) const {
   out.printf("    shape: 0x%p\n", shape());
 }
@@ -279,10 +273,6 @@ void WarpGetIntrinsic::traceData(JSTracer* trc) {
 
 void WarpGetImport::traceData(JSTracer* trc) {
   TraceWarpGCPtr(trc, targetEnv_, "warp-import-env");
-}
-
-void WarpLambda::traceData(JSTracer* trc) {
-  TraceWarpGCPtr(trc, baseScript_, "warp-lambda-basescript");
 }
 
 void WarpRest::traceData(JSTracer* trc) {
