@@ -337,6 +337,7 @@ void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
     case nsIAccessibleText::BOUNDARY_WORD_END:
     case nsIAccessibleText::BOUNDARY_LINE_START:
     case nsIAccessibleText::BOUNDARY_LINE_END:
+    case nsIAccessibleText::BOUNDARY_PARAGRAPH:
       TextLeafPoint start, end;
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
         start = TextLeafPoint::GetCaret(Acc());
