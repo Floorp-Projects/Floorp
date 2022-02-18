@@ -70,6 +70,7 @@ case "$target" in
   # Give it a fake one.
   echo "#!/bin/sh" > codesign
   chmod +x codesign
+  PATH="$PATH:$PWD"
   ;;
 *-linux-android)
   cflags="
