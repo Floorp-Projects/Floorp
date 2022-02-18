@@ -173,11 +173,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   mozilla::a11y::role ARIARole();
 
   /**
-   * Return a landmark role if applied.
-   */
-  virtual nsAtom* LandmarkRole() const;
-
-  /**
    * Returns enumerated accessible role from native markup (see constants in
    * Role.h). Doesn't take into account ARIA roles.
    */

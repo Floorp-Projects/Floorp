@@ -1427,26 +1427,6 @@ already_AddRefed<AccAttributes> HyperTextAccessible::NativeAttributes() {
   return attributes.forget();
 }
 
-nsAtom* HyperTextAccessible::LandmarkRole() const {
-  if (!HasOwnContent()) return nullptr;
-
-  // For the html landmark elements we expose them like we do ARIA landmarks to
-  // make AT navigation schemes "just work".
-  if (mContent->IsHTMLElement(nsGkAtoms::nav)) {
-    return nsGkAtoms::navigation;
-  }
-
-  if (mContent->IsHTMLElement(nsGkAtoms::aside)) {
-    return nsGkAtoms::complementary;
-  }
-
-  if (mContent->IsHTMLElement(nsGkAtoms::main)) {
-    return nsGkAtoms::main;
-  }
-
-  return AccessibleWrap::LandmarkRole();
-}
-
 int32_t HyperTextAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
                                            uint32_t aCoordType) {
   nsIFrame* hyperFrame = GetFrame();
