@@ -11,6 +11,7 @@
 #include "mozilla/dom/WritableStreamDefaultWriter.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/AlreadyAddRefed.h"
 
 namespace mozilla::dom {
 
@@ -82,8 +83,7 @@ void PipeToPump::PerformAbortAlgorithm(JSContext* aCx,
 
   auto action = [](JSContext* aCx, PipeToPump* aPipeToPump,
                    JS::Handle<mozilla::Maybe<JS::Value>> aError,
-                   ErrorResult& aRv)
-                    MOZ_CAN_RUN_SCRIPT -> already_AddRefed<Promise> {
+                   ErrorResult& aRv) MOZ_CAN_RUN_SCRIPT {
     JS::Rooted<JS::Value> error(aCx, *aError);
 
     // Step 2. Let actions be an empty ordered set.
@@ -98,7 +98,7 @@ void PipeToPump::PerformAbortAlgorithm(JSContext* aCx,
       if (dest->State() == WritableStream::WriterState::Writable) {
         RefPtr<Promise> p = WritableStreamAbort(aCx, dest, error, aRv);
         if (aRv.Failed()) {
-          return nullptr;
+          return already_AddRefed<Promise>();
         }
         actions.AppendElement(p);
       }
@@ -117,7 +117,7 @@ void PipeToPump::PerformAbortAlgorithm(JSContext* aCx,
       if (source->State() == ReadableStream::ReaderState::Readable) {
         RefPtr<Promise> p = ReadableStreamCancel(aCx, source, error, aRv);
         if (aRv.Failed()) {
-          return nullptr;
+          return already_AddRefed<Promise>();
         }
         actions.AppendElement(p);
       }
@@ -616,7 +616,7 @@ void PipeToPump::OnSourceClosed(JSContext* aCx, JS::Handle<JS::Value>) {
         aCx,
         [](JSContext* aCx, PipeToPump* aPipeToPump,
            JS::Handle<mozilla::Maybe<JS::Value>> aError, ErrorResult& aRv)
-            MOZ_CAN_RUN_SCRIPT -> already_AddRefed<Promise> {
+            MOZ_CAN_RUN_SCRIPT {
               RefPtr<WritableStreamDefaultWriter> writer = aPipeToPump->mWriter;
               return WritableStreamDefaultWriterCloseWithErrorPropagation(
                   aCx, writer, aRv);
@@ -675,7 +675,7 @@ void PipeToPump::OnSourceErrored(JSContext* aCx,
         aCx,
         [](JSContext* aCx, PipeToPump* aPipeToPump,
            JS::Handle<mozilla::Maybe<JS::Value>> aError, ErrorResult& aRv)
-            MOZ_CAN_RUN_SCRIPT -> already_AddRefed<Promise> {
+            MOZ_CAN_RUN_SCRIPT {
               JS::Rooted<JS::Value> error(aCx, *aError);
               RefPtr<WritableStream> dest = aPipeToPump->mWriter->GetStream();
               return WritableStreamAbort(aCx, dest, error, aRv);
@@ -720,7 +720,7 @@ void PipeToPump::OnDestClosed(JSContext* aCx, JS::Handle<JS::Value>) {
         aCx,
         [](JSContext* aCx, PipeToPump* aPipeToPump,
            JS::Handle<mozilla::Maybe<JS::Value>> aError, ErrorResult& aRv)
-            MOZ_CAN_RUN_SCRIPT -> already_AddRefed<Promise> {
+            MOZ_CAN_RUN_SCRIPT {
               JS::Rooted<JS::Value> error(aCx, *aError);
               RefPtr<ReadableStream> dest = aPipeToPump->mReader->GetStream();
               return ReadableStreamCancel(aCx, dest, error, aRv);
@@ -745,7 +745,7 @@ void PipeToPump::OnDestErrored(JSContext* aCx,
         aCx,
         [](JSContext* aCx, PipeToPump* aPipeToPump,
            JS::Handle<mozilla::Maybe<JS::Value>> aError, ErrorResult& aRv)
-            MOZ_CAN_RUN_SCRIPT -> already_AddRefed<Promise> {
+            MOZ_CAN_RUN_SCRIPT {
               JS::Rooted<JS::Value> error(aCx, *aError);
               RefPtr<ReadableStream> dest = aPipeToPump->mReader->GetStream();
               return ReadableStreamCancel(aCx, dest, error, aRv);
