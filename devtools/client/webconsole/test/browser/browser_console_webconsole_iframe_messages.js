@@ -29,7 +29,10 @@ add_task(async function() {
   await closeConsole();
   info("web console closed");
 
+  // Show the content messages
   await pushPref("devtools.browserconsole.contentMessages", true);
+  // Enable Fission browser console to see the logged content object
+  await pushPref("devtools.browsertoolbox.fission", true);
   hud = await BrowserConsoleManager.toggleBrowserConsole();
   ok(hud, "browser console opened");
   await testMessages(hud);
