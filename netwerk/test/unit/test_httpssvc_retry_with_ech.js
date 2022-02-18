@@ -113,6 +113,37 @@ ActivityObserver.prototype = {
   },
 };
 
+function checkHttpActivities(activites) {
+  let foundDNSAndSocket = false;
+  let foundSettingECH = false;
+  let foundConnectionCreated = false;
+  for (let activity of activites) {
+    switch (activity.subType) {
+      case Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_DNSANDSOCKET_CREATED:
+      case Ci.nsIHttpActivityObserver
+        .ACTIVITY_SUBTYPE_SPECULATIVE_DNSANDSOCKET_CREATED:
+        foundDNSAndSocket = true;
+        break;
+      case Ci.nsIHttpActivityDistributor.ACTIVITY_SUBTYPE_ECH_SET:
+        foundSettingECH = true;
+        break;
+      case Ci.nsIHttpActivityDistributor.ACTIVITY_SUBTYPE_CONNECTION_CREATED:
+        foundConnectionCreated = true;
+        break;
+      default:
+        break;
+    }
+  }
+
+  Assert.equal(foundDNSAndSocket, true, "Should have one DnsAndSock created");
+  Assert.equal(foundSettingECH, true, "Should have echConfig");
+  Assert.equal(
+    foundConnectionCreated,
+    true,
+    "Should have one connection created"
+  );
+}
+
 add_task(async function testConnectWithECH() {
   const ECH_CONFIG_FIXED =
     "AEn+DQBFTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAEAA2QWZWNoLXB1YmxpYy5leGFtcGxlLmNvbQAA";
@@ -187,23 +218,7 @@ add_task(async function testConnectWithECH() {
   let filtered = observer.activites.filter(
     activity => activity.host === "ech-private.example.com"
   );
-  Assert.equal(filtered.length, 3);
-  Assert.equal(
-    filtered[0].subType,
-    Ci.nsIHttpActivityObserver
-      .ACTIVITY_SUBTYPE_SPECULATIVE_DNSANDSOCKET_CREATED,
-    "Should have only one speculative DnsAndSock created"
-  );
-  Assert.equal(
-    filtered[1].subType,
-    Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_ECH_SET,
-    "Should have echConfig"
-  );
-  Assert.equal(
-    filtered[2].subType,
-    Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_CONNECTION_CREATED,
-    "Should have one connection created"
-  );
+  checkHttpActivities(filtered);
 });
 
 add_task(async function testEchRetry() {
