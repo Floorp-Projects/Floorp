@@ -449,51 +449,6 @@ ImageContainer* WebRenderCanvasData::GetImageContainer() {
 
 void WebRenderCanvasData::ClearImageContainer() { mContainer = nullptr; }
 
-WebRenderLocalCanvasData::WebRenderLocalCanvasData(
-    RenderRootStateManager* aManager, nsDisplayItem* aItem)
-    : WebRenderUserData(aManager, aItem) {}
-
-WebRenderLocalCanvasData::~WebRenderLocalCanvasData() = default;
-
-void WebRenderLocalCanvasData::RequestFrameReadback() {
-  if (mGpuBridge) {
-    mGpuBridge->SwapChainPresent(mExternalImageId, mGpuTextureId)
-        ->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [self = RefPtr{this},
-             externalImageId = mExternalImageId](bool aPresented) {
-              if (aPresented) {
-                self->RefreshExternalImage(externalImageId);
-              }
-              return webgpu::SwapChainPromise::CreateAndResolve(aPresented,
-                                                                __func__);
-            },
-            [](const ipc::ResponseRejectReason& aReason) {
-              return webgpu::SwapChainPromise::CreateAndReject(aReason,
-                                                               __func__);
-            });
-  }
-}
-
-void WebRenderLocalCanvasData::RefreshExternalImage(
-    const wr::ExternalImageId& aExternalImageId) {
-  // Because we can be called from an async lambda, we need to verify that we
-  // remain in the WebRenderUserData table. If we are not, then we know that
-  // the cache was cleared, because of a tab switch/closure, or a device reset.
-  // Also if the external image ID changes, then we know we got reconfigured
-  // and are now using a different texture.
-  if (!(mExternalImageId == aExternalImageId) || !mTable->Contains(this)) {
-    return;
-  }
-
-  MOZ_ASSERT(!mManager->IsDestroyed());
-
-  const ImageIntRect dirtyRect(0, 0, mDescriptor.width, mDescriptor.height);
-  // Update the WR external image, forcing the composition of a new frame.
-  mManager->AsyncResourceUpdates().UpdatePrivateExternalImage(
-      mExternalImageId, mImageKey, mDescriptor, dirtyRect);
-}
-
 WebRenderRemoteData::WebRenderRemoteData(RenderRootStateManager* aManager,
                                          nsDisplayItem* aItem)
     : WebRenderUserData(aManager, aItem) {}
