@@ -302,6 +302,11 @@ function assertDebugLine(dbg, line, column) {
     return;
   }
 
+  // Scroll the line into view to make sure the content
+  // on the line is rendered and in the dom.
+  getCM(dbg).scrollIntoView({ line, ch: 0 });
+
+
   if (!lineInfo.wrapClass) {
     const pauseLine = getVisibleSelectedFrameLine(dbg);
     ok(false, `Expected pause line on line ${line}, it is on ${pauseLine}`);
