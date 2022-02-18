@@ -113,12 +113,8 @@ class UntrustedModulesProcessor final : public nsIObserver {
       ModulePaths&& aModPaths, bool aRunAtNormalPriority);
   RefPtr<ModulesTrustPromise> GetModulesTrustInternal(ModulePaths&& aModPaths);
 
-  // These two functions are only called by the parent process
-  RefPtr<ModuleRecord> GetOrAddModuleRecord(
-      ModulesMap& aModules, const ModuleEvaluator& aModEval,
-      const glue::EnhancedModuleLoadInfo& aModLoadInfo);
-  RefPtr<ModuleRecord> GetOrAddModuleRecord(ModulesMap& aModules,
-                                            const ModuleEvaluator& aModEval,
+  // This function is only called by the parent process
+  RefPtr<ModuleRecord> GetOrAddModuleRecord(const ModuleEvaluator& aModEval,
                                             const nsAString& aResolvedNtPath);
 
   // Only called by child processes
@@ -136,6 +132,7 @@ class UntrustedModulesProcessor final : public nsIObserver {
   RefPtr<LazyIdleThread> mThread;
 
   Mutex mUnprocessedMutex;
+  Mutex mModuleCacheMutex;
 
   // The members in this group are protected by mUnprocessedMutex
   Vector<glue::EnhancedModuleLoadInfo> mUnprocessedModuleLoads;
@@ -146,6 +143,11 @@ class UntrustedModulesProcessor final : public nsIObserver {
 
   // This member may be touched by any thread
   Atomic<bool> mAllowProcessing;
+
+  // Cache all module records, including ones trusted and ones loaded in
+  // child processes, in the browser process to avoid evaluating the same
+  // module multiple times
+  ModulesMap mGlobalModuleCache;
 };
 
 }  // namespace mozilla
