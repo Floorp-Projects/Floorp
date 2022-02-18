@@ -68,8 +68,7 @@ inline void ImplCycleCollectionUnlink(
   aReader = AsVariant(mozilla::Nothing());
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStream)
@@ -965,5 +964,4 @@ already_AddRefed<ReadableStream> ReadableStream::Create(
   return stream.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

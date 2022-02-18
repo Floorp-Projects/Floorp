@@ -25,8 +25,7 @@
 #include "nsTArray.h"
 #include "nsISupportsBase.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ReadableStream;
 class ReadableStreamDefaultReader;
@@ -174,7 +173,6 @@ extern void ReadableStreamDefaultControllerError(
 extern void ReadableStreamDefaultControllerClearAlgorithms(
     ReadableStreamDefaultController* aController);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ReadableStreamDefaultController_h

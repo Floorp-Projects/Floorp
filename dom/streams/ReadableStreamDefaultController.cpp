@@ -21,8 +21,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION(ReadableStreamController, mGlobal)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStreamController)
@@ -724,5 +723,4 @@ void ReadableStreamDefaultController::ReleaseSteps() {
   // Step 1. Return.
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
