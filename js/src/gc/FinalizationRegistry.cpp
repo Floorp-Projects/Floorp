@@ -13,6 +13,7 @@
 #include "mozilla/ScopeExit.h"
 
 #include "builtin/FinalizationRegistryObject.h"
+#include "gc/GCInternals.h"
 #include "gc/GCRuntime.h"
 #include "gc/Zone.h"
 #include "vm/JSContext.h"
