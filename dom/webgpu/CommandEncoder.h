@@ -17,7 +17,6 @@ class ErrorResult;
 
 namespace dom {
 struct GPUComputePassDescriptor;
-class HTMLCanvasElement;
 template <typename T>
 class Sequence;
 struct GPUCommandBufferDescriptor;
@@ -41,6 +40,7 @@ struct WGPUExtent3d;
 
 class BindGroup;
 class Buffer;
+class CanvasContext;
 class CommandBuffer;
 class ComputePassEncoder;
 class Device;
@@ -69,7 +69,7 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
   void Cleanup();
 
   RefPtr<WebGPUChild> mBridge;
-  nsTArray<WeakPtr<dom::HTMLCanvasElement>> mTargetCanvases;
+  nsTArray<WeakPtr<CanvasContext>> mTargetContexts;
 
  public:
   void EndComputePass(ffi::WGPUComputePass& aPass, ErrorResult& aRv);
