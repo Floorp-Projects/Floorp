@@ -264,7 +264,9 @@ bool SVGDrawingCallback::operator()(gfxContext* aContext,
   gfxContextAutoSaveRestore contextRestorer(aContext);
 
   // Clip to aFillRect so that we don't paint outside.
-  aContext->Clip(aFillRect);
+  aContext->NewPath();
+  aContext->Rectangle(aFillRect);
+  aContext->Clip();
 
   gfxMatrix matrix = aTransform;
   if (!matrix.Invert()) {

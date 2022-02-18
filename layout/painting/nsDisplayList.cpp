@@ -7608,7 +7608,9 @@ void nsDisplayText::RenderToContext(gfxContext* aCtx,
 
   bool willClip = !aBuilder->IsForGenerateGlyphMask() && !aIsRecording;
   if (willClip) {
-    aCtx->Clip(pixelVisible);
+    aCtx->NewPath();
+    aCtx->Rectangle(pixelVisible);
+    aCtx->Clip();
   }
 
   NS_ASSERTION(mVisIStartEdge >= 0, "illegal start edge");
