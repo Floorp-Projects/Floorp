@@ -1184,7 +1184,9 @@ bool PaintFrameCallback::operator()(gfxContext* aContext,
   aContext->Save();
 
   // Clip to aFillRect so that we don't paint outside.
-  aContext->Clip(aFillRect);
+  aContext->NewPath();
+  aContext->Rectangle(aFillRect);
+  aContext->Clip();
 
   gfxMatrix invmatrix = aTransform;
   if (!invmatrix.Invert()) {
