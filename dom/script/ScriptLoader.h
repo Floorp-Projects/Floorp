@@ -416,12 +416,10 @@ class ScriptLoader final : public ScriptLoaderInterface {
  private:
   virtual ~ScriptLoader();
 
-  ScriptLoadRequest* CreateLoadRequest(ScriptKind aKind, nsIURI* aURI,
-                                       nsIScriptElement* aElement,
-                                       nsIPrincipal* aTriggeringPrincipal,
-                                       mozilla::CORSMode aCORSMode,
-                                       const SRIMetadata& aIntegrity,
-                                       ReferrerPolicy aReferrerPolicy);
+  already_AddRefed<ScriptLoadRequest> CreateLoadRequest(
+      ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
+      nsIPrincipal* aTriggeringPrincipal, mozilla::CORSMode aCORSMode,
+      const SRIMetadata& aIntegrity, ReferrerPolicy aReferrerPolicy);
 
   /**
    * Unblocks the creator parser of the parser-blocking scripts.
