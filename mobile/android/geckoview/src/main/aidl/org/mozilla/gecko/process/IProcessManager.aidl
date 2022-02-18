@@ -9,6 +9,4 @@ import org.mozilla.gecko.gfx.ISurfaceAllocator;
 
 interface IProcessManager {
     void getEditableParent(in IGeckoEditableChild child, long contentId, long tabId);
-    // Returns the interface that child processes should use to allocate Surfaces.
-    ISurfaceAllocator getSurfaceAllocator();
 }

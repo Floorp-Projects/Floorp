@@ -42,5 +42,12 @@ interface IChildProcess {
      * Returns the interface that other processes should use to allocate Surfaces to be
      * consumed by the GPU process. Must only be called for a GPU child process type.
      */
-    ISurfaceAllocator getSurfaceAllocator();
+    ISurfaceAllocator getSurfaceAllocatorFromGpuProcess();
+
+    /**
+     * Connects the child process' SurfaceAllocator to the specified RemoteSurfaceAllocator.
+     * Must be called after creating the child process and after rendering has been reinitialized
+     * following the GPU process being killed, to allow the child process to allocate Surfaces.
+     */
+    oneway void setSurfaceAllocator(in ISurfaceAllocator surfaceAllocator);
 }

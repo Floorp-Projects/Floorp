@@ -48,6 +48,7 @@
 #include "SandboxHal.h"
 #include "SourceSurfaceRawData.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "gfxConfig.h"
 #include "gfxPlatform.h"
 #include "gfxPlatformFontList.h"
 #include "mozilla/AutoRestore.h"
@@ -3053,6 +3054,8 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
                               std::move(vrBridge), std::move(videoManager),
                               namespaces);
 
+  InitSurfaceAllocator();
+
   gpm->AddListener(this);
 
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
@@ -3225,6 +3228,28 @@ void ContentParent::OnCompositorUnexpectedShutdown() {
   Unused << SendReinitRendering(std::move(compositor), std::move(imageBridge),
                                 std::move(vrBridge), std::move(videoManager),
                                 namespaces);
+
+  InitSurfaceAllocator();
+}
+
+void ContentParent::InitSurfaceAllocator() {
+#ifdef MOZ_WIDGET_ANDROID
+  nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
+  MOZ_ASSERT(launcherThread);
+
+  auto selector = java::GeckoProcessManager::Selector::New(
+      java::GeckoProcessType::CONTENT(), OtherPid());
+
+  bool gpuProcessEnabled = gfx::gfxConfig::IsEnabled(gfx::Feature::GPU_PROCESS);
+
+  launcherThread->Dispatch(NS_NewRunnableFunction(
+      "ContentParent::InitSurfaceAllocator()",
+      [selector = java::GeckoProcessManager::Selector::GlobalRef(selector),
+       gpuProcessEnabled]() {
+        java::GeckoProcessManager::SetChildProcessSurfaceAllocator(
+            selector, gpuProcessEnabled);
+      }));
+#endif
 }
 
 void ContentParent::OnCompositorDeviceReset() {
