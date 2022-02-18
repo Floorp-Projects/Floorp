@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ModuleLoadRequest_h
-#define mozilla_dom_ModuleLoadRequest_h
+#ifndef js_loader_ModuleLoadRequest_h
+#define js_loader_ModuleLoadRequest_h
 
 #include "ScriptLoadRequest.h"
 #include "mozilla/MozPromise.h"
@@ -14,8 +14,7 @@
 #include "nsURIHashKey.h"
 #include "nsTHashtable.h"
 
-namespace mozilla {
-namespace dom {
+namespace JS::loader {
 
 class ModuleScript;
 class ModuleLoaderBase;
@@ -43,10 +42,15 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ModuleLoadRequest,
                                                          ScriptLoadRequest)
+  using SRIMetadata = mozilla::dom::SRIMetadata;
+
+  template <typename T>
+  using MozPromiseHolder = mozilla::MozPromiseHolder<T>;
+  using GenericPromise = mozilla::GenericPromise;
 
   ModuleLoadRequest(nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
                     const SRIMetadata& aIntegrity, nsIURI* aReferrer,
-                    ScriptLoadContext* aContext, bool aIsTopLevel,
+                    mozilla::dom::ScriptLoadContext* aContext, bool aIsTopLevel,
                     bool aIsDynamicImport, ModuleLoaderBase* aLoader,
                     VisitedURLSet* aVisitedSet, ModuleLoadRequest* aRootModule);
 
@@ -114,7 +118,6 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   JS::Heap<JSObject*> mDynamicPromise;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace JS::loader
 
-#endif  // mozilla_dom_ModuleLoadRequest_h
+#endif  // js_loader_ModuleLoadRequest_h

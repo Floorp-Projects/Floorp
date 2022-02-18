@@ -5,10 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScriptLoadRequest.h"
-#include "mozilla/dom/ScriptLoadContext.h"
 #include "GeckoProfiler.h"
 
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/ScriptLoadContext.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Unused.h"
@@ -22,13 +23,10 @@
 #include "nsICacheInfoChannel.h"
 #include "nsIClassOfService.h"
 #include "nsISupportsPriority.h"
-#include "ScriptLoadRequest.h"
-#include "mozilla/dom/ScriptSettings.h"
 
 using JS::SourceText;
 
-namespace mozilla {
-namespace dom {
+namespace JS::loader {
 
 //////////////////////////////////////////////////////////////
 // ScriptFetchOptions
@@ -39,9 +37,9 @@ NS_IMPL_CYCLE_COLLECTION(ScriptFetchOptions, mTriggeringPrincipal)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ScriptFetchOptions, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ScriptFetchOptions, Release)
 
-ScriptFetchOptions::ScriptFetchOptions(mozilla::CORSMode aCORSMode,
-                                       ReferrerPolicy aReferrerPolicy,
-                                       nsIPrincipal* aTriggeringPrincipal)
+ScriptFetchOptions::ScriptFetchOptions(
+    mozilla::CORSMode aCORSMode, mozilla::dom::ReferrerPolicy aReferrerPolicy,
+    nsIPrincipal* aTriggeringPrincipal)
     : mCORSMode(aCORSMode),
       mReferrerPolicy(aReferrerPolicy),
       mTriggeringPrincipal(aTriggeringPrincipal) {
@@ -80,7 +78,7 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
                                      ScriptFetchOptions* aFetchOptions,
                                      const SRIMetadata& aIntegrity,
                                      nsIURI* aReferrer,
-                                     ScriptLoadContext* aContext)
+                                     mozilla::dom::ScriptLoadContext* aContext)
     : mKind(aKind),
       mIsCanceled(false),
       mProgress(Progress::eLoading),
@@ -232,5 +230,4 @@ bool ScriptLoadRequestList::Contains(ScriptLoadRequest* aElem) const {
 }
 #endif  // DEBUG
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace JS::loader

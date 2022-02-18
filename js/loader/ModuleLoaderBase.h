@@ -4,8 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ModuleLoaderBase_h
-#define mozilla_dom_ModuleLoaderBase_h
+#ifndef js_loader_ModuleLoaderBase_h
+#define js_loader_ModuleLoaderBase_h
+
+#include "LoadedScript.h"
+#include "ScriptLoadRequest.h"
 
 #include "js/TypeDecls.h"  // JS::MutableHandle, JS::Handle, JS::Root
 #include "nsRefPtrHashtable.h"
@@ -15,14 +18,19 @@
 #include "nsINode.h"      // nsIURI
 #include "nsURIHashKey.h"
 #include "mozilla/CORSMode.h"
-#include "mozilla/dom/LoadedScript.h"
 #include "mozilla/dom/JSExecutionContext.h"
-#include "mozilla/dom/ScriptLoadRequest.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/MozPromise.h"
 #include "ModuleMapKey.h"
 
 class nsIURI;
+
+namespace mozilla {
+
+class LazyLogModule;
+union Utf8Unit;
+
+}  // namespace mozilla
 
 namespace JS {
 
@@ -31,14 +39,7 @@ class CompileOptions;
 template <typename UnitT>
 class SourceText;
 
-}  // namespace JS
-
-namespace mozilla {
-
-class LazyLogModule;
-union Utf8Unit;
-
-namespace dom {
+namespace loader {
 
 class ModuleLoaderBase;
 class ModuleLoadRequest;
@@ -46,6 +47,13 @@ class ModuleScript;
 
 class ScriptLoaderInterface : public nsISupports {
  public:
+  // alias common classes
+  using ScriptFetchOptions = JS::loader::ScriptFetchOptions;
+  using ScriptKind = JS::loader::ScriptKind;
+  using ScriptLoadRequest = JS::loader::ScriptLoadRequest;
+  using ScriptLoadRequestList = JS::loader::ScriptLoadRequestList;
+  using ModuleLoadRequest = JS::loader::ModuleLoadRequest;
+
   // In some environments, we will need to default to a base URI
   virtual nsIURI* GetBaseURI() const = 0;
 
@@ -66,8 +74,10 @@ class ScriptLoaderInterface : public nsISupports {
 
 class ModuleLoaderBase : public nsISupports {
  private:
+  using GenericNonExclusivePromise = mozilla::GenericNonExclusivePromise;
+  using GenericPromise = mozilla::GenericPromise;
   // Module map
-  nsRefPtrHashtable<ModuleMapKey, mozilla::GenericNonExclusivePromise::Private>
+  nsRefPtrHashtable<ModuleMapKey, GenericNonExclusivePromise::Private>
       mFetchingModules;
   nsRefPtrHashtable<ModuleMapKey, ModuleScript> mFetchedModules;
 
@@ -80,6 +90,9 @@ class ModuleLoaderBase : public nsISupports {
   NS_DECL_CYCLE_COLLECTION_CLASS(ModuleLoaderBase)
   explicit ModuleLoaderBase(ScriptLoaderInterface* aLoader);
 
+  using ScriptFetchOptions = JS::loader::ScriptFetchOptions;
+  using ScriptLoadRequest = JS::loader::ScriptLoadRequest;
+  using ModuleLoadRequest = JS::loader::ModuleLoadRequest;
   ScriptLoadRequestList mDynamicImportRequests;
 
   using MaybeSourceText =
@@ -112,7 +125,7 @@ class ModuleLoaderBase : public nsISupports {
       ModuleLoadRequest* aRequest, nsresult aResult);
 
   bool ModuleMapContainsURL(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
-  RefPtr<mozilla::GenericNonExclusivePromise> WaitForModuleFetch(
+  RefPtr<GenericNonExclusivePromise> WaitForModuleFetch(
       nsIURI* aURL, nsIGlobalObject* aGlobal);
   ModuleScript* GetFetchedModule(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
 
@@ -134,7 +147,7 @@ class ModuleLoaderBase : public nsISupports {
 
   void StartFetchingModuleDependencies(ModuleLoadRequest* aRequest);
 
-  RefPtr<mozilla::GenericPromise> StartFetchingModuleAndDependencies(
+  RefPtr<GenericPromise> StartFetchingModuleAndDependencies(
       ModuleLoadRequest* aParent, nsIURI* aURI);
 
   void StartDynamicImport(ModuleLoadRequest* aRequest);
@@ -182,11 +195,11 @@ class ModuleLoaderBase : public nsISupports {
   void CancelAndClearDynamicImports();
 
  public:
-  static LazyLogModule gCspPRLog;
-  static LazyLogModule gModuleLoaderBaseLog;
+  static mozilla::LazyLogModule gCspPRLog;
+  static mozilla::LazyLogModule gModuleLoaderBaseLog;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace loader
+}  // namespace JS
 
-#endif  // mozilla_dom_ModuleLoaderBase_h
+#endif  // js_loader_ModuleLoaderBase_h

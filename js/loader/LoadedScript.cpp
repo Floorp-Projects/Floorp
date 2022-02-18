@@ -11,8 +11,7 @@
 #include "jsfriendapi.h"
 #include "js/Modules.h"  // JS::{Get,Set}ModulePrivate
 
-namespace mozilla {
-namespace dom {
+namespace JS::loader {
 
 //////////////////////////////////////////////////////////////
 // LoadedScript
@@ -40,7 +39,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(LoadedScript)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadedScript)
 
 LoadedScript::LoadedScript(ScriptKind aKind, ScriptFetchOptions* aFetchOptions,
-                           nsIURI* aBaseURL, Element* aElement)
+                           nsIURI* aBaseURL, mozilla::dom::Element* aElement)
     : mKind(aKind),
       mFetchOptions(aFetchOptions),
       mBaseURL(aBaseURL),
@@ -49,7 +48,7 @@ LoadedScript::LoadedScript(ScriptKind aKind, ScriptFetchOptions* aFetchOptions,
   MOZ_ASSERT(mBaseURL);
 }
 
-LoadedScript::~LoadedScript() { DropJSObjects(this); }
+LoadedScript::~LoadedScript() { mozilla::DropJSObjects(this); }
 
 void LoadedScript::AssociateWithScript(JSScript* aScript) {
   // Set a JSScript's private value to point to this object. The JS engine will
@@ -95,7 +94,7 @@ void HostReleaseTopLevelScript(const JS::Value& aPrivate) {
 //////////////////////////////////////////////////////////////
 
 EventScript::EventScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-                         Element* aElement)
+                         mozilla::dom::Element* aElement)
     : LoadedScript(ScriptKind::eEvent, aFetchOptions, aBaseURL, aElement) {}
 
 //////////////////////////////////////////////////////////////
@@ -103,7 +102,7 @@ EventScript::EventScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
 //////////////////////////////////////////////////////////////
 
 ClassicScript::ClassicScript(ScriptFetchOptions* aFetchOptions,
-                             nsIURI* aBaseURL, Element* aElement)
+                             nsIURI* aBaseURL, mozilla::dom::Element* aElement)
     : LoadedScript(ScriptKind::eClassic, aFetchOptions, aBaseURL, aElement) {}
 
 //////////////////////////////////////////////////////////////
@@ -134,7 +133,7 @@ NS_IMPL_ADDREF_INHERITED(ModuleScript, LoadedScript)
 NS_IMPL_RELEASE_INHERITED(ModuleScript, LoadedScript)
 
 ModuleScript::ModuleScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-                           Element* aElement)
+                           mozilla::dom::Element* aElement)
     : LoadedScript(ScriptKind::eModule, aFetchOptions, aBaseURL, aElement),
       mDebuggerDataInitialized(false) {
   MOZ_ASSERT(!ModuleRecord());
@@ -172,7 +171,7 @@ void ModuleScript::SetModuleRecord(JS::Handle<JSObject*> aModuleRecord) {
   MOZ_ASSERT(JS::GetModulePrivate(mModuleRecord).isUndefined());
   JS::SetModulePrivate(mModuleRecord, JS::PrivateValue(this));
 
-  HoldJSObjects(this);
+  mozilla::HoldJSObjects(this);
 }
 
 void ModuleScript::SetParseError(const JS::Value& aError) {
@@ -182,7 +181,7 @@ void ModuleScript::SetParseError(const JS::Value& aError) {
 
   UnlinkModuleRecord();
   mParseError = aError;
-  HoldJSObjects(this);
+  mozilla::HoldJSObjects(this);
 }
 
 void ModuleScript::SetErrorToRethrow(const JS::Value& aError) {
@@ -202,5 +201,4 @@ void ModuleScript::SetDebuggerDataInitialized() {
   mDebuggerDataInitialized = true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace JS::loader

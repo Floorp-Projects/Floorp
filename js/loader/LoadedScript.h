@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_LoadedScript_h
-#define mozilla_dom_LoadedScript_h
+#ifndef js_loader_LoadedScript_h
+#define js_loader_LoadedScript_h
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -14,11 +14,7 @@
 
 class nsIURI;
 
-namespace mozilla {
-namespace dom {
-
-class Element;
-class ScriptLoader;
+namespace JS::loader {
 
 void HostAddRefTopLevelScript(const JS::Value& aPrivate);
 void HostReleaseTopLevelScript(const JS::Value& aPrivate);
@@ -31,11 +27,11 @@ class LoadedScript : public nsISupports {
   ScriptKind mKind;
   RefPtr<ScriptFetchOptions> mFetchOptions;
   nsCOMPtr<nsIURI> mBaseURL;
-  nsCOMPtr<Element> mElement;
+  nsCOMPtr<mozilla::dom::Element> mElement;
 
  protected:
   LoadedScript(ScriptKind aKind, ScriptFetchOptions* aFetchOptions,
-               nsIURI* aBaseURL, Element* aElement);
+               nsIURI* aBaseURL, mozilla::dom::Element* aElement);
 
   virtual ~LoadedScript();
 
@@ -54,7 +50,7 @@ class LoadedScript : public nsISupports {
   ScriptFetchOptions* GetFetchOptions() const { return mFetchOptions; }
 
   // Used by the Debugger to get the associated Script Element
-  Element* GetScriptElement() const { return mElement; }
+  mozilla::dom::Element* GetScriptElement() const { return mElement; }
 
   nsIURI* BaseURL() const { return mBaseURL; }
 
@@ -66,7 +62,7 @@ class ClassicScript final : public LoadedScript {
 
  public:
   ClassicScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-                Element* aElement);
+                mozilla::dom::Element* aElement);
 };
 
 class EventScript final : public LoadedScript {
@@ -74,7 +70,7 @@ class EventScript final : public LoadedScript {
 
  public:
   EventScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-              Element* aElement);
+              mozilla::dom::Element* aElement);
 };
 
 // A single module script. May be used to satisfy multiple load requests.
@@ -93,7 +89,7 @@ class ModuleScript final : public LoadedScript {
                                                          LoadedScript)
 
   ModuleScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-               Element* aElement);
+               mozilla::dom::Element* aElement);
 
   void SetModuleRecord(JS::Handle<JSObject*> aModuleRecord);
   void SetParseError(const JS::Value& aError);
@@ -123,7 +119,6 @@ ModuleScript* LoadedScript::AsModuleScript() {
   return static_cast<ModuleScript*>(this);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace JS::loader
 
-#endif  // mozilla_dom_LoadedScript_h
+#endif  // js_loader_LoadedScript_h
