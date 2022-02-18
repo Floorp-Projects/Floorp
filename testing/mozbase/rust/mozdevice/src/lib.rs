@@ -844,6 +844,33 @@ impl Device {
         Ok(())
     }
 
+    pub fn pull_dir(&self, src: &UnixPath, dest_dir: &Path) -> Result<()> {
+        let src = src.to_path_buf();
+        let dest_dir = dest_dir.to_path_buf();
+
+        for entry in self.list_dir(&src)? {
+            match entry.metadata {
+                RemoteMetadata::RemoteSymlink => {} // Ignored.
+                RemoteMetadata::RemoteDir => {
+                    let mut d = dest_dir.clone();
+                    d.push(&entry.name);
+
+                    std::fs::create_dir_all(&d)?;
+                }
+                RemoteMetadata::RemoteFile(_) => {
+                    let mut s = src.clone();
+                    s.push(&entry.name);
+                    let mut d = dest_dir.clone();
+                    d.push(&entry.name);
+
+                    self.pull(&s, &mut File::create(d)?)?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     pub fn push(&self, buffer: &mut dyn Read, dest: &UnixPath, mode: u32) -> Result<()> {
         // Implement the ADB protocol to send a file to the device.
         // The protocol consists of the following steps:
