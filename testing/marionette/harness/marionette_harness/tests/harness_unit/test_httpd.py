@@ -23,7 +23,7 @@ parent = os.path.dirname(here)
 default_doc_root = os.path.join(os.path.dirname(parent), "www")
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def server():
     server = httpd.FixtureServer(default_doc_root)
     yield server
