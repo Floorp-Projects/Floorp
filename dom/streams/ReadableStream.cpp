@@ -31,7 +31,6 @@
 #include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/ReadableStreamDefaultReader.h"
-#include "mozilla/dom/ReadableStreamPipeTo.h"
 #include "mozilla/dom/ReadableStreamTee.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -39,8 +38,6 @@
 #include "mozilla/dom/TeeState.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
-#include "mozilla/dom/WritableStream.h"
-#include "mozilla/dom/WritableStreamDefaultWriter.h"
 #include "nsCOMPtr.h"
 
 #include "mozilla/dom/Promise-inl.h"
@@ -847,37 +844,6 @@ static void ReadableStreamDefaultTee(JSContext* aCx, ReadableStream* aStream,
   // Step 20.
   aResult.AppendElement(teeState->Branch1());
   aResult.AppendElement(teeState->Branch2());
-}
-
-// https://streams.spec.whatwg.org/#rs-pipe-to
-already_AddRefed<Promise> ReadableStream::PipeTo(
-    WritableStream& aDestination, const StreamPipeOptions& aOptions,
-    ErrorResult& aRv) {
-  // Step 1. If !IsReadableStreamLocked(this) is true, return a promise rejected
-  // with a TypeError exception.
-  if (IsReadableStreamLocked(this)) {
-    aRv.ThrowTypeError("Cannot pipe from a locked stream.");
-    return nullptr;
-  }
-
-  // Step 2. If !IsWritableStreamLocked(destination) is true, return a promise
-  //         rejected with a TypeError exception.
-  if (IsWritableStreamLocked(&aDestination)) {
-    aRv.ThrowTypeError("Can not pipe to a locked stream.");
-    return nullptr;
-  }
-
-  // Step 3. Let signal be options["signal"] if it exists, or undefined
-  // otherwise.
-  RefPtr<AbortSignal> signal =
-      aOptions.mSignal.WasPassed() ? &aOptions.mSignal.Value() : nullptr;
-
-  // Step 4. Return ! ReadableStreamPipeTo(this, destination,
-  // options["preventClose"], options["preventAbort"], options["preventCancel"],
-  // signal).
-  return ReadableStreamPipeTo(this, &aDestination, aOptions.mPreventClose,
-                              aOptions.mPreventAbort, aOptions.mPreventCancel,
-                              signal, aRv);
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-tee
