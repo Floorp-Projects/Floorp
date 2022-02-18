@@ -9,7 +9,6 @@
       "bug47258-extract-symbols-mbcs.patch",
       "Remove-FlushViewOfFile-when-unmaping-gcda-files.patch",
       "fuzzing_ccov_build_clang_12.patch",
-      "compiler-rt-13-no-codesign.patch",
       "win64-no-symlink.patch",
       "revert-llvmorg-13-init-8182-gc2297544c047.patch",
       "revert-llvmorg-12-init-7827-g2a078c307204.patch",
