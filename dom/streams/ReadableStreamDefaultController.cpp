@@ -18,6 +18,7 @@
 #include "mozilla/dom/ReadableStreamDefaultControllerBinding.h"
 #include "mozilla/dom/ReadableStreamDefaultReaderBinding.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
+#include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 
@@ -100,13 +101,9 @@ static bool ReadableStreamDefaultControllerCanCloseOrEnqueue(
 
   // Step 2. If controller.[[closeRequested]] is false and state is "readable",
   // return true.
-  if (!aController->CloseRequested() &&
-      state == ReadableStream::ReaderState::Readable) {
-    return true;
-  }
-
   // Step 3. Return false.
-  return false;
+  return !aController->CloseRequested() &&
+         state == ReadableStream::ReaderState::Readable;
 }
 
 enum class CloseOrEnqueue { Close, Enqueue };
