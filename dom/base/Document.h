@@ -4824,9 +4824,6 @@ class Document : public nsINode,
   // Currently active onload blockers.
   uint32_t mOnloadBlockCount;
 
-  // Onload blockers which haven't been activated yet.
-  uint32_t mAsyncOnloadBlockCount;
-
   // Tracks if we are currently processing any document.write calls (either
   // implicit or explicit). Note that if a write call writes out something which
   // would block the parser, then mWriteLevel will be incorrect until the parser
