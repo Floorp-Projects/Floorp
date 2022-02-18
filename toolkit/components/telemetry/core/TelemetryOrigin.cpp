@@ -604,7 +604,7 @@ size_t TelemetryOrigin::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
   n += gMetricToOriginBag->ShallowSizeOfIncludingThis(aMallocSizeOf);
   for (const auto& origins : gMetricToOriginBag->Values()) {
     // The string hashkey and count should both be contained by the hashtable.
-    n += origins.ShallowSizeOfIncludingThis(aMallocSizeOf);
+    n += origins.ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
   // The string hashkey and ID should both be contained within the hashtable.
