@@ -19,13 +19,13 @@
   #endif
 #endif
 
-//たくさん閉じようとしたときに警告
+//開いているタブが2つ以上のとき、ウインドウを閉じようとした際に、警告を表示します
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnCloseOtherTabs", true);
 
 //ウェブとの互換性を考慮して、Firefox のユーザエージェントを固定します。Floorp ではしばらく三桁にする予定はありません。（変更するかも知れません）
 pref("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0");
-//addon推奨プロンプトを消す
+//about:addons サイト内で、Mozilla からのアドオン推奨プロンプトを削除します。
 pref("extensions.getAddons.showPane", false , locked);
 //軽量化
 pref("browser.tabs.animate", false);
@@ -41,17 +41,17 @@ pref("content.notify.ontimer", true);
 pref("content.interrupt.parsing", true);
 pref("nglayout.initialpaint.delay", 0);
 
-//調査と思われるものを削除。Torでは削除済み。
+//調査と思われるものを削除。Torでは削除済みのようです。
 pref("app.normandy.api_url", "");
 pref("app.normandy.enabled", true);
 
 //backdropfilterを既定で有効化します。
 pref("layout.css.backdrop-filter.enabled", true);
 
-//SVG avif jxl 画像ファイルをの互換性向上または、既定で開けるように
-pref("svg.context-properties.content.enabled", true, locked);
-pref("image.avif.enabled", true, locked);
-pref("image.jxl.enabled", true, locked);
+//SVG avif jxl 画像ファイルをの互換性向上または、既定で開けるように。BETA版
+pref("svg.context-properties.content.enabled", true);
+pref("image.avif.enabled", true);
+pref("image.jxl.enabled", true);
 
 // Add-On のブラックリストをFloorpが参照する際の情報漏洩削減
 pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
@@ -74,7 +74,7 @@ pref("breakpad.reportURL", "", locked);
 pref("browser.tabs.crashReporting.sendReport", false);
 pref("browser.crashReports.unsubmittedCheck.enabled",	false);
 
-//野良アドオンのインストールを許可。開発者向け。Floorp アドオンストアの準備。
+//野良アドオンのインストールを許可。開発者向け。Floorp アドオンストアの準備。（効果なし？）
 pref("xpinstall.signatures.required", false);
 
 // Firefox による、Mozilla への情報送信テレメンタリーを無効化
