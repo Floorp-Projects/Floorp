@@ -61,8 +61,6 @@ void Relations(nsTArray<RelationType>* aTypes,
 
 bool IsSearchbox() const;
 
-nsAtom* LandmarkRole() const;
-
 nsStaticAtom* ARIARoleAtom() const;
 
 virtual mozilla::a11y::GroupPos GroupPosition() override;

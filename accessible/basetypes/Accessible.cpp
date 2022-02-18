@@ -321,3 +321,56 @@ const Accessible* Accessible::ActionAncestor() const {
 
   return nullptr;
 }
+
+nsAtom* Accessible::LandmarkRole() const {
+  nsAtom* tagName = TagName();
+  if (!tagName) {
+    // Either no associated content, or no cache.
+    return nullptr;
+  }
+
+  if (tagName == nsGkAtoms::nav) {
+    return nsGkAtoms::navigation;
+  }
+
+  if (tagName == nsGkAtoms::aside) {
+    return nsGkAtoms::complementary;
+  }
+
+  if (tagName == nsGkAtoms::main) {
+    return nsGkAtoms::main;
+  }
+
+  if (tagName == nsGkAtoms::header) {
+    if (Role() == roles::LANDMARK) {
+      return nsGkAtoms::banner;
+    }
+  }
+
+  if (tagName == nsGkAtoms::footer) {
+    if (Role() == roles::LANDMARK) {
+      return nsGkAtoms::contentinfo;
+    }
+  }
+
+  if (tagName == nsGkAtoms::section) {
+    nsAutoString name;
+    Name(name);
+    if (!name.IsEmpty()) {
+      return nsGkAtoms::region;
+    }
+  }
+
+  if (tagName == nsGkAtoms::form) {
+    nsAutoString name;
+    Name(name);
+    if (!name.IsEmpty()) {
+      return nsGkAtoms::form;
+    }
+  }
+
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  return roleMapEntry && roleMapEntry->IsOfType(eLandmark)
+             ? roleMapEntry->roleAtom
+             : nullptr;
+}

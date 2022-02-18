@@ -50,7 +50,6 @@ class HyperTextAccessible : public AccessibleWrap,
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HyperTextAccessible, AccessibleWrap)
 
   // LocalAccessible
-  virtual nsAtom* LandmarkRole() const override;
   virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;

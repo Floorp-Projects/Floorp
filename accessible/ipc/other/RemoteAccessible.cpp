@@ -129,6 +129,10 @@ bool RemoteAccessible::IsSearchbox() const {
 }
 
 nsAtom* RemoteAccessible::LandmarkRole() const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::LandmarkRole();
+  }
+
   nsString landmark;
   Unused << mDoc->SendLandmarkRole(mID, &landmark);
   return NS_GetStaticAtom(landmark);

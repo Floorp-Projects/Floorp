@@ -229,6 +229,11 @@ class Accessible {
    */
   virtual nsAtom* TagName() const = 0;
 
+  /**
+   * Return a landmark role if applied.
+   */
+  virtual nsAtom* LandmarkRole() const;
+
   //////////////////////////////////////////////////////////////////////////////
   // ActionAccessible
 
