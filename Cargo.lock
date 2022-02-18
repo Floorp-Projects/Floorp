@@ -2414,7 +2414,7 @@ version = "0.1.0"
 dependencies = [
  "nserror",
  "nsstring",
- "sfv 0.8.0",
+ "sfv",
  "thin-vec",
  "xpcom",
 ]
@@ -3470,7 +3470,7 @@ dependencies = [
  "neqo-qpack",
  "neqo-transport",
  "qlog",
- "sfv 0.9.1",
+ "sfv",
  "smallvec",
  "url",
 ]
@@ -4658,17 +4658,6 @@ name = "servo_arc"
 version = "0.1.1"
 dependencies = [
  "stable_deref_trait",
-]
-
-[[package]]
-name = "sfv"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13ed1dd5a626253083678d21b5c38dd94f8717b961d4b7469eb96b41173cc148"
-dependencies = [
- "data-encoding",
- "indexmap",
- "rust_decimal",
 ]
 
 [[package]]
