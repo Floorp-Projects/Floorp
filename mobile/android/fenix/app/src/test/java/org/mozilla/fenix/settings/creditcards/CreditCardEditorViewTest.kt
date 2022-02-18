@@ -17,11 +17,13 @@ import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
 import mozilla.components.service.sync.autofill.AutofillCrypto
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.utils.CreditCardNetworkType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -162,6 +164,11 @@ class CreditCardEditorViewTest {
         }
 
         assertFalse(creditCardEditorView.validateForm())
+        assertNotNull(fragmentCreditCardEditorBinding.cardNumberLayout.error)
+        assertEquals(
+            fragmentCreditCardEditorBinding.cardNumberLayout.errorCurrentTextColors,
+            fragmentCreditCardEditorBinding.root.context.getColorFromAttr(R.attr.destructive)
+        )
 
         verify(exactly = 0) {
             interactor.onSaveCreditCard(
@@ -182,6 +189,11 @@ class CreditCardEditorViewTest {
         fragmentCreditCardEditorBinding.saveButton.performClick()
 
         assertFalse(creditCardEditorView.validateForm())
+        assertNotNull(fragmentCreditCardEditorBinding.cardNumberLayout.error)
+        assertEquals(
+            fragmentCreditCardEditorBinding.cardNumberLayout.errorCurrentTextColors,
+            fragmentCreditCardEditorBinding.root.context.getColorFromAttr(R.attr.destructive)
+        )
 
         verify(exactly = 0) {
             interactor.onSaveCreditCard(
@@ -219,6 +231,11 @@ class CreditCardEditorViewTest {
         }
 
         assertFalse(creditCardEditorView.validateForm())
+        assertNotNull(fragmentCreditCardEditorBinding.nameOnCardLayout.error)
+        assertEquals(
+            fragmentCreditCardEditorBinding.nameOnCardLayout.errorCurrentTextColors,
+            fragmentCreditCardEditorBinding.root.context.getColorFromAttr(R.attr.destructive)
+        )
 
         verify(exactly = 0) {
             interactor.onSaveCreditCard(

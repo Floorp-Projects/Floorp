@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.creditcards.view
 
+import android.content.res.ColorStateList
 import android.view.View
 import android.widget.ArrayAdapter
 import androidx.annotation.VisibleForTesting
@@ -58,6 +59,17 @@ class CreditCardEditorView(
 
         binding.cardNumberInput.text = state.cardNumber.toEditable()
         binding.nameOnCardInput.text = state.billingName.toEditable()
+
+        binding.cardNumberLayout.setErrorTextColor(
+            ColorStateList.valueOf(
+                binding.root.context.getColorFromAttr(R.attr.destructive)
+            )
+        )
+        binding.nameOnCardLayout.setErrorTextColor(
+            ColorStateList.valueOf(
+                binding.root.context.getColorFromAttr(R.attr.destructive)
+            )
+        )
 
         bindExpiryMonthDropDown(state.expiryMonth)
         bindExpiryYearDropDown(state.expiryYears)
