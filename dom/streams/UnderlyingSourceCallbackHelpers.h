@@ -10,7 +10,6 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/ModuleMapKey.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
 #include "nsISupports.h"
 #include "nsISupportsImpl.h"
@@ -27,6 +26,7 @@
 namespace mozilla::dom {
 
 class BodyStreamHolder;
+class ReadableStreamController;
 
 // Note: Until we need to be able to provide a native implementation of start,
 // I don't distinguish between UnderlyingSourceStartCallbackHelper and  a

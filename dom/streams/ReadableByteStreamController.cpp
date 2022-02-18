@@ -436,50 +436,49 @@ static size_t ReadableStreamGetNumReadIntoRequests(ReadableStream* aStream) {
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-should-call-pull
 bool ReadableByteStreamControllerShouldCallPull(
     ReadableByteStreamController* aController) {
-  // Step 1.
+  // Step 1. Let stream be controller.[[stream]].
   ReadableStream* stream = aController->Stream();
 
-  // Step 2.
+  // Step 2. If stream.[[state]] is not "readable", return false.
   if (stream->State() != ReadableStream::ReaderState::Readable) {
     return false;
   }
 
-  // Step 3.
+  // Step 3. If controller.[[closeRequested]] is true, return false.
   if (aController->CloseRequested()) {
     return false;
   }
 
-  // Step 4.
+  // Step 4. If controller.[[started]] is false, return false.
   if (!aController->Started()) {
     return false;
   }
 
-  // Step 5.
+  // Step 5. If ! ReadableStreamHasDefaultReader(stream) is true
+  // and ! ReadableStreamGetNumReadRequests(stream) > 0, return true.
   if (ReadableStreamHasDefaultReader(stream) &&
       ReadableStreamGetNumReadRequests(stream) > 0) {
     return true;
   }
 
-  // Step 6.
+  // Step 6. If ! ReadableStreamHasBYOBReader(stream) is true
+  // and ! ReadableStreamGetNumReadIntoRequests(stream) > 0, return true.
   if (ReadableStreamHasBYOBReader(stream) &&
       ReadableStreamGetNumReadIntoRequests(stream) > 0) {
     return true;
   }
 
-  // Step 7.
+  // Step 7. Let desiredSize be
+  // ! ReadableByteStreamControllerGetDesiredSize(controller).
   Nullable<double> desiredSize =
       ReadableByteStreamControllerGetDesiredSize(aController);
 
-  // Step 8.
+  // Step 8. Assert: desiredSize is not null.
   MOZ_ASSERT(!desiredSize.IsNull());
 
-  // Step 9.
-  if (desiredSize.Value() > 0) {
-    return true;
-  }
-
-  // Step 10.
-  return false;
+  // Step 9. If desiredSize > 0, return true.
+  // Step 10. Return false.
+  return desiredSize.Value() > 0;
 }
 
 // MG:XXX: There's a template hiding here for handling the difference between
