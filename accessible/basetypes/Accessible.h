@@ -168,6 +168,11 @@ class Accessible {
    */
   virtual void Description(nsString& aDescription) const = 0;
 
+  /**
+   * Get the value of this accessible.
+   */
+  virtual void Value(nsString& aValue) const = 0;
+
   virtual double CurValue() const = 0;
   virtual double MinValue() const = 0;
   virtual double MaxValue() const = 0;

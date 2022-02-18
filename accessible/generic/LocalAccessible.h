@@ -137,7 +137,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Get the value of this accessible.
    */
-  virtual void Value(nsString& aValue) const;
+  virtual void Value(nsString& aValue) const override;
 
   /**
    * Get help string for the accessible.

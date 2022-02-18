@@ -282,11 +282,7 @@ xpcAccessible::GetValue(nsAString& aValue) {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
   nsAutoString value;
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
-    proxy->Value(value);
-  } else {
-    Intl()->Value(value);
-  }
+  IntlGeneric()->Value(value);
 
   aValue.Assign(value);
 
