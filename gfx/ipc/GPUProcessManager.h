@@ -93,9 +93,6 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // Ensure that GPU-bound methods can be used. If no GPU process is being
   // used, or one is launched and ready, this function returns immediately.
   // Otherwise it blocks until the GPU process has finished launching.
-  // If the GPU process is enabled but has not yet been launched then this will
-  // launch the process. If that is not desired then check that return value of
-  // Process() is non-null before calling.
   bool EnsureGPUReady();
 
   already_AddRefed<CompositorSession> CreateTopLevelCompositor(
@@ -233,8 +230,8 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   void RegisterInProcessSession(InProcessCompositorSession* aSession);
   void UnregisterInProcessSession(InProcessCompositorSession* aSession);
 
-  void DestroyRemoteCompositorSessions();
-  void DestroyInProcessCompositorSessions();
+  void RebuildRemoteSessions();
+  void RebuildInProcessSessions();
 
   // Returns true if we crossed the threshold such that we should disable
   // acceleration.
@@ -265,8 +262,6 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   void DestroyProcess(bool aUnexpectedShutdown = false);
 
   void HandleProcessLost();
-  // Reinitialize rendering following a GPU process loss.
-  void ReinitializeRendering();
 
   void EnsureVsyncIOThread();
   void ShutdownVsyncIOThread();
@@ -322,12 +317,6 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 
   uint32_t mDeviceResetCount;
   TimeStamp mDeviceResetLastTime;
-
-  // Keeps track of whether not the application is in the foreground on android.
-  bool mAppInForeground;
-  // Whether we must finish re-initializing rendering following a process loss
-  // where we decided not to re-launch the process immediately.
-  bool mNeedsRenderingReinit;
 
   // Fields that are associated with the current GPU process.
   GPUProcessHost* mProcess;

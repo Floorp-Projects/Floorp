@@ -92,8 +92,6 @@ GPUProcessManager::GPUProcessManager()
       mUnstableProcessAttempts(0),
       mTotalProcessAttempts(0),
       mDeviceResetCount(0),
-      mAppInForeground(true),
-      mNeedsRenderingReinit(false),
       mProcess(nullptr),
       mProcessToken(0),
       mProcessStable(true),
@@ -132,16 +130,6 @@ GPUProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
     mManager->OnXPCOMShutdown();
   } else if (!strcmp(aTopic, "nsPref:changed")) {
     mManager->OnPreferenceChange(aData);
-  } else if (!strcmp(aTopic, "application-foreground")) {
-    mManager->mAppInForeground = true;
-    if (mManager->mNeedsRenderingReinit) {
-      if (!mManager->mProcess && gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
-        mManager->LaunchGPUProcess();
-      }
-      mManager->ReinitializeRendering();
-    }
-  } else if (!strcmp(aTopic, "application-background")) {
-    mManager->mAppInForeground = false;
   }
   return NS_OK;
 }
@@ -150,9 +138,6 @@ void GPUProcessManager::OnXPCOMShutdown() {
   if (mObserver) {
     nsContentUtils::UnregisterShutdownObserver(mObserver);
     Preferences::RemoveObserver(mObserver, "");
-    nsCOMPtr<nsIObserverService> obsServ = services::GetObserverService();
-    obsServ->RemoveObserver(mObserver, "application-foreground");
-    obsServ->RemoveObserver(mObserver, "application-background");
     mObserver = nullptr;
   }
 
@@ -189,9 +174,6 @@ void GPUProcessManager::LaunchGPUProcess() {
     mObserver = new Observer(this);
     nsContentUtils::RegisterShutdownObserver(mObserver);
     Preferences::AddStrongObserver(mObserver, "");
-    nsCOMPtr<nsIObserverService> obsServ = services::GetObserverService();
-    obsServ->AddObserver(mObserver, "application-foreground", false);
-    obsServ->AddObserver(mObserver, "application-background", false);
   }
 
   // Start the Vsync I/O thread so can use it as soon as the process launches.
@@ -281,13 +263,6 @@ bool GPUProcessManager::MaybeDisableGPUProcess(const char* aMessage,
 }
 
 bool GPUProcessManager::EnsureGPUReady() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Launch the GPU process if it is enabled but hasn't been (re-)launched yet.
-  if (!mProcess && gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
-    LaunchGPUProcess();
-  }
-
   if (mProcess && !mProcess->IsConnected()) {
     if (!mProcess->WaitForLaunch()) {
       // If this fails, we should have fired OnProcessLaunchComplete and
@@ -569,9 +544,9 @@ void GPUProcessManager::DisableWebRender(wr::WebRenderError aError,
                                          const nsCString& aMsg) {
   if (DisableWebRenderConfig(aError, aMsg)) {
     if (mProcess) {
-      DestroyRemoteCompositorSessions();
+      RebuildRemoteSessions();
     } else {
-      DestroyInProcessCompositorSessions();
+      RebuildInProcessSessions();
     }
     NotifyListenersOnCompositeDeviceReset();
   }
@@ -637,7 +612,7 @@ void GPUProcessManager::OnInProcessDeviceReset(bool aTrackThreshold) {
   // Normally nsWindow::OnPaint() already handled it.
   gfxWindowsPlatform::GetPlatform()->HandleDeviceReset();
 #endif
-  DestroyInProcessCompositorSessions();
+  RebuildInProcessSessions();
   NotifyListenersOnCompositeDeviceReset();
 }
 
@@ -649,7 +624,7 @@ void GPUProcessManager::OnRemoteProcessDeviceReset(GPUProcessHost* aHost) {
     return;
   }
 
-  DestroyRemoteCompositorSessions();
+  RebuildRemoteSessions();
   NotifyListenersOnCompositeDeviceReset();
 }
 
@@ -695,41 +670,40 @@ void GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost) {
 }
 
 void GPUProcessManager::HandleProcessLost() {
-  MOZ_ASSERT(NS_IsMainThread());
+  if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+    LaunchGPUProcess();
+  }
 
   // The shutdown and restart sequence for the GPU process is as follows:
   //
   //  (1) The GPU process dies. IPDL will enqueue an ActorDestroy message on
-  //      each channel owning a bridge to the GPU process, on the thread owning
-  //      that channel.
+  //      each channel owning a bridge to the GPU process, on the thread
+  //      owning that channel.
   //
   //  (2) The first channel to process its ActorDestroy message will post a
-  //      message to the main thread to call NotifyRemoteActorDestroyed on the
-  //      GPUProcessManager, which calls OnProcessUnexpectedShutdown if it has
-  //      not handled shutdown for this process yet. OnProcessUnexpectedShutdown
-  //      is responsible for tearing down the old process and deciding whether
-  //      or not to disable the GPU process. It then calls this function,
-  //      HandleProcessLost.
+  //      message to the main thread to call NotifyRemoteActorDestroyed on
+  //      the GPUProcessManager, which calls OnProcessUnexpectedShutdown if
+  //      it has not handled shutdown for this process yet.
   //
-  //  (3) We then notify each widget that its session with the compositor is now
-  //      invalid. The widget is responsible for destroying its layer manager
-  //      and CompositorBridgeChild. Note that at this stage, not all actors may
-  //      have received ActorDestroy yet. CompositorBridgeChild may attempt to
-  //      send messages, and if this happens, it will probably report a
-  //      MsgDropped error. This is okay.
+  //  (3) We then notify each widget that its session with the compositor is
+  //      now invalid. The widget is responsible for destroying its layer
+  //      manager and CompositorBridgeChild. Note that at this stage, not
+  //      all actors may have received ActorDestroy yet. CompositorBridgeChild
+  //      may attempt to send messages, and if this happens, it will probably
+  //      report a MsgDropped error. This is okay.
   //
   //  (4) At this point, the UI process has a clean slate: no layers should
-  //      exist for the old compositor. We may make a decision on whether or not
-  //      to re-launch the GPU process. Or, on Android if the app is in the
-  //      background we may decide to wait until it comes to the foreground
-  //      before re-launching.
+  //      exist for the old compositor. We may make a decision on whether or
+  //      not to re-launch the GPU process. Currently, we do not relaunch it,
+  //      and any new compositors will be created in-process and will default
+  //      to software.
   //
-  //  (5) When we do decide to re-launch, or continue without a GPU process, we
-  //      notify each ContentParent of the lost connection. It will request new
-  //      endpoints from the GPUProcessManager and forward them to its
-  //      ContentChild. The parent-side of these endpoints may come from the
-  //      compositor thread of the UI process, or the compositor thread of the
-  //      GPU process. However, no actual compositors should exist yet.
+  //  (5) Next we notify each ContentParent of the lost connection. It will
+  //      request new endpoints from the GPUProcessManager and forward them
+  //      to its ContentChild. The parent-side of these endpoints may come
+  //      from the compositor thread of the UI process, or the compositor
+  //      thread of the GPU process. However, no actual compositors should
+  //      exist yet.
   //
   //  (6) Each ContentChild will receive new endpoints. It will destroy its
   //      Compositor/ImageBridgeChild singletons and recreate them, as well
@@ -742,15 +716,15 @@ void GPUProcessManager::HandleProcessLost() {
   //        (b) [CONTENT] BrowserChild::ReinitRendering
   //        (c) [CONTENT] BrowserChild::SendEnsureLayersConnected
   //        (d)      [UI] BrowserParent::RecvEnsureLayersConnected
-  //        (e)      [UI] RemoteLayerTreeOwner::EnsureLayersConnected
+  //        (e)      [UI] RenderFrame::EnsureLayersConnected
   //        (f)      [UI] CompositorBridgeChild::SendNotifyChildRecreated
   //
-  //      Note that at step (e), RemoteLayerTreeOwner will call
-  //      GetWindowRenderer on the nsIWidget owning the tab. This step ensures
-  //      that a compositor exists for the window. If we decided to launch a new
-  //      GPU Process, at this point we block until the process has launched and
-  //      we're able to create a new window compositor. Otherwise, if
-  //      compositing is now in-process, this will simply create a new
+  //      Note that at step (e), RenderFrame will call GetLayerManager
+  //      on the nsIWidget owning the tab. This step ensures that a compositor
+  //      exists for the window. If we decided to launch a new GPU Process,
+  //      at this point we block until the process has launched and we're
+  //      able to create a new window compositor. Otherwise, if compositing
+  //      is now in-process, this will simply create a new
   //      CompositorBridgeParent in the UI process. If there are multiple tabs
   //      in the same window, additional tabs will simply return the already-
   //      established compositor.
@@ -761,34 +735,10 @@ void GPUProcessManager::HandleProcessLost() {
   //      exists, and that the tab can forward layers.
   //
   //  (8) Last, if the window had no remote tabs, step (7) will not have
-  //      applied, and the window will not have a new compositor just yet. The
-  //      next refresh tick and paint will ensure that one exists, again via
-  //      nsIWidget::GetWindowRenderer. On Android, we called
-  //      nsIWidgetListener::RequestRepaint back in step (3) to ensure this
-  //      tick occurs, but on other platforms this is not necessary.
-
-  DestroyRemoteCompositorSessions();
-
-  // On Android we want to avoid restarting the GPU process immediately if it
-  // was killed and the app is in the background. Just set the flag saying we
-  // need to reinitialize once the app is foregrounded again, and return early.
-  // If the GPU process has been disabled we can continue re-initializing
-  // immediately.
-  if (!mAppInForeground && gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
-    mNeedsRenderingReinit = true;
-    return;
-  }
-
-  // Launch the process if it is enabled and hasn't already been relaunched.
-  if (!mProcess && gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
-    LaunchGPUProcess();
-  }
-
-  ReinitializeRendering();
-}
-
-void GPUProcessManager::ReinitializeRendering() {
-  mNeedsRenderingReinit = false;
+  //      applied, and the window will not have a new compositor just yet.
+  //      The next refresh tick and paint will ensure that one exists, again
+  //      via nsIWidget::GetLayerManager.
+  RebuildRemoteSessions();
 
   // Notify content. This will ensure that each content process re-establishes
   // a connection to the compositor thread (whether it's in-process or in a
@@ -806,7 +756,7 @@ void GPUProcessManager::ReinitializeRendering() {
   }
 }
 
-void GPUProcessManager::DestroyRemoteCompositorSessions() {
+void GPUProcessManager::RebuildRemoteSessions() {
   // Build a list of sessions to notify, since notification might delete
   // entries from the list.
   nsTArray<RefPtr<RemoteCompositorSession>> sessions;
@@ -821,7 +771,7 @@ void GPUProcessManager::DestroyRemoteCompositorSessions() {
   }
 }
 
-void GPUProcessManager::DestroyInProcessCompositorSessions() {
+void GPUProcessManager::RebuildInProcessSessions() {
   // Build a list of sessions to notify, since notification might delete
   // entries from the list.
   nsTArray<RefPtr<InProcessCompositorSession>> sessions;
@@ -1325,9 +1275,7 @@ class GPUMemoryReporter : public MemoryReportingProcess {
 };
 
 RefPtr<MemoryReportingProcess> GPUProcessManager::GetProcessMemoryReporter() {
-  // Ensure mProcess is non-null before calling EnsureGPUReady, to avoid
-  // launching the process if it has not already been launched.
-  if (!mProcess || !EnsureGPUReady()) {
+  if (!EnsureGPUReady()) {
     return nullptr;
   }
   return new GPUMemoryReporter();

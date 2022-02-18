@@ -9,10 +9,12 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.util.SparseArray;
-import androidx.annotation.NonNull;
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.process.GeckoProcessManager;
+import org.mozilla.gecko.process.GeckoServiceChildProcess;
 
-public final class SurfaceAllocator {
+/* package */ final class SurfaceAllocator {
   private static final String LOGTAG = "SurfaceAllocator";
 
   private static ISurfaceAllocator sAllocator;
@@ -21,13 +23,23 @@ public final class SurfaceAllocator {
   // connection to the allocator service.
   private static final SparseArray<GeckoSurface> sSurfaces = new SparseArray<GeckoSurface>();
 
-  public static synchronized void connect(final @NonNull ISurfaceAllocator allocator) {
-    if (allocator == null) {
-      throw new IllegalArgumentException("SurfaceAllocator.connect() allocator must be non-null");
+  private static synchronized void ensureConnection() {
+    if (sAllocator != null) {
+      return;
     }
 
     try {
-      allocator
+      if (GeckoAppShell.isParentProcess()) {
+        sAllocator = GeckoProcessManager.getInstance().getSurfaceAllocator();
+      } else {
+        sAllocator = GeckoServiceChildProcess.getSurfaceAllocator();
+      }
+
+      if (sAllocator == null) {
+        Log.w(LOGTAG, "Failed to connect to RemoteSurfaceAllocator");
+        return;
+      }
+      sAllocator
           .asBinder()
           .linkToDeath(
               new IBinder.DeathRecipient() {
@@ -47,7 +59,6 @@ public final class SurfaceAllocator {
                 }
               },
               0);
-      sAllocator = allocator;
     } catch (final RemoteException e) {
       Log.w(LOGTAG, "Failed to connect to RemoteSurfaceAllocator", e);
       sAllocator = null;
@@ -58,6 +69,8 @@ public final class SurfaceAllocator {
   public static synchronized GeckoSurface acquireSurface(
       final int width, final int height, final boolean singleBufferMode) {
     try {
+      ensureConnection();
+
       if (sAllocator == null) {
         Log.w(LOGTAG, "Failed to acquire GeckoSurface: not connected");
         return null;
