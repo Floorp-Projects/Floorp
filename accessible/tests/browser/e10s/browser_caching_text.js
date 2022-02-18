@@ -33,7 +33,6 @@ addAccessibleTask(
 ef gh</pre>
 <p id="linksStartEnd"><a href="https://example.com/">a</a>b<a href="https://example.com/">c</a></p>
 <p id="linksBreaking">a<a href="https://example.com/">b<br>c</a>d</p>
-<p id="p">a<br role="presentation">b</p>
   `,
   async function(browser, docAcc) {
     for (const id of ["br", "pre"]) {
@@ -129,10 +128,6 @@ ef gh</pre>
           [9, 11, "", 11, 11],
         ]);
       }
-      testTextAtOffset(acc, BOUNDARY_PARAGRAPH, [
-        [0, 5, "ab cd\n", 0, 6],
-        [6, 11, "ef gh", 6, 11],
-      ]);
     }
     const linksStartEnd = findAccessibleChildByID(docAcc, "linksStartEnd");
     testTextAtOffset(linksStartEnd, BOUNDARY_LINE_START, [
@@ -159,12 +154,6 @@ ef gh</pre>
         "TextLeafPoint disabled, so word boundaries are incorrect for linksBreaking"
       );
     }
-    const p = findAccessibleChildByID(docAcc, "p");
-    testTextAtOffset(p, BOUNDARY_LINE_START, [
-      [0, 0, "a", 0, 1],
-      [1, 2, "b", 1, 2],
-    ]);
-    testTextAtOffset(p, BOUNDARY_PARAGRAPH, [[0, 2, "ab", 0, 2]]);
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );
