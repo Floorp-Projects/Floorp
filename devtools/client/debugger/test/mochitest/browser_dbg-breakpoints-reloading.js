@@ -113,9 +113,3 @@ function assertSourceDoesNotExist(dbg, url) {
   const source = findSource(dbg, url, { silent: true });
   ok(!source, `Source for ${url} does not exist`);
 }
-
-async function addBreakpointViaGutter(dbg, line) {
-  info(`Add breakpoint via the editor on line ${line}`);
-  await clickGutter(dbg, line);
-  return waitForDispatch(dbg.store, "SET_BREAKPOINT");
-}
