@@ -3467,14 +3467,14 @@ void CodeGenerator::visitLambda(LLambda* lir) {
   Register envChain = ToRegister(lir->environmentChain());
   Register output = ToRegister(lir->output());
   Register tempReg = ToRegister(lir->temp0());
-  const LambdaFunctionInfo& info = lir->mir()->info();
+
+  JSFunction* fun = lir->mir()->templateFunction();
 
   using Fn = JSObject* (*)(JSContext*, HandleFunction, HandleObject);
   OutOfLineCode* ool = oolCallVM<Fn, js::Lambda>(
-      lir, ArgList(ImmGCPtr(info.funUnsafe()), envChain),
-      StoreRegisterTo(output));
+      lir, ArgList(ImmGCPtr(fun), envChain), StoreRegisterTo(output));
 
-  TemplateObject templateObject(info.funUnsafe());
+  TemplateObject templateObject(fun);
   masm.createGCObject(output, tempReg, templateObject, gc::DefaultHeap,
                       ool->entry());
 
@@ -3488,22 +3488,23 @@ void CodeGenerator::visitLambdaArrow(LLambdaArrow* lir) {
   ValueOperand newTarget = ToValue(lir, LLambdaArrow::NewTargetIndex);
   Register output = ToRegister(lir->output());
   Register temp = ToRegister(lir->temp0());
-  const LambdaFunctionInfo& info = lir->mir()->info();
+
+  JSFunction* fun = lir->mir()->templateFunction();
 
   using Fn =
       JSObject* (*)(JSContext*, HandleFunction, HandleObject, HandleValue);
   OutOfLineCode* ool = oolCallVM<Fn, LambdaArrow>(
-      lir, ArgList(ImmGCPtr(info.funUnsafe()), envChain, newTarget),
+      lir, ArgList(ImmGCPtr(fun), envChain, newTarget),
       StoreRegisterTo(output));
 
-  TemplateObject templateObject(info.funUnsafe());
+  TemplateObject templateObject(fun);
   masm.createGCObject(output, temp, templateObject, gc::DefaultHeap,
                       ool->entry());
 
   emitLambdaInit(output, envChain);
 
   // Lexical new.target is stored in the first extended slot.
-  MOZ_ASSERT(info.flags.isExtended());
+  MOZ_ASSERT(fun->isExtended());
   static_assert(FunctionExtended::ARROW_NEWTARGET_SLOT == 0,
                 "|new.target| must be stored in first slot");
   masm.storeValue(newTarget,

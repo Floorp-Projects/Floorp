@@ -5241,13 +5241,14 @@ void MStoreDynamicSlot::printOpcode(GenericPrinter& out) const {
 #endif
 
 MDefinition* MGuardFunctionScript::foldsTo(TempAllocator& alloc) {
-  if (input()->isLambda() &&
-      input()->toLambda()->info().baseScript == expected()) {
-    return input();
+  MDefinition* in = input();
+  if (in->isLambda() &&
+      in->toLambda()->templateFunction()->baseScript() == expected()) {
+    return in;
   }
-  if (input()->isLambdaArrow() &&
-      input()->toLambdaArrow()->info().baseScript == expected()) {
-    return input();
+  if (in->isLambdaArrow() &&
+      in->toLambdaArrow()->templateFunction()->baseScript() == expected()) {
+    return in;
   }
   return this;
 }
