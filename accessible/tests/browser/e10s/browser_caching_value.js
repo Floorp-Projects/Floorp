@@ -147,6 +147,24 @@ const valueTests = [
     waitFor: EVENT_VALUE_CHANGE,
     expected: "5",
   },
+  {
+    desc: "Initially textbox value is text subtree",
+    id: "textbox",
+    expected: "Some rich text",
+  },
+  {
+    desc: "Textbox value changes when subtree changes",
+    id: "textbox",
+    async action(browser) {
+      await invokeContentTask(browser, [], () => {
+        let boldText = content.document.createElement("strong");
+        boldText.textContent = " bold";
+        content.document.getElementById("textbox").appendChild(boldText);
+      });
+    },
+    waitFor: EVENT_TEXT_VALUE_CHANGE,
+    expected: "Some rich text bold",
+  },
 ];
 
 /**
@@ -163,7 +181,8 @@ addAccessibleTask(
   </select>
   <input id="combobox" role="combobox" aria-autocomplete="inline">
   <progress id="progress" value="22" max="100"></progress>
-  <input type="range" id="range" min="0" max="10" value="6">`,
+  <input type="range" id="range" min="0" max="10" value="6">
+  <div contenteditable="yes" role="textbox" id="textbox">Some <a href="#">rich</a> text</div>`,
   async function(browser, accDoc) {
     for (let { desc, id, action, attrs, expected, waitFor } of valueTests) {
       info(desc);
