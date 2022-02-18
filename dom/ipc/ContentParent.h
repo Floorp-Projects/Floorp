@@ -722,6 +722,11 @@ class ContentParent final
   void OnVarChanged(const GfxVarUpdate& aVar) override;
   void OnCompositorUnexpectedShutdown() override;
 
+  // Sets the SurfaceAllocator the content process should use to allocate
+  // Surfaces on Android. Ideally this should be done in (Re)InitRendering,
+  // but unfortunately we must go via Java and AIDL rather than IPDL.
+  void InitSurfaceAllocator();
+
  private:
   /**
    * A map of the remote content process type to a list of content parents

@@ -66,43 +66,49 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     nativeGetEditableParent(child, contentId, tabId);
   }
 
-  /**
-   * Returns the surface allocator interface to be used by child processes to allocate Surfaces. The
-   * service bound to the returned interface may live in either the GPU process or parent process.
-   */
-  @Override // IProcessManager
-  public ISurfaceAllocator getSurfaceAllocator() {
-    final GeckoResult<Boolean> gpuReady = GeckoAppShell.ensureGpuProcessReady();
-
-    try {
-      final GeckoResult<ISurfaceAllocator> allocator = new GeckoResult<>();
-      if (gpuReady.poll(1000)) {
-        // The GPU process is enabled and ready, so ask it for its surface allocator.
-        XPCOMEventTarget.runOnLauncherThread(
-            () -> {
-              final Selector selector = new Selector(GeckoProcessType.GPU);
-              final GpuProcessConnection conn =
-                  (GpuProcessConnection) INSTANCE.mConnections.getExistingConnection(selector);
-
-              allocator.complete(conn.getSurfaceAllocator());
-            });
-      } else {
-        // The GPU process is disabled, so return the parent process allocator instance.
-        allocator.complete(RemoteSurfaceAllocator.getInstance());
-      }
-      return allocator.poll(100);
-    } catch (final Throwable e) {
-      Log.e(LOGTAG, "Error in getSurfaceAllocator", e);
-      return null;
-    }
-  }
-
   @WrapForJNI
   public static CompositorSurfaceManager getCompositorSurfaceManager() {
     final Selector selector = new Selector(GeckoProcessType.GPU);
     final GpuProcessConnection conn =
         (GpuProcessConnection) INSTANCE.mConnections.getExistingConnection(selector);
     return conn.getCompositorSurfaceManager();
+  }
+
+  /**
+   * Connects the specified child process' SurfaceAllocator. Should be called after creating the
+   * child process, and after rendering has been reinitialized following the a GPU process loss, to
+   * allow the child process to allocate Surfaces.
+   *
+   * @param selector Selector identifying the child process to connect.
+   * @param gpuProcessEnabled Whether the GPU process is enabled.
+   */
+  @WrapForJNI
+  public static void setChildProcessSurfaceAllocator(
+      final Selector selector, final boolean gpuProcessEnabled) {
+    XPCOMEventTarget.assertOnLauncherThread();
+    final ChildConnection conn = INSTANCE.mConnections.getExistingConnection(selector);
+    if (conn == null) {
+      return;
+    }
+
+    if (gpuProcessEnabled) {
+      // If the GPU process is enabled then attempt to connect the child process to the GPU process'
+      // surface allocator. If the GPU process has died then we may be unable to find the
+      // connection, in which case do nothing - this function will be called again once rendering
+      // has been reinitialized.
+      final Selector gpuSelector = new Selector(GeckoProcessType.GPU);
+      final GpuProcessConnection gpuConn =
+          (GpuProcessConnection) INSTANCE.mConnections.getExistingConnection(gpuSelector);
+      if (gpuConn != null) {
+        conn.setSurfaceAllocator(gpuConn.getSurfaceAllocator());
+      } else {
+        Log.w(LOGTAG, "setSurfaceAllocator called with GPU process enabled but not running");
+      }
+    } else {
+      // If the GPU process is disabled then connect the child process to the parent process'
+      // surface allocator
+      conn.setSurfaceAllocator(RemoteSurfaceAllocator.getInstance());
+    }
   }
 
   /** Gecko uses this class to uniquely identify a process managed by GeckoProcessManager. */
@@ -245,6 +251,14 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
       return GeckoResult.fromValue(null);
     }
 
+    public void setSurfaceAllocator(final ISurfaceAllocator surfaceAllocator) {
+      try {
+        mChild.setSurfaceAllocator(surfaceAllocator);
+      } catch (final RemoteException e) {
+        Log.w(LOGTAG, "Error calling IChildProcess.setSurfaceAllocator()", e);
+      }
+    }
+
     @Override
     protected void onBinderConnected(final IBinder service) {
       XPCOMEventTarget.assertOnLauncherThread();
@@ -322,7 +336,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     @Override
     protected void onBinderConnected(@NonNull final IChildProcess child) throws RemoteException {
       mCompositorSurfaceManager = new CompositorSurfaceManager(child.getCompositorSurfaceManager());
-      mSurfaceAllocator = child.getSurfaceAllocator();
+      mSurfaceAllocator = child.getSurfaceAllocatorFromGpuProcess();
     }
 
     public CompositorSurfaceManager getCompositorSurfaceManager() {
