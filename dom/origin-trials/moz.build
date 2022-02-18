@@ -14,7 +14,7 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
 
     CbindgenHeader(
         "origin_trials_ffi_generated.h",
-        inputs=["ffi"],
+        inputs=["/dom/origin-trials/ffi"],
     )
 
 EXPORTS.mozilla += [
