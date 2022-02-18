@@ -38,21 +38,6 @@ add_task(async function testBreakableLinesOverReloads() {
   await assertBreakableLines(dbg, "original.js", 18, [[1,3], [8,11], [13]]);
 });
 
-function assertLineIsBreakable(dbg, file, line, shouldBeBreakable) {
-  const lineInfo = getCM(dbg).lineInfo(line - 1);
-  // When a line is not breakable, the "empty-line" class is added
-  // and the line is greyed out
-  if (shouldBeBreakable) {
-    ok(
-      !lineInfo.wrapClass?.includes("empty-line"),
-      `${file}:${line} should be breakable`);
-  } else {
-    ok(
-      lineInfo?.wrapClass?.includes("empty-line"),
-      `${file}:${line} should NOT be breakable`);
-  }
-}
-
 function shouldLineBeBreakable(breakableLines, line) {
   for(const range of breakableLines) {
     if (range.length == 2) {
