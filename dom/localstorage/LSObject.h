@@ -185,6 +185,9 @@ class LSObject final : public Storage {
   bool GetHasSnapshot(nsIPrincipal& aSubjectPrincipal,
                       ErrorResult& aError) override;
 
+  int64_t GetSnapshotUsage(nsIPrincipal& aSubjectPrincipal,
+                           ErrorResult& aError) override;
+
   //////////////////////////////////////////////////////////////////////////////
 
   NS_DECL_ISUPPORTS_INHERITED

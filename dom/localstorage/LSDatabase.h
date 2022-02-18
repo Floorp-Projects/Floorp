@@ -88,6 +88,8 @@ class LSDatabase final {
 
   bool HasSnapshot() const;
 
+  int64_t GetSnapshotUsage() const;
+
  private:
   ~LSDatabase();
 

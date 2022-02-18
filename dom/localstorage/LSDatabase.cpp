@@ -323,6 +323,15 @@ bool LSDatabase::HasSnapshot() const {
   return !!mSnapshot;
 }
 
+int64_t LSDatabase::GetSnapshotUsage() const {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(!mAllowedToClose);
+  MOZ_ASSERT(mSnapshot);
+
+  return mSnapshot->GetUsage();
+}
+
 nsresult LSDatabase::EnsureSnapshot(LSObject* aObject, const nsAString& aKey,
                                     bool aExplicit) {
   MOZ_ASSERT(aObject);

@@ -879,6 +879,28 @@ bool LSObject::GetHasSnapshot(nsIPrincipal& aSubjectPrincipal,
   return mDatabase->HasSnapshot();
 }
 
+int64_t LSObject::GetSnapshotUsage(nsIPrincipal& aSubjectPrincipal,
+                                   ErrorResult& aError) {
+  AssertIsOnOwningThread();
+
+  if (!CanUseStorage(aSubjectPrincipal)) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return 0;
+  }
+
+  if (!mDatabase || mDatabase->IsAllowedToClose()) {
+    aError.Throw(NS_ERROR_NOT_AVAILABLE);
+    return 0;
+  }
+
+  if (!mDatabase->HasSnapshot()) {
+    aError.Throw(NS_ERROR_NOT_AVAILABLE);
+    return 0;
+  }
+
+  return mDatabase->GetSnapshotUsage();
+}
+
 NS_IMPL_ADDREF_INHERITED(LSObject, Storage)
 NS_IMPL_RELEASE_INHERITED(LSObject, Storage)
 

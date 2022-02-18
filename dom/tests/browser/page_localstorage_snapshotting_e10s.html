@@ -49,6 +49,15 @@ function beginExplicitSnapshot() {
 function endExplicitSnapshot() {
   localStorage.endExplicitSnapshot();
 }
+
+function getHasSnapshot() {
+  return localStorage.hasSnapshot;
+}
+
+function getSnapshotUsage() {
+  return localStorage.snapshotUsage;
+}
+
 </script>
 </head>
 <body><h2 id="pageNameH"></h2></body>
