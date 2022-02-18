@@ -102,21 +102,6 @@ class Accessible {
   }
 
   /**
-   * Return true if this Accessible is before another Accessible in the tree.
-   */
-  bool IsBefore(const Accessible* aAcc) const;
-
-  bool IsAncestorOf(const Accessible* aAcc) const {
-    for (const Accessible* parent = aAcc->Parent(); parent;
-         parent = parent->Parent()) {
-      if (parent == this) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
    * Used by ChildAtPoint() method to get direct or deepest child at point.
    */
   enum class EWhichChildAtPoint { DirectChild, DeepestChild };
@@ -453,7 +438,6 @@ class Accessible {
    * @param  aSetSize   [out] the group size
    */
   virtual void GetPositionAndSetSize(int32_t* aPosInSet, int32_t* aSetSize);
-
 
   /**
    * Return the nearest ancestor that has a primary action, or null.

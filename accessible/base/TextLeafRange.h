@@ -167,9 +167,6 @@ class TextLeafPoint final {
 
   TextLeafPoint FindLineEnd(nsDirection aDirection, bool aIncludeOrigin) const;
   TextLeafPoint FindWordEnd(nsDirection aDirection, bool aIncludeOrigin) const;
-
-  TextLeafPoint FindParagraphSameAcc(nsDirection aDirection,
-                                     bool aIncludeOrigin) const;
 };
 
 /**
