@@ -17,8 +17,7 @@
 #include "nsWrapperCache.h"
 #include "nsIGlobalObject.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CountQueuingStrategy final : public BaseQueuingStrategy,
                                    public nsWrapperCache {
@@ -44,7 +43,6 @@ class CountQueuingStrategy final : public BaseQueuingStrategy,
   already_AddRefed<Function> GetSize(ErrorResult& aRv);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CountQueuingStrategy_h

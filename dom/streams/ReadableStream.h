@@ -23,8 +23,7 @@
 #  error "Shouldn't be compiling with this header without MOZ_DOM_STREAMS set"
 #endif
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Promise;
 class ReadableStreamGenericReader;
@@ -197,7 +196,6 @@ CreateReadableByteStream(JSContext* aCx, nsIGlobalObject* aGlobal,
                          UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm,
                          ErrorResult& aRv);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ReadableStream_h
