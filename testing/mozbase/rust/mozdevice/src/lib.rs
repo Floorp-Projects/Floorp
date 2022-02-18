@@ -653,6 +653,59 @@ impl Device {
             .map(|path| !path.contains("No such file or directory"))
     }
 
+    pub fn pull(&self, src: &UnixPath, buffer: &mut dyn Write) -> Result<()> {
+        // Implement the ADB protocol to receive a file from the device.
+        let mut stream = self.host.connect()?;
+
+        // Send "host:transport" command with device serial
+        let message = encode_message(&format!("host:transport:{}", self.serial))?;
+        stream.write_all(message.as_bytes())?;
+        let _bytes = read_response(&mut stream, false, true)?;
+
+        // Send "sync:" command to initialize file transfer
+        let message = encode_message("sync:")?;
+        stream.write_all(message.as_bytes())?;
+        let _bytes = read_response(&mut stream, false, true)?;
+
+        // Send "RECV" command with name of the file
+        stream.write_all(SyncCommand::Recv.code())?;
+        let args_string = format!("{}", src.display());
+        let args = args_string.as_bytes();
+        write_length_little_endian(&mut stream, args.len())?;
+        stream.write_all(args)?;
+
+        // Use the maximum 64KB buffer to transfer the file contents.
+        let mut buf = [0; 64 * 1024];
+
+        // Read "DATA" command one or more times for the file content
+        loop {
+            stream.read_exact(&mut buf[0..4])?;
+
+            if &buf[0..4] == SyncCommand::Data.code() {
+                let len = read_length_little_endian(&mut stream)?;
+                stream.read_exact(&mut buf[0..len])?;
+                buffer.write_all(&buf[0..len])?;
+            } else if &buf[0..4] == SyncCommand::Done.code() {
+                // "DONE" command indicates end of file transfer
+                break;
+            } else if &buf[0..4] == SyncCommand::Fail.code() {
+                let n = buf.len().min(read_length_little_endian(&mut stream)?);
+
+                stream.read_exact(&mut buf[0..n])?;
+
+                let message = std::str::from_utf8(&buf[0..n])
+                    .map(|s| format!("adb error: {}", s))
+                    .unwrap_or_else(|_| "adb error was not utf-8".into());
+
+                return Err(DeviceError::Adb(message));
+            } else {
+                return Err(DeviceError::Adb("FAIL (unknown)".to_owned()));
+            }
+        }
+
+        Ok(())
+    }
+
     pub fn push(&self, buffer: &mut dyn Read, dest: &UnixPath, mode: u32) -> Result<()> {
         // Implement the ADB protocol to send a file to the device.
         // The protocol consists of the following steps:
