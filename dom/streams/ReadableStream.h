@@ -14,6 +14,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
 #include "mozilla/dom/ReadableStreamController.h"
+#include "mozilla/dom/ReadableStreamBinding.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -31,6 +32,7 @@ class ReadableStreamDefaultReader;
 class ReadableStreamGenericReader;
 struct ReadableStreamGetReaderOptions;
 struct ReadIntoRequest;
+class WritableStream;
 
 using ReadableStreamReader =
     ReadableStreamDefaultReaderOrReadableStreamBYOBReader;
@@ -121,6 +123,10 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
 
   void GetReader(JSContext* aCx, const ReadableStreamGetReaderOptions& aOptions,
                  OwningReadableStreamReader& resultReader, ErrorResult& aRv);
+
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> PipeTo(
+      WritableStream& aDestinaton, const StreamPipeOptions& aOptions,
+      ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT void Tee(JSContext* aCx,
                               nsTArray<RefPtr<ReadableStream>>& aResult,

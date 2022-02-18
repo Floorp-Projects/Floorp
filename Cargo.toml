@@ -41,6 +41,7 @@ exclude = [
   "xpcom/rust/gkrust_utils",
   "tools/lint/test/files/clippy",
   "tools/fuzzing/rust",
+  "dom/origin-trials/ffi",
 ]
 
 # Use the new dependency resolver to reduce some of the platform-specific dependencies.

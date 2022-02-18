@@ -30,12 +30,12 @@ def pytest_addoption(parser):
     parser.addoption("--headless", action="store_true", default=False, help="run browser in headless mode")
 
 
-def pytest_collect_file(path, parent):
-    if path.ext.lower() != '.html':
+def pytest_collect_file(file_path, path, parent):
+    if file_path.suffix.lower() != '.html':
         return
 
     # Tests are organized in directories by type
-    test_type = os.path.relpath(str(path), HERE)
+    test_type = os.path.relpath(str(file_path), HERE)
     if os.path.sep not in test_type or ".." in test_type:
         # HTML files in this directory are not tests
         return
@@ -44,8 +44,8 @@ def pytest_collect_file(path, parent):
     # Handle the deprecation of Node construction in pytest6
     # https://docs.pytest.org/en/stable/deprecations.html#node-construction-changed-to-node-from-parent
     if hasattr(HTMLItem, "from_parent"):
-        return HTMLItem.from_parent(parent, filename=str(path), test_type=test_type)
-    return HTMLItem(parent, str(path), test_type)
+        return HTMLItem.from_parent(parent, filename=str(file_path), test_type=test_type)
+    return HTMLItem(parent, str(file_path), test_type)
 
 
 def pytest_configure(config):

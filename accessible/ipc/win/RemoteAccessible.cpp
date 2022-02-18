@@ -151,6 +151,11 @@ ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
 }
 
 void RemoteAccessible::Value(nsString& aValue) const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    RemoteAccessibleBase<RemoteAccessible>::Value(aValue);
+    return;
+  }
+
   aValue.Truncate();
   RefPtr<IAccessible> acc;
   if (!GetCOMInterface((void**)getter_AddRefs(acc))) {

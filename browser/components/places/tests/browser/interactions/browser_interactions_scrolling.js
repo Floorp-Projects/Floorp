@@ -12,8 +12,18 @@ const TEST_URL =
   "https://example.com/browser/browser/components/places/tests/browser/interactions/scrolling.html";
 const TEST_URL2 = "https://example.com/browser";
 
-async function waitForScrollEvent(aBrowser) {
-  await BrowserTestUtils.waitForContentEvent(aBrowser, "scroll");
+async function waitForScrollEvent(aBrowser, aTask) {
+  let promise = BrowserTestUtils.waitForContentEvent(aBrowser, "scroll");
+
+  // This forces us to send a message to the browser's process and receive a response which ensures
+  // that the message sent to register the scroll event listener will also have been processed by
+  // the content process. Without this it is possible for our scroll task to send a higher priority
+  // message which can be processed by the content process before the message to register the scroll
+  // event listener.
+  await SpecialPowers.spawn(aBrowser, [], () => {});
+
+  await aTask();
+  await promise;
 }
 
 add_task(async function test_no_scrolling() {
@@ -40,9 +50,9 @@ add_task(async function test_arrow_key_down_scroll() {
       heading.focus();
     });
 
-    await EventUtils.synthesizeKey("KEY_ArrowDown");
-
-    await waitForScrollEvent(browser);
+    await waitForScrollEvent(browser, () =>
+      EventUtils.synthesizeKey("KEY_ArrowDown")
+    );
 
     BrowserTestUtils.loadURI(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
@@ -60,12 +70,12 @@ add_task(async function test_arrow_key_down_scroll() {
 add_task(async function test_scrollIntoView() {
   await Interactions.reset();
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    await SpecialPowers.spawn(browser, [], function() {
-      const heading = content.document.getElementById("middleHeading");
-      heading.scrollIntoView();
-    });
-
-    waitForScrollEvent(browser);
+    await waitForScrollEvent(browser, () =>
+      SpecialPowers.spawn(browser, [], function() {
+        const heading = content.document.getElementById("middleHeading");
+        heading.scrollIntoView();
+      })
+    );
 
     BrowserTestUtils.loadURI(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
@@ -84,12 +94,12 @@ add_task(async function test_scrollIntoView() {
 add_task(async function test_anchor_click() {
   await Interactions.reset();
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    await SpecialPowers.spawn(browser, [], function() {
-      const anchor = content.document.getElementById("to_bottom_anchor");
-      anchor.click();
-    });
-
-    waitForScrollEvent(browser);
+    await waitForScrollEvent(browser, () =>
+      SpecialPowers.spawn(browser, [], function() {
+        const anchor = content.document.getElementById("to_bottom_anchor");
+        anchor.click();
+      })
+    );
 
     BrowserTestUtils.loadURI(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
@@ -108,11 +118,11 @@ add_task(async function test_anchor_click() {
 add_task(async function test_window_scrollBy() {
   await Interactions.reset();
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    await SpecialPowers.spawn(browser, [], function() {
-      content.scrollBy(0, 100);
-    });
-
-    waitForScrollEvent(browser);
+    await waitForScrollEvent(browser, () =>
+      SpecialPowers.spawn(browser, [], function() {
+        content.scrollBy(0, 100);
+      })
+    );
 
     BrowserTestUtils.loadURI(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
@@ -131,11 +141,11 @@ add_task(async function test_window_scrollBy() {
 add_task(async function test_window_scrollTo() {
   await Interactions.reset();
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    await SpecialPowers.spawn(browser, [], function() {
-      content.scrollTo(0, 200);
-    });
-
-    waitForScrollEvent(browser);
+    await waitForScrollEvent(browser, () =>
+      SpecialPowers.spawn(browser, [], function() {
+        content.scrollTo(0, 200);
+      })
+    );
 
     BrowserTestUtils.loadURI(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);

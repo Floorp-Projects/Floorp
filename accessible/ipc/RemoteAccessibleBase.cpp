@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ARIAMap.h"
 #include "DocAccessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
@@ -17,6 +18,7 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/Unused.h"
 #include "nsAccUtils.h"
+#include "nsTextEquivUtils.h"
 #include "Pivot.h"
 #include "RelationType.h"
 #include "xpcAccessibleDocument.h"
@@ -203,6 +205,47 @@ void RemoteAccessibleBase<Derived>::Description(nsString& aDescription) const {
   if (mCachedFields) {
     mCachedFields->GetAttribute(nsGkAtoms::description, aDescription);
     VERIFY_CACHE(CacheDomain::NameAndDescription);
+  }
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::Value(nsString& aValue) const {
+  if (mCachedFields) {
+    if (mCachedFields->HasAttribute(nsGkAtoms::aria_valuetext)) {
+      mCachedFields->GetAttribute(nsGkAtoms::aria_valuetext, aValue);
+      VERIFY_CACHE(CacheDomain::Value);
+      return;
+    }
+
+    if (HasNumericValue()) {
+      double checkValue = CurValue();
+      if (!IsNaN(checkValue)) {
+        aValue.AppendFloat(checkValue);
+      }
+      return;
+    }
+
+    const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+    // Value of textbox is a textified subtree.
+    if (roleMapEntry && roleMapEntry->Is(nsGkAtoms::textbox)) {
+      nsTextEquivUtils::GetTextEquivFromSubtree(this, aValue);
+      return;
+    }
+
+    if (IsCombobox()) {
+      Pivot p = Pivot(const_cast<RemoteAccessibleBase<Derived>*>(this));
+      PivotStateRule rule(states::ACTIVE);
+      Accessible* option = p.First(rule);
+      if (!option) {
+        option =
+            const_cast<RemoteAccessibleBase<Derived>*>(this)->GetSelectedItem(
+                0);
+      }
+
+      if (option) {
+        option->Name(aValue);
+      }
+    }
   }
 }
 

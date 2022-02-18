@@ -65,7 +65,7 @@ def shell(cmd, working_dir):
         subprocess.check_call(step, shell=True, cwd=working_dir)
 
 
-@pytest.yield_fixture(params=["git", "hg"])
+@pytest.fixture(params=["git", "hg"])
 def repo(tmpdir, request):
     tmpdir = Path(tmpdir)
     vcs = request.param

@@ -1362,7 +1362,7 @@ void WebSocketChannel::BeginOpenInternal() {
 
   if (NS_FAILED(rv)) {
     LOG(("WebSocketChannel::BeginOpenInternal: cannot async open\n"));
-    AbortSession(NS_ERROR_CONNECTION_REFUSED);
+    AbortSession(NS_ERROR_WEBSOCKET_CONNECTION_REFUSED);
     return;
   }
   mOpenedHttpChannel = true;
@@ -3252,7 +3252,7 @@ WebSocketChannel::Notify(nsITimer* timer) {
     }
 
     LOG(("WebSocketChannel:: Expecting Server Close - Timed Out\n"));
-    AbortSession(NS_ERROR_NET_TIMEOUT);
+    AbortSession(NS_ERROR_NET_TIMEOUT_EXTERNAL);
   } else if (timer == mOpenTimer) {
     MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
@@ -3262,7 +3262,7 @@ WebSocketChannel::Notify(nsITimer* timer) {
       return NS_OK;
     }
 
-    AbortSession(NS_ERROR_NET_TIMEOUT);
+    AbortSession(NS_ERROR_NET_TIMEOUT_EXTERNAL);
     // mReconnectDelayTimer is only modified on MainThread
   } else if (timer == mReconnectDelayTimer) {
     MOZ_RELEASE_ASSERT(mConnecting == CONNECTING_DELAYED,
@@ -3296,7 +3296,7 @@ WebSocketChannel::Notify(nsITimer* timer) {
     } else {
       LOG(("nsWebSocketChannel:: Timed out Ping\n"));
       mPingTimer = nullptr;
-      AbortSession(NS_ERROR_NET_TIMEOUT);
+      AbortSession(NS_ERROR_NET_TIMEOUT_EXTERNAL);
     }
   } else if (timer == mLingeringCloseTimer) {
     LOG(("WebSocketChannel:: Lingering Close Timer"));
@@ -3845,8 +3845,8 @@ WebSocketChannel::OnStartRequest(nsIRequest* aRequest) {
 
   if (mStopped) {
     LOG(("WebSocketChannel::OnStartRequest: Channel Already Done\n"));
-    AbortSession(NS_ERROR_CONNECTION_REFUSED);
-    return NS_ERROR_CONNECTION_REFUSED;
+    AbortSession(NS_ERROR_WEBSOCKET_CONNECTION_REFUSED);
+    return NS_ERROR_WEBSOCKET_CONNECTION_REFUSED;
   }
 
   nsresult rv;
@@ -3856,11 +3856,12 @@ WebSocketChannel::OnStartRequest(nsIRequest* aRequest) {
   rv = mHttpChannel->GetResponseStatus(&status);
   if (NS_FAILED(rv)) {
     nsresult httpStatus;
-    rv = NS_ERROR_CONNECTION_REFUSED;
+    rv = NS_ERROR_WEBSOCKET_CONNECTION_REFUSED;
 
     // If we failed to connect due to unsuccessful TLS handshake, we must
     // propagate a specific error to mozilla::dom::WebSocketImpl so it can set
-    // status code to 1015. Otherwise return NS_ERROR_CONNECTION_REFUSED.
+    // status code to 1015. Otherwise return
+    // NS_ERROR_WEBSOCKET_CONNECTION_REFUSED.
     if (NS_SUCCEEDED(mHttpChannel->GetStatus(&httpStatus))) {
       uint32_t errorClass;
       nsCOMPtr<nsINSSErrorsService> errSvc =
@@ -3886,8 +3887,8 @@ WebSocketChannel::OnStartRequest(nsIRequest* aRequest) {
       !((versionMajor == 1 && versionMinor != 0) || versionMajor == 2) ||
       (versionMajor == 1 && status != 101) ||
       (versionMajor == 2 && status != 200)) {
-    AbortSession(NS_ERROR_CONNECTION_REFUSED);
-    return NS_ERROR_CONNECTION_REFUSED;
+    AbortSession(NS_ERROR_WEBSOCKET_CONNECTION_REFUSED);
+    return NS_ERROR_WEBSOCKET_CONNECTION_REFUSED;
   }
 
   if (versionMajor == 1) {

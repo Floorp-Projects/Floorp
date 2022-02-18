@@ -244,7 +244,6 @@ class HTMLFormAccessible : public HyperTextAccessibleWrap {
                                        HyperTextAccessibleWrap)
 
   // LocalAccessible
-  virtual nsAtom* LandmarkRole() const override;
   virtual a11y::role NativeRole() const override;
 
  protected:

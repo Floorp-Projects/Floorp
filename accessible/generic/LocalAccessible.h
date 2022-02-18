@@ -137,7 +137,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Get the value of this accessible.
    */
-  virtual void Value(nsString& aValue) const;
+  virtual void Value(nsString& aValue) const override;
 
   /**
    * Get help string for the accessible.
@@ -171,11 +171,6 @@ class LocalAccessible : public nsISupports, public Accessible {
    * roles).
    */
   mozilla::a11y::role ARIARole();
-
-  /**
-   * Return a landmark role if applied.
-   */
-  virtual nsAtom* LandmarkRole() const;
 
   /**
    * Returns enumerated accessible role from native markup (see constants in

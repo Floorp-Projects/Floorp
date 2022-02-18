@@ -363,8 +363,8 @@ class StorageActorMock extends EventEmitter {
       case "file":
       case "javascript":
       case "resource":
-      case "moz-extension":
         return uri.displaySpec;
+      case "moz-extension":
       case "http":
       case "https":
         return uri.prePath;
