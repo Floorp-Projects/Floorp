@@ -3480,17 +3480,6 @@ void CodeGenerator::visitLambda(LLambda* lir) {
 
   emitLambdaInit(output, envChain, info);
 
-  if (info.flags.isExtended()) {
-    MOZ_ASSERT(info.flags.allowSuperProperty() ||
-               info.flags.isSelfHostedBuiltin());
-    static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2,
-                  "All slots must be initialized");
-    masm.storeValue(UndefinedValue(),
-                    Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
-    masm.storeValue(UndefinedValue(),
-                    Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
-  }
-
   masm.bind(ool->rejoin());
 }
 
@@ -3513,16 +3502,12 @@ void CodeGenerator::visitLambdaArrow(LLambdaArrow* lir) {
 
   emitLambdaInit(output, envChain, info);
 
-  // Initialize extended slots. Lexical |this| is stored in the first one.
+  // Lexical new.target is stored in the first extended slot.
   MOZ_ASSERT(info.flags.isExtended());
-  static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2,
-                "All slots must be initialized");
   static_assert(FunctionExtended::ARROW_NEWTARGET_SLOT == 0,
                 "|new.target| must be stored in first slot");
   masm.storeValue(newTarget,
                   Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
-  masm.storeValue(UndefinedValue(),
-                  Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
 
   masm.bind(ool->rejoin());
 }
