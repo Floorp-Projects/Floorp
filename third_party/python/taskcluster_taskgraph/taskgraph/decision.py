@@ -153,7 +153,10 @@ def get_decision_parameters(graph_config, options):
     }
 
     repo = get_repository(os.getcwd())
-    commit_message = repo.get_commit_message()
+    try:
+        commit_message = repo.get_commit_message()
+    except UnicodeDecodeError:
+        commit_message = ""
 
     # Define default filter list, as most configurations shouldn't need
     # custom filters.

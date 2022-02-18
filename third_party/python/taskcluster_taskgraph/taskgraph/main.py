@@ -314,7 +314,7 @@ def generate_taskgraph(options, parameters, logdir):
     "the hash or `.~1` (hg) or `HEAD~1` (git) can be used as well.",
 )
 def show_taskgraph(options):
-    from taskgraph.parameters import Parameters
+    from taskgraph.parameters import Parameters, parameters_loader
     from taskgraph.util.vcs import get_repository
 
     if options.pop("verbose", False):
@@ -352,10 +352,12 @@ def show_taskgraph(options):
 
     parameters: List[Any[str, Parameters]] = options.pop("parameters")
     if not parameters:
-        kwargs = {
+        overrides = {
             "target-kind": options.get("target_kind"),
         }
-        parameters = [Parameters(strict=False, **kwargs)]  # will use default values
+        parameters = [
+            parameters_loader(None, strict=False, overrides=overrides)
+        ]  # will use default values
 
     for param in parameters[:]:
         if isinstance(param, str) and os.path.isdir(param):
