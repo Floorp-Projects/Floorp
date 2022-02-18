@@ -390,6 +390,11 @@ void HyperTextAccessibleBase::TextAfterOffset(
 
   switch (aBoundaryType) {
     case nsIAccessibleText::BOUNDARY_CHAR: {
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET &&
+          adjustedOffset > 0 &&
+          TextLeafPoint::GetCaret(Acc()).IsCaretAtEndOfLine()) {
+        --adjustedOffset;
+      }
       uint32_t count = CharacterCount();
       if (adjustedOffset >= count) {
         *aStartOffset = *aEndOffset = static_cast<int32_t>(count);
