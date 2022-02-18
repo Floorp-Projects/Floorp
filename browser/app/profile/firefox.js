@@ -23,8 +23,8 @@
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnCloseOtherTabs", true);
 
-//UA変更
-pref("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0");
+//ウェブとの互換性を考慮して、Firefox のユーザエージェントを固定します。Floorp ではしばらく三桁にする予定はありません。（変更するかも知れません）
+pref("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0");
 //addon推奨プロンプトを消す
 pref("extensions.getAddons.showPane", false , locked);
 //軽量化
@@ -142,7 +142,7 @@ pref("extensions.webcompat-reporter.enabled", false);
 //同期システムの一部無効化
 pref("services.sync.prefs.sync.browser.contentblocking.category", false);
 
-// Dragpad gesture
+// Dragpad gesture を無効化。Firefox 97では正常に動作しません。
 pref("browser.gesture.swipe.left", "");
 pref("browser.gesture.swipe.right", "");
 
