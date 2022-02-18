@@ -48,12 +48,14 @@ def run(
     save=False,
     preset=None,
     mod_presets=False,
-    push=True,
+    stage_changes=False,
+    dry_run=False,
     message="{msg}",
     closed_tree=False,
 ):
     from .app import create_application
 
+    push = not stage_changes and not dry_run
     check_working_directory(push)
 
     tg = generate_tasks(parameters, full)
@@ -91,6 +93,7 @@ def run(
         "chooser",
         message.format(msg=msg),
         try_task_config=generate_try_task_config("chooser", selected, try_config),
-        push=push,
+        stage_changes=stage_changes,
+        dry_run=dry_run,
         closed_tree=closed_tree,
     )
