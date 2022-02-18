@@ -56,14 +56,18 @@ namespace dom {
 class AutoJSAPI;
 class DocGroup;
 class Document;
-class ModuleLoader;
 class LoadedScript;
 class ScriptLoaderInterface;
+class ModuleLoader;
 class ModuleLoadRequest;
 class ModuleScript;
 class SRICheckDataVerifier;
 class SRIMetadata;
 class ScriptLoadHandler;
+class ScriptLoadRequest;
+class ScriptLoadRequestList;
+class ScriptLoadContext;
+
 class ScriptLoader;
 class ScriptRequestProcessor;
 
