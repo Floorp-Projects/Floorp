@@ -403,7 +403,77 @@ fn device_kill_reverse_all_ports_twice() {
 
 #[test]
 #[ignore]
-fn device_push() {
+fn device_push_pull_text_file() {
+    run_device_test(
+        |device: &Device, _: &TempDir, remote_root_path: &UnixPath| {
+            let content = "test";
+            let remote_path = remote_root_path.join("foo.txt");
+
+            device
+                .push(
+                    &mut io::BufReader::new(content.as_bytes()),
+                    &remote_path,
+                    0o777,
+                )
+                .expect("file has been pushed");
+
+            let file_content = device
+                .execute_host_shell_command(&format!("cat {}", remote_path.display()))
+                .expect("host shell command for 'cat' to succeed");
+
+            assert_eq!(file_content, content);
+
+            // And as second step pull it off the device.
+            let mut buffer = Vec::new();
+            device
+                .pull(&remote_path, &mut buffer)
+                .expect("file has been pulled");
+            assert_eq!(buffer, content.as_bytes());
+        },
+    );
+}
+
+#[test]
+#[ignore]
+fn device_push_pull_large_binary_file() {
+    run_device_test(
+        |device: &Device, _: &TempDir, remote_root_path: &UnixPath| {
+            let remote_path = remote_root_path.join("foo.binary");
+
+            let mut content = Vec::new();
+
+            // Needs to be larger than 64kB to test multiple chunks.
+            for i in 0..100000u32 {
+                content.push('0' as u8 + (i % 10) as u8);
+            }
+
+            device
+                .push(
+                    &mut std::io::Cursor::new(content.clone()),
+                    &remote_path,
+                    0o777,
+                )
+                .expect("large file has been pushed");
+
+            let output = device
+                .execute_host_shell_command(&format!("ls -l {}", remote_path.display()))
+                .expect("host shell command for 'ls' to succeed");
+
+            assert!(output.contains(remote_path.to_str().unwrap()));
+
+            let mut buffer = Vec::new();
+
+            device
+                .pull(&remote_path, &mut buffer)
+                .expect("large binary file has been pulled");
+            assert_eq!(buffer, content);
+        },
+    );
+}
+
+#[test]
+#[ignore]
+fn device_push_permission() {
     run_device_test(
         |device: &Device, _: &TempDir, remote_root_path: &UnixPath| {
             fn adjust_mode(mode: u32) -> u32 {
@@ -435,6 +505,7 @@ fn device_push() {
             let content = "test";
             let remote_path = remote_root_path.join("foo.bar");
 
+            // First push the file to the device
             let modes = vec![0o421, 0o644, 0o666, 0o777];
             for mode in modes {
                 let adjusted_mode = adjust_mode(mode);
@@ -461,12 +532,20 @@ fn device_push() {
 
             assert!(output.contains(remote_root_path.to_str().unwrap()));
             assert!(output.starts_with("drwxrwxrwx"));
+        },
+    );
+}
 
-            let file_content = device
-                .execute_host_shell_command(&format!("cat {}", remote_path.display()))
-                .expect("host shell command for 'cat' to succeed");
+#[test]
+#[ignore]
+fn device_pull_fails_for_missing_file() {
+    run_device_test(
+        |device: &Device, _: &TempDir, remote_root_path: &UnixPath| {
+            let mut buffer = Vec::new();
 
-            assert_eq!(file_content, content);
+            device
+                .pull(&remote_root_path.join("missing"), &mut buffer)
+                .expect_err("missing file should not be pulled");
         },
     );
 }
