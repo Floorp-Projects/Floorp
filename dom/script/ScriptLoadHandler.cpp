@@ -11,6 +11,7 @@
 #include "ScriptLoader.h"
 #include "ScriptTrace.h"
 #include "js/Transcoding.h"
+#include "js/loader/ScriptLoadRequest.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
@@ -24,7 +25,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/SRICheck.h"
 #include "mozilla/dom/ScriptDecoding.h"
-#include "mozilla/dom/ScriptLoadRequest.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
@@ -50,7 +50,7 @@ namespace dom {
   MOZ_LOG_TEST(ScriptLoader::gScriptLoaderLog, mozilla::LogLevel::Debug)
 
 ScriptLoadHandler::ScriptLoadHandler(
-    ScriptLoader* aScriptLoader, ScriptLoadRequest* aRequest,
+    ScriptLoader* aScriptLoader, JS::loader::ScriptLoadRequest* aRequest,
     UniquePtr<SRICheckDataVerifier>&& aSRIDataVerifier)
     : mScriptLoader(aScriptLoader),
       mRequest(aRequest),
@@ -76,7 +76,7 @@ nsresult ScriptLoadHandler::DecodeRawDataHelper(const uint8_t* aData,
   }
 
   // Reference to the script source buffer which we will update.
-  ScriptLoadRequest::ScriptTextBuffer<Unit>& scriptText =
+  JS::loader::ScriptLoadRequest::ScriptTextBuffer<Unit>& scriptText =
       mRequest->ScriptText<Unit>();
 
   uint32_t haveRead = scriptText.length();

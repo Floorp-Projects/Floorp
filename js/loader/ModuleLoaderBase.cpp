@@ -6,9 +6,9 @@
 
 #include "GeckoProfiler.h"
 #include "LoadedScript.h"
+#include "ModuleLoadRequest.h"
 #include "ScriptLoadRequest.h"
 #include "mozilla/dom/ScriptTrace.h"
-#include "ModuleLoadRequest.h"
 
 #include "js/Array.h"  // JS::GetArrayLength
 #include "js/CompilationAndEvaluation.h"
@@ -26,10 +26,11 @@
 
 using JS::SourceText;
 
-namespace mozilla::dom {
+namespace JS::loader {
 
-LazyLogModule ModuleLoaderBase::gCspPRLog("CSP");
-LazyLogModule ModuleLoaderBase::gModuleLoaderBaseLog("ModuleLoaderBase");
+mozilla::LazyLogModule ModuleLoaderBase::gCspPRLog("CSP");
+mozilla::LazyLogModule ModuleLoaderBase::gModuleLoaderBaseLog(
+    "ModuleLoaderBase");
 
 #undef LOG
 #define LOG(args)                                                           \
@@ -49,7 +50,8 @@ inline void ImplCycleCollectionUnlink(
   for (auto iter = aField.Iter(); !iter.Done(); iter.Next()) {
     ImplCycleCollectionUnlink(iter.Key());
 
-    RefPtr<GenericNonExclusivePromise::Private> promise = iter.UserData();
+    RefPtr<mozilla::GenericNonExclusivePromise::Private> promise =
+        iter.UserData();
     if (promise) {
       promise->Reject(NS_ERROR_ABORT, __func__);
     }
@@ -119,7 +121,7 @@ void ModuleLoaderBase::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
                                    aRequest->mLoadContext->GetWebExtGlobal()));
   ModuleMapKey key(aRequest->mURI, aRequest->mLoadContext->GetWebExtGlobal());
   mFetchingModules.InsertOrUpdate(
-      key, RefPtr<GenericNonExclusivePromise::Private>{});
+      key, RefPtr<mozilla::GenericNonExclusivePromise::Private>{});
 }
 
 void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
@@ -136,7 +138,7 @@ void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
        aRequest, aRequest->mModuleScript.get(), unsigned(aResult)));
 
   ModuleMapKey key(aRequest->mURI, aRequest->mLoadContext->GetWebExtGlobal());
-  RefPtr<GenericNonExclusivePromise::Private> promise;
+  RefPtr<mozilla::GenericNonExclusivePromise::Private> promise;
   if (!mFetchingModules.Remove(key, getter_AddRefs(promise))) {
     LOG(
         ("ScriptLoadRequest (%p): Key not found in mFetchingModules, "
@@ -161,14 +163,14 @@ void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
   }
 }
 
-RefPtr<GenericNonExclusivePromise> ModuleLoaderBase::WaitForModuleFetch(
-    nsIURI* aURL, nsIGlobalObject* aGlobal) {
+RefPtr<mozilla::GenericNonExclusivePromise>
+ModuleLoaderBase::WaitForModuleFetch(nsIURI* aURL, nsIGlobalObject* aGlobal) {
   MOZ_ASSERT(ModuleMapContainsURL(aURL, aGlobal));
 
   ModuleMapKey key(aURL, aGlobal);
   if (auto entry = mFetchingModules.Lookup(key)) {
     if (!entry.Data()) {
-      entry.Data() = new GenericNonExclusivePromise::Private(__func__);
+      entry.Data() = new mozilla::GenericNonExclusivePromise::Private(__func__);
     }
     return entry.Data();
   }
@@ -176,11 +178,11 @@ RefPtr<GenericNonExclusivePromise> ModuleLoaderBase::WaitForModuleFetch(
   RefPtr<ModuleScript> ms;
   MOZ_ALWAYS_TRUE(mFetchedModules.Get(key, getter_AddRefs(ms)));
   if (!ms) {
-    return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                       __func__);
+    return mozilla::GenericNonExclusivePromise::CreateAndReject(
+        NS_ERROR_FAILURE, __func__);
   }
 
-  return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
+  return mozilla::GenericNonExclusivePromise::CreateAndResolve(true, __func__);
 }
 
 ModuleScript* ModuleLoaderBase::GetFetchedModule(
@@ -233,11 +235,11 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoMicroTask mt;
+  mozilla::nsAutoMicroTask mt;
 
-  AutoAllowLegacyScriptExecution exemption;
+  mozilla::AutoAllowLegacyScriptExecution exemption;
 
-  AutoEntryScript aes(globalObject, "CompileModule", true);
+  mozilla::dom::AutoEntryScript aes(globalObject, "CompileModule", true);
 
   nsresult rv;
   {
@@ -391,7 +393,7 @@ nsresult ModuleLoaderBase::ResolveRequestedModules(
     ModuleLoadRequest* aRequest, nsCOMArray<nsIURI>* aUrlsOut) {
   ModuleScript* ms = aRequest->mModuleScript;
 
-  AutoJSAPI jsapi;
+  mozilla::dom::AutoJSAPI jsapi;
   if (!jsapi.Init(ms->ModuleRecord())) {
     return NS_ERROR_FAILURE;
   }
@@ -494,23 +496,25 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
 
   // For each url in urls, fetch a module script tree given url, module script's
   // CORS setting, and module script's settings object.
-  nsTArray<RefPtr<GenericPromise>> importsReady;
+  nsTArray<RefPtr<mozilla::GenericPromise>> importsReady;
   for (auto* url : urls) {
-    RefPtr<GenericPromise> childReady =
+    RefPtr<mozilla::GenericPromise> childReady =
         StartFetchingModuleAndDependencies(aRequest, url);
     importsReady.AppendElement(childReady);
   }
 
   // Wait for all imports to become ready.
-  RefPtr<GenericPromise::AllPromiseType> allReady =
-      GenericPromise::All(GetMainThreadSerialEventTarget(), importsReady);
-  allReady->Then(GetMainThreadSerialEventTarget(), __func__, aRequest,
+  RefPtr<mozilla::GenericPromise::AllPromiseType> allReady =
+      mozilla::GenericPromise::All(mozilla::GetMainThreadSerialEventTarget(),
+                                   importsReady);
+  allReady->Then(mozilla::GetMainThreadSerialEventTarget(), __func__, aRequest,
                  &ModuleLoadRequest::DependenciesLoaded,
                  &ModuleLoadRequest::ModuleErrored);
 }
 
-RefPtr<GenericPromise> ModuleLoaderBase::StartFetchingModuleAndDependencies(
-    ModuleLoadRequest* aParent, nsIURI* aURI) {
+RefPtr<mozilla::GenericPromise>
+ModuleLoaderBase::StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
+                                                     nsIURI* aURI) {
   MOZ_ASSERT(aURI);
 
   RefPtr<ModuleLoadRequest> childRequest = CreateStaticImport(aURI, aParent);
@@ -530,7 +534,7 @@ RefPtr<GenericPromise> ModuleLoaderBase::StartFetchingModuleAndDependencies(
          url2.get()));
   }
 
-  RefPtr<GenericPromise> ready = childRequest->mReady.Ensure(__func__);
+  RefPtr<mozilla::GenericPromise> ready = childRequest->mReady.Ensure(__func__);
 
   nsresult rv = StartModuleLoad(childRequest);
   if (NS_FAILED(rv)) {
@@ -560,7 +564,7 @@ void ModuleLoaderBase::StartDynamicImport(ModuleLoadRequest* aRequest) {
 
 void ModuleLoaderBase::FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
                                                     nsresult aResult) {
-  AutoJSAPI jsapi;
+  mozilla::dom::AutoJSAPI jsapi;
   MOZ_ASSERT(NS_FAILED(aResult));
   MOZ_ALWAYS_TRUE(jsapi.Init(aRequest->mDynamicPromise));
   FinishDynamicImport(jsapi.cx(), aRequest, aResult, nullptr);
@@ -652,8 +656,8 @@ bool ModuleLoaderBase::InstantiateModuleTree(ModuleLoadRequest* aRequest) {
 
   MOZ_ASSERT(moduleScript->ModuleRecord());
 
-  nsAutoMicroTask mt;
-  AutoJSAPI jsapi;
+  mozilla::nsAutoMicroTask mt;
+  mozilla::dom::AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.Init(moduleScript->ModuleRecord()))) {
     return false;
   }
@@ -724,8 +728,8 @@ void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
 
 nsresult ModuleLoaderBase::EvaluateModule(nsIGlobalObject* aGlobalObject,
                                           ScriptLoadRequest* aRequest) {
-  nsAutoMicroTask mt;
-  AutoEntryScript aes(aGlobalObject, "EvaluateModule", true);
+  mozilla::nsAutoMicroTask mt;
+  mozilla::dom::AutoEntryScript aes(aGlobalObject, "EvaluateModule", true);
   JSContext* cx = aes.cx();
 
   nsAutoCString profilerLabelString;
@@ -843,4 +847,4 @@ void ModuleLoaderBase::CancelAndClearDynamicImports() {
 #undef LOG
 #undef LOG_ENABLED
 
-}  // namespace mozilla::dom
+}  // namespace JS::loader

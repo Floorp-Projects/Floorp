@@ -8,6 +8,9 @@
 #define mozilla_dom_ScriptLoader_h
 
 #include "js/TypeDecls.h"
+#include "js/loader/LoadedScript.h"
+#include "js/loader/ScriptKind.h"
+#include "js/loader/ScriptLoadRequest.h"
 #include "nsCOMPtr.h"
 #include "nsRefPtrHashtable.h"
 #include "nsIScriptElement.h"
@@ -20,13 +23,10 @@
 #include "nsIScriptLoaderObserver.h"
 #include "nsURIHashKey.h"
 #include "mozilla/CORSMode.h"
-#include "mozilla/dom/LoadedScript.h"
 #include "mozilla/dom/JSExecutionContext.h"  // JSExecutionContext
-#include "mozilla/dom/ScriptLoadRequest.h"
 #include "ModuleLoader.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/MozPromise.h"
-#include "ScriptKind.h"
 
 class nsCycleCollectionTraversalCallback;
 class nsIChannel;
@@ -44,6 +44,16 @@ class CompileOptions;
 template <typename UnitT>
 class SourceText;
 
+namespace loader {
+
+class LoadedScript;
+class ScriptLoaderInterface;
+class ModuleLoadRequest;
+class ModuleScript;
+class ScriptLoadRequest;
+class ScriptLoadRequestList;
+
+}  // namespace loader
 }  // namespace JS
 
 namespace mozilla {
@@ -56,18 +66,11 @@ namespace dom {
 class AutoJSAPI;
 class DocGroup;
 class Document;
-class LoadedScript;
-class ScriptLoaderInterface;
 class ModuleLoader;
-class ModuleLoadRequest;
-class ModuleScript;
 class SRICheckDataVerifier;
 class SRIMetadata;
 class ScriptLoadHandler;
-class ScriptLoadRequest;
-class ScriptLoadRequestList;
 class ScriptLoadContext;
-
 class ScriptLoader;
 class ScriptRequestProcessor;
 
@@ -96,7 +99,7 @@ class AsyncCompileShutdownObserver final : public nsIObserver {
 // Script loader implementation
 //////////////////////////////////////////////////////////////
 
-class ScriptLoader final : public ScriptLoaderInterface {
+class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   class MOZ_STACK_CLASS AutoCurrentScriptUpdater {
    public:
     AutoCurrentScriptUpdater(ScriptLoader* aScriptLoader,
@@ -117,7 +120,7 @@ class ScriptLoader final : public ScriptLoaderInterface {
     ScriptLoader* mScriptLoader;
   };
 
-  friend class ModuleLoadRequest;
+  friend class JS::loader::ModuleLoadRequest;
   friend class ScriptRequestProcessor;
   friend class ModuleLoader;
   friend class ScriptLoadHandler;
@@ -409,7 +412,7 @@ class ScriptLoader final : public ScriptLoaderInterface {
    * Get the currently active script. This is used as the initiating script when
    * executing timeout handler scripts.
    */
-  static LoadedScript* GetActiveScript(JSContext* aCx);
+  static JS::loader::LoadedScript* GetActiveScript(JSContext* aCx);
 
   Document* GetDocument() const { return mDocument; }
 
@@ -439,9 +442,9 @@ class ScriptLoader final : public ScriptLoaderInterface {
 
   bool ProcessInlineScript(nsIScriptElement* aElement, ScriptKind aScriptKind);
 
-  ScriptLoadRequest* LookupPreloadRequest(nsIScriptElement* aElement,
-                                          ScriptKind aScriptKind,
-                                          const SRIMetadata& aSRIMetadata);
+  JS::loader::ScriptLoadRequest* LookupPreloadRequest(
+      nsIScriptElement* aElement, ScriptKind aScriptKind,
+      const SRIMetadata& aSRIMetadata);
 
   void GetSRIMetadata(const nsAString& aIntegrityAttr,
                       SRIMetadata* aMetadataOut);
