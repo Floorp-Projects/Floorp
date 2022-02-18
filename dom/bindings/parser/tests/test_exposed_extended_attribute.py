@@ -290,3 +290,94 @@ def WebIDLTest(parser, harness):
         members[1]._exposureGlobalNames == set(["Bar"]),
         "otherMethod should have the right exposure global names",
     )
+
+    parser = parser.reset()
+    parser.parse(
+        """
+        [Global, Exposed=Foo] interface Foo {};
+        [Global, Exposed=Bar] interface Bar {};
+
+        [Exposed=*]
+        interface Baz {
+          void methodWild();
+        };
+
+        [Exposed=Bar]
+        interface mixin Mixin {
+          void methodNotWild();
+        };
+
+        Baz includes Mixin;
+    """
+    )
+
+    results = parser.finish()
+
+    harness.check(len(results), 5, "Should know about five things")
+    iface = results[2]
+    harness.ok(isinstance(iface, WebIDL.IDLInterface), "Should have an interface here")
+    members = iface.members
+    harness.check(len(members), 2, "Should have two members")
+
+    harness.ok(
+        members[0].exposureSet == set(["Foo", "Bar"]),
+        "methodWild should have the right exposure set",
+    )
+    harness.ok(
+        members[0]._exposureGlobalNames == set(["Foo", "Bar"]),
+        "methodWild should have the right exposure global names",
+    )
+
+    harness.ok(
+        members[1].exposureSet == set(["Bar"]),
+        "methodNotWild should have the right exposure set",
+    )
+    harness.ok(
+        members[1]._exposureGlobalNames == set(["Bar"]),
+        "methodNotWild should have the right exposure global names",
+    )
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse(
+            """
+            [Global, Exposed=Foo] interface Foo {};
+            [Global, Exposed=Bar] interface Bar {};
+
+            [Exposed=Foo]
+            interface Baz {
+              [Exposed=*]
+              void method();
+            };
+        """
+        )
+
+        results = parser.finish()
+    except Exception as x:
+        threw = True
+
+    harness.ok(
+        threw, "Should have thrown on member exposed where its interface is not."
+    )
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse(
+            """
+            [Global, Exposed=Foo] interface Foo {};
+            [Global, Exposed=Bar] interface Bar {};
+
+            [Exposed=(Foo,*)]
+            interface Baz {
+              void method();
+            };
+        """
+        )
+
+        results = parser.finish()
+    except Exception as x:
+        threw = True
+
+    harness.ok(threw, "Should have thrown on a wildcard in an identifier list.")
