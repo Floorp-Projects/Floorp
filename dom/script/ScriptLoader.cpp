@@ -1137,7 +1137,7 @@ static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
   return NS_SUCCEEDED(rv) && allowInlineScript;
 }
 
-ScriptLoadRequest* ScriptLoader::CreateLoadRequest(
+already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
     ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
     nsIPrincipal* aTriggeringPrincipal, CORSMode aCORSMode,
     const SRIMetadata& aIntegrity, ReferrerPolicy aReferrerPolicy) {
@@ -1147,17 +1147,18 @@ ScriptLoadRequest* ScriptLoader::CreateLoadRequest(
       aCORSMode, aReferrerPolicy, aTriggeringPrincipal, nullptr);
 
   if (aKind == ScriptKind::eClassic) {
-    ScriptLoadRequest* aRequest =
+    RefPtr<ScriptLoadRequest> aRequest =
         new ScriptLoadRequest(aKind, aURI, fetchOptions, aIntegrity, referrer);
     DOMScriptLoadContext* aContext =
         new DOMScriptLoadContext(domElement, aRequest);
     aRequest->mLoadContext = aContext;
-    return aRequest;
+    return aRequest.forget();
   }
 
   MOZ_ASSERT(aKind == ScriptKind::eModule);
-  return ModuleLoadRequest::CreateTopLevel(aURI, fetchOptions, domElement,
-                                           aIntegrity, referrer, this);
+  RefPtr<ModuleLoadRequest> aRequest = ModuleLoadRequest::CreateTopLevel(
+      aURI, fetchOptions, domElement, aIntegrity, referrer, this);
+  return aRequest.forget();
 }
 
 bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement) {
