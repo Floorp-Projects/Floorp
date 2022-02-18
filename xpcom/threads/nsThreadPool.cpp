@@ -81,6 +81,7 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
 
   bool spawnThread = false;
   uint32_t stackSize = 0;
+  nsCString name;
   {
     MutexAutoLock lock(mMutex);
 
@@ -105,6 +106,7 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
     mEvents.PutEvent(event.forget(), EventQueuePriority::Normal, lock);
     mEventsAvailable.Notify();
     stackSize = mStackSize;
+    name = mName;
   }
 
   auto delay = MakeScopeExit([&]() {
@@ -118,7 +120,7 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
   }
 
   nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_NewNamedThread(mThreadNaming.GetNextThreadName(mName),
+  nsresult rv = NS_NewNamedThread(mThreadNaming.GetNextThreadName(name),
                                   getter_AddRefs(thread), nullptr, stackSize);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_UNEXPECTED;
@@ -201,8 +203,6 @@ void nsThreadPool::ShutdownThread(nsIThread* aThread) {
 
 NS_IMETHODIMP
 nsThreadPool::Run() {
-  LOG(("THRD-P(%p) enter %s\n", this, mName.BeginReading()));
-
   nsCOMPtr<nsIThread> current;
   nsThreadManager::get().GetCurrentThread(getter_AddRefs(current));
 
@@ -219,6 +219,7 @@ nsThreadPool::Run() {
   {
     MutexAutoLock lock(mMutex);
     listener = mListener;
+    LOG(("THRD-P(%p) enter %s\n", this, mName.BeginReading()));
   }
 
   if (listener) {
@@ -290,8 +291,11 @@ nsThreadPool::Run() {
       }
     }
     if (event) {
-      LOG(("THRD-P(%p) %s running [%p]\n", this, mName.BeginReading(),
-           event.get()));
+      if (MOZ_LOG_TEST(sThreadPoolLog, mozilla::LogLevel::Debug)) {
+        MutexAutoLock lock(mMutex);
+        LOG(("THRD-P(%p) %s running [%p]\n", this, mName.BeginReading(),
+             event.get()));
+      }
 
       // Delay event processing to encourage whoever dispatched this event
       // to run.
@@ -451,6 +455,7 @@ nsThreadPool::ShutdownWithTimeout(int32_t aTimeoutMs) {
 
 NS_IMETHODIMP
 nsThreadPool::GetThreadLimit(uint32_t* aValue) {
+  MutexAutoLock lock(mMutex);
   *aValue = mThreadLimit;
   return NS_OK;
 }
@@ -473,6 +478,7 @@ nsThreadPool::SetThreadLimit(uint32_t aValue) {
 
 NS_IMETHODIMP
 nsThreadPool::GetIdleThreadLimit(uint32_t* aValue) {
+  MutexAutoLock lock(mMutex);
   *aValue = mIdleThreadLimit;
   return NS_OK;
 }
@@ -496,6 +502,7 @@ nsThreadPool::SetIdleThreadLimit(uint32_t aValue) {
 
 NS_IMETHODIMP
 nsThreadPool::GetIdleThreadTimeout(uint32_t* aValue) {
+  MutexAutoLock lock(mMutex);
   *aValue = mIdleThreadTimeout;
   return NS_OK;
 }
@@ -516,6 +523,7 @@ nsThreadPool::SetIdleThreadTimeout(uint32_t aValue) {
 
 NS_IMETHODIMP
 nsThreadPool::GetIdleThreadTimeoutRegressive(bool* aValue) {
+  MutexAutoLock lock(mMutex);
   *aValue = mRegressiveMaxIdleTime;
   return NS_OK;
 }
@@ -567,13 +575,10 @@ nsThreadPool::SetListener(nsIThreadPoolListener* aListener) {
 
 NS_IMETHODIMP
 nsThreadPool::SetName(const nsACString& aName) {
-  {
-    MutexAutoLock lock(mMutex);
-    if (mThreads.Count()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
+  MutexAutoLock lock(mMutex);
+  if (mThreads.Count()) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
-
   mName = aName;
   return NS_OK;
 }
