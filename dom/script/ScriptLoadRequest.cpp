@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScriptLoadRequest.h"
+#include "ScriptLoadContext.h"
 #include "GeckoProfiler.h"
 
 #include "mozilla/dom/Document.h"
@@ -78,7 +79,7 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
                                      ScriptFetchOptions* aFetchOptions,
                                      const SRIMetadata& aIntegrity,
                                      nsIURI* aReferrer,
-                                     DOMScriptLoadContext* aContext)
+                                     ScriptLoadContext* aContext)
     : mKind(aKind),
       mIsCanceled(false),
       mProgress(Progress::eLoading),
@@ -97,90 +98,12 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
   }
 }
 
-//////////////////////////////////////////////////////////////
-// DOMScriptLoadContext
-//////////////////////////////////////////////////////////////
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMScriptLoadContext)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMScriptLoadContext)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMScriptLoadContext)
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(DOMScriptLoadContext)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMScriptLoadContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoadBlockedDocument, mRequest, mElement,
-                                  mWebExtGlobal)
-  if (Runnable* runnable = tmp->mRunnable.exchange(nullptr)) {
-    runnable->Release();
-  }
-  tmp->MaybeUnblockOnload();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMScriptLoadContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoadBlockedDocument, mRequest, mElement,
-                                    mWebExtGlobal)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMScriptLoadContext)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-DOMScriptLoadContext::DOMScriptLoadContext(Element* aElement,
-                                           nsIGlobalObject* aWebExtGlobal)
-    : mScriptMode(ScriptMode::eBlocking),
-      mScriptFromHead(false),
-      mIsInline(true),
-      mInDeferList(false),
-      mInAsyncList(false),
-      mIsNonAsyncScriptInserted(false),
-      mIsXSLT(false),
-      mInCompilingList(false),
-      mIsTracking(false),
-      mWasCompiledOMT(false),
-      mOffThreadToken(nullptr),
-      mRunnable(nullptr),
-      mLineNo(1),
-      mIsPreload(false),
-      mElement(aElement),
-      mWebExtGlobal(aWebExtGlobal),
-      mRequest(nullptr),
-      mUnreportedPreloadError(NS_OK) {}
-
 ScriptLoadRequest::~ScriptLoadRequest() {
   if (mScript) {
     DropBytecodeCacheReferences();
   }
   mLoadContext = nullptr;
   DropJSObjects(this);
-}
-
-DOMScriptLoadContext::~DOMScriptLoadContext() {
-  // When speculative parsing is enabled, it is possible to off-main-thread
-  // compile scripts that are never executed.  These should be cleaned up here
-  // if they exist.
-  mRequest = nullptr;
-  MOZ_ASSERT_IF(
-      !StaticPrefs::
-          dom_script_loader_external_scripts_speculative_omt_parse_enabled(),
-      !mOffThreadToken);
-
-  MaybeCancelOffThreadScript();
-
-  MaybeUnblockOnload();
-}
-
-void DOMScriptLoadContext::BlockOnload(Document* aDocument) {
-  MOZ_ASSERT(!mLoadBlockedDocument);
-  aDocument->BlockOnload();
-  mLoadBlockedDocument = aDocument;
-}
-
-void DOMScriptLoadContext::MaybeUnblockOnload() {
-  if (mLoadBlockedDocument) {
-    mLoadBlockedDocument->UnblockOnload(false);
-    mLoadBlockedDocument = nullptr;
-  }
 }
 
 void ScriptLoadRequest::SetReady() {
@@ -195,34 +118,6 @@ void ScriptLoadRequest::Cancel() {
   }
 }
 
-void DOMScriptLoadContext::MaybeCancelOffThreadScript() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mOffThreadToken) {
-    return;
-  }
-
-  JSContext* cx = danger::GetJSContext();
-  // Follow the same conditions as ScriptLoader::AttemptAsyncScriptCompile
-  if (mRequest->IsModuleRequest()) {
-    JS::CancelCompileModuleToStencilOffThread(cx, mOffThreadToken);
-  } else if (mRequest->IsSource()) {
-    JS::CancelCompileToStencilOffThread(cx, mOffThreadToken);
-  } else {
-    MOZ_ASSERT(mRequest->IsBytecode());
-    JS::CancelDecodeStencilOffThread(cx, mOffThreadToken);
-  }
-
-  // Cancellation request above should guarantee removal of the parse task, so
-  // releasing the runnable should be safe to do here.
-  if (Runnable* runnable = mRunnable.exchange(nullptr)) {
-    runnable->Release();
-  }
-
-  MaybeUnblockOnload();
-  mOffThreadToken = nullptr;
-}
-
 void ScriptLoadRequest::DropBytecodeCacheReferences() {
   mCacheInfo = nullptr;
   DropJSObjects(this);
@@ -231,24 +126,6 @@ void ScriptLoadRequest::DropBytecodeCacheReferences() {
 ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {
   MOZ_ASSERT(IsModuleRequest());
   return static_cast<ModuleLoadRequest*>(this);
-}
-
-void DOMScriptLoadContext::SetRequest(ScriptLoadRequest* aRequest) {
-  MOZ_ASSERT(!mRequest);
-  mRequest = aRequest;
-}
-
-void DOMScriptLoadContext::SetScriptMode(bool aDeferAttr, bool aAsyncAttr,
-                                         bool aLinkPreload) {
-  if (aLinkPreload) {
-    mScriptMode = ScriptMode::eLinkPreload;
-  } else if (aAsyncAttr) {
-    mScriptMode = ScriptMode::eAsync;
-  } else if (aDeferAttr || mRequest->IsModuleRequest()) {
-    mScriptMode = ScriptMode::eDeferred;
-  } else {
-    mScriptMode = ScriptMode::eBlocking;
-  }
 }
 
 void ScriptLoadRequest::SetBytecode() {
@@ -266,61 +143,6 @@ void ScriptLoadRequest::SetScript(JSScript* aScript) {
   MOZ_ASSERT(!mScript);
   mScript = aScript;
   HoldJSObjects(this);
-}
-
-// static
-void DOMScriptLoadContext::PrioritizeAsPreload(nsIChannel* aChannel) {
-  if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(aChannel)) {
-    cos->AddClassFlags(nsIClassOfService::Unblocked);
-  }
-  if (nsCOMPtr<nsISupportsPriority> sp = do_QueryInterface(aChannel)) {
-    sp->AdjustPriority(nsISupportsPriority::PRIORITY_HIGHEST);
-  }
-}
-
-void DOMScriptLoadContext::PrioritizeAsPreload() {
-  if (!IsLinkPreloadScript()) {
-    // Do the prioritization only if this request has not already been created
-    // as a preload.
-    PrioritizeAsPreload(Channel());
-  }
-}
-
-bool DOMScriptLoadContext::IsPreload() const {
-  if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
-    ModuleLoadRequest* root = mRequest->AsModuleRequest()->GetRootModule();
-    return root->GetLoadContext()->IsPreload();
-  }
-
-  MOZ_ASSERT_IF(mIsPreload, !GetScriptElement());
-  return mIsPreload;
-}
-
-nsIGlobalObject* DOMScriptLoadContext::GetWebExtGlobal() const {
-  if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
-    ModuleLoadRequest* root = mRequest->AsModuleRequest()->GetRootModule();
-    return root->GetLoadContext()->GetWebExtGlobal();
-  }
-
-  return mWebExtGlobal;
-}
-
-nsIScriptElement* DOMScriptLoadContext::GetScriptElement() const {
-  if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
-    ModuleLoadRequest* root = mRequest->AsModuleRequest()->GetRootModule();
-    return root->GetLoadContext()->GetScriptElement();
-  }
-  nsCOMPtr<nsIScriptElement> scriptElement = do_QueryInterface(mElement);
-  return scriptElement;
-}
-
-void DOMScriptLoadContext::SetIsLoadRequest(nsIScriptElement* aElement) {
-  MOZ_ASSERT(aElement);
-  MOZ_ASSERT(!GetScriptElement());
-  MOZ_ASSERT(IsPreload());
-  // TODO: How to allow both to access fetch options
-  mElement = do_QueryInterface(aElement);
-  mIsPreload = false;
 }
 
 nsresult ScriptLoadRequest::GetScriptSource(JSContext* aCx,
@@ -381,44 +203,6 @@ nsresult ScriptLoadRequest::GetScriptSource(JSContext* aCx,
 
   aMaybeSource->construct<SourceText<Utf8Unit>>(std::move(srcBuf));
   return NS_OK;
-}
-
-void DOMScriptLoadContext::GetProfilerLabel(nsACString& aOutString) {
-  if (!profiler_is_active()) {
-    aOutString.Append("<script> element");
-    return;
-  }
-  aOutString.Append("<script");
-  if (IsAsyncScript()) {
-    aOutString.Append(" async");
-  } else if (IsDeferredScript()) {
-    aOutString.Append(" defer");
-  }
-  if (mRequest->IsModuleRequest()) {
-    aOutString.Append(" type=\"module\"");
-  }
-
-  nsAutoCString url;
-  if (mRequest->mURI) {
-    mRequest->mURI->GetAsciiSpec(url);
-  } else {
-    url = "<unknown>";
-  }
-
-  if (mIsInline) {
-    if (GetParserCreated() != NOT_FROM_PARSER) {
-      aOutString.Append("> inline at line ");
-      aOutString.AppendInt(mLineNo);
-      aOutString.Append(" of ");
-    } else {
-      aOutString.Append("> inline (dynamically created) in ");
-    }
-    aOutString.Append(url);
-  } else {
-    aOutString.Append(" src=\"");
-    aOutString.Append(url);
-    aOutString.Append("\">");
-  }
 }
 
 //////////////////////////////////////////////////////////////

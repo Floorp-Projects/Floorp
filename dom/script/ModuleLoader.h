@@ -8,6 +8,7 @@
 #define mozilla_dom_ModuleLoader_h
 
 #include "ModuleLoaderBase.h"
+#include "mozilla/dom/ScriptLoadContext.h"
 #include "mozilla/dom/ScriptLoadRequest.h"
 #include "ScriptLoader.h"
 
@@ -59,7 +60,7 @@ class ModuleLoader final : public ModuleLoaderBase {
   static already_AddRefed<ModuleLoadRequest> CreateTopLevel(
       nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
       const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader,
-      DOMScriptLoadContext* aContext);
+      ScriptLoadContext* aContext);
 
   // Create a module load request for a static module import.
   already_AddRefed<ModuleLoadRequest> CreateStaticImport(
@@ -68,7 +69,7 @@ class ModuleLoader final : public ModuleLoaderBase {
   // Create a module load request for dynamic module import.
   static already_AddRefed<ModuleLoadRequest> CreateDynamicImport(
       nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-      DOMScriptLoadContext* aContext, ScriptLoader* aLoader,
+      ScriptLoadContext* aContext, ScriptLoader* aLoader,
       JS::Handle<JS::Value> aReferencingPrivate,
       JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise);
 };
