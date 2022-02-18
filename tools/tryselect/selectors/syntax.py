@@ -692,7 +692,8 @@ class AutoTry:
         push_to_try(
             "syntax",
             kwargs["message"].format(msg=msg),
-            push=kwargs["push"],
+            stage_changes=kwargs["stage_changes"],
+            dry_run=kwargs["dry_run"],
             closed_tree=kwargs["closed_tree"],
         )
 

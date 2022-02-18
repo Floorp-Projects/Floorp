@@ -327,7 +327,8 @@ def run(
     full=False,
     parameters=None,
     save_query=False,
-    push=True,
+    stage_changes=False,
+    dry_run=False,
     message="{msg}",
     test_paths=None,
     exact=False,
@@ -341,6 +342,7 @@ def run(
         print(FZF_NOT_FOUND)
         return 1
 
+    push = not stage_changes and not dry_run
     check_working_directory(push)
     tg = generate_tasks(
         parameters, full=full, disable_target_task_filter=disable_target_task_filter
@@ -450,6 +452,7 @@ def run(
         "fuzzy",
         message.format(msg=msg),
         try_task_config=generate_try_task_config("fuzzy", selected, try_config),
-        push=push,
+        stage_changes=stage_changes,
+        dry_run=dry_run,
         closed_tree=closed_tree,
     )
