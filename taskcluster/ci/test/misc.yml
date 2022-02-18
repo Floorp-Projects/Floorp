@@ -33,11 +33,14 @@ telemetry-tests-client:
     description: "Telemetry tests client run"
     suite: telemetry-tests-client
     treeherder-symbol: tt(c)
-    variants: [fission]
+    variants:
+        - fission
+        - no-fission
+    run-without-variant: false
     run-on-projects:
         by-variant:
             fission: built-projects
-            default:
+            no-fission:
                 by-test-platform:
                     linux.*: ['trunk']
                     default: []
