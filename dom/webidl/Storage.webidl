@@ -79,4 +79,14 @@ partial interface Storage {
    */
   [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
   readonly attribute boolean hasSnapshot;
+
+  /**
+   * Returns snapshot usage.
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE if the underlying database hasn't been
+   *         opened or the database is being closed or it doesn't have a
+   *         snapshot.
+   */
+  [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
+  readonly attribute long long snapshotUsage;
 };

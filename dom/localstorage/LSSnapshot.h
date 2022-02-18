@@ -157,6 +157,8 @@ class LSSnapshot final : public nsIRunnable {
 
   nsresult End();
 
+  int64_t GetUsage() const;
+
  private:
   ~LSSnapshot();
 
