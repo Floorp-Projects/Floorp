@@ -1005,12 +1005,9 @@ MsaaAccessible::get_accValue(
   if (accessible) {
     return accessible->get_accValue(kVarChildIdSelf, pszValue);
   }
-  if (mAcc->IsRemote()) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
-  }
 
   nsAutoString value;
-  LocalAcc()->Value(value);
+  Acc()->Value(value);
 
   // See bug 438784: need to expose URL on doc's value attribute. For this,
   // reverting part of fix for bug 425693 to make this MSAA method behave
