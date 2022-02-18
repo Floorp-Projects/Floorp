@@ -53,8 +53,6 @@ parent:
 
   async ContentReceivedInputBlock(uint64_t aInputBlockId, bool PreventDefault);
 
-  async AddInputBlockCallback(uint64_t aInputBlockId);
-
   async SetTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] Targets);
 
   async UpdateZoomConstraints(ScrollableLayerGuid aGuid, ZoomConstraints? aConstraints);
@@ -85,9 +83,6 @@ child:
                            Modifiers aModifiers);
 
   async CancelAutoscroll(ViewID aScrollId);
-
-  async CallInputBlockCallback(uint64_t aInputBlockId,
-                               APZHandledResult aHandledResult);
 };
 
 } // namespace gfx

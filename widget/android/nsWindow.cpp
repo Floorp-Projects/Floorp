@@ -813,8 +813,17 @@ class NPZCSupport final
       return;
     }
 
-    APZEventResult result =
-        controller->InputBridge()->ReceiveInputEvent(aInput);
+    APZInputBridge::InputBlockCallback callback;
+    if (aReturnResult) {
+      callback = [aReturnResult = java::GeckoResult::GlobalRef(aReturnResult)](
+                     uint64_t aInputBlockId,
+                     const APZHandledResult& aHandledResult) {
+        aReturnResult->Complete(ConvertAPZHandledResult(aHandledResult));
+      };
+    }
+    APZEventResult result = controller->InputBridge()->ReceiveInputEvent(
+        aInput, std::move(callback));
+
     if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
       if (aReturnResult) {
         aReturnResult->Complete(java::PanZoomController::InputResultDetail::New(
@@ -831,12 +840,7 @@ class NPZCSupport final
       window->DispatchHitTest(touchEvent);
     });
 
-    if (!aReturnResult) {
-      // We don't care how APZ handled the event so we're done here.
-      return;
-    }
-
-    if (result.GetHandledResult() != Nothing()) {
+    if (aReturnResult && result.GetHandledResult() != Nothing()) {
       // We know conclusively that the root APZ handled this or not and
       // don't need to do any more work.
       switch (result.GetStatus()) {
@@ -860,16 +864,7 @@ class NPZCSupport final
                   java::PanZoomController::OVERSCROLL_FLAG_NONE));
           break;
       }
-      return;
     }
-
-    // Wait to see if APZ handled the event or not...
-    controller->AddInputBlockCallback(
-        result.mInputBlockId,
-        [aReturnResult = java::GeckoResult::GlobalRef(aReturnResult)](
-            uint64_t aInputBlockId, const APZHandledResult& aHandledResult) {
-          aReturnResult->Complete(ConvertAPZHandledResult(aHandledResult));
-        });
   }
 };
 
