@@ -38,8 +38,7 @@
 
 #include <algorithm>  // std::min
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableByteStreamController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ReadableByteStreamController,
@@ -2132,5 +2131,4 @@ void SetUpReadableByteStreamControllerFromBodyStreamUnderlyingSource(
       errorAlgorithm, highWaterMark, autoAllocateChunkSize, aRv);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

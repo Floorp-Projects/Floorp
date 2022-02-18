@@ -10,8 +10,7 @@
 #include "js/experimental/TypedData.h"
 #include "mozilla/ErrorResult.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // https://streams.spec.whatwg.org/#transfer-array-buffer
 // As some parts of the specifcation want to use the abrupt completion value,
@@ -104,5 +103,4 @@ JSObject* CloneAsUint8Array(JSContext* aCx, JS::HandleObject aObject) {
   return array;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

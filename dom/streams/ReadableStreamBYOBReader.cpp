@@ -20,8 +20,7 @@
 #include "mozilla/dom/ReadableStreamBYOBRequest.h"
 #include "mozilla/dom/ReadableStreamBYOBReader.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(ReadableStreamBYOBReader,
                                                 ReadableStreamGenericReader,
@@ -350,5 +349,4 @@ already_AddRefed<ReadableStreamBYOBReader> AcquireReadableStreamBYOBReader(
   return reader.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

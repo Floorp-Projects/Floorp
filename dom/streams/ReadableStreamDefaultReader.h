@@ -18,8 +18,7 @@
 #include "nsWrapperCache.h"
 #include "mozilla/LinkedList.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Promise;
 class ReadableStream;
@@ -103,7 +102,6 @@ void ReadableStreamDefaultReaderRelease(JSContext* aCx,
                                         ReadableStreamDefaultReader* aReader,
                                         ErrorResult& aRv);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ReadableStreamDefaultReader_h
