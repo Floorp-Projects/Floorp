@@ -340,6 +340,8 @@ with modules["NETWORK"]:
     errors["NS_ERROR_NET_TIMEOUT_EXTERNAL"] = FAILURE(85)
     # An error related to HTTPS-only mode
     errors["NS_ERROR_HTTPS_ONLY"] = FAILURE(86)
+    # A WebSocket connection is failed.
+    errors["NS_ERROR_WEBSOCKET_CONNECTION_REFUSED"] = FAILURE(87)
 
     # XXX really need to better rationalize these error codes.  are consumers of
     # necko really expected to know how to discern the meaning of these??
