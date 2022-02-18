@@ -49,7 +49,7 @@ class ReadableByteStreamController final : public ReadableStreamController,
   explicit ReadableByteStreamController(nsIGlobalObject* aGlobal);
 
  protected:
-  ~ReadableByteStreamController();
+  ~ReadableByteStreamController() override;
 
  public:
   bool IsDefault() override { return false; }
@@ -73,12 +73,11 @@ class ReadableByteStreamController final : public ReadableStreamController,
   void Error(JSContext* aCx, JS::Handle<JS::Value> aErrorValue,
              ErrorResult& aRv);
 
-  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> CancelSteps(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CancelSteps(
       JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) override;
-  MOZ_CAN_RUN_SCRIPT virtual void PullSteps(JSContext* aCx,
-                                            ReadRequest* aReadRequest,
-                                            ErrorResult& aRv) override;
-  virtual void ReleaseSteps() override;
+  MOZ_CAN_RUN_SCRIPT void PullSteps(JSContext* aCx, ReadRequest* aReadRequest,
+                                    ErrorResult& aRv) override;
+  void ReleaseSteps() override;
 
   // Internal Slot Accessors
   Maybe<uint64_t> AutoAllocateChunkSize() { return mAutoAllocateChunkSize; }

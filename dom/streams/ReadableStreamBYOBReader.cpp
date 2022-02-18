@@ -149,7 +149,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
   }
 
  protected:
-  virtual ~Read_ReadIntoRequest() = default;
+  ~Read_ReadIntoRequest() override = default;
 };
 
 NS_IMPL_CYCLE_COLLECTION(ReadIntoRequest)
