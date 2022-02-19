@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
+[MoveOnly] using class mozilla::ipc::ScopedPort from "mozilla/ipc/ScopedPort.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+// IPDL representation of GTest's TestPartResult type.
+struct TestPartResult {
+  bool failed;
+  bool fatal;
+  nsCString filename;
+  int32_t lineNumber;
+  nsCString summary;
+  nsCString message;
+};
+
+// Primary actor for the IPDLUnitTest process and thread.
+[NeedsOtherPid] async protocol PIPDLUnitTest {
+ child:
+  async Start(nsCString name, ScopedPort port);
+
+ parent:
+  async Report(TestPartResult result);
+  async Complete();
+};
+
+}  // namespace _ipdltest
+}  // namespace mozilla
