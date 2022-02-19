@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ReadableStream.h"
 #include "js/Exception.h"
 #include "js/TypeDecls.h"
 #include "js/experimental/TypedData.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ReadIntoRequest.h"
+#include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/ReadableStreamBYOBReader.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/ReadableStreamGenericReader.h"
@@ -272,7 +272,6 @@ MOZ_CAN_RUN_SCRIPT void ByteStreamTeePullAlgorithm(JSContext* aCx,
   }
 
   // Step {17,18}.6: Return a promise resolved with undefined.
-  return;
 }
 
 class NativeByteStreamTeePullAlgorithm final
@@ -291,9 +290,9 @@ class NativeByteStreamTeePullAlgorithm final
       : mTeeState(aTeeState), mBranch(aBranch) {}
 
   MOZ_CAN_RUN_SCRIPT
-  virtual already_AddRefed<Promise> PullCallback(
-      JSContext* aCx, ReadableStreamController& aController,
-      ErrorResult& aRv) override {
+  already_AddRefed<Promise> PullCallback(JSContext* aCx,
+                                         ReadableStreamController& aController,
+                                         ErrorResult& aRv) override {
     RefPtr<Promise> returnPromise = Promise::CreateResolvedWithUndefined(
         mTeeState->GetStream()->GetParentObject(), aRv);
     if (aRv.Failed()) {
@@ -306,7 +305,7 @@ class NativeByteStreamTeePullAlgorithm final
   }
 
  protected:
-  ~NativeByteStreamTeePullAlgorithm() = default;
+  ~NativeByteStreamTeePullAlgorithm() override = default;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(NativeByteStreamTeePullAlgorithm)
@@ -552,7 +551,7 @@ struct PullWithDefaultReaderReadRequest final : public ReadRequest {
   }
 
  protected:
-  virtual ~PullWithDefaultReaderReadRequest() = default;
+  ~PullWithDefaultReaderReadRequest() override = default;
 };
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(PullWithDefaultReaderReadRequest,
@@ -605,7 +604,7 @@ void PullWithDefaultReader(JSContext* aCx, TeeState* aTeeState,
 class PullWithBYOBReader_ReadIntoRequest final : public ReadIntoRequest {
   RefPtr<TeeState> mTeeState;
   const TeeBranch mForBranch;
-  virtual ~PullWithBYOBReader_ReadIntoRequest() = default;
+  ~PullWithBYOBReader_ReadIntoRequest() override = default;
 
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -907,7 +906,7 @@ void PullWithBYOBReader(JSContext* aCx, TeeState* aTeeState,
 }
 
 class ForwardReaderErrorPromiseHandler final : public PromiseNativeHandler {
-  ~ForwardReaderErrorPromiseHandler() = default;
+  ~ForwardReaderErrorPromiseHandler() override = default;
   RefPtr<TeeState> mTeeState;
   RefPtr<ReadableStreamGenericReader> mReader;
 
@@ -924,8 +923,8 @@ class ForwardReaderErrorPromiseHandler final : public PromiseNativeHandler {
                         ErrorResult& aRv) override {}
 
   MOZ_CAN_RUN_SCRIPT
-  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     // Step 14.1.1
     if (mTeeState->GetReader() != mReader) {
       return;
@@ -992,7 +991,7 @@ class ReadableByteStreamTeeCancelAlgorithm final
   // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee
   // Steps 19 and 20 both use this class.
   MOZ_CAN_RUN_SCRIPT
-  virtual already_AddRefed<Promise> CancelCallback(
+  already_AddRefed<Promise> CancelCallback(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) override {
     // Step 1.
@@ -1041,7 +1040,7 @@ class ReadableByteStreamTeeCancelAlgorithm final
   }
 
  protected:
-  ~ReadableByteStreamTeeCancelAlgorithm() = default;
+  ~ReadableByteStreamTeeCancelAlgorithm() override = default;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableByteStreamTeeCancelAlgorithm)

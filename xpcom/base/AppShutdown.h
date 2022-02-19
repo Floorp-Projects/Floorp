@@ -21,7 +21,6 @@ enum class AppShutdownMode {
 
 class AppShutdown {
  public:
-  static bool IsShuttingDown();
   static ShutdownPhase GetCurrentShutdownPhase();
   static bool IsInOrBeyond(ShutdownPhase aPhase);
 

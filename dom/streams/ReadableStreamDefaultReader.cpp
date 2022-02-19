@@ -17,8 +17,7 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION(ReadableStreamGenericReader, mClosedPromise, mStream,
                          mGlobal)
@@ -424,5 +423,4 @@ void SetUpReadableStreamDefaultReader(JSContext* aCx,
   aReader->ReadRequests().clear();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

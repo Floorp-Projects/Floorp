@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/BodyStream.h"
+#include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
 
