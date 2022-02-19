@@ -12,7 +12,6 @@ from mozbuild.backend.common import CommonBackend
 from mozbuild.frontend.data import (
     ComputedFlags,
     Sources,
-    GeneratedSources,
     DirectoryTraversal,
     PerSourceFlag,
     VariablePassthru,
@@ -67,7 +66,7 @@ class CompileDBBackend(CommonBackend):
         if isinstance(obj, DirectoryTraversal):
             self._envs[obj.objdir] = obj.config
 
-        elif isinstance(obj, (Sources, GeneratedSources)):
+        elif isinstance(obj, Sources):
             # For other sources, include each source file.
             for f in obj.files:
                 self._build_db_line(
