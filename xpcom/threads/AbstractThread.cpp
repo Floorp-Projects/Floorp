@@ -22,6 +22,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
+#include <memory>
+
 namespace mozilla {
 
 LazyLogModule gMozPromiseLog("MozPromise");
@@ -102,13 +104,14 @@ class XPCOMThreadWrapper final : public AbstractThread,
   TaskDispatcher& TailDispatcher() override {
     MOZ_ASSERT(IsCurrentThreadIn());
     MOZ_ASSERT(IsTailDispatcherAvailable());
-    if (!mTailDispatcher.isSome()) {
-      mTailDispatcher.emplace(mDirectTaskDispatcher,
-                              /* aIsTailDispatcher = */ true);
+    if (!mTailDispatcher) {
+      mTailDispatcher =
+          std::make_unique<AutoTaskDispatcher>(mDirectTaskDispatcher,
+                                               /* aIsTailDispatcher = */ true);
       mThread->AddObserver(this);
     }
 
-    return mTailDispatcher.ref();
+    return *mTailDispatcher;
   }
 
   bool IsTailDispatcherAvailable() override {
@@ -119,7 +122,7 @@ class XPCOMThreadWrapper final : public AbstractThread,
     return inEventLoop;
   }
 
-  bool MightHaveTailTasks() override { return mTailDispatcher.isSome(); }
+  bool MightHaveTailTasks() override { return !!mTailDispatcher; }
 
   nsIEventTarget* AsEventTarget() override { return mThread; }
 
@@ -178,7 +181,7 @@ class XPCOMThreadWrapper final : public AbstractThread,
   const RefPtr<nsIThreadInternal> mThread;
   const nsCOMPtr<nsIDelayedRunnableObserver> mDelayedRunnableObserver;
   const nsCOMPtr<nsIDirectTaskDispatcher> mDirectTaskDispatcher;
-  Maybe<AutoTaskDispatcher> mTailDispatcher;
+  std::unique_ptr<AutoTaskDispatcher> mTailDispatcher;
   const bool mOnThread;
 
   ~XPCOMThreadWrapper() {
@@ -190,8 +193,8 @@ class XPCOMThreadWrapper final : public AbstractThread,
   }
 
   void MaybeFireTailDispatcher() {
-    if (mTailDispatcher.isSome()) {
-      mTailDispatcher.ref().DrainDirectTasks();
+    if (mTailDispatcher) {
+      mTailDispatcher->DrainDirectTasks();
       mThread->RemoveObserver(this);
       mTailDispatcher.reset();
     }
