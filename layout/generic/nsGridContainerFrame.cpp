@@ -5036,8 +5036,11 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
       childSize.ISize(wm) = aChild->ISize(wm);
       nsContainerFrame::FinishReflowChild(aChild, pc, childSize, &childRI, wm,
                                           LogicalPoint(wm), nsSize(), flags);
-      GRID_LOG("[perf] MeasuringReflow accepted cached value=%d, child=%p",
-               cachedMeasurement.BSize(), aChild);
+      GRID_LOG(
+          "[perf] MeasuringReflow accepted cached value=%d, child=%p, "
+          "aCBSize.ISize=%d",
+          cachedMeasurement.BSize(), aChild,
+          aCBSize.ISize(aChild->GetWritingMode()));
       return cachedMeasurement.BSize();
     }
   }
@@ -5060,16 +5063,22 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
                                                        childSize.BSize(wm));
       aChild->SetProperty(GridItemCachedBAxisMeasurement::Prop(),
                           cachedMeasurement);
-      GRID_LOG("[perf] MeasuringReflow created new cached value=%d, child=%p",
-               cachedMeasurement.BSize(), aChild);
+      GRID_LOG(
+          "[perf] MeasuringReflow created new cached value=%d, child=%p, "
+          "aCBSize.ISize=%d",
+          cachedMeasurement.BSize(), aChild,
+          aCBSize.ISize(aChild->GetWritingMode()));
     } else if (found) {
       if (GridItemCachedBAxisMeasurement::CanCacheMeasurement(aChild,
                                                               aCBSize)) {
         cachedMeasurement.Update(aChild, aCBSize, childSize.BSize(wm));
         GRID_LOG(
             "[perf] MeasuringReflow rejected but updated cached value=%d, "
-            "child=%p",
-            cachedMeasurement.BSize(), aChild);
+            "child=%p, aCBSize.ISize=%d",
+            cachedMeasurement.BSize(), aChild,
+            aCBSize.ISize(aChild->GetWritingMode()));
+        aChild->SetProperty(GridItemCachedBAxisMeasurement::Prop(),
+                            cachedMeasurement);
       } else {
         aChild->RemoveProperty(GridItemCachedBAxisMeasurement::Prop());
         GRID_LOG(

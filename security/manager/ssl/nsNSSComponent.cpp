@@ -2165,7 +2165,7 @@ void IntermediatePreloadingHealerCallback(nsITimer*, void*) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("IntermediatePreloadingHealerCallback"));
 
-  if (AppShutdown::IsShuttingDown()) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("Exiting healer due to app shutdown"));
     return;
@@ -2194,7 +2194,7 @@ void IntermediatePreloadingHealerCallback(nsITimer*, void*) {
   // is a preloaded intermediate.
   for (CERTCertListNode* n = CERT_LIST_HEAD(softokenCertificates);
        !CERT_LIST_END(n, softokenCertificates); n = CERT_LIST_NEXT(n)) {
-    if (AppShutdown::IsShuttingDown()) {
+    if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
               ("Exiting healer due to app shutdown"));
       return;
@@ -2246,7 +2246,7 @@ void IntermediatePreloadingHealerCallback(nsITimer*, void*) {
     }
   }
   for (const auto& certToDelete : certsToDelete) {
-    if (AppShutdown::IsShuttingDown()) {
+    if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
               ("Exiting healer due to app shutdown"));
       return;

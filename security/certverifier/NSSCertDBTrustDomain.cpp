@@ -1940,7 +1940,7 @@ void SaveIntermediateCerts(const nsTArray<nsTArray<uint8_t>>& certList) {
     nsCOMPtr<nsIRunnable> importCertsRunnable(NS_NewRunnableFunction(
         "IdleSaveIntermediateCerts",
         [intermediates = std::move(intermediates)]() -> void {
-          if (AppShutdown::IsShuttingDown()) {
+          if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
             return;
           }
 
@@ -1954,7 +1954,8 @@ void SaveIntermediateCerts(const nsTArray<nsTArray<uint8_t>>& certList) {
           for (CERTCertListNode* node = CERT_LIST_HEAD(intermediates);
                !CERT_LIST_END(node, intermediates);
                node = CERT_LIST_NEXT(node)) {
-            if (AppShutdown::IsShuttingDown()) {
+            if (AppShutdown::IsInOrBeyond(
+                    ShutdownPhase::AppShutdownConfirmed)) {
               return;
             }
 

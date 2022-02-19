@@ -18,17 +18,14 @@
 #include "nsWrapperCache.h"
 #include "mozilla/LinkedList.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Promise;
 class ReadableStream;
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ReadableStreamBYOBReader final : public ReadableStreamGenericReader,
                                        public nsWrapperCache {
@@ -65,7 +62,7 @@ class ReadableStreamBYOBReader final : public ReadableStreamGenericReader,
   }
 
  private:
-  virtual ~ReadableStreamBYOBReader() = default;
+  ~ReadableStreamBYOBReader() override = default;
 
   LinkedList<RefPtr<ReadIntoRequest>> mReadIntoRequests = {};
 };
@@ -85,7 +82,6 @@ void ReadableStreamBYOBReaderRelease(JSContext* aCx,
                                      ReadableStreamBYOBReader* aReader,
                                      ErrorResult& aRv);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ReadableStreamBYOBReader_h

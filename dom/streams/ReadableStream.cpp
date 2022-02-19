@@ -68,8 +68,7 @@ inline void ImplCycleCollectionUnlink(
   aReader = AsVariant(mozilla::Nothing());
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStream)
@@ -656,7 +655,7 @@ class ReadableStreamDefaultTeeCancelAlgorithm final
       : mTeeState(aTeeState), mIsCancel1(aIsCancel1) {}
 
   MOZ_CAN_RUN_SCRIPT
-  virtual already_AddRefed<Promise> CancelCallback(
+  already_AddRefed<Promise> CancelCallback(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) override {
     // Step 1.
@@ -716,7 +715,7 @@ class ReadableStreamDefaultTeeCancelAlgorithm final
   }
 
  protected:
-  ~ReadableStreamDefaultTeeCancelAlgorithm() = default;
+  ~ReadableStreamDefaultTeeCancelAlgorithm() override = default;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultTeeCancelAlgorithm)
@@ -744,7 +743,7 @@ NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceCancelCallbackHelper)
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
 // Step 19.
 class ReadableStreamTeeClosePromiseHandler final : public PromiseNativeHandler {
-  ~ReadableStreamTeeClosePromiseHandler() = default;
+  ~ReadableStreamTeeClosePromiseHandler() override = default;
   RefPtr<TeeState> mTeeState;
 
  public:
@@ -965,5 +964,4 @@ already_AddRefed<ReadableStream> ReadableStream::Create(
   return stream.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
