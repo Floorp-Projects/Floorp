@@ -170,7 +170,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Telepítés</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Szinkronizált lapok</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Szinkronizált lapok</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Újraszinkronizálás</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -421,9 +421,11 @@
     <string name="wallpaper_updated_snackbar_action">Nézet</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Koppintson a logóra a háttérkép megváltoztatásához</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Koppintson a logóra a háttérkép megváltoztatásához</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">A háttérkép módosításához koppintson a Firefox kezdőlap logójára</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Végigléptetés és a kép frissítése a kezdőképernyő elhagyása nélkül.</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Végigléptetés és a kép frissítése a kezdőképernyő elhagyása nélkül.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -737,7 +739,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Adja meg a keresési kifejezést</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Adja meg a keresési kifejezést</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Adja meg a keresési kifejezéseket</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Előzmények törlése</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->

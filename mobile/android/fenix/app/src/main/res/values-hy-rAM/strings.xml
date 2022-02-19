@@ -170,7 +170,7 @@
     <string name="browser_menu_install_on_homescreen">Տեղադրել</string>
 
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Համաժամեցված ներդիրներ</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Համաժամեցված ներդիրներ</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Կրկնահամաժամեցում</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -415,9 +415,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Տեսք</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Պաստառը փոխելու համար հպեք պատկերանշանին</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Պաստառը փոխելու համար հպեք պատկերանշանին</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Փոխեք պաստառը՝ կտտացնելով Firefox-ի գլխավոր էջի պատկերանշանին</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Շրջեք և թարմացրեք պատկերը՝ առանց գլխավոր էջից դուրս գալու:</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Շրջեք և թարմացրեք պատկերը՝ առանց գլխավոր էջից դուրս գալու:</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -725,7 +727,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Մուտքագրեք որոնվող բառը</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Մուտքագրեք որոնվող բառը</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Մուտքագրեք որոնվող բառը</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Ջնջել պատմությունը</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->

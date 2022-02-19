@@ -170,7 +170,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Installa</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Schede sincronizzate</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Schede sincronizzate</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Risincronizza</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -425,10 +425,12 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Visualizza</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Tocca il logo per cambiare lo sfondo</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Tocca il logo per cambiare lo sfondo</string>
 
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Cambia lo sfondo toccando il logo di Firefox nella pagina iniziale</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Passa da un’immagine all’altra senza abbandonare la pagina principale.</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Passa da un’immagine all’altra senza abbandonare la pagina principale.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -746,7 +748,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Immetti termine di ricerca</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Immetti termine di ricerca</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Immetti i termini di ricerca</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Cancella cronologia</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->

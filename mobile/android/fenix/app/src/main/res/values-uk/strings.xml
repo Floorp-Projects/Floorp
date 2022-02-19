@@ -170,7 +170,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Встановити</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Синхронізовані вкладки</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Синхронізовані вкладки</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Синхронізувати повторно</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -422,9 +422,11 @@
     <string name="wallpaper_updated_snackbar_action">Переглянути</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Торкніться логотипу, щоб змінити шпалери</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Торкніться логотипу, щоб змінити шпалери</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Змінюйте шпалери, торкнувшись логотипу домівки Firefox</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Переглядайте та оновлюйте зображення, не залишаючи домівку.</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Переглядайте та оновлюйте зображення, не залишаючи домівку.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -736,7 +738,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Введіть пошуковий термін</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Введіть пошуковий термін</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Введіть пошукові терміни</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Видалити історію</string>
 

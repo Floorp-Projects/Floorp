@@ -170,7 +170,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instalar</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Pestañas sincronizadas</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Pestañas sincronizadas</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Resincronizar</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -420,9 +420,11 @@
     <string name="wallpaper_updated_snackbar_action">Ver</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Tocar el logo para cambiar el fondo de pantalla</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Tocar el logo para cambiar el fondo de pantalla</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Cambia el fondo de pantalla tocando el logotipo de la página de inicio de Firefox</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Recorre y actualiza la imagen sin salir de la página de inicio.</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Recorre y actualiza la imagen sin salir de la página de inicio.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -731,7 +733,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Ingresa los términos de búsqueda</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Ingresa los términos de búsqueda</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Ingresa los términos de búsqueda</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Eliminar historial</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->

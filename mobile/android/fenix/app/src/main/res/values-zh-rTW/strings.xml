@@ -171,7 +171,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">安裝</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">同步的分頁</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">同步的分頁</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">重新同步</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -423,9 +423,11 @@
     <string name="wallpaper_updated_snackbar_action">檢視</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">點擊圖示即可更換背景圖</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">點擊圖示即可更換背景圖</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">點擊 Firefox 首頁的圖示即可更改背景圖</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">不用離開首頁即可更換背景圖。</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">不用離開首頁即可更換背景圖。</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -740,7 +742,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">輸入搜尋詞彙</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">輸入搜尋詞彙</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">輸入搜尋詞彙</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">刪除瀏覽紀錄</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->

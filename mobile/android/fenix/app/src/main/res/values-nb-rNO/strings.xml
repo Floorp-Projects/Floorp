@@ -173,7 +173,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Installer</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Synkroniserte faner</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Synkroniserte faner</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Synkroniser på nytt</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -420,9 +420,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Vis</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Trykk på logo for å endre bakgrunnsbilde</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Trykk på logo for å endre bakgrunnsbilde</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Endre bakgrunnsbilde ved å trykke på Firefox-logoen på startsiden</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Bla gjennom og oppdater bildet uten å forlate startsiden.</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Bla gjennom og oppdater bildet uten å forlate startsiden.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -733,7 +735,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Skriv inn søketekst</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Skriv inn søketekst</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Skriv inn søketekst</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Slett historikk</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->

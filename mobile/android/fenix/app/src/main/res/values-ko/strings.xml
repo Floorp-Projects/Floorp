@@ -175,7 +175,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">설치</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">동기화된 탭</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">동기화된 탭</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">다시 동기화</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -425,13 +425,15 @@
     <string name="wallpaper_updated_snackbar_action">보기</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">배경 화면을 변경하려면 로고를 누르세요</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">배경 화면을 변경하려면 로고를 누르세요</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">배경 화면을 변경하려면 Firefox 홈페이지 로고를 누르세요</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">홈페이지를 떠나지 않고 이미지를 순환하고 업데이트합니다.</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">홈페이지를 떠나지 않고 이미지를 순환하고 업데이트합니다.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Firefox 로고 - 배경화면 변경, 버튼</string>
+    <string name="wallpaper_logo_content_description">Firefox 로고 - 배경 화면 변경, 버튼</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -743,7 +745,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">검색어를 입력하세요</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">검색어를 입력하세요</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">검색어 입력</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">기록 삭제</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->

@@ -170,7 +170,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instalěrowaś</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Synchronizěrowane rejtariki</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Synchronizěrowane rejtariki</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Znowego synchronizěrowaś</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -417,10 +417,12 @@
     <string name="wallpaper_updated_snackbar_action">Pokazaś</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Pótusniśo logo, aby slězynowy wobraz změnił</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Pótusniśo logo, aby slězynowy wobraz změnił</string>
 
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Pótusniśo logo startowego boka Firefox, aby slězynowy wobraz změnił</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Pśeglědujśo a aktualizěrujśo wobraze, mimo aby startowy bok spušćił.</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Pśeglědujśo a aktualizěrujśo wobraze, mimo aby startowy bok spušćił.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -731,7 +733,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Pytański wuraz zapódaś</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Pytański wuraz zapódaś</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Pytańske wuraze zapódaś</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Historiju wulašowaś</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->

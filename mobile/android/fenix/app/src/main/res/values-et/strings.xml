@@ -502,6 +502,14 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Turundusandmed</string>
 
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Jagab põhilisi kasutusandmeid meie mobiiliturunduse teenusepakkujaga Adjust</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Uuringud</string>
+
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Võimaldab Mozillal paigaldada ja käivitada uuringuid</string>
+
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Lülita Sync sisse</string>

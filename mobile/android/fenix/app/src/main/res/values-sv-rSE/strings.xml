@@ -172,7 +172,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Installera</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Synkade flikar</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Synkade flikar</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Omsynkronisering</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -425,9 +425,11 @@
     <string name="wallpaper_updated_snackbar_action">Visa</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Tryck på logotypen för att byta bakgrund</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Tryck på logotypen för att byta bakgrund</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Ändra bakgrundsbild genom att trycka på Firefox startsidas logotyp</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Bläddra igenom och uppdatera bilden utan att lämna startsidan.</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Bläddra igenom och uppdatera bilden utan att lämna startsidan.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -740,7 +742,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Ange sökterm</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Ange sökterm</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Ange söktermer</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Rensa historik</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
