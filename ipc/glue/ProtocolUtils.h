@@ -418,7 +418,7 @@ class IToplevelProtocol : public IProtocol {
 
   bool Open(ScopedPort aPort, base::ProcessId aOtherPid);
 
-  bool Open(IToplevelProtocol* aTarget, nsISerialEventTarget* aEventTarget,
+  bool Open(MessageChannel* aChannel, nsISerialEventTarget* aEventTarget,
             mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
   // Open a toplevel actor such that both ends of the actor's channel are on
@@ -427,7 +427,7 @@ class IToplevelProtocol : public IProtocol {
   //
   // WARNING: Attempting to send a sync or intr message on the same thread
   // will crash.
-  bool OpenOnSameThread(IToplevelProtocol* aTarget,
+  bool OpenOnSameThread(MessageChannel* aChannel,
                         mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
   /**

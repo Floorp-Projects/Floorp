@@ -12,5 +12,3 @@ IPDL_SOURCES += [
     "bar.ipdl",
     "bar2.ipdlh",
 ]
-
-FINAL_LIBRARY = "dummy"

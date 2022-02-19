@@ -14,7 +14,6 @@ using webgpu::ffi::WGPUHostMap from "mozilla/webgpu/ffi/wgpu.h";
 using MaybeScopedError from "mozilla/webgpu/WebGPUTypes.h";
 
 include "mozilla/ipc/ByteBufUtils.h";
-include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/webgpu/WebGPUSerialize.h";
 include "mozilla/layers/WebRenderMessageUtils.h";
 include protocol PCanvasManager;

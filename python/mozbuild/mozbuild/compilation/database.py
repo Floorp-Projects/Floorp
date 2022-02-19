@@ -12,6 +12,7 @@ from mozbuild.backend.common import CommonBackend
 from mozbuild.frontend.data import (
     ComputedFlags,
     Sources,
+    GeneratedSources,
     DirectoryTraversal,
     PerSourceFlag,
     VariablePassthru,
@@ -66,7 +67,7 @@ class CompileDBBackend(CommonBackend):
         if isinstance(obj, DirectoryTraversal):
             self._envs[obj.objdir] = obj.config
 
-        elif isinstance(obj, Sources):
+        elif isinstance(obj, (Sources, GeneratedSources)):
             # For other sources, include each source file.
             for f in obj.files:
                 self._build_db_line(
@@ -184,8 +185,10 @@ class CompileDBBackend(CommonBackend):
         sorted_ipdl_sources,
         sorted_nonstatic_ipdl_sources,
         sorted_static_ipdl_sources,
+        unified_ipdl_cppsrcs_mapping,
     ):
-        pass
+        for f in unified_ipdl_cppsrcs_mapping:
+            self._build_db_line(ipdl_dir, None, self.environment, f[0], ".cpp")
 
     def _handle_webidl_build(
         self,

@@ -71,7 +71,7 @@ void InProcessParent::Startup() {
   }
 
   // Link the two actors
-  if (!child->OpenOnSameThread(parent, ChildSide)) {
+  if (!child->OpenOnSameThread(parent->GetIPCChannel(), ChildSide)) {
     MOZ_CRASH("Failed to open InProcessChild!");
   }
 
