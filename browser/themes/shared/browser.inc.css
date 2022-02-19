@@ -140,6 +140,11 @@ richlistitem[originaltype="loginsFooter"] .ac-site-icon
 	list-style-image: url(chrome://browser/skin/forget.svg) !important;
 }
 
+#fxa-toolbar-menu-button{
+	display: block;
+}
+
+
 #developer-button
 {
 	list-style-image: url(chrome://browser/skin/developer.svg) !important;
@@ -150,6 +155,18 @@ richlistitem[originaltype="loginsFooter"] .ac-site-icon
 {
 	list-style-image: url(chrome://browser/skin/addons.svg) !important;
 }
+
+:root
+    {
+        --arrowpanel-menuitem-margin: 0 var(--browser-context-menu-margin-padding) !important;
+        --arrowpanel-menuitem-padding-block: var(--browser-context-menu-margin-padding) !important;
+        --arrowpanel-menuitem-padding-inline: var(--browser-context-menu-margin-padding) !important;
+        --panel-separator-margin-vertical: var(--browser-context-menu-margin-padding) !important;
+        --panel-separator-margin-horizontal: var(--browser-context-menu-margin-padding) !important;
+        --panel-subview-body-padding: var(--browser-context-menu-margin-padding) 0 !important;
+
+        --browser-context-menu-margin-padding: 5.5px;
+   }
 
 #email-link-button,
 #pageAction-panel-emailLink
@@ -1472,10 +1489,7 @@ hbox[anonid="findbar-textbox-wrapper"] toolbarbutton:not([disabled]):hover:activ
 	transition-duration: .1s !important;
 }
 /* note: use Firefox account button instead */
-#TabsToolbar .private-browsing-indicator
-{
-	display: none !important;
-}
+
 /* light mode */
 :root:not([style]),
 :root[style*="--lwt-accent-color:rgb(227, 228, 230);"],

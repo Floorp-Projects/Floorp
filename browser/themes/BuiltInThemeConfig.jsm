@@ -25,7 +25,7 @@ const BuiltInThemeConfig = new Map([
       path: "resource://builtin-themes/light/",
     },
   ],
-  [
+    [
     "floorp-edge@mozilla.org",
     {
       version: "1.2",

@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script>
+    function test() {
+      history.scrollRestoration = "manual";
+      document.getElementById("initialfocus").focus();
+      history.pushState('data', '', '');
+      history.back();
+    }
+
+    window.onpopstate = function() {
+      window.onscroll = function() {
+        window.onscroll = null;
+        document.documentElement.style.display = "none";
+        // focus() triggers recreation of the nsIFrames without a reflow.
+        document.getElementById("focustarget").focus();
+        document.documentElement.style.display = "";
+        // Flush the layout.
+        document.documentElement.getBoundingClientRect();
+        opener.isnot(window.scrollY, 0, "The page should have been scrolled down(1)");
+        requestAnimationFrame(
+          function() {
+            // Extra timeout to ensure we're called after rAF has triggered a
+            // reflow.
+            setTimeout(function() {
+              opener.isnot(window.scrollY, 0, "The page should have been scrolled down(2)");
+              window.close();
+              opener.SimpleTest.finish();
+            });
+        });
+      }
+      window.scrollTo(0, 1000);
+    }
+  </script>
+</head>
+<body onload="setTimeout(test)">
+<div style="position: fixed;">
+  <input type="button" value="" id="initialfocus">
+  <input type="button" value="" id="focustarget">
+</div>
+<div style="border: 1px solid black; width: 100px; height: 9000px;"></div>
+</body>
+</html>

@@ -19,13 +19,14 @@
   #endif
 #endif
 
-//開いているタブが2つ以上のとき、ウインドウを閉じようとした際に、警告を表示します
+//たくさん閉じようとしたときに警告
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnCloseOtherTabs", true);
 
-//ウェブとの互換性を考慮して、Firefox のユーザエージェントを固定します。Floorp ではしばらく三桁にする予定はありません。（変更するかも知れません）
-pref("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0");
-//about:addons サイト内で、Mozilla からのアドオン推奨プロンプトを削除します。
+//デフォルトブラウザーのチェック無効
+pref("browser.shell.checkDefaultBrowser", false);
+
+//addon推奨プロンプトを消す
 pref("extensions.getAddons.showPane", false , locked);
 //軽量化
 pref("browser.tabs.animate", false);
@@ -41,17 +42,17 @@ pref("content.notify.ontimer", true);
 pref("content.interrupt.parsing", true);
 pref("nglayout.initialpaint.delay", 0);
 
-//調査と思われるものを削除。Torでは削除済みのようです。
+//調査と思われるものを削除。Torでは削除済み。
 pref("app.normandy.api_url", "");
 pref("app.normandy.enabled", true);
 
 //backdropfilterを既定で有効化します。
 pref("layout.css.backdrop-filter.enabled", true);
 
-//SVG avif jxl 画像ファイルをの互換性向上または、既定で開けるように。BETA版
-pref("svg.context-properties.content.enabled", true);
-pref("image.avif.enabled", true);
-pref("image.jxl.enabled", true);
+//SVG avif jxl 画像ファイルをの互換性向上または、既定で開けるように
+pref("svg.context-properties.content.enabled", true, locked);
+pref("image.avif.enabled", true, locked);
+pref("image.jxl.enabled", true, locked);
 
 // Add-On のブラックリストをFloorpが参照する際の情報漏洩削減
 pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
@@ -74,7 +75,7 @@ pref("breakpad.reportURL", "", locked);
 pref("browser.tabs.crashReporting.sendReport", false);
 pref("browser.crashReports.unsubmittedCheck.enabled",	false);
 
-//野良アドオンのインストールを許可。開発者向け。Floorp アドオンストアの準備。（効果なし？）
+//野良アドオンのインストールを許可。開発者向け。Floorp アドオンストアの準備。
 pref("xpinstall.signatures.required", false);
 
 // Firefox による、Mozilla への情報送信テレメンタリーを無効化
@@ -111,12 +112,6 @@ pref("privacy.trackingprotection.pbmode.enabled", true);
 //https:// 通信時、緑色に
 ("security.secure_connection_icon_color_gray", false);
 
-// WebGLが有効化時、プライバシー保護を提供します。Floorp では、WebGLは既定で有効化します
-pref("webgl.min_capability_mode", true);
-pref("webgl.disable-extensions", true);
-pref("webgl.disable-fail-if-major-performance-caveat",	true);
-pref("webgl.enable-debug-renderer-info", false);
-
 //「既定でオンを推奨」フィンガープリント対策の一環。
 //参考：https://www.torproject.org/projects/torbrowser/design/#fingerprinting-defenses
 pref("dom.network.enabled", false);
@@ -142,7 +137,7 @@ pref("extensions.webcompat-reporter.enabled", false);
 //同期システムの一部無効化
 pref("services.sync.prefs.sync.browser.contentblocking.category", false);
 
-// Dragpad gesture を無効化。Firefox 97では正常に動作しません。
+// Dragpad gesture
 pref("browser.gesture.swipe.left", "");
 pref("browser.gesture.swipe.right", "");
 
@@ -388,7 +383,7 @@ pref("browser.touchmode.auto", true);
 pref("browser.compactmode.show", false);
 
 // At startup, check if we're the default browser and prompt user if not.
-pref("browser.shell.checkDefaultBrowser", true);
+//pref("browser.shell.checkDefaultBrowser", true);
 pref("browser.shell.shortcutFavicons",true);
 pref("browser.shell.mostRecentDateSetAsDefault", "");
 pref("browser.shell.skipDefaultBrowserCheckOnFirstRun", true);
@@ -2790,3 +2785,4 @@ pref("browser.snapshots.score.InNavigation", 3);
 pref("browser.snapshots.score.IsOverlappingVisit", 3);
 pref("browser.snapshots.score.IsUserPersisted", 1);
 pref("browser.snapshots.score.IsUsedRemoved", -10);
+

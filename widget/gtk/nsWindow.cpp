@@ -5237,7 +5237,8 @@ void nsWindow::DisableRenderingToWindow() {
 }
 
 Window nsWindow::GetX11Window() {
-  return GdkIsX11Display() ? gdk_x11_window_get_xid(mGdkWindow) : X11None;
+  return GdkIsX11Display() && mGdkWindow ? gdk_x11_window_get_xid(mGdkWindow)
+                                         : X11None;
 }
 
 void nsWindow::EnsureGdkWindow() {
@@ -5246,7 +5247,6 @@ void nsWindow::EnsureGdkWindow() {
                                                         : mShell);
     g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", this);
   }
-  MOZ_DIAGNOSTIC_ASSERT(mGdkWindow, "We're missing GdkWindow!");
 }
 
 bool nsWindow::GetShapedState() {
