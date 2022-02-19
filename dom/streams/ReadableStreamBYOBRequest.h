@@ -19,8 +19,7 @@
 #include "nsWrapperCache.h"
 #include "nsIGlobalObject.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ReadableByteStreamController;
 
@@ -64,7 +63,6 @@ class ReadableStreamBYOBRequest final : public nsISupports,
   JS::Heap<JSObject*> mView;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

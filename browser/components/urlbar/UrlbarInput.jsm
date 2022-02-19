@@ -740,6 +740,14 @@ class UrlbarInput {
       return;
     }
 
+    if (element?.classList.contains("urlbarView-button-block")) {
+      this.controller.notify(
+        this.controller.NOTIFICATIONS.QUERY_RESULT_REMOVED,
+        result.rowIndex
+      );
+      return;
+    }
+
     let urlOverride;
     if (element?.classList.contains("urlbarView-button-help")) {
       urlOverride = result.payload.helpUrl;

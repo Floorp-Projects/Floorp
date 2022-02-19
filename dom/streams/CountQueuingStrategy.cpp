@@ -10,8 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION(BaseQueuingStrategy, mGlobal)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(BaseQueuingStrategy)
@@ -101,5 +100,4 @@ already_AddRefed<Function> CountQueuingStrategy::GetSize(ErrorResult& aRv) {
   return function.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

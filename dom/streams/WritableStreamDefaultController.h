@@ -22,8 +22,7 @@
 #include "nsTArray.h"
 #include "nsISupportsBase.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AbortSignal;
 class WritableStream;
@@ -190,7 +189,6 @@ MOZ_CAN_RUN_SCRIPT extern double WritableStreamDefaultControllerGetChunkSize(
     JSContext* aCx, WritableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_WritableStreamDefaultController_h

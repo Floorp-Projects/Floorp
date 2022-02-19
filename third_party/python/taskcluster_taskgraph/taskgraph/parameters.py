@@ -65,7 +65,7 @@ def _get_defaults(repo_root=None):
         repo_url = repo.get_url()
         project = repo_url.rsplit("/", 1)[1]
     except (CalledProcessError, IndexError):
-        # IndexError because not all repo_urls have slashes.
+        # IndexError is raised if repo url doesn't have any slashes.
         repo_url = ""
         project = ""
 

@@ -102,7 +102,7 @@ void WritableStream::DealWithRejection(JSContext* aCx,
 }
 
 class AbortStepsNativePromiseHandler final : public PromiseNativeHandler {
-  ~AbortStepsNativePromiseHandler() = default;
+  ~AbortStepsNativePromiseHandler() override = default;
 
   RefPtr<WritableStream> mStream;
   RefPtr<Promise> mAbortRequestPromise;

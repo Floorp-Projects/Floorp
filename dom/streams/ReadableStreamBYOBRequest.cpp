@@ -18,8 +18,7 @@
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 ReadableStreamBYOBRequest::ReadableStreamBYOBRequest(nsIGlobalObject* aGlobal)
     : mGlobal(aGlobal) {
@@ -136,5 +135,4 @@ void ReadableStreamBYOBRequest::SetController(
   mController = aController;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
