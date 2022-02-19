@@ -21,6 +21,7 @@ from mozpack.files import FileFinder
 from .common import CommonBackend
 from ..frontend.data import (
     Defines,
+    GeneratedSources,
     HostProgram,
     HostSources,
     Library,
@@ -100,6 +101,9 @@ class VisualStudioBackend(CommonBackend):
             self._add_sources(reldir, obj)
 
         elif isinstance(obj, HostSources):
+            self._add_sources(reldir, obj)
+
+        elif isinstance(obj, GeneratedSources):
             self._add_sources(reldir, obj)
 
         elif isinstance(obj, UnifiedSources):

@@ -8,7 +8,6 @@
 include LayersSurfaces;
 include protocol PVRManager;
 
-include "mozilla/GfxMessageUtils.h";
 include "VRLayerChild.h";
 
 using mozilla::gfx::Rect from "mozilla/gfx/Rect.h";

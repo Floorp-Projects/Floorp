@@ -1463,7 +1463,7 @@ VARIABLES = {
         """,
     ),
     "UNIFIED_SOURCES": (
-        ContextDerivedTypedList(Path, StrictOrderingOnAppendList),
+        ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList),
         list,
         """Source code files that can be compiled together.
 

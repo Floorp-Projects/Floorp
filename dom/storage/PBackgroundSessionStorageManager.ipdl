@@ -6,8 +6,6 @@ include protocol PBackground;
 include protocol PBackgroundSessionStorageCache;
 include PBackgroundSharedTypes;
 
-include "mozilla/dom/quota/SerializationHelpers.h";
-
 using mozilla::OriginAttributesPattern
   from "mozilla/OriginAttributes.h";
 

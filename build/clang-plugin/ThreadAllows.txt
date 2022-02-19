@@ -38,7 +38,6 @@ ICS parser
 IMAP
 IPC Launch
 IPDL Background
-IPDL UnitTest
 IdentityCrypto
 ImageBridgeChld
 LS Thread

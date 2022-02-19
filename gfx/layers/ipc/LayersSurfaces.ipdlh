@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include "gfxipc/ShadowLayerUtils.h";
-include "mozilla/GfxMessageUtils.h";
 
 using gfxPoint from "gfxPoint.h";
 using nsIntRegion from "nsRegion.h";
