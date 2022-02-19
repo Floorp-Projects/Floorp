@@ -588,16 +588,19 @@ bool IToplevelProtocol::Open(ScopedPort aPort, base::ProcessId aOtherPid) {
   return GetIPCChannel()->Open(std::move(aPort), mSide);
 }
 
-bool IToplevelProtocol::Open(MessageChannel* aChannel,
+bool IToplevelProtocol::Open(IToplevelProtocol* aTarget,
                              nsISerialEventTarget* aEventTarget,
                              mozilla::ipc::Side aSide) {
   SetOtherProcessId(base::GetCurrentProcId());
-  return GetIPCChannel()->Open(aChannel, aEventTarget, aSide);
+  aTarget->SetOtherProcessId(base::GetCurrentProcId());
+  return GetIPCChannel()->Open(aTarget->GetIPCChannel(), aEventTarget, aSide);
 }
 
-bool IToplevelProtocol::OpenOnSameThread(MessageChannel* aChannel, Side aSide) {
+bool IToplevelProtocol::OpenOnSameThread(IToplevelProtocol* aTarget,
+                                         Side aSide) {
   SetOtherProcessId(base::GetCurrentProcId());
-  return GetIPCChannel()->OpenOnSameThread(aChannel, aSide);
+  aTarget->SetOtherProcessId(base::GetCurrentProcId());
+  return GetIPCChannel()->OpenOnSameThread(aTarget->GetIPCChannel(), aSide);
 }
 
 void IToplevelProtocol::NotifyImpendingShutdown() {
