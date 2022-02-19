@@ -265,7 +265,7 @@ UiCompositorControllerChild::~UiCompositorControllerChild() = default;
 void UiCompositorControllerChild::OpenForSameProcess() {
   MOZ_ASSERT(IsOnUiThread());
 
-  mIsOpen = Open(mParent->GetIPCChannel(), mozilla::layers::CompositorThread(),
+  mIsOpen = Open(mParent, mozilla::layers::CompositorThread(),
                  mozilla::ipc::ChildSide);
 
   if (!mIsOpen) {
