@@ -3,6 +3,8 @@
 
 "use strict";
 
+Services.prefs.setBoolPref("extensions.blocklist.enabled", false);
+
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo(
@@ -291,16 +293,6 @@ add_task(
       manifest,
       files,
     });
-
-    Services.prefs.setBoolPref(
-      "extensions.webextensions.background-delayed-startup",
-      false
-    );
-    registerCleanupFunction(() =>
-      Services.prefs.clearUserPref(
-        "extensions.webextensions.background-delayed-startup"
-      )
-    );
 
     // This temporary directory is going to be removed from the
     // cleanup function, but also make it unique as we do for the

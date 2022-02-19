@@ -33,24 +33,9 @@ add_task(async function setup() {
 
   await AddonTestUtils.promiseStartupManager();
 
-  // Make sure background-delayed-startup is set to true (in some builds,
-  // in particular Thunderbird, it is set to false) otherwise the extension
-  // service worker will be started before the test cases can properly
-  // mock the behavior expected on browser startup by calling the
-  // nsIServiceWorkerManager.reloadRegistrationsForTest (and then the test task
-  // test_serviceworker_lifecycle_events will fail because the worker will
-  // refuse to be spawned while the extension is still disabled).
-  Services.prefs.setBoolPref(
-    "extensions.webextensions.background-delayed-startup",
-    true
-  );
-
   Services.prefs.setBoolPref("dom.serviceWorkers.testing.enabled", true);
 
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(
-      "extensions.webextensions.background-delayed-startup"
-    );
     Services.prefs.clearUserPref("dom.serviceWorkers.testing.enabled");
     Services.prefs.clearUserPref("dom.serviceWorkers.idle_timeout");
   });
@@ -267,8 +252,18 @@ add_task(async function test_serviceworker_lifecycle_events() {
   );
 
   info("Restart AddonManager (mocking Browser instance restart)");
-  ExtensionParent._resetStartupPromises();
-  await AddonTestUtils.promiseStartupManager();
+  // Start the addon manager with `earlyStartup: false` to keep the background service worker
+  // from being started right away:
+  //
+  // - the call to `swm.reloadRegistrationForTest()` that follows is making sure that
+  //   the previously registered service worker is in the same state it would be when
+  //   the entire browser is restarted.
+  //
+  // - if the background service worker is being spawned again by the time we call
+  //   `swm.reloadRegistrationForTest()`, ServiceWorkerUpdateJob would fail and trigger
+  //   an `mState == State::Started` diagnostic assertion from ServiceWorkerJob::Finish
+  //   and the xpcshell test will fail for the crash triggered by the assertion.
+  await AddonTestUtils.promiseStartupManager({ lateStartup: false });
   await extension.awaitStartup();
 
   info(
@@ -279,6 +274,8 @@ add_task(async function test_serviceworker_lifecycle_events() {
   info(
     "trigger delayed call to nsIServiceWorkerManager.registerForAddonPrincipal"
   );
+  // complete the startup notifications, then start the background
+  AddonTestUtils.notifyLateStartup();
   extension.extension.emit("start-background-script");
 
   info("Force activate the extension worker");
