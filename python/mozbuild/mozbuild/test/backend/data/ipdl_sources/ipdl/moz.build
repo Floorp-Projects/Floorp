@@ -4,13 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PREPROCESSED_IPDL_SOURCES += [
-    "foo1.ipdl",
-]
-
-IPDL_SOURCES += [
-    "foo.ipdl",
-    "foo2.ipdlh",
-]
+# This file just exists to establish a directory as the IPDL root directory.
 
 FINAL_LIBRARY = "dummy"

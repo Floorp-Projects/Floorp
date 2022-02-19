@@ -137,18 +137,11 @@ class CommonBackend(BuildBackend):
             self._handle_webidl_collection(obj)
 
         elif isinstance(obj, IPDLCollection):
-            self._handle_generated_sources(
-                mozpath.join(obj.objdir, f) for f in obj.all_generated_sources()
-            )
-            self._write_unified_files(
-                obj.unified_source_mapping, obj.objdir, poison_windows_h=False
-            )
             self._handle_ipdl_sources(
                 obj.objdir,
                 list(sorted(obj.all_sources())),
                 list(sorted(obj.all_preprocessed_sources())),
                 list(sorted(obj.all_regular_sources())),
-                obj.unified_source_mapping,
             )
 
         elif isinstance(obj, XPCOMComponentManifests):
