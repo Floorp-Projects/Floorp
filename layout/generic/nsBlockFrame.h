@@ -296,27 +296,21 @@ class nsBlockFrame : public nsContainerFrame {
   /**
    * Compute the final block size of this frame.
    *
-   * @param aReflowInput Data structure passed from parent during reflow.
-   * @param aStatus [in/out] The reflow status for this reflow operation. When
-   *        this function is called, aStatus should represent what our status
-   *        would be as if we were shrinkwrapping our children's block-size.
-   *        This function will then adjust aStatus before returning, if our
-   *        status is different in light of our actual final block-size and
-   *        current page/column's available block-size.
+   * @param aBri BlockReflowInput passed from parent during reflow.
+   *        Note: aBri.mReflowStatus is mostly an "input" parameter. When this
+   *        method is called, it should represent what our status would be as if
+   *        we were shrinkwrapping our children's block-size. This method will
+   *        then adjust it before returning if our status is different in light
+   *        of our actual final block-size and current page/column's available
+   *        block-size.
    * @param aBEndEdgeOfChildren The distance between this frame's block-start
    *        border-edge and the block-end edge of our last child's border-box.
    *        This is effectively our block-start border-padding plus the
    *        block-size of our children, precomputed outside of this function.
-   * @param aBorderPadding The margins representing the border padding for block
-   *        frames. Can be 0.
-   * @param aConsumed The block-size already consumed by our previous-in-flows.
    * @return our final block-size with respect to aReflowInput's writing-mode.
    */
-  nscoord ComputeFinalBSize(const ReflowInput& aReflowInput,
-                            nsReflowStatus& aStatus,
-                            nscoord aBEndEdgeOfChildren,
-                            const mozilla::LogicalMargin& aBorderPadding,
-                            nscoord aConsumed);
+  nscoord ComputeFinalBSize(BlockReflowInput& aBri,
+                            nscoord aBEndEdgeOfChildren);
 
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
               const ReflowInput& aReflowInput,

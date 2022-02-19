@@ -8,8 +8,6 @@
   /* ::::: Variables ::::: */
   --panel-description-color: hsl(0,0%,50%);
 
-  --focus-outline-color: -moz-mac-focusring;
-
   /* ::::: Styles ::::: */
   appearance: auto;
   -moz-default-appearance: dialog;

@@ -3784,8 +3784,6 @@ pref("extensions.webextensions.protocol.remote", true);
 // Enable userScripts API by default.
 pref("extensions.webextensions.userScripts.enabled", true);
 
-pref("extensions.webextensions.background-delayed-startup", false);
-
 // Whether or not the installed extensions should be migrated to the storage.local IndexedDB backend.
 pref("extensions.webextensions.ExtensionStorageIDB.enabled", true);
 
