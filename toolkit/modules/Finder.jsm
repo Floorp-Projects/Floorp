@@ -17,6 +17,12 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
   this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
   "FinderIterator",
   "resource://gre/modules/FinderIterator.jsm"
 );
@@ -517,6 +523,8 @@ Finder.prototype = {
 
   keyPress(aEvent) {
     let controller = this._getSelectionController(this._getWindow());
+    let accelKeyPressed =
+      AppConstants.platform == "macosx" ? aEvent.metaKey : aEvent.ctrlKey;
 
     switch (aEvent.keyCode) {
       case aEvent.DOM_VK_RETURN:
@@ -549,10 +557,18 @@ Finder.prototype = {
         controller.scrollPage(true);
         break;
       case aEvent.DOM_VK_UP:
-        controller.scrollLine(false);
+        if (accelKeyPressed) {
+          controller.completeScroll(false);
+        } else {
+          controller.scrollLine(false);
+        }
         break;
       case aEvent.DOM_VK_DOWN:
-        controller.scrollLine(true);
+        if (accelKeyPressed) {
+          controller.completeScroll(true);
+        } else {
+          controller.scrollLine(true);
+        }
         break;
     }
   },

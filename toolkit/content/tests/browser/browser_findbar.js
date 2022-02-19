@@ -1,6 +1,10 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
+const { ContentTaskUtils } = ChromeUtils.import(
+  "resource://testing-common/ContentTaskUtils.jsm"
+);
+
 const TEST_PAGE_URI = "data:text/html;charset=utf-8,The letter s.";
 // Using 'javascript' schema to bypass E10SUtils.canLoadURIInRemoteType, because
 // it does not allow 'data:' URI to be loaded in the parent process.
@@ -295,6 +299,69 @@ add_task(async function test_open_and_close_keys() {
   );
 
   ok(scrollPosition > 0, "Scrolled ok to " + scrollPosition);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+/**
+ * This test makes sure that keyboard navigation (for example arrow up/down,
+ * accel+arrow up/down) still works while the findbar is open.
+ */
+add_task(async function test_input_keypress() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "data:text/html,<body style='height: 5000px;'>Hello There</body>"
+  );
+
+  await gFindBarPromise;
+  let findBar = gFindBar;
+
+  is(findBar.hidden, true, "Findbar is hidden now.");
+  let openedPromise = BrowserTestUtils.waitForEvent(findBar, "findbaropen");
+  await EventUtils.synthesizeKey("f", { accelKey: true });
+  await openedPromise;
+
+  is(findBar.hidden, false, "Findbar should not be hidden.");
+
+  let scrollPromise = BrowserTestUtils.waitForContentEvent(
+    tab.linkedBrowser,
+    "scroll"
+  );
+  await EventUtils.synthesizeKey("KEY_ArrowDown");
+  await scrollPromise;
+
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.document.defaultView.innerHeight +
+          content.document.defaultView.pageYOffset >
+        0,
+      "Scroll with ArrowDown"
+    );
+  });
+
+  let completeScrollPromise = BrowserTestUtils.waitForContentEvent(
+    tab.linkedBrowser,
+    "scroll"
+  );
+  await EventUtils.synthesizeKey("KEY_ArrowDown", { accelKey: true });
+  await completeScrollPromise;
+
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.document.defaultView.innerHeight +
+          content.document.defaultView.pageYOffset >=
+        content.document.body.offsetHeight,
+      "Scroll with Accel+ArrowDown"
+    );
+  });
+
+  let closedPromise = BrowserTestUtils.waitForEvent(findBar, "findbarclose");
+  await EventUtils.synthesizeKey("KEY_Escape");
+  await closedPromise;
+
+  info("Scrolling ok");
 
   BrowserTestUtils.removeTab(tab);
 });
