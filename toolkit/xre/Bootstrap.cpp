@@ -98,6 +98,12 @@ class BootstrapImpl final : public Bootstrap {
   }
 #endif
 
+#ifdef MOZ_IPDL_TESTS
+  virtual int XRE_RunIPDLTest(int argc, char** argv) override {
+    return ::XRE_RunIPDLTest(argc, argv);
+  }
+#endif
+
 #ifdef MOZ_ENABLE_FORKSERVER
   virtual int XRE_ForkServer(int* argc, char*** argv) override {
     return ::XRE_ForkServer(argc, argv);
