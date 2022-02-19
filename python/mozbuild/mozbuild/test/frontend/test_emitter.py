@@ -1058,27 +1058,6 @@ class TestEmitterBasic(unittest.TestCase):
         expected = set(["bar/bar1.ipdl", "foo/foo1.ipdl"])
         self.assertEqual(pp_ipdls, expected)
 
-        generated_sources = set(ipdl_collection.all_generated_sources())
-        expected = set(
-            [
-                "bar.cpp",
-                "barChild.cpp",
-                "barParent.cpp",
-                "bar1.cpp",
-                "bar1Child.cpp",
-                "bar1Parent.cpp",
-                "bar2.cpp",
-                "foo.cpp",
-                "fooChild.cpp",
-                "fooParent.cpp",
-                "foo1.cpp",
-                "foo1Child.cpp",
-                "foo1Parent.cpp",
-                "foo2.cpp",
-            ]
-        )
-        self.assertEqual(generated_sources, expected)
-
     def test_local_includes(self):
         """Test that LOCAL_INCLUDES is emitted correctly."""
         reader = self.reader("local_includes")
