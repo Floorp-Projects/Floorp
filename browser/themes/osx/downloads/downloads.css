@@ -4,15 +4,6 @@
 
 %include ../../shared/downloads/downloads.inc.css
 
-/*** Panel and outer controls ***/
-
-#downloadsPanel[keyfocus] #downloadsSummary:focus {
-  outline: 2px -moz-mac-focusring solid;
-  outline-offset: -2px;
-}
-
-/*** List items and similar elements in the summary ***/
-
 :root {
   --downloads-item-height: 6em;
   --downloads-item-font-size-factor: 0.80;
@@ -20,14 +11,9 @@
   --downloads-item-disabled-opacity: 0.7;
 }
 
-.downloadButton:focus > .button-box {
-  outline: 2px -moz-mac-focusring solid;
-  outline-offset: -2px;
-}
-
-/*** Highlighted list items ***/
-
-#downloadsPanel[keyfocus] #downloadsListBox:focus > richlistitem[selected] {
-  outline: 2px -moz-mac-focusring solid;
-  outline-offset: -2px;
+.downloadButton:focus > .button-box,
+#downloadsPanel[keyfocus] #downloadsListBox:focus > richlistitem[selected],
+#downloadsPanel[keyfocus] #downloadsSummary:focus {
+  outline: var(--focus-outline);
+  outline-offset: calc(var(--focus-outline-width) * -1);
 }

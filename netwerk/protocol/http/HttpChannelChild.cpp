@@ -84,6 +84,7 @@ HttpChannelChild::HttpChannelChild()
       mKeptAlive(false),
       mIPCActorDeleted(false),
       mSuspendSent(false),
+      mIsFirstPartOfMultiPart(false),
       mIsLastPartOfMultiPart(false),
       mSuspendForWaitCompleteRedirectSetup(false),
       mRecvOnStartRequestSentCalled(false),
@@ -460,6 +461,7 @@ void HttpChannelChild::OnStartRequest(
   StoreAllRedirectsSameOrigin(aArgs.allRedirectsSameOrigin());
 
   mMultiPartID = aArgs.multiPartID();
+  mIsFirstPartOfMultiPart = aArgs.isFirstPartOfMultiPart();
   mIsLastPartOfMultiPart = aArgs.isLastPartOfMultiPart();
 
   if (aArgs.overrideReferrerInfo()) {
@@ -2686,6 +2688,15 @@ HttpChannelChild::GetPartID(uint32_t* aPartID) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   *aPartID = *mMultiPartID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::GetIsFirstPart(bool* aIsFirstPart) {
+  if (!mMultiPartID) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aIsFirstPart = mIsFirstPartOfMultiPart;
   return NS_OK;
 }
 
