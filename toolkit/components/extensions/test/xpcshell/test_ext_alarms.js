@@ -261,14 +261,11 @@ add_task(
     skip_if: () => ExtensionTestUtils.isInBackgroundServiceWorkerTests(),
     pref_set: [
       ["privacy.resistFingerprinting.reduceTimerPrecision.jitter", false],
-      ["extensions.webextensions.background-delayed-startup", true],
       ["extensions.eventPages.enabled", true],
     ],
   },
   async function test_alarm_persists() {
     await AddonTestUtils.promiseStartupManager();
-    // ensure normal delayed startup notification had already happened at some point
-    Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
 
     let extension = getAlarmExtension(
       { periodInMinutes: 0.01 },

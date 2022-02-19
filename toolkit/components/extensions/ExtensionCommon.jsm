@@ -2482,8 +2482,6 @@ class EventManager {
       if (listener) {
         // During startup only a subset of persisted listeners are primed.  As
         // well, each API determines whether to prime a specific listener.
-        // Additionally, if extensions.webextensions.background-delayed-startup
-        // is disabled we may not have primed listeners.
         let { primed } = listener;
         if (primed) {
           listener.primed = null;

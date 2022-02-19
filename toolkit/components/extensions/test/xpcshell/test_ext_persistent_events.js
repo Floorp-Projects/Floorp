@@ -158,11 +158,6 @@ function trackEvents(wrapper) {
 }
 
 add_task(async function setup() {
-  Services.prefs.setBoolPref(
-    "extensions.webextensions.background-delayed-startup",
-    true
-  );
-
   AddonTestUtils.init(global);
   AddonTestUtils.overrideCertDB();
   AddonTestUtils.createAppInfo(
@@ -498,14 +493,13 @@ add_task(async function test_shutdown_before_background_loaded() {
   // that the persistent listeners have not been unregistered.
 
   // Suppress background page start until an explicit notification.
-  ExtensionParent._resetStartupPromises();
   await Promise.all([
     promiseObservable("prime-event-listener", 1),
-    AddonTestUtils.promiseStartupManager(),
+    AddonTestUtils.promiseStartupManager({ earlyStartup: false }),
   ]);
   info("Triggering persistent event to force the background page to start");
   Services.obs.notifyObservers({ listenerArgs: 123 }, "fire-onEvent1");
-  Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
+  AddonTestUtils.notifyEarlyStartup();
   await extension.awaitMessage("bg_started");
   equal(await extension.awaitMessage("triggered"), 123, "triggered event");
 
@@ -516,10 +510,9 @@ add_task(async function test_shutdown_before_background_loaded() {
 
   // And lastly, verify that a primed listener is correctly removed when the
   // extension unloads normally before the delayed background page can load.
-  ExtensionParent._resetStartupPromises();
   await Promise.all([
     promiseObservable("prime-event-listener", 1),
-    AddonTestUtils.promiseStartupManager(),
+    AddonTestUtils.promiseStartupManager({ earlyStartup: false }),
   ]);
 
   info("Unloading extension before background page has loaded");
@@ -536,8 +529,6 @@ add_task(async function test_shutdown_before_background_loaded() {
 // put to sleep.
 add_task(async function test_background_restarted() {
   await AddonTestUtils.promiseStartupManager();
-  // ensure normal delayed startup notification had already happened at some point
-  Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
 
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
@@ -582,8 +573,6 @@ add_task(
   { prefs_set: [["extensions.eventPages.enabled", true]] },
   async function test_eventpage_startup() {
     await AddonTestUtils.promiseStartupManager();
-    // ensure normal delayed startup notification had already happened at some point
-    Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
 
     let extension = ExtensionTestUtils.loadExtension({
       useAddonManager: "permanent",
@@ -652,7 +641,7 @@ add_task(
       new Promise(resolve => extension.extension.once("shutdown", resolve)),
       AddonTestUtils.promiseShutdownManager(),
     ]);
-    await AddonTestUtils.promiseStartupManager();
+    await AddonTestUtils.promiseStartupManager({ lateStartup: false });
     await extension.awaitStartup();
     await testAfterRestart();
 
