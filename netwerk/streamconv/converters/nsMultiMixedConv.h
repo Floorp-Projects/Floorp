@@ -35,7 +35,7 @@ class nsPartChannel final : public nsIChannel,
                             public nsIMultiPartChannel {
  public:
   nsPartChannel(nsIChannel* aMultipartChannel, uint32_t aPartID,
-                nsIStreamListener* aListener);
+                bool aIsFirstPart, nsIStreamListener* aListener);
 
   void InitializeByteRange(int64_t aStart, int64_t aEnd);
   void SetIsLastPart() { mIsLastPart = true; }
@@ -83,6 +83,7 @@ class nsPartChannel final : public nsIChannel,
 
   uint32_t mPartID;  // unique ID that can be used to identify
                      // this part of the multipart document
+  bool mIsFirstPart;
   bool mIsLastPart{false};
 };
 
