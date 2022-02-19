@@ -28,19 +28,6 @@ namespace mozilla {
 /* static*/
 void CSSClipPathInstance::ApplyBasicShapeOrPathClip(
     gfxContext& aContext, nsIFrame* aFrame, const gfxMatrix& aTransform) {
-  aContext.NewPath();
-  RefPtr<Path> path =
-      CreateClipPathForFrame(aContext.GetDrawTarget(), aFrame, aTransform);
-  if (!path) {
-    return;
-  }
-  aContext.SetPath(path);
-  aContext.Clip();
-}
-
-/* static*/
-RefPtr<Path> CSSClipPathInstance::CreateClipPathForFrame(
-    gfx::DrawTarget* aDt, nsIFrame* aFrame, const gfxMatrix& aTransform) {
   const auto& clipPathStyle = aFrame->StyleSVGReset()->mClipPath;
   MOZ_ASSERT(clipPathStyle.IsShape() || clipPathStyle.IsBox() ||
                  clipPathStyle.IsPath(),
@@ -48,7 +35,14 @@ RefPtr<Path> CSSClipPathInstance::CreateClipPathForFrame(
 
   CSSClipPathInstance instance(aFrame, clipPathStyle);
 
-  return instance.CreateClipPath(aDt, aTransform);
+  aContext.NewPath();
+  RefPtr<Path> path =
+      instance.CreateClipPath(aContext.GetDrawTarget(), aTransform);
+  if (!path) {
+    return;
+  }
+  aContext.SetPath(path);
+  aContext.Clip();
 }
 
 /* static*/
