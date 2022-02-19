@@ -438,6 +438,11 @@ ExternalHelperAppParent::GetPartID(uint32_t* aPartID) {
 }
 
 NS_IMETHODIMP
+ExternalHelperAppParent::GetIsFirstPart(bool* aIsLastPart) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 ExternalHelperAppParent::GetIsLastPart(bool* aIsLastPart) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
