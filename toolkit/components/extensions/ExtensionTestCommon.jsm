@@ -236,6 +236,29 @@ function provide(obj, keys, value, override = false) {
 }
 
 ExtensionTestCommon = class ExtensionTestCommon {
+  // Called by AddonTestUtils.promiseShutdownManager to reset startup promises
+  static resetStartupPromises() {
+    ExtensionParent._resetStartupPromises();
+  }
+
+  // Called to notify "browser-delayed-startup-finished", which resolves
+  // ExtensionParent.browserPaintedPromise.  Thus must be resolved for
+  // primed listeners to be able to wake the extension.
+  static notifyEarlyStartup() {
+    Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
+    return ExtensionParent.browserPaintedPromise;
+  }
+
+  // Called to notify "extensions-late-startup", which resolves
+  // ExtensionParent.browserStartupPromise.  Normally, in Firefox, the
+  // notification would be "sessionstore-windows-restored", however
+  // mobile listens for "extensions-late-startup" so that is more useful
+  // in testing.
+  static notifyLateStartup() {
+    Services.obs.notifyObservers(null, "extensions-late-startup");
+    return ExtensionParent.browserStartupPromise;
+  }
+
   /**
    * Shortcut to more easily access WebExtensionPolicy.backgroundServiceWorkerEnabled
    * from mochitest-plain tests.
@@ -561,6 +584,8 @@ ExtensionTestCommon = class ExtensionTestCommon {
         incognitoOverride: data.incognitoOverride,
         temporarilyInstalled: !!data.temporarilyInstalled,
         TEST_NO_ADDON_MANAGER: true,
+        // By default we set TEST_NO_DELAYED_STARTUP to true
+        TEST_NO_DELAYED_STARTUP: !data.delayedStartup,
       },
       data.startupReason
     );

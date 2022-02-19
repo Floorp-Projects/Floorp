@@ -961,11 +961,7 @@ class ExtensionData {
     }
     // V2 addons can only use event pages if the pref is also flipped and
     // persistent is explicilty set to false.
-    let { persistent } = manifest.background;
-    if (!this.eventPagesEnabled && !persistent) {
-      this.logWarning("Event pages are not currently supported.");
-    }
-    return !this.eventPagesEnabled || persistent;
+    return !this.eventPagesEnabled || manifest.background.persistent;
   }
 
   async getExtensionVersionWithoutValidation() {
@@ -1089,6 +1085,15 @@ class ExtensionData {
         );
       }
       manifest.applications = manifest.browser_specific_settings;
+    }
+
+    if (
+      this.manifestVersion < 3 &&
+      manifest.background &&
+      !this.eventPagesEnabled &&
+      !manifest.background.persistent
+    ) {
+      this.logWarning("Event pages are not currently supported.");
     }
 
     this.id ??= manifest.applications?.gecko?.id;
@@ -2118,6 +2123,9 @@ class Extension extends ExtensionData {
 
     if (addonData.TEST_NO_ADDON_MANAGER) {
       this.dontSaveStartupData = true;
+    }
+    if (addonData.TEST_NO_DELAYED_STARTUP) {
+      this.testNoDelayedStartup = true;
     }
 
     this.addonData = addonData;

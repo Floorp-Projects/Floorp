@@ -16,10 +16,6 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-Services.prefs.setBoolPref(
-  "extensions.webextensions.background-delayed-startup",
-  true
-);
 Services.prefs.setBoolPref("extensions.eventPages.enabled", true);
 
 ChromeUtils.defineModuleGetter(
@@ -30,9 +26,6 @@ ChromeUtils.defineModuleGetter(
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
-  // resolve startup promises, we'll test waking a background
-  Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
-  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
 
   // Create an object to hold the values to which we will initialize the prefs.
   const PREFS = {

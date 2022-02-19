@@ -24,12 +24,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "DELAYED_STARTUP",
-  "extensions.webextensions.background-delayed-startup"
-);
-
 XPCOMUtils.defineLazyGetter(this, "serviceWorkerManager", () => {
   return Cc["@mozilla.org/serviceworkers/manager;1"].getService(
     Ci.nsIServiceWorkerManager
@@ -298,6 +292,10 @@ this.backgroundPage = class extends ExtensionAPI {
       extension.on("shutdown", done);
     });
 
+    extension.promiseBackgroundStarted = () => {
+      return bgStartupPromise;
+    };
+
     extension.wakeupBackground = () => {
       extension.emit("background-script-event");
       extension.wakeupBackground = () => bgStartupPromise;
@@ -325,10 +323,8 @@ this.backgroundPage = class extends ExtensionAPI {
     // to initialize the addon and create the persisted listeners.
     if (
       isInStartup &&
-      (!DELAYED_STARTUP ||
-        (extension.persistentBackground &&
-          extension.startupReason !== "APP_STARTUP") ||
-        ["ADDON_INSTALL", "ADDON_ENABLE"].includes(extension.startupReason))
+      (extension.testNoDelayedStartup ||
+        extension.startupReason !== "APP_STARTUP")
     ) {
       return this.build();
     }
