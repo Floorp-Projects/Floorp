@@ -106,7 +106,7 @@ process_types = [
         "IPDLUnitTest",
         "ipdlunittest",
         "IPDLUnitTest",
-        "PluginContainer",
+        "Self",
         "IPDLUnitTest",
         "IpdlUnitTest",
         "IPDLUNITTEST",
