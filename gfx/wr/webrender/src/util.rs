@@ -1240,15 +1240,6 @@ pub fn project_rect<F, T>(
     }
 }
 
-pub fn raster_rect_to_device_pixels(
-    rect: RasterRect,
-    device_pixel_scale: DevicePixelScale,
-) -> DeviceRect {
-    let world_rect = rect * Scale::new(1.0);
-    let device_rect = world_rect * device_pixel_scale;
-    device_rect.round_out()
-}
-
 /// Run the first callback over all elements in the array. If the callback returns true,
 /// the element is removed from the array and moved to a second callback.
 ///
