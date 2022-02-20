@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.creditcards
 
+import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.Menu
@@ -56,6 +57,7 @@ class CreditCardEditorFragment :
 
     private lateinit var interactor: CreditCardEditorInteractor
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -81,10 +83,20 @@ class CreditCardEditorFragment :
             creditCardEditorView = CreditCardEditorView(binding, interactor)
             creditCardEditorView.bind(creditCardEditorState)
 
-            binding.cardNumberInput.apply {
-                requestFocus()
-                placeCursorAtEnd()
-                showKeyboard()
+            binding.apply {
+                cardNumberInput.apply {
+                    requestFocus()
+                    placeCursorAtEnd()
+                    showKeyboard()
+                }
+                expiryMonthDropDown.setOnTouchListener { view, _ ->
+                    view?.hideKeyboard()
+                    false
+                }
+                expiryYearDropDown.setOnTouchListener { view, _ ->
+                    view?.hideKeyboard()
+                    false
+                }
             }
         }
     }
