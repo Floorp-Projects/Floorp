@@ -7,7 +7,7 @@ use api::units::*;
 use crate::clip::{ClipChainId, ClipNodeKind, ClipStore, ClipInstance};
 use crate::frame_builder::FrameBuilderConfig;
 use crate::internal_types::{FastHashMap, FastHashSet};
-use crate::picture::{PrimitiveList, PictureCompositeMode, PictureOptions, PicturePrimitive, SliceId};
+use crate::picture::{PrimitiveList, PictureCompositeMode, PicturePrimitive, SliceId};
 use crate::picture::{Picture3DContext, TileCacheParams, TileOffset};
 use crate::prim_store::{PrimitiveInstance, PrimitiveStore, PictureIndex};
 use crate::scene_building::SliceFlags;
@@ -629,7 +629,6 @@ fn create_tile_cache(
         PrimitiveFlags::IS_BACKFACE_VISIBLE,
         prim_list,
         scroll_root,
-        PictureOptions::default(),
     ));
 
     PictureIndex(pic_index)
