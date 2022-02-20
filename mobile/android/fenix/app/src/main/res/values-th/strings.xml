@@ -169,7 +169,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">ติดตั้ง</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">แท็บที่ซิงค์</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">แท็บที่ซิงค์</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">ซิงค์ใหม่</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -407,6 +407,9 @@
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">รูปพื้นหลัง</string>
 
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">ทางลัดที่ได้รับการสนับสนุน</string>
+
     <!-- Wallpapers -->
     <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
     <string name="wallpapers_item_name_content_description">รายการรูปพื้นหลัง: %1$s</string>
@@ -416,7 +419,7 @@
     <string name="wallpaper_updated_snackbar_action">ดู</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">แตะโลโก้เพื่อเปลี่ยนรูปพื้นหลัง</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">แตะโลโก้เพื่อเปลี่ยนรูปพื้นหลัง</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -722,7 +725,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">ป้อนคำค้นหา</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">ป้อนคำค้นหา</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">ป้อนคำค้นหา</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">ลบประวัติ</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -1671,7 +1676,9 @@
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">ไซต์เด่นที่เยี่ยมชมบ่อยที่สุด</string>
 
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">ทางลัด</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">ชื่อ</string>
 	<!-- Hint for renaming title of a top site -->
 	<string name="top_site_name_hint">ชื่อเว็บไซต์เด่น</string>
