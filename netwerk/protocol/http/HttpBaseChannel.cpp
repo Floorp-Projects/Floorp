@@ -35,6 +35,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/nsHTTPSOnlyUtils.h"
+#include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/ProcessIsolation.h"
@@ -339,7 +340,10 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
   // Construct connection info object
   nsAutoCString host;
   int32_t port = -1;
-  bool isHTTPS = mURI->SchemeIs("https");
+  bool isHTTPS =
+      StaticPrefs::network_http_encoding_trustworthy_is_https()
+          ? nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(mURI)
+          : mURI->SchemeIs("https");
 
   nsresult rv = mURI->GetAsciiHost(host);
   if (NS_FAILED(rv)) return rv;
@@ -1254,7 +1258,12 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
       break;
     }
 
-    if (gHttpHandler->IsAcceptableEncoding(val, mURI->SchemeIs("https"))) {
+    bool isHTTPS =
+        StaticPrefs::network_http_encoding_trustworthy_is_https()
+            ? nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(mURI)
+            : mURI->SchemeIs("https");
+
+    if (gHttpHandler->IsAcceptableEncoding(val, isHTTPS)) {
       RefPtr<nsHTTPCompressConv> converter = new nsHTTPCompressConv();
       nsAutoCString from(val);
       ToLowerCase(from);
