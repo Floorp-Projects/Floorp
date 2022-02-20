@@ -31,8 +31,7 @@ use crate::render_task_cache::RenderTaskCacheKeyKind;
 use crate::render_task_cache::{RenderTaskCacheKey, to_cache_size, RenderTaskParent};
 use crate::render_task::{RenderTaskKind, RenderTask};
 use crate::segment::SegmentBuilder;
-use crate::space::SpaceMapper;
-use crate::util::{clamp_to_scale_factor, pack_as_float, raster_rect_to_device_pixels};
+use crate::util::{clamp_to_scale_factor, pack_as_float};
 use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility, VisibilityState};
 
 
@@ -306,7 +305,7 @@ fn prepare_interned_prim_for_render(
                 // Pick the maximum dimension as scale
                 let world_scale = LayoutToWorldScale::new(scale_width.max(scale_height));
 
-                let scale_factor = world_scale * device_pixel_scale;
+                let scale_factor = world_scale * Scale::new(1.0);
                 let mut task_size = (LayoutSize::from_au(cache_key.size) * scale_factor).ceil().to_i32();
                 if task_size.width > MAX_LINE_DECORATION_RESOLUTION as i32 ||
                    task_size.height > MAX_LINE_DECORATION_RESOLUTION as i32 {
@@ -948,7 +947,6 @@ fn update_clip_task_for_brush(
     segments_store: &mut SegmentStorage,
     segment_instances_store: &mut SegmentInstanceStorage,
     clip_mask_instances: &mut Vec<ClipMaskKind>,
-    unclipped: &DeviceRect,
     device_pixel_scale: DevicePixelScale,
 ) -> Option<ClipTaskIndex> {
     let segments = match instance.kind {
@@ -1064,14 +1062,11 @@ fn update_clip_task_for_brush(
         let clip_mask_kind = update_brush_segment_clip_task(
             &segments[0],
             Some(&instance.vis.clip_chain),
-            frame_state.current_dirty_region().combined,
             root_spatial_node_index,
             pic_context.surface_index,
-            pic_state,
             frame_context,
             frame_state,
             &mut data_stores.clip,
-            unclipped,
             device_pixel_scale,
         );
         clip_mask_instances.push(clip_mask_kind);
@@ -1108,14 +1103,11 @@ fn update_clip_task_for_brush(
             let clip_mask_kind = update_brush_segment_clip_task(
                 &segment,
                 segment_clip_chain.as_ref(),
-                frame_state.current_dirty_region().combined,
                 root_spatial_node_index,
                 pic_context.surface_index,
-                pic_state,
                 frame_context,
                 frame_state,
                 &mut data_stores.clip,
-                unclipped,
                 device_pixel_scale,
             );
             clip_mask_instances.push(clip_mask_kind);
@@ -1144,16 +1136,6 @@ pub fn update_clip_task(
         info!("\tupdating clip task with pic rect {:?}", instance.vis.clip_chain.pic_coverage_rect);
     }
 
-    // Get the device space rect for the primitive if it was unclipped.
-    let unclipped = match get_unclipped_device_rect(
-        instance.vis.clip_chain.pic_coverage_rect,
-        &pic_state.map_pic_to_raster,
-        device_pixel_scale,
-    ) {
-        Some(rect) => rect,
-        None => return false,
-    };
-
     build_segments_if_needed(
         instance,
         frame_state,
@@ -1178,7 +1160,6 @@ pub fn update_clip_task(
         &mut scratch.segments,
         &mut scratch.segment_instances,
         &mut scratch.clip_mask_instances,
-        &unclipped,
         device_pixel_scale,
     ) {
         if instance.is_chased() {
@@ -1189,13 +1170,11 @@ pub fn update_clip_task(
         // Get a minimal device space rect, clipped to the screen that we
         // need to allocate for the clip mask, as well as interpolated
         // snap offsets.
-        let unadjusted_device_rect = match get_clipped_device_rect(
-            &unclipped,
-            &pic_state.map_raster_to_world,
-            frame_state.current_dirty_region().combined,
-            device_pixel_scale,
+        let unadjusted_device_rect = match frame_state.surfaces[pic_context.surface_index.0].get_surface_rect(
+            &instance.vis.clip_chain.pic_coverage_rect,
+            frame_context.spatial_tree,
         ) {
-            Some(device_rect) => device_rect,
+            Some(rect) => rect,
             None => return false,
         };
 
@@ -1244,14 +1223,11 @@ pub fn update_clip_task(
 pub fn update_brush_segment_clip_task(
     segment: &BrushSegment,
     clip_chain: Option<&ClipChainInstance>,
-    world_clip_rect: WorldRect,
     root_spatial_node_index: SpatialNodeIndex,
     surface_index: SurfaceIndex,
-    pic_state: &mut PictureState,
     frame_context: &FrameBuildingContext,
     frame_state: &mut FrameBuildingState,
     clip_data_store: &mut ClipDataStore,
-    unclipped: &DeviceRect,
     device_pixel_scale: DevicePixelScale,
 ) -> ClipMaskKind {
     let clip_chain = match clip_chain {
@@ -1263,29 +1239,12 @@ pub fn update_brush_segment_clip_task(
         return ClipMaskKind::None;
     }
 
-    let segment_world_rect = match pic_state.map_pic_to_world.map(&clip_chain.pic_coverage_rect) {
-        Some(rect) => rect,
-        None => return ClipMaskKind::Clipped,
-    };
-
-    let segment_world_rect = match segment_world_rect.intersection(&world_clip_rect) {
-        Some(rect) => rect,
-        None => return ClipMaskKind::Clipped,
-    };
-
-    // Get a minimal device space rect, clipped to the screen that we
-    // need to allocate for the clip mask, as well as interpolated
-    // snap offsets.
-    let device_rect = match get_clipped_device_rect(
-        unclipped,
-        &pic_state.map_raster_to_world,
-        segment_world_rect,
-        device_pixel_scale,
+    let device_rect = match frame_state.surfaces[surface_index.0].get_surface_rect(
+        &clip_chain.pic_coverage_rect,
+        frame_context.spatial_tree,
     ) {
-        Some(info) => info,
-        None => {
-            return ClipMaskKind::Clipped;
-        }
+        Some(rect) => rect,
+        None => return ClipMaskKind::Clipped,
     };
 
     let (device_rect, device_pixel_scale) = adjust_mask_scale_for_max_size(device_rect, device_pixel_scale);
@@ -1516,56 +1475,6 @@ fn build_segments_if_needed(
             *segment_instance_index = segment_instances_store.push(instance);
         };
     }
-}
-
-/// Retrieve the exact unsnapped device space rectangle for a primitive.
-fn get_unclipped_device_rect(
-    prim_rect: PictureRect,
-    map_to_raster: &SpaceMapper<PicturePixel, RasterPixel>,
-    device_pixel_scale: DevicePixelScale,
-) -> Option<DeviceRect> {
-    let raster_rect = map_to_raster.map(&prim_rect)?;
-    let world_rect = raster_rect * Scale::new(1.0);
-    Some(world_rect * device_pixel_scale)
-}
-
-/// Given an unclipped device rect, try to find a minimal device space
-/// rect to allocate a clip mask for, by clipping to the screen. This
-/// function is very similar to picture::get_raster_rects. It is far from
-/// ideal, and should be refactored as part of the support for setting
-/// scale per-raster-root.
-fn get_clipped_device_rect(
-    unclipped: &DeviceRect,
-    map_to_world: &SpaceMapper<RasterPixel, WorldPixel>,
-    world_clip_rect: WorldRect,
-    device_pixel_scale: DevicePixelScale,
-) -> Option<DeviceRect> {
-    let unclipped_raster_rect = {
-        let world_rect = (*unclipped) * Scale::new(1.0);
-        let raster_rect = world_rect * device_pixel_scale.inverse();
-
-        raster_rect.cast_unit()
-    };
-
-    let unclipped_world_rect = map_to_world.map(&unclipped_raster_rect)?;
-
-    let clipped_world_rect = unclipped_world_rect.intersection(&world_clip_rect)?;
-
-    let clipped_raster_rect = map_to_world.unmap(&clipped_world_rect)?;
-
-    let clipped_raster_rect = clipped_raster_rect.intersection(&unclipped_raster_rect)?;
-
-    // Ensure that we won't try to allocate a zero-sized clip render task.
-    if clipped_raster_rect.is_empty() {
-        return None;
-    }
-
-    let clipped = raster_rect_to_device_pixels(
-        clipped_raster_rect,
-        device_pixel_scale,
-    );
-
-    Some(clipped)
 }
 
 // Ensures that the size of mask render tasks are within MAX_MASK_SIZE.
