@@ -5,5 +5,5 @@
 
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <corners android:radius="@dimen/tab_corner_radius"/>
-    <stroke android:width="@dimen/tab_border_width" android:color="?tabRing"/>
+    <stroke android:width="@dimen/tab_border_width" android:color="?accent"/>
 </shape>

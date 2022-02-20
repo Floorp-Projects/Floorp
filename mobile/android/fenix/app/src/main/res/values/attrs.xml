@@ -17,7 +17,6 @@
     <attr name="accentBright" format="reference" />
     <attr name="accentHighContrast" format="reference" />
     <attr name="accentUsedOnDarkBackground" format="reference" />
-    <attr name="tabRing" format="reference" />
     <attr name="snackbar" format="reference" />
     <attr name="foundation" format="reference" />
     <attr name="above" format="reference" />
