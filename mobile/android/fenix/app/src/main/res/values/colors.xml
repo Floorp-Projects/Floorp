@@ -274,9 +274,6 @@
     <color name="onboarding_illustration_deselected_private_theme">#99FBFBFE</color>
     <color name="prompt_login_edit_text_cursor_color_private_theme">@color/photonViolet50</color>
 
-    <!-- Tab Tray -->
-    <color name="tab_tray_item_media_background_private_theme">@color/photonViolet50</color>
-
     <!-- Normal theme colors for light mode -->
     <color name="caption_text_normal_theme">@color/photonLightGrey90</color>
     <color name="inset_normal_theme">@color/photonLightGrey30</color>

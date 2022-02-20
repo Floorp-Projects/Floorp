@@ -8,7 +8,7 @@
         android:width="24dp"
         android:height="24dp" />
     <!-- Background color of the circle -->
-    <solid android:color="?tabTrayItemMediaBackground" />
+    <solid android:color="?accent" />
     <!-- Outer circle border -->
     <stroke android:color="@color/photonWhite"
         android:width="2dp"/>
