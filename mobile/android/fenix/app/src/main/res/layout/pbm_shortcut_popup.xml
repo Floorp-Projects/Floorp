@@ -15,7 +15,7 @@
         android:layout_marginEnd="@dimen/cfr_triangle_margin_edge"
         android:importantForAccessibility="no"
         app:srcCompat="@drawable/ic_cfr_triangle"
-        app:tint="#7542E5" />
+        app:tint="@color/fx_mobile_layer_color_gradient_end" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"

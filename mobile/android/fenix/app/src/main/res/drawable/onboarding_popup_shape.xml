@@ -6,6 +6,6 @@
     <corners android:radius="12dp" />
     <gradient
         android:angle="45"
-        android:endColor="#AB71FF"
-        android:startColor="#592ACB" />
+        android:endColor="@color/fx_mobile_layer_color_gradient_end"
+        android:startColor="@color/fx_mobile_layer_color_gradient_start" />
 </shape>

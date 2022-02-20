@@ -20,9 +20,9 @@
     <color name="fx_mobile_layer_color_scrim_start">@color/photonInk80A96</color>
     <color name="fx_mobile_layer_color_scrim_end">@color/photonDarkGrey90A96</color>
     <!-- Tooltip -->
-    <color name="fx_mobile_layer_color_gradient_start" tools:ignore="UnusedResources">@color/photonViolet70</color>
+    <color name="fx_mobile_layer_color_gradient_start">@color/photonViolet70</color>
     <!-- Tooltip -->
-    <color name="fx_mobile_layer_color_gradient_end" tools:ignore="UnusedResources">@color/photonViolet40</color>
+    <color name="fx_mobile_layer_color_gradient_end">@color/photonViolet40</color>
 
     <!-- Action -->
     <!-- Primary button, Snackbar, Floating action button, Chip selected -->
