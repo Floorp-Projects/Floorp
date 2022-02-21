@@ -7,17 +7,17 @@
 #ifndef vm_StaticStrings_h
 #define vm_StaticStrings_h
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/TextUtils.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE
+#include "mozilla/TextUtils.h"  // mozilla::{IsAsciiDigit, IsAsciiLowercaseAlpha, IsAsciiUppercaseAlpha}
 
-#include <stddef.h>
-#include <stdint.h>
-#include <type_traits>
+#include <stddef.h>     // size_t
+#include <stdint.h>     // int32_t, uint32_t
+#include <type_traits>  // std::is_same_v
 
-#include "jstypes.h"
+#include "jstypes.h"  // JS_PUBLIC_API, js::Bit, js::BitMask
 
-#include "js/TypeDecls.h"
+#include "js/TypeDecls.h"  // JS::Latin1Char
 
 struct JS_PUBLIC_API JSContext;
 
