@@ -2019,6 +2019,8 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
 
   mozilla::ipc::IPCResult RecvFinish() override;
 
+  mozilla::ipc::IPCResult RecvSyncFinish() override;
+
   mozilla::ipc::IPCResult RecvLoaded() override;
 
   mozilla::ipc::IPCResult RecvLoadValueAndMoreItems(
@@ -2029,8 +2031,6 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
 
   mozilla::ipc::IPCResult RecvIncreasePeakUsage(const int64_t& aMinSize,
                                                 int64_t* aSize) override;
-
-  mozilla::ipc::IPCResult RecvPing() override;
 };
 
 class Observer final : public PBackgroundLSObserverParent {
@@ -5769,7 +5769,20 @@ mozilla::ipc::IPCResult Snapshot::RecvFinish() {
 
   if (NS_WARN_IF(mFinishReceived)) {
     MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Already finished");
+  }
+
+  Finish();
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult Snapshot::RecvSyncFinish() {
+  AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(mFinishReceived)) {
+    MOZ_CRASH_UNLESS_FUZZING();
+    return IPC_FAIL(this, "Already finished");
   }
 
   Finish();
@@ -6007,15 +6020,6 @@ mozilla::ipc::IPCResult Snapshot::RecvIncreasePeakUsage(const int64_t& aMinSize,
   mPeakUsage += size;
 
   *aSize = size;
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult Snapshot::RecvPing() {
-  AssertIsOnBackgroundThread();
-
-  // Do nothing here. This is purely a sync message allowing the child to
-  // confirm that the actor has received previous async message.
 
   return IPC_OK();
 }
