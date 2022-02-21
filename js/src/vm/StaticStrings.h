@@ -269,4 +269,4 @@ constexpr StaticStrings::SmallChar StaticStrings::toSmallChar(uint32_t c) {
 
 }  // namespace js
 
-#endif /* vm_StringType_h */
+#endif /* vm_StaticStrings_h */
