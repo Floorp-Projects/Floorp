@@ -12,7 +12,7 @@ import threading
 from mozdevice import ADBDevice
 from mozlog import get_proxy_logger
 from mozperftest.layers import Layer
-from mozperftest.utils import download_file, install_package, get_output_dir
+from mozperftest.utils import download_file, install_package, get_output_dir, ON_TRY
 from mozprocess import ProcessHandler
 
 
@@ -138,11 +138,13 @@ class ProxyRunner(Layer):
             self.mach_cmd.virtualenv_manager.python_path,
             "-m",
             "mozproxy.driver",
-            "--local",
             "--topsrcdir=" + self.mach_cmd.topsrcdir,
             "--objdir=" + self.mach_cmd.topobjdir,
             "--profiledir=" + self.get_arg("profile-directory"),
         ]
+
+        if not ON_TRY:
+            command.extend(["--local"])
 
         if metadata.flavor == "mobile-browser":
             command.extend(["--tool=%s" % "mitmproxy-android"])

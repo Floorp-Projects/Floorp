@@ -321,7 +321,6 @@ async function pageload_test(context, commands) {
         context.log.info(
           "Element not found! The cookie prompt may have not appeared, please check the screenshots."
         );
-        break;
       }
     }
   }
