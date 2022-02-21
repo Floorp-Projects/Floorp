@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_UnderlyingSinkCallbackHelpers_h
 #define mozilla_dom_UnderlyingSinkCallbackHelpers_h
 
+#include "js/loader/ModuleMapKey.h"
 #include "mozilla/HoldDropJSObjects.h"
-#include "mozilla/dom/ModuleMapKey.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnderlyingSinkBinding.h"
 #include "nsISupports.h"

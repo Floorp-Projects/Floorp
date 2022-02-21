@@ -320,12 +320,6 @@ inline void TraceWeakMapKeyEdge(JSTracer* trc, Zone* weakMapZone,
       trc, weakMapZone, gc::ConvertToBase(thingp->unbarrieredAddress()), name);
 }
 
-// Permanent atoms and well-known symbols are shared between runtimes and must
-// use a separate marking path so that we can filter them out of normal heap
-// tracing.
-template <typename T>
-void TraceProcessGlobalRoot(JSTracer* trc, T* thing, const char* name);
-
 // Trace a root edge that uses the base GC thing type, instead of a more
 // specific type.
 void TraceGenericPointerRoot(JSTracer* trc, gc::Cell** thingp,

@@ -18,6 +18,7 @@
     "nsIEffectiveTLDService": "eTLD",
     "nsIEnterprisePolicies": "policies",
     "nsIEventListenerService": "els",
+    "nsIFOG": "fog",
     "nsIFocusManager": "focus",
     "nsIIOService": "io",
     "nsILoadContextInfoFactory": "loadContextInfo",

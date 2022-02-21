@@ -43,7 +43,7 @@ class nsColorPicker : public nsIColorPicker {
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init(mozIDOMWindowProxy* parent, const nsAString& title,
-                  const nsAString& aInitialColor);
+                  const nsAString& aInitialColor) override;
   NS_IMETHOD Open(nsIColorPickerShownCallback* aCallback) override;
 
  private:

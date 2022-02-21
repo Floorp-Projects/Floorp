@@ -83,10 +83,10 @@ add_task(async function testBreakpointInFunctionRelocation() {
   const dbg = await initDebuggerWithAbsoluteURL(BASE_URL + "doc-breakpoint-reload.html", "script.js");
 
   let source = findSource(dbg, "script.js");
-  await selectSource(dbg, source.url);
+  await selectSource(dbg, source);
 
   info("Add breakpoint in bar()")
-  await addBreakpoint(dbg, source.url, 3);
+  await addBreakpoint(dbg, source, 3);
 
   info("Assert the text content on line 3 to make sure the breakpoint was set in bar()");
   assertTextContentOnLine(dbg, 3, 'return prefix + "bar";');

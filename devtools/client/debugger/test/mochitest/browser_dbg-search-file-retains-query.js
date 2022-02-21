@@ -9,9 +9,7 @@ add_task(async function() {
   const {
     selectors: { getActiveSearch, getFileSearchQuery },
   } = dbg;
-  const source = findSource(dbg, "simple1.js");
-
-  await selectSource(dbg, source.url);
+  await selectSource(dbg, "simple1.js");
 
   // Open search bar
   pressKey(dbg, "fileSearch");

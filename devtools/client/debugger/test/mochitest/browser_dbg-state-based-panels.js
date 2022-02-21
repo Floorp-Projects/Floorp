@@ -5,7 +5,7 @@
 // Tests that breakpoint panels open when their relevant breakpoint is hit
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-sources.html", "simple1");
+  const dbg = await initDebugger("doc-sources.html", "simple1.js");
 
   clickElementWithSelector(dbg, ".breakpoints-pane h2");
 

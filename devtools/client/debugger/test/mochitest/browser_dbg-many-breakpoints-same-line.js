@@ -9,10 +9,10 @@
 const BREAKPOINT_LINE = 5;
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "simple2");
+  const dbg = await initDebugger("doc-scripts.html", "simple2.js");
 
-  await selectSource(dbg, "simple2");
-  await waitForSelectedSource(dbg, "simple2");
+  await selectSource(dbg, "simple2.js");
+  await waitForSelectedSource(dbg, "simple2.js");
 
   await testSimpleAndLog(dbg);
 
@@ -21,14 +21,14 @@ add_task(async function() {
 
 async function testSimpleAndLog(dbg) {
   info("Add a simple breakpoint");
-  await addBreakpoint(dbg, "simple2", BREAKPOINT_LINE);
+  await addBreakpoint(dbg, "simple2.js", BREAKPOINT_LINE);
 
   info("Add a log breakpoint, replacing the breakpoint into a logpoint");
   await setLogPoint(dbg, BREAKPOINT_LINE, "`log point ${x}`");
   await waitForLog(dbg, "`log point ${x}`");
   await assertLogBreakpoint(dbg, BREAKPOINT_LINE);
 
-  const bp = findBreakpoint(dbg, "simple2", BREAKPOINT_LINE);
+  const bp = findBreakpoint(dbg, "simple2.js", BREAKPOINT_LINE);
   is(bp.options.logValue, "`log point ${x}`", "log breakpoint value is correct");
 
   info("Eval foo() and trigger the breakpoints. If this freeze here, it means that the log point has been ignored.");
@@ -49,7 +49,7 @@ async function testLogUpdates(dbg) {
   await waitForLog(dbg, "`log point`");
   await assertLogBreakpoint(dbg, BREAKPOINT_LINE);
 
-  const bp = findBreakpoint(dbg, "simple2", BREAKPOINT_LINE);
+  const bp = findBreakpoint(dbg, "simple2.js", BREAKPOINT_LINE);
   is(bp.options.logValue, "`log point`", "log breakpoint value is correct");
 
   info("Edit the log breakpoint");
@@ -57,7 +57,7 @@ async function testLogUpdates(dbg) {
   await waitForLog(dbg, "`log point` + ` edited`");
   await assertLogBreakpoint(dbg, BREAKPOINT_LINE);
 
-  const bp2 = findBreakpoint(dbg, "simple2", BREAKPOINT_LINE);
+  const bp2 = findBreakpoint(dbg, "simple2.js", BREAKPOINT_LINE);
   is(bp2.options.logValue, "`log point` + ` edited`", "log breakpoint value is correct");
 
   info("Eval foo() and trigger the breakpoints");

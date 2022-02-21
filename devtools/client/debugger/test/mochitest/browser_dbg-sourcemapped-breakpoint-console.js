@@ -59,7 +59,7 @@ async function evalInConsoleAtPoint(
   { line, column },
   statements
 ) {
-  const filename = `${target}://./${fixture}/input.`;
+  const url = `${target}://./${fixture}/input.js`;
   const fnName = (target + "-" + fixture).replace(/-([a-z])/g, (s, c) =>
     c.toUpperCase()
   );
@@ -67,7 +67,7 @@ async function evalInConsoleAtPoint(
   await invokeWithBreakpoint(
     dbg,
     fnName,
-    filename,
+    url,
     { line, column },
     async () => {
       await assertConsoleEval(dbg, statements);

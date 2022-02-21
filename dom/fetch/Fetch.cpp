@@ -624,7 +624,7 @@ class ResolveFetchPromise : public Runnable {
         mPromise(aPromise),
         mResponse(aResponse) {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     mPromise->MaybeResolve(mResponse);
     return NS_OK;
   }
