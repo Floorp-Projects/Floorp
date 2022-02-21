@@ -5,12 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScriptLoader.h"
-#include "ScriptLoadRequest.h"
-#include "ScriptTrace.h"
-#include "LoadedScript.h"
 #include "ModuleLoader.h"
-#include "ModuleLoaderBase.h"
-#include "ModuleLoadRequest.h"
 
 #include "jsapi.h"
 #include "js/ContextOptions.h"  // JS::ContextOptionsRef
@@ -20,11 +15,16 @@
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/Realm.h"
 #include "js/SourceText.h"
+#include "js/loader/LoadedScript.h"
+#include "js/loader/ScriptLoadRequest.h"
+#include "js/loader/ModuleLoaderBase.h"
+#include "js/loader/ModuleLoadRequest.h"
 #include "xpcpublic.h"
 #include "GeckoProfiler.h"
 #include "nsIContent.h"
 #include "nsJSUtils.h"
 #include "mozilla/dom/AutoEntryScript.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 #include "nsGlobalWindowInner.h"
@@ -32,6 +32,7 @@
 #include "mozilla/LoadInfo.h"
 
 using JS::SourceText;
+using namespace JS::loader;
 
 namespace mozilla::dom {
 
