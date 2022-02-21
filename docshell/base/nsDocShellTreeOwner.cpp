@@ -1228,14 +1228,17 @@ bool ChromeTooltipListener::WebProgressShowedTooltip(
 //   -- the dom node the user hovered over    (mPossibleTooltipNode)
 void ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
                                              void* aChromeTooltipListener) {
-  auto self = static_cast<ChromeTooltipListener*>(aChromeTooltipListener);
-  if (self && self->mPossibleTooltipNode) {
-    // release tooltip target once done, no matter what we do here.
-    auto cleanup = MakeScopeExit([&] { self->mPossibleTooltipNode = nullptr; });
-    if (!self->mPossibleTooltipNode->IsInComposedDoc()) {
-      return;
-    }
-    // Check that the document or its ancestors haven't been replaced.
+  auto* self = static_cast<ChromeTooltipListener*>(aChromeTooltipListener);
+  if (!self || !self->mPossibleTooltipNode) {
+    return;
+  }
+  // release tooltip target once done, no matter what we do here.
+  auto cleanup = MakeScopeExit([&] { self->mPossibleTooltipNode = nullptr; });
+  if (!self->mPossibleTooltipNode->IsInComposedDoc()) {
+    return;
+  }
+  // Check that the document or its ancestors haven't been replaced.
+  {
     Document* doc = self->mPossibleTooltipNode->OwnerDoc();
     while (doc) {
       if (!doc->IsCurrentActiveDocument()) {
@@ -1243,53 +1246,34 @@ void ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
       }
       doc = doc->GetInProcessParentDocument();
     }
+  }
 
-    // The actual coordinates we want to put the tooltip at are relative to the
-    // toplevel docshell of our mWebBrowser.  We know what the screen
-    // coordinates of the mouse event were, which means we just need the screen
-    // coordinates of the docshell.  Unfortunately, there is no good way to
-    // find those short of groveling for the presentation in that docshell and
-    // finding the screen coords of its toplevel widget...
-    nsCOMPtr<nsIDocShell> docShell =
-        do_GetInterface(static_cast<nsIWebBrowser*>(self->mWebBrowser));
-    RefPtr<PresShell> presShell = docShell ? docShell->GetPresShell() : nullptr;
+  nsCOMPtr<nsIDocShell> docShell =
+      do_GetInterface(static_cast<nsIWebBrowser*>(self->mWebBrowser));
+  if (!docShell || !docShell->GetBrowsingContext()->IsActive()) {
+    return;
+  }
 
-    nsIWidget* widget = nullptr;
-    if (presShell) {
-      nsViewManager* vm = presShell->GetViewManager();
-      if (vm) {
-        nsView* view = vm->GetRootView();
-        if (view) {
-          nsPoint offset;
-          widget = view->GetNearestWidget(&offset);
-        }
-      }
-    }
+  // if there is text associated with the node, show the tip and fire
+  // off a timer to auto-hide it.
+  nsITooltipTextProvider* tooltipProvider = self->GetTooltipTextProvider();
+  if (!tooltipProvider) {
+    return;
+  }
+  nsString tooltipText;
+  nsString directionText;
+  bool textFound = false;
+  tooltipProvider->GetNodeText(self->mPossibleTooltipNode,
+                               getter_Copies(tooltipText),
+                               getter_Copies(directionText), &textFound);
 
-    if (!widget || !docShell || !docShell->GetBrowsingContext()->IsActive()) {
-      return;
-    }
-
-    // if there is text associated with the node, show the tip and fire
-    // off a timer to auto-hide it.
-    nsITooltipTextProvider* tooltipProvider = self->GetTooltipTextProvider();
-    if (tooltipProvider) {
-      nsString tooltipText;
-      nsString directionText;
-      bool textFound = false;
-      tooltipProvider->GetNodeText(self->mPossibleTooltipNode,
-                                   getter_Copies(tooltipText),
-                                   getter_Copies(directionText), &textFound);
-
-      if (textFound && (!self->mTooltipShownOnce ||
-                        tooltipText != self->mLastShownTooltipText)) {
-        // ShowTooltip expects screen-relative position.
-        self->ShowTooltip(self->mMouseScreenX, self->mMouseScreenY, tooltipText,
-                          directionText);
-        self->mLastShownTooltipText = std::move(tooltipText);
-        self->mLastDocshell = do_GetWeakReference(
-            self->mPossibleTooltipNode->OwnerDoc()->GetDocShell());
-      }
-    }
+  if (textFound && (!self->mTooltipShownOnce ||
+                    tooltipText != self->mLastShownTooltipText)) {
+    // ShowTooltip expects screen-relative position.
+    self->ShowTooltip(self->mMouseScreenX, self->mMouseScreenY, tooltipText,
+                      directionText);
+    self->mLastShownTooltipText = std::move(tooltipText);
+    self->mLastDocshell = do_GetWeakReference(
+        self->mPossibleTooltipNode->OwnerDoc()->GetDocShell());
   }
 }
