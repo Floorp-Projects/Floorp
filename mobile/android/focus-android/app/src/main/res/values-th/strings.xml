@@ -866,6 +866,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">เปลี่ยนชื่อ</string>
 
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">ชื่อทางลัด</string>
+
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">&lt;b&gt;จะไม่ลบ&lt;/b&gt;ภาพที่บันทึกไว้และแบ่งปันเมื่อคุณล้างประวัติของ %1$s</string>
@@ -881,6 +884,9 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_auto_battery_theme">กำหนดโดยตัวประหยัดแบตเตอรี่</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">ตามชุดตกแต่งอุปกรณ์</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">ไซต์ที่คุณร้องขอไม่รองรับ HTTPS</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
