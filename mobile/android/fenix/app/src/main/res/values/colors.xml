@@ -66,9 +66,9 @@
     <!-- Small heading, Text link -->
     <color name="fx_mobile_text_color_accent_disabled" tools:ignore="UnusedResources">@color/photonViolet70A80</color>
     <!-- Text Inverted/On Color -->
-    <color name="fx_mobile_text_color_oncolor_primary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
+    <color name="fx_mobile_text_color_oncolor_primary">@color/photonLightGrey05</color>
     <!-- Text Inverted/On Color -->
-    <color name="fx_mobile_text_color_oncolor_secondary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
+    <color name="fx_mobile_text_color_oncolor_secondary">@color/photonLightGrey40</color>
     <!-- Action Primary text -->
     <color name="fx_mobile_text_color_action_primary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Action Secondary text -->
@@ -90,7 +90,7 @@
     <!-- Disabled icon -->
     <color name="fx_mobile_icon_color_disabled" tools:ignore="UnusedResources">@color/photonDarkGrey90A40</color>
     <!-- Icon inverted (on color) -->
-    <color name="fx_mobile_icon_color_oncolor" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
+    <color name="fx_mobile_icon_color_oncolor">@color/photonLightGrey05</color>
     <!-- Information -->
     <color name="fx_mobile_icon_color_information">@color/photonBlue30</color>
     <!-- Icon button -->
@@ -244,7 +244,6 @@
     <!-- Misc colors applied universally-->
     <color name="suggestion_highlight_color">#5C592ACB</color>
     <color name="white_color">@color/photonLightGrey05</color>
-    <color name="neutral_text">@color/white_color</color>
     <color name="text_scale_example_text_color">#232749</color>
     <color name="sync_error_background_color">#FFF36E</color>
     <color name="sync_error_text_color">@color/photonYellow90</color>
