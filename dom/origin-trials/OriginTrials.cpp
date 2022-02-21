@@ -55,10 +55,10 @@ void OriginTrials::UpdateFromToken(const nsAString& aBase64EncodedToken,
   };
   auto result = origin_trials_ffi::origin_trials_parse_and_validate_token(
       decodedTokenSpan.data(), decodedTokenSpan.size(), &params);
-  if (!result.IsSuccess()) {
+  if (!result.IsOk()) {
     return;  // TODO(emilio): Maybe report to console or what not?
   }
-  OriginTrial trial = result.AsSuccess().trial;
+  OriginTrial trial = result.AsOk().trial;
   mEnabledTrials += trial;
 }
 

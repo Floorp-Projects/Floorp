@@ -24,6 +24,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/BitSet.h"
+#include "mozilla/OriginTrials.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/CallState.h"
 #include "mozilla/EventStates.h"
@@ -4410,6 +4411,8 @@ class Document : public nsINode,
 
   NotNull<const Encoding*> mCharacterSet;
   int32_t mCharacterSetSource;
+
+  OriginTrials mTrials;
 
   // This is just a weak pointer; the parent document owns its children.
   Document* mParentDocument;
