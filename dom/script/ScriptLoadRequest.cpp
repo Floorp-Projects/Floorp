@@ -44,7 +44,6 @@ ScriptFetchOptions::ScriptFetchOptions(mozilla::CORSMode aCORSMode,
                                        nsIGlobalObject* aWebExtGlobal)
     : mCORSMode(aCORSMode),
       mReferrerPolicy(aReferrerPolicy),
-      mIsPreload(false),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mWebExtGlobal(aWebExtGlobal) {
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -139,6 +138,7 @@ DOMScriptLoadContext::DOMScriptLoadContext(Element* aElement,
       mWasCompiledOMT(false),
       mOffThreadToken(nullptr),
       mRunnable(nullptr),
+      mIsPreload(false),
       mElement(aElement),
       mRequest(aRequest),
       mUnreportedPreloadError(NS_OK) {}
@@ -277,7 +277,21 @@ void DOMScriptLoadContext::PrioritizeAsPreload() {
   }
 }
 
+bool DOMScriptLoadContext::IsPreload() const {
+  if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
+    ModuleLoadRequest* root = mRequest->AsModuleRequest()->GetRootModule();
+    return root->mLoadContext->IsPreload();
+  }
+
+  MOZ_ASSERT_IF(mIsPreload, !GetScriptElement());
+  return mIsPreload;
+}
+
 nsIScriptElement* DOMScriptLoadContext::GetScriptElement() const {
+  if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
+    ModuleLoadRequest* root = mRequest->AsModuleRequest()->GetRootModule();
+    return root->mLoadContext->GetScriptElement();
+  }
   nsCOMPtr<nsIScriptElement> scriptElement = do_QueryInterface(mElement);
   return scriptElement;
 }
@@ -288,7 +302,7 @@ void DOMScriptLoadContext::SetIsLoadRequest(nsIScriptElement* aElement) {
   MOZ_ASSERT(IsPreload());
   // TODO: How to allow both to access fetch options
   mElement = do_QueryInterface(aElement);
-  mRequest->mFetchOptions->mIsPreload = false;
+  mIsPreload = false;
 }
 
 nsresult ScriptLoadRequest::GetScriptSource(JSContext* aCx,
