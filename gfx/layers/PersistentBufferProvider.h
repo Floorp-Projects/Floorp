@@ -24,6 +24,7 @@ class ClientWebGLContext;
 namespace gfx {
 class SourceSurface;
 class DrawTarget;
+class DrawTargetWebgl;
 }  // namespace gfx
 
 namespace layers {
@@ -149,8 +150,15 @@ class PersistentBufferProviderAccelerated
 
   bool CopySnapshotTo(gfx::DrawTarget* aDT) override;
 
+  already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(
+      const gfx::IntRect& aPersistedRect) override;
+
+  bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) override;
+
  protected:
   ~PersistentBufferProviderAccelerated() override;
+
+  gfx::DrawTargetWebgl* GetDrawTargetWebgl() const;
 };
 
 /**
