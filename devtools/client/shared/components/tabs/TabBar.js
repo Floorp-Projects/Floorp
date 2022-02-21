@@ -316,7 +316,7 @@ class Tabbar extends Component {
     });
 
     // Show a drop down menu with frames.
-    menu.popupAtTarget(target, this.props.menuDocument);
+    menu.popupAtTarget(target);
 
     return menu;
   }
