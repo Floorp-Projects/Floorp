@@ -25,13 +25,14 @@ NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(ModuleLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ModuleLoadRequest,
                                                 ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader, mModuleScript, mImports)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader, mModuleScript, mImports, mRootModule)
   tmp->ClearDynamicImport();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ModuleLoadRequest,
                                                   ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoader, mModuleScript, mImports)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoader, mModuleScript, mImports,
+                                    mRootModule)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleLoadRequest,
@@ -51,38 +52,39 @@ static VisitedURLSet* NewVisitedSetForTopLevelImport(nsIURI* aURI) {
 }
 
 /* static */
-ModuleLoadRequest* ModuleLoadRequest::CreateTopLevel(
+already_AddRefed<ModuleLoadRequest> ModuleLoadRequest::CreateTopLevel(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions, Element* aElement,
     const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader) {
-  auto* request = new ModuleLoadRequest(
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aFetchOptions, aIntegrity, aReferrer, true, /* is top level */
       false,                                            /* is dynamic import */
-      aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI));
+      aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI),
+      nullptr);
   DOMScriptLoadContext* context = new DOMScriptLoadContext(aElement, request);
   request->mLoadContext = context;
-  return request;
+  return request.forget();
 }
 
 /* static */
-ModuleLoadRequest* ModuleLoadRequest::CreateStaticImport(
+already_AddRefed<ModuleLoadRequest> ModuleLoadRequest::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {
-  auto request =
-      new ModuleLoadRequest(aURI, aParent->mFetchOptions, SRIMetadata(),
-                            aParent->mURI, false, /* is top level */
-                            false,                /* is dynamic import */
-                            aParent->mLoader, aParent->mVisitedSet);
-  DOMScriptLoadContext* context =
-      new DOMScriptLoadContext(aParent->mLoadContext->mElement, request);
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      aURI, aParent->mFetchOptions, SRIMetadata(), aParent->mURI,
+      false, /* is top level */
+      false, /* is dynamic import */
+      aParent->mLoader, aParent->mVisitedSet, aParent->GetRootModule());
+  DOMScriptLoadContext* context = new DOMScriptLoadContext(nullptr, request);
   context->mIsInline = false;
+  // Propagated Parent values. TODO: allow child modules to use root module's
+  // script mode.
   context->mScriptMode = aParent->GetLoadContext()->mScriptMode;
 
   request->mLoadContext = context;
-
-  return request;
+  return request.forget();
 }
 
 /* static */
-ModuleLoadRequest* ModuleLoadRequest::CreateDynamicImport(
+already_AddRefed<ModuleLoadRequest> ModuleLoadRequest::CreateDynamicImport(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
     Element* aElement, ScriptLoader* aLoader,
     JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
@@ -90,10 +92,11 @@ ModuleLoadRequest* ModuleLoadRequest::CreateDynamicImport(
   MOZ_ASSERT(aSpecifier);
   MOZ_ASSERT(aPromise);
 
-  auto request = new ModuleLoadRequest(
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aFetchOptions, SRIMetadata(), aBaseURL, true, /* is top level */
       true, /* is dynamic import */
-      aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI));
+      aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI),
+      nullptr);
 
   DOMScriptLoadContext* context = new DOMScriptLoadContext(aElement, request);
   context->mIsInline = false;
@@ -103,20 +106,22 @@ ModuleLoadRequest* ModuleLoadRequest::CreateDynamicImport(
   request->mDynamicSpecifier = aSpecifier;
   request->mDynamicPromise = aPromise;
 
-  HoldJSObjects(request);
+  HoldJSObjects(request.get());
 
-  return request;
+  return request.forget();
 }
 
 ModuleLoadRequest::ModuleLoadRequest(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
     const SRIMetadata& aIntegrity, nsIURI* aReferrer, bool aIsTopLevel,
-    bool aIsDynamicImport, ModuleLoader* aLoader, VisitedURLSet* aVisitedSet)
+    bool aIsDynamicImport, ModuleLoader* aLoader, VisitedURLSet* aVisitedSet,
+    ModuleLoadRequest* aRootModule)
     : ScriptLoadRequest(ScriptKind::eModule, aURI, aFetchOptions, aIntegrity,
                         aReferrer),
       mIsTopLevel(aIsTopLevel),
       mIsDynamicImport(aIsDynamicImport),
       mLoader(aLoader),
+      mRootModule(aRootModule),
       mVisitedSet(aVisitedSet) {}
 
 void ModuleLoadRequest::Cancel() {
