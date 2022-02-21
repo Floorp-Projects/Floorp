@@ -132,11 +132,11 @@
     <!-- Search -->
     <color name="fx_mobile_private_layer_color_3">@color/photonInk50</color>
     <!-- Homescreen background, Toolbar -->
-    <color name="fx_mobile_private_layer_color_4_start" tools:ignore="UnusedResources">@color/photonPurple70</color>
+    <color name="fx_mobile_private_layer_color_4_start">@color/photonPurple70</color>
     <!-- Homescreen background, Toolbar -->
-    <color name="fx_mobile_private_layer_color_4_center" tools:ignore="UnusedResources">@color/photonViolet80</color>
+    <color name="fx_mobile_private_layer_color_4_center">@color/photonViolet80</color>
     <!-- Homescreen background, Toolbar -->
-    <color name="fx_mobile_private_layer_color_4_end" tools:ignore="UnusedResources">@color/photonInk05</color>
+    <color name="fx_mobile_private_layer_color_4_end">@color/photonInk05</color>
     <!-- App Bar Top (edit), Text Cursor, Selected Tab Check -->
     <color name="fx_mobile_private_layer_color_accent" tools:ignore="UnusedResources">@color/photonViolet40</color>
     <!-- Selected tab -->
@@ -264,9 +264,6 @@
     <color name="scrimStart_private_theme">@color/photonInk80A96</color>
     <color name="scrimEnd_private_theme">@color/photonDarkGrey90A96</color>
     <color name="snackbar_private_theme">@color/photonInk20</color>
-    <color name="toolbar_start_gradient_private_theme">#7529A7</color>
-    <color name="toolbar_center_gradient_private_theme">#492E85</color>
-    <color name="toolbar_end_gradient_private_theme">#383372</color>
     <color name="toolbar_divider_color_private_theme">@color/photonDarkGrey10</color>
     <color name="sync_disconnected_icon_fill_private_theme">@color/photonYellow70</color>
     <color name="sync_disconnected_background_private_theme">#5B5846</color>

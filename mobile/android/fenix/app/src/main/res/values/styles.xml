@@ -243,9 +243,9 @@
         <item name="scrimEnd">@color/scrimEnd_private_theme</item>
         <item name="snackbar">@color/snackbar_private_theme</item>
         <item name="accentUsedOnDarkBackground">@color/accent_high_contrast_private_theme</item>
-        <item name="toolbarStartGradient">@color/toolbar_start_gradient_private_theme</item>
-        <item name="toolbarCenterGradient">@color/toolbar_center_gradient_private_theme</item>
-        <item name="toolbarEndGradient">@color/toolbar_end_gradient_private_theme</item>
+        <item name="toolbarStartGradient">@color/fx_mobile_private_layer_color_4_start</item>
+        <item name="toolbarCenterGradient">@color/fx_mobile_private_layer_color_4_center</item>
+        <item name="toolbarEndGradient">@color/fx_mobile_private_layer_color_4_end</item>
         <item name="toolbarDivider">@color/toolbar_divider_color_private_theme</item>
         <item name="fillLinkFromClipboard">@color/accent_high_contrast_private_theme</item>
         <item name="syncDisconnected">@color/sync_disconnected_icon_fill_private_theme</item>
