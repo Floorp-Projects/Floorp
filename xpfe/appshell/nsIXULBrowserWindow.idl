@@ -44,6 +44,8 @@ interface nsIXULBrowserWindow : nsISupports
 
   /**
    * Show/hide a tooltip (when the user mouses over a link, say).
+   *
+   * x and y coordinates are in device pixels.
    */
   void showTooltip(in long x, in long y, in AString tooltip, in AString direction,
                    in Element browser);
