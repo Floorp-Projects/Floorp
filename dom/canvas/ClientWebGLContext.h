@@ -1014,9 +1014,14 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   }
   void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
 
+  layers::TextureType GetTexTypeForSwapChain() const;
   void Present(WebGLFramebufferJS*, const bool webvr = false);
   void Present(WebGLFramebufferJS*, layers::TextureType,
                const bool webvr = false);
+  void CopyToSwapChain(
+      WebGLFramebufferJS*,
+      const webgl::SwapChainOptions& options = webgl::SwapChainOptions());
+  void EndOfFrame();
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(
       WebGLFramebufferJS*, const bool webvr = false) override;
   Maybe<layers::SurfaceDescriptor> PresentFrontBuffer(

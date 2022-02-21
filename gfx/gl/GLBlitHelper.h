@@ -217,9 +217,10 @@ class GLBlitHelper final {
                             GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
                             GLenum destTarget = LOCAL_GL_TEXTURE_2D) const;
 
-  void DrawBlitTextureToFramebuffer(
-      GLuint srcTex, const gfx::IntSize& srcSize, const gfx::IntSize& destSize,
-      GLenum srcTarget = LOCAL_GL_TEXTURE_2D) const;
+  void DrawBlitTextureToFramebuffer(GLuint srcTex, const gfx::IntSize& srcSize,
+                                    const gfx::IntSize& destSize,
+                                    GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
+                                    bool srcIsBGRA = false) const;
 
   bool BlitImageToFramebuffer(layers::Image* srcImage,
                               const gfx::IntSize& destSize,
