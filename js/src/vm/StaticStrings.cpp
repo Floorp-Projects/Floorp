@@ -6,22 +6,18 @@
 
 #include "vm/StaticStrings.h"
 
-#include "mozilla/Assertions.h"
-#include "mozilla/HashFunctions.h"
-#include "mozilla/Range.h"
+#include "mozilla/HashFunctions.h"  // mozilla::HashString
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stddef.h>  // size_t
+#include <stdint.h>  // uint32_t
 
-#include "NamespaceImports.h"
+#include "js/HashTable.h"   // js::HashNumber
+#include "js/TypeDecls.h"   // Latin1Char
+#include "vm/Realm.h"       // AutoAllocInAtomsZone
+#include "vm/StringType.h"  // JSString, JSLinearString
 
-#include "gc/Allocator.h"
-#include "gc/AllocKind.h"
-#include "js/HashTable.h"
-#include "js/TypeDecls.h"
-
-#include "vm/Realm-inl.h"
-#include "vm/StringType-inl.h"
+#include "vm/Realm-inl.h"       // AutoAllocInAtomsZone
+#include "vm/StringType-inl.h"  // NewInlineStringForAtom
 
 using namespace js;
 
