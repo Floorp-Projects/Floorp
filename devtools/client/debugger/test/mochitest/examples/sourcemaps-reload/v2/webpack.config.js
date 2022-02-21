@@ -1,12 +1,7 @@
 const path = require("path");
 const webpack = require("webpack");
 
-module.exports = {
-  entry: [path.join(__dirname, "original.js")],
-  output: {
-    path: __dirname,
-    filename: "bundle.js"
-  },
+const config = {
   devtool: "sourcemap",
   module: {
     loaders: [
@@ -18,5 +13,27 @@ module.exports = {
     ]
   },
   plugins: [
-  ]
+  ],
 };
+
+const originalBundle = Object.assign({}, config, {
+  entry: [
+    path.join(__dirname, "original.js"),
+  ],
+  output: {
+    path: __dirname,
+    filename: "bundle.js"
+  },
+});
+
+const replacedBundle = Object.assign({}, config, {
+  entry: [
+    path.join(__dirname, "new-original.js"),
+  ],
+  output: {
+    path: __dirname,
+    filename: "replaced-bundle.js"
+  },
+});
+
+module.exports = [originalBundle, replacedBundle];
