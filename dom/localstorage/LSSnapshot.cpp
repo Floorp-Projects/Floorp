@@ -932,7 +932,8 @@ nsresult LSSnapshot::Checkpoint() {
     MOZ_ASSERT(mWriteAndNotifyInfos);
 
     if (!mWriteAndNotifyInfos->IsEmpty()) {
-      MOZ_ALWAYS_TRUE(mActor->SendCheckpointAndNotify(*mWriteAndNotifyInfos));
+      MOZ_ALWAYS_TRUE(
+          mActor->SendAsyncCheckpointAndNotify(*mWriteAndNotifyInfos));
 
       mWriteAndNotifyInfos->Clear();
     }
@@ -945,7 +946,7 @@ nsresult LSSnapshot::Checkpoint() {
 
       MOZ_ASSERT(!writeInfos.IsEmpty());
 
-      MOZ_ALWAYS_TRUE(mActor->SendCheckpoint(writeInfos));
+      MOZ_ALWAYS_TRUE(mActor->SendAsyncCheckpoint(writeInfos));
 
       mWriteOptimizer->Reset();
     }
