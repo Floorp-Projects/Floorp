@@ -7,7 +7,7 @@ browser.browserAction.onClicked.addListener(tab => {
 				if (sessionInfo.tab.sessionId != null) {chrome.sessions.restore(sessionInfo.tab.sessionId);}else{}break;}}})});
 
 const BROWSER_VERSION = "8.4.8"
-const APP_ID = "floorp-global"
+const APP_ID = "floorp"
 const API_END_POINT = "https://repo.ablaze.one/api/"
 
 const Notify = (url, now, latest) =>{

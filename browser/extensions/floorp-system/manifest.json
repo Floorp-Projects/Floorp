@@ -28,7 +28,7 @@
 
   "page_action": {
     "browser_style": true,
-    "default_icon": "icons/icon.svg",
+    "default_icon": "icons/icon.png",
     "default_popup": "qr-code/popup.html",
     "show_matches": [
       "<all_urls>"
@@ -41,7 +41,7 @@
 
   "applications": {
     "gecko": {
-      "id": "floorp-system@floorp.ablaze.one"
+      "id": "floorp-systexasm@floorp.ablaze.one"
     }
   },
 
