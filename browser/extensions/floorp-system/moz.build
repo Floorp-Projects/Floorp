@@ -39,7 +39,7 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["zh_C
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["icons"] += [
     "icons/i.svg",
-    "icons/icon.svg",
+    "icons/icon.png",
     "icons/LICENSE",
     "icons/link-48.png",
 ]
