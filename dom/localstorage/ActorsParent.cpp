@@ -2017,7 +2017,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
   mozilla::ipc::IPCResult RecvAsyncCheckpointAndNotify(
       nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos) override;
 
-  mozilla::ipc::IPCResult RecvFinish() override;
+  mozilla::ipc::IPCResult RecvAsyncFinish() override;
 
   mozilla::ipc::IPCResult RecvSyncFinish() override;
 
@@ -5764,7 +5764,7 @@ mozilla::ipc::IPCResult Snapshot::RecvAsyncCheckpointAndNotify(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult Snapshot::RecvFinish() {
+mozilla::ipc::IPCResult Snapshot::RecvAsyncFinish() {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mFinishReceived)) {

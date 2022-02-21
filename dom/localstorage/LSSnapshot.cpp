@@ -961,7 +961,7 @@ nsresult LSSnapshot::Finish(bool aSync) {
   if (aSync) {
     MOZ_ALWAYS_TRUE(mActor->SendSyncFinish());
   } else {
-    MOZ_ALWAYS_TRUE(mActor->SendFinish());
+    MOZ_ALWAYS_TRUE(mActor->SendAsyncFinish());
   }
 
   mDatabase->NoteFinishedSnapshot(this);
