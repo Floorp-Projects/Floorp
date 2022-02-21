@@ -16,7 +16,7 @@ DIRS += [
     "floorp-rss-read",
     "floorpsync",
     "translate",
-    "tab-s",
+    "treestyletab",
     "floorp-system",
     "gesturefy",
 ]

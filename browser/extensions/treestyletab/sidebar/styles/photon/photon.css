@@ -1,0 +1,190 @@
+/*
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+@import url("/resources/ui-color.css");
+@import url("base.css");
+
+
+/* Coloring */
+
+:root {
+  --toolbar-non-lwt-bgcolor: var(--in-content-page-background);
+  --toolbar-non-lwt-textcolor: var(--in-content-page-color);
+
+  --tab-like-surface: var(--browser-bg-base, var(--toolbar-non-lwt-bgcolor));
+  --tab-surface-regular: var(--browser-bg-for-header-image, var(--tab-like-surface));
+  --tab-text-regular: var(--browser-fg, var(--toolbar-non-lwt-textcolor));
+  --tab-text-inverted: var(--browser-bg-more-lighter, var(--toolbar-non-lwt-bgcolor));
+  --tab-text-active: var(--tab-text);
+  --tab-text-active-inverted: var(--toolbar-non-lwt-bgcolor);
+  --tab-border: var(--browser-border, var(--browser-bg-more-darker, var(--in-content-box-border-color-mixed)));
+  --tab-surface-hover: var(--browser-bg-hover-for-header-image, var(--browser-bg-more-lighter, var(--in-content-box-background-hover)));
+  --tab-surface-active: var(--browser-bg-active-for-header-image, var(--face-highlight-more-lighter, var(--in-content-button-background-mixed)));
+  --tab-surface-active-hover: var(--browser-bg-active-for-header-image, var(--face-highlight-more-more-lighter, var(--in-content-button-background-active-mixed)));
+  --tab-dropmarker: var(--browser-fg, var(--toolbar-non-lwt-textcolor));
+  --throbber-color: var(--browser-loading-indicator, var(--tab-text));
+  --throbber-color-active: var(--browser-loading-indicator, var(--tab-text-active));
+
+  --tabbar-bg: var(--browser-bg-darker, darkgray);
+}
+
+:root,
+body,
+#background {
+  background-color: var(--browser-background, var(--tabbar-bg));
+  background-image: var(--browser-bg-images, none);
+  background-position: var(--browser-bg-position, left);
+  background-size: var(--browser-bg-size, auto);
+  background-repeat: var(--browser-bg-repeat, none);
+}
+:root.right,
+:root.right #background {
+  background-position: right;
+}
+
+@media not (prefers-color-scheme: dark) {
+  :root[color-scheme="system-color"] {
+    --tab-surface-regular: var(--browser-bg-for-header-image, var(--browser-bg-base, -moz-dialog));
+    --tab-text-regular: var(--browser-fg, -moz-dialogtext);
+    --tab-text-inverted: var(--browser-bg-more-lighter, -moz-dialog);
+    --tab-text-active: var(--tab-text-regular);
+    --tab-text-active-inverted: Highlight;
+    --tab-border: var(--browser-border, var(--browser-bg-more-darker, ThreeDShadow));
+    --tab-surface-hover: var(--browser-bg-hover-for-header-image, var(--browser-bg-more-lighter, ThreeDHighlight));
+    --tab-surface-active: var(--browser-bg-active-for-header-image, var(--face-highlight-more-lighter, Highlight));
+    --tab-surface-active-hover: var(--browser-bg-active-for-header-image, var(--face-highlight-more-more-lighter, Highlight));
+    --tab-dropmarker: var(--browser-fg, -moz-dialogtext);
+    --tabbar-bg: var(--browser-bg-darker, ThreeDShadow);
+  }
+  :root[color-scheme="system-color"] #background::after {
+    background: var(--browser-bg-darker, AppWorkspace);
+    opacity: 0.15;
+
+    bottom: 0;
+    content: "";
+    left: 0;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 20;
+  }
+}
+
+#tabbar {
+  scrollbar-color: var(--theme-colors-toolbar_bottom_separator, var(--in-content-button-background-hover-mixed))
+                   var(--theme-colors-toolbar, var(--in-content-box-background));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tab-highlighter: var(--browser-tab-highlighter, var(--dark-tab-line));
+    --tabbar-bg: var(--browser-bg-darker, var(--dark-frame));
+  }
+}
+
+tab-item,
+.after-tabs button,
+.after-tabs [role="button"],
+#subpanel-container,
+#dummy-tab-color-box {
+  --tab-surface: var(--tab-surface-regular);
+  --tab-text: var(--tab-text-regular);
+  --tab-text-shadow: var(--browser-textshadow-for-header-image, none);
+}
+tab-item-substance,
+.after-tabs button,
+.after-tabs [role="button"],
+#subpanel-container,
+#dummy-tab-color-box {
+  background: var(--tab-surface);
+  color: var(--tab-text);
+  text-shadow: var(--tab-text-shadow);
+}
+
+tab-item * {
+  color: var(--tab-text);
+}
+
+tab-item:not(.active) tab-item-substance:hover,
+.after-tabs button:hover,
+.after-tabs [role="button"]:hover {
+  --tab-surface: var(--tab-surface-hover);
+  --tab-text: var(--tab-text-regular);
+}
+
+#subpanel-selector-anchor:hover {
+  background: var(--tab-surface-hover);
+  color: var(--tab-text-regular);
+}
+
+tab-item.active {
+  --tab-surface: var(--tab-surface-active);
+  --throbber-color: var(--throbber-color-active);
+  --tab-text: var(--tab-text-active);
+  --tab-text-inverted: var(--tab-text-active-inverted);
+}
+tab-item.bundled-active,
+tab-item.active tab-item-substance:hover {
+  --tab-surface: var(--tab-surface-active-hover);
+}
+
+tab-closebox {
+  background: none transparent;
+  border: none 0 transparent;
+  margin: 0;
+  padding: 0.1em;
+}
+
+tab-item .burster {
+  --throbber-color: var(--tab-loading-fill);
+}
+
+
+
+/* Dropshadow */
+
+:root {
+  --shadow-color: rgba(0, 0, 0, 0.04);
+  --shadow-blur: 0.2em;
+}
+
+:root.left tab-item:not(.pinned):not(collapsed) tab-item-substance {
+  box-shadow: -0.3em 0.3em var(--shadow-blur) var(--shadow-color);
+}
+
+:root.right tab-item:not(.pinned):not(collapsed) tab-item-substance {
+  box-shadow: 0.3em 0.3em var(--shadow-blur) var(--shadow-color);
+}
+
+.after-tabs button,
+.after-tabs [role="button"] {
+  box-shadow: 0 0.3em var(--shadow-blur) var(--shadow-color);
+}
+
+
+:root.left #tabbar {
+  box-shadow: inset -0.2em 0.2em var(--shadow-blur) var(--shadow-color);
+}
+
+:root.right #tabbar {
+  box-shadow: inset 0.2em 0.2em var(--shadow-blur) var(--shadow-color);
+}
+
+
+/* Transparent tabs are shown above solid tabs.
+   We have to set z-index to show all tabs in the same layer. */
+tab-item {
+  z-index: auto;
+}
+
+.after-tabs button,
+.after-tabs [role="button"] {
+  z-index: 100;
+}
+

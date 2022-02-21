@@ -1,0 +1,297 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ * 
+ * The contents of these files are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use these files except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ * 
+ * The Original Code is the SidebarStyleTab.
+ * 
+ * The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
+ * Portions created by the Initial Developer are Copyright (C) 2010-2019
+ * the Initial Developer. All Rights Reserved.
+ * 
+ * Contributor(s): Philipp von Weitershausen <philipp@weitershausen.de>
+ *                 YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
+ * 
+ * ***** END LICENSE BLOCK ***** */
+
+:root {
+  --bg-color: #d4dde5;
+  --bg-color-inactive: #e8e8e8;
+  --shadow-color: #404040;
+  --shadow-color-inactive: #868686;
+  --tab-like-surface: #d4dde5;
+  --tab-surface-regular: transparent;
+  --tab-surface-active-color: #94A1C0;
+  --tab-surface-active-color-pale: #B4C1E0;
+  --tab-surface-active-gradient: linear-gradient(to bottom, #A0B0CF, #7386AB) repeat-x;
+  --tab-surface-active-gradient-pale: linear-gradient(to bottom, #C0D0EF, #93A6CB) repeat-x;
+  --tab-surface-active-gradient-inactive: linear-gradient(to bottom, #B4B4B4, #8A8A8A) repeat-x;
+  --tab-surface-active: var(--tab-surface-active-gradient);
+  --tab-surface-active-hover: var(--tab-surface-active);
+  --tab-text-regular: black;
+  --tab-text-inverted: white;
+  --tab-text-active: white;
+  --badge-bg-color: #91a0c0;
+  --badge-color-inactive: #b5b5b5;
+  --badge-bg-color-inactive: #929292;
+  --dropmarker-border-color: #577bf3;
+  --dropmarker-bg-color: #d0def5;
+  --throbber-color: white;
+  --throbber-color-active: white;
+  --throbber-shadow-color: var(--dropmarker-border-color);
+  --tab-text-shadow: 0 1px var(--shadow-color);
+
+  --tab-highlighted-highlight: white;
+  --tab-highlighted-glow: var(--dropmarker-border-color);
+  --tab-highlighted-base: var(--bg-color);
+
+  --multiselected-color: var(--tab-surface-active-gradient);
+  --multiselected-color-opacity: 0.35;
+}
+
+tab-item:not(.active) {
+  --throbber-color: var(--dropmarker-border-color);
+  --throbber-shadow-color: white;
+}
+
+/* Background colour for the tree sidebar (light blue when window is
+   active, grey otherwise) */
+:root,
+body,
+#background {
+  background: var(--bg-color);
+}
+
+:root:not(.active),
+:root:not(.active) #background {
+  background: var(--bg-color-inactive);
+}
+
+/* Use the splitter to display the border of tab-items */
+:root.left {
+  border-right: 1px solid var(--shadow-color);
+}
+:root:not(.active).left {
+  border-right-color: var(--shadow-color-inactive);
+}
+
+:root.right {
+  border-left: 1px solid var(--shadow-color);
+}
+:root:not(.active).right {
+  border-left-color: var(--shadow-color-inactive);
+}
+
+/* Style tabs themselves.  Get rid of most of the initial XUL styling */
+tab-item-substance {
+  border-top: 1px solid transparent;
+  height: 2.2em;     /* height including border! */
+  padding: 0.075em 3px 0.075em 2px;
+  z-index: 0;
+}
+
+/* macOS workaround */
+:root.platform-mac #tabbar:dir(rtl).overflow tab-item:not(.pinned) tab-item-substance {
+  padding-left: var(--scrollbar-placeholder-size); /* it will be enough larger than the default padding */
+}
+:root.platform-mac #tabbar:dir(ltr).overflow tab-item:not(.pinned) tab-item-substance {
+  padding-right: var(--scrollbar-placeholder-size); /* it will be enough larger than the default padding */
+}
+
+tab-item.active {
+  --tab-surface: var(--tab-surface-active-gradient);
+}
+tab-item.active tab-item-substance {
+  background: var(--tab-surface);
+  border-top: 1px solid var(--tab-surface-active-color);
+}
+
+tab-item.bundled-active {
+  --tab-surface: var(--tab-surface-active-gradient-pale);
+}
+tab-item.bundled-active tab-item-substance {
+  background: var(--tab-surface);
+  border-top: 1px solid var(--tab-surface-active-color-pale);
+}
+
+:root:not(.active) tab-item.active {
+  --tab-surface: var(--tab-surface-active-gradient-inactive);
+}
+:root:not(.active) tab-item.active tab-item-substance {
+  background: var(--tab-surface);
+  border-top: 1px solid var(--tab-surface-active-color-inactive);
+}
+
+/* Keep the close button at a safe distance from the tab label. */
+tab-closebox::after {
+  display: none;
+}
+tab-closebox {
+  width: 1.5em;
+  min-width: 1.5em;
+  height: 1.5em;
+  margin-left: 3px;
+  background: url("closetab.png") center center no-repeat;
+  opacity: 0.27;  /* turn black into #b9b9b9 */
+  border: 0 none;
+}
+
+tab-closebox:active {
+  opacity: 0.46;  /* turn black into #8a8a8a */
+}
+
+tab-item.active tab-closebox {
+  background-image: url("closetab-white.png");
+  opacity: 1;
+}
+
+tab-item:not(.active):not(#dummy-tab) tab-item-substance:not(:hover) tab-closebox {
+  display: none;
+}
+
+/* Tab label is without special decoration except when selected: then
+   the text is white and bold.
+   We need to apply text-shadow for .label-content instead of tab-label
+   because transparent underline for the high contrast mode should not
+   have text-shadow. */
+tab-item tab-label .label-content {
+  font-weight: normal;
+  line-height: 1.4;
+  color: var(--tab-text);
+  text-align: start;
+  text-shadow: none;
+  margin-bottom: 1px;
+  margin-left: 0.25em;
+  padding: 0 0 0.25em 0;
+}
+
+tab-item.active tab-label .label-content {
+  font-weight: bold;
+  color: var(--tab-text-active);
+  text-shadow: var(--tab-text-shadow);
+}
+
+tab-item.active tab-twisty {
+  color: white;
+}
+
+/* Make the tab counter look like the bubbles in Mail.app et.al. */
+.counter::before,
+.counter::after {
+  display: none;
+}
+
+.counter {
+  background-color: var(--badge-bg-color);
+  border-radius: 0.75em;
+  box-sizing: content-box;
+  color: var(--tab-text-active);
+  flex-shrink: 0;
+  font-size: 85%;
+  font-weight: bold;
+  min-width: 1em;
+  padding: 0.25em;
+  text-shadow: none;
+  text-align: center;
+}
+
+tab-item.active .counter {
+  background-color: var(--tab-text-active);
+  color: var(--badge-bg-color);
+}
+
+:root:not(.active) .counter {
+  background-color: var(--badge-bg-color-inactive);
+}
+:root:not(.active) tab-item.active .counter {
+  background-color: var(--tab-text-active);
+  color: var(--badge-color-inactive);
+}
+
+
+
+/* Drag'n'drop styling */
+
+/* Round blue rectangle around tabs that are dropping targets. */
+tab-item[data-drop-position="self"] tab-item-substance {
+  background: var(--dropmarker-bg-color);
+  border: 2px solid var(--dropmarker-border-color); /* not OSX's colour but Firefox's */
+  border-radius: 0.3em;
+  padding: 0 1px 0 8px;
+  outline: none !important;
+}
+
+/* White-blue-white separator for drop indicator. */
+tab-item[data-drop-position]:not([data-drop-position="self"]) tab-item-substance::before {
+  background: transparent !important;
+  max-height: 6px;
+  min-height: 6px;
+  border-image: url("dropmarker.png") 12 0 0 11 fill / 12px 0 0 11px;
+  border-image-outset: 6px 0 0 0;
+}
+
+tab-item:not(.faviconized)[data-drop-position="before"] tab-item-substance::before {
+  top: 6px;
+}
+
+
+.mutiple-highlighted tab-item:not(.highlighted) tab-item-substance {
+  opacity: 0.5;
+}
+
+
+
+/* changed from original SidebarStyleTab */
+
+.after-tabs button,
+.after-tabs [role="button"] {
+  background: transparent;
+  border: 0 none;
+}
+
+/* for rightside tab bar: "display:none" breaks the order of tab contents. */
+:root
+  tab-item:not(.active):not(#dummy-tab)
+  tab-item-substance:not(:hover)
+  tab-closebox {
+  display: -moz-box !important;
+  visibility: collapse !important;
+}
+
+
+/* for Multiple Tab Handler */
+tab-item:not(.active)[multipletab-ready-to-close="true"] tab-item-substance:not(:hover) tab-closebox {
+  visibility: visible;
+}
+
+
+
+/* hide regular active tab marker */
+.highlighter::before {
+  display: none !important;
+}
+
+
+/* multiselection of tabs */
+
+.mutiple-highlighted > tab-item.highlighted tab-item-substance::after {
+  background: var(--multiselected-color);
+  bottom: 0;
+  content: " ";
+  display: block;
+  left: 0;
+  opacity: var(--multiselected-color-opacity);
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 10;
+}

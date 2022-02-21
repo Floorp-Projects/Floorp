@@ -20,7 +20,7 @@ display: block !important;
 #floorp-legacy-sub-sub{
   color: var(--in-content-deemphasized-text) !important;
 margin: 4px 0 10px !important;
-line-height: 1.4em !important;  
+line-height: 1.4em !important;
 }
 
 #legacy-header{
@@ -257,9 +257,8 @@ checkbox {
   fill: currentColor;
   stroke: var(--in-content-page-background);
 }
-.navigation
-{
-  min-width: 259px;
+:root{
+  --in-content-sidebar-width: 252px !important;
 }
 
 /* All panes */
