@@ -130,18 +130,66 @@ PerformanceRecorder.prototype = {
    * actors, so the connection can handle them.
    */
   _registerListeners: function() {
-    this._timeline.on("*", this._onTimelineData);
-    this._memory.on("*", this._onTimelineData);
-    this._profiler.on("*", this._onProfilerEvent);
+    this._listenersAbortController = new AbortController();
+    const listenersOptions = { signal: this._listenersAbortController.signal };
+
+    this._timeline.on(
+      "markers",
+      data => this._onTimelineData("markers", data),
+      listenersOptions
+    );
+    this._timeline.on(
+      "ticks",
+      data => this._onTimelineData("ticks", data),
+      listenersOptions
+    );
+    this._timeline.on(
+      "memory",
+      data => this._onTimelineData("memory", data),
+      listenersOptions
+    );
+    this._timeline.on(
+      "frames",
+      data => this._onTimelineData("frames", data),
+      listenersOptions
+    );
+
+    this._memory.on(
+      "allocations",
+      data => this._onTimelineData("allocations", data),
+      listenersOptions
+    );
+    this._memory.on(
+      "garbage-collection",
+      data => this._onTimelineData("garbage-collection", data),
+      listenersOptions
+    );
+
+    this._profiler.on(
+      "console-api-profiler",
+      data => this._onProfilerEvent("console-api-profiler", data),
+      listenersOptions
+    );
+    this._profiler.on(
+      "profiler-stopped",
+      data => this._onProfilerEvent("profiler-stopped", data),
+      listenersOptions
+    );
+    this._profiler.on(
+      "profiler-status",
+      data => this._onProfilerEvent("profiler-status", data),
+      listenersOptions
+    );
   },
 
   /**
    * Unregisters listeners on events on the underlying actors.
    */
   _unregisterListeners: function() {
-    this._timeline.off("*", this._onTimelineData);
-    this._memory.off("*", this._onTimelineData);
-    this._profiler.off("*", this._onProfilerEvent);
+    if (this._listenersAbortController) {
+      this._listenersAbortController.abort();
+      this._listenersAbortController = null;
+    }
   },
 
   /**
@@ -251,32 +299,7 @@ PerformanceRecorder.prototype = {
    * - ticks
    * - allocations
    */
-  _onTimelineData: function(eventName, ...data) {
-    let eventData = Object.create(null);
-
-    switch (eventName) {
-      case "markers": {
-        eventData = { markers: data[0], endTime: data[1] };
-        break;
-      }
-      case "ticks": {
-        eventData = { delta: data[0], timestamps: data[1] };
-        break;
-      }
-      case "memory": {
-        eventData = { delta: data[0], measurement: data[1] };
-        break;
-      }
-      case "frames": {
-        eventData = { delta: data[0], frames: data[1] };
-        break;
-      }
-      case "allocations": {
-        eventData = data[0];
-        break;
-      }
-    }
-
+  _onTimelineData: function(eventName, eventData) {
     // Filter by only recordings that are currently recording;
     // TODO should filter by recordings that have realtimeMarkers enabled.
     const activeRecordings = this._recordings.filter(r => r.isRecording());

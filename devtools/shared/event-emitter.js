@@ -260,15 +260,6 @@ class EventEmitter {
       }
     }
 
-    // Backward compatibility with the SDK event-emitter: support wildcard listeners that
-    // will be called for any event. The arguments passed to the listener are the event
-    // type followed by the actual arguments.
-    // !!! This API will be removed by Bug 1391261.
-    const hasWildcardListeners = target[eventListeners].has("*");
-    if (type !== "*" && hasWildcardListeners) {
-      EventEmitter.emit(target, "*", type, ...rest);
-    }
-
     if (async) {
       return Promise.all(promises);
     }
