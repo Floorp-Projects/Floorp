@@ -115,6 +115,7 @@ add_task(async function testReloadingStableOriginalSource() {
  * This source is mapped to replaced-bundle.js.
  * This original source is removed and another original file: new-original.js
  * will replace the content of the removed-original.js in the replaced-bundle.js generated file.
+ * And finally, everything is removed, both original and generated source.
  */
 add_task(async function testReloadingReplacedOriginalSource() {
   testServer.backToFirstVersion();
@@ -160,4 +161,18 @@ add_task(async function testReloadingReplacedOriginalSource() {
   is(breakpoint.location.sourceUrl, newSource.url);
   is(breakpoint.location.line, 2);
   is(breakpoint.generatedLocation.line, 78);
+
+  info("Reload a last time to remove both original and generated sources entirely");
+  testServer.switchToNextVersion();
+  await reload(dbg);
+
+  // Let some time for breakpoint syncing to be buggy and recreated unexpected breakpoint
+  await wait(1000);
+
+  info("Assert that sources and breakpoints are gone and we aren't paused");
+  ok(!sourceExists(dbg, "removed-original.js"), "removed-original is not present");
+  ok(!sourceExists(dbg, "new-original.js"), "new-original is not present");
+  ok(!sourceExists(dbg, "replaced-bundle.js"), "replaced-bundle is not present");
+	assertNotPaused(dbg);
+  is(dbg.selectors.getBreakpointCount(), 0, "We no longer have any breakpoint");
 });
