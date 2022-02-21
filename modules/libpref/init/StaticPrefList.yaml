@@ -3172,15 +3172,39 @@
   value: 0
   mirror: always
 
-# Maximum total size for all full parsed scripts in each ScriptLoader instance.
-# -1 implies full parse everything.  Default value is 10MB for utf8 scripts.
-- name: dom.script_loader.full_parse_max_size
+# Select which parse/delazification strategy should be used while parsing
+# scripts off-main-thread. (see CompileOptions.h, DelazificationOption enum)
+#
+#   0: On-demand only. Delazification will be triggered only on the main thread
+#      before the execution of the function.
+#
+#   1: Depth-first. Delazify all functions off-thread in the order of appearance
+#      in the source.
+#
+# 255: Parse everything eagerly, from the first parse. All functions are parsed
+#      at the same time as the top-level of a file.
+- name: dom.script_loader.delazification.strategy
+  type: uint32_t
+  value: 255
+  mirror: always
+
+# Maximum total size after which the delazification strategy, specified by
+# `dom.script_loader.delazification.strategy`, is no longer applied, and the
+# on-demand strategy is used by default.
+#
+# -1 disable the threshold, and delazification strategy is applied to all
+# scripts.
+#
+# Default value is 10MB for utf8 scripts.
+- name: dom.script_loader.delazification.max_size
   type: int32_t
   value: 10485760
   mirror: always
 
-# Minimum memory, in GB, required to enable full parsing.
-- name: dom.script_loader.full_parse_min_mem
+# Minimum memory, in GB, required to enable delazification strategy, specified
+# by `dom.script_loader.delazification.strategy`. Otherwise, the on-demand
+# delazification strategy is used.
+- name: dom.script_loader.delazification.min_mem
   type: int32_t
   value: 2
   mirror: always
