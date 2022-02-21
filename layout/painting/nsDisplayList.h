@@ -2996,8 +2996,8 @@ class nsPaintedDisplayItem : public nsDisplayItem {
  * (HitTest()) internally build a temporary array of all
  * the items while they do the downward traversal, so overall they're still
  * linear time. We have optimized for efficient AppendToTop() of both
- * items and lists, with minimal codesize. AppendToBottom() is efficient too.
- */
+ * items and lists, with minimal codesize.
+ * */
 class nsDisplayList {
  public:
   class Iterator {
@@ -3145,65 +3145,12 @@ class nsDisplayList {
   }
 
   /**
-   * Append a new item to the bottom of the list. The item must be non-null
-   * and not already in a list.
-   */
-  void AppendToBottom(nsDisplayItem* aItem) {
-    if (!aItem) {
-      return;
-    }
-    MOZ_ASSERT(!aItem->mAbove, "Already in a list!");
-    aItem->mAbove = mSentinel.mAbove;
-    mSentinel.mAbove = aItem;
-    if (mTop == &mSentinel) {
-      mTop = aItem;
-    }
-    mLength++;
-  }
-
-  template <typename T, typename F, typename... Args>
-  void AppendNewToBottom(nsDisplayListBuilder* aBuilder, F* aFrame,
-                         Args&&... aArgs) {
-    AppendNewToBottomWithIndex<T>(aBuilder, aFrame, 0,
-                                  std::forward<Args>(aArgs)...);
-  }
-
-  template <typename T, typename F, typename... Args>
-  void AppendNewToBottomWithIndex(nsDisplayListBuilder* aBuilder, F* aFrame,
-                                  const uint16_t aIndex, Args&&... aArgs) {
-    nsDisplayItem* item = MakeDisplayItemWithIndex<T>(
-        aBuilder, aFrame, aIndex, std::forward<Args>(aArgs)...);
-
-    if (item) {
-      AppendToBottom(item);
-    }
-  }
-
-  /**
    * Removes all items from aList and appends them to the top of this list
    */
   void AppendToTop(nsDisplayList* aList) {
     if (aList->mSentinel.mAbove) {
       mTop->mAbove = aList->mSentinel.mAbove;
       mTop = aList->mTop;
-      aList->mTop = &aList->mSentinel;
-      aList->mSentinel.mAbove = nullptr;
-      mLength += aList->mLength;
-      aList->mLength = 0;
-    }
-  }
-
-  /**
-   * Removes all items from aList and prepends them to the bottom of this list
-   */
-  void AppendToBottom(nsDisplayList* aList) {
-    if (aList->mSentinel.mAbove) {
-      aList->mTop->mAbove = mSentinel.mAbove;
-      mSentinel.mAbove = aList->mSentinel.mAbove;
-      if (mTop == &mSentinel) {
-        mTop = aList->mTop;
-      }
-
       aList->mTop = &aList->mSentinel;
       aList->mSentinel.mAbove = nullptr;
       mLength += aList->mLength;
@@ -4732,6 +4679,8 @@ class nsDisplayCompositorHitTestInfo final : public nsDisplayItem {
   Maybe<int32_t> mOverrideZIndex;
 };
 
+class nsDisplayWrapper;
+
 /**
  * A class that lets you wrap a display list as a display item.
  *
@@ -4806,12 +4755,10 @@ class nsDisplayWrapList : public nsPaintedDisplayItem {
   }
 
   /**
-   * Creates a new nsDisplayWrapList that holds a pointer to the display list
-   * owned by the given nsDisplayItem. The new nsDisplayWrapList will be added
-   * to the bottom of this item's contents.
+   * Creates a new nsDisplayWrapper that holds a pointer to the display list
+   * owned by the given nsDisplayItem.
    */
-  void MergeDisplayListFromItem(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayWrapList* aItem);
+  nsDisplayWrapper* CreateShallowCopy(nsDisplayListBuilder* aBuilder);
 
   /**
    * Call this if the wrapped list is changed.

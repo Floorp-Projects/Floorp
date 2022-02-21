@@ -5215,12 +5215,20 @@ already_AddRefed<SourceSurface> PresShell::RenderSelection(
                              aScreenRect, aFlags);
 }
 
+void AddDisplayItemToBottom(nsDisplayList* aList, nsDisplayItem* aItem) {
+  nsDisplayList list;
+  list.AppendToTop(aItem);
+  list.AppendToTop(aList);
+  aList->AppendToTop(&list);
+}
+
 void PresShell::AddPrintPreviewBackgroundItem(nsDisplayListBuilder* aBuilder,
                                               nsDisplayList* aList,
                                               nsIFrame* aFrame,
                                               const nsRect& aBounds) {
-  aList->AppendNewToBottom<nsDisplaySolidColor>(aBuilder, aFrame, aBounds,
-                                                NS_RGB(115, 115, 115));
+  nsDisplayItem* item = MakeDisplayItem<nsDisplaySolidColor>(
+      aBuilder, aFrame, aBounds, NS_RGB(115, 115, 115));
+  AddDisplayItemToBottom(aList, item);
 }
 
 static bool AddCanvasBackgroundColor(const nsDisplayList* aList,
@@ -5274,16 +5282,15 @@ void PresShell::AddCanvasBackgroundColorItem(
   // color background behind a scrolled transparent background. Instead,
   // we'll try to move the color background into the scrolled content
   // by making nsDisplayCanvasBackground paint it.
-  // If we're only adding an unscrolled item, then pretend that we've
-  // already done it.
-  bool addedScrollingBackgroundColor =
-      !!(aFlags & AddCanvasBackgroundColorFlags::AppendUnscrolledOnly);
-  if (!aFrame->GetParent() && !addedScrollingBackgroundColor) {
+  bool addedScrollingBackgroundColor = false;
+  if (!aFrame->GetParent()) {
     nsIScrollableFrame* sf =
         aFrame->PresShell()->GetRootScrollFrameAsScrollable();
     if (sf) {
       nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
       if (canvasFrame && canvasFrame->IsVisibleForPainting()) {
+        // TODO: We should be able to set canvas background color during display
+        // list building to avoid calling this function.
         addedScrollingBackgroundColor = AddCanvasBackgroundColor(
             aList, canvasFrame, bgcolor, mHasCSSBackgroundColor);
       }
@@ -5299,8 +5306,9 @@ void PresShell::AddCanvasBackgroundColorItem(
       nsLayoutUtils::UsesAsyncScrolling(aFrame) && NS_GET_A(bgcolor) == 255;
 
   if (!addedScrollingBackgroundColor || forceUnscrolledItem) {
-    aList->AppendNewToBottom<nsDisplaySolidColor>(aBuilder, aFrame, aBounds,
-                                                  bgcolor);
+    nsDisplayItem* item = MakeDisplayItem<nsDisplaySolidColor>(
+        aBuilder, aFrame, aBounds, bgcolor);
+    AddDisplayItemToBottom(aList, item);
   }
 }
 
