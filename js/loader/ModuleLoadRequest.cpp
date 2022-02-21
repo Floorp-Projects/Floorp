@@ -11,8 +11,7 @@
 #include "LoadedScript.h"
 #include "ModuleLoaderBase.h"
 
-namespace mozilla {
-namespace dom {
+namespace JS::loader {
 
 #undef LOG
 #define LOG(args)                                                           \
@@ -55,10 +54,10 @@ VisitedURLSet* ModuleLoadRequest::NewVisitedSetForTopLevelImport(nsIURI* aURI) {
 
 ModuleLoadRequest::ModuleLoadRequest(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
-    const SRIMetadata& aIntegrity, nsIURI* aReferrer,
-    ScriptLoadContext* aContext, bool aIsTopLevel, bool aIsDynamicImport,
-    ModuleLoaderBase* aLoader, VisitedURLSet* aVisitedSet,
-    ModuleLoadRequest* aRootModule)
+    const mozilla::dom::SRIMetadata& aIntegrity, nsIURI* aReferrer,
+    mozilla::dom::ScriptLoadContext* aContext, bool aIsTopLevel,
+    bool aIsDynamicImport, ModuleLoaderBase* aLoader,
+    VisitedURLSet* aVisitedSet, ModuleLoadRequest* aRootModule)
     : ScriptLoadRequest(ScriptKind::eModule, aURI, aFetchOptions, aIntegrity,
                         aReferrer, aContext),
       mIsTopLevel(aIsTopLevel),
@@ -192,5 +191,4 @@ void ModuleLoadRequest::ClearDynamicImport() {
   mDynamicPromise = nullptr;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace JS::loader
