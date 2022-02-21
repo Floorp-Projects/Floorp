@@ -597,6 +597,7 @@ SearchService.prototype = {
 
     if (
       prevCurrentEngine &&
+      newCurrentEngine &&
       newCurrentEngine !== prevCurrentEngine &&
       prevMetaData &&
       settings.metaData &&
