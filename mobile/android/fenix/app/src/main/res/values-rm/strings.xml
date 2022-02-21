@@ -167,7 +167,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Installar</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Tabs sincronisads</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Tabs sincronisads</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Resincronisar</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -413,9 +413,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Mussar</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Tutga il logo per midar il maletg dal fund davos</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Tutga il logo per midar il maletg dal fund davos</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Mida il maletg dal fund davos cun tutgar il logo da Firefox sin la pagina da partenza</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Percurrer ed actualisar il maletg senza bandunar la pagina da partenza.</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Percurrer ed actualisar il maletg senza bandunar la pagina da partenza.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -722,7 +724,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Endatar in term da tschertga</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Endatar in term da tschertga</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Endatar terms da tschertga</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Stizzar la cronologia</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->

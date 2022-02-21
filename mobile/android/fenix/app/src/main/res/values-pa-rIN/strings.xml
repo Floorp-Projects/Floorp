@@ -175,7 +175,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">ਇੰਸਟਾਲ ਕਰੋ</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">ਸਿੰਕ ਕੀਤੀਆਂ ਟੈਬਾਂ</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">ਸਿੰਕ ਕੀਤੀਆਂ ਟੈਬਾਂ</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">ਮੁੜ-ਸਿੰਕ ਕਰੋ</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -425,9 +425,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">ਵੇਖੋ</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">ਵਾਲਪੇਪਰ ਬਦਲਣ ਲਈ ਲੋਗੋ ਨੂੰ ਛੂਹੋ</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">ਵਾਲਪੇਪਰ ਬਦਲਣ ਲਈ ਲੋਗੋ ਨੂੰ ਛੂਹੋ</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Firefox ਮੁੱਖ-ਸਫ਼ੇ ਲੋਗੋ ਨੂੰ ਛੂਹ ਕੇ ਵਾਲਪੇਪਰ ਬਦਲੋ</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">ਬਿਨਾਂ ਮੁੱਖ ਸਫ਼ਾ ਬਦਲੇ ਚਿੱਤਰ ਬਦਲੋ ਅਤੇ ਅੱਪਡੇਟ ਕਰੋ।</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">ਬਿਨਾਂ ਮੁੱਖ ਸਫ਼ਾ ਬਦਲੇ ਚਿੱਤਰ ਬਦਲੋ ਅਤੇ ਅੱਪਡੇਟ ਕਰੋ।</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -743,7 +745,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">ਖੋਜ ਸ਼ਬਦ ਦਿਓ</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">ਖੋਜ ਸ਼ਬਦ ਦਿਓ</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">ਖੋਜ ਸ਼ਬਦ ਦਿਓ</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">ਅਤੀਤ ਹਟਾਓ</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->

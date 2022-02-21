@@ -123,7 +123,7 @@
     <string name="recent_tabs_show_all">Показать все</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description_2">Показать кнопку всех недавних вкладок</string>
+    <string name="recent_tabs_show_all_content_description_2">Кнопка показа всех недавних вкладок</string>
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Показать все недавние вкладки</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
@@ -1711,7 +1711,7 @@
     <string name="top_sites_max_limit_confirmation_button">OK, понятно</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Самые посещаемые топ-сайты</string>
+    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Самые посещаемые сайты</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Ярлыки</string>

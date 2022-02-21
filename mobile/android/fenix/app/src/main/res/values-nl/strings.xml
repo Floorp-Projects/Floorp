@@ -175,7 +175,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Installeren</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Gesynchroniseerde tabbladen</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Gesynchroniseerde tabbladen</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Opnieuw synchroniseren</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -424,10 +424,12 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Weergeven</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Tik op het logo om de achtergrond te wijzigen</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Tik op het logo om de achtergrond te wijzigen</string>
 
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Wijzig uw achtergrond door op het Firefox-startpaginalogo te tikken</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Door afbeeldingen lopen en ze bijwerken zonder de startpagina te verlaten.</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Door afbeeldingen lopen en ze bijwerken zonder de startpagina te verlaten.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -740,7 +742,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Voer zoekterm in</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Voer zoekterm in</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Voer zoektermen in</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Geschiedenis verwijderen</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
