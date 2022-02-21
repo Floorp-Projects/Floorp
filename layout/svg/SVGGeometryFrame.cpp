@@ -733,6 +733,45 @@ void SVGGeometryFrame::Render(gfxContext* aContext, uint32_t aRenderComponents,
   }
 }
 
+bool SVGGeometryFrame::IsInvisible() const {
+  if (!StyleVisibility()->IsVisible()) {
+    return false;
+  }
+
+  const nsStyleSVG* style = StyleSVG();
+  SVGContextPaint* contextPaint =
+      SVGContextPaint::GetContextPaint(GetContent());
+
+  // Anything below will round to zero later down the pipeline.
+  float opacity_threshold = 1.0 / 128.0;
+
+  float elemOpacity = StyleEffects()->mOpacity;
+  if (elemOpacity <= opacity_threshold) {
+    return true;
+  }
+
+  if (!style->mFill.kind.IsNone() || IsSVGImageFrame()) {
+    float opacity = SVGUtils::GetOpacity(style->mFillOpacity, contextPaint);
+    if (opacity > opacity_threshold) {
+      return false;
+    }
+  }
+
+  if (!style->mStroke.kind.IsNone()) {
+    float opacity = SVGUtils::GetOpacity(style->mStrokeOpacity, contextPaint);
+    if (opacity > opacity_threshold) {
+      return false;
+    }
+  }
+
+  if (style->mMarkerStart.IsUrl() || style->mMarkerMid.IsUrl() ||
+      style->mMarkerEnd.IsUrl()) {
+    return false;
+  }
+
+  return true;
+}
+
 void SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
                                     const gfxMatrix& aTransform,
                                     imgDrawingParams& aImgParams) {

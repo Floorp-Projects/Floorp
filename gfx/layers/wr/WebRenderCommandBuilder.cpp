@@ -86,6 +86,7 @@ struct BlobItemData {
   // invalidation region
   UniquePtr<nsDisplayItemGeometry> mGeometry;
   DisplayItemClip mClip;
+  bool mInvisible;
   bool mUsed;  // initialized near construction
   // XXX: only used for debugging
   bool mInvalid;
@@ -100,7 +101,7 @@ struct BlobItemData {
   std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
 
   BlobItemData(DIGroup* aGroup, nsDisplayItem* aItem)
-      : mUsed(false), mGroup(aGroup) {
+      : mInvisible(false), mUsed(false), mGroup(aGroup) {
     mInvalid = false;
     mDisplayItemKey = aItem->GetPerFrameKey();
     AddFrame(aItem->Frame());
@@ -538,7 +539,9 @@ struct DIGroup {
         }
       }
     }
-    mActualBounds.OrWith(aData->mRect);
+    if (!aData->mInvisible) {
+      mActualBounds.OrWith(aData->mRect);
+    }
     aData->mClip = clip;
     GP("post mInvalidRect: %d %d %d %d\n", mInvalidRect.x, mInvalidRect.y,
        mInvalidRect.width, mInvalidRect.height);
@@ -665,6 +668,7 @@ struct DIGroup {
       // we don't want to send a new image that doesn't have any
       // items in it
       if (!hasItems || mVisibleRect.IsEmpty()) {
+        GP("Skipped group with no items\n");
         return;
       }
 
@@ -753,6 +757,10 @@ struct DIGroup {
       MOZ_ASSERT(item);
 
       BlobItemData* data = GetBlobItemData(item);
+      if (data->mInvisible) {
+        continue;
+      }
+
       LayerIntRect bounds = data->mRect;
       auto bottomRight = bounds.BottomRight();
 
@@ -1276,6 +1284,7 @@ bool Grouper::ConstructItemInsideInactive(
    * set it to 'true' we ensure that we're not using the value from the last
    * time that we painted */
   data->mInvalid = false;
+  data->mInvisible = aItem->IsInvisible();
 
   // we compute the geometry change here because we have the transform around
   // still

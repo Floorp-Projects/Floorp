@@ -2158,6 +2158,12 @@ class nsDisplayItem : public nsDisplayItemLink {
   virtual nsIFrame* FrameForInvalidation() const { return Frame(); }
 
   /**
+   * Display items can override this to communicate that they won't
+   * contribute any visual information (for example fully transparent).
+   */
+  virtual bool IsInvisible() const { return false; }
+
+  /**
    * Returns the printable name of this display item.
    */
   virtual const char* Name() const = 0;
@@ -4663,6 +4669,8 @@ class nsDisplayCompositorHitTestInfo final : public nsDisplayItem {
       const StackingContextHelper& aSc,
       layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
+
+  bool isInvisible() const { return true; }
 
   int32_t ZIndex() const override;
   void SetOverrideZIndex(int32_t aZIndex);
