@@ -71,9 +71,9 @@ sync protocol PBackgroundLSSnapshot
 parent:
   async DeleteMe();
 
-  async Checkpoint(LSWriteInfo[] writeInfos);
+  async AsyncCheckpoint(LSWriteInfo[] writeInfos);
 
-  async CheckpointAndNotify(LSWriteAndNotifyInfo[] writeAndNotifyInfos);
+  async AsyncCheckpointAndNotify(LSWriteAndNotifyInfo[] writeAndNotifyInfos);
 
   async Finish();
 
