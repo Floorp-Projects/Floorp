@@ -1494,6 +1494,8 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 
   if (aRequest->IsTextSource()) {
     if (!JS::CanCompileOffThread(cx, options, aRequest->ScriptTextLength())) {
+      TRACE_FOR_TEST(aRequest->GetScriptElement(),
+                     "scriptloader_main_thread_compile");
       return NS_OK;
     }
   } else {
@@ -1566,6 +1568,23 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
     MaybeSourceText maybeSource;
     nsresult rv = aRequest->GetScriptSource(cx, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (StaticPrefs::dom_expose_test_interfaces()) {
+      switch (options.eagerDelazificationStrategy()) {
+        case JS::DelazificationOption::OnDemandOnly:
+          TRACE_FOR_TEST(aRequest->GetScriptElement(),
+                         "delazification_on_demand_only");
+          break;
+        case JS::DelazificationOption::ConcurrentDepthFirst:
+          TRACE_FOR_TEST(aRequest->GetScriptElement(),
+                         "delazification_concurrent_depth_first");
+          break;
+        case JS::DelazificationOption::ParseEverythingEagerly:
+          TRACE_FOR_TEST(aRequest->GetScriptElement(),
+                         "delazification_parse_everything_eagerly");
+          break;
+      }
+    }
 
     aRequest->GetLoadContext()->mOffThreadToken =
         maybeSource.constructed<SourceText<char16_t>>()
