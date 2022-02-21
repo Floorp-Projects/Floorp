@@ -7,7 +7,7 @@
     <item
         android:id="@+id/share_bookmark_multi_select"
         android:icon="@drawable/ic_share"
-        app:iconTint="@color/white_color"
+        app:iconTint="@color/fx_mobile_icon_color_oncolor"
         android:title="@string/browser_menu_share"
         app:showAsAction="ifRoom" />
     <item

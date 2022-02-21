@@ -28,7 +28,7 @@ class TabCollectionTest {
         }
 
         // Returns a color for negative IDs
-        val defaultColor = ContextCompat.getColor(testContext, R.color.white_color)
+        val defaultColor = ContextCompat.getColor(testContext, R.color.fx_mobile_icon_color_oncolor)
         assertNotEquals(defaultColor, mockTabCollection(-123L).getIconColor(testContext))
     }
 

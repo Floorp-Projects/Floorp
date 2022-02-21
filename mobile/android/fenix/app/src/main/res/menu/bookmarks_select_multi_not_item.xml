@@ -7,7 +7,7 @@
     <item
         android:id="@+id/delete_bookmarks_multi_select"
         android:icon="@drawable/mozac_ic_delete"
-        app:iconTint="@color/white_color"
+        app:iconTint="@color/fx_mobile_icon_color_oncolor"
         android:title="@string/bookmark_menu_delete_button"
         app:showAsAction="ifRoom" />
 </menu>

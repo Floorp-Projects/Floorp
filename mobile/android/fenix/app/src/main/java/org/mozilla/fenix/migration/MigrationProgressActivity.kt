@@ -86,7 +86,12 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
         }
         binding.migrationButtonTextView.apply {
             text = getString(R.string.migration_update_app_button, getString(R.string.app_name))
-            setTextColor(ContextCompat.getColor(context, R.color.white_color))
+            setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.fx_mobile_text_color_oncolor_primary
+                )
+            )
         }
         binding.migrationButton.setBackgroundResource(R.drawable.migration_button_background)
         binding.migrationButtonProgressBar.visibility = View.INVISIBLE

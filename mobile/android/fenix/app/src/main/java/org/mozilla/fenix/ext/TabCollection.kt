@@ -19,7 +19,10 @@ import kotlin.math.abs
 fun TabCollection.getIconColor(context: Context): Int {
     val iconColors = context.resources.obtainTypedArray(R.array.collection_icon_colors)
     val index = abs(id % iconColors.length()).toInt()
-    val color = iconColors.getColor(index, ContextCompat.getColor(context, R.color.white_color))
+    val color = iconColors.getColor(
+        index,
+        ContextCompat.getColor(context, R.color.fx_mobile_icon_color_oncolor)
+    )
     iconColors.recycle()
     return color
 }

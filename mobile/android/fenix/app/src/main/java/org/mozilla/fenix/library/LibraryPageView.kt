@@ -34,7 +34,10 @@ open class LibraryPageView(
     ) {
         updateToolbar(
             title = title,
-            foregroundColor = ContextCompat.getColor(context, R.color.white_color),
+            foregroundColor = ContextCompat.getColor(
+                context,
+                R.color.fx_mobile_text_color_oncolor_primary
+            ),
             backgroundColor = context.getColorFromAttr(R.attr.accent)
         )
     }
