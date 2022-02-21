@@ -137,7 +137,9 @@ void ModuleLoader::SetModuleFetchFinishedAndResumeWaitingRequests(
   ModuleMapKey key(aRequest->mURI, aRequest->GetWebExtGlobal());
   RefPtr<GenericNonExclusivePromise::Private> promise;
   if (!mFetchingModules.Remove(key, getter_AddRefs(promise))) {
-    LOG(("ScriptLoadRequest (%p): Key not found in mFetchingModules",
+    LOG(
+        ("ScriptLoadRequest (%p): Key not found in mFetchingModules, "
+         "assuming we have an inline module or have finished fetching already",
          aRequest));
     return;
   }
@@ -208,9 +210,7 @@ nsresult ModuleLoader::ProcessFetchedModuleSource(ModuleLoadRequest* aRequest) {
     return rv;
   }
 
-  if (!aRequest->mIsInline) {
-    SetModuleFetchFinishedAndResumeWaitingRequests(aRequest, rv);
-  }
+  SetModuleFetchFinishedAndResumeWaitingRequests(aRequest, rv);
 
   if (!aRequest->mModuleScript->HasParseError()) {
     StartFetchingModuleDependencies(aRequest);
@@ -249,32 +249,8 @@ nsresult ModuleLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
                                                &introductionScript);
 
     if (NS_SUCCEEDED(rv)) {
-      if (aRequest->mWasCompiledOMT) {
-        JS::Rooted<JS::InstantiationStorage> storage(cx);
-
-        RefPtr<JS::Stencil> stencil = JS::FinishCompileModuleToStencilOffThread(
-            cx, aRequest->mOffThreadToken, storage.address());
-        if (stencil) {
-          JS::InstantiateOptions instantiateOptions(options);
-          module = JS::InstantiateModuleStencil(cx, instantiateOptions, stencil,
-                                                storage.address());
-        }
-
-        aRequest->mOffThreadToken = nullptr;
-        rv = module ? NS_OK : NS_ERROR_FAILURE;
-      } else {
-        MaybeSourceText maybeSource;
-        rv = aRequest->GetScriptSource(cx, &maybeSource);
-        if (NS_SUCCEEDED(rv)) {
-          rv = maybeSource.constructed<SourceText<char16_t>>()
-                   ? nsJSUtils::CompileModule(
-                         cx, maybeSource.ref<SourceText<char16_t>>(), global,
-                         options, &module)
-                   : nsJSUtils::CompileModule(
-                         cx, maybeSource.ref<SourceText<Utf8Unit>>(), global,
-                         options, &module);
-        }
-      }
+      rv = mLoader->CompileOrFinishModuleScript(cx, global, options, aRequest,
+                                                &module);
     }
 
     MOZ_ASSERT(NS_SUCCEEDED(rv) == (module != nullptr));
@@ -758,7 +734,9 @@ nsresult ModuleLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
   JSContext* cx = aes.cx();
 
   nsAutoCString profilerLabelString;
-  aRequest->GetProfilerLabel(profilerLabelString);
+  if (aRequest->HasLoadContext()) {
+    aRequest->GetLoadContext()->GetProfilerLabel(profilerLabelString);
+  }
 
   LOG(("ScriptLoadRequest (%p): Evaluate Module", aRequest));
   AUTO_PROFILER_MARKER_TEXT("ModuleEvaluation", JS,
@@ -771,7 +749,8 @@ nsresult ModuleLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
 
   ModuleLoadRequest* request = aRequest->AsModuleRequest();
   MOZ_ASSERT(request->mModuleScript);
-  MOZ_ASSERT(!request->mOffThreadToken);
+  MOZ_ASSERT_IF(request->HasLoadContext(),
+                !request->GetLoadContext()->mOffThreadToken);
 
   ModuleScript* moduleScript = request->mModuleScript;
   if (moduleScript->HasErrorToRethrow()) {
@@ -792,7 +771,10 @@ nsresult ModuleLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
   nsresult rv = InitDebuggerDataForModuleTree(cx, request);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  TRACE_FOR_TEST(aRequest->GetScriptElement(), "scriptloader_evaluate_module");
+  if (request->HasLoadContext()) {
+    TRACE_FOR_TEST(aRequest->GetLoadContext()->GetScriptElement(),
+                   "scriptloader_evaluate_module");
+  }
 
   JS::Rooted<JS::Value> rval(cx);
 
@@ -833,7 +815,10 @@ nsresult ModuleLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
     }
   }
 
-  TRACE_FOR_TEST_NONE(aRequest->GetScriptElement(), "scriptloader_no_encode");
+  if (aRequest->HasLoadContext()) {
+    TRACE_FOR_TEST_NONE(aRequest->GetLoadContext()->GetScriptElement(),
+                        "scriptloader_no_encode");
+  }
   aRequest->mCacheInfo = nullptr;
   return rv;
 }

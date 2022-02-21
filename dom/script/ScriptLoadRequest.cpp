@@ -67,19 +67,13 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoadRequest)
 NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptLoadRequest)
-  // XXX missing mLoadBlockedDocument ?
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions, mCacheInfo)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions, mCacheInfo, mLoadContext)
   tmp->mScript = nullptr;
-  if (Runnable* runnable = tmp->mRunnable.exchange(nullptr)) {
-    runnable->Release();
-  }
   tmp->DropBytecodeCacheReferences();
-  tmp->MaybeUnblockOnload();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions, mCacheInfo,
-                                    mLoadBlockedDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions, mCacheInfo, mLoadContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ScriptLoadRequest)
@@ -91,9 +85,49 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
                                      const SRIMetadata& aIntegrity,
                                      nsIURI* aReferrer)
     : mKind(aKind),
-      mScriptMode(ScriptMode::eBlocking),
+      mIsCanceled(false),
       mProgress(Progress::eLoading),
       mDataType(DataType::eUnknown),
+      mFetchOptions(aFetchOptions),
+      mIntegrity(aIntegrity),
+      mReferrer(aReferrer),
+      mScriptTextLength(0),
+      mScriptBytecode(),
+      mBytecodeOffset(0),
+      mURI(aURI),
+      mLineNo(1) {
+  MOZ_ASSERT(mFetchOptions);
+}
+
+//////////////////////////////////////////////////////////////
+// DOMScriptLoadContext
+//////////////////////////////////////////////////////////////
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMScriptLoadContext)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMScriptLoadContext)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMScriptLoadContext)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(DOMScriptLoadContext)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMScriptLoadContext)
+  // XXX missing mLoadBlockedDocument ?
+  if (Runnable* runnable = tmp->mRunnable.exchange(nullptr)) {
+    runnable->Release();
+  }
+  tmp->MaybeUnblockOnload();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMScriptLoadContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoadBlockedDocument, mRequest)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMScriptLoadContext)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+DOMScriptLoadContext::DOMScriptLoadContext(ScriptLoadRequest* aRequest)
+    : mScriptMode(ScriptMode::eBlocking),
       mScriptFromHead(false),
       mIsInline(true),
       mInDeferList(false),
@@ -101,27 +135,26 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
       mIsNonAsyncScriptInserted(false),
       mIsXSLT(false),
       mInCompilingList(false),
-      mIsCanceled(false),
-      mWasCompiledOMT(false),
       mIsTracking(false),
-      mFetchOptions(aFetchOptions),
+      mWasCompiledOMT(false),
       mOffThreadToken(nullptr),
       mRunnable(nullptr),
-      mScriptTextLength(0),
-      mScriptBytecode(),
-      mBytecodeOffset(0),
-      mURI(aURI),
-      mLineNo(1),
-      mIntegrity(aIntegrity),
-      mReferrer(aReferrer),
-      mUnreportedPreloadError(NS_OK) {
-  MOZ_ASSERT(mFetchOptions);
-}
+      mRequest(aRequest),
+      mUnreportedPreloadError(NS_OK) {}
 
 ScriptLoadRequest::~ScriptLoadRequest() {
+  if (mScript) {
+    DropBytecodeCacheReferences();
+  }
+  mLoadContext = nullptr;
+  DropJSObjects(this);
+}
+
+DOMScriptLoadContext::~DOMScriptLoadContext() {
   // When speculative parsing is enabled, it is possible to off-main-thread
   // compile scripts that are never executed.  These should be cleaned up here
   // if they exist.
+  mRequest = nullptr;
   MOZ_ASSERT_IF(
       !StaticPrefs::
           dom_script_loader_external_scripts_speculative_omt_parse_enabled(),
@@ -129,21 +162,16 @@ ScriptLoadRequest::~ScriptLoadRequest() {
 
   MaybeCancelOffThreadScript();
 
-  if (mScript) {
-    DropBytecodeCacheReferences();
-  }
-
   MaybeUnblockOnload();
-  DropJSObjects(this);
 }
 
-void ScriptLoadRequest::BlockOnload(Document* aDocument) {
+void DOMScriptLoadContext::BlockOnload(Document* aDocument) {
   MOZ_ASSERT(!mLoadBlockedDocument);
   aDocument->BlockOnload();
   mLoadBlockedDocument = aDocument;
 }
 
-void ScriptLoadRequest::MaybeUnblockOnload() {
+void DOMScriptLoadContext::MaybeUnblockOnload() {
   if (mLoadBlockedDocument) {
     mLoadBlockedDocument->UnblockOnload(false);
     mLoadBlockedDocument = nullptr;
@@ -157,10 +185,12 @@ void ScriptLoadRequest::SetReady() {
 
 void ScriptLoadRequest::Cancel() {
   mIsCanceled = true;
-  MaybeCancelOffThreadScript();
+  if (HasLoadContext()) {
+    GetLoadContext()->MaybeCancelOffThreadScript();
+  }
 }
 
-void ScriptLoadRequest::MaybeCancelOffThreadScript() {
+void DOMScriptLoadContext::MaybeCancelOffThreadScript() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mOffThreadToken) {
@@ -169,12 +199,12 @@ void ScriptLoadRequest::MaybeCancelOffThreadScript() {
 
   JSContext* cx = danger::GetJSContext();
   // Follow the same conditions as ScriptLoader::AttemptAsyncScriptCompile
-  if (IsModuleRequest()) {
+  if (mRequest->IsModuleRequest()) {
     JS::CancelCompileModuleToStencilOffThread(cx, mOffThreadToken);
-  } else if (IsSource()) {
+  } else if (mRequest->IsSource()) {
     JS::CancelCompileToStencilOffThread(cx, mOffThreadToken);
   } else {
-    MOZ_ASSERT(IsBytecode());
+    MOZ_ASSERT(mRequest->IsBytecode());
     JS::CancelDecodeStencilOffThread(cx, mOffThreadToken);
   }
 
@@ -198,31 +228,16 @@ ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {
   return static_cast<ModuleLoadRequest*>(this);
 }
 
-void ScriptLoadRequest::SetScriptMode(bool aDeferAttr, bool aAsyncAttr,
-                                      bool aLinkPreload) {
+void DOMScriptLoadContext::SetScriptMode(bool aDeferAttr, bool aAsyncAttr,
+                                         bool aLinkPreload) {
   if (aLinkPreload) {
     mScriptMode = ScriptMode::eLinkPreload;
   } else if (aAsyncAttr) {
     mScriptMode = ScriptMode::eAsync;
-  } else if (aDeferAttr || IsModuleRequest()) {
+  } else if (aDeferAttr || mRequest->IsModuleRequest()) {
     mScriptMode = ScriptMode::eDeferred;
   } else {
     mScriptMode = ScriptMode::eBlocking;
-  }
-}
-
-void ScriptLoadRequest::SetUnknownDataType() {
-  mDataType = DataType::eUnknown;
-  mScriptData.reset();
-}
-
-void ScriptLoadRequest::SetTextSource() {
-  MOZ_ASSERT(IsUnknownDataType());
-  mDataType = DataType::eTextSource;
-  if (StaticPrefs::dom_script_loader_external_scripts_utf8_parsing_enabled()) {
-    mScriptData.emplace(VariantType<ScriptTextBuffer<Utf8Unit>>());
-  } else {
-    mScriptData.emplace(VariantType<ScriptTextBuffer<char16_t>>());
   }
 }
 
@@ -244,7 +259,7 @@ void ScriptLoadRequest::SetScript(JSScript* aScript) {
 }
 
 // static
-void ScriptLoadRequest::PrioritizeAsPreload(nsIChannel* aChannel) {
+void DOMScriptLoadContext::PrioritizeAsPreload(nsIChannel* aChannel) {
   if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(aChannel)) {
     cos->AddClassFlags(nsIClassOfService::Unblocked);
   }
@@ -253,7 +268,7 @@ void ScriptLoadRequest::PrioritizeAsPreload(nsIChannel* aChannel) {
   }
 }
 
-void ScriptLoadRequest::PrioritizeAsPreload() {
+void DOMScriptLoadContext::PrioritizeAsPreload() {
   if (!IsLinkPreloadScript()) {
     // Do the prioritization only if this request has not already been created
     // as a preload.
@@ -261,26 +276,26 @@ void ScriptLoadRequest::PrioritizeAsPreload() {
   }
 }
 
-nsIScriptElement* ScriptLoadRequest::GetScriptElement() const {
+nsIScriptElement* DOMScriptLoadContext::GetScriptElement() const {
   nsCOMPtr<nsIScriptElement> scriptElement =
-      do_QueryInterface(mFetchOptions->mElement);
+      do_QueryInterface(mRequest->mFetchOptions->mElement);
   return scriptElement;
 }
 
-void ScriptLoadRequest::SetIsLoadRequest(nsIScriptElement* aElement) {
+void DOMScriptLoadContext::SetIsLoadRequest(nsIScriptElement* aElement) {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(!GetScriptElement());
   MOZ_ASSERT(IsPreload());
-  mFetchOptions->mElement = do_QueryInterface(aElement);
-  mFetchOptions->mIsPreload = false;
+  mRequest->mFetchOptions->mElement = do_QueryInterface(aElement);
+  mRequest->mFetchOptions->mIsPreload = false;
 }
 
 nsresult ScriptLoadRequest::GetScriptSource(JSContext* aCx,
                                             MaybeSourceText* aMaybeSource) {
   // If there's no script text, we try to get it from the element
-  if (mIsInline) {
+  if (HasLoadContext() && GetLoadContext()->mIsInline) {
     nsAutoString inlineData;
-    GetScriptElement()->GetScriptText(inlineData);
+    GetLoadContext()->GetScriptElement()->GetScriptText(inlineData);
 
     size_t nbytes = inlineData.Length() * sizeof(char16_t);
     JS::UniqueTwoByteChars chars(
@@ -335,7 +350,7 @@ nsresult ScriptLoadRequest::GetScriptSource(JSContext* aCx,
   return NS_OK;
 }
 
-void ScriptLoadRequest::GetProfilerLabel(nsACString& aOutString) {
+void DOMScriptLoadContext::GetProfilerLabel(nsACString& aOutString) {
   if (!profiler_is_active()) {
     aOutString.Append("<script> element");
     return;
@@ -346,13 +361,13 @@ void ScriptLoadRequest::GetProfilerLabel(nsACString& aOutString) {
   } else if (IsDeferredScript()) {
     aOutString.Append(" defer");
   }
-  if (IsModuleRequest()) {
+  if (mRequest->IsModuleRequest()) {
     aOutString.Append(" type=\"module\"");
   }
 
   nsAutoCString url;
-  if (mURI) {
-    mURI->GetAsciiSpec(url);
+  if (mRequest->mURI) {
+    mRequest->mURI->GetAsciiSpec(url);
   } else {
     url = "<unknown>";
   }
@@ -360,7 +375,7 @@ void ScriptLoadRequest::GetProfilerLabel(nsACString& aOutString) {
   if (mIsInline) {
     if (GetParserCreated() != NOT_FROM_PARSER) {
       aOutString.Append("> inline at line ");
-      aOutString.AppendInt(mLineNo);
+      aOutString.AppendInt(mRequest->mLineNo);
       aOutString.Append(" of ");
     } else {
       aOutString.Append("> inline (dynamically created) in ");
