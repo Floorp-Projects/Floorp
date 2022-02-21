@@ -6759,6 +6759,10 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
     }
   }
 
+  if (aHeaderField == nsGkAtoms::origin_trial) {
+    mTrials.UpdateFromToken(aData, NodePrincipal());
+  }
+
   if (aHeaderField == nsGkAtoms::headerDefaultStyle) {
     SetPreferredStyleSheetSet(aData);
   }
@@ -10906,7 +10910,7 @@ void Document::RetrieveRelevantHeaders(nsIChannel* aChannel) {
     static const char* const headers[] = {
         "default-style", "content-style-type", "content-language",
         "content-disposition", "refresh", "x-dns-prefetch-control",
-        "x-frame-options",
+        "x-frame-options", "origin-trial",
         // add more http headers if you need
         // XXXbz don't add content-location support without reading bug
         // 238654 and its dependencies/dups first.
@@ -10954,7 +10958,7 @@ void Document::RetrieveRelevantHeaders(nsIChannel* aChannel) {
 void Document::ProcessMETATag(HTMLMetaElement* aMetaElement) {
   // set any HTTP-EQUIV data into document's header data as well as url
   nsAutoString header;
-  aMetaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+  aMetaElement->GetAttr(nsGkAtoms::httpEquiv, header);
   if (!header.IsEmpty()) {
     // Ignore META REFRESH when document is sandboxed from automatic features.
     nsContentUtils::ASCIIToLower(header);
@@ -10964,7 +10968,7 @@ void Document::ProcessMETATag(HTMLMetaElement* aMetaElement) {
     }
 
     nsAutoString result;
-    aMetaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
+    aMetaElement->GetAttr(nsGkAtoms::content, result);
     if (!result.IsEmpty()) {
       RefPtr<nsAtom> fieldAtom(NS_Atomize(header));
       SetHeaderData(fieldAtom, result);
