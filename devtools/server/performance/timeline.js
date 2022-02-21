@@ -145,16 +145,6 @@ Timeline.prototype = {
               );
             }
           }
-
-          // Emit some helper events for "DOMContentLoaded" and "Load" markers.
-          if (this._withDocLoadingEvents) {
-            if (
-              marker.name == "document::DOMContentLoaded" ||
-              marker.name == "document::Load"
-            ) {
-              this.emit("doc-loading", marker, endTime);
-            }
-          }
         }
       }
     }
