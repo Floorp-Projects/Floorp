@@ -4,8 +4,8 @@
 
 // Tests the outline pane fuzzy filtering of outline items
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "long");
-  await selectSource(dbg, "long", 1);
+  const dbg = await initDebugger("doc-scripts.html", "long.js");
+  await selectSource(dbg, "long.js", 1);
   findElementWithSelector(dbg, ".outline-tab").click();
 
   // turn off alphetical sort if active

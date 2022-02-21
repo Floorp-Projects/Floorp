@@ -11,12 +11,12 @@ add_task(async function() {
     "opts.js"
   );
 
-  await selectSource(dbg, "times2");
-  await addBreakpoint(dbg, "times2", 2);
+  await selectSource(dbg, "times2.js");
+  await addBreakpoint(dbg, "times2.js", 2);
 
   invokeInTab("keepMeAlive");
   await waitForPaused(dbg);
-  await waitForSelectedSource(dbg, "times2");
+  await waitForSelectedSource(dbg, "times2.js");
 
   info("Test previewing in the original location");
   await assertPreviews(dbg, [
@@ -31,7 +31,7 @@ add_task(async function() {
   ]);
 
   info("Test that you can not preview in another original file");
-  await selectSource(dbg, "output");
+  await selectSource(dbg, "output.js");
   await hoverAtPos(dbg, { line: 2, ch: 16 });
   await assertNoTooltip(dbg);
 });

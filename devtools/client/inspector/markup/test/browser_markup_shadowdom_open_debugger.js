@@ -134,5 +134,5 @@ async function waitUntilDebuggerReady(debuggerContext) {
 
   // We have to wait until the debugger has fully loaded the source otherwise
   // we will get unhandled promise rejections.
-  await waitForLoadedSource(debuggerContext, "data:");
+  await waitForLoadedSource(debuggerContext, TEST_URL);
 }

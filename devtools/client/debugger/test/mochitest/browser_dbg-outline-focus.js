@@ -5,9 +5,9 @@
 // Tests that after clicking a function in edtior, outline focuses that function
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-sources.html", "long");
+  const dbg = await initDebugger("doc-sources.html", "long.js");
 
-  await selectSource(dbg, "long", 1);
+  await selectSource(dbg, "long.js", 1);
   findElementWithSelector(dbg, ".outline-tab").click();
   is(getItems(dbg).length, 9, "9 items in the outline list");
 

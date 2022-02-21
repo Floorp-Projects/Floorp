@@ -20,11 +20,11 @@ add_task(async function() {
   is(dbg.selectors.getSourceCount(), 5, "5 sources are loaded.");
 
   // Check that you can still break after target switching.
-  await selectSource(dbg, "simple1");
+  await selectSource(dbg, "simple1.js");
   await addBreakpoint(dbg, "simple1.js", 4);
   invokeInTab("main");
   await waitForPaused(dbg);
-  await waitForLoadedSource(dbg, "simple1");
+  await waitForLoadedSource(dbg, "simple1.js");
 
   await dbg.toolbox.closeToolbox();
 });
