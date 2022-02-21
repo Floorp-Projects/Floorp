@@ -16,6 +16,7 @@ import androidx.annotation.Dimension.DP
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.WindowInsetsCompat
 import mozilla.components.support.ktx.android.util.dpToPx
+import mozilla.components.support.utils.ext.bottom
 import org.mozilla.fenix.R
 
 fun View.increaseTapArea(@Dimension(unit = DP) extraDps: Int) {
@@ -158,14 +159,12 @@ internal fun View.getWindowVisibleDisplayFrame(): Rect = with(Rect()) {
 }
 
 @VisibleForTesting
-@Suppress("DEPRECATION")
-// https://github.com/mozilla-mobile/fenix/issues/19929
 internal fun View.getKeyboardHeight(): Int {
     val windowRect = getWindowVisibleDisplayFrame()
     val statusBarHeight = windowRect.top
     var keyboardHeight = rootView.height - (windowRect.height() + statusBarHeight)
     getWindowInsets()?.let {
-        keyboardHeight -= it.stableInsetBottom
+        keyboardHeight -= it.bottom()
     }
 
     return keyboardHeight

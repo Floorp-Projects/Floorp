@@ -22,6 +22,7 @@ import io.mockk.slot
 import io.mockk.verify
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.utils.ext.bottom
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -41,6 +42,7 @@ class ViewTest {
     fun setup() {
         MockKAnnotations.init(this)
         mockkStatic("mozilla.components.support.ktx.android.util.DisplayMetricsKt")
+        mockkStatic("mozilla.components.support.utils.ext.WindowInsetsCompatKt")
         mockkStatic("org.mozilla.fenix.ext.ViewKt")
 
         every { view.context } answers { testContext }
@@ -112,14 +114,13 @@ class ViewTest {
     }
 
     @Test
-    @Suppress("DEPRECATION")
-    // https://github.com/mozilla-mobile/fenix/issues/19929
     fun `getKeyboardHeight accounts for status bar and navigation bar`() {
+        val windowInsetsCompat: WindowInsetsCompat = mockk()
+
         every { view.getWindowVisibleDisplayFrame() } returns Rect(0, 50, 1000, 500)
         every { view.rootView.height } returns 1000
-        every { view.getWindowInsets() } returns mockk(relaxed = true) {
-            every { stableInsetBottom } returns 50
-        }
+        every { view.getWindowInsets() } returns windowInsetsCompat
+        every { windowInsetsCompat.bottom() } returns 50
 
         assertEquals(450, view.getKeyboardHeight())
     }

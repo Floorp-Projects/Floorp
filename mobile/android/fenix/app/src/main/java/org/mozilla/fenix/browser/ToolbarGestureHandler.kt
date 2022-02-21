@@ -23,6 +23,8 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.android.view.getRectWithViewLocation
+import mozilla.components.support.utils.ext.bottom
+import mozilla.components.support.utils.ext.mandatorySystemGestureInsets
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getRectWithScreenLocation
 import org.mozilla.fenix.ext.getWindowInsets
@@ -276,15 +278,13 @@ class ToolbarGestureHandler(
         }.start()
     }
 
-    @Suppress("DEPRECATION")
-    // https://github.com/mozilla-mobile/fenix/issues/19929
     private fun PointF.isInToolbar(): Boolean {
         val toolbarLocation = toolbarLayout.getRectWithScreenLocation()
         // In Android 10, the system gesture touch area overlaps the bottom of the toolbar, so
         // lets make our swipe area taller by that amount
         activity.window.decorView.getWindowInsets()?.let { insets ->
             if (activity.settings().shouldUseBottomToolbar) {
-                toolbarLocation.top -= (insets.mandatorySystemGestureInsets.bottom - insets.stableInsetBottom)
+                toolbarLocation.top -= (insets.mandatorySystemGestureInsets().bottom - insets.bottom())
             }
         }
         return toolbarLocation.contains(toPoint())
