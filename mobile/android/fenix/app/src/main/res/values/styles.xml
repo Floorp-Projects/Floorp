@@ -267,7 +267,7 @@
 
         <!-- Shared widget colors -->
         <item name="mozac_primary_text_color">@color/fx_mobile_private_text_color_primary</item>
-        <item name="mozac_caption_text_color">@color/caption_text_private_theme</item>
+        <item name="mozac_caption_text_color">@color/fx_mobile_private_text_color_secondary</item>
         <item name="mozac_widget_favicon_background_color">@color/photonInk50</item>
         <item name="mozac_widget_favicon_border_color">@color/photonInk50</item>
 
