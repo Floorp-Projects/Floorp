@@ -182,13 +182,13 @@
             <TextView
                 android:id="@+id/users_count"
                 style="@style/AboutHeaderContentText"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                app:layout_constrainedWidth="true"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/rating_view"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_default="wrap"
                 tools:text="591,642" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>

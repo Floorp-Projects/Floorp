@@ -12,7 +12,7 @@
 
     <Button
         android:id="@+id/back_button"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:drawablePadding="8dp"
@@ -27,16 +27,16 @@
         android:textSize="20sp"
         app:drawableStartCompat="@drawable/mozac_ic_back"
         app:drawableTint="@color/fx_mobile_icon_color_oncolor"
+        app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toStartOf="@+id/guideline"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_default="wrap"
         tools:ignore="ButtonStyleXmlDetector" />
 
     <Button
         android:id="@+id/select_all_button"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:fontFamily="@font/metropolis_bold"
@@ -49,12 +49,12 @@
         android:textAllCaps="false"
         android:textColor="@color/fx_mobile_text_color_oncolor_primary"
         android:textSize="16sp"
+        app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="@id/back_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1"
         app:layout_constraintStart_toEndOf="@+id/guideline"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_default="wrap"
         tools:ignore="ButtonStyleXmlDetector" />
 
     <androidx.constraintlayout.widget.Guideline
