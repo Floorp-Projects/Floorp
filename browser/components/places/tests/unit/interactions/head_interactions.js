@@ -8,6 +8,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Interactions: "resource:///modules/Interactions.jsm",
+  PageThumbs: "resource://gre/modules/PageThumbs.jsm",
+  PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
@@ -297,36 +299,12 @@ async function assertSnapshots(expected, options) {
  *   The expected snapshot group.
  */
 function assertSnapshotGroup(group, expected) {
-  if (expected.title != null) {
-    Assert.equal(group.title, expected.title, "Should have the expected title");
-  }
-  if (expected.builder != null) {
-    Assert.equal(
-      group.builder,
-      expected.builder,
-      "Should have the expected builder"
-    );
-  }
-  if (expected.builderMetadata != null) {
-    Assert.deepEqual(
-      group.builderMetadata,
-      expected.builderMetadata,
-      "Should have the expected builderMetadata"
-    );
-  }
-  if (expected.snapshotCount != null) {
-    Assert.equal(
-      group.snapshotCount,
-      expected.snapshotCount,
-      "Should have the expected snapshotCount"
-    );
-  }
-  if (expected.lastAccessed != null) {
-    Assert.equal(
-      group.lastAccessed,
-      expected.lastAccessed,
-      "Should have the expected lastAccessed value"
-    );
+  for (let [p, v] in Object.entries(expected)) {
+    let comparator = Assert.equal.bind(Assert);
+    if (v && typeof v == "object") {
+      comparator = Assert.deepEqual.bind(Assert);
+    }
+    comparator(group[p], v, `Should have the expected ${p} value`);
   }
 }
 
@@ -393,4 +371,17 @@ function assertSnapshotScores(combinedSnapshots, expectedSnapshots) {
       `Should have set the expected score for ${expectedSnapshots[i].url}`
     );
   }
+}
+
+/**
+ * Abstracts getting the right moz-page-thumb url depending on enabled features.
+ * @param {string} url
+ *  The page url to get a screenshot for.
+ * @returns {string} a moz-page-thumb:// url
+ */
+function getPageThumbURL(url) {
+  if (PlacesPreviews.enabled) {
+    return PlacesPreviews.getPageThumbURL(url);
+  }
+  return PageThumbs.getThumbnailURL(url);
 }
