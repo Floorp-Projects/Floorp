@@ -68,8 +68,8 @@ already_AddRefed<PermissionStatus> CreatePermissionStatus(
 already_AddRefed<Promise> Permissions::Query(JSContext* aCx,
                                              JS::Handle<JSObject*> aPermission,
                                              ErrorResult& aRv) {
-  if (!mWindow) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  if (!mWindow || !mWindow->IsFullyActive()) {
+    aRv.ThrowInvalidStateError("The document is not fully active.");
     return nullptr;
   }
 
