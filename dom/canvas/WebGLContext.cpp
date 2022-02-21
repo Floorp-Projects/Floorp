@@ -793,7 +793,7 @@ void WebGLContext::OnEndOfFrame() {
 
 void WebGLContext::BlitBackbufferToCurDriverFB(
     WebGLFramebuffer* const srcAsWebglFb,
-    const gl::MozFramebuffer* const srcAsMozFb) const {
+    const gl::MozFramebuffer* const srcAsMozFb, bool srcIsBGRA) const {
   DoColorMask(0x0f);
 
   if (mScissorTestEnabled) {
@@ -818,19 +818,25 @@ void WebGLContext::BlitBackbufferToCurDriverFB(
       size = mozFb->mSize;
     }
 
-    if (gl->IsSupported(gl::GLFeature::framebuffer_blit)) {
-      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
-      gl->fBlitFramebuffer(0, 0, size.width, size.height, 0, 0, size.width,
-                           size.height, LOCAL_GL_COLOR_BUFFER_BIT,
-                           LOCAL_GL_NEAREST);
-      return;
-    }
-    if (mDefaultFB->mSamples &&
-        gl->IsExtensionSupported(
-            gl::GLContext::APPLE_framebuffer_multisample)) {
-      gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
-      gl->fResolveMultisampleFramebufferAPPLE();
-      return;
+    // If no format conversion is necessary, then attempt to directly blit
+    // between framebuffers. Otherwise, if we need to convert to RGBA from
+    // the source format, then we will need to use the texture blit path
+    // below.
+    if (!srcIsBGRA) {
+      if (gl->IsSupported(gl::GLFeature::framebuffer_blit)) {
+        gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
+        gl->fBlitFramebuffer(0, 0, size.width, size.height, 0, 0, size.width,
+                             size.height, LOCAL_GL_COLOR_BUFFER_BIT,
+                             LOCAL_GL_NEAREST);
+        return;
+      }
+      if (mDefaultFB->mSamples &&
+          gl->IsExtensionSupported(
+              gl::GLContext::APPLE_framebuffer_multisample)) {
+        gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
+        gl->fResolveMultisampleFramebufferAPPLE();
+        return;
+      }
     }
 
     GLuint colorTex = 0;
@@ -841,7 +847,8 @@ void WebGLContext::BlitBackbufferToCurDriverFB(
     } else {
       colorTex = mozFb->ColorTex();
     }
-    gl->BlitHelper()->DrawBlitTextureToFramebuffer(colorTex, size, size);
+    gl->BlitHelper()->DrawBlitTextureToFramebuffer(
+        colorTex, size, size, LOCAL_GL_TEXTURE_2D, srcIsBGRA);
   }();
 
   if (mScissorTestEnabled) {
@@ -860,26 +867,13 @@ constexpr auto MakeArray(Args... args) -> std::array<T, sizeof...(Args)> {
 
 // For an overview of how WebGL compositing works, see:
 // https://wiki.mozilla.org/Platform/GFX/WebGL/Compositing
-bool WebGLContext::PresentInto(gl::SwapChain& swapChain,
-                               WebGLFramebuffer* const srcFb) {
+bool WebGLContext::PresentInto(gl::SwapChain& swapChain) {
   OnEndOfFrame();
 
-  if (!ValidateAndInitFB(srcFb)) return false;
+  if (!ValidateAndInitFB(nullptr)) return false;
 
   {
-    GLuint fbo = 0;
-    gfx::IntSize size;
-    if (srcFb) {
-      fbo = srcFb->mGLName;
-      const auto* info = srcFb->GetCompletenessInfo();
-      MOZ_ASSERT(info);
-      size = gfx::IntSize(info->width, info->height);
-    } else {
-      fbo = mDefaultFB->mFB;
-      size = mDefaultFB->mSize;
-    }
-
-    auto presenter = swapChain.Acquire(size);
+    auto presenter = swapChain.Acquire(mDefaultFB->mSize);
     if (!presenter) {
       GenerateWarning("Swap chain surface creation failed.");
       LoseContext();
@@ -889,19 +883,17 @@ bool WebGLContext::PresentInto(gl::SwapChain& swapChain,
     const auto destFb = presenter->Fb();
     gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, destFb);
 
-    BlitBackbufferToCurDriverFB(srcFb);
+    BlitBackbufferToCurDriverFB();
 
     if (!mOptions.preserveDrawingBuffer) {
       if (gl->IsSupported(gl::GLFeature::invalidate_framebuffer)) {
-        gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fbo);
+        gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, mDefaultFB->mFB);
         constexpr auto attachments = MakeArray<GLenum>(
             LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
         gl->fInvalidateFramebuffer(LOCAL_GL_READ_FRAMEBUFFER,
                                    attachments.size(), attachments.data());
       }
-      if (!srcFb) {
-        mDefaultFB_IsInvalid = true;
-      }
+      mDefaultFB_IsInvalid = true;
     }
 
 #ifdef DEBUG
@@ -948,6 +940,22 @@ bool WebGLContext::PresentIntoXR(gl::SwapChain& swapChain,
   return true;
 }
 
+// Initialize a swap chain's surface factory given the desired surface type.
+void InitSwapChain(gl::GLContext& gl, gl::SwapChain& swapChain,
+                   const layers::TextureType consumerType) {
+  if (!swapChain.mFactory) {
+    auto typedFactory = gl::SurfaceFactory::Create(&gl, consumerType);
+    if (typedFactory) {
+      swapChain.mFactory = std::move(typedFactory);
+    }
+  }
+  if (!swapChain.mFactory) {
+    NS_WARNING("Failed to make an ideal SurfaceFactory.");
+    swapChain.mFactory = MakeUnique<gl::SurfaceFactory_Basic>(gl);
+  }
+  MOZ_ASSERT(swapChain.mFactory);
+}
+
 void WebGLContext::Present(WebGLFramebuffer* const xrFb,
                            const layers::TextureType consumerType,
                            const bool webvr) {
@@ -966,23 +974,52 @@ void WebGLContext::Present(WebGLFramebuffer* const xrFb,
     mResolvedDefaultFB = nullptr;
   }
 
-  if (!swapChain->mFactory) {
-    auto typedFactory = gl::SurfaceFactory::Create(gl, consumerType);
-    if (typedFactory) {
-      swapChain->mFactory = std::move(typedFactory);
-    }
-  }
-  if (!swapChain->mFactory) {
-    NS_WARNING("Failed to make an ideal SurfaceFactory.");
-    swapChain->mFactory = MakeUnique<gl::SurfaceFactory_Basic>(*gl);
-  }
-  MOZ_ASSERT(swapChain->mFactory);
+  InitSwapChain(*gl, *swapChain, consumerType);
 
   if (maybeFB) {
     (void)PresentIntoXR(*swapChain, *maybeFB);
   } else {
-    (void)PresentInto(*swapChain, xrFb);
+    (void)PresentInto(*swapChain);
   }
+}
+
+void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
+                                   const layers::TextureType consumerType,
+                                   const webgl::SwapChainOptions& options) {
+  const FuncScope funcScope(*this, "<CopyToSwapChain>");
+  if (IsContextLost()) return;
+
+  OnEndOfFrame();
+
+  if (!srcFb) return;
+  const auto* info = srcFb->GetCompletenessInfo();
+  if (!info) {
+    return;
+  }
+  gfx::IntSize size(info->width, info->height);
+
+  InitSwapChain(*gl, srcFb->mSwapChain, consumerType);
+
+  auto presenter = srcFb->mSwapChain.Acquire(size);
+  if (!presenter) {
+    GenerateWarning("Swap chain surface creation failed.");
+    LoseContext();
+    return;
+  }
+
+  const ScopedFBRebinder saveFB(this);
+
+  const auto destFb = presenter->Fb();
+  gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, destFb);
+
+  BlitBackbufferToCurDriverFB(srcFb, nullptr, options.bgra);
+}
+
+void WebGLContext::EndOfFrame() {
+  const FuncScope funcScope(*this, "<EndOfFrame>");
+  if (IsContextLost()) return;
+
+  OnEndOfFrame();
 }
 
 Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
