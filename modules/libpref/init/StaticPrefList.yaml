@@ -12906,7 +12906,7 @@
 
 - name: widget.windows.window_occlusion_tracking_session_lock.enabled
   type: bool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 #endif
 
