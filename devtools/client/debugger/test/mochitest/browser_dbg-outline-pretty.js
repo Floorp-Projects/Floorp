@@ -4,13 +4,13 @@
 
 // Tests that the length of outline functions for original and pretty printed source matches
 add_task(async function () {
-  const dbg = await initDebugger("doc-scripts.html", "simple1");
+  const dbg = await initDebugger("doc-scripts.html", "simple1.js");
   const {
     selectors: { getSelectedSource },
     getState
   } = dbg;
 
-  await selectSource(dbg, "simple1");
+  await selectSource(dbg, "simple1.js");
   findElementWithSelector(dbg, ".outline-tab").click();
   const originalSource = getItems(dbg);
 

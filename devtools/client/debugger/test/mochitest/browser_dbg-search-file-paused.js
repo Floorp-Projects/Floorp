@@ -13,7 +13,7 @@ add_task(async function() {
 
   info("Add a breakpoint, wait for pause");
   const source = findSource(dbg, "simple2.js");
-  await selectSource(dbg, source.url);
+  await selectSource(dbg, source);
   await addBreakpoint(dbg, source, 5);
   invokeInTab("main");
   await waitForPaused(dbg);
