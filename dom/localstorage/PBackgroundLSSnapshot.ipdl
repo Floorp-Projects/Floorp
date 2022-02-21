@@ -75,7 +75,7 @@ parent:
 
   async AsyncCheckpointAndNotify(LSWriteAndNotifyInfo[] writeAndNotifyInfos);
 
-  async Finish();
+  async AsyncFinish();
 
   // A synchronous finish. This should only be used by the snapshotting code to
   // end an explicit snapshot.
