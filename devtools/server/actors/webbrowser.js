@@ -321,7 +321,36 @@ BrowserTabList.prototype._getActorForBrowser = async function(browser) {
   return actor;
 };
 
-BrowserTabList.prototype.getTab = function({ outerWindowID, tabId }) {
+/**
+ * Return the tab descriptor for the tab identified by one of the IDs
+ * passed as argument.
+ *
+ * @param {Number} browserId: use to match any tab (should become the new way to identify any remote tab)
+ * @param {Number} outerWindowID: used to match tabs in parent process (obsolete, use browserId)
+ * @param {Number} tabId: used to match tabs in child processes (obsolete, use browserId)
+ */
+BrowserTabList.prototype.getTab = function({
+  browserId,
+  outerWindowID,
+  tabId,
+}) {
+  if (typeof browserId == "number") {
+    const browsingContext = BrowsingContext.getCurrentTopByBrowserId(browserId);
+    if (!browsingContext) {
+      return Promise.reject({
+        error: "noTab",
+        message: `Unable to find tab with browserId '${browserId}' (no browsing-context)`,
+      });
+    }
+    const browser = browsingContext.embedderElement;
+    if (!browser) {
+      return Promise.reject({
+        error: "noTab",
+        message: `Unable to find tab with browserId '${browserId}' (no embedder element)`,
+      });
+    }
+    return this._getActorForBrowser(browser);
+  }
   if (typeof outerWindowID == "number") {
     // First look for in-process frames with this ID
     const window = Services.wm.getOuterWindowWithId(outerWindowID);
