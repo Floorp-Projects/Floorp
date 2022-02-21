@@ -5,10 +5,10 @@
     <string name="mozac_browser_errorpages_page_refresh">Попробовать снова</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
-    <string name="mozac_browser_errorpages_generic_title">Не удалось завершить запрос</string>
+    <string name="mozac_browser_errorpages_generic_title">Не удалось выполнить запрос</string>
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_message"><![CDATA[
-      <p>Дополнительная информация об этой ошибке в данное время недоступна.</p>
+      <p>Дополнительная информация об этой проблеме или ошибке сейчас недоступна.</p>
     ]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
@@ -24,8 +24,8 @@
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
       <ul>
-        <li>Это может быть вызвано неправильной настройкой сервера или же кто-то пытается подменить нужный вам сервер другим.</li>
-        <li>Если в прошлом вы успешно соединялись с этим сервером, то, возможно, эта ошибка является временной. Попробуйте зайти позже.</li>
+        <li>Это может быть вызвано неправильной настройкой сервера, или, возможно, кто-то пытается подменить нужный вам сервер другим.</li>
+        <li>Если раньше вы успешно соединялись с этим сервером, то ошибка может быть временной. В таком случае попробуйте ещё раз позже.</li>
       </ul>
     ]]></string>
 
