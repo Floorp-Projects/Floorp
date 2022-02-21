@@ -103,6 +103,12 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function networkRequest(url, opts) {
+  const UNSUPPORTED_PROTOCOLS = ["chrome://", "resource://"];
+
+  if (UNSUPPORTED_PROTOCOLS.some(protocol => url.startsWith(protocol))) {
+    return Promise.reject(`unsupported protocol for sourcemap request ${url}`);
+  }
+
   return fetch(url, {
     cache: opts.loadFromCache ? "default" : "no-cache"
   }).then(res => {
