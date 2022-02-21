@@ -592,33 +592,6 @@ template void js::TraceWeakMapKeyEdgeInternal<BaseScript>(JSTracer*, Zone*,
                                                           BaseScript**,
                                                           const char*);
 
-template <typename T>
-void js::TraceProcessGlobalRoot(JSTracer* trc, T* thing, const char* name) {
-  AssertRootMarkingPhase(trc);
-  MOZ_ASSERT(thing->isPermanentAndMayBeShared());
-
-  // We have to mark permanent atoms and well-known symbols through a special
-  // method because the default DoMarking implementation automatically skips
-  // them. Fortunately, atoms (permanent and non) cannot refer to other GC
-  // things so they do not need to go through the mark stack and may simply
-  // be marked directly.  Moreover, well-known symbols can refer only to
-  // permanent atoms, so likewise require no subsequent marking.
-  if (trc->isMarkingTracer()) {
-    CheckTracedThing(trc, *ConvertToBase(&thing));
-    AutoClearTracingSource acts(trc);
-    thing->asTenured().markIfUnmarked(gc::MarkColor::Black);
-    return;
-  }
-
-  T* tmp = thing;
-  TraceEdgeInternal(trc, ConvertToBase(&tmp), name);
-  MOZ_ASSERT(tmp == thing);  // We shouldn't move process global roots.
-}
-template void js::TraceProcessGlobalRoot<JSAtom>(JSTracer*, JSAtom*,
-                                                 const char*);
-template void js::TraceProcessGlobalRoot<JS::Symbol>(JSTracer*, JS::Symbol*,
-                                                     const char*);
-
 static Cell* TraceGenericPointerRootAndType(JSTracer* trc, Cell* thing,
                                             JS::TraceKind kind,
                                             const char* name) {

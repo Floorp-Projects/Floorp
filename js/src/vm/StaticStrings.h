@@ -19,7 +19,6 @@
 
 #include "js/TypeDecls.h"
 
-class JS_PUBLIC_API JSTracer;
 struct JS_PUBLIC_API JSContext;
 
 class JSAtom;
@@ -69,7 +68,6 @@ class StaticStrings {
   StaticStrings() = default;
 
   bool init(JSContext* cx);
-  void trace(JSTracer* trc);
 
   static bool hasUint(uint32_t u) { return u < INT_STATIC_LIMIT; }
 
