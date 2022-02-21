@@ -2301,6 +2301,8 @@ async function setLogPoint(dbg, index, value) {
  *     Returns the absolute url for a given file.
  *   - switchToNextVersion()
  *     Start serving files from the next available sub folder.
+ *   - backToFirstVersion()
+ *     When running more than one test, helps restart from the first folder.
  */
 function createVersionizedHttpTestServer(testFolderName) {
   const httpServer = createTestHTTPServer();
@@ -2329,6 +2331,9 @@ function createVersionizedHttpTestServer(testFolderName) {
   return {
     switchToNextVersion() {
       currentVersion++;
+    },
+    backToFirstVersion() {
+      currentVersion = 1;
     },
     urlFor(path) {
       const port = httpServer.identity.primaryPort;
