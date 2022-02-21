@@ -60,6 +60,80 @@ add_task(async function sponsoredHelpButton() {
   });
 });
 
+// Tests keyboard selection using the arrow keys.
+add_task(async function arrowKeys() {
+  await doKeySelectionTest(false);
+});
+
+// Tests keyboard selection using the tab key.
+add_task(async function tabKey() {
+  await doKeySelectionTest(true);
+});
+
+async function doKeySelectionTest(useTabKey) {
+  info(`Starting key selection test with useTabKey=${useTabKey}`);
+
+  let result = makeBestMatchResult({
+    isSponsored: true,
+    helpUrl: "https://example.com/help",
+  });
+
+  await withProvider(result, async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+    });
+
+    await checkBestMatchRow({ result, isSponsored: true, hasHelpButton: true });
+
+    // Ordered list of class names of the elements that should be selected as
+    // the tab key is pressed.
+    let expectedClassNames = [
+      "urlbarView-row-inner",
+      "urlbarView-button-block",
+      "urlbarView-button-help",
+    ];
+
+    let sendKey = reverse => {
+      if (useTabKey) {
+        EventUtils.synthesizeKey("KEY_Tab", { shiftKey: reverse });
+      } else if (reverse) {
+        EventUtils.synthesizeKey("KEY_ArrowUp");
+      } else {
+        EventUtils.synthesizeKey("KEY_ArrowDown");
+      }
+    };
+
+    // First tab in forward order and then in reverse order.
+    for (let reverse of [false, true]) {
+      info(`Doing key selection with reverse=${reverse}`);
+
+      let classNames = [...expectedClassNames];
+      if (reverse) {
+        classNames.reverse();
+      }
+
+      for (let className of classNames) {
+        sendKey(reverse);
+        Assert.ok(gURLBar.view.isOpen, "View remains open");
+        let { selectedElement } = gURLBar.view;
+        Assert.ok(selectedElement, "Selected element exists");
+        Assert.ok(
+          selectedElement.classList.contains(className),
+          "Expected element is selected"
+        );
+      }
+      sendKey(reverse);
+      Assert.ok(
+        gURLBar.view.isOpen,
+        "View remains open after keying through best match row"
+      );
+    }
+
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+}
+
 async function checkBestMatchRow({
   result,
   isSponsored = false,
