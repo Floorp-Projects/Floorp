@@ -864,7 +864,7 @@ class HomeFragment : Fragment() {
                 ColorDrawable(
                     ContextCompat.getColor(
                         requireContext(),
-                        R.color.foundation_private_theme
+                        R.color.fx_mobile_private_layer_color_1
                     )
                 )
             )
