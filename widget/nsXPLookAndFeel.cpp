@@ -375,10 +375,14 @@ void nsXPLookAndFeel::Shutdown() {
   widget::Theme::Shutdown();
 }
 
-static void IntPrefChanged() {
-  // Int prefs can't change our system colors or fonts.
-  LookAndFeel::NotifyChangedAllWindows(
-      widget::ThemeChangeKind::MediaQueriesOnly);
+static void IntPrefChanged(const nsACString& aPref) {
+  // Most Int prefs can't change our system colors or fonts, but
+  // ui.systemUsesDarkTheme can, since it affects the effective color-scheme
+  // (affecting system colors).
+  auto changeKind = aPref.EqualsLiteral("ui.systemUsesDarkTheme")
+                        ? widget::ThemeChangeKind::Style
+                        : widget::ThemeChangeKind::MediaQueriesOnly;
+  LookAndFeel::NotifyChangedAllWindows(changeKind);
 }
 
 static void FloatPrefChanged() {
@@ -397,7 +401,7 @@ void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
   nsDependentCString prefName(aPref);
   for (const char* pref : sIntPrefs) {
     if (prefName.Equals(pref)) {
-      IntPrefChanged();
+      IntPrefChanged(prefName);
       return;
     }
   }
