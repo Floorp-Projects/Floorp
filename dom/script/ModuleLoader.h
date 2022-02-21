@@ -70,6 +70,10 @@ class ScriptLoaderInterface : public nsISupports {
   virtual void EnsureModuleHooksInitialized() = 0;
   virtual nsresult StartModuleLoad(ScriptLoadRequest* aRequest) = 0;
   virtual void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) = 0;
+  virtual nsresult CompileOrFinishModuleScript(
+      JSContext* aCx, JS::Handle<JSObject*> aGlobal,
+      JS::CompileOptions& aOptions, ModuleLoadRequest* aRequest,
+      JS::MutableHandle<JSObject*> aModuleScript) = 0;
 };
 
 class ModuleLoader : public nsISupports {

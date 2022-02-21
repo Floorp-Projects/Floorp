@@ -54,10 +54,13 @@ static VisitedURLSet* NewVisitedSetForTopLevelImport(nsIURI* aURI) {
 ModuleLoadRequest* ModuleLoadRequest::CreateTopLevel(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
     const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader) {
-  return new ModuleLoadRequest(
+  auto* request = new ModuleLoadRequest(
       aURI, aFetchOptions, aIntegrity, aReferrer, true, /* is top level */
       false,                                            /* is dynamic import */
       aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI));
+  DOMScriptLoadContext* context = new DOMScriptLoadContext(request);
+  request->mLoadContext = context;
+  return request;
 }
 
 /* static */
@@ -68,9 +71,11 @@ ModuleLoadRequest* ModuleLoadRequest::CreateStaticImport(
                             aParent->mURI, false, /* is top level */
                             false,                /* is dynamic import */
                             aParent->mLoader, aParent->mVisitedSet);
+  DOMScriptLoadContext* context = new DOMScriptLoadContext(request);
+  context->mIsInline = false;
+  context->mScriptMode = aParent->GetLoadContext()->mScriptMode;
 
-  request->mIsInline = false;
-  request->mScriptMode = aParent->mScriptMode;
+  request->mLoadContext = context;
 
   return request;
 }
@@ -88,8 +93,10 @@ ModuleLoadRequest* ModuleLoadRequest::CreateDynamicImport(
       true, /* is dynamic import */
       aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI));
 
-  request->mIsInline = false;
-  request->mScriptMode = ScriptMode::eAsync;
+  DOMScriptLoadContext* context = new DOMScriptLoadContext(request);
+  context->mIsInline = false;
+  context->mScriptMode = DOMScriptLoadContext::ScriptMode::eAsync;
+  request->mLoadContext = context;
   request->mDynamicReferencingPrivate = aReferencingPrivate;
   request->mDynamicSpecifier = aSpecifier;
   request->mDynamicPromise = aPromise;
