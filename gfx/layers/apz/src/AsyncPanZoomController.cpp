@@ -2732,7 +2732,7 @@ nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
   // gesture block.
   overscrollHandoffChain->SnapBackOverscrolledApzcForMomentum(
       this, GetVelocityVector());
-  // If this APZC is overscrolled, the above SnapBackOverscrolledApzcForMomemtum
+  // If this APZC is overscrolled, the above SnapBackOverscrolledApzcForMomentum
   // triggers an overscroll animation, do not reset the state in such case.
   if (mState != OVERSCROLL_ANIMATION) {
     SetState(NOTHING);

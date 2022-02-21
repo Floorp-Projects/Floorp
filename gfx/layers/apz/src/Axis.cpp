@@ -210,9 +210,20 @@ void Axis::EndOverscrollAnimation() {
   mMSDModel.SetVelocity(0.0);
 }
 
-bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
+bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta,
+                                     SideBits aOverscrollSideBits) {
   mMSDModel.Simulate(aDelta);
   mOverscroll = mMSDModel.GetPosition();
+
+  if (((aOverscrollSideBits & (SideBits::eTop | SideBits::eLeft)) &&
+       mOverscroll > 0) ||
+      ((aOverscrollSideBits & (SideBits::eBottom | SideBits::eRight)) &&
+       mOverscroll < 0)) {
+    // Stop the overscroll model immediately if it's going to get across the
+    // boundary.
+    mMSDModel.SetPosition(0.0);
+    mMSDModel.SetVelocity(0.0);
+  }
 
   AXIS_LOG("%p|%s changed overscroll amount to %f\n", mAsyncPanZoomController,
            Name(), mOverscroll.value);

@@ -1089,68 +1089,82 @@ nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
     return NS_OK;
   }
 
-  RefPtr<EditorBase> editorBase(mEditorBase);
-
-  // Spell check a textarea the first time that it is focused.
-  SpellCheckIfNeeded();
-  if (DetachedFromEditor()) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsINode> eventTargetNode =
+  nsCOMPtr<nsINode> originalEventTargetNode =
       nsINode::FromEventTargetOrNull(aFocusEvent->GetOriginalDOMEventTarget());
-  if (NS_WARN_IF(!eventTargetNode)) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!originalEventTargetNode))) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  // If the target is a document node but it's not editable, we should ignore
-  // it because actual focused element's event is going to come.
-  if (eventTargetNode->IsDocument() && !eventTargetNode->IsInDesignMode()) {
+  // If the target is a document node but it's not editable, we should
+  // ignore it because actual focused element's event is going to come.
+  if (originalEventTargetNode->IsDocument()) {
+    if (!originalEventTargetNode->IsInDesignMode()) {
+      return NS_OK;
+    }
+  }
+  // We should not receive focus events whose target is not a content node
+  // unless the node is a document node.
+  else if (MOZ_UNLIKELY(NS_WARN_IF(!originalEventTargetNode->IsContent()))) {
     return NS_OK;
   }
 
-  if (eventTargetNode->IsContent()) {
-    nsIContent* content =
-        eventTargetNode->AsContent()->FindFirstNonChromeOnlyAccessContent();
-    // XXX If the focus event target is a form control in contenteditable
-    // element, perhaps, the parent HTML editor should do nothing by this
-    // handler.  However, FindSelectionRoot() returns the root element of the
-    // contenteditable editor.  So, the editableRoot value is invalid for
-    // the plain text editor, and it will be set to the wrong limiter of
-    // the selection.  However, fortunately, actual bugs are not found yet.
-    nsCOMPtr<nsIContent> editableRoot = editorBase->FindSelectionRoot(content);
-
-    // make sure that the element is really focused in case an earlier
-    // listener in the chain changed the focus.
-    if (editableRoot) {
-      nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
-      if (NS_WARN_IF(!focusManager)) {
-        return NS_OK;
-      }
-
-      nsIContent* focusedContent = focusManager->GetFocusedElement();
-      if (!focusedContent) {
-        return NS_OK;
-      }
-
-      nsCOMPtr<nsIContent> originalTargetAsContent =
-          do_QueryInterface(aFocusEvent->GetOriginalDOMEventTarget());
-
-      if (!SameCOMIdentity(
-              focusedContent->FindFirstNonChromeOnlyAccessContent(),
-              originalTargetAsContent->FindFirstNonChromeOnlyAccessContent())) {
-        return NS_OK;
-      }
-    }
+  RefPtr<nsFocusManager> focusManager = nsFocusManager::GetFocusManager();
+  if (MOZ_UNLIKELY(NS_WARN_IF(!focusManager))) {
+    return NS_OK;
   }
 
-  editorBase->OnFocus(*eventTargetNode);
+  auto CanKeepHandlingFocusEvent = [&]() -> bool {
+    if (this->DetachedFromEditor()) {
+      return false;
+    }
+    // If the event target is document mode, we only need to handle the focus
+    // event when the document is still in designMode.  Otherwise, the
+    // mode has been disabled by somebody while we're handling the focus event.
+    if (originalEventTargetNode->IsDocument()) {
+      return originalEventTargetNode->IsInDesignMode();
+    }
+    MOZ_ASSERT(originalEventTargetNode->IsContent());
+    // If nobody has focus, the focus event target has been blurred by somebody
+    // else.  So the editor shouldn't initialize itself to start to handle
+    // anything.
+    if (!focusManager->GetFocusedElement()) {
+      return false;
+    }
+    const nsIContent* const exposedTargetContent =
+        originalEventTargetNode->AsContent()
+            ->FindFirstNonChromeOnlyAccessContent();
+    const nsIContent* const exposedFocusedContent =
+        focusManager->GetFocusedElement()
+            ->FindFirstNonChromeOnlyAccessContent();
+    return exposedTargetContent && exposedFocusedContent &&
+           exposedTargetContent == exposedFocusedContent;
+  };
+
+  RefPtr<PresShell> presShell = GetPresShell();
+  if (MOZ_UNLIKELY(NS_WARN_IF(!presShell))) {
+    return NS_OK;
+  }
+  // Let's update the layout information right now because there are some
+  // pending notifications and flushing them may cause destroying the editor.
+  presShell->FlushPendingNotifications(FlushType::Layout);
+  if (MOZ_UNLIKELY(!CanKeepHandlingFocusEvent())) {
+    return NS_OK;
+  }
+
+  // Spell check a textarea the first time that it is focused.
+  SpellCheckIfNeeded();
+  if (MOZ_UNLIKELY(!CanKeepHandlingFocusEvent())) {
+    return NS_OK;
+  }
+
+  RefPtr<EditorBase> editorBase(mEditorBase);
+  editorBase->OnFocus(*originalEventTargetNode);
   if (DetachedFromEditorOrDefaultPrevented(aFocusEvent)) {
     return NS_OK;
   }
 
   RefPtr<nsPresContext> presContext = GetPresContext();
-  if (NS_WARN_IF(!presContext)) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!presContext))) {
     return NS_OK;
   }
   nsCOMPtr<nsIContent> focusedContent = editorBase->GetFocusedContent();
