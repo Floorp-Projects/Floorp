@@ -157,6 +157,23 @@ add_task(async function test_default_engine_unchanged() {
   );
 });
 
+add_task(async function test_new_current_engine_is_undefined() {
+  let settings = structuredClone(userSettings);
+  let getEngineDefaultStub = sinon.stub(
+    await Services.search.wrappedJSObject,
+    "_getEngineDefault"
+  );
+  getEngineDefaultStub.returns(undefined);
+
+  await loadEngines(settings);
+  Assert.ok(
+    stub.notCalled,
+    "_loadEngines should not have shown the notification box."
+  );
+
+  getEngineDefaultStub.restore();
+});
+
 add_task(async function test_current_engine_is_null() {
   Services.search.wrappedJSObject._currentEngine = null;
 
