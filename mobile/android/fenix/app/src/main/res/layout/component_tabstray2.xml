@@ -119,7 +119,7 @@
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@id/tab_layout"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/tab_layout"
+        app:layout_constraintTop_toTopOf="@id/topBar"
         app:srcCompat="@drawable/ic_menu"
         app:tint="@color/fx_mobile_icon_color_primary" />
 
