@@ -185,6 +185,11 @@ class SettingsSubMenuSearchRobot {
     }
 }
 
+fun searchSettingsScreen(interact: SettingsSubMenuSearchRobot.() -> Unit): SettingsSubMenuSearchRobot.Transition {
+    SettingsSubMenuSearchRobot().interact()
+    return SettingsSubMenuSearchRobot.Transition()
+}
+
 private fun assertSearchToolbar() =
     onView(
         allOf(

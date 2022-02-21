@@ -40,12 +40,14 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import java.io.File
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.support.ktx.android.content.appName
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matcher
 import org.junit.Assert
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -252,4 +254,11 @@ object TestHelper {
     }
 
     fun getStringResource(id: Int) = appContext.resources.getString(id, appName)
+
+    fun setCustomSearchEngine(searchEngine: SearchEngine) {
+        with(appContext.components.useCases.searchUseCases) {
+            addSearchEngine(searchEngine)
+            selectSearchEngine(searchEngine)
+        }
+    }
 }

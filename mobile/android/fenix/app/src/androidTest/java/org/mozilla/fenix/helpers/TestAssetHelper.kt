@@ -15,7 +15,7 @@ import org.mozilla.fenix.helpers.ext.toUri
 object TestAssetHelper {
     @Suppress("MagicNumber")
     val waitingTime: Long = TimeUnit.SECONDS.toMillis(15)
-    val waitingTimeShort: Long = TimeUnit.SECONDS.toMillis(1)
+    val waitingTimeShort: Long = TimeUnit.SECONDS.toMillis(3)
 
     data class TestAsset(val url: Uri, val content: String, val title: String)
 

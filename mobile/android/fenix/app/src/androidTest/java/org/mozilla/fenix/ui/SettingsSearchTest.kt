@@ -4,13 +4,13 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -18,6 +18,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 
 class SettingsSearchTest {
     private lateinit var mockWebServer: MockWebServer
+    private lateinit var searchMockServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
@@ -147,12 +148,15 @@ class SettingsSearchTest {
     @SmokeTest
     @Test
     // Verifies setting as default a customized search engine name and URL
-    @Ignore("Failing intermittently https://github.com/mozilla-mobile/fenix/issues/22256")
     fun editCustomSearchEngineTest() {
+        searchMockServer = MockWebServer().apply {
+            dispatcher = SearchDispatcher()
+            start()
+        }
         val searchEngine = object {
-            var title = "Elefant"
-            var url = "https://www.elefant.ro/search?SearchTerm=%s"
-            var newTitle = "Test"
+            val title = "TestSearchEngine"
+            val url = "http://localhost:${searchMockServer.port}/searchResults.html?search=%s"
+            val newTitle = "Test"
         }
 
         homeScreen {

@@ -33,7 +33,6 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
-import junit.framework.TestCase.assertTrue
 import mozilla.components.browser.state.state.searchEngines
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
@@ -42,6 +41,7 @@ import org.hamcrest.CoreMatchers.not
 import org.hamcrest.Matchers
 import org.junit.Assert
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -141,6 +141,43 @@ class HomeScreenRobot {
     fun verifyJumpBackInSectionIsNotDisplayed() = assertJumpBackInSectionIsNotDisplayed()
     fun verifyRecentBookmarksSectionIsDisplayed() = assertRecentBookmarksSectionIsDisplayed()
     fun verifyRecentBookmarksSectionIsNotDisplayed() = assertRecentBookmarksSectionIsNotDisplayed()
+
+    fun verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed: Boolean, searchTerm: String, groupSize: Int) {
+        // checks if the search group exists in the Recently visited section
+        if (shouldBeDisplayed) {
+            recentlyVisitedList.waitForExists(waitingTime)
+            scrollToElementByText("Recently visited")
+            recentlyVisitedList.getChildByText(UiSelector().text(searchTerm), searchTerm, true)
+                .waitForExists(waitingTimeShort)
+            assertTrue(
+                mDevice.findObject(UiSelector().text(searchTerm))
+                    .getFromParent(UiSelector().text("$groupSize sites"))
+                    .waitForExists(waitingTimeShort)
+            )
+        } else {
+            assertFalse(
+                mDevice.findObject(UiSelector().text(searchTerm))
+                    .getFromParent(UiSelector().text("$groupSize sites"))
+                    .waitForExists(waitingTimeShort)
+            )
+        }
+    }
+
+    fun verifyCurrentSearchGroupIsDisplayed(shouldBeDisplayed: Boolean, searchTerm: String, groupSize: Int = 0) {
+        // checks search group in the Jump back in section
+        if (shouldBeDisplayed) {
+            assertTrue(
+                mDevice.findObject(UiSelector().text("""Your search for "$searchTerm""""))
+                    .getFromParent(UiSelector().textContains("$groupSize sites"))
+                    .waitForExists(waitingTimeShort)
+            )
+        } else {
+            assertFalse(
+                mDevice.findObject(UiSelector().text("""Your search for "$searchTerm""""))
+                    .waitForExists(waitingTimeShort)
+            )
+        }
+    }
 
     // Collections elements
     fun verifyCollectionIsDisplayed(title: String, collectionExists: Boolean = true) {
@@ -365,6 +402,15 @@ class HomeScreenRobot {
 
             CollectionRobot().interact()
             return CollectionRobot.Transition()
+        }
+
+        fun openRecentlyVisitedSearchGroupHistoryList(title: String, interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
+            val searchGroup = recentlyVisitedList.getChildByText(UiSelector().text(title), title, true)
+            searchGroup.waitForExists(waitingTimeShort)
+            searchGroup.click()
+
+            HistoryRobot().interact()
+            return HistoryRobot.Transition()
         }
     }
 }
@@ -672,3 +718,9 @@ val deleteFromHistory =
             withText(R.string.delete_from_history)
         )
     ).inRoot(RootMatchers.isPlatformPopup())
+
+private val recentlyVisitedList =
+    UiScrollable(
+        UiSelector()
+            .className("android.widget.HorizontalScrollView")
+    ).setAsHorizontalList()
