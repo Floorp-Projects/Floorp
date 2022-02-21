@@ -207,55 +207,56 @@ class EventEmitter {
    *    Otherwise, this function returns undefined;
    */
   static _emit(target, type, async, args) {
-    logEvent(type, args);
+    if (loggingEnabled) {
+      logEvent(type, args);
+    }
 
-    if (!(eventListeners in target)) {
+    const targetEventListeners = target[eventListeners];
+    if (!targetEventListeners) {
+      return undefined;
+    }
+
+    const listeners = targetEventListeners.get(type);
+    if (!listeners?.size) {
       return undefined;
     }
 
     const promises = async ? [] : null;
 
-    if (target[eventListeners].has(type)) {
-      // Creating a temporary Set with the original listeners, to avoiding side effects
-      // in emit.
-      const listenersForType = new Set(target[eventListeners].get(type));
+    // Creating a temporary Set with the original listeners, to avoiding side effects
+    // in emit.
+    for (const listener of new Set(listeners)) {
+      // If the object was destroyed during event emission, stop emitting.
+      if (!(eventListeners in target)) {
+        break;
+      }
 
-      const events = target[eventListeners];
-      const listeners = events.get(type);
-
-      for (const listener of listenersForType) {
-        // If the object was destroyed during event emission, stop emitting.
-        if (!(eventListeners in target)) {
-          break;
-        }
-
-        // If listeners were removed during emission, make sure the
-        // event handler we're going to fire wasn't removed.
-        if (listeners && listeners.has(listener)) {
-          try {
-            let promise;
-            if (isEventHandler(listener)) {
-              promise = listener[handler](type, ...args);
-            } else {
-              promise = listener.apply(target, args);
-            }
-            if (async) {
-              // Assert the name instead of `constructor != Promise` in order
-              // to avoid cross compartment issues where Promise can be multiple.
-              if (!promise || promise.constructor.name != "Promise") {
-                console.warn(
-                  `Listener for event '${type}' did not return a promise.`
-                );
-              } else {
-                promises.push(promise);
-              }
-            }
-          } catch (ex) {
-            // Prevent a bad listener from interfering with the others.
-            console.error(ex);
-            const msg = ex + ": " + ex.stack;
-            dump(msg + "\n");
+      // If listeners were removed during emission, make sure the
+      // event handler we're going to fire wasn't removed.
+      if (listeners && listeners.has(listener)) {
+        try {
+          let promise;
+          if (isEventHandler(listener)) {
+            promise = listener[handler](type, ...args);
+          } else {
+            promise = listener.apply(target, args);
           }
+          if (async) {
+            // Assert the name instead of `constructor != Promise` in order
+            // to avoid cross compartment issues where Promise can be multiple.
+            if (!promise || promise.constructor.name != "Promise") {
+              console.warn(
+                `Listener for event '${type}' did not return a promise.`
+              );
+            } else {
+              promises.push(promise);
+            }
+          }
+        } catch (ex) {
+          // Prevent a bad listener from interfering with the others.
+          console.error(ex);
+          const msg = ex + ": " + ex.stack;
+          dump(msg + "\n");
         }
       }
     }
@@ -448,10 +449,6 @@ function truncate(value, maxLen) {
 }
 
 function logEvent(type, args) {
-  if (!loggingEnabled) {
-    return;
-  }
-
   let argsOut = "";
 
   // We need this try / catch to prevent any dead object errors.
