@@ -1235,10 +1235,11 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   }
 
   RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
-      CORS_NONE, aElement->OwnerDoc()->GetReferrerPolicy(), aElement,
+      CORS_NONE, aElement->OwnerDoc()->GetReferrerPolicy(),
       aElement->OwnerDoc()->NodePrincipal(), nullptr);
 
-  RefPtr<EventScript> eventScript = new EventScript(fetchOptions, uri);
+  RefPtr<EventScript> eventScript =
+      new EventScript(fetchOptions, uri, aElement);
 
   JS::CompileOptions options(cx);
   // Use line 0 to make the function body starts from line 1.
