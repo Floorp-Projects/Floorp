@@ -230,7 +230,7 @@
 
         <!-- Updated color attributes -->
         <item name="primaryText">@color/fx_mobile_private_text_color_primary</item>
-        <item name="secondaryText">@color/secondary_text_private_theme</item>
+        <item name="secondaryText">@color/fx_mobile_private_text_color_secondary</item>
         <item name="contrastText">@color/fx_mobile_private_text_color_primary</item>
         <item name="accent">@color/accent_private_theme</item>
         <item name="accentBright">@color/photonViolet70</item>
