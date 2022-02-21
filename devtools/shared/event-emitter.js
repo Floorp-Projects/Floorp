@@ -14,10 +14,6 @@ const handler = Symbol("EventEmitter/event-handler");
 loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
 
 class EventEmitter {
-  constructor() {
-    this[eventListeners] = new Map();
-  }
-
   /**
    * Registers an event `listener` that is called every time events of
    * specified `type` is emitted on the given event `target`.
