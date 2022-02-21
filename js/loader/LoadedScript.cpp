@@ -11,7 +11,6 @@
 
 #include "jsfriendapi.h"
 #include "js/Modules.h"  // JS::{Get,Set}ModulePrivate
-#include "ScriptLoader.h"
 
 namespace mozilla {
 namespace dom {
