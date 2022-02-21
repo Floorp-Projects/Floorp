@@ -6,11 +6,8 @@
 
 #include "ScriptLoader.h"
 #include "ScriptLoadHandler.h"
-#include "ScriptLoadRequest.h"
 #include "ScriptTrace.h"
-#include "LoadedScript.h"
 #include "ModuleLoader.h"
-#include "ModuleLoadRequest.h"
 
 #include "prsystem.h"
 #include "jsapi.h"
@@ -19,6 +16,9 @@
 #include "js/CompilationAndEvaluation.h"
 #include "js/ContextOptions.h"        // JS::ContextOptionsRef
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/loader/ScriptLoadRequest.h"
+#include "js/loader/LoadedScript.h"
+#include "js/loader/ModuleLoadRequest.h"
 #include "js/MemoryFunctions.h"
 #include "js/OffThreadScriptCompilation.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
@@ -92,6 +92,7 @@
 #include "nsIAsyncOutputStream.h"
 
 using JS::SourceText;
+using namespace JS::loader;
 
 using mozilla::Telemetry::LABELS_DOM_SCRIPT_PRELOAD_RESULT;
 

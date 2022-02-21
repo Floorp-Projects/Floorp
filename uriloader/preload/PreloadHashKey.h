@@ -7,10 +7,14 @@
 
 #include "mozilla/CORSMode.h"
 #include "mozilla/css/SheetParsingMode.h"
-#include "mozilla/dom/ScriptKind.h"
+#include "js/loader/ScriptKind.h"
 #include "nsURIHashKey.h"
 
 class nsIPrincipal;
+
+namespace JS::loader {
+enum class ScriptKind;
+}
 
 namespace mozilla {
 
@@ -44,7 +48,7 @@ class PreloadHashKey : public nsURIHashKey {
 
   // Construct key for "script"
   static PreloadHashKey CreateAsScript(nsIURI* aURI, CORSMode aCORSMode,
-                                       dom::ScriptKind aScriptKind);
+                                       JS::loader::ScriptKind aScriptKind);
   static PreloadHashKey CreateAsScript(nsIURI* aURI,
                                        const nsAString& aCrossOrigin,
                                        const nsAString& aType);
@@ -92,7 +96,7 @@ class PreloadHashKey : public nsURIHashKey {
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   struct {
-    dom::ScriptKind mScriptKind = dom::ScriptKind::eClassic;
+    JS::loader::ScriptKind mScriptKind = JS::loader::ScriptKind::eClassic;
   } mScript;
 
   struct {
