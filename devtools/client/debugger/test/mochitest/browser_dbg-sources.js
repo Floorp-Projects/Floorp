@@ -7,9 +7,9 @@
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-sources.html",
-    "simple1",
-    "simple2",
-    "nested-source",
+    "simple1.js",
+    "simple2.js",
+    "nested-source.js",
     "long.js"
   );
   const {

@@ -645,33 +645,42 @@ function pauseTest() {
   return new Promise(resolve => (resumeTest = resolve));
 }
 
-// Actions
 /**
- * Returns a source that matches the URL.
+ * Returns a source that matches a given filename, or a URL.
+ * This also accept a source as input argument, in such case it just returns it.
  *
- * @memberof mochitest/actions
  * @param {Object} dbg
- * @param {String} url
+ * @param {String} filenameOrUrlOrSource
+ *        The typical case will be to pass only a filename,
+ *        but you may also pass a full URL to match sources without filesnames like data: URL
+ *        or pass the source itself, which is just returned.
+ * @param {Object} options
+ * @param {Boolean} options.silent
+ *        If true, won't throw if the source is missing.
  * @return {Object} source
- * @static
  */
-function findSource(dbg, url, { silent } = { silent: false }) {
-  if (typeof url !== "string") {
-    // Support passing in a source object itelf all APIs that use this
+function findSource(dbg, filenameOrUrlOrSource, { silent } = { silent: false }) {
+  if (typeof filenameOrUrlOrSource !== "string") {
+    // Support passing in a source object itself all APIs that use this
     // function support both styles
-    const source = url;
-    return source;
+    return filenameOrUrlOrSource; 
   }
 
   const sources = dbg.selectors.getSourceList();
-  const source = sources.find(s => (s.url || "").includes(url));
+  const source = sources.find(s => {
+    // Sources don't have a file name attribute, we need to compute it here:
+    const sourceFileName = s.url ? s.url.substring(s.url.lastIndexOf("/") + 1) : "";
+    // The input argument may either be only the filename, or the complete URL
+    // This helps match sources whose URL doesn't contain a filename, like data: URLs
+    return sourceFileName == filenameOrUrlOrSource || s.url == filenameOrUrlOrSource;
+  });
 
   if (!source) {
     if (silent) {
       return false;
     }
 
-    throw new Error(`Unable to find source: ${url}`);
+    throw new Error(`Unable to find source: ${filenameOrUrlOrSource}`);
   }
 
   return source;
@@ -2292,6 +2301,8 @@ async function setLogPoint(dbg, index, value) {
  *     Returns the absolute url for a given file.
  *   - switchToNextVersion()
  *     Start serving files from the next available sub folder.
+ *   - backToFirstVersion()
+ *     When running more than one test, helps restart from the first folder.
  */
 function createVersionizedHttpTestServer(testFolderName) {
   const httpServer = createTestHTTPServer();
@@ -2320,6 +2331,9 @@ function createVersionizedHttpTestServer(testFolderName) {
   return {
     switchToNextVersion() {
       currentVersion++;
+    },
+    backToFirstVersion() {
+      currentVersion = 1;
     },
     urlFor(path) {
       const port = httpServer.identity.primaryPort;

@@ -17,20 +17,23 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 
+namespace JS::loader {
+class ScriptLoadRequest;
+}
+
 namespace mozilla {
 
 class Decoder;
 
 namespace dom {
 
-class ScriptLoadRequest;
 class ScriptLoader;
 class SRICheckDataVerifier;
 
 class ScriptLoadHandler final : public nsIIncrementalStreamLoaderObserver {
  public:
   explicit ScriptLoadHandler(
-      ScriptLoader* aScriptLoader, ScriptLoadRequest* aRequest,
+      ScriptLoader* aScriptLoader, JS::loader::ScriptLoadRequest* aRequest,
       UniquePtr<SRICheckDataVerifier>&& aSRIDataVerifier);
 
   NS_DECL_ISUPPORTS
@@ -96,7 +99,7 @@ class ScriptLoadHandler final : public nsIIncrementalStreamLoaderObserver {
   RefPtr<ScriptLoader> mScriptLoader;
 
   // The ScriptLoadRequest for this load. Decoded data are accumulated on it.
-  RefPtr<ScriptLoadRequest> mRequest;
+  RefPtr<JS::loader::ScriptLoadRequest> mRequest;
 
   // SRI data verifier.
   UniquePtr<SRICheckDataVerifier> mSRIDataVerifier;

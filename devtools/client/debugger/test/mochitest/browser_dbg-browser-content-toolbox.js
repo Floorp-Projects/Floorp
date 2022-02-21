@@ -28,17 +28,17 @@ add_task(async function() {
   ok(dbg, "Debugger context is available");
 
   info("Create a breakpoint");
-  await selectSource(dbg, "simple2");
-  await addBreakpoint(dbg, "simple2", 3);
+  await selectSource(dbg, "simple2.js");
+  await addBreakpoint(dbg, "simple2.js", 3);
 
   info("Disable the breakpoint");
   await disableBreakpoint(dbg, 0);
-  let bp = findBreakpoint(dbg, "simple2", 3);
+  let bp = findBreakpoint(dbg, "simple2.js", 3);
   is(bp.disabled, true, "breakpoint is disabled");
 
   info("Enable the breakpoint");
   await enableBreakpoint(dbg, 0);
-  bp = findBreakpoint(dbg, "simple2", 3);
+  bp = findBreakpoint(dbg, "simple2.js", 3);
   is(bp.disabled, false, "breakpoint is enabled");
 
   info("Close the browser toolbox window");

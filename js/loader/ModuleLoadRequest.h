@@ -4,22 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ModuleLoadRequest_h
-#define mozilla_dom_ModuleLoadRequest_h
+#ifndef js_loader_ModuleLoadRequest_h
+#define js_loader_ModuleLoadRequest_h
 
 #include "ScriptLoadRequest.h"
+#include "ModuleLoaderBase.h"
 #include "mozilla/MozPromise.h"
 #include "js/RootingAPI.h"
 #include "js/Value.h"
 #include "nsURIHashKey.h"
 #include "nsTHashtable.h"
 
-namespace mozilla {
-namespace dom {
+namespace JS::loader {
 
 class ModuleScript;
-class ModuleLoader;
-class ScriptLoader;
+class ModuleLoaderBase;
 
 // A reference counted set of URLs we have visited in the process of loading a
 // module graph.
@@ -40,32 +39,23 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   ModuleLoadRequest(const ModuleLoadRequest& aOther) = delete;
   ModuleLoadRequest(ModuleLoadRequest&& aOther) = delete;
 
-  ModuleLoadRequest(nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
-                    const SRIMetadata& aIntegrity, nsIURI* aReferrer,
-                    bool aIsTopLevel, bool aIsDynamicImport,
-                    ModuleLoader* aLoader, VisitedURLSet* aVisitedSet);
-
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ModuleLoadRequest,
                                                          ScriptLoadRequest)
+  using SRIMetadata = mozilla::dom::SRIMetadata;
 
-  // Create a top-level module load request.
-  static ModuleLoadRequest* CreateTopLevel(nsIURI* aURI,
-                                           ScriptFetchOptions* aFetchOptions,
-                                           const SRIMetadata& aIntegrity,
-                                           nsIURI* aReferrer,
-                                           ScriptLoader* aLoader);
+  template <typename T>
+  using MozPromiseHolder = mozilla::MozPromiseHolder<T>;
+  using GenericPromise = mozilla::GenericPromise;
 
-  // Create a module load request for a static module import.
-  static ModuleLoadRequest* CreateStaticImport(nsIURI* aURI,
-                                               ModuleLoadRequest* aParent);
+  ModuleLoadRequest(nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
+                    const SRIMetadata& aIntegrity, nsIURI* aReferrer,
+                    mozilla::dom::ScriptLoadContext* aContext, bool aIsTopLevel,
+                    bool aIsDynamicImport, ModuleLoaderBase* aLoader,
+                    VisitedURLSet* aVisitedSet, ModuleLoadRequest* aRootModule);
 
-  // Create a module load request for dynamic module import.
-  static ModuleLoadRequest* CreateDynamicImport(
-      nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-      ScriptLoader* aLoader, JS::Handle<JS::Value> aReferencingPrivate,
-      JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise);
+  static VisitedURLSet* NewVisitedSetForTopLevelImport(nsIURI* aURI);
 
   bool IsTopLevel() const override { return mIsTopLevel; }
 
@@ -79,6 +69,13 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   void ModuleErrored();
   void DependenciesLoaded();
   void LoadFailed();
+
+  ModuleLoadRequest* GetRootModule() {
+    if (!mRootModule) {
+      return this;
+    }
+    return mRootModule;
+  }
 
  private:
   void LoadFinished();
@@ -94,7 +91,11 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   // Pointer to the script loader, used to trigger actions when the module load
   // finishes.
-  RefPtr<ModuleLoader> mLoader;
+  RefPtr<ModuleLoaderBase> mLoader;
+
+  // Pointer to the top level module of this module tree, nullptr if this is
+  // a top level module
+  RefPtr<ModuleLoadRequest> mRootModule;
 
   // Set to a module script object after a successful load or nullptr on
   // failure.
@@ -118,7 +119,6 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   JS::Heap<JSObject*> mDynamicPromise;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace JS::loader
 
-#endif  // mozilla_dom_ModuleLoadRequest_h
+#endif  // js_loader_ModuleLoadRequest_h

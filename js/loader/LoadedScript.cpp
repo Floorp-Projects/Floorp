@@ -7,13 +7,12 @@
 #include "LoadedScript.h"
 
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/dom/Element.h"
 
 #include "jsfriendapi.h"
 #include "js/Modules.h"  // JS::{Get,Set}ModulePrivate
-#include "ScriptLoader.h"
 
-namespace mozilla {
-namespace dom {
+namespace JS::loader {
 
 //////////////////////////////////////////////////////////////
 // LoadedScript
@@ -27,10 +26,11 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(LoadedScript)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(LoadedScript)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBaseURL)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(LoadedScript)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions, mElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(LoadedScript)
@@ -40,13 +40,16 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(LoadedScript)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadedScript)
 
 LoadedScript::LoadedScript(ScriptKind aKind, ScriptFetchOptions* aFetchOptions,
-                           nsIURI* aBaseURL)
-    : mKind(aKind), mFetchOptions(aFetchOptions), mBaseURL(aBaseURL) {
+                           nsIURI* aBaseURL, mozilla::dom::Element* aElement)
+    : mKind(aKind),
+      mFetchOptions(aFetchOptions),
+      mBaseURL(aBaseURL),
+      mElement(aElement) {
   MOZ_ASSERT(mFetchOptions);
   MOZ_ASSERT(mBaseURL);
 }
 
-LoadedScript::~LoadedScript() { DropJSObjects(this); }
+LoadedScript::~LoadedScript() { mozilla::DropJSObjects(this); }
 
 void LoadedScript::AssociateWithScript(JSScript* aScript) {
   // Set a JSScript's private value to point to this object. The JS engine will
@@ -91,16 +94,17 @@ void HostReleaseTopLevelScript(const JS::Value& aPrivate) {
 // EventScript
 //////////////////////////////////////////////////////////////
 
-EventScript::EventScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eEvent, aFetchOptions, aBaseURL) {}
+EventScript::EventScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
+                         mozilla::dom::Element* aElement)
+    : LoadedScript(ScriptKind::eEvent, aFetchOptions, aBaseURL, aElement) {}
 
 //////////////////////////////////////////////////////////////
 // ClassicScript
 //////////////////////////////////////////////////////////////
 
 ClassicScript::ClassicScript(ScriptFetchOptions* aFetchOptions,
-                             nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eClassic, aFetchOptions, aBaseURL) {}
+                             nsIURI* aBaseURL, mozilla::dom::Element* aElement)
+    : LoadedScript(ScriptKind::eClassic, aFetchOptions, aBaseURL, aElement) {}
 
 //////////////////////////////////////////////////////////////
 // ModuleScript
@@ -129,8 +133,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_ADDREF_INHERITED(ModuleScript, LoadedScript)
 NS_IMPL_RELEASE_INHERITED(ModuleScript, LoadedScript)
 
-ModuleScript::ModuleScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
-    : LoadedScript(ScriptKind::eModule, aFetchOptions, aBaseURL),
+ModuleScript::ModuleScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
+                           mozilla::dom::Element* aElement)
+    : LoadedScript(ScriptKind::eModule, aFetchOptions, aBaseURL, aElement),
       mDebuggerDataInitialized(false) {
   MOZ_ASSERT(!ModuleRecord());
   MOZ_ASSERT(!HasParseError());
@@ -167,7 +172,7 @@ void ModuleScript::SetModuleRecord(JS::Handle<JSObject*> aModuleRecord) {
   MOZ_ASSERT(JS::GetModulePrivate(mModuleRecord).isUndefined());
   JS::SetModulePrivate(mModuleRecord, JS::PrivateValue(this));
 
-  HoldJSObjects(this);
+  mozilla::HoldJSObjects(this);
 }
 
 void ModuleScript::SetParseError(const JS::Value& aError) {
@@ -177,7 +182,7 @@ void ModuleScript::SetParseError(const JS::Value& aError) {
 
   UnlinkModuleRecord();
   mParseError = aError;
-  HoldJSObjects(this);
+  mozilla::HoldJSObjects(this);
 }
 
 void ModuleScript::SetErrorToRethrow(const JS::Value& aError) {
@@ -197,5 +202,4 @@ void ModuleScript::SetDebuggerDataInitialized() {
   mDebuggerDataInitialized = true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace JS::loader

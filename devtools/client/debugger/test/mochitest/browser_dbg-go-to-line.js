@@ -6,8 +6,8 @@
 
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "long.js");
-  await selectSource(dbg, "long");
-  await waitForSelectedSource(dbg, "long");
+  await selectSource(dbg, "long.js");
+  await waitForSelectedSource(dbg, "long.js");
 
   info('Test opening');
   pressKey(dbg, "goToLine");

@@ -68,7 +68,7 @@ add_task(async function() {
   assertNotPaused(dbg);
 
   info("Pause in both workers");
-  await addBreakpoint(dbg, "simple-worker", 10);
+  await addBreakpoint(dbg, "simple-worker.js", 10);
   invokeInTab("sayHello");
 
   info("Wait for both workers to pause");
