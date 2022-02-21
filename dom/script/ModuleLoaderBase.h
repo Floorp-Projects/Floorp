@@ -86,7 +86,9 @@ class ModuleLoaderBase : public nsISupports {
       mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
 
   // Methods that must be overwritten by an extending class
-  virtual void EnsureModuleHooksInitialized() = 0;
+  virtual void EnsureModuleHooksInitialized() {
+    MOZ_ASSERT(false, "You must override EnsureModuleHooksInitialized");
+  }
   virtual nsresult StartModuleLoad(ScriptLoadRequest* aRequest) = 0;
   virtual void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) = 0;
   virtual nsresult CompileOrFinishModuleScript(
