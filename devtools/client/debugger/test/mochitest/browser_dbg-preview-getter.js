@@ -32,4 +32,3 @@ add_task(async function() {
 
   await closePreviewAtPos(dbg, 5, 8);
 });
-
