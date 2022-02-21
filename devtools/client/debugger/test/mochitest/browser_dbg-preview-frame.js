@@ -20,7 +20,7 @@ add_task(async function() {
   info("Preview should still work after selecting different locations");
   const frame = dbg.selectors.getVisibleSelectedFrame();
   const inScopeLines = dbg.selectors.getInScopeLines(frame.location);
-  await selectSource(dbg, "switching-01");
+  await selectSource(dbg, "script-switching-01.js");
   await assertFunctionPreview(dbg, 8, 4, "secondCall()");
   is(
     dbg.selectors.getInScopeLines(frame.location),

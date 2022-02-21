@@ -14,7 +14,7 @@ add_task(async function() {
   const { getState } = dbg;
   const source = findSource(dbg, "simple1.js");
 
-  await selectSource(dbg, source.url);
+  await selectSource(dbg, source);
 
   // Make sure that clicking the gutter creates a breakpoint icon.
   await clickGutter(dbg, 4);

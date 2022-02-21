@@ -28,8 +28,8 @@ add_task(async function testAllBlackBox() {
 
   const source = findSource(dbg, file);
 
-  await selectSource(dbg, source.url);
-  await waitForSelectedSource(dbg, source.url);
+  await selectSource(dbg, source);
+  await waitForSelectedSource(dbg, source);
 
   await addBreakpoint(dbg, file, 8);
 
@@ -47,8 +47,8 @@ add_task(async function testBlackBoxOnReload() {
 
   const source = findSource(dbg, file);
 
-  await selectSource(dbg, source.url);
-  await waitForSelectedSource(dbg, source.url);
+  await selectSource(dbg, source);
+  await waitForSelectedSource(dbg, source);
 
   // Adding 2 breakpoints in funcB() and funcC() which
   // would be hit in order.

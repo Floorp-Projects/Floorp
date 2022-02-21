@@ -8,14 +8,14 @@
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-duplicate-functions.html",
-    "doc-duplicate-functions"
+    "doc-duplicate-functions.html"
   );
-  let source = findSource(dbg, "doc-duplicate-functions");
+  let source = findSource(dbg, "doc-duplicate-functions.html");
 
-  await selectSource(dbg, source.url);
-  await addBreakpoint(dbg, source.url, 21);
+  await selectSource(dbg, source);
+  await addBreakpoint(dbg, source, 21);
 
-  await reload(dbg, "doc-duplicate-functions");
+  await reload(dbg, "doc-duplicate-functions.html");
 
   await waitForState(dbg, state => dbg.selectors.getBreakpointCount() == 1);
 
@@ -27,7 +27,7 @@ add_task(async function() {
   invokeInTab("func");
   await waitForPaused(dbg);
 
-  source = findSource(dbg, "doc-duplicate-functions");
+  source = findSource(dbg, "doc-duplicate-functions.html");
   assertPausedAtSourceAndLine(dbg, source.id, 21);
   await assertBreakpoint(dbg, 21);
 
