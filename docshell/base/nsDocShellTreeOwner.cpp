@@ -131,11 +131,8 @@ class ChromeTooltipListener final : public nsIDOMEventListener {
   bool WebProgressShowedTooltip(nsIWebProgress* aWebProgress);
 
  private:
-  // various delays for tooltips
-  enum {
-    kTooltipAutoHideTime = 5000,    // ms
-    kTooltipMouseMoveTolerance = 7  // pixel tolerance for mousemove event
-  };
+  // pixel tolerance for mousemove event
+  static constexpr CSSIntCoord kTooltipMouseMoveTolerance = 7;
 
   NS_IMETHOD AddTooltipListener();
   NS_IMETHOD RemoveTooltipListener();
@@ -161,12 +158,10 @@ class ChromeTooltipListener final : public nsIDOMEventListener {
   static void sTooltipCallback(nsITimer* aTimer, void* aListener);
 
   // Mouse coordinates for last mousemove event we saw
-  int32_t mMouseClientX;
-  int32_t mMouseClientY;
+  CSSIntPoint mMouseClientPoint;
 
   // Mouse coordinates for tooltip event
-  int32_t mMouseScreenX;
-  int32_t mMouseScreenY;
+  LayoutDeviceIntPoint mMouseScreenPoint;
 
   bool mShowingTooltip;
 
@@ -1030,10 +1025,6 @@ ChromeTooltipListener::ChromeTooltipListener(nsWebBrowser* aInBrowser,
     : mWebBrowser(aInBrowser),
       mWebBrowserChrome(aInChrome),
       mTooltipListenerInstalled(false),
-      mMouseClientX(0),
-      mMouseClientY(0),
-      mMouseScreenX(0),
-      mMouseScreenY(0),
       mShowingTooltip(false),
       mTooltipShownOnce(false) {}
 
@@ -1173,23 +1164,22 @@ nsresult ChromeTooltipListener::MouseMove(Event* aMouseEvent) {
   // within the timer callback. On win32, we'll get a MouseMove event even when
   // a popup goes away -- even when the mouse doesn't change position! To get
   // around this, we make sure the mouse has really moved before proceeding.
-  int32_t newMouseX = mouseEvent->ClientX();
-  int32_t newMouseY = mouseEvent->ClientY();
-  if (mMouseClientX == newMouseX && mMouseClientY == newMouseY) {
+  CSSIntPoint newMouseClientPoint = mouseEvent->ClientPoint();
+  if (mMouseClientPoint == newMouseClientPoint) {
     return NS_OK;
   }
 
   // Filter out minor mouse movements.
   if (mShowingTooltip &&
-      (abs(mMouseClientX - newMouseX) <= kTooltipMouseMoveTolerance) &&
-      (abs(mMouseClientY - newMouseY) <= kTooltipMouseMoveTolerance)) {
+      (abs(mMouseClientPoint.x - newMouseClientPoint.x) <=
+       kTooltipMouseMoveTolerance) &&
+      (abs(mMouseClientPoint.y - newMouseClientPoint.y) <=
+       kTooltipMouseMoveTolerance)) {
     return NS_OK;
   }
 
-  mMouseClientX = newMouseX;
-  mMouseClientY = newMouseY;
-  mMouseScreenX = mouseEvent->ScreenX(CallerType::System);
-  mMouseScreenY = mouseEvent->ScreenY(CallerType::System);
+  mMouseClientPoint = newMouseClientPoint;
+  mMouseScreenPoint = mouseEvent->ScreenPointLayoutDevicePix();
 
   if (mTooltipTimer) {
     mTooltipTimer->Cancel();
@@ -1352,8 +1342,8 @@ void ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
   if (textFound && (!self->mTooltipShownOnce ||
                     tooltipText != self->mLastShownTooltipText)) {
     // ShowTooltip expects screen-relative position.
-    self->ShowTooltip(self->mMouseScreenX, self->mMouseScreenY, tooltipText,
-                      directionText);
+    self->ShowTooltip(self->mMouseScreenPoint.x, self->mMouseScreenPoint.y,
+                      tooltipText, directionText);
     self->mLastShownTooltipText = std::move(tooltipText);
     self->mLastDocshell = do_GetWeakReference(
         self->mPossibleTooltipNode->OwnerDoc()->GetDocShell());
