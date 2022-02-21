@@ -1302,6 +1302,17 @@ void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
 }
 
 Maybe<ColorScheme> nsLookAndFeel::ComputeColorSchemeSetting() {
+  {
+    // Check the pref explicitly here. Usually this shouldn't be needed, but
+    // since we can only load one GTK theme at a time, and the pref will
+    // override the effective value that the rest of gecko assumes for the
+    // "system" color scheme, we need to factor it in our GTK theme decisions.
+    int32_t pref = 0;
+    if (NS_SUCCEEDED(Preferences::GetInt("ui.systemUsesDarkTheme", &pref))) {
+      return Some(pref ? ColorScheme::Dark : ColorScheme::Light);
+    }
+  }
+
   if (!mDBusSettingsProxy) {
     return Nothing();
   }
