@@ -44,11 +44,24 @@ class ScriptLoadRequestList;
 class DOMScriptLoadContext;
 
 /*
- * Some options used when fetching script resources. This only loosely
- * corresponds to HTML's "script fetch options".
+ * ScriptFetchOptions loosely corresponds to HTML's "script fetch options",
+ * https://html.spec.whatwg.org/multipage/webappapis.html#script-fetch-options
+ * with the exception of the following properties:
+ *   cryptographic nonce
+ *      The cryptographic nonce metadata used for the initial fetch and for
+ *      fetching any imported modules. This is handled by the principal.
+ *   parser metadata
+ *      The parser metadata used for the initial fetch and for fetching any
+ *      imported modules. This is not implemented.
+ *   integrity metadata
+ *      The integrity metadata used for the initial fetch. This is
+ *      implemented in ScriptLoadRequest, as it changes for every
+ *      ScriptLoadRequest.
  *
- * These are common to all modules in a module graph, and hence a single
- * instance is shared by all ModuleLoadRequest objects in a graph.
+ * In the case of classic scripts without dynamic import, this object is
+ * used once. For modules, this object is propogated throughout the module
+ * tree. If there is a dynamically imported module in any type of script,
+ * the ScriptFetchOptions object will be propogated from its importer.
  */
 
 class ScriptFetchOptions {
@@ -60,15 +73,25 @@ class ScriptFetchOptions {
 
   ScriptFetchOptions(mozilla::CORSMode aCORSMode,
                      enum ReferrerPolicy aReferrerPolicy,
-                     nsIPrincipal* aTriggeringPrincipal,
-                     nsIGlobalObject* aWebExtGlobal);
+                     nsIPrincipal* aTriggeringPrincipal);
 
+  /*
+   *  The credentials mode used for the initial fetch (for module scripts)
+   *  and for fetching any imported modules (for both module scripts and
+   *  classic scripts)
+   */
   const mozilla::CORSMode mCORSMode;
+
+  /*
+   *  The referrer policy used for the initial fetch and for fetching any
+   *  imported modules
+   */
   const enum ReferrerPolicy mReferrerPolicy;
+
+  /*
+   * related to cryptographic nonce, used to determine CSP
+   */
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-  // Global that initiated this request, when using a WebExtension
-  // content-script.
-  nsCOMPtr<nsIGlobalObject> mWebExtGlobal;
 };
 
 /*
@@ -227,13 +250,6 @@ class ScriptLoadRequest
     return mFetchOptions->mTriggeringPrincipal;
   }
 
-  // This will return nullptr in most cases,
-  // unless this is a module being imported by a WebExtension content script.
-  // In that case it's the Sandbox global executing that code.
-  nsIGlobalObject* GetWebExtGlobal() const {
-    return mFetchOptions->mWebExtGlobal;
-  }
-
   void ClearScriptSource();
 
   void SetScript(JSScript* aScript);
@@ -339,7 +355,8 @@ class DOMScriptLoadContext : public PreloaderBase {
   virtual ~DOMScriptLoadContext();
 
  public:
-  explicit DOMScriptLoadContext(Element* aElement, ScriptLoadRequest* aRequest);
+  explicit DOMScriptLoadContext(Element* aElement, ScriptLoadRequest* aRequest,
+                                nsIGlobalObject* aWebExtGlobal = nullptr);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMScriptLoadContext)
@@ -362,6 +379,11 @@ class DOMScriptLoadContext : public PreloaderBase {
   }
 
   bool IsPreload() const;
+
+  // This will return nullptr in most cases,
+  // unless this is a module being imported by a WebExtension content script.
+  // In that case it's the Sandbox global executing that code.
+  nsIGlobalObject* GetWebExtGlobal() const;
 
   bool CompileStarted() const {
     return mRequest->InCompilingStage() ||
@@ -455,6 +477,9 @@ class DOMScriptLoadContext : public PreloaderBase {
   // Set on scripts and top level modules.
   bool mIsPreload;
   nsCOMPtr<Element> mElement;
+  // Global that initiated this request, when using a WebExtension
+  // content-script.
+  nsCOMPtr<nsIGlobalObject> mWebExtGlobal;
 
   RefPtr<ScriptLoadRequest> mRequest;
 
