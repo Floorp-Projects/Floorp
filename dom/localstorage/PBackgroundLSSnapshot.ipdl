@@ -77,6 +77,10 @@ parent:
 
   async Finish();
 
+  // A synchronous finish. This should only be used by the snapshotting code to
+  // end an explicit snapshot.
+  sync SyncFinish();
+
   async Loaded();
 
   /**
@@ -118,11 +122,6 @@ parent:
    */
   sync IncreasePeakUsage(int64_t minSize)
     returns (int64_t size);
-
-  // A synchronous ping to the parent actor to confirm that the parent actor
-  // has received previous async message. This should only be used by the
-  // snapshotting code to end an explicit snapshot.
-  sync Ping();
 
 child:
   /**

@@ -176,7 +176,7 @@ class LSSnapshot final : public nsIRunnable {
 
   nsresult Checkpoint();
 
-  nsresult Finish();
+  nsresult Finish(bool aSync = false);
 
   void CancelIdleTimer();
 
