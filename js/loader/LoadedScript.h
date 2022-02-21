@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_LoadedScript_h
-#define mozilla_dom_LoadedScript_h
+#ifndef js_loader_LoadedScript_h
+#define js_loader_LoadedScript_h
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -14,10 +14,7 @@
 
 class nsIURI;
 
-namespace mozilla {
-namespace dom {
-
-class ScriptLoader;
+namespace JS::loader {
 
 void HostAddRefTopLevelScript(const JS::Value& aPrivate);
 void HostReleaseTopLevelScript(const JS::Value& aPrivate);
@@ -30,10 +27,11 @@ class LoadedScript : public nsISupports {
   ScriptKind mKind;
   RefPtr<ScriptFetchOptions> mFetchOptions;
   nsCOMPtr<nsIURI> mBaseURL;
+  RefPtr<mozilla::dom::Element> mElement;
 
  protected:
   LoadedScript(ScriptKind aKind, ScriptFetchOptions* aFetchOptions,
-               nsIURI* aBaseURL);
+               nsIURI* aBaseURL, mozilla::dom::Element* aElement);
 
   virtual ~LoadedScript();
 
@@ -48,7 +46,12 @@ class LoadedScript : public nsISupports {
   inline ModuleScript* AsModuleScript();
   inline EventScript* AsEventScript();
 
+  // Used to propagate Fetch Options to child modules
   ScriptFetchOptions* GetFetchOptions() const { return mFetchOptions; }
+
+  // Used by the Debugger to get the associated Script Element
+  mozilla::dom::Element* GetScriptElement() const { return mElement; }
+
   nsIURI* BaseURL() const { return mBaseURL; }
 
   void AssociateWithScript(JSScript* aScript);
@@ -58,14 +61,16 @@ class ClassicScript final : public LoadedScript {
   ~ClassicScript() = default;
 
  public:
-  ClassicScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
+  ClassicScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
+                mozilla::dom::Element* aElement);
 };
 
 class EventScript final : public LoadedScript {
   ~EventScript() = default;
 
  public:
-  EventScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
+  EventScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
+              mozilla::dom::Element* aElement);
 };
 
 // A single module script. May be used to satisfy multiple load requests.
@@ -83,7 +88,8 @@ class ModuleScript final : public LoadedScript {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ModuleScript,
                                                          LoadedScript)
 
-  ModuleScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL);
+  ModuleScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
+               mozilla::dom::Element* aElement);
 
   void SetModuleRecord(JS::Handle<JSObject*> aModuleRecord);
   void SetParseError(const JS::Value& aError);
@@ -113,7 +119,6 @@ ModuleScript* LoadedScript::AsModuleScript() {
   return static_cast<ModuleScript*>(this);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace JS::loader
 
-#endif  // mozilla_dom_LoadedScript_h
+#endif  // js_loader_LoadedScript_h

@@ -7,7 +7,7 @@ const SOURCES = [
   "simple2.js",
   "simple3.js",
   "long.js",
-  "scripts.html"
+  "doc-scripts.html"
 ];
 
 /**
@@ -29,7 +29,7 @@ add_task(async function() {
   await navigate(dbg, "doc-scripts.html", "simple1.js");
 
   info("Set a breakpoint on the second document and pause on it");
-  await selectSource(dbg, "simple1");
+  await selectSource(dbg, "simple1.js");
   await addBreakpoint(dbg, "simple1.js", 4);
   invokeInTab("main");
   await waitForPaused(dbg);

@@ -9,14 +9,14 @@
 #include "mozilla/HoldDropJSObjects.h"
 
 #include "LoadedScript.h"
-#include "ScriptLoader.h"
+#include "ModuleLoaderBase.h"
 
-namespace mozilla {
-namespace dom {
+namespace JS::loader {
 
 #undef LOG
-#define LOG(args) \
-  MOZ_LOG(ScriptLoader::gScriptLoaderLog, mozilla::LogLevel::Debug, args)
+#define LOG(args)                                                           \
+  MOZ_LOG(ModuleLoaderBase::gModuleLoaderBaseLog, mozilla::LogLevel::Debug, \
+          args)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ModuleLoadRequest)
 NS_INTERFACE_MAP_END_INHERITING(ScriptLoadRequest)
@@ -25,13 +25,14 @@ NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(ModuleLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ModuleLoadRequest,
                                                 ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader, mModuleScript, mImports)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader, mModuleScript, mImports, mRootModule)
   tmp->ClearDynamicImport();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ModuleLoadRequest,
                                                   ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoader, mModuleScript, mImports)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoader, mModuleScript, mImports,
+                                    mRootModule)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleLoadRequest,
@@ -44,70 +45,25 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_ADDREF_INHERITED(ModuleLoadRequest, ScriptLoadRequest)
 NS_IMPL_RELEASE_INHERITED(ModuleLoadRequest, ScriptLoadRequest)
 
-static VisitedURLSet* NewVisitedSetForTopLevelImport(nsIURI* aURI) {
+/* static */
+VisitedURLSet* ModuleLoadRequest::NewVisitedSetForTopLevelImport(nsIURI* aURI) {
   auto set = new VisitedURLSet();
   set->PutEntry(aURI);
   return set;
 }
 
-/* static */
-ModuleLoadRequest* ModuleLoadRequest::CreateTopLevel(
-    nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
-    const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader) {
-  return new ModuleLoadRequest(
-      aURI, aFetchOptions, aIntegrity, aReferrer, true, /* is top level */
-      false,                                            /* is dynamic import */
-      aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI));
-}
-
-/* static */
-ModuleLoadRequest* ModuleLoadRequest::CreateStaticImport(
-    nsIURI* aURI, ModuleLoadRequest* aParent) {
-  auto request =
-      new ModuleLoadRequest(aURI, aParent->mFetchOptions, SRIMetadata(),
-                            aParent->mURI, false, /* is top level */
-                            false,                /* is dynamic import */
-                            aParent->mLoader, aParent->mVisitedSet);
-
-  request->mIsInline = false;
-  request->mScriptMode = aParent->mScriptMode;
-
-  return request;
-}
-
-/* static */
-ModuleLoadRequest* ModuleLoadRequest::CreateDynamicImport(
-    nsIURI* aURI, ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL,
-    ScriptLoader* aLoader, JS::Handle<JS::Value> aReferencingPrivate,
-    JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise) {
-  MOZ_ASSERT(aSpecifier);
-  MOZ_ASSERT(aPromise);
-
-  auto request = new ModuleLoadRequest(
-      aURI, aFetchOptions, SRIMetadata(), aBaseURL, true, /* is top level */
-      true, /* is dynamic import */
-      aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI));
-
-  request->mIsInline = false;
-  request->mScriptMode = ScriptMode::eAsync;
-  request->mDynamicReferencingPrivate = aReferencingPrivate;
-  request->mDynamicSpecifier = aSpecifier;
-  request->mDynamicPromise = aPromise;
-
-  HoldJSObjects(request);
-
-  return request;
-}
-
 ModuleLoadRequest::ModuleLoadRequest(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
-    const SRIMetadata& aIntegrity, nsIURI* aReferrer, bool aIsTopLevel,
-    bool aIsDynamicImport, ModuleLoader* aLoader, VisitedURLSet* aVisitedSet)
+    const mozilla::dom::SRIMetadata& aIntegrity, nsIURI* aReferrer,
+    mozilla::dom::ScriptLoadContext* aContext, bool aIsTopLevel,
+    bool aIsDynamicImport, ModuleLoaderBase* aLoader,
+    VisitedURLSet* aVisitedSet, ModuleLoadRequest* aRootModule)
     : ScriptLoadRequest(ScriptKind::eModule, aURI, aFetchOptions, aIntegrity,
-                        aReferrer),
+                        aReferrer, aContext),
       mIsTopLevel(aIsTopLevel),
       mIsDynamicImport(aIsDynamicImport),
       mLoader(aLoader),
+      mRootModule(aRootModule),
       mVisitedSet(aVisitedSet) {}
 
 void ModuleLoadRequest::Cancel() {
@@ -149,7 +105,9 @@ void ModuleLoadRequest::ModuleLoaded() {
 
   LOG(("ScriptLoadRequest (%p): Module loaded", this));
 
-  mModuleScript = mLoader->GetFetchedModule(mURI, GetWebExtGlobal());
+  nsIGlobalObject* global =
+      HasLoadContext() ? GetLoadContext()->GetWebExtGlobal() : nullptr;
+  mModuleScript = mLoader->GetFetchedModule(mURI, global);
   if (!mModuleScript || mModuleScript->HasParseError()) {
     ModuleErrored();
     return;
@@ -233,5 +191,4 @@ void ModuleLoadRequest::ClearDynamicImport() {
   mDynamicPromise = nullptr;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace JS::loader

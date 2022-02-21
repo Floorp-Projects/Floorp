@@ -18,16 +18,16 @@ add_task(async function() {
   pressKey(dbg, "Escape");
 
   info("Testing source search and check to see if source is selected");
-  await waitForSource(dbg, "switching-01");
+  await waitForSource(dbg, "script-switching-01.js");
   await quickOpen(dbg, "sw1");
-  await waitForResults(dbg, ["switching-01.js"]);
+  await waitForResults(dbg, ["script-switching-01.js"]);
   is(resultCount(dbg), 1, "one file results");
   pressKey(dbg, "Enter");
-  await waitForSelectedSource(dbg, "switching-01");
+  await waitForSelectedSource(dbg, "script-switching-01.js");
 
   info("Test that results show tab icons");
   await quickOpen(dbg, "sw1");
-  await waitForResults(dbg, ["switching-01.js"]);
+  await waitForResults(dbg, ["script-switching-01.js"]);
   await assertResultIsTab(dbg, 1);
   pressKey(dbg, "Tab");
 
@@ -35,11 +35,11 @@ add_task(async function() {
     "Testing arrow keys in source search and check to see if source is selected"
   );
   await quickOpen(dbg, "sw2");
-  await waitForResults(dbg, ["switching-02.js"]);
+  await waitForResults(dbg, ["script-switching-02.js"]);
   is(resultCount(dbg), 1, "one file results");
   pressKey(dbg, "Down");
   pressKey(dbg, "Enter");
-  await waitForSelectedSource(dbg, "switching-02");
+  await waitForSelectedSource(dbg, "script-switching-02.js");
 
   info("Testing tab closes the search");
   await quickOpen(dbg, "sw");
@@ -70,9 +70,9 @@ add_task(async function() {
 
   info("Testing gotoSource");
   await quickOpen(dbg, "sw1:5");
-  await waitForResults(dbg, ["switching-01.js"]);
+  await waitForResults(dbg, ["script-switching-01.js"]);
   pressKey(dbg, "Enter");
-  await waitForSelectedSource(dbg, "switching-01");
+  await waitForSelectedSource(dbg, "script-switching-01.js");
   assertLine(dbg, 5);
 });
 

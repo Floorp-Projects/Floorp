@@ -29,7 +29,7 @@ UIEvent::UIEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                  WidgetGUIEvent* aEvent)
     : Event(aOwner, aPresContext,
             aEvent ? aEvent : new InternalUIEvent(false, eVoidEvent, nullptr)),
-      mClientPoint(0, 0),
+      mDefaultClientPoint(0, 0),
       mLayerPoint(0, 0),
       mPagePoint(0, 0),
       mMovementPoint(0, 0),
@@ -189,12 +189,12 @@ nsIntPoint UIEvent::GetLayerPoint() const {
 }
 
 void UIEvent::DuplicatePrivateData() {
-  mClientPoint = Event::GetClientCoords(mPresContext, mEvent, mEvent->mRefPoint,
-                                        mClientPoint);
+  mDefaultClientPoint = Event::GetClientCoords(
+      mPresContext, mEvent, mEvent->mRefPoint, mDefaultClientPoint);
   mMovementPoint = GetMovementPoint();
   mLayerPoint = GetLayerPoint();
   mPagePoint = Event::GetPageCoords(mPresContext, mEvent, mEvent->mRefPoint,
-                                    mClientPoint);
+                                    mDefaultClientPoint);
   // GetScreenPoint converts mEvent->mRefPoint to right coordinates.
   CSSIntPoint screenPoint =
       Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint);
