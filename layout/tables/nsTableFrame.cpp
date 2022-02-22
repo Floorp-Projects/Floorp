@@ -7520,9 +7520,7 @@ void nsDisplayTableItem::ComputeInvalidationRegion(
 
 nsDisplayTableBackgroundSet::nsDisplayTableBackgroundSet(
     nsDisplayListBuilder* aBuilder, nsIFrame* aTable)
-    : mBuilder(aBuilder),
-      mColGroupBackgrounds(aBuilder),
-      mColBackgrounds(aBuilder) {
+    : mBuilder(aBuilder) {
   mPrevTableBackgroundSet = mBuilder->SetTableBackgroundSet(this);
   mozilla::DebugOnly<const nsIFrame*> reference =
       mBuilder->FindReferenceFrameFor(aTable, &mToReferenceFrame);
