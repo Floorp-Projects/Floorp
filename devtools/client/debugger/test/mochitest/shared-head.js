@@ -1,18 +1,29 @@
-/* eslint-disable no-unused-vars */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/* eslint-disable no-unused-vars */
 
 /**
  * Helper methods to drive with the debugger during mochitests. This file can be safely
  * required from other panel test files.
  */
 
-// Import helpers for the new debugger
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers/context.js",
-  this
-);
+/**
+ * Helper method to create a "dbg" context for other tools to use
+ */
+function createDebuggerContext(toolbox) {
+  const panel = toolbox.getPanel("jsdebugger");
+  const win = panel.panelWin;
+
+  return {
+    ...win.dbg,
+    commands: toolbox.commands,
+    toolbox: toolbox,
+    win: win,
+    panel: panel
+  };
+}
 
 var { Toolbox } = require("devtools/client/framework/toolbox");
 const asyncStorage = require("devtools/shared/async-storage");
