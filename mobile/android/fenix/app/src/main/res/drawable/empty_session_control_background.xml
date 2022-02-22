@@ -4,6 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <stroke android:width="2dp" android:dashWidth="4dp" android:color="?neutral" android:dashGap="4dp" />
+    <stroke android:width="2dp" android:dashWidth="4dp" android:color="?borderPrimary" android:dashGap="4dp" />
     <corners android:radius="8dp" />
 </shape>
