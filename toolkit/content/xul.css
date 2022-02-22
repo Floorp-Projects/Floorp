@@ -207,6 +207,7 @@ html|input,
 tab,
 radio,
 splitter,
+menu,
 menulist {
   -moz-window-dragging: no-drag;
 }
