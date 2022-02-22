@@ -4282,14 +4282,16 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   }
 
   if (mDragService) {
-    // set the dragend point from the current mouse location
     RefPtr<nsDragService> dragService = static_cast<nsDragService*>(mDragService);
-    FlipCocoaScreenCoordinate(aPoint);
-    dragService->SetDragEndPoint(gfx::IntPoint::Round(aPoint.x, aPoint.y));
 
+    // Set the dragend point from the current mouse location
+    // FIXME(emilio): Weird that we wouldn't use aPoint instead? Seems to work
+    // locally as well...
+    // NSPoint pnt = aPoint;
     NSPoint pnt = [NSEvent mouseLocation];
+    NSPoint locationInWindow = nsCocoaUtils::ConvertPointFromScreen([self window], pnt);
     FlipCocoaScreenCoordinate(pnt);
-    dragService->SetDragEndPoint(gfx::IntPoint::Round(pnt.x, pnt.y));
+    dragService->SetDragEndPoint([self convertWindowCoordinates:locationInWindow]);
 
     // XXX: dropEffect should be updated per |aOperation|.
     // As things stand though, |aOperation| isn't well handled within "our"
