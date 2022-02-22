@@ -1218,6 +1218,22 @@ class PictureInPictureChild extends JSWindowActorChild {
   }
 
   /**
+   * Creates a link element with a reference to the css stylesheet needed
+   * for text tracks responsive styling.
+   * @returns {Element} the link element containing text tracks stylesheet.
+   */
+  createTextTracksStyleSheet() {
+    let headStyleElement = this.document.createElement("link");
+    headStyleElement.setAttribute("rel", "stylesheet");
+    headStyleElement.setAttribute(
+      "href",
+      "chrome://global/skin/pictureinpicture/texttracks.css"
+    );
+    headStyleElement.setAttribute("type", "text/css");
+    return headStyleElement;
+  }
+
+  /**
    * Sets up Picture-in-Picture to support displaying text tracks from WebVTT
    * or if WebVTT isn't supported we will register the caption change mutation observer if
    * the site wrapper exists.
@@ -1306,9 +1322,6 @@ class PictureInPictureChild extends JSWindowActorChild {
       let cueTextNode = WebVTT.convertCueToDOMTree(playerVideoWindow, text);
       let cueDiv = this.document.createElement("div");
       cueDiv.appendChild(cueTextNode);
-      // Whitespaces are usually collapsed. Set to pre-wrap
-      // so that newlines are rendered.
-      cueDiv.style = "white-space: pre;";
       pipWindowTracksContainer.appendChild(cueDiv);
     });
   }
@@ -1773,17 +1786,11 @@ class PictureInPictureChild extends JSWindowActorChild {
     // we can load text tracks without having to constantly
     // access the parent process.
     textTracks.id = "texttracks";
-    // TODO: responsive styling. Hardcoded values until design spec confirmed.
-    textTracks.style.position = "absolute";
-    textTracks.style.textAlign = "center";
-    textTracks.style.width = "100vw";
-    textTracks.style.bottom = "30px";
-    textTracks.style.backgroundColor = "black";
-    textTracks.style.color = "white";
-    textTracks.style.whiteSpace = "pre-wrap";
-
     doc.body.appendChild(playerVideo);
     doc.body.appendChild(textTracks);
+    // Load text tracks stylesheet
+    let textTracksStyleSheet = this.createTextTracksStyleSheet();
+    doc.head.appendChild(textTracksStyleSheet);
 
     originatingVideo.cloneElementVisually(playerVideo);
 
