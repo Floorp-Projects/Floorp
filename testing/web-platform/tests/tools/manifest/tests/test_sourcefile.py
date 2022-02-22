@@ -499,6 +499,31 @@ def test_testharness(ext):
     assert items(s) == [("testharness", "/" + filename)]
 
 
+@pytest.mark.parametrize("variant", ["", "?foo", "#bar", "?foo#bar"])
+def test_testharness_variant(variant):
+    content = (b"<meta name=variant content=\"%s\">" % variant.encode("utf-8") +
+               b"<meta name=variant content=\"?fixed\">" +
+               b"<script src=/resources/testharness.js></script>")
+
+    filename = "html/test.html"
+    s = create(filename, content)
+
+    s.test_variants = [variant, "?fixed"]
+
+
+@pytest.mark.parametrize("variant", ["?", "#", "?#bar"])
+def test_testharness_variant_invalid(variant):
+    content = (b"<meta name=variant content=\"%s\">" % variant.encode("utf-8") +
+               b"<meta name=variant content=\"?fixed\">" +
+               b"<script src=/resources/testharness.js></script>")
+
+    filename = "html/test.html"
+    s = create(filename, content)
+
+    with pytest.raises(ValueError):
+        s.test_variants
+
+
 @pytest.mark.parametrize("ext", ["htm", "html"])
 def test_relative_testharness(ext):
     content = b"<script src=../resources/testharness.js></script>"
