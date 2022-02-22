@@ -187,15 +187,11 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   bool IsWriteOnly() const;
 
   /**
-   * Force the canvas to be write-only.
-   */
-  void SetWriteOnly();
-
-  /**
    * Force the canvas to be write-only, except for readers from
-   * a specific extension's content script expanded principal.
+   * a specific extension's content script expanded principal, if
+   * available.
    */
-  void SetWriteOnly(nsIPrincipal* aExpandedReader);
+  void SetWriteOnly(nsIPrincipal* aExpandedReader = nullptr);
 
   /**
    * Notify the placeholder offscreen canvas of an updated size.
