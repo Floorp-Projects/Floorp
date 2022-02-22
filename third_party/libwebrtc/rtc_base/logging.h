@@ -533,7 +533,7 @@ class LogMessage {
   inline static int GetLogToStream(LogSink* stream = nullptr) { return 0; }
   inline static int GetMinLogSeverity() { return 0; }
   inline static void ConfigureLogging(const char* params) {}
-  inline static bool IsNoop(LoggingSeverity severity) { return true; }
+  static constexpr bool IsNoop(LoggingSeverity severity) { return true; }
 #endif  // RTC_LOG_ENABLED()
 
   // Enable dumping of AEC inputs and outputs.  Can be changed in mid-call
