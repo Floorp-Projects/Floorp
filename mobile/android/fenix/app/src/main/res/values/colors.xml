@@ -310,9 +310,6 @@
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>
 
-    <!-- Top site colors -->
-    <color name="top_site_pin_icon_color">@color/photonDarkGrey80</color>
-
     <!-- Quick action buttons-->
     <color name="quick_action_reader_appearance_icon">#482166</color>
 

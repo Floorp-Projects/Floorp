@@ -153,9 +153,6 @@
     <!-- Tab History -->
     <color name="tab_history_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_dark_theme</color>
 
-    <!--Top site colors -->
-    <color name="top_site_pin_icon_color">@color/photonLightGrey20</color>
-
     <!-- Search Widget -->
     <color name="search_widget_background">@color/inset_normal_theme</color>
     <color name="search_widget_mic_fill_color">@color/photonLightGrey05</color>
