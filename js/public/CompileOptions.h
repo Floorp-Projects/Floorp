@@ -77,8 +77,7 @@ enum class AsmJSOption : uint8_t {
   _(OnDemandOnly)                                                              \
                                                                                \
   /*                                                                           \
-   * Delazifiy functions in a depth first traversal of the functions. (not     \
-   * implemented yet)                                                          \
+   * Delazifiy functions in a depth first traversal of the functions.          \
    */                                                                          \
   _(ConcurrentDepthFirst)                                                      \
                                                                                \
