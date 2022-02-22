@@ -1555,6 +1555,24 @@ TEST_F(PeerConnectionRtpTestUnifiedPlan,
   ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
 }
 
+TEST_F(PeerConnectionRtpTestUnifiedPlan,
+       StopAndNegotiateCausesTransceiverToDisappear) {
+  auto caller = CreatePeerConnection();
+  auto callee = CreatePeerConnection();
+  auto transceiver = caller->AddTransceiver(cricket::MEDIA_TYPE_AUDIO);
+  ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
+  callee->pc()->GetTransceivers()[0]->StopStandard();
+  ASSERT_TRUE(callee->ExchangeOfferAnswerWith(caller.get()));
+  EXPECT_EQ(RtpTransceiverDirection::kStopped,
+            transceiver->current_direction());
+  EXPECT_EQ(0U, caller->pc()->GetTransceivers().size());
+  EXPECT_EQ(0U, callee->pc()->GetTransceivers().size());
+  EXPECT_EQ(0U, caller->pc()->GetSenders().size());
+  EXPECT_EQ(0U, callee->pc()->GetSenders().size());
+  EXPECT_EQ(0U, caller->pc()->GetReceivers().size());
+  EXPECT_EQ(0U, callee->pc()->GetReceivers().size());
+}
+
 // Test that AddTransceiver fails if trying to use unimplemented RTP encoding
 // parameters with the send_encodings parameters.
 TEST_F(PeerConnectionRtpTestUnifiedPlan,
