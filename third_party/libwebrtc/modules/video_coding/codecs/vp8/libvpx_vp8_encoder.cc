@@ -729,12 +729,16 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
   // On mobile platform, use a lower speed setting for lower resolutions for
   // CPUs with 4 or more cores.
   RTC_DCHECK_GT(number_of_cores_, 0);
+  if (experimental_cpu_speed_config_arm_
+          .GetValue(width * height, number_of_cores_)
+          .has_value()) {
+    return experimental_cpu_speed_config_arm_
+        .GetValue(width * height, number_of_cores_)
+        .value();
+  }
+
   if (number_of_cores_ <= 3)
     return -12;
-
-  if (experimental_cpu_speed_config_arm_.GetValue(width * height).has_value()) {
-    return experimental_cpu_speed_config_arm_.GetValue(width * height).value();
-  }
 
   if (width * height <= 352 * 288)
     return -8;
