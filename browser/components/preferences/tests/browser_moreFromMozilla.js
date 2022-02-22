@@ -69,32 +69,6 @@ add_task(async function testDefaultUIWithoutTemplatePref() {
   BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function testDefaulEmailClick() {
-  await clearPolicies();
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
-    leaveOpen: true,
-  });
-  let doc = gBrowser.contentDocument;
-  let tab = gBrowser.selectedTab;
-
-  let moreFromMozillaCategory = doc.getElementById(
-    "category-more-from-mozilla"
-  );
-  moreFromMozillaCategory.click();
-
-  const expectedUrl = "https://www.mozilla.org/firefox/mobile/get-app/?v=mfm";
-  let sendEmailLink = doc.getElementById("default-qr-code-send-email");
-
-  Assert.ok(
-    sendEmailLink.href.startsWith(expectedUrl),
-    `Expected URL ${sendEmailLink.href}`
-  );
-
-  let searchParams = new URL(sendEmailLink.href).searchParams;
-  Assert.equal(searchParams.get("v"), "mfm", "expected send email param set");
-  BrowserTestUtils.removeTab(tab);
-});
-
 /**
  * Test that we don't show moreFromMozilla pane when it's disabled.
  */
