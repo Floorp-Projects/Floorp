@@ -279,6 +279,7 @@
 	bottom: 0 !important;
 	pointer-events: none !important;
 	transition: box-shadow 0s var(--tab-transition-duration) var(--ease-basic) !important;
+  clip-path: inset(0) !important;
 }
 
 .tab-background::before
