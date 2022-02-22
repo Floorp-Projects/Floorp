@@ -221,11 +221,13 @@
 }
 
 .downloadIconShow > .button-box > .button-icon {
-%ifdef XP_MACOSX
-  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
-%else
   list-style-image: url("chrome://global/skin/icons/folder.svg");
-%endif
+}
+
+@media (-moz-platform: macos) {
+  .downloadIconShow > .button-box > .button-icon {
+    list-style-image: url("chrome://global/skin/icons/search-glass.svg");
+  }
 }
 
 .downloadIconRetry > .button-box > .button-icon {
