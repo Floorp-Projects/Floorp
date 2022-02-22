@@ -63,7 +63,6 @@ DevToolsModules(
     "target-configuration.js",
     "thread-configuration.js",
     "thread.js",
-    "timeline.js",
     "walker.js",
     "watcher.js",
     "webconsole.js",

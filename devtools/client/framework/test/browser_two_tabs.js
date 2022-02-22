@@ -70,6 +70,16 @@ async function checkGetTab(client, tab1, tab2, targetFront1, targetFront2) {
 
 async function checkGetTabFailures(client) {
   try {
+    await getTabTarget(client, { browserId: -999 });
+    ok(false, "getTab unexpectedly succeed with a wrong browserId");
+  } catch (error) {
+    is(
+      error.message,
+      "Protocol error (noTab): Unable to find tab with browserId '-999' (no browsing-context) from: " +
+        client.mainRoot.actorID
+    );
+  }
+  try {
     await getTabTarget(client, { tabId: -999 });
     ok(false, "getTab unexpectedly succeed with a wrong tabId");
   } catch (error) {

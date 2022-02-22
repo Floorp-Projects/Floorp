@@ -23,6 +23,7 @@ using OriginTrial = origin_trials_ffi::OriginTrial;
 // These allow sites to opt-in and provide feedback into experimental features
 // before we ship it to the general public.
 class OriginTrials final {
+ public:
   // Parses and verifies a base64-encoded token from either a header or a meta
   // tag. If the token is valid and not expired, this will enable the relevant
   // feature.

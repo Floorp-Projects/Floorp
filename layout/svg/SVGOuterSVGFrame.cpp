@@ -997,7 +997,7 @@ void SVGOuterSVGAnonChildFrame::BuildDisplayList(
   // inside the nsDisplayTransform for our viewbox transform. The
   // nsDisplaySVGWrapper's reference frame is this frame, because this frame
   // always returns true from IsSVGTransformed.
-  nsDisplayList newList;
+  nsDisplayList newList(aBuilder);
   nsDisplayListSet set(&newList, &newList, &newList, &newList, &newList,
                        &newList);
   BuildDisplayListForNonBlockChildren(aBuilder, set);

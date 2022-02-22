@@ -83,6 +83,37 @@ add_task(async function test_add_and_query() {
     builder: "domain",
     snapshotCount: data.length,
     lastAccessed: now - 10000,
+    imageUrl: getPageThumbURL(TEST_URL1),
+  });
+
+  info("add a featured image for second oldest snapshot");
+  let previewImageURL = "https://example.com/preview2.png";
+  await PlacesUtils.history.update({
+    url: TEST_URL2,
+    previewImageURL,
+  });
+  groups = await SnapshotGroups.query({ skipMinimum: true });
+  assertSnapshotGroup(groups[0], {
+    title: "Test Group",
+    builder: "domain",
+    snapshotCount: data.length,
+    lastAccessed: now - 10000,
+    imageUrl: previewImageURL,
+  });
+
+  info("add a featured image for the oldest snapshot");
+  previewImageURL = "https://example.com/preview1.png";
+  await PlacesUtils.history.update({
+    url: TEST_URL1,
+    previewImageURL,
+  });
+  groups = await SnapshotGroups.query({ skipMinimum: true });
+  assertSnapshotGroup(groups[0], {
+    title: "Test Group",
+    builder: "domain",
+    snapshotCount: data.length,
+    lastAccessed: now - 10000,
+    imageUrl: previewImageURL,
   });
 });
 
@@ -290,6 +321,36 @@ add_task(async function test_get_snapshots_startIndex() {
   Assert.equal(snapshots.length, 2, "Should return 2 Snapshots");
 
   await assertSnapshotList(snapshots, [{ url: TEST_URL2 }, { url: TEST_URL1 }]);
+});
+
+add_task(async function test_get_snapshots_sortDescending() {
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
+
+  let snapshots = await SnapshotGroups.getSnapshots({
+    id: groups[0].id,
+    sortDescending: false,
+  });
+  await assertSnapshotList(snapshots, [
+    { url: TEST_URL1 },
+    { url: TEST_URL2 },
+    { url: TEST_URL3 },
+  ]);
+});
+
+add_task(async function test_get_snapshots_sortBy() {
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
+  Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
+
+  let snapshots = await SnapshotGroups.getSnapshots({
+    id: groups[0].id,
+    sortBy: "last_interaction_at",
+  });
+  await assertSnapshotList(snapshots, [
+    { url: TEST_URL3 },
+    { url: TEST_URL2 },
+    { url: TEST_URL1 },
+  ]);
 });
 
 add_task(async function test_minimum_size() {

@@ -217,6 +217,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include top sites and the view will open on focus.
   ["suggest.topsites", true],
 
+  // JSON'ed array of blocked quick suggest URL digests.
+  ["quickSuggest.blockedDigests", ""],
+
   // Global toggle for whether the quick suggest feature is enabled, i.e.,
   // sponsored and recommended results related to the user's search string.
   ["quicksuggest.enabled", false],
