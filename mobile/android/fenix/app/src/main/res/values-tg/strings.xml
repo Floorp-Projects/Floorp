@@ -173,7 +173,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Насб кардан</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Варақаҳои ҳамоҳангшуда</string>
+    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Варақаҳои ҳамоҳангшуда</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Аз нав ҳамоҳанг кардан</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -417,9 +417,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Намоиш</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label">Барои иваз кардани тасвири замина, тамғаро зер кунед</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Барои иваз кардани тасвири замина, тамғаро зер кунед</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Тасвири заминаро бо зеркунии тамғаи саҳифаи асосии «Firefox» иваз намоед</string>
     <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_description">Аз саҳифаи асосӣ нарафта, тасвирро аз назар гузаронед ва навсозӣ кунед.</string>
+    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Аз саҳифаи асосӣ нарафта, тасвирро аз назар гузаронед ва навсозӣ кунед.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -730,7 +732,9 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search">Вожаи ҷустуҷӯиро ворид намоед</string>
+    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Вожаи ҷустуҷӯиро ворид намоед</string>
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Вожаҳои ҷустуҷӯиро ворид намоед</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Нест кардани таърих</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
