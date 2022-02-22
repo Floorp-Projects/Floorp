@@ -558,7 +558,8 @@ struct DIGroup {
                 nsDisplayListBuilder* aDisplayListBuilder,
                 wr::DisplayListBuilder& aBuilder,
                 wr::IpcResourceUpdateQueue& aResources, Grouper* aGrouper,
-                nsDisplayItem* aStartItem, nsDisplayItem* aEndItem) {
+                nsDisplayList::iterator aStartItem,
+                nsDisplayList::iterator aEndItem) {
     GP("\n\n");
     GP("Begin EndGroup\n");
 
@@ -654,6 +655,7 @@ struct DIGroup {
 
     RenderRootStateManager* rootManager =
         aWrManager->GetRenderRootStateManager();
+
     bool empty = aStartItem == aEndItem;
     if (empty) {
       ClearImageKey(rootManager, true);
@@ -663,8 +665,8 @@ struct DIGroup {
     // Reset mHitInfo, it will get updated inside PaintItemRange
     mHitInfo = CompositorHitTestInvisibleToHit;
 
-    PaintItemRange(aGrouper, nsDisplayList::Range(aStartItem, aEndItem),
-                   context, recorder, rootManager, aResources);
+    PaintItemRange(aGrouper, aStartItem, aEndItem, context, recorder,
+                   rootManager, aResources);
 
     // XXX: set this correctly perhaps using
     // aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).
@@ -769,14 +771,14 @@ struct DIGroup {
                          SideBits::eNone);
   }
 
-  void PaintItemRange(Grouper* aGrouper, nsDisplayList::Iterator aIter,
-                      gfxContext* aContext,
+  void PaintItemRange(Grouper* aGrouper, nsDisplayList::iterator aStartItem,
+                      nsDisplayList::iterator aEndItem, gfxContext* aContext,
                       WebRenderDrawEventRecorder* aRecorder,
                       RenderRootStateManager* aRootManager,
                       wr::IpcResourceUpdateQueue& aResources) {
     LayerIntSize size = mVisibleRect.Size();
-    while (aIter.HasNext()) {
-      nsDisplayItem* item = aIter.GetNext();
+    for (auto it = aStartItem; it != aEndItem; ++it) {
+      nsDisplayItem* item = *it;
       MOZ_ASSERT(item);
 
       BlobItemData* data = GetBlobItemData(item);
@@ -949,7 +951,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
         aContext->GetDrawTarget()->FlushItem(aItemBounds);
       } else {
         aContext->Multiply(ThebesMatrix(trans2d));
-        aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren),
+        aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
                                aContext, aRecorder, aRootManager, aResources);
       }
 
@@ -972,8 +974,8 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
-      aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren), aContext,
-                             aRecorder, aRootManager, aResources);
+      aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
+                             aContext, aRecorder, aRootManager, aResources);
       aContext->GetDrawTarget()->PopLayer();
       GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
@@ -989,8 +991,8 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
-      aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren), aContext,
-                             aRecorder, aRootManager, aResources);
+      aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
+                             aContext, aRecorder, aRootManager, aResources);
       aContext->GetDrawTarget()->PopLayer();
       GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
@@ -1003,8 +1005,8 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
-      aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren), aContext,
-                             aRecorder, aRootManager, aResources);
+      aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
+                             aContext, aRecorder, aRootManager, aResources);
       aContext->GetDrawTarget()->PopLayer();
       GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
          aItem->GetPerFrameKey());
@@ -1023,7 +1025,7 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
               GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
                  aItem->GetPerFrameKey());
               aContext->GetDrawTarget()->FlushItem(aItemBounds);
-              aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren),
+              aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
                                      aContext, aRecorder, aRootManager,
                                      aResources);
               GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
@@ -1061,8 +1063,8 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
     }
 
     default:
-      aGroup->PaintItemRange(this, nsDisplayList::Iterator(aChildren), aContext,
-                             aRecorder, aRootManager, aResources);
+      aGroup->PaintItemRange(this, aChildren->begin(), aChildren->end(),
+                             aContext, aRecorder, aRootManager, aResources);
       break;
   }
 }
@@ -1186,15 +1188,18 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
   RenderRootStateManager* manager =
       aCommandBuilder->mManager->GetRenderRootStateManager();
 
-  nsDisplayItem* startOfCurrentGroup = nullptr;
+  nsDisplayList::iterator startOfCurrentGroup = aList->end();
   DIGroup* currentGroup = aGroup;
 
   // We need to track whether we have active siblings for mixed blend mode.
   bool encounteredActiveItem = false;
 
-  for (nsDisplayItem* item : *aList) {
-    if (!startOfCurrentGroup) {
-      startOfCurrentGroup = item;
+  for (auto it = aList->begin(); it != aList->end(); ++it) {
+    nsDisplayItem* item = *it;
+    MOZ_ASSERT(item);
+
+    if (startOfCurrentGroup == aList->end()) {
+      startOfCurrentGroup = it;
     }
 
     if (IsItemProbablyActive(item, aBuilder, aResources, aSc, manager,
@@ -1250,7 +1255,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
 
       currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder,
                              aBuilder, aResources, this, startOfCurrentGroup,
-                             item);
+                             it);
 
       {
         auto spaceAndClipChain =
@@ -1270,7 +1275,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
         sIndent--;
       }
 
-      startOfCurrentGroup = nullptr;
+      startOfCurrentGroup = aList->end();
       currentGroup = &groupData->mFollowingGroup;
     } else {  // inactive item
       ConstructItemInsideInactive(aCommandBuilder, aBuilder, aResources,
@@ -1280,7 +1285,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
 
   currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder,
                          aBuilder, aResources, this, startOfCurrentGroup,
-                         nullptr);
+                         aList->end());
 }
 
 // This does a pass over the display lists and will join the display items

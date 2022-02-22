@@ -193,7 +193,7 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
   // a merge.
   const bool initializeOldItems = aList->mOldItems.IsEmpty();
   if (initializeOldItems) {
-    aList->mOldItems.SetCapacity(aList->Count());
+    aList->mOldItems.SetCapacity(aList->Length());
   } else {
     MOZ_RELEASE_ASSERT(!initializeDAG);
   }
@@ -201,7 +201,7 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
   MOZ_RELEASE_ASSERT(
       initializeDAG ||
       aList->mDAG.Length() ==
-          (initializeOldItems ? aList->Count() : aList->mOldItems.Length()));
+          (initializeOldItems ? aList->Length() : aList->mOldItems.Length()));
 
   nsDisplayList out;
 
@@ -349,7 +349,6 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
   }
 
   MOZ_RELEASE_ASSERT(aList->mOldItems.Length() == aList->mDAG.Length());
-  aList->RestoreState();
 
   if (aKeepLinked) {
     aList->AppendToTop(&out);
@@ -462,6 +461,7 @@ class MergeState {
         mOldDAG(
             std::move(*reinterpret_cast<DirectedAcyclicGraph<OldListUnits>*>(
                 &aOldList.mDAG))),
+        mMergedItems(aBuilder->Builder()),
         mOuterItem(aOuterItem),
         mResultIsModified(false) {
     mMergedDAG.EnsureCapacityFor(mOldDAG);
@@ -538,7 +538,7 @@ class MergeState {
     }
 
     Maybe<const ActiveScrolledRoot*> containerASRForChildren;
-    nsDisplayList empty;
+    nsDisplayList empty(mBuilder->Builder());
     const bool modified = mBuilder->MergeDisplayLists(
         aNewItem ? aNewItem->GetChildren() : &empty, aOldItem->GetChildren(),
         aOutItem->GetChildren(), containerASRForChildren, aOutItem);
@@ -636,10 +636,10 @@ class MergeState {
       ProcessOldNode(OldListIndex(i), std::move(directPredecessors));
     }
 
-    RetainedDisplayList result;
+    RetainedDisplayList result(mBuilder->Builder());
     result.AppendToTop(&mMergedItems);
     result.mDAG = std::move(mMergedDAG);
-    MOZ_RELEASE_ASSERT(result.mDAG.Length() == result.Count());
+    MOZ_RELEASE_ASSERT(result.mDAG.Length() == result.Length());
     return result;
   }
 
@@ -1563,14 +1563,14 @@ void CollectStackingContextItems(nsDisplayListBuilder* aBuilder,
                                  int aDepth = 0, bool aParentReused = false) {
   nsDisplayList out;
 
-  while (nsDisplayItem* item = aList->RemoveBottom()) {
+  for (nsDisplayItem* item : *aList) {
     if (DL_LOG_TEST(LogLevel::Debug)) {
       DL_LOGD(
           "%*s Preprocessing item %p (%s) (frame: %p) "
-          "(children: %d) (depth: %d) (parentReused: %d)",
+          "(children: %zu) (depth: %d) (parentReused: %d)",
           aDepth, "", item, item->Name(),
           item->HasDeletedFrame() ? nullptr : item->Frame(),
-          item->GetChildren() ? item->GetChildren()->Count() : 0, aDepth,
+          item->GetChildren() ? item->GetChildren()->Length() : 0, aDepth,
           aParentReused);
     }
 
@@ -1616,8 +1616,8 @@ void CollectStackingContextItems(nsDisplayListBuilder* aBuilder,
     }
   }
 
+  aList->Clear();
   aList->AppendToTop(&out);
-  aList->RestoreState();
 }
 
 }  // namespace RDL
@@ -1664,7 +1664,7 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
   }
 
   nsRect modifiedDirty;
-  nsDisplayList modifiedDL;
+  nsDisplayList modifiedDL(&mBuilder);
   nsIFrame* modifiedAGR = nullptr;
   PartialUpdateResult result = PartialUpdateResult::NoChange;
   const bool simpleUpdate =
