@@ -45,6 +45,8 @@ class CacheStreamControlParent final : public PCacheStreamControlParent,
   virtual void OpenStream(const nsID& aId,
                           InputStreamResolver&& aResolver) override;
 
+  void AssertWillDelete();
+
  private:
   ~CacheStreamControlParent();
   virtual void NoteClosedAfterForget(const nsID& aId) override;
