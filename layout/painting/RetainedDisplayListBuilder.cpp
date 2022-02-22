@@ -203,10 +203,8 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
       aList->mDAG.Length() ==
           (initializeOldItems ? aList->Length() : aList->mOldItems.Length()));
 
-  nsDisplayList out;
-
   size_t i = 0;
-  while (nsDisplayItem* item = aList->RemoveBottom()) {
+  for (nsDisplayItem* item : aList->TakeItems()) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     item->SetMergedPreProcessed(false, true);
 #endif
@@ -343,16 +341,13 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
       if (item->GetType() == DisplayItemType::TYPE_SUBDOCUMENT) {
         IncrementSubDocPresShellPaintCount(item);
       }
-      out.AppendToTop(item);
+      aList->AppendToTop(item);
     }
     i++;
   }
 
   MOZ_RELEASE_ASSERT(aList->mOldItems.Length() == aList->mDAG.Length());
 
-  if (aKeepLinked) {
-    aList->AppendToTop(&out);
-  }
   return true;
 }
 
@@ -856,7 +851,7 @@ bool RetainedDisplayListBuilder::MergeDisplayLists(
   MergeState merge(this, *aOldList, aOuterItem);
 
   Maybe<MergedListIndex> previousItemIndex;
-  while (nsDisplayItem* item = aNewList->RemoveBottom()) {
+  for (nsDisplayItem* item : aNewList->TakeItems()) {
     Metrics()->mNewItems++;
     previousItemIndex = merge.ProcessItemFromNewList(item, previousItemIndex);
   }
@@ -1561,9 +1556,7 @@ bool IsReuseableStackingContextItem(nsDisplayItem* aItem) {
 void CollectStackingContextItems(nsDisplayListBuilder* aBuilder,
                                  nsDisplayList* aList, nsIFrame* aOuterFrame,
                                  int aDepth = 0, bool aParentReused = false) {
-  nsDisplayList out;
-
-  for (nsDisplayItem* item : *aList) {
+  for (nsDisplayItem* item : aList->TakeItems()) {
     if (DL_LOG_TEST(LogLevel::Debug)) {
       DL_LOGD(
           "%*s Preprocessing item %p (%s) (frame: %p) "
@@ -1600,7 +1593,7 @@ void CollectStackingContextItems(nsDisplayListBuilder* aBuilder,
     if (aParentReused) {
       // Keep the contents of the current container item linked.
       RDLUtils::AssertDisplayItemUnmodified(item);
-      out.AppendToTop(item);
+      aList->AppendToTop(item);
     } else if (isStackingContextItem) {
       // |item| is a stacking context item that can be reused.
       ReuseStackingContextItem(aBuilder, item);
@@ -1615,9 +1608,6 @@ void CollectStackingContextItems(nsDisplayListBuilder* aBuilder,
       IncrementPresShellPaintCount(aBuilder, item);
     }
   }
-
-  aList->Clear();
-  aList->AppendToTop(&out);
 }
 
 }  // namespace RDL
