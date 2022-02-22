@@ -50,5 +50,12 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["qr-code"] += [
     "qr-code/qrious.js",
 ]
 
+
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["updateAPIs"] += [
+    "updateAPIs/aboutConfigPrefs.js",
+    "updateAPIs/aboutConfigPrefs.json"
+]
+
+
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "floorp-system")

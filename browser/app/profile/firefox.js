@@ -19,6 +19,10 @@
   #endif
 #endif
 
+
+//Floorpアップデートを有効化
+pref("enable.floorp.updater", true);
+
 //たくさん閉じようとしたときに警告
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnCloseOtherTabs", true);
@@ -110,7 +114,7 @@ pref("browser.urlbar.trimURLs", false);
 pref("privacy.trackingprotection.pbmode.enabled", true);
 
 //https:// 通信時、緑色に
-("security.secure_connection_icon_color_gray", false);
+pref("security.secure_connection_icon_color_gray", false);
 
 //「既定でオンを推奨」フィンガープリント対策の一環。
 //参考：https://www.torproject.org/projects/torbrowser/design/#fingerprinting-defenses
