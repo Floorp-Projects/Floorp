@@ -1283,6 +1283,10 @@ static NSString* NSStringForOSType(OSType type) {
   CGColorSpaceRef colorSpace = CVImageBufferGetColorSpace(aBuffer);
   NSLog(@"ColorSpace is %@.\n", colorSpace);
 
+  CFDictionaryRef bufferAttachments =
+      CVBufferGetAttachments(aBuffer, kCVAttachmentMode_ShouldPropagate);
+  NSLog(@"Buffer attachments are %@.\n", bufferAttachments);
+
   OSType codec = CMFormatDescriptionGetMediaSubType(aFormat);
   NSLog(@"Codec is %@.\n", NSStringForOSType(codec));
 
