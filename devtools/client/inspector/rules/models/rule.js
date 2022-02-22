@@ -216,7 +216,7 @@ class Rule {
    */
   async getCompatibilityIssues() {
     if (!this.compatibilityIssues) {
-      const targetBrowsers = getTargetBrowsers();
+      const targetBrowsers = await getTargetBrowsers();
       const compatibility = await this.inspector.inspectorFront.getCompatibilityFront();
       this.compatibilityIssues = await compatibility.getCSSDeclarationBlockIssues(
         this.domRule.declarations,

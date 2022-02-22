@@ -15,6 +15,7 @@ module.exports = {
     "^devtools/shared/DevToolsUtils": `${fixturesDir}/devtools-utils`,
     // This is needed for the Debugger, for some reason
     "shared/DevToolsUtils$": `${fixturesDir}/devtools-utils`,
+    "^ChromeUtils": `${fixturesDir}/ChromeUtils`,
     "^Services": `${fixturesDir}/Services`,
     // Alias for Services, used by the debugger.
     "devtools-services": `${fixturesDir}/Services`,
