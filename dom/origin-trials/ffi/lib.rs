@@ -21,7 +21,7 @@ impl OriginTrial {
 
 #[repr(u8)]
 pub enum OriginTrialResult {
-    Success { trial: OriginTrial },
+    Ok { trial: OriginTrial },
     BufferTooSmall,
     MismatchedPayloadSize { expected: usize, actual: usize },
     InvalidSignature,
@@ -127,5 +127,5 @@ pub unsafe extern "C" fn origin_trials_parse_and_validate_token(
         return OriginTrialResult::OriginMismatch;
     }
 
-    OriginTrialResult::Success { trial }
+    OriginTrialResult::Ok { trial }
 }

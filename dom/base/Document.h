@@ -24,6 +24,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/BitSet.h"
+#include "mozilla/OriginTrials.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/CallState.h"
 #include "mozilla/EventStates.h"
@@ -365,18 +366,6 @@ enum class DeprecatedOperations : uint16_t {
 #define NS_DOCUMENT_STATE_ALL_LWTHEME_BITS                            \
   (NS_DOCUMENT_STATE_LWTHEME | NS_DOCUMENT_STATE_LWTHEME_BRIGHTTEXT | \
    NS_DOCUMENT_STATE_LWTHEME_DARKTEXT)
-
-class DocHeaderData {
- public:
-  DocHeaderData(nsAtom* aField, const nsAString& aData)
-      : mField(aField), mData(aData), mNext(nullptr) {}
-
-  ~DocHeaderData(void) { delete mNext; }
-
-  RefPtr<nsAtom> mField;
-  nsString mData;
-  DocHeaderData* mNext;
-};
 
 class ExternalResourceMap {
   using SubDocEnumFunc = FunctionRef<CallState(Document&)>;
@@ -4423,6 +4412,8 @@ class Document : public nsINode,
   NotNull<const Encoding*> mCharacterSet;
   int32_t mCharacterSetSource;
 
+  OriginTrials mTrials;
+
   // This is just a weak pointer; the parent document owns its children.
   Document* mParentDocument;
 
@@ -5098,7 +5089,8 @@ class Document : public nsINode,
 
   PLDHashTable* mSubDocuments;
 
-  DocHeaderData* mHeaderData;
+  class HeaderData;
+  UniquePtr<HeaderData> mHeaderData;
 
   // For determining if this is a flash document which should be
   // blocked based on its principal.

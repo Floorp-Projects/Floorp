@@ -88,6 +88,16 @@ const char* const kFragBody_RGBA =
         FRAG_COLOR = TEXTURE(uTex0, vTexCoord0);                             \n\
     }                                                                        \n\
 ";
+const char* const kFragBody_BGRA =
+    "\
+    VARYING vec2 vTexCoord0;                                                 \n\
+    uniform SAMPLER uTex0;                                                   \n\
+                                                                             \n\
+    void main(void)                                                          \n\
+    {                                                                        \n\
+        FRAG_COLOR = TEXTURE(uTex0, vTexCoord0).bgra;                        \n\
+    }                                                                        \n\
+";
 const char* const kFragBody_CrYCb =
     "\
     VARYING vec2 vTexCoord0;                                                 \n\
@@ -1120,8 +1130,9 @@ bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
 void GLBlitHelper::DrawBlitTextureToFramebuffer(const GLuint srcTex,
                                                 const gfx::IntSize& srcSize,
                                                 const gfx::IntSize& destSize,
-                                                const GLenum srcTarget) const {
-  const char* fragHeader;
+                                                const GLenum srcTarget,
+                                                const bool srcIsBGRA) const {
+  const char* fragHeader = nullptr;
   Mat3 texMatrix0;
   switch (srcTarget) {
     case LOCAL_GL_TEXTURE_2D:
@@ -1136,7 +1147,8 @@ void GLBlitHelper::DrawBlitTextureToFramebuffer(const GLuint srcTex,
       gfxCriticalError() << "Unexpected srcTarget: " << srcTarget;
       return;
   }
-  const auto& prog = GetDrawBlitProg({fragHeader, kFragBody_RGBA});
+  const char* fragBody = srcIsBGRA ? kFragBody_BGRA : kFragBody_RGBA;
+  const auto& prog = GetDrawBlitProg({fragHeader, fragBody});
 
   const ScopedSaveMultiTex saveTex(mGL, 1, srcTarget);
   mGL->fBindTexture(srcTarget, srcTex);

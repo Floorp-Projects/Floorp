@@ -108,13 +108,32 @@ PersistentBufferProviderAccelerated::~PersistentBufferProviderAccelerated() {
   MOZ_COUNT_DTOR(PersistentBufferProviderAccelerated);
 }
 
+inline gfx::DrawTargetWebgl*
+PersistentBufferProviderAccelerated::GetDrawTargetWebgl() const {
+  return static_cast<gfx::DrawTargetWebgl*>(mDrawTarget.get());
+}
+
 Maybe<layers::SurfaceDescriptor>
 PersistentBufferProviderAccelerated::GetFrontBuffer() {
-  return static_cast<DrawTargetWebgl*>(mDrawTarget.get())->GetFrontBuffer();
+  return GetDrawTargetWebgl()->GetFrontBuffer();
 }
 
 bool PersistentBufferProviderAccelerated::CopySnapshotTo(gfx::DrawTarget* aDT) {
-  return static_cast<DrawTargetWebgl*>(mDrawTarget.get())->CopySnapshotTo(aDT);
+  return GetDrawTargetWebgl()->CopySnapshotTo(aDT);
+}
+
+already_AddRefed<gfx::DrawTarget>
+PersistentBufferProviderAccelerated::BorrowDrawTarget(
+    const gfx::IntRect& aPersistedRect) {
+  GetDrawTargetWebgl()->BeginFrame(aPersistedRect);
+  return PersistentBufferProviderBasic::BorrowDrawTarget(aPersistedRect);
+}
+
+bool PersistentBufferProviderAccelerated::ReturnDrawTarget(
+    already_AddRefed<gfx::DrawTarget> aDT) {
+  bool result = PersistentBufferProviderBasic::ReturnDrawTarget(std::move(aDT));
+  GetDrawTargetWebgl()->EndFrame();
+  return result;
 }
 
 static already_AddRefed<TextureClient> CreateTexture(
