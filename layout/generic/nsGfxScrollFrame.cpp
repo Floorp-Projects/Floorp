@@ -4132,7 +4132,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // Effectively we are double clipping to the viewport, at potentially
     // different async scales.
 
-    nsDisplayList resultList(aBuilder);
+    nsDisplayList resultList;
     set.SerializeWithCorrectZOrder(&resultList, mOuter->GetContent());
 
     if (blendCapture.CaptureContainsBlendMode()) {
