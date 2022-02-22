@@ -267,10 +267,7 @@ static void BuildPreviousPageOverflow(nsDisplayListBuilder* aBuilder,
 static void PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
                                          nsPageFrame* aPage,
                                          nsDisplayList* aList) {
-  nsDisplayList newList;
-
-  while (true) {
-    nsDisplayItem* i = aList->RemoveBottom();
+  for (nsDisplayItem* i : aList->TakeItems()) {
     if (!i) break;
     nsDisplayList* subList = i->GetSameCoordinateSystemChildren();
     if (subList) {
@@ -285,9 +282,8 @@ static void PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
         continue;
       }
     }
-    newList.AppendToTop(i);
+    aList->AppendToTop(i);
   }
-  aList->AppendToTop(&newList);
 }
 
 static void BuildDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
