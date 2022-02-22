@@ -1452,10 +1452,9 @@ public class GeckoAppShell {
   public static native boolean isParentProcess();
 
   /**
-   * Returns a GeckoResult that will be completed to true if the GPU process is running and false if
-   * it is disabled. If the GPU process is currently being (re)started this will wait until it is
-   * ready before completing.
+   * Returns a GeckoResult that will be completed to true if the GPU process is enabled and false if
+   * it is disabled.
    */
   @WrapForJNI
-  public static native GeckoResult<Boolean> ensureGpuProcessReady();
+  public static native GeckoResult<Boolean> isGpuProcessEnabled();
 }
