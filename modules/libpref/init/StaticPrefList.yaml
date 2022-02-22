@@ -10781,13 +10781,6 @@
   value: false
   mirror: always
 
-# When this pref is true, we will use the HTTPS acceptable content encoding
-# list for trustworthy domains such as http://localhost
-- name: network.http.encoding.trustworthy_is_https
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Support http3 version1
 - name: network.http.http3.support_version1
   type: RelaxedAtomicBool
