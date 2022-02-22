@@ -15,9 +15,7 @@
     "sessions",
     "storage",
     "tabs",
-    "theme"
-  ],
-  "optional_permissions": [
+    "theme",
     "<all_urls>",
     "bookmarks",
     "tabHide"
