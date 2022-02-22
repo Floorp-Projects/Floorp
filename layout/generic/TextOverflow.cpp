@@ -285,6 +285,7 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
       mBuilder(aBuilder),
       mBlock(aBlockFrame),
       mScrollableFrame(nsLayoutUtils::GetScrollableFrameFor(aBlockFrame)),
+      mMarkerList(aBuilder),
       mBlockSize(aBlockFrame->GetSize()),
       mBlockWM(aBlockFrame->GetWritingMode()),
       mAdjustForPixelSnapping(false) {
