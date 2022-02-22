@@ -111,21 +111,19 @@ void RecordPowerMetrics() {
     // This should be fine for now, but may overflow in the future.
     // Bug 1751277 tracks a newer, bigger counter.
     int32_t nNewCpuTime = int32_t(newCpuTime);
-    if (newCpuTime > std::numeric_limits<int32_t>::max()) {
-      nNewCpuTime = std::numeric_limits<int32_t>::max();
+    if (newCpuTime < std::numeric_limits<int32_t>::max()) {
+      power::total_cpu_time_ms.Add(nNewCpuTime);
+      power::cpu_time_per_process_type_ms.Get(type).Add(nNewCpuTime);
     }
-    power::total_cpu_time_ms.Add(nNewCpuTime);
-    power::cpu_time_per_process_type_ms.Get(type).Add(nNewCpuTime);
     previousCpuTime += newCpuTime;
   }
 
   if (newGpuTime) {
     int32_t nNewGpuTime = int32_t(newGpuTime);
-    if (newGpuTime > std::numeric_limits<int32_t>::max()) {
-      nNewGpuTime = std::numeric_limits<int32_t>::max();
+    if (newGpuTime < std::numeric_limits<int32_t>::max()) {
+      power::total_gpu_time_ms.Add(nNewGpuTime);
+      power::gpu_time_per_process_type_ms.Get(type).Add(nNewGpuTime);
     }
-    power::total_gpu_time_ms.Add(nNewGpuTime);
-    power::gpu_time_per_process_type_ms.Get(type).Add(nNewGpuTime);
     previousGpuTime += newGpuTime;
   }
 }
