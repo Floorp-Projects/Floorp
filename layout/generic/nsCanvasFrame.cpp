@@ -502,7 +502,7 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       return false;
     }();
 
-    nsDisplayList layerItems(aBuilder);
+    nsDisplayList layerItems;
 
     // Create separate items for each background layer.
     const nsStyleImageLayers& layers = bg->StyleBackground()->mImage;
@@ -518,7 +518,7 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
           GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
 
       const ActiveScrolledRoot* thisItemASR = asr;
-      nsDisplayList thisItemList(aBuilder);
+      nsDisplayList thisItemList;
       nsDisplayBackgroundImage::InitData bgData =
           nsDisplayBackgroundImage::GetInitData(aBuilder, this, i, bgRect, bg);
 
