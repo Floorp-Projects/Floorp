@@ -285,7 +285,6 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
       mBuilder(aBuilder),
       mBlock(aBlockFrame),
       mScrollableFrame(nsLayoutUtils::GetScrollableFrameFor(aBlockFrame)),
-      mMarkerList(aBuilder),
       mBlockSize(aBlockFrame->GetSize()),
       mBlockWM(aBlockFrame->GetWritingMode()),
       mAdjustForPixelSnapping(false) {
@@ -766,7 +765,9 @@ void TextOverflow::ProcessLine(const nsDisplayListSet& aLists, nsLineBox* aLine,
 void TextOverflow::PruneDisplayListContents(
     nsDisplayList* aList, const FrameHashtable& aFramesToHide,
     const LogicalRect& aInsideMarkersArea) {
-  for (nsDisplayItem* item : aList->TakeItems()) {
+  nsDisplayList saved;
+  nsDisplayItem* item;
+  while ((item = aList->RemoveBottom())) {
     nsIFrame* itemFrame = item->Frame();
     if (IsFrameDescendantOfAny(itemFrame, aFramesToHide, mBlock)) {
       item->Destroy(mBuilder);
@@ -802,8 +803,9 @@ void TextOverflow::PruneDisplayListContents(
       }
     }
 
-    aList->AppendToTop(item);
+    saved.AppendToTop(item);
   }
+  aList->AppendToTop(&saved);
 }
 
 /* static */
