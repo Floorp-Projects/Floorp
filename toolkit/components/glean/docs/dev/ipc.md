@@ -130,7 +130,7 @@ handed off to C++, passed over IPC,
 then given back to `bincode` in Rust on the Parent.
 
 Rust is then responsible for turning the pending data into
-[metric API](../user/api.md) calls on the metrics in the parent process.
+[metrics API][glean-metrics] calls on the metrics in the parent process.
 
 #### Supported Process Types
 
@@ -179,3 +179,5 @@ mentioned above in "Mechanics" to another process type's protocol (ipdl file).
       (like `PROCESS_TYPE_CONTENT`'s)
 6. Add to the documented [list of supported process types](#supported-process-types)
    the process type you added support for.
+
+[glean-metrics]: https://mozilla.github.io/glean/book/reference/metrics/index.html
