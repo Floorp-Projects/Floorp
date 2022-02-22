@@ -91,6 +91,7 @@ class DefaultTopSitesStorage(
     ): List<TopSite> {
         val topSites = ArrayList<TopSite>()
         val pinnedSites = pinnedSitesStorage.getPinnedSites().take(totalSites)
+        var providerTopSites = emptyList<TopSite>()
         var numSitesRequired = totalSites - pinnedSites.size
 
         if (topSitesProvider != null &&
@@ -99,7 +100,7 @@ class DefaultTopSitesStorage(
             pinnedSites.size < providerConfig.maxThreshold
         ) {
             try {
-                val providerTopSites = topSitesProvider
+                providerTopSites = topSitesProvider
                     .getTopSites(allowCache = true)
                     .take(numSitesRequired)
                 topSites.addAll(providerTopSites)
@@ -117,7 +118,7 @@ class DefaultTopSitesStorage(
             val frecentSites = historyStorage
                 .getTopFrecentSites(totalSites, frecencyConfig)
                 .map { it.toTopSite() }
-                .filter { !pinnedSites.hasUrl(it.url) }
+                .filter { !pinnedSites.hasUrl(it.url) && !providerTopSites.hasUrl(it.url) }
                 .take(numSitesRequired)
 
             topSites.addAll(frecentSites)
