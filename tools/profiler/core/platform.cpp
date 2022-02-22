@@ -6325,9 +6325,11 @@ void profiler_thread_sleep() {
 }
 
 #if defined(GP_OS_windows)
+#  if !defined(__MINGW32__)
 enum {
   ThreadBasicInformation,
 };
+#  endif
 
 struct THREAD_BASIC_INFORMATION {
   NTSTATUS ExitStatus;
