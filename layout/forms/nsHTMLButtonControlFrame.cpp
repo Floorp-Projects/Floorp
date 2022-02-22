@@ -73,7 +73,7 @@ bool nsHTMLButtonControlFrame::ShouldClipPaintingToBorderBox() {
 
 void nsHTMLButtonControlFrame::BuildDisplayList(
     nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
-  nsDisplayList onTop(aBuilder);
+  nsDisplayList onTop;
   if (IsVisibleForPainting()) {
     // Clip the button itself to its border area for event hit testing.
     Maybe<DisplayListClipState::AutoSaveRestore> eventClipState;

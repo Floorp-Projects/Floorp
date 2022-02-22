@@ -267,7 +267,10 @@ static void BuildPreviousPageOverflow(nsDisplayListBuilder* aBuilder,
 static void PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
                                          nsPageFrame* aPage,
                                          nsDisplayList* aList) {
-  for (nsDisplayItem* i : aList->TakeItems()) {
+  nsDisplayList newList;
+
+  while (true) {
+    nsDisplayItem* i = aList->RemoveBottom();
     if (!i) break;
     nsDisplayList* subList = i->GetSameCoordinateSystemChildren();
     if (subList) {
@@ -282,8 +285,9 @@ static void PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
         continue;
       }
     }
-    aList->AppendToTop(i);
+    newList.AppendToTop(i);
   }
+  aList->AppendToTop(&newList);
 }
 
 static void BuildDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
@@ -297,7 +301,7 @@ static void BuildDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
   if (!aExtraPage->HasAnyStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {
     return;
   }
-  nsDisplayList list(aBuilder);
+  nsDisplayList list;
   aExtraPage->BuildDisplayListForStackingContext(aBuilder, &list);
   PruneDisplayListForExtraPage(aBuilder, aPage, &list);
   aList->AppendToTop(&list);
@@ -328,7 +332,7 @@ void nsPageContentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   nsDisplayListCollection set(aBuilder);
 
-  nsDisplayList content(aBuilder);
+  nsDisplayList content;
   {
     const nsRect clipRect(aBuilder->ToReferenceFrame(this), GetSize());
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
