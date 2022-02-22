@@ -30,11 +30,13 @@ struct LSSnapshotInitInfo
    * be false.
    */
   bool addKeyToUnknownItems;
+
   /**
    * As many key/value or key/void pairs as the snapshot prefill byte budget
    * allowed.
    */
   LSItemInfo[] itemInfos;
+
   /**
    * The total number of key/value pairs in LocalStorage for this origin at the
    * time the snapshot was created.  (And the point of the snapshot is to
@@ -43,11 +45,13 @@ struct LSSnapshotInitInfo
    * processes.)
    */
   uint32_t totalLength;
+
   /**
    * The current amount of LocalStorage usage as measured by the summing the
    * nsString Length() of both the key and the value over all stored pairs.
    */
   int64_t initialUsage;
+
   /**
    * The amount of storage allowed to be used by the Snapshot without requesting
    * more storage space via IncreasePeakUsage.  This is the `initialUsage` plus
@@ -60,8 +64,16 @@ struct LSSnapshotInitInfo
    * `minSize`, or 0 depending on remaining available space.
    */
   int64_t peakUsage;
+
   // See `LSSnapshot::LoadState` in `LSSnapshot.h`
   LoadState loadState;
+
+  /**
+   * Boolean indicating whether there where cross-process databases registered
+   * for this origin at the time the snapshot was created.
+   */
+  bool hasOtherProcessDatabases;
+
   /**
    * Boolean indicating whether there where cross-process observers registered
    * for this origin at the time the snapshot was created.
