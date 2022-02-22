@@ -94,7 +94,11 @@ class CompatibilityView {
       )
     );
 
-    this.inspector.store.dispatch(initUserSettings());
+    await this.inspector.store.dispatch(initUserSettings());
+    // awaiting for `initUserSettings` makes us miss the initial "compatibilityview-selected"
+    // event, so we need to manually call _onPanelSelected to fetch compatibility issues
+    // for the selected node (and the whole page).
+    this._onPanelSelected();
 
     this.inspector.on("new-root", this._onTopLevelTargetChanged);
     this.inspector.on("markupmutation", this._onMarkupMutation);
