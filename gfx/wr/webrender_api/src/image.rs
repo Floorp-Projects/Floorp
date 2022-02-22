@@ -160,7 +160,7 @@ pub enum ImageFormat {
     /// Two-channels, byte storage. Similar to `R8`, this just means
     /// "two channels" rather than "red and green".
     RG8 = 5,
-    /// Two-channels, byte storage. Similar to `R16`, this just means
+    /// Two-channels, short storage. Similar to `R16`, this just means
     /// "two channels" rather than "red and green".
     RG16 = 6,
 
