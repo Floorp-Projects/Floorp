@@ -234,7 +234,8 @@ struct RangePaintInfo {
 
   RangePaintInfo(nsRange* aRange, nsIFrame* aFrame)
       : mRange(aRange),
-        mBuilder(aFrame, nsDisplayListBuilderMode::Painting, false) {
+        mBuilder(aFrame, nsDisplayListBuilderMode::Painting, false),
+        mList(&mBuilder) {
     MOZ_COUNT_CTOR(RangePaintInfo);
     mBuilder.BeginFrame();
   }
@@ -4691,12 +4692,10 @@ nsRect PresShell::ClipListToRange(nsDisplayListBuilder* aBuilder,
   // part of the selection. Then, append the wrapper to the top of the list.
   // Otherwise, just delete the item and don't append it.
   nsRect surfaceRect;
-  nsDisplayList tmpList;
 
-  nsDisplayItem* i;
-  while ((i = aList->RemoveBottom())) {
+  for (nsDisplayItem* i : aList->TakeItems()) {
     if (i->GetType() == DisplayItemType::TYPE_CONTAINER) {
-      tmpList.AppendToTop(i);
+      aList->AppendToTop(i);
       surfaceRect.UnionRect(
           surfaceRect, ClipListToRange(aBuilder, i->GetChildren(), aRange));
       continue;
@@ -4777,7 +4776,7 @@ nsRect PresShell::ClipListToRange(nsDisplayListBuilder* aBuilder,
     // list, insert that as well
     nsDisplayList* sublist = i->GetSameCoordinateSystemChildren();
     if (itemToInsert || sublist) {
-      tmpList.AppendToTop(itemToInsert ? itemToInsert : i);
+      aList->AppendToTop(itemToInsert ? itemToInsert : i);
       // if the item is a list, iterate over it as well
       if (sublist)
         surfaceRect.UnionRect(surfaceRect,
@@ -4787,9 +4786,6 @@ nsRect PresShell::ClipListToRange(nsDisplayListBuilder* aBuilder,
       i->Destroy(aBuilder);
     }
   }
-
-  // now add all the items back onto the original list again
-  aList->AppendToTop(&tmpList);
 
   return surfaceRect;
 }
@@ -4909,7 +4905,7 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
     ViewID zoomedId =
         nsLayoutUtils::FindOrCreateIDFor(rootScrollFrame->GetContent());
 
-    nsDisplayList wrapped;
+    nsDisplayList wrapped(&info->mBuilder);
     wrapped.AppendNewToTop<nsDisplayAsyncZoom>(&info->mBuilder, rootScrollFrame,
                                                &info->mList, nullptr, zoomedId);
     info->mList.AppendToTop(&wrapped);
@@ -5215,12 +5211,21 @@ already_AddRefed<SourceSurface> PresShell::RenderSelection(
                              aScreenRect, aFlags);
 }
 
+void AddDisplayItemToBottom(nsDisplayListBuilder* aBuilder,
+                            nsDisplayList* aList, nsDisplayItem* aItem) {
+  nsDisplayList list(aBuilder);
+  list.AppendToTop(aItem);
+  list.AppendToTop(aList);
+  aList->AppendToTop(&list);
+}
+
 void PresShell::AddPrintPreviewBackgroundItem(nsDisplayListBuilder* aBuilder,
                                               nsDisplayList* aList,
                                               nsIFrame* aFrame,
                                               const nsRect& aBounds) {
-  aList->AppendNewToBottom<nsDisplaySolidColor>(aBuilder, aFrame, aBounds,
-                                                NS_RGB(115, 115, 115));
+  nsDisplayItem* item = MakeDisplayItem<nsDisplaySolidColor>(
+      aBuilder, aFrame, aBounds, NS_RGB(115, 115, 115));
+  AddDisplayItemToBottom(aBuilder, aList, item);
 }
 
 static bool AddCanvasBackgroundColor(const nsDisplayList* aList,
@@ -5274,16 +5279,15 @@ void PresShell::AddCanvasBackgroundColorItem(
   // color background behind a scrolled transparent background. Instead,
   // we'll try to move the color background into the scrolled content
   // by making nsDisplayCanvasBackground paint it.
-  // If we're only adding an unscrolled item, then pretend that we've
-  // already done it.
-  bool addedScrollingBackgroundColor =
-      !!(aFlags & AddCanvasBackgroundColorFlags::AppendUnscrolledOnly);
-  if (!aFrame->GetParent() && !addedScrollingBackgroundColor) {
+  bool addedScrollingBackgroundColor = false;
+  if (!aFrame->GetParent()) {
     nsIScrollableFrame* sf =
         aFrame->PresShell()->GetRootScrollFrameAsScrollable();
     if (sf) {
       nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
       if (canvasFrame && canvasFrame->IsVisibleForPainting()) {
+        // TODO: We should be able to set canvas background color during display
+        // list building to avoid calling this function.
         addedScrollingBackgroundColor = AddCanvasBackgroundColor(
             aList, canvasFrame, bgcolor, mHasCSSBackgroundColor);
       }
@@ -5299,8 +5303,9 @@ void PresShell::AddCanvasBackgroundColorItem(
       nsLayoutUtils::UsesAsyncScrolling(aFrame) && NS_GET_A(bgcolor) == 255;
 
   if (!addedScrollingBackgroundColor || forceUnscrolledItem) {
-    aList->AppendNewToBottom<nsDisplaySolidColor>(aBuilder, aFrame, aBounds,
-                                                  bgcolor);
+    nsDisplayItem* item = MakeDisplayItem<nsDisplaySolidColor>(
+        aBuilder, aFrame, aBounds, bgcolor);
+    AddDisplayItemToBottom(aBuilder, aList, item);
   }
 }
 

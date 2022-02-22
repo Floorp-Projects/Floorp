@@ -439,6 +439,25 @@ mozilla::LazyLogModule gUseCountersLog("UseCounters");
 namespace mozilla {
 namespace dom {
 
+class Document::HeaderData {
+ public:
+  HeaderData(nsAtom* aField, const nsAString& aData)
+      : mField(aField), mData(aData) {}
+
+  ~HeaderData() {
+    // Delete iteratively to avoid blowing up the stack, though it shouldn't
+    // happen in practice.
+    UniquePtr<HeaderData> next = std::move(mNext);
+    while (next) {
+      next = std::move(next->mNext);
+    }
+  }
+
+  RefPtr<nsAtom> mField;
+  nsString mData;
+  UniquePtr<HeaderData> mNext;
+};
+
 using LinkArray = nsTArray<Link*>;
 
 AutoTArray<Document*, 8>* Document::sLoadingForegroundTopLevelContentDocument =
@@ -2275,7 +2294,7 @@ Document::~Document() {
     mPermissionDelegateHandler->DropDocumentReference();
   }
 
-  delete mHeaderData;
+  mHeaderData = nullptr;
 
   mPendingTitleChangeEvent.Revoke();
 
@@ -6685,14 +6704,13 @@ void Document::GetSandboxFlagsAsString(nsAString& aFlags) {
 
 void Document::GetHeaderData(nsAtom* aHeaderField, nsAString& aData) const {
   aData.Truncate();
-  const DocHeaderData* data = mHeaderData;
+  const HeaderData* data = mHeaderData.get();
   while (data) {
     if (data->mField == aHeaderField) {
       aData = data->mData;
-
       break;
     }
-    data = data->mNext;
+    data = data->mNext.get();
   }
 }
 
@@ -6704,32 +6722,32 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
 
   if (!mHeaderData) {
     if (!aData.IsEmpty()) {  // don't bother storing empty string
-      mHeaderData = new DocHeaderData(aHeaderField, aData);
+      mHeaderData = MakeUnique<HeaderData>(aHeaderField, aData);
     }
   } else {
-    DocHeaderData* data = mHeaderData;
-    DocHeaderData** lastPtr = &mHeaderData;
+    HeaderData* data = mHeaderData.get();
+    UniquePtr<HeaderData>* lastPtr = &mHeaderData;
     bool found = false;
     do {  // look for existing and replace
       if (data->mField == aHeaderField) {
         if (!aData.IsEmpty()) {
           data->mData.Assign(aData);
         } else {  // don't store empty string
-          *lastPtr = data->mNext;
-          data->mNext = nullptr;
-          delete data;
+          // Note that data->mNext is moved to a temporary before the old value
+          // of *lastPtr is deleted.
+          *lastPtr = std::move(data->mNext);
         }
         found = true;
 
         break;
       }
-      lastPtr = &(data->mNext);
-      data = *lastPtr;
+      lastPtr = &data->mNext;
+      data = lastPtr->get();
     } while (data);
 
     if (!aData.IsEmpty() && !found) {
       // didn't find, append
-      *lastPtr = new DocHeaderData(aHeaderField, aData);
+      *lastPtr = MakeUnique<HeaderData>(aHeaderField, aData);
     }
   }
 
@@ -6739,6 +6757,10 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
     if (auto* presContext = GetPresContext()) {
       presContext->ContentLanguageChanged();
     }
+  }
+
+  if (aHeaderField == nsGkAtoms::origin_trial) {
+    mTrials.UpdateFromToken(aData, NodePrincipal());
   }
 
   if (aHeaderField == nsGkAtoms::headerDefaultStyle) {
@@ -10888,7 +10910,7 @@ void Document::RetrieveRelevantHeaders(nsIChannel* aChannel) {
     static const char* const headers[] = {
         "default-style", "content-style-type", "content-language",
         "content-disposition", "refresh", "x-dns-prefetch-control",
-        "x-frame-options",
+        "x-frame-options", "origin-trial",
         // add more http headers if you need
         // XXXbz don't add content-location support without reading bug
         // 238654 and its dependencies/dups first.
@@ -10936,7 +10958,7 @@ void Document::RetrieveRelevantHeaders(nsIChannel* aChannel) {
 void Document::ProcessMETATag(HTMLMetaElement* aMetaElement) {
   // set any HTTP-EQUIV data into document's header data as well as url
   nsAutoString header;
-  aMetaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+  aMetaElement->GetAttr(nsGkAtoms::httpEquiv, header);
   if (!header.IsEmpty()) {
     // Ignore META REFRESH when document is sandboxed from automatic features.
     nsContentUtils::ASCIIToLower(header);
@@ -10946,7 +10968,7 @@ void Document::ProcessMETATag(HTMLMetaElement* aMetaElement) {
     }
 
     nsAutoString result;
-    aMetaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
+    aMetaElement->GetAttr(nsGkAtoms::content, result);
     if (!result.IsEmpty()) {
       RefPtr<nsAtom> fieldAtom(NS_Atomize(header));
       SetHeaderData(fieldAtom, result);

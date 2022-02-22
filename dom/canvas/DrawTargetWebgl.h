@@ -57,6 +57,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   friend class StandaloneTexture;
   friend class TextureHandle;
   friend class SourceSurfaceWebgl;
+  friend class AutoSaveContext;
 
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetWebgl, override)
@@ -76,6 +77,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   bool mWebglValid = false;
   // Whether or not the clip state has changed since last used by SharedContext.
   bool mClipDirty = true;
+  // The framebuffer has been modified and should be copied to the swap chain.
+  bool mNeedsPresent = true;
 
   RefPtr<TextureHandle> mSnapshotTexture;
 
@@ -186,6 +189,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     already_AddRefed<WebGLTextureJS> GetCompatibleSnapshot(
         SourceSurface* aSurface);
 
+    bool UploadSurface(DataSourceSurface* aData, SurfaceFormat aFormat,
+                       const IntRect& aSrcRect, const IntPoint& aDstOffset,
+                       bool aInit);
     bool DrawRectAccel(const Rect& aRect, const Pattern& aPattern,
                        const DrawOptions& aOptions,
                        Maybe<DeviceColor> aMaskColor = Nothing(),
@@ -204,7 +210,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
                                     CompositionOp aOperator);
 
     bool FillGlyphsAccel(ScaledFont* aFont, const GlyphBuffer& aBuffer,
-                         const Pattern& aPattern, const DrawOptions& aOptions);
+                         const Pattern& aPattern, const DrawOptions& aOptions,
+                         bool aUseSubpixelAA);
 
     void PruneTextureHandle(const RefPtr<TextureHandle>& aHandle);
     bool PruneTextureMemory(size_t aMargin = 0, bool aPruneUnused = true);
@@ -240,13 +247,16 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   already_AddRefed<SourceSurface> Snapshot() override;
   already_AddRefed<SourceSurface> GetBackingSurface() override;
-  void DetachAllSnapshots() override { MarkChanged(); }
+  void DetachAllSnapshots() override;
+
+  void BeginFrame(const IntRect& aPersistedRect);
+  void EndFrame();
 
   bool LockBits(uint8_t** aData, IntSize* aSize, int32_t* aStride,
                 SurfaceFormat* aFormat, IntPoint* aOrigin = nullptr) override;
   void ReleaseBits(uint8_t* aData) override;
 
-  void Flush() override;
+  void Flush() override {}
   void DrawSurface(
       SourceSurface* aSurface, const Rect& aDest, const Rect& aSource,
       const DrawSurfaceOptions& aSurfOptions = DrawSurfaceOptions(),
@@ -365,7 +375,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
                 const DrawOptions& aOptions,
                 const StrokeOptions* aStrokeOptions = nullptr);
 
-  void MarkChanged();
+  bool MarkChanged();
 
   void ReadIntoSkia();
   void FlattenSkia();
@@ -385,9 +395,24 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   bool ReadInto(uint8_t* aDstData, int32_t aDstStride);
   already_AddRefed<DataSourceSurface> ReadSnapshot();
   already_AddRefed<TextureHandle> CopySnapshot();
-  already_AddRefed<SourceSurfaceWebgl> ClearSnapshot();
+  void ClearSnapshot(bool aCopyOnWrite = true);
 
   bool CreateFramebuffer();
+
+  // PrepareContext may sometimes be used recursively. When this occurs, ensure
+  // that clip state is restored after the context is used.
+  struct AutoRestoreContext {
+    DrawTargetWebgl* mTarget;
+    IntRect mClipRect;
+
+    explicit AutoRestoreContext(DrawTargetWebgl* aTarget)
+        : mTarget(aTarget), mClipRect(aTarget->mSharedContext->mClipRect) {}
+
+    ~AutoRestoreContext() {
+      mTarget->mSharedContext->SetClipRect(mClipRect);
+      mTarget->mClipDirty = true;
+    }
+  };
 };
 
 }  // namespace gfx

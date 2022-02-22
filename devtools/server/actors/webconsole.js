@@ -756,7 +756,17 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             this.documentEventsListener = new DocumentEventsListener(
               this.parentActor
             );
-            this.documentEventsListener.on("*", this.onDocumentEvent);
+
+            this.documentEventsListener.on("dom-loading", data =>
+              this.onDocumentEvent("dom-loading", data)
+            );
+            this.documentEventsListener.on("dom-interactive", data =>
+              this.onDocumentEvent("dom-interactive", data)
+            );
+            this.documentEventsListener.on("dom-complete", data =>
+              this.onDocumentEvent("dom-complete", data)
+            );
+
             this.documentEventsListener.listen();
           }
           startedListeners.push(event);
@@ -1798,12 +1808,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *        Only passed when `name` is "dom-complete" (see devtools/server/actors/webconsole/listeners/document-events.js).
    */
   onDocumentEvent: function(name, { time, hasNativeConsoleAPI }) {
-    // will-navigate event has been added in Fx91 and is only expected to be used
-    // by DOCUMENT_EVENT watcher. For toolbox still not using watcher actor and DOCUMENT_EVENT watcher
-    // will-navigate will be emitted based on target actor's will-navigate events.
-    if (name == "will-navigate") {
-      return;
-    }
     this.emit("documentEvent", {
       name,
       time,
