@@ -1181,3 +1181,23 @@ add_task(async function blockedSuggestionsAPI() {
     "_blockedDigests is now empty"
   );
 });
+
+// Test whether the blocking for remote settings results works.
+add_task(async function block() {
+  for (const suggestion of REMOTE_SETTINGS_DATA) {
+    await UrlbarProviderQuickSuggest.blockSuggestion(suggestion.url);
+  }
+
+  for (const suggestion of REMOTE_SETTINGS_DATA) {
+    const context = createContext(suggestion.keywords[0], {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    });
+    await check_results({
+      context,
+      matches: [],
+    });
+  }
+
+  await UrlbarProviderQuickSuggest.clearBlockedSuggestions();
+});
