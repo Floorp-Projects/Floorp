@@ -380,6 +380,8 @@ add_task(async function test_background_update() {
   await a1.uninstall();
 });
 
+const STATE_BLOCKED = Ci.nsIBlocklistService.STATE_BLOCKED;
+
 const PARAMS =
   "?" +
   [
@@ -538,30 +540,6 @@ const PARAM_ADDONS = {
     updateType: [AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED],
   },
 
-  "blocklist1@tests.mozilla.org": {
-    manifest: {
-      name: "Test Addon 1",
-      version: "5.0",
-      applications: {
-        gecko: {
-          id: "blocklist1@tests.mozilla.org",
-          update_url: `http://example.com/data/param_test.json${PARAMS}`,
-          strict_min_version: "1",
-          strict_max_version: "2",
-        },
-      },
-    },
-    params: {
-      item_version: "5.0",
-      item_maxappversion: "2",
-      item_status: "userDisabled,softblocked",
-      app_version: "1",
-      update_type: "97",
-    },
-    updateType: [AddonManager.UPDATE_WHEN_USER_REQUESTED],
-    blocklistState: "STATE_SOFTBLOCKED",
-  },
-
   "blocklist2@tests.mozilla.org": {
     manifest: {
       name: "Test Addon 1",
@@ -583,7 +561,7 @@ const PARAM_ADDONS = {
       update_type: "97",
     },
     updateType: [AddonManager.UPDATE_WHEN_USER_REQUESTED],
-    blocklistState: "STATE_BLOCKED",
+    blocklistState: STATE_BLOCKED,
   },
 };
 
@@ -591,13 +569,14 @@ const PARAM_IDS = Object.keys(PARAM_ADDONS);
 
 // Verify the parameter escaping in update urls.
 add_task(async function test_params() {
-  let blocklistAddons = new Map();
+  let blocked = [];
   for (let [id, options] of Object.entries(PARAM_ADDONS)) {
-    if (options.blocklistState) {
-      blocklistAddons.set(id, Ci.nsIBlocklistService[options.blocklistState]);
+    if (options.blocklistState == STATE_BLOCKED) {
+      blocked.push(`${id}:${options.manifest.version}`);
     }
   }
-  let mockBlocklist = await AddonTestUtils.overrideBlocklist(blocklistAddons);
+  let extensionsMLBF = [{ stash: { blocked, unblocked: [] }, stash_time: 0 }];
+  await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF });
 
   for (let [id, options] of Object.entries(PARAM_ADDONS)) {
     await promiseInstallWebExtension({ manifest: options.manifest });
@@ -665,8 +644,6 @@ add_task(async function test_params() {
   for (let [, addon] of await getAddons(PARAM_IDS)) {
     await addon.uninstall();
   }
-
-  await mockBlocklist.unregister();
 });
 
 // Tests that if a manifest claims compatibility then the add-on will be
