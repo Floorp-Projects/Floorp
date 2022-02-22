@@ -110,7 +110,7 @@ class BookmarkControllerTest {
     }
 
     @Test
-    fun `handleBookmarkTapped should load the bookmark in the current tab`() {
+    fun `handleBookmarkTapped should load the bookmark in a new tab`() {
         var invokePendingDeletionInvoked = false
         val flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
 
@@ -124,7 +124,7 @@ class BookmarkControllerTest {
         verify {
             homeActivity.openToBrowserAndLoad(
                 item.url!!,
-                false,
+                true,
                 BrowserDirection.FromBookmarks,
                 flags = flags
             )
@@ -290,7 +290,7 @@ class BookmarkControllerTest {
         verify {
             homeActivity.openToBrowserAndLoad(
                 item.url!!,
-                false,
+                true,
                 BrowserDirection.FromBookmarks,
                 flags = flags
             )
