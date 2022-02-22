@@ -52,6 +52,9 @@ class WindowFeature(
                             )
                             windowRequest.start()
                         }
+                        else -> {
+                            // no-op
+                        }
                     }
                 }
         }
