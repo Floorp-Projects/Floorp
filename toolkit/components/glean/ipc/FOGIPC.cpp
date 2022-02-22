@@ -142,6 +142,8 @@ void RecordPowerMetrics() {
     if (newCpuTime < std::numeric_limits<int32_t>::max()) {
       power::total_cpu_time_ms.Add(nNewCpuTime);
       power::cpu_time_per_process_type_ms.Get(type).Add(nNewCpuTime);
+    } else {
+      power::cpu_time_bogus_values.Add(1);
     }
     PROFILER_MARKER("CPU Time", OTHER, {}, ProcessingTimeMarker, nNewCpuTime,
                     type);
@@ -153,6 +155,8 @@ void RecordPowerMetrics() {
     if (newGpuTime < std::numeric_limits<int32_t>::max()) {
       power::total_gpu_time_ms.Add(nNewGpuTime);
       power::gpu_time_per_process_type_ms.Get(type).Add(nNewGpuTime);
+    } else {
+      power::gpu_time_bogus_values.Add(1);
     }
     PROFILER_MARKER("GPU Time", OTHER, {}, ProcessingTimeMarker, nNewGpuTime,
                     type);
