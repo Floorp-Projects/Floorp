@@ -141,7 +141,6 @@ class TabTarget extends Target {
       // title: this.title,
       type: this.type,
       url: this.url,
-      browsingContextId: this.browsingContext.id,
       webSocketDebuggerUrl: this.wsDebuggerURL,
     };
   }
