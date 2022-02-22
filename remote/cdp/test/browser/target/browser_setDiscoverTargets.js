@@ -28,11 +28,7 @@ add_task(
 
 add_task(async function pageTargets({ client, tab }) {
   const { Target, target } = client;
-  is(
-    target.browsingContextId,
-    tab.linkedBrowser.browsingContext.id,
-    "Current target has expected browsing context id"
-  );
+
   const currentTargetId = target.id;
   const url = toDataURL("pageTargets");
   await loadURL(url);
