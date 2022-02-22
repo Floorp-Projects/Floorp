@@ -10,6 +10,7 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   EnterprisePolicyTesting:
     "resource://testing-common/EnterprisePolicyTesting.jsm",
+  sinon: "resource://testing-common/Sinon.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
@@ -22,6 +23,61 @@ let gUserBranch = Services.prefs.getBranch("browser.urlbar.");
 
 add_task(async function init() {
   await QuickSuggestTestUtils.ensureQuickSuggestInit();
+});
+
+// Makes sure `UrlbarProviderQuickSuggest._updateExperimentState()` is called
+// when the `browser.urlbar.quicksuggest.enabled` pref is changed.
+add_task(async function test_updateExperimentState_pref() {
+  Assert.ok(
+    UrlbarPrefs.get("quicksuggest.enabled"),
+    "Sanity check: quicksuggest.enabled is true by default"
+  );
+
+  let sandbox = sinon.createSandbox();
+  let spy = sandbox.spy(UrlbarProviderQuickSuggest, "_updateExperimentState");
+
+  UrlbarPrefs.set("quicksuggest.enabled", false);
+  await UrlbarQuickSuggest.readyPromise;
+  Assert.equal(
+    spy.callCount,
+    1,
+    "_updateExperimentState called once after changing pref"
+  );
+
+  UrlbarPrefs.clear("quicksuggest.enabled");
+  await UrlbarQuickSuggest.readyPromise;
+  Assert.equal(
+    spy.callCount,
+    2,
+    "_updateExperimentState called again after clearing pref"
+  );
+
+  sandbox.restore();
+});
+
+// Makes sure `UrlbarProviderQuickSuggest._updateExperimentState()` is called
+// when a Nimbus experiment is installed and uninstalled.
+add_task(async function test_updateExperimentState_experiment() {
+  let sandbox = sinon.createSandbox();
+  let spy = sandbox.spy(UrlbarProviderQuickSuggest, "_updateExperimentState");
+
+  await QuickSuggestTestUtils.withExperiment({
+    callback: () => {
+      Assert.equal(
+        spy.callCount,
+        1,
+        "_updateExperimentState called once after installing experiment"
+      );
+    },
+  });
+
+  Assert.equal(
+    spy.callCount,
+    2,
+    "_updateExperimentState called again after uninstalling experiment"
+  );
+
+  sandbox.restore();
 });
 
 add_task(async function test_indexes() {
