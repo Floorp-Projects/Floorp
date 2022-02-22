@@ -609,8 +609,8 @@ def test_variant_missing():
 # SourceFile implementation raises a runtime exception for the condition this
 # linting rule describes
 @pytest.mark.parametrize("content", ["",
-                                     "?"
-                                     "#"])
+                                     "?foo"
+                                     "#bar"])
 def test_variant_malformed_negative(content):
     code = """\
 <html xmlns="http://www.w3.org/1999/xhtml">
