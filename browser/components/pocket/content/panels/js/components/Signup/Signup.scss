@@ -1,0 +1,19 @@
+body {
+  &.stp_signup_body {
+    overflow: hidden;
+  }
+}
+
+.stp_panel_signup {
+  .stp_signup_content_wrapper {
+    margin: 12px 0 20px;
+  }
+  .stp_signup_img_rainbow_reader {
+    background: url(../img/rainbow-reader.svg) bottom center no-repeat;
+    background-size: contain;
+    height: 72px;
+    width: 82px;
+    float: inline-end;
+    margin-inline-start: 16px;
+  }
+}
