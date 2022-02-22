@@ -187,6 +187,10 @@ add_task(async function test_check_saving_handler_choices() {
     let doc = dialogWindow.document;
     let internalHandlerRadio = doc.querySelector("#handleInternally");
 
+    if (Services.focus.activeWindow != dialogWindow) {
+      await BrowserTestUtils.waitForEvent(dialogWindow, "activate");
+    }
+
     await waitForAcceptButtonToGetEnabled(doc);
 
     ok(!internalHandlerRadio.hidden, "The option should be visible for SVG");
@@ -221,8 +225,13 @@ add_task(async function test_check_saving_handler_choices() {
 
     await testCase.dialogActions(doc);
 
+    let mainWindowActivatedAndFocused = Promise.all([
+      BrowserTestUtils.waitForEvent(window, "activate"),
+      BrowserTestUtils.waitForEvent(window, "focus", true),
+    ]);
     let dialog = doc.querySelector("#unknownContentType");
     dialog.acceptDialog();
+    await mainWindowActivatedAndFocused;
 
     let download = await downloadFinishedPromise;
     if (expectLaunch) {
