@@ -41,6 +41,9 @@ XPCOMUtils.defineLazyGlobalGetters(this, [URL]);
 const ONCE_DOMAINS = ["mozilla.org", "firefox.com"];
 const ONCE_PREF = "browser.startup.homepage_override.once";
 
+// Index of Private Browsing icon in firefox.exe
+// Must line up with the one in nsNativeAppSupportWin.h.
+const PRIVATE_BROWSING_ICON_INDEX = 5;
 const PRIVACY_SEGMENTATION_PREF = "browser.privacySegmentation.enabled";
 
 function shouldLoadURI(aURI) {
@@ -277,6 +280,13 @@ function openBrowserWindow(
           // This must stay pref'ed off until this is resolved.
           // https://bugzilla.mozilla.org/show_bug.cgi?id=1751010
           WinTaskbar.setGroupIdForWindow(win, WinTaskbar.defaultPrivateGroupId);
+          WindowsUIUtils.setWindowIconFromExe(
+            win,
+            Services.dirsvc.get("XREExeF", Ci.nsIFile).path,
+            // This corresponds to the definitions in
+            // nsNativeAppSupportWin.h
+            PRIVATE_BROWSING_ICON_INDEX
+          );
         }
       }
 
