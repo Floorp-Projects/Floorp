@@ -12722,7 +12722,7 @@
 # Whether to use gtk portal for the mime handler.
 #  - 0: never
 #  - 1: always
-#  - 2: auto (for now only true for flatpak, see bug 1516290)
+#  - 2: auto (true for flatpak or GTK_USE_PORTAL=1, false otherwise)
 - name: widget.use-xdg-desktop-portal.mime-handler
   type: int32_t
   value: 2
