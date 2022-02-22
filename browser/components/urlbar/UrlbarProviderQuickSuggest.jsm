@@ -67,7 +67,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     super(...args);
     this._updateExperimentState();
     UrlbarPrefs.addObserver(this);
-    NimbusFeatures.urlbar.onUpdate(this._updateExperimentState);
+    NimbusFeatures.urlbar.onUpdate(() => this._updateExperimentState());
   }
 
   /**
