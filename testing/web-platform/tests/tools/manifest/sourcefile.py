@@ -714,7 +714,12 @@ class SourceFile(object):
                     rv.append(variant)
 
         for variant in rv:
-            assert variant == "" or variant[0] in ["#", "?"], variant
+            if variant != "":
+                if variant[0] not in ("#", "?"):
+                    raise ValueError("Non-empty variant must start with either a ? or a #")
+                if len(variant) == 1 or (variant[0] == "?" and variant[1] == "#"):
+                    raise ValueError("Variants must not have empty fragment or query " +
+                                     "(omit the empty part instead)")
 
         if not rv:
             rv = [""]
