@@ -100,6 +100,8 @@ void ConvertAndScaleFromYCbCrDescriptor(uint8_t* aBuffer,
                                         unsigned char* aDestBuffer,
                                         int32_t aStride);
 
+gfx::IntSize GetCroppedCbCrSize(const YCbCrDescriptor& aDescriptor);
+
 }  // namespace ImageDataSerializer
 
 }  // namespace layers
