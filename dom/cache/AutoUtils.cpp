@@ -367,6 +367,7 @@ AutoParentOpResult::~AutoParentOpResult() {
   }
 
   if (action == Delete && mStreamControl) {
+    mStreamControl->AssertWillDelete();
     QM_WARNONLY_TRY(
         OkIf(PCacheStreamControlParent::Send__delete__(mStreamControl)));
   }
