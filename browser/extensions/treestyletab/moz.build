@@ -12,43 +12,6 @@ FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"] += [
     "manifest.json",
 ]
 
-FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["ja"] += [
-    "_locales/ja/messages.json",
-]
-
-FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["de"] += [
-    "_locales/de/messages.json",
-]
-
-FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["fr"] += [
-    "_locales/fr/messages.json",
-]
-
-FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["en"] += [
-    "_locales/en/messages.json",
-]
-
-FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["ko"] += [
-    "_locales/ko/messages.json",
-]
-
-FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["ru"] += [
-    "_locales/ru/messages.json",
-]
-
-FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["uk"] += [
-    "_locales/uk/messages.json",
-]
-
-
-FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["zh_TW"] += [
-    "_locales/zh_TW/messages.json",
-]
-
-FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["zh_CN"] += [
-    "_locales/zh_CN/messages.json",
-]
-
 FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["background"] += [
     "background/api-tabs-listener.js",
     "background/background-cache.js",
@@ -74,7 +37,7 @@ FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["background"] += [
     "background/tabs-move.js",
     "background/tabs-open.js",
     "background/tree-structure.js",
-    "background/tree.js"
+    "background/tree.js",
 ]
 
 FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["common"] += [
@@ -120,7 +83,6 @@ FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["extlib"] += [
     "extlib/RichConfirm.js",
     "extlib/TabFavIconHelper.js",
 ]
-
 
 FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["extlib"]["codemirror-theme"] += [
     "extlib/codemirror-theme/3024-day.css",
@@ -171,6 +133,7 @@ FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["extlib"]["codemir
     "extlib/codemirror-theme/paraiso-dark.css",
     "extlib/codemirror-theme/paraiso-light.css",
     "extlib/codemirror-theme/pastel-on-dark.css",
+    "extlib/codemirror-theme/railscasts.css",
     "extlib/codemirror-theme/rubyblue.css",
     "extlib/codemirror-theme/seti.css",
     "extlib/codemirror-theme/shadowfox.css",
@@ -230,12 +193,6 @@ FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["resources"] += [
     "resources/ui-color.css",
 ]
 
-FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["resources"]["module"] += [
-    "resources/module/logs.js",
-    "resources/module/protocol-handler.js",
-    "resources/module/startup.js",
-]
-
 FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["resources"]["icons"]["contextual-identities"] += [
     "resources/icons/contextual-identities/briefcase.svg",
     "resources/icons/contextual-identities/cart.svg",
@@ -255,6 +212,7 @@ FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["resources"]["icon
 FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["resources"]["icons"] += [
     "resources/icons/customize.svg",
     "resources/icons/dashboard.svg",
+    "resources/icons/defaultFavicon.svg",
     "resources/icons/developer.svg",
     "resources/icons/device-desktop.svg",
     "resources/icons/device-mobile.svg",
@@ -279,6 +237,12 @@ FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["resources"]["icon
     "resources/icons/settings.svg",
     "resources/icons/warning.svg",
     "resources/icons/window.svg",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["resources"]["module"] += [
+    "resources/module/logs.js",
+    "resources/module/protocol-handler.js",
+    "resources/module/startup.js",
 ]
 
 FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["sidebar"] += [
@@ -370,5 +334,45 @@ FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["tests"] += [
     "tests/utils.js",
 ]
 
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["de"] += [
+    "_locales/de/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["en"] += [
+    "_locales/en/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["fr"] += [
+    "_locales/fr/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["ja"] += [
+    "_locales/ja/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["ko"] += [
+    "_locales/ko/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"] += [
+    "_locales/README.md",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["ru"] += [
+    "_locales/ru/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["uk"] += [
+    "_locales/uk/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["zh_CN"] += [
+    "_locales/zh_CN/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["zh_TW"] += [
+    "_locales/zh_TW/messages.json",
+]
+
 with Files("**"):
-    BUG_COMPONENT = ("Firefox", "treestyletab")
+    BUG_COMPONENT = ("Firefox", "treestyletab@piro.sakura.ne.jp")

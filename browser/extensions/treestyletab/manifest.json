@@ -23,32 +23,33 @@
     "tabHide"
   ],
   "icons": {
-    "16": "/resources/16x16.svg",
-    "20": "/resources/20x20.svg",
-    "24": "/resources/24x24.svg",
-    "32": "/resources/32x32.svg"
+    "16": "resources/16x16.svg",
+    "20": "resources/20x20.svg",
+    "24": "resources/24x24.svg",
+    "32": "resources/32x32.svg"
   },
   "background": {
-    "page": "/background/background.html"
+    "page": "background/background.html"
   },
   "browser_action": {
     "default_title": "__MSG_sidebarTitle__",
+    "default_area" : "menupanel",
     "default_icon": {
-      "16": "/resources/16x16.svg",
-      "20": "/resources/20x20.svg",
-      "24": "/resources/24x24.svg",
-      "32": "/resources/32x32.svg"
+      "16": "resources/16x16.svg",
+      "20": "resources/20x20.svg",
+      "24": "resources/24x24.svg",
+      "32": "resources/32x32.svg"
     }
   },
   "sidebar_action": {
     "default_title": "__MSG_sidebarTitle__",
     "default_icon": {
-      "16": "/resources/16x16.svg",
-      "20": "/resources/20x20.svg",
-      "24": "/resources/24x24.svg",
-      "32": "/resources/32x32.svg"
+      "16": "resources/16x16.svg",
+      "20": "resources/20x20.svg",
+      "24": "resources/24x24.svg",
+      "32": "resources/32x32.svg"
     },
-    "default_panel": "/sidebar/sidebar.html",
+    "default_panel": "sidebar/sidebar.html",
     "browser_style": false
   },
   "commands": {
@@ -201,24 +202,23 @@
     }
   },
   "options_ui": {
-    "page": "/options/options.html",
+    "page": "options/options.html",
     "browser_style": false
   },
   "web_accessible_resources": [
-    "/resources/group-tab.html*"
+    "resources/group-tab.html*"
   ],
   "protocol_handlers": [
     {
       "protocol": "ext+treestyletab",
       "name": "Tree Style Tab",
-      "uriTemplate": "/resources/protocol-handler.html?%s"
+      "uriTemplate": "resources/protocol-handler.html?%s"
     }
   ],
   "default_locale": "en",
   "applications": {
     "gecko": {
-      "id": "treestyletab@piro.sakura.ne.jp",
-      "strict_min_version": "67.0"
+      "id": "treestyletab@piro.sakura.ne.jp"
     }
   }
 }
