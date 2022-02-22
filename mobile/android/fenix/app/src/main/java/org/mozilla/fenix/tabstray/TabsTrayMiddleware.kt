@@ -54,6 +54,9 @@ class TabsTrayMiddleware(
                     }
                 }
             }
+            else -> {
+                // no-op
+            }
         }
     }
 

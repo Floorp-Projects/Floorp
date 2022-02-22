@@ -103,6 +103,9 @@ fun SyncedTabsList(
                             )
                         }
                     }
+                    else -> {
+                        // no-op
+                    }
                 }
             }
         } else {
@@ -121,6 +124,9 @@ fun SyncedTabsList(
                         ) {
                             onTabClick(syncedTabItem.tab)
                         }
+                    }
+                    else -> {
+                        // no-op
                     }
                 }
             }

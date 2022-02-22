@@ -52,6 +52,9 @@ class SearchTermTabGroupMiddleware : Middleware<BrowserState, BrowserAction> {
                     }
                 }
             }
+            else -> {
+                // no-op
+            }
         }
     }
 }

@@ -149,6 +149,9 @@ class BookmarkView(
                     )
                 )
             }
+            else -> {
+                // no-op
+            }
         }
         binding.bookmarksProgressBar.isVisible = state.isLoading
         binding.swipeRefresh.isEnabled =
