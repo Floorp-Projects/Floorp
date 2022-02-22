@@ -662,8 +662,9 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     if (maskUsage.shouldGenerateMaskLayer && maskFrame) {
       StyleMaskMode maskMode =
           aFrame->StyleSVGReset()->mMask.mLayers[0].mMaskMode;
-      SVGMaskFrame::MaskParams params(&aContext, aFrame, aTransform,
-                                      maskUsage.opacity, maskMode, aImgParams);
+      SVGMaskFrame::MaskParams params(aContext.GetDrawTarget(), aFrame,
+                                      aTransform, maskUsage.opacity, maskMode,
+                                      aImgParams);
       // We want the mask to be untransformed so use the inverse of the current
       // transform as the maskTransform to compensate.
       maskTransform = aContext.CurrentMatrix();

@@ -525,8 +525,8 @@ static bool PaintMaskSurface(const PaintFramesParams& aParams,
     // maskFrame == nullptr means we get an image mask.
     if (maskFrame) {
       SVGMaskFrame::MaskParams params(
-          maskContext, aParams.frame, cssPxToDevPxMatrix, aOpacity,
-          svgReset->mMask.mLayers[i].mMaskMode, aParams.imgParams);
+          maskContext->GetDrawTarget(), aParams.frame, cssPxToDevPxMatrix,
+          aOpacity, svgReset->mMask.mLayers[i].mMaskMode, aParams.imgParams);
       RefPtr<SourceSurface> svgMask = maskFrame->GetMaskForMaskedFrame(params);
       if (svgMask) {
         Matrix tmp = aMaskDT->GetTransform();
@@ -583,7 +583,7 @@ static MaskPaintResult CreateAndPaintMaskSurface(
         SVGUtils::GetCSSPxToDevPxMatrix(aParams.frame);
     paintResult.opacityApplied = true;
     SVGMaskFrame::MaskParams params(
-        &ctx, aParams.frame, cssPxToDevPxMatrix, aOpacity,
+        ctx.GetDrawTarget(), aParams.frame, cssPxToDevPxMatrix, aOpacity,
         svgReset->mMask.mLayers[0].mMaskMode, aParams.imgParams);
     paintResult.maskSurface = aMaskFrames[0]->GetMaskForMaskedFrame(params);
     paintResult.maskTransform = ctx.CurrentMatrix();
