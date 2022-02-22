@@ -81,10 +81,11 @@ These do not await a flush of child process metric values.
 You can use the test-only method `testFlushAllChildren` on the `FOG`
 XPCOM component to await child data's arrival:
 ```js
-let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
-await FOG.testFlushAllChildren();
+await Services.fog.testFlushAllChildren();
 ```
-See [the test documentation](testing.md) for more details on testing.
+See [the test documentation](testing) for more details on testing FOG.
+For writing tests about instrumentation, see
+[the instrumentation test documentation](../user/instrumentation_tests).
 
 #### Pings
 
