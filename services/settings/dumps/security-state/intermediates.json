@@ -1,6 +1,132 @@
 {
   "data": [
     {
+      "schema": 1645174638267,
+      "derHash": "OH1Ja5IgLUxEPNlP9C2hffLx5o4kTC+7p+KU290RNXs=",
+      "subject": "CN=WISeKey CertifyID Advanced GC CA 1,O=WISeKey,C=CH",
+      "subjectDN": "MEwxCzAJBgNVBAYTAkNIMRAwDgYDVQQKEwdXSVNlS2V5MSswKQYDVQQDEyJXSVNlS2V5IENlcnRpZnlJRCBBZHZhbmNlZCBHQyBDQSAx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3847cc74ceb46d2e07d37b69b668ff50587428a43ef992473d4a3e433bcb1972",
+        "size": 1293,
+        "filename": "Y3IJxxxojxFKeXVhVUyyPE4P-7QrAbKt0viCWXpb1G8=.pem",
+        "location": "security-state-staging/intermediates/233bd648-66bc-440b-8b31-293196be1b49.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Y3IJxxxojxFKeXVhVUyyPE4P+7QrAbKt0viCWXpb1G8=",
+      "crlite_enrolled": false,
+      "id": "5905f153-1bda-44df-8205-013b8756834a",
+      "last_modified": 1645373937715
+    },
+    {
+      "schema": 1645051712843,
+      "derHash": "s5xKRZbTGRr6Oz0lTSjlxIL80NUA4Kkzf5knfLii7vg=",
+      "subject": "CN=TrustID Server CA A52,OU=TrustID Server,O=IdenTrust,C=US",
+      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlJZGVuVHJ1c3QxFzAVBgNVBAsTDlRydXN0SUQgU2VydmVyMR4wHAYDVQQDExVUcnVzdElEIFNlcnZlciBDQSBBNTI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "98d3cfa7dab9b95ecb8cc38637e485c249a12ae6ca445e96105f2708a82c09fa",
+        "size": 2442,
+        "filename": "baHWPQeCjK_t6GB-okH73C13ZXVDr2QAVt6jQTsq2Ys=.pem",
+        "location": "security-state-staging/intermediates/fce94b6e-1e43-4d74-8a2d-cfe52aa9d807.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "baHWPQeCjK/t6GB+okH73C13ZXVDr2QAVt6jQTsq2Ys=",
+      "crlite_enrolled": false,
+      "id": "57eb281e-444c-4634-bcd1-8b742ffc9da6",
+      "last_modified": 1645153040489
+    },
+    {
+      "schema": 1645145331886,
+      "derHash": "z20DM9C+LGmkLUU5YN7p4QnZ6IQ+owYaFnHW6vhet9g=",
+      "subject": "CN=emSign Class 1 CA - G1,OU=emSign PKI,O=eMudhra Technologies Limited,C=IN",
+      "subjectDN": "MGoxCzAJBgNVBAYTAklOMRMwEQYDVQQLEwplbVNpZ24gUEtJMSUwIwYDVQQKExxlTXVkaHJhIFRlY2hub2xvZ2llcyBMaW1pdGVkMR8wHQYDVQQDExZlbVNpZ24gQ2xhc3MgMSBDQSAtIEcx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "266278533c3786da3d8865fcd54e0e8fbedf26868dc64378e368d49cb3b7817b",
+        "size": 1589,
+        "filename": "8eYpGcWTiEZyMyyg19Q9T-bCQt78vGjuJDkLU10HGx8=.pem",
+        "location": "security-state-staging/intermediates/ca8d7c44-0de7-4fdb-a4bb-a07b24618b68.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8eYpGcWTiEZyMyyg19Q9T+bCQt78vGjuJDkLU10HGx8=",
+      "crlite_enrolled": true,
+      "id": "1cb8aaf5-1bf5-4af2-992d-adeedaabcaa7",
+      "last_modified": 1645153040475
+    },
+    {
+      "schema": 1645145332268,
+      "derHash": "g8xQ4V0WmCSuvQvsv/r+c2vFWuIRvD7mM4+0c7kBWgc=",
+      "subject": "CN=TrustCor OV SSL CA - G2 - RSA,O=TrustCor Systems S. de R.L.,C=PA",
+      "subjectDN": "MFsxCzAJBgNVBAYTAlBBMSQwIgYDVQQKDBtUcnVzdENvciBTeXN0ZW1zIFMuIGRlIFIuTC4xJjAkBgNVBAMMHVRydXN0Q29yIE9WIFNTTCBDQSAtIEcyIC0gUlNB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "0dc01364783a9271db505d8e1e3e6043cf875754d6bd36c6945e11fb53e02604",
+        "size": 2385,
+        "filename": "Mj3vTN7j1fDT_WCo762M8I9WedMYrlbBSvj8E4HDtuA=.pem",
+        "location": "security-state-staging/intermediates/173a1a2d-4f59-4194-99eb-916147b82f27.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Mj3vTN7j1fDT/WCo762M8I9WedMYrlbBSvj8E4HDtuA=",
+      "crlite_enrolled": true,
+      "id": "38aa6198-2c05-4917-88c6-c6a161997f08",
+      "last_modified": 1645153040463
+    },
+    {
+      "schema": 1645145332988,
+      "derHash": "oE+mnoTM1E9eUmtVhjHjRrIUF9TRtgagjK3jko2/EVg=",
+      "subject": "CN=GlobalSign Atlas R3 AlphaSSL CA 2022 Q1,O=Globalsign nv-sa,C=BE",
+      "subjectDN": "MFoxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxzaWduIG52LXNhMTAwLgYDVQQDEydHbG9iYWxTaWduIEF0bGFzIFIzIEFscGhhU1NMIENBIDIwMjIgUTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3f4317e778b3da30eec0cd9dbe908ae50b5736d6612f97db5ec06bc2d774dc25",
+        "size": 1715,
+        "filename": "bB0N8F_eQUgJWwMgm9RHXw1K3t_cLoC1Y1kTX0-qGSw=.pem",
+        "location": "security-state-staging/intermediates/8f3f0c51-d60e-4fa9-ad11-755c3dcfbad7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "bB0N8F/eQUgJWwMgm9RHXw1K3t/cLoC1Y1kTX0+qGSw=",
+      "crlite_enrolled": true,
+      "id": "f37d4264-4777-4f39-97d4-2ba26829cab4",
+      "last_modified": 1645153040451
+    },
+    {
+      "schema": 1645116876222,
+      "derHash": "OPWMr2UMzU9gJ9HJImgokaFl/vSR/B0zP+ipyFFYbUg=",
+      "subject": "CN=MuaSSL.com EV TLS Issuing RSA CA R1,O=Hao Quang Viet Software Company Limited,C=VN",
+      "subjectDN": "MG0xCzAJBgNVBAYTAlZOMTAwLgYDVQQKDCdIYW8gUXVhbmcgVmlldCBTb2Z0d2FyZSBDb21wYW55IExpbWl0ZWQxLDAqBgNVBAMMI011YVNTTC5jb20gRVYgVExTIElzc3VpbmcgUlNBIENBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1268f09ff0fbaa823641ed09fcffa9375ff709984ae1760df81690f6d93e599a",
+        "size": 2540,
+        "filename": "13AbTAPgSo4ZEXl_1d53tBhdk_1OZp42oZ8Uo8f-0gs=.pem",
+        "location": "security-state-staging/intermediates/865dda55-844a-4582-a11b-5b6e5990260f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "13AbTAPgSo4ZEXl/1d53tBhdk/1OZp42oZ8Uo8f+0gs=",
+      "crlite_enrolled": true,
+      "id": "a654fabe-9ac1-4467-9d3a-bdafdd9b0b8a",
+      "last_modified": 1645153040439
+    },
+    {
+      "schema": 1645145332637,
+      "derHash": "0VgzPgKxDID2lmt3Bat5VwsX2jix45IUWUDtfmfuT9g=",
+      "subject": "CN=TrustAsia RSA EV TLS CA G2,O=TrustAsia Technologies\\, Inc.,C=CN",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMSUwIwYDVQQKExxUcnVzdEFzaWEgVGVjaG5vbG9naWVzLCBJbmMuMSMwIQYDVQQDExpUcnVzdEFzaWEgUlNBIEVWIFRMUyBDQSBHMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a5261900f9c803468ebe0d8d9a0abeaeced2a9d2a845da37daa5650f563dd624",
+        "size": 1792,
+        "filename": "F5bT3sFndGlyea2tS1nY_6Ln9zvFckAmivpIsKkT5XQ=.pem",
+        "location": "security-state-staging/intermediates/7cf5568f-520a-4c42-a67a-874421ee65db.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "F5bT3sFndGlyea2tS1nY/6Ln9zvFckAmivpIsKkT5XQ=",
+      "crlite_enrolled": true,
+      "id": "42a054e1-89f9-48cc-b92a-4da9e9c308e3",
+      "last_modified": 1645153040427
+    },
+    {
       "schema": 1645038106736,
       "derHash": "xesadjm52NcLT4Kt2AeUF17ktqPbGGGzhxfJb8GRSSc=",
       "subject": "CN=NAVER Secure Certification Authority 1,O=NAVER BUSINESS PLATFORM Corp.,C=KR",
@@ -17,24 +143,6 @@
       "crlite_enrolled": true,
       "id": "9fe92629-6232-4af7-a10f-6fe9d20f1fa8",
       "last_modified": 1645048666423
-    },
-    {
-      "schema": 1644422524927,
-      "derHash": "s5xKRZbTGRr6Oz0lTSjlxIL80NUA4Kkzf5knfLii7vg=",
-      "subject": "CN=TrustID Server CA A52,OU=TrustID Server,O=IdenTrust,C=US",
-      "subjectDN": "MFoxCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlJZGVuVHJ1c3QxFzAVBgNVBAsTDlRydXN0SUQgU2VydmVyMR4wHAYDVQQDExVUcnVzdElEIFNlcnZlciBDQSBBNTI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "98d3cfa7dab9b95ecb8cc38637e485c249a12ae6ca445e96105f2708a82c09fa",
-        "size": 2442,
-        "filename": "baHWPQeCjK_t6GB-okH73C13ZXVDr2QAVt6jQTsq2Ys=.pem",
-        "location": "security-state-staging/intermediates/6d66de8a-8c0b-4ade-8054-7f91cdf6accb.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "baHWPQeCjK/t6GB+okH73C13ZXVDr2QAVt6jQTsq2Ys=",
-      "crlite_enrolled": false,
-      "id": "aa0a2c54-cd68-43b3-be06-0831027e3b6b",
-      "last_modified": 1644440236638
     },
     {
       "schema": 1644367739235,
@@ -3131,24 +3239,6 @@
       "crlite_enrolled": false,
       "id": "3e78916f-055f-4525-91bb-ad08e95c58eb",
       "last_modified": 1642150669372
-    },
-    {
-      "schema": 1642150112541,
-      "derHash": "0VgzPgKxDID2lmt3Bat5VwsX2jix45IUWUDtfmfuT9g=",
-      "subject": "CN=TrustAsia RSA EV TLS CA G2,O=TrustAsia Technologies\\, Inc.,C=CN",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMSUwIwYDVQQKExxUcnVzdEFzaWEgVGVjaG5vbG9naWVzLCBJbmMuMSMwIQYDVQQDExpUcnVzdEFzaWEgUlNBIEVWIFRMUyBDQSBHMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a5261900f9c803468ebe0d8d9a0abeaeced2a9d2a845da37daa5650f563dd624",
-        "size": 1792,
-        "filename": "F5bT3sFndGlyea2tS1nY_6Ln9zvFckAmivpIsKkT5XQ=.pem",
-        "location": "security-state-staging/intermediates/7cf5568f-520a-4c42-a67a-874421ee65db.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "F5bT3sFndGlyea2tS1nY/6Ln9zvFckAmivpIsKkT5XQ=",
-      "crlite_enrolled": false,
-      "id": "42a054e1-89f9-48cc-b92a-4da9e9c308e3",
-      "last_modified": 1642150669359
     },
     {
       "schema": 1642150113750,
@@ -6643,24 +6733,6 @@
       "last_modified": 1639018682403
     },
     {
-      "schema": 1639016175207,
-      "derHash": "OH1Ja5IgLUxEPNlP9C2hffLx5o4kTC+7p+KU290RNXs=",
-      "subject": "CN=WISeKey CertifyID Advanced GC CA 1,O=WISeKey,C=CH",
-      "subjectDN": "MEwxCzAJBgNVBAYTAkNIMRAwDgYDVQQKEwdXSVNlS2V5MSswKQYDVQQDEyJXSVNlS2V5IENlcnRpZnlJRCBBZHZhbmNlZCBHQyBDQSAx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3847cc74ceb46d2e07d37b69b668ff50587428a43ef992473d4a3e433bcb1972",
-        "size": 1293,
-        "filename": "Y3IJxxxojxFKeXVhVUyyPE4P-7QrAbKt0viCWXpb1G8=.pem",
-        "location": "security-state-staging/intermediates/233bd648-66bc-440b-8b31-293196be1b49.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Y3IJxxxojxFKeXVhVUyyPE4P+7QrAbKt0viCWXpb1G8=",
-      "crlite_enrolled": true,
-      "id": "5905f153-1bda-44df-8205-013b8756834a",
-      "last_modified": 1639018682392
-    },
-    {
       "schema": 1638824446434,
       "derHash": "BjYnNVyUGhyT/FFcuu8vFz1KZG3esTnLjHXBAiIimU8=",
       "subject": "CN=TunTrust Services CA,O=Agence Nationale de Certification Electronique,C=TN",
@@ -7001,24 +7073,6 @@
       "crlite_enrolled": true,
       "id": "c5018a05-ac0d-419c-883c-606fbf703668",
       "last_modified": 1637917121230
-    },
-    {
-      "schema": 1637676979360,
-      "derHash": "OPWMr2UMzU9gJ9HJImgokaFl/vSR/B0zP+ipyFFYbUg=",
-      "subject": "CN=MuaSSL.com EV TLS Issuing RSA CA R1,O=Hao Quang Viet Software Company Limited,C=VN",
-      "subjectDN": "MG0xCzAJBgNVBAYTAlZOMTAwLgYDVQQKDCdIYW8gUXVhbmcgVmlldCBTb2Z0d2FyZSBDb21wYW55IExpbWl0ZWQxLDAqBgNVBAMMI011YVNTTC5jb20gRVYgVExTIElzc3VpbmcgUlNBIENBIFIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "1268f09ff0fbaa823641ed09fcffa9375ff709984ae1760df81690f6d93e599a",
-        "size": 2540,
-        "filename": "13AbTAPgSo4ZEXl_1d53tBhdk_1OZp42oZ8Uo8f-0gs=.pem",
-        "location": "security-state-staging/intermediates/865dda55-844a-4582-a11b-5b6e5990260f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "13AbTAPgSo4ZEXl/1d53tBhdk/1OZp42oZ8Uo8f+0gs=",
-      "crlite_enrolled": false,
-      "id": "a654fabe-9ac1-4467-9d3a-bdafdd9b0b8a",
-      "last_modified": 1637679524859
     },
     {
       "schema": 1637635863576,
@@ -7685,24 +7739,6 @@
       "crlite_enrolled": false,
       "id": "d4415400-0498-4b9f-b22d-f16e45359a07",
       "last_modified": 1634947050410
-    },
-    {
-      "schema": 1634937122928,
-      "derHash": "oE+mnoTM1E9eUmtVhjHjRrIUF9TRtgagjK3jko2/EVg=",
-      "subject": "CN=GlobalSign Atlas R3 AlphaSSL CA 2022 Q1,O=Globalsign nv-sa,C=BE",
-      "subjectDN": "MFoxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxzaWduIG52LXNhMTAwLgYDVQQDEydHbG9iYWxTaWduIEF0bGFzIFIzIEFscGhhU1NMIENBIDIwMjIgUTE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3f4317e778b3da30eec0cd9dbe908ae50b5736d6612f97db5ec06bc2d774dc25",
-        "size": 1715,
-        "filename": "bB0N8F_eQUgJWwMgm9RHXw1K3t_cLoC1Y1kTX0-qGSw=.pem",
-        "location": "security-state-staging/intermediates/8f3f0c51-d60e-4fa9-ad11-755c3dcfbad7.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "bB0N8F/eQUgJWwMgm9RHXw1K3t/cLoC1Y1kTX0+qGSw=",
-      "crlite_enrolled": false,
-      "id": "f37d4264-4777-4f39-97d4-2ba26829cab4",
-      "last_modified": 1634947050390
     },
     {
       "schema": 1634937128072,
@@ -14347,24 +14383,6 @@
       "last_modified": 1591199862392
     },
     {
-      "schema": 1591167015993,
-      "derHash": "g8xQ4V0WmCSuvQvsv/r+c2vFWuIRvD7mM4+0c7kBWgc=",
-      "subject": "CN=TrustCor OV SSL CA - G2 - RSA,O=TrustCor Systems S. de R.L.,C=PA",
-      "subjectDN": "MFsxCzAJBgNVBAYTAlBBMSQwIgYDVQQKDBtUcnVzdENvciBTeXN0ZW1zIFMuIGRlIFIuTC4xJjAkBgNVBAMMHVRydXN0Q29yIE9WIFNTTCBDQSAtIEcyIC0gUlNB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "0dc01364783a9271db505d8e1e3e6043cf875754d6bd36c6945e11fb53e02604",
-        "size": 2385,
-        "filename": "Mj3vTN7j1fDT_WCo762M8I9WedMYrlbBSvj8E4HDtuA=.pem",
-        "location": "security-state-staging/intermediates/173a1a2d-4f59-4194-99eb-916147b82f27.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Mj3vTN7j1fDT/WCo762M8I9WedMYrlbBSvj8E4HDtuA=",
-      "crlite_enrolled": false,
-      "id": "38aa6198-2c05-4917-88c6-c6a161997f08",
-      "last_modified": 1591199862386
-    },
-    {
       "schema": 1591167018876,
       "derHash": "CDeZ6LK5AW5EcC6/m/NpziU/4fvrZQ5d8Q70TYe/O64=",
       "subject": "CN=GEANT OV ECC CA 4,O=GEANT Vereniging,C=NL",
@@ -16111,24 +16129,6 @@
       "last_modified": 1576536533929
     },
     {
-      "schema": 1576535948851,
-      "derHash": "Ly8AiBdxChCFtOa8XjM1R0RE2YMnLjOZWjMb4aTE/go=",
-      "subject": "CN=GDCA TrustAUTH R4 CodeSigning CA,O=GUANG DONG CERTIFICATE AUTHORITY CO.\\,LTD.,C=CN",
-      "subjectDN": "MGwxCzAJBgNVBAYTAkNOMTIwMAYDVQQKDClHVUFORyBET05HIENFUlRJRklDQVRFIEFVVEhPUklUWSBDTy4sTFRELjEpMCcGA1UEAwwgR0RDQSBUcnVzdEFVVEggUjQgQ29kZVNpZ25pbmcgQ0E=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "e49b8906ff1d55085ab7bffeb8787da6f1f9f4546d283158c9622d150967f70e",
-        "size": 2064,
-        "filename": "5Zt41KtIYUpjoXvNDZtGlrN-S-X9juxZk0kJdwQpIlM=.pem",
-        "location": "security-state-staging/intermediates/76698902-bd03-4c1d-9344-a48278211966.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "5Zt41KtIYUpjoXvNDZtGlrN+S+X9juxZk0kJdwQpIlM=",
-      "crlite_enrolled": false,
-      "id": "012b0afc-e805-47a0-ab53-af5bbbf79132",
-      "last_modified": 1576536533911
-    },
-    {
       "schema": 1576535945982,
       "derHash": "pjwTmLX43S1DL75MLBkUK+ptXQIh+ueUcYrnWXrMqW0=",
       "subject": "CN=GlobalSign Root R46,O=GlobalSign nv-sa,C=BE",
@@ -16613,24 +16613,6 @@
       "crlite_enrolled": true,
       "id": "391141f8-c2c2-411c-b042-418ab514fd96",
       "last_modified": 1576536533315
-    },
-    {
-      "schema": 1576535719414,
-      "derHash": "iC4BRtFdNIPuWYHjUGfxRJ5WK4niLsw/3zcnTt0xTNo=",
-      "subject": "CN=GDCA TrustAUTH R4 EV CodeSigning CA,O=Global Digital Cybersecurity Authority Co.\\, Ltd.,C=CN",
-      "subjectDN": "MHYxCzAJBgNVBAYTAkNOMTkwNwYDVQQKDDBHbG9iYWwgRGlnaXRhbCBDeWJlcnNlY3VyaXR5IEF1dGhvcml0eSBDby4sIEx0ZC4xLDAqBgNVBAMMI0dEQ0EgVHJ1c3RBVVRIIFI0IEVWIENvZGVTaWduaW5nIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "10f99f1db6de610fba982c5f65250fa8086ea7f1cdce17fd51e1059ad62997f3",
-        "size": 2068,
-        "filename": "K1O1P19UCSRwBq2Y5xce7r_TavF-pDYjmdSYRVYHFXI=.pem",
-        "location": "security-state-staging/intermediates/8227657d-5641-4c7a-aa33-89019ad18fdf.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "K1O1P19UCSRwBq2Y5xce7r/TavF+pDYjmdSYRVYHFXI=",
-      "crlite_enrolled": false,
-      "id": "072a60e3-e6bd-435f-8486-855b8b3b6efe",
-      "last_modified": 1576536533298
     },
     {
       "schema": 1576535718042,
@@ -17821,24 +17803,6 @@
       "last_modified": 1576536531740
     },
     {
-      "schema": 1576536075645,
-      "derHash": "z20DM9C+LGmkLUU5YN7p4QnZ6IQ+owYaFnHW6vhet9g=",
-      "subject": "CN=emSign Class 1 CA - G1,OU=emSign PKI,O=eMudhra Technologies Limited,C=IN",
-      "subjectDN": "MGoxCzAJBgNVBAYTAklOMRMwEQYDVQQLEwplbVNpZ24gUEtJMSUwIwYDVQQKExxlTXVkaHJhIFRlY2hub2xvZ2llcyBMaW1pdGVkMR8wHQYDVQQDExZlbVNpZ24gQ2xhc3MgMSBDQSAtIEcx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "266278533c3786da3d8865fcd54e0e8fbedf26868dc64378e368d49cb3b7817b",
-        "size": 1589,
-        "filename": "8eYpGcWTiEZyMyyg19Q9T-bCQt78vGjuJDkLU10HGx8=.pem",
-        "location": "security-state-staging/intermediates/ca8d7c44-0de7-4fdb-a4bb-a07b24618b68.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "8eYpGcWTiEZyMyyg19Q9T+bCQt78vGjuJDkLU10HGx8=",
-      "crlite_enrolled": false,
-      "id": "1cb8aaf5-1bf5-4af2-992d-adeedaabcaa7",
-      "last_modified": 1576536531692
-    },
-    {
       "schema": 1576536075273,
       "derHash": "jxn/4C/Hle1wdl0UNq3fdy/g8Hc9pDbtvbQqLjDi6Cg=",
       "subject": "CN=GlobalSign ECC EV SSL CA 2018,O=GlobalSign nv-sa,C=BE",
@@ -18269,24 +18233,6 @@
       "crlite_enrolled": true,
       "id": "44fdaa59-55ab-4b5a-9584-878de01ee51f",
       "last_modified": 1562108591025
-    },
-    {
-      "schema": 1562108587986,
-      "derHash": "vsBvVTRMPeTxLNXYCJBs3idSNJUb4BdqeH5ijivn1R8=",
-      "subject": "CN=GDCA TrustAUTH R4 Extended Validation CodeSigning CA,O=GUANG DONG CERTIFICATE AUTHORITY CO.\\,LTD.,C=CN",
-      "subjectDN": "MIGAMQswCQYDVQQGEwJDTjEyMDAGA1UECgwpR1VBTkcgRE9ORyBDRVJUSUZJQ0FURSBBVVRIT1JJVFkgQ08uLExURC4xPTA7BgNVBAMMNEdEQ0EgVHJ1c3RBVVRIIFI0IEV4dGVuZGVkIFZhbGlkYXRpb24gQ29kZVNpZ25pbmcgQ0E=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "504b1a2b2ef9230c71054bc7a026d1827d3f8d8b714b5492dc42264973ecb432",
-        "size": 2105,
-        "filename": "K1O1P19UCSRwBq2Y5xce7r_TavF-pDYjmdSYRVYHFXI=.pem",
-        "location": "security-state-staging/intermediates/292a44cc-36e5-4678-b2da-b286cf71965d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "K1O1P19UCSRwBq2Y5xce7r/TavF+pDYjmdSYRVYHFXI=",
-      "crlite_enrolled": false,
-      "id": "08dade63-03e8-4738-af5e-1139634ccf0f",
-      "last_modified": 1562108588742
     },
     {
       "schema": 1562108584121,
@@ -20123,24 +20069,6 @@
       "crlite_enrolled": false,
       "id": "0fb33d2f-f64b-456b-ac79-80910985aadd",
       "last_modified": 1562025423424
-    },
-    {
-      "schema": 1562025420418,
-      "derHash": "BRwjj618HcD860rvecrpf+SagtqJFqSgkg8weqzWD4E=",
-      "subject": "CN=GDCA TrustAUTH R4 CodeSigning CA,O=Global Digital Cybersecurity Authority Co.\\, Ltd.,C=CN",
-      "subjectDN": "MHMxCzAJBgNVBAYTAkNOMTkwNwYDVQQKDDBHbG9iYWwgRGlnaXRhbCBDeWJlcnNlY3VyaXR5IEF1dGhvcml0eSBDby4sIEx0ZC4xKTAnBgNVBAMMIEdEQ0EgVHJ1c3RBVVRIIFI0IENvZGVTaWduaW5nIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "7af1e6c6f9dd99eac7019162f8379c26901b03968413c1d8c3c8744bfff66c86",
-        "size": 2060,
-        "filename": "5Zt41KtIYUpjoXvNDZtGlrN-S-X9juxZk0kJdwQpIlM=.pem",
-        "location": "security-state-staging/intermediates/9201b15f-d676-42cb-8b9d-46172588682e.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "5Zt41KtIYUpjoXvNDZtGlrN+S+X9juxZk0kJdwQpIlM=",
-      "crlite_enrolled": false,
-      "id": "9e86f345-8b64-4b98-bb28-df4a1df1da0b",
-      "last_modified": 1562025421177
     },
     {
       "schema": 1562025418924,
