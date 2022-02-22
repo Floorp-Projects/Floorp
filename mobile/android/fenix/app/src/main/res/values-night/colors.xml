@@ -153,11 +153,6 @@
     <!-- Tab History -->
     <color name="tab_history_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_dark_theme</color>
 
-    <!-- Search Widget -->
-    <color name="search_widget_background">@color/inset_normal_theme</color>
-    <color name="search_widget_mic_fill_color">@color/photonLightGrey05</color>
-    <color name="search_widget_text">@color/fx_mobile_text_color_primary</color>
-
     <!-- Reader View colors -->
     <color name="mozac_feature_readerview_text_color">@color/fx_mobile_text_color_primary</color>
 

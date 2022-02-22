@@ -345,11 +345,6 @@
     <color name="grey_button_color">@color/photonLightGrey30</color>
     <color name="button_text_color">@color/photonInk20</color>
 
-    <!-- Search Widget -->
-    <color name="search_widget_background">@color/white_color</color>
-    <color name="search_widget_mic_fill_color">@color/photonBlack</color>
-    <color name="search_widget_text">@color/photonGrey50</color>
-
     <!-- Private Browsing Mode Persistent Notification -->
     <color name="pbm_notification_color">@color/photonViolet70</color>
 
