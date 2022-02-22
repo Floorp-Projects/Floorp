@@ -34,6 +34,9 @@ class BlockedTrackersMiddleware(
             is TrackingProtectionAction.TrackerBlockedAction -> {
                 incrementCount()
             }
+            else -> {
+                // no-op
+            }
         }
 
         next(action)
