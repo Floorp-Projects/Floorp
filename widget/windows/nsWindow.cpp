@@ -86,6 +86,8 @@
 #include <unknwn.h>
 #include <psapi.h>
 #include <rpc.h>
+#include <propvarutil.h>
+#include <propkey.h>
 
 #include "mozilla/Logging.h"
 #include "prtime.h"
@@ -1023,6 +1025,28 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   if (!mWnd) {
     NS_WARNING("nsWindow CreateWindowEx failed.");
     return NS_ERROR_FAILURE;
+  }
+
+  if (aInitData->mIsPrivate) {
+    if (Preferences::GetBool("browser.privacySegmentation.enabled", false)) {
+      RefPtr<IPropertyStore> pPropStore;
+      if (!FAILED(SHGetPropertyStoreForWindow(mWnd, IID_IPropertyStore,
+                                              getter_AddRefs(pPropStore)))) {
+        PROPVARIANT pv;
+        nsAutoString aumid;
+        // make sure we're using the private browsing AUMID so that taskbar
+        // grouping works properly
+        NS_WARN_IF(
+            !mozilla::widget::WinTaskbar::GenerateAppUserModelID(aumid, true));
+        if (!FAILED(InitPropVariantFromString(aumid.get(), &pv))) {
+          if (!FAILED(pPropStore->SetValue(PKEY_AppUserModel_ID, pv))) {
+            pPropStore->Commit();
+          }
+
+          PropVariantClear(&pv);
+        }
+      }
+    }
   }
 
   mDeviceNotifyHandle = InputDeviceUtils::RegisterNotification(mWnd);
