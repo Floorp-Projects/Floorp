@@ -87,6 +87,7 @@ const EXPECTED_BEST_MATCH_RESULT = {
   isBestMatch: true,
   payload: {
     url: "http://example.com/best-match",
+    originalUrl: "http://example.com/best-match",
     title: `${BEST_MATCH_SEARCH_STRING} title`,
     icon: null,
     isSponsored: true,
@@ -107,6 +108,7 @@ const EXPECTED_NON_BEST_MATCH_RESULT = {
   heuristic: false,
   payload: {
     url: "http://example.com/non-best-match",
+    originalUrl: "http://example.com/non-best-match",
     title: `${NON_BEST_MATCH_SEARCH_STRING} title`,
     qsSuggestion: NON_BEST_MATCH_SEARCH_STRING,
     icon: null,
@@ -129,6 +131,7 @@ const EXPECTED_BEST_MATCH_POSITION_RESULT = {
   isBestMatch: true,
   payload: {
     url: "http://example.com/best-match-position",
+    originalUrl: "http://example.com/best-match-position",
     title: `${BEST_MATCH_POSITION_SEARCH_STRING} title`,
     icon: null,
     isSponsored: true,
@@ -405,6 +408,7 @@ add_task(async function tempLogic() {
     heuristic: false,
     payload: {
       url: "http://example.com/logic-test",
+      originalUrl: "http://example.com/logic-test",
       title: "logictest title",
       icon: null,
       isSponsored: true,
