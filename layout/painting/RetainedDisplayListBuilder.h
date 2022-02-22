@@ -177,7 +177,7 @@ struct RetainedDisplayListMetrics {
 struct RetainedDisplayListBuilder {
   RetainedDisplayListBuilder(nsIFrame* aReferenceFrame,
                              nsDisplayListBuilderMode aMode, bool aBuildCaret)
-      : mBuilder(aReferenceFrame, aMode, aBuildCaret, true) {}
+      : mBuilder(aReferenceFrame, aMode, aBuildCaret, true), mList(&mBuilder) {}
   ~RetainedDisplayListBuilder() { mList.DeleteAll(&mBuilder); }
 
   nsDisplayListBuilder* Builder() { return &mBuilder; }
