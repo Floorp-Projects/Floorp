@@ -795,8 +795,7 @@ bool SVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
     SVGObserverUtils::GetAndObserveClipPath(firstFrame, &clipPathFrame);
     RefPtr<SourceSurface> maskSurface =
         maskUsage.shouldGenerateMaskLayer ? maskTarget->Snapshot() : nullptr;
-    clipPathFrame->PaintClipMask(ctx, frame, cssPxToDevPxMatrix, maskSurface,
-                                 ctx.CurrentMatrix());
+    clipPathFrame->PaintClipMask(ctx, frame, cssPxToDevPxMatrix, maskSurface);
   }
 
   return true;
@@ -860,7 +859,6 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
   if (shouldGenerateMask) {
     gfxContextMatrixAutoSaveRestore matSR;
 
-    Matrix maskTransform;
     RefPtr<SourceSurface> maskSurface;
     bool opacityApplied = false;
 
@@ -882,10 +880,6 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
       maskSurface = paintResult.maskSurface;
       if (maskSurface) {
         shouldPushMask = true;
-        // We want the mask to be untransformed so use the inverse of the
-        // current transform as the maskTransform to compensate.
-        maskTransform = context.CurrentMatrix();
-        maskTransform.Invert();
 
         opacityApplied = paintResult.opacityApplied;
       }
@@ -897,14 +891,10 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
 
       MoveContextOriginToUserSpace(firstFrame, aParams);
       RefPtr<SourceSurface> clipMaskSurface = clipPathFrame->GetClipMask(
-          context, frame, cssPxToDevPxMatrix, maskSurface, maskTransform);
+          context, frame, cssPxToDevPxMatrix, maskSurface);
 
       if (clipMaskSurface) {
         maskSurface = clipMaskSurface;
-        // We want the mask to be untransformed so use the inverse of the
-        // current transform as the maskTransform to compensate.
-        maskTransform = context.CurrentMatrix();
-        maskTransform.Invert();
       } else {
         // Either entire surface is clipped out, or gfx buffer allocation
         // failure in SVGClipPathFrame::GetClipMask.
@@ -925,6 +915,11 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
     }
 
     if (shouldPushMask) {
+      // We want the mask to be untransformed so use the inverse of the
+      // current transform as the maskTransform to compensate.
+      Matrix maskTransform = context.CurrentMatrix();
+      maskTransform.Invert();
+
       context.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
                                     opacityApplied ? 1.0 : maskUsage.opacity,
                                     maskSurface, maskTransform);
