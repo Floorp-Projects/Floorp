@@ -17,8 +17,6 @@ interface nsIWindowsUIUtils : nsISupports
 
   void setWindowIcon(in mozIDOMWindowProxy aWindow, in imgIContainer aSmallIcon, in imgIContainer aLargeIcon);
 
-  void setWindowIconFromExe(in mozIDOMWindowProxy aWindow, in AString aExe, in unsigned short aIndex);
-
   void setWindowIconNoData(in mozIDOMWindowProxy aWindow);
 
   /**
