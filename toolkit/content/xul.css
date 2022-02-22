@@ -192,12 +192,10 @@ groupbox {
 
 /******** draggable elements *********/
 
-%ifndef MOZ_WIDGET_GTK
 titlebar,
 toolbar:not([nowindowdrag="true"], [customizing="true"]) {
   -moz-window-dragging: drag;
 }
-%endif
 
 /* The list below is non-comprehensive and will probably need some tweaking. */
 toolbaritem,
