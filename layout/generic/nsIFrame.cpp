@@ -3702,7 +3702,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
     nsDisplayItem* separator = nullptr;
 
-    while (nsDisplayItem* item = resultList.RemoveBottom()) {
+    // TODO: This can be simplified: |participants| is just |resultList|.
+    for (nsDisplayItem* item : resultList.TakeItems()) {
       if (ItemParticipatesIn3DContext(this, item) &&
           !item->GetClip().HasClip()) {
         // The frame of this item participates the same 3D context.
@@ -3883,7 +3884,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
       container = MakeDisplayItem<nsDisplayContainer>(
           aBuilder, this, containerItemASR, &resultList);
     } else {
-      container = resultList.RemoveBottom();
+      MOZ_ASSERT(resultList.Length() == 1);
+      resultList.Clear();
     }
 
     // Mark the outermost display item as reusable. These display items and
@@ -3923,7 +3925,8 @@ static nsDisplayItem* WrapInWrapList(nsDisplayListBuilder* aBuilder,
   // invalidation) or we're doing a full build and don't need a wrap list, then
   // we can skip adding one.
   if (aBuiltContainerItem || (!aBuilder->IsPartialUpdate() && !needsWrapList)) {
-    aList->RemoveBottom();
+    MOZ_ASSERT(aList->Length() == 1);
+    aList->Clear();
     return item;
   }
 
@@ -3940,7 +3943,8 @@ static nsDisplayItem* WrapInWrapList(nsDisplayListBuilder* aBuilder,
     if (needsWrapList) {
       DiscardOldItems(aFrame);
     } else {
-      aList->RemoveBottom();
+      MOZ_ASSERT(aList->Length() == 1);
+      aList->Clear();
       return item;
     }
   }
