@@ -35,7 +35,7 @@ x86_64-unknown-linux-gnu)
     export TARGET_CC="$CC -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk"
     export TARGET_CXX="$CXX -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk"
     ;;
-i686-pc-windows-msvc)
+*-pc-windows-msvc)
     # Cross-compiling for Windows on Linux.
     EXE=.exe
     # Some magic that papers over differences in case-sensitivity/insensitivity on Linux
@@ -47,8 +47,17 @@ i686-pc-windows-msvc)
     export CC=$MOZ_FETCHES_DIR/clang/bin/clang-cl
     export CXX=$MOZ_FETCHES_DIR/clang/bin/clang-cl
     export TARGET_AR=$MOZ_FETCHES_DIR/clang/bin/llvm-lib
-    . $GECKO_PATH/taskcluster/scripts/misc/vs-setup32.sh
-    export CARGO_TARGET_I686_PC_WINDOWS_MSVC_LINKER=$MOZ_FETCHES_DIR/clang/bin/lld-link
+
+    case "$TARGET" in
+        i686-pc-windows-msvc)
+            . $GECKO_PATH/taskcluster/scripts/misc/vs-setup32.sh
+            export CARGO_TARGET_I686_PC_WINDOWS_MSVC_LINKER=$MOZ_FETCHES_DIR/clang/bin/lld-link
+            ;;
+        x86_64-pc-windows-msvc)
+            . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
+            export CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$MOZ_FETCHES_DIR/clang/bin/lld-link
+            ;;
+    esac
     ;;
 esac
 
