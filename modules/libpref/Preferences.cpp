@@ -516,7 +516,7 @@ class Pref {
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
 
-    if (!XRE_IsParentProcess() &&
+    if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
         ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
@@ -532,7 +532,7 @@ class Pref {
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
 
-    if (!XRE_IsParentProcess() &&
+    if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
         ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
@@ -549,7 +549,7 @@ class Pref {
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
 
-    if (!XRE_IsParentProcess() &&
+    if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
         ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
@@ -581,7 +581,7 @@ class Pref {
       aDomPref->defaultValue() = Nothing();
     }
 
-    if (mHasUserValue && !mIsSanitized) {
+    if (mHasUserValue && !mIsSanitized && !sOmitBlocklistedPrefValues) {
       aDomPref->userValue() = Some(dom::PrefValue());
       mUserValue.ToDomPrefValue(Type(), &aDomPref->userValue().ref());
     } else {
@@ -589,7 +589,8 @@ class Pref {
     }
 
     MOZ_ASSERT(aDomPref->defaultValue().isNothing() ||
-               aDomPref->userValue().isNothing() || mIsSanitized ||
+               aDomPref->userValue().isNothing() ||
+               (mIsSanitized && sOmitBlocklistedPrefValues) ||
                (aDomPref->defaultValue().ref().type() ==
                 aDomPref->userValue().ref().type()));
   }
