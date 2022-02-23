@@ -1352,6 +1352,20 @@ hbox[anonid="findbar-textbox-wrapper"] toolbarbutton:not([disabled]):hover:activ
 	height: auto !important;
 }
 
+#tabbrowser-arrowscrollbox::part(scrollbutton-up), #tabbrowser-arrowscrollbox::part(scrollbutton-down) {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 99px !important;
+    margin: 0 !important;
+    margin-top: calc(var(--tab-shadow-max-size) + 3px) !important;
+    margin-bottom: 1px !important;
+    padding: 0 !important;
+    border: 2px solid transparent !important;
+    transition-property: background-color, background-size, fill-opacity !important;
+    transition-duration: .3s !important;
+    transition-timing-function: var(--ease-basic), var(--ease-out), var(--ease-basic) !important;
+}
+
 /*
 	hack: fix customization screen popping bug when changing ui density
 	icon size is enforced and it doesn't like it when the normal density

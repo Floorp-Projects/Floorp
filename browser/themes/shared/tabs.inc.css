@@ -279,6 +279,7 @@
 	bottom: 0 !important;
 	pointer-events: none !important;
 	transition: box-shadow 0s var(--tab-transition-duration) var(--ease-basic) !important;
+  clip-path: inset(0) !important;
 }
 
 .tab-background::before
@@ -584,7 +585,9 @@
 #tabbrowser-tabs::part(arrowscrollbox-overflow-end-indicator),
 /* no ::part workaround - may have side effects */
 spacer[part="overflow-start-indicator"],
-spacer[part="overflow-end-indicator"]
+spacer[part="overflow-end-indicator"],
+#tabbrowser-arrowscrollbox::part(overflow-start-indicator),
+#tabbrowser-arrowscrollbox::part(overflow-end-indicator)
 {
 	display: none !important;
 }
