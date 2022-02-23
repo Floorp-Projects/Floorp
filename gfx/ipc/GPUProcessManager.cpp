@@ -162,13 +162,12 @@ void GPUProcessManager::OnPreferenceChange(const char16_t* aData) {
   NS_LossyConvertUTF16toASCII strData(aData);
 
   // A pref changed. If it is useful to do so, inform child processes.
-  if (!ShouldSyncPreference(strData.Data(), false)) {
+  if (ShouldSanitizePreference(strData.Data(), false)) {
     return;
   }
-
   mozilla::dom::Pref pref(strData, /* isLocked */ false,
-                          !ShouldSyncPreference(strData.Data()), Nothing(),
-                          Nothing());
+                          ShouldSanitizePreference(strData.Data(), false),
+                          Nothing(), Nothing());
 
   Preferences::GetPreference(&pref);
   if (!!mGPUChild) {
