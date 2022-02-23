@@ -51,7 +51,7 @@ static const gchar* getActionNameCB(AtkAction* aAction, gint aActionIndex) {
   AtkObject* atkObject = ATK_OBJECT(aAction);
   nsAutoString autoStr;
   if (Accessible* acc = GetInternalObj(atkObject)) {
-    acc->ActionDescriptionAt(aActionIndex, autoStr);
+    acc->ActionNameAt(aActionIndex, autoStr);
     return AccessibleWrap::ReturnString(autoStr);
   }
 
