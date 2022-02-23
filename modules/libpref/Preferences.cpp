@@ -5702,6 +5702,10 @@ bool ShouldSanitizePreference(const char* aPref,
     size_t mLen;
   };
 
+  if (!aIsContentProcess) {
+    return false;
+  }
+
   // These prefs are not useful in child processes.
   static const PrefListEntry sParentOnlyPrefBranchList[] = {
       PREF_LIST_ENTRY("app.update.lastUpdateTime."),
