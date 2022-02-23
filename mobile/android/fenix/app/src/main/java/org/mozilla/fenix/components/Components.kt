@@ -14,11 +14,10 @@ import com.google.android.play.core.review.ReviewManagerFactory
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
-import mozilla.components.feature.addons.migration.SupportedAddonsChecker
-import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
+import mozilla.components.support.base.worker.Frequency
 import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
@@ -126,13 +125,13 @@ class Components(private val context: Context) {
 
     @Suppress("MagicNumber")
     val addonUpdater by lazyMonitored {
-        DefaultAddonUpdater(context, AddonUpdater.Frequency(12, TimeUnit.HOURS))
+        DefaultAddonUpdater(context, Frequency(12, TimeUnit.HOURS))
     }
 
     @Suppress("MagicNumber")
     val supportedAddonsChecker by lazyMonitored {
         DefaultSupportedAddonsChecker(
-            context, SupportedAddonsChecker.Frequency(12, TimeUnit.HOURS),
+            context, Frequency(12, TimeUnit.HOURS),
             onNotificationClickIntent = Intent(context, HomeActivity::class.java).apply {
                 action = Intent.ACTION_VIEW
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
