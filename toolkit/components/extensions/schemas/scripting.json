@@ -127,6 +127,51 @@
             "description": "Details specifying the target into which to inject the CSS."
           }
         }
+      },
+      {
+        "id": "ContentScriptFilter",
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "optional": true,
+            "description": "The IDs of specific scripts to retrieve with <code>getRegisteredContentScripts()</code>.",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      {
+        "id": "RegisteredContentScript",
+        "type": "object",
+        "properties": {
+          "allFrames": {
+            "type": "boolean",
+            "optional": true,
+            "description": "If specified true, it will inject into all frames, even if the frame is not the top-most frame in the tab. Each frame is checked independently for URL requirements; it will not inject into child frames if the URL requirements are not met. Defaults to false, meaning that only the top frame is matched."
+          },
+          "excludeMatches": {
+            "type": "array",
+            "optional": true,
+            "description": "Excludes pages that this content script would otherwise be injected into.",
+            "items": { "type": "string" }
+          },
+          "id": {
+            "type": "string",
+            "description": "The id of the content script, specified in the API call."
+          },
+          "js": {
+            "type": "array",
+            "optional": true,
+            "description": "The list of JavaScript files to be injected into matching pages. These are injected in the order they appear in this array.",
+            "items": { "$ref": "manifest.ExtensionURL" }
+          },
+          "matches": {
+            "type": "array",
+            "optional": true,
+            "description": "Specifies which pages this content script will be injected into. Must be specified for <code>registerContentScripts()</code>.",
+            "items": { "type": "string" }
+          }
+        }
       }
     ],
     "functions": [
@@ -189,6 +234,26 @@
             "name": "callback",
             "type": "function",
             "description": "Invoked upon completion of the injection.",
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "registerContentScripts",
+        "type": "function",
+        "description": "Registers one or more content scripts for this extension.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "scripts",
+            "type": "array",
+            "description": "Contains a list of scripts to be registered. If there are errors during script parsing/file validation, or if the IDs specified already exist, then no scripts are registered.",
+            "items": { "$ref": "RegisteredContentScript" }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "description": "Invoked upon completion of the registration.",
             "parameters": []
           }
         ]
