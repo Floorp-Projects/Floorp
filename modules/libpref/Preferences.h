@@ -216,7 +216,6 @@ class Preferences final : public nsIPrefService,
   static nsresult Lock(const char* aPrefName);
   static nsresult Unlock(const char* aPrefName);
   static bool IsLocked(const char* aPrefName);
-  static bool IsSanitized(const char* aPrefName);
 
   // Clears user set pref. Fails if run outside the parent process.
   static nsresult ClearUser(const char* aPrefName);
@@ -401,7 +400,7 @@ class Preferences final : public nsIPrefService,
   // prefs in bulk from the parent process, via shared memory.
   static void SerializePreferences(
       nsCString& aStr,
-      const std::function<bool(const char*, bool)>& aShouldSerializeFn);
+      const std::function<bool(const char*)>& aShouldSerializeFn);
   static void DeserializePreferences(char* aStr, size_t aPrefsLen);
 
   static mozilla::ipc::FileDescriptor EnsureSnapshot(size_t* aSize);
@@ -531,11 +530,6 @@ class Preferences final : public nsIPrefService,
   // Init static members. Returns true on success.
   static bool InitStaticMembers();
 };
-
-static Atomic<bool, Relaxed> sOmitBlocklistedPrefValues(false);
-static Atomic<bool, Relaxed> sCrashOnBlocklistedPref(false);
-
-bool ShouldSanitizePreference(const char* aPref, bool aIsContentProcess = true);
 
 }  // namespace mozilla
 
