@@ -30,7 +30,7 @@ class nsLineLayout {
    * nullptr if no separate base nsLineLayout is needed.
    */
   nsLineLayout(nsPresContext* aPresContext, nsFloatManager* aFloatManager,
-               const ReflowInput* aOuterReflowInput,
+               const ReflowInput& aLineContainerRI,
                const nsLineList::iterator* aLine,
                nsLineLayout* aBaseLineLayout);
   ~nsLineLayout();
@@ -290,8 +290,8 @@ class nsLineLayout {
    * some other kind of frame when inline frames are reflowed in a non-block
    * context (e.g. MathML or floating first-letter).
    */
-  nsIFrame* LineContainerFrame() const { return mBlockReflowInput->mFrame; }
-  const ReflowInput* LineContainerRI() const { return mBlockReflowInput; }
+  nsIFrame* LineContainerFrame() const { return mLineContainerRI.mFrame; }
+  const ReflowInput& LineContainerRI() const { return mLineContainerRI; }
   const nsLineList::iterator* GetLine() const {
     return mGotLineBox ? &mLineBox : nullptr;
   }
@@ -334,7 +334,7 @@ class nsLineLayout {
   nsFloatManager* mFloatManager;
 
   const nsStyleText* mStyleText;  // for the block
-  const ReflowInput* mBlockReflowInput;
+  const ReflowInput& mLineContainerRI;
 
   // The line layout for the base text.  It is usually nullptr.
   // It becomes not null when the current line layout is for ruby
