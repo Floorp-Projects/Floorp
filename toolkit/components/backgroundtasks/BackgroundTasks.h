@@ -11,6 +11,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 
+#include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPtr.h"
 
@@ -25,8 +26,7 @@ class BackgroundTasks final : public nsIBackgroundTasks {
   NS_DECL_NSIBACKGROUNDTASKS
 
  public:
-  explicit BackgroundTasks(Maybe<nsCString> aBackgroundTask)
-      : mBackgroundTask(aBackgroundTask) {}
+  explicit BackgroundTasks(Maybe<nsCString> aBackgroundTask);
 
   static void Init(Maybe<nsCString> aBackgroundTask);
 
@@ -67,6 +67,7 @@ class BackgroundTasks final : public nsIBackgroundTasks {
 
  protected:
   static StaticRefPtr<BackgroundTasks> sSingleton;
+  static LazyLogModule sBackgroundTasksLog;
 
   Maybe<nsCString> mBackgroundTask;
   nsCOMPtr<nsIFile> mProfD;
