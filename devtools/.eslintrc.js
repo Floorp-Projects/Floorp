@@ -37,6 +37,7 @@ module.exports = {
         "client/shared/*.jsm",
         "client/shared/widgets/*.jsm",
         "client/storage/VariablesView.jsm",
+        "client/debugger/test/**",
       ],
       rules: {
         "consistent-return": "off",
@@ -77,7 +78,7 @@ module.exports = {
       },
     },
     {
-      files: ["client/framework/**"],
+      files: ["client/framework/**", "client/debugger/test/**"],
       rules: {
         strict: "off",
       },
@@ -135,7 +136,7 @@ module.exports = {
       excludedFiles: [
         // Debugger modules have a custom bundling logic which relies on relative
         // paths.
-        "client/debugger/**",
+        "client/debugger/src/**",
         // `client/shared/build` contains node helpers to build the debugger and
         // not devtools modules.
         "client/shared/build/**",
