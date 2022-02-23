@@ -895,7 +895,7 @@ bool MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg) {
       return true;
     } else if (IMPENDING_SHUTDOWN_MESSAGE_TYPE == aMsg.type()) {
       IPC_LOG("Impending Shutdown received");
-      ProcessChild::NotifyImpendingShutdown();
+      ProcessChild::NotifiedImpendingShutdown();
       return true;
     }
   }
