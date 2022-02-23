@@ -96,7 +96,11 @@ async function testNavigation() {
     [URL_IFRAME],
     async function(url) {
       const iframe = content.document.querySelector("iframe");
+      const onIframeLoaded = new Promise(loaded =>
+        iframe.addEventListener("load", loaded, { once: true })
+      );
       iframe.src = url;
+      await onIframeLoaded;
     }
   );
   info("Waiting for storage tree to update");
