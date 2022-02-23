@@ -287,7 +287,7 @@ void WindowSurfaceWaylandMB::Commit(
   }
 
   if (moz_container_wayland_is_commiting_to_parent(container)) {
-    // When commiting to parent surface we must use wl_surface_damage().
+    // When committing to parent surface we must use wl_surface_damage().
     // A parent surface is created as v.3 object which does not support
     // wl_surface_damage_buffer().
     wl_surface_damage(waylandSurface, 0, 0, INT32_MAX, INT32_MAX);
