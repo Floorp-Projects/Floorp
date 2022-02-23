@@ -429,6 +429,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   void prepareForCompacting();
 
+  void traceRootsInMajorGC(JSTracer* trc);
+
   void sweepAfterMinorGC(JSTracer* trc);
   void sweepUniqueIds();
   void sweepCompartments(JSFreeOp* fop, bool keepAtleastOne, bool lastGC);
