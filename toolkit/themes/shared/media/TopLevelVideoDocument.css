@@ -3,10 +3,5 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 body {
-  background-image: url("chrome://global/skin/media/imagedoc-darknoise.png");
-  background-color: rgb(33,33,33); /* Average color of that ^ image. */
-}
-
-video {
-  box-shadow: 0 0 5px rgba(0,0,0,0.6);
+  background-color: black;
 }

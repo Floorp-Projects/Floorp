@@ -13,6 +13,21 @@
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 
 power:
+  cpu_time_bogus_values:
+    type: counter
+    description: >
+      Impossibly large CPU time values that were discarded.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1755733
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1755733
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - florian@mozilla.com
+    expires: never
+    telemetry_mirror: POWER_CPU_TIME_BOGUS_VALUES
+
   cpu_time_per_process_type_ms:
     type: labeled_counter
     description: >
@@ -61,6 +76,21 @@ power:
     expires: never
     labels: *per_process_type_labels
     telemetry_mirror: POWER_GPU_TIME_PER_PROCESS_TYPE_MS
+
+  gpu_time_bogus_values:
+    type: counter
+    description: >
+      Impossibly large GPU time values that were discarded.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1755733
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1755733
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - florian@mozilla.com
+    expires: never
+    telemetry_mirror: POWER_GPU_TIME_BOGUS_VALUES
 
   total_cpu_time_ms:
     type: counter

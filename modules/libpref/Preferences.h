@@ -223,6 +223,9 @@ class Preferences final : public nsIPrefService,
   // Whether the pref has a user value or not.
   static bool HasUserValue(const char* aPref);
 
+  // Whether the pref has a user value or not.
+  static bool HasDefaultValue(const char* aPref);
+
   // Adds/Removes the observer for the root pref branch. See nsIPrefBranch.idl
   // for details.
   static nsresult AddStrongObserver(nsIObserver* aObserver,

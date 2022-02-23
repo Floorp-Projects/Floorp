@@ -1,14 +1,23 @@
 /* Any copyright is dedicated to the Public Domain.
 http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
 const { BrowserUtils } = ChromeUtils.import(
   "resource://gre/modules/BrowserUtils.jsm"
 );
 
+const { EnterprisePolicyTesting } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
+);
+
 const { Region } = ChromeUtils.import("resource://gre/modules/Region.jsm");
 
-const initialHomeRegion = Region._home;
-const initialCurrentRegion = Region._current;
+const { updateAppInfo } = ChromeUtils.import(
+  "resource://testing-common/AppInfo.jsm"
+);
 
 // Helper to run tests for specific regions
 function setupRegions(home, current) {
@@ -59,11 +68,29 @@ add_task(async function test_shouldShowVPNPromo() {
   setupRegions(unsupportedRegion, allowedRegion); // revert changes to regions
   Assert.ok(BrowserUtils.shouldShowVPNPromo());
 
-  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
+  if (AppConstants.platform !== "android") {
+    // Services.policies isn't shipped on Android
+    // Don't show VPN if there's an active enterprise policy
+    setupRegions(allowedRegion, allowedRegion);
+    // set app info name as it's needed to set a policy and is not defined by default in xpcshell tests
+    updateAppInfo({
+      name: "XPCShell",
+    });
+    // set up an arbitrary enterprise policy
+    await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+      policies: {
+        EnableTrackingProtection: {
+          Value: true,
+        },
+      },
+    });
+    Assert.ok(!BrowserUtils.shouldShowVPNPromo());
+
+    await EnterprisePolicyTesting.setupPolicyEngineWithJson(""); // revert changes to policies
+  }
 });
 
 add_task(async function test_shouldShowRallyPromo() {
-  const initialLanguage = Services.locale.appLocaleAsBCP47;
   const allowedRegion = "US";
   const disallowedRegion = "CN";
   const allowedLanguage = "en-US";
@@ -95,7 +122,4 @@ add_task(async function test_shouldShowRallyPromo() {
   // Don't show when current region is not US, even if home region is US and langague is en-US
   setupRegions(allowedRegion, disallowedRegion);
   Assert.ok(!BrowserUtils.shouldShowRallyPromo());
-
-  setupRegions(initialHomeRegion, initialCurrentRegion); // revert changes to regions
-  setLanguage(initialLanguage); // revert changes to language
 });

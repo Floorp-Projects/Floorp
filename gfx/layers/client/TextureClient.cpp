@@ -850,14 +850,6 @@ bool TextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) {
   return mData ? mData->Serialize(aOutDescriptor) : false;
 }
 
-bool TextureClient::CropYCbCrPlanes(const gfx::IntSize& aYSize,
-                                    const gfx::IntSize& aCbCrSize) {
-  if (!mData) {
-    return false;
-  }
-  return mData->CropYCbCrPlanes(aYSize, aCbCrSize);
-}
-
 // static
 PTextureChild* TextureClient::CreateIPDLActor() {
   TextureChild* c = new TextureChild();

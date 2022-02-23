@@ -529,11 +529,12 @@ void BufferTextureHost::PushResourceUpdates(
     MOZ_ASSERT(aImageKeys.length() == 3);
 
     const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+    gfx::IntSize ySize = desc.display().Size();
+    gfx::IntSize cbcrSize = ImageDataSerializer::GetCroppedCbCrSize(desc);
     wr::ImageDescriptor yDescriptor(
-        desc.ySize(), desc.yStride(),
-        SurfaceFormatForColorDepth(desc.colorDepth()));
+        ySize, desc.yStride(), SurfaceFormatForColorDepth(desc.colorDepth()));
     wr::ImageDescriptor cbcrDescriptor(
-        desc.cbCrSize(), desc.cbCrStride(),
+        cbcrSize, desc.cbCrStride(),
         SurfaceFormatForColorDepth(desc.colorDepth()));
     (aResources.*method)(aImageKeys[0], yDescriptor, aExtID, imageType, 0);
     (aResources.*method)(aImageKeys[1], cbcrDescriptor, aExtID, imageType, 1);

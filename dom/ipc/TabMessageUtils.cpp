@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/TabMessageUtils.h"
@@ -20,7 +21,14 @@ bool ReadRemoteEvent(const IPC::Message* aMsg, PickleIterator* aIter,
   aResult->mEvent =
       EventDispatcher::CreateEvent(nullptr, nullptr, nullptr, type);
 
-  return aResult->mEvent->Deserialize(aMsg, aIter);
+  // In a controlled environment, we should always have a valid event.
+  bool ret = false;
+  if (aResult->mEvent) {
+    ret = aResult->mEvent->Deserialize(aMsg, aIter);
+  }
+  MOZ_ASSERT_UNLESS_FUZZING(ret);
+
+  return ret;
 }
 
 }  // namespace mozilla::dom

@@ -334,10 +334,6 @@ toolbar[customizing] #whats-new-menu-button {
 }
 %endif
 
-#titlebar {
-  -moz-window-dragging: drag;
-}
-
 :root[tabsintitlebar] .titlebar-buttonbox {
   position: relative;
 }

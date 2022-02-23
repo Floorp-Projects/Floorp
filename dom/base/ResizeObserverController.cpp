@@ -95,6 +95,7 @@ static void FlushLayoutForWholeBrowsingContextTree(Document& aDoc) {
 }
 
 void ResizeObserverController::Notify() {
+  mResizeObserverNotificationHelper->Unregister();
   if (mResizeObservers.IsEmpty()) {
     return;
   }
@@ -135,8 +136,6 @@ void ResizeObserverController::Notify() {
     // shallowestTargetDepth.
     GatherAllActiveObservations(shallowestTargetDepth);
   }
-
-  mResizeObserverNotificationHelper->Unregister();
 
   if (HasAnySkippedObservations()) {
     // Per spec, we deliver an error if the document has any skipped

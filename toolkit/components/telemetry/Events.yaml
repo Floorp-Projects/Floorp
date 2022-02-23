@@ -3160,3 +3160,23 @@ privacy_segmentation:
       - rtestard@mozilla.com
     expiry_version: "106"
     products: ["firefox"]
+
+synced_tabs:
+  click:
+    objects: [
+      "fxa_avatar_menu",
+      "fxa_app_menu",
+      "synced_tabs_sidebar",
+      ]
+    methods: ["click"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: Record how users access and use synced tabs component
+    bug_numbers: [1756252]
+    notification_emails: ["sync-dev@mozilla.org"]
+    expiry_version: "never"
+    extra_keys:
+      tab_pos: position of the tab clicked
+      filter: was there a filter enabled

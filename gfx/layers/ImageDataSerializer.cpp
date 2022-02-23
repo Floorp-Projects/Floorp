@@ -345,6 +345,11 @@ void ConvertAndScaleFromYCbCrDescriptor(uint8_t* aBuffer,
                          aStride);
 }
 
+gfx::IntSize GetCroppedCbCrSize(const YCbCrDescriptor& aDescriptor) {
+  return gfx::GetCroppedCbCrSize(aDescriptor.ySize(), aDescriptor.cbCrSize(),
+                                 aDescriptor.display().Size());
+}
+
 }  // namespace ImageDataSerializer
 }  // namespace layers
 }  // namespace mozilla

@@ -299,7 +299,7 @@ async function assertSnapshots(expected, options) {
  *   The expected snapshot group.
  */
 function assertSnapshotGroup(group, expected) {
-  for (let [p, v] in Object.entries(expected)) {
+  for (let [p, v] of Object.entries(expected)) {
     let comparator = Assert.equal.bind(Assert);
     if (v && typeof v == "object") {
       comparator = Assert.deepEqual.bind(Assert);

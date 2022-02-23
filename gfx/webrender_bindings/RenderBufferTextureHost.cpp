@@ -208,19 +208,21 @@ bool RenderBufferTextureHost::MapPlane(RenderCompositor* aCompositor,
           aPlaneInfo.mData =
               layers::ImageDataSerializer::GetYChannel(mBuffer, desc);
           aPlaneInfo.mStride = desc.yStride();
-          aPlaneInfo.mSize = desc.ySize();
+          aPlaneInfo.mSize = desc.display().Size();
           break;
         case 1:
           aPlaneInfo.mData =
               layers::ImageDataSerializer::GetCbChannel(mBuffer, desc);
           aPlaneInfo.mStride = desc.cbCrStride();
-          aPlaneInfo.mSize = desc.cbCrSize();
+          aPlaneInfo.mSize =
+              layers::ImageDataSerializer::GetCroppedCbCrSize(desc);
           break;
         case 2:
           aPlaneInfo.mData =
               layers::ImageDataSerializer::GetCrChannel(mBuffer, desc);
           aPlaneInfo.mStride = desc.cbCrStride();
-          aPlaneInfo.mSize = desc.cbCrSize();
+          aPlaneInfo.mSize =
+              layers::ImageDataSerializer::GetCroppedCbCrSize(desc);
           break;
       }
       break;

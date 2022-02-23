@@ -234,7 +234,8 @@ struct RangePaintInfo {
 
   RangePaintInfo(nsRange* aRange, nsIFrame* aFrame)
       : mRange(aRange),
-        mBuilder(aFrame, nsDisplayListBuilderMode::Painting, false) {
+        mBuilder(aFrame, nsDisplayListBuilderMode::Painting, false),
+        mList(&mBuilder) {
     MOZ_COUNT_CTOR(RangePaintInfo);
     mBuilder.BeginFrame();
   }
@@ -4691,12 +4692,10 @@ nsRect PresShell::ClipListToRange(nsDisplayListBuilder* aBuilder,
   // part of the selection. Then, append the wrapper to the top of the list.
   // Otherwise, just delete the item and don't append it.
   nsRect surfaceRect;
-  nsDisplayList tmpList;
 
-  nsDisplayItem* i;
-  while ((i = aList->RemoveBottom())) {
+  for (nsDisplayItem* i : aList->TakeItems()) {
     if (i->GetType() == DisplayItemType::TYPE_CONTAINER) {
-      tmpList.AppendToTop(i);
+      aList->AppendToTop(i);
       surfaceRect.UnionRect(
           surfaceRect, ClipListToRange(aBuilder, i->GetChildren(), aRange));
       continue;
@@ -4777,7 +4776,7 @@ nsRect PresShell::ClipListToRange(nsDisplayListBuilder* aBuilder,
     // list, insert that as well
     nsDisplayList* sublist = i->GetSameCoordinateSystemChildren();
     if (itemToInsert || sublist) {
-      tmpList.AppendToTop(itemToInsert ? itemToInsert : i);
+      aList->AppendToTop(itemToInsert ? itemToInsert : i);
       // if the item is a list, iterate over it as well
       if (sublist)
         surfaceRect.UnionRect(surfaceRect,
@@ -4787,9 +4786,6 @@ nsRect PresShell::ClipListToRange(nsDisplayListBuilder* aBuilder,
       i->Destroy(aBuilder);
     }
   }
-
-  // now add all the items back onto the original list again
-  aList->AppendToTop(&tmpList);
 
   return surfaceRect;
 }
@@ -4909,7 +4905,7 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
     ViewID zoomedId =
         nsLayoutUtils::FindOrCreateIDFor(rootScrollFrame->GetContent());
 
-    nsDisplayList wrapped;
+    nsDisplayList wrapped(&info->mBuilder);
     wrapped.AppendNewToTop<nsDisplayAsyncZoom>(&info->mBuilder, rootScrollFrame,
                                                &info->mList, nullptr, zoomedId);
     info->mList.AppendToTop(&wrapped);
@@ -5215,8 +5211,13 @@ already_AddRefed<SourceSurface> PresShell::RenderSelection(
                              aScreenRect, aFlags);
 }
 
-void AddDisplayItemToBottom(nsDisplayList* aList, nsDisplayItem* aItem) {
-  nsDisplayList list;
+void AddDisplayItemToBottom(nsDisplayListBuilder* aBuilder,
+                            nsDisplayList* aList, nsDisplayItem* aItem) {
+  if (!aItem) {
+    return;
+  }
+
+  nsDisplayList list(aBuilder);
   list.AppendToTop(aItem);
   list.AppendToTop(aList);
   aList->AppendToTop(&list);
@@ -5228,7 +5229,7 @@ void PresShell::AddPrintPreviewBackgroundItem(nsDisplayListBuilder* aBuilder,
                                               const nsRect& aBounds) {
   nsDisplayItem* item = MakeDisplayItem<nsDisplaySolidColor>(
       aBuilder, aFrame, aBounds, NS_RGB(115, 115, 115));
-  AddDisplayItemToBottom(aList, item);
+  AddDisplayItemToBottom(aBuilder, aList, item);
 }
 
 static bool AddCanvasBackgroundColor(const nsDisplayList* aList,
@@ -5308,7 +5309,7 @@ void PresShell::AddCanvasBackgroundColorItem(
   if (!addedScrollingBackgroundColor || forceUnscrolledItem) {
     nsDisplayItem* item = MakeDisplayItem<nsDisplaySolidColor>(
         aBuilder, aFrame, aBounds, bgcolor);
-    AddDisplayItemToBottom(aList, item);
+    AddDisplayItemToBottom(aBuilder, aList, item);
   }
 }
 

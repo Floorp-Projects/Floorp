@@ -118,8 +118,8 @@ def await_first_element_of(session, selectors, timeout=None, is_displayed=False)
     return found
 
 
-def await_element(session, selector, timeout=None):
-    return await_first_element_of(session, [selector], timeout)[0]
+def await_element(session, selector, timeout=None, default=None):
+    return await_first_element_of(session, [selector], timeout, default)[0]
 
 
 def load_page_and_wait_for_iframe(session, url, selector, loads=1, timeout=None):
@@ -129,3 +129,16 @@ def load_page_and_wait_for_iframe(session, url, selector, loads=1, timeout=None)
         loads -= 1
     session.switch_to.frame(frame)
     return frame
+
+
+def await_dom_ready(session):
+    session.execute_async_script(
+        """
+        const cb = arguments[0];
+        setInterval(() => {
+            if (document.readyState === "complete") {
+                cb();
+            }
+        }, 500);
+    """
+    )

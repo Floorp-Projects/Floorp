@@ -4,6 +4,27 @@
 
 @namespace html "http://www.w3.org/1999/xhtml";
 
+/* Global rules */
+* {
+  user-select: text;
+}
+
+body {
+  font-size: 1.25em;
+}
+
+@media (-moz-platform: macos) {
+  body {
+    font-size: 1.36em;
+  }
+}
+
+@media (-moz-platform: linux) {
+  body {
+    font-size: 1.11em;
+  }
+}
+
 #preferences-root {
   text-rendering: optimizeLegibility;
 }
@@ -29,10 +50,6 @@
   -moz-box-orient: vertical;
 
   --main-pane-width: 664px;
-}
-
-* {
-  user-select: text;
 }
 
 /*
@@ -1452,5 +1469,53 @@ richlistitem .text-link:hover {
 
   .qr-code-box-title {
     color: #fbfbfe;
+  }
+}
+
+/* Platform-specific tweaks & overrides */
+
+@media (-moz-platform: macos) {
+  tabpanels {
+    padding: 20px 7px 7px;
+  }
+
+  #browserUseCurrent,
+  #browserUseBookmark,
+  #browserUseBlank {
+    margin-top: 10px;
+  }
+
+  #advancedPrefs {
+    margin: 0 8px;
+  }
+
+  #privacyPrefs {
+    padding: 0 4px;
+  }
+
+  #privacyPrefs > tabpanels {
+    padding: 18px 10px 10px;
+  }
+
+  #OCSPDialogPane {
+    font: message-box !important;
+  }
+
+  /**
+   * Update Preferences
+   */
+  #autoInstallOptions {
+    margin-inline-start: 20px;
+  }
+
+  .updateControls {
+    margin-inline-start: 10px;
+  }
+}
+
+@media (-moz-platform: linux) {
+  .treecol-sortdirection {
+    /* override the Linux only toolkit rule */
+    appearance: none;
   }
 }

@@ -344,6 +344,13 @@ class Manager::Factory {
     return !sFactory;
   }
 
+  static void RecordMayNotDeleteCSCP(int32_t aCacheStreamControlParentId) {
+    if (sFactory) {
+      sFactory->mPotentiallyUnreleasedCSCP.AppendElement(
+          aCacheStreamControlParentId);
+    }
+  }
+
   static nsCString GetShutdownStatus() {
     mozilla::ipc::AssertIsOnBackgroundThread();
 
@@ -367,7 +374,12 @@ class Manager::Factory {
         data.AppendLiteral(", ");
       }
 
-      data.AppendLiteral(" )");
+      data.AppendLiteral(" ) ");
+      if (sFactory->mPotentiallyUnreleasedCSCP.Length() > 0) {
+        data.Append(
+            "There have been CSCP instances whose"
+            "Send__delete__ might not have freed them.");
+      }
     }
 
     return data;
@@ -481,6 +493,8 @@ class Manager::Factory {
   // or Shutdown() on each Manager.  We need to be careful not to synchronously
   // trigger the deletion of the factory while still executing this loop.
   bool mInSyncAbortOrShutdown;
+
+  nsTArray<int32_t> mPotentiallyUnreleasedCSCP;
 };
 
 // static
@@ -1567,6 +1581,10 @@ bool Manager::IsShutdownAllComplete() {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
   return Factory::IsShutdownAllComplete();
+}
+
+void Manager::RecordMayNotDeleteCSCP(int32_t aCacheStreamControlParentId) {
+  Factory::RecordMayNotDeleteCSCP(aCacheStreamControlParentId);
 }
 
 // static

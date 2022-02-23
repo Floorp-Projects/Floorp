@@ -1212,6 +1212,29 @@ add_task(async function suggestedDisabled_dataCollectionEnabled_providers() {
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
 });
 
+// Test whether the blocking for Merino results works.
+add_task(async function block() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
+
+  for (const suggestion of MERINO_RESPONSE.body.suggestions) {
+    await UrlbarProviderQuickSuggest.blockSuggestion(suggestion.url);
+  }
+
+  const context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+
+  await check_results({
+    context,
+    matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
+  });
+
+  await UrlbarProviderQuickSuggest.clearBlockedSuggestions();
+});
+
 function makeMerinoServer(endpointPath) {
   let server = makeTestServer();
   server.registerPathHandler(endpointPath, async (req, resp) => {

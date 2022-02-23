@@ -1553,6 +1553,8 @@ class Datastore final
 
   void NoteFinishedPreparedDatastore(PreparedDatastore* aPreparedDatastore);
 
+  bool HasOtherProcessDatabases(Database* aDatabase);
+
   void NoteLiveDatabase(Database* aDatabase);
 
   void NoteFinishedDatabase(Database* aDatabase);
@@ -1627,6 +1629,8 @@ class Datastore final
 
   void NotifySnapshots(Database* aDatabase, const nsAString& aKey,
                        const LSValue& aOldValue, bool aAffectsOrder);
+
+  void NoteChangedDatabaseMap();
 };
 
 class PrivateDatastore {
@@ -1937,6 +1941,13 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
   bool mLoadKeysReceived;
   bool mSentMarkDirty;
 
+  /**
+   * True if there are Database objects in other content processes. The value
+   * never gets updated, we instead mark snapshots as dirty when Database
+   * objects are added or removed. Marking snapshots as dirty forces creation
+   * of new snapshots for new tasks.
+   */
+  bool mHasOtherProcessDatabases;
   bool mHasOtherProcessObservers;
 
  public:
@@ -1946,7 +1957,8 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
   void Init(nsTHashtable<nsStringHashKey>& aLoadedItems,
             nsTHashSet<nsString>&& aUnknownItems, uint32_t aNextLoadIndex,
             uint32_t aTotalLength, int64_t aInitialUsage, int64_t aPeakUsage,
-            LSSnapshot::LoadState aLoadState, bool aHasOtherProcessObservers) {
+            LSSnapshot::LoadState aLoadState, bool aHasOtherProcessDatabases,
+            bool aHasOtherProcessObservers) {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(aInitialUsage >= 0);
     MOZ_ASSERT(aPeakUsage >= aInitialUsage);
@@ -1973,6 +1985,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
       mLoadedAllItems = true;
       mLoadKeysReceived = true;
     }
+    mHasOtherProcessDatabases = aHasOtherProcessDatabases;
     mHasOtherProcessObservers = aHasOtherProcessObservers;
   }
 
@@ -1990,6 +2003,12 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
     AssertIsOnBackgroundThread();
 
     return mSentMarkDirty;
+  }
+
+  bool HasOtherProcessDatabases() const {
+    AssertIsOnBackgroundThread();
+
+    return mHasOtherProcessDatabases;
   }
 
   bool HasOtherProcessObservers() const {
@@ -4528,6 +4547,20 @@ void Datastore::NoteFinishedPreparedDatastore(
   MaybeClose();
 }
 
+bool Datastore::HasOtherProcessDatabases(Database* aDatabase) {
+  AssertIsOnBackgroundThread();
+
+  PBackgroundParent* databaseBackgroundActor = aDatabase->Manager();
+
+  for (Database* database : mDatabases) {
+    if (database->Manager() != databaseBackgroundActor) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void Datastore::NoteLiveDatabase(Database* aDatabase) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
@@ -4536,6 +4569,8 @@ void Datastore::NoteLiveDatabase(Database* aDatabase) {
   MOZ_ASSERT(!mClosed);
 
   mDatabases.Insert(aDatabase);
+
+  NoteChangedDatabaseMap();
 }
 
 void Datastore::NoteFinishedDatabase(Database* aDatabase) {
@@ -4547,6 +4582,8 @@ void Datastore::NoteFinishedDatabase(Database* aDatabase) {
   MOZ_ASSERT(!mClosed);
 
   mDatabases.Remove(aDatabase);
+
+  NoteChangedDatabaseMap();
 
   QuotaManager::MaybeRecordQuotaClientShutdownStep(quota::Client::LS,
                                                    "Database finished"_ns);
@@ -5243,6 +5280,24 @@ void Datastore::NotifySnapshots(Database* aDatabase, const nsAString& aKey,
   }
 }
 
+void Datastore::NoteChangedDatabaseMap() {
+  AssertIsOnBackgroundThread();
+
+  for (Database* database : mActiveDatabases) {
+    Snapshot* snapshot = database->GetSnapshot();
+    MOZ_ASSERT(snapshot);
+
+    if (snapshot->IsDirty()) {
+      continue;
+    }
+
+    if (snapshot->HasOtherProcessDatabases() !=
+        HasOtherProcessDatabases(database)) {
+      snapshot->MarkDirty();
+    }
+  }
+}
+
 /*******************************************************************************
  * PreparedDatastore
  ******************************************************************************/
@@ -5517,11 +5572,12 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
     peakUsage += size;
   }
 
+  bool hasOtherProcessDatabases = mDatastore->HasOtherProcessDatabases(this);
   bool hasOtherProcessObservers = mDatastore->HasOtherProcessObservers(this);
 
   snapshot->Init(loadedItems, std::move(unknownItems), nextLoadIndex,
                  totalLength, initialUsage, peakUsage, loadState,
-                 hasOtherProcessObservers);
+                 hasOtherProcessDatabases, hasOtherProcessObservers);
 
   RegisterSnapshot(snapshot);
 
@@ -5531,6 +5587,7 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
   aInitInfo->initialUsage() = initialUsage;
   aInitInfo->peakUsage() = peakUsage;
   aInitInfo->loadState() = loadState;
+  aInitInfo->hasOtherProcessDatabases() = hasOtherProcessDatabases;
   aInitInfo->hasOtherProcessObservers() = hasOtherProcessObservers;
 
   return IPC_OK();
