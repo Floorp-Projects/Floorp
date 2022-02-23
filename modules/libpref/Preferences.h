@@ -532,6 +532,9 @@ class Preferences final : public nsIPrefService,
   static bool InitStaticMembers();
 };
 
+static Atomic<bool, Relaxed> sOmitBlocklistedPrefValues(false);
+static Atomic<bool, Relaxed> sCrashOnBlocklistedPref(false);
+
 bool ShouldSanitizePreference(const char* aPref, bool aIsContentProcess = true);
 
 }  // namespace mozilla
