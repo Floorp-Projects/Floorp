@@ -195,8 +195,6 @@ void moz_container_wayland_add_initial_draw_callback(
   if (wl_container->ready_to_draw && wl_container->surface) {
     initial_draw_cb();
   } else {
-    MOZ_DIAGNOSTIC_ASSERT_IF(!wl_container->surface,
-                             !wl_container->ready_to_draw);
     wl_container->initial_draw_cbs.push_back(initial_draw_cb);
   }
 }
@@ -223,9 +221,6 @@ static void moz_container_wayland_frame_callback_handler(
 
   if (!wl_container->ready_to_draw) {
     wl_container->ready_to_draw = true;
-    MOZ_DIAGNOSTIC_ASSERT(wl_container->surface,
-                          "Should have surface if we're ready to draw");
-
     auto cbs = std::move(wl_container->initial_draw_cbs);
     for (auto const& cb : cbs) {
       cb();
@@ -533,8 +528,6 @@ static bool moz_container_wayland_surface_create_locked(
                                       wl_container->surface, parent_surface);
   if (!wl_container->subsurface) {
     g_clear_pointer(&wl_container->surface, wl_surface_destroy);
-    MOZ_DIAGNOSTIC_ASSERT(!wl_container->ready_to_draw,
-                          "Clearing surface but not ready_to_draw!");
     LOGWAYLAND("    Failed - can't create sub-surface!");
     return false;
   }
@@ -578,8 +571,6 @@ struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container) {
   //           container->wl_container.ready_to_draw);
   if (!container->wl_container.surface ||
       !container->wl_container.ready_to_draw) {
-    MOZ_DIAGNOSTIC_ASSERT(!container->wl_container.ready_to_draw,
-                          "Shouldn't have no surface but be ready to draw");
     return nullptr;
   }
   container->wl_container.container_lock->Lock();
@@ -605,8 +596,6 @@ struct wl_surface* moz_container_wayland_get_surface_locked(
              container->wl_container.ready_to_draw);
   if (!container->wl_container.surface ||
       !container->wl_container.ready_to_draw) {
-    MOZ_DIAGNOSTIC_ASSERT(!container->wl_container.ready_to_draw,
-                          "Shouldn't have no surface but be ready to draw");
     return nullptr;
   }
   moz_container_wayland_set_scale_factor_locked(container);
@@ -631,8 +620,6 @@ struct wl_egl_window* moz_container_wayland_get_egl_window(
 
   MutexAutoLock lock(*wl_container->container_lock);
   if (!wl_container->surface || !wl_container->ready_to_draw) {
-    MOZ_DIAGNOSTIC_ASSERT(!container->wl_container.ready_to_draw,
-                          "Shouldn't have no surface but be ready to draw");
     return nullptr;
   }
   if (!wl_container->eglwindow) {
