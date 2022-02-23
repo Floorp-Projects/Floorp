@@ -12,9 +12,11 @@ add_task(async function() {
   invokeInTab("arithmetic");
 
   info("Switch to console and check message");
-  const minifiedLink = await waitForConsoleLink(dbg,
+  const minifiedLink = await waitForConsoleLink(
+    dbg,
     "arithmetic",
-    "math.min.js:3:73");
+    "math.min.js:3:73"
+  );
 
   info("Click on the link to open the debugger");
   minifiedLink.click();
@@ -49,7 +51,7 @@ async function waitForConsoleLink(dbg, messageText, linkText) {
     // Wait until the message updates.
     const [message] = await findConsoleMessages(toolbox, messageText);
     if (!message) {
-      return false
+      return false;
     }
     const linkEl = message.querySelector(".frame-link-source");
     if (!linkEl) {

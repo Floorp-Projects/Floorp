@@ -5,7 +5,7 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-script-mutate.html");
 
-  let onPaused = waitForPaused(dbg);
+  const onPaused = waitForPaused(dbg);
   invokeInTab("mutate");
   await onPaused;
   await waitForSelectedSource(dbg, "script-mutate");

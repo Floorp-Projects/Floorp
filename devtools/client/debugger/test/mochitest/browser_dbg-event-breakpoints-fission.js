@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
- // Tests early event breakpoints and event breakpoints in a remote frame.
+// Tests early event breakpoints and event breakpoints in a remote frame.
 
-add_task(async function () {
-    await pushPref(
+add_task(async function() {
+  await pushPref(
     "devtools.debugger.features.event-listeners-breakpoints",
     true
   );
@@ -21,7 +21,7 @@ add_task(async function () {
   await dbg.actions.addEventListenerBreakpoints([
     "event.mouse.click",
     "event.xhr.load",
-    "timer.timeout.set"
+    "timer.timeout.set",
   ]);
 
   info("Assert early timeout event breakpoint gets hit");
@@ -36,7 +36,7 @@ add_task(async function () {
   info("Assert event breakpoints work in remote frame");
   await invokeAndAssertBreakpoints(dbg);
 
-  info("reload the iframe")
+  info("reload the iframe");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
     content.wrappedJSObject.reloadIframe()
   );
@@ -69,7 +69,10 @@ function assertPauseLocation(dbg, line, url = "event-breakpoints.js") {
 
 async function invokeInTabRemoteFrame(fnc, ...args) {
   info(`Invoking in tab remote frame: ${fnc}(${args.map(uneval).join(",")})`);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [fnc, args], function (_fnc, _args) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [fnc, args], function(
+    _fnc,
+    _args
+  ) {
     return SpecialPowers.spawn(
       content.document.querySelector("iframe"),
       [_fnc, _args],
@@ -77,4 +80,3 @@ async function invokeInTabRemoteFrame(fnc, ...args) {
     );
   });
 }
-

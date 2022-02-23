@@ -43,12 +43,16 @@ add_task(async function() {
   info("Wait for the debugger to be paused on the debugger statement");
   await waitForPaused(dbg);
 
-  is(getCM(dbg).getValue(), EVALED_SOURCE_TEXT, "The debugger is showing the evaled source");
+  is(
+    getCM(dbg).getValue(),
+    EVALED_SOURCE_TEXT,
+    "The debugger is showing the evaled source"
+  );
 
   const evaledSource = dbg.selectors.getSelectedSource();
   assertPausedAtSourceAndLine(dbg, evaledSource.id, 2);
 
-  info("Add a breakpoint in the evaled source")
+  info("Add a breakpoint in the evaled source");
   await addBreakpoint(dbg, evaledSource, 3);
 
   info("Resume and check that we hit the breakpoint");

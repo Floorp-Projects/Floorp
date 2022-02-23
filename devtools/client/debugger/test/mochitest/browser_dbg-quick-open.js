@@ -97,11 +97,7 @@ function assertColumn(dbg, columnNumber) {
   if (value === undefined) {
     value = null;
   }
-  is(
-    value,
-    columnNumber,
-    `goto column is ${columnNumber}`
-  );
+  is(value, columnNumber, `goto column is ${columnNumber}`);
 }
 
 function waitForSymbols(dbg, url) {

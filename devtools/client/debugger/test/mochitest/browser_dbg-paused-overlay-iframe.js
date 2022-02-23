@@ -4,8 +4,7 @@
 
 // Tests the paused overlay in a remote frame
 
-const TEST_COM_URI =
-  URL_ROOT_COM_SSL + "examples/doc_dbg-fission-frame-sources.html";
+const TEST_COM_URI = `${URL_ROOT_COM_SSL}examples/doc_dbg-fission-frame-sources.html`;
 
 add_task(async function() {
   info("Load a test page with a remote frame");

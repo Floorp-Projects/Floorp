@@ -60,19 +60,13 @@ async function evalInConsoleAtPoint(
   statements
 ) {
   const url = `${target}://./${fixture}/input.js`;
-  const fnName = (target + "-" + fixture).replace(/-([a-z])/g, (s, c) =>
+  const fnName = `${target}-${fixture}`.replace(/-([a-z])/g, (s, c) =>
     c.toUpperCase()
   );
 
-  await invokeWithBreakpoint(
-    dbg,
-    fnName,
-    url,
-    { line, column },
-    async () => {
-      await assertConsoleEval(dbg, statements);
-    }
-  );
+  await invokeWithBreakpoint(dbg, fnName, url, { line, column }, async () => {
+    await assertConsoleEval(dbg, statements);
+  });
 
   ok(true, `Ran tests for ${fixture} at line ${line} column ${column}`);
 }

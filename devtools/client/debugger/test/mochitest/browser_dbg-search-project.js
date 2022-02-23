@@ -4,7 +4,10 @@
 
 // Testing basic project search
 add_task(async function() {
-  const dbg = await initDebugger("doc-script-switching.html", "script-switching-01.js");
+  const dbg = await initDebugger(
+    "doc-script-switching.html",
+    "script-switching-01.js"
+  );
 
   await selectSource(dbg, "script-switching-01.js");
 

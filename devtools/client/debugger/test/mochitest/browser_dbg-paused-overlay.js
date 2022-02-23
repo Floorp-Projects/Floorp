@@ -30,7 +30,7 @@ add_task(async function() {
   );
   ok(true, "Paused debugger overlay is visible");
 
-  let pauseLine = getVisibleSelectedFrameLine(dbg);
+  const pauseLine = getVisibleSelectedFrameLine(dbg);
   is(pauseLine, 2, "We're paused at the expected location");
 
   info("Test clicking the step over button");
