@@ -7689,14 +7689,14 @@ nsBlockFrame* nsBlockFrame::GetNearestAncestorBlock(nsIFrame* aCandidate) {
   return nullptr;
 }
 
-nscoord nsBlockFrame::ComputeFinalBSize(BlockReflowState& aBri,
+nscoord nsBlockFrame::ComputeFinalBSize(BlockReflowState& aState,
                                         nscoord aBEndEdgeOfChildren) {
-  const WritingMode wm = aBri.mReflowInput.GetWritingMode();
+  const WritingMode wm = aState.mReflowInput.GetWritingMode();
 
   const nscoord effectiveContentBoxBSize =
-      GetEffectiveComputedBSize(aBri.mReflowInput, aBri.mConsumedBSize);
-  const nscoord blockStartBP = aBri.BorderPadding().BStart(wm);
-  const nscoord blockEndBP = aBri.BorderPadding().BEnd(wm);
+      GetEffectiveComputedBSize(aState.mReflowInput, aState.mConsumedBSize);
+  const nscoord blockStartBP = aState.BorderPadding().BStart(wm);
+  const nscoord blockEndBP = aState.BorderPadding().BEnd(wm);
 
   NS_ASSERTION(
       !IsTrueOverflowContainer() || (effectiveContentBoxBSize == 0 &&
@@ -7724,30 +7724,31 @@ nscoord nsBlockFrame::ComputeFinalBSize(BlockReflowState& aBri,
     return std::min(effectiveBorderBoxBSize, aBEndEdgeOfChildren);
   }
 
-  const nscoord availBSize = aBri.mReflowInput.AvailableBSize();
+  const nscoord availBSize = aState.mReflowInput.AvailableBSize();
   if (availBSize == NS_UNCONSTRAINEDSIZE) {
     return effectiveBorderBoxBSize;
   }
 
   // Save our children's reflow status.
-  const bool isChildStatusComplete = aBri.mReflowStatus.IsComplete();
+  const bool isChildStatusComplete = aState.mReflowStatus.IsComplete();
   if (isChildStatusComplete && effectiveContentBoxBSize > 0 &&
       effectiveBorderBoxBSize > availBSize &&
-      ShouldAvoidBreakInside(aBri.mReflowInput)) {
-    aBri.mReflowStatus.SetInlineLineBreakBeforeAndReset();
+      ShouldAvoidBreakInside(aState.mReflowInput)) {
+    aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
     return effectiveBorderBoxBSize;
   }
 
-  const bool isBDBClone = aBri.mReflowInput.mStyleBorder->mBoxDecorationBreak ==
-                          StyleBoxDecorationBreak::Clone;
+  const bool isBDBClone =
+      aState.mReflowInput.mStyleBorder->mBoxDecorationBreak ==
+      StyleBoxDecorationBreak::Clone;
 
   // The maximum value our content-box block-size can take within the given
   // available block-size.
-  const nscoord maxContentBoxBSize = aBri.ContentBSize();
+  const nscoord maxContentBoxBSize = aState.ContentBSize();
 
   // The block-end edge of our content-box (relative to this frame's origin) if
   // we consumed the maximum block-size available to us (maxContentBoxBSize).
-  const nscoord maxContentBoxBEnd = aBri.ContentBEnd();
+  const nscoord maxContentBoxBEnd = aState.ContentBEnd();
 
   // These variables are uninitialized intentionally so that the compiler can
   // check they are assigned in every if-else branch below.
@@ -7782,7 +7783,7 @@ nscoord nsBlockFrame::ComputeFinalBSize(BlockReflowState& aBri,
     // conditions which would force us to overflow beyond the available space --
     // these might result in us actually being complete if we're forced to
     // overflow far enough.
-    if (MOZ_UNLIKELY(aBri.mReflowInput.mFlags.mIsTopOfPage && isBDBClone &&
+    if (MOZ_UNLIKELY(aState.mReflowInput.mFlags.mIsTopOfPage && isBDBClone &&
                      maxContentBoxBSize <= 0 &&
                      aBEndEdgeOfChildren == blockStartBP)) {
       // In this rare case, we are at the top of page/column, we have
@@ -7834,7 +7835,7 @@ nscoord nsBlockFrame::ComputeFinalBSize(BlockReflowState& aBri,
       // We want to use children's reflow status as ours, which can be overflow
       // incomplete. Suppress the urge to call aBri.mReflowStatus.Reset() here.
     } else {
-      aBri.mReflowStatus.SetOverflowIncomplete();
+      aState.mReflowStatus.SetOverflowIncomplete();
     }
   } else {
     NS_ASSERTION(!IsTrueOverflowContainer(),
@@ -7844,9 +7845,9 @@ nscoord nsBlockFrame::ComputeFinalBSize(BlockReflowState& aBri,
       finalBorderBoxBSize =
           NSCoordSaturatingAdd(finalBorderBoxBSize, blockEndBP);
     }
-    aBri.mReflowStatus.SetIncomplete();
+    aState.mReflowStatus.SetIncomplete();
     if (!GetNextInFlow()) {
-      aBri.mReflowStatus.SetNextInFlowNeedsReflow();
+      aState.mReflowStatus.SetNextInFlowNeedsReflow();
     }
   }
 
