@@ -758,16 +758,19 @@ bool SVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
     MoveContextOriginToUserSpace(firstFrame, aParams);
 
     basicShapeSR.SetContext(&ctx);
-    CSSClipPathInstance::ApplyBasicShapeOrPathClip(
-        ctx, frame, SVGUtils::GetCSSPxToDevPxMatrix(frame));
+    gfxMatrix mat = SVGUtils::GetCSSPxToDevPxMatrix(frame);
     if (!maskUsage.shouldGenerateMaskLayer) {
       // Only have basic-shape clip-path effect. Fill clipped region by
       // opaque white.
       ctx.SetDeviceColor(DeviceColor::MaskOpaqueWhite());
+      RefPtr<Path> path = CSSClipPathInstance::CreateClipPathForFrame(
+          ctx.GetDrawTarget(), frame, mat);
+      ctx.SetPath(path);
       ctx.Fill();
 
       return true;
     }
+    CSSClipPathInstance::ApplyBasicShapeOrPathClip(ctx, frame, mat);
   }
 
   // Paint mask onto ctx.
