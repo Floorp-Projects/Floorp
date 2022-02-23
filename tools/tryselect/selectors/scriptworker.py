@@ -7,8 +7,8 @@ import sys
 
 import requests
 from taskgraph.parameters import Parameters
-from taskgraph.util.taskcluster import find_task_id, get_artifact, get_session
 
+from gecko_taskgraph.util.taskcluster import find_task_id, get_artifact, get_session
 from gecko_taskgraph.util.taskgraph import find_existing_tasks
 
 from ..cli import BaseTryParser

@@ -9,7 +9,6 @@ import re
 
 from redo import retry
 from taskgraph.parameters import Parameters
-from taskgraph.util.taskcluster import find_task_id
 
 from gecko_taskgraph import try_option_syntax
 from gecko_taskgraph.util.attributes import (
@@ -17,6 +16,7 @@ from gecko_taskgraph.util.attributes import (
     match_run_on_hg_branches,
 )
 from gecko_taskgraph.util.platforms import platform_family
+from gecko_taskgraph.util.taskcluster import find_task_id
 
 _target_task_methods = {}
 
