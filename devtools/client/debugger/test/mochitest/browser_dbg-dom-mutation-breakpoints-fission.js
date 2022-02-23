@@ -78,13 +78,11 @@ add_task(async function() {
 
   info("Wait until the input is enabled");
   await asyncWaitUntil(() =>
-    SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
-      return SpecialPowers.spawn(
-        content.document.querySelector("iframe"),
-        [],
-        () => !content.document.querySelector("input").disabled
-      );
-    })
+    SpecialPowers.spawn(
+      frameBC,
+      [],
+      () => !content.document.querySelector("input").disabled
+    )
   );
   is(isPaused(dbg), false, "DOM breakpoint should not have been hit");
 

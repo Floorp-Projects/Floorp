@@ -6,10 +6,6 @@
 
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
-  const {
-    selectors: { getSelectedSource },
-    getState,
-  } = dbg;
 
   // Sanity check
   const highlighterTestFront = await getHighlighterTestFront(dbg.toolbox);
@@ -25,9 +21,7 @@ add_task(async function() {
   await waitForPaused(dbg);
 
   info("Check that the paused overlay is displayed");
-  await waitFor(
-    async () => await highlighterTestFront.isPausedDebuggerOverlayVisible()
-  );
+  await waitFor(() => highlighterTestFront.isPausedDebuggerOverlayVisible());
   ok(true, "Paused debugger overlay is visible");
 
   const pauseLine = getVisibleSelectedFrameLine(dbg);
@@ -61,13 +55,10 @@ add_task(async function() {
     "Check that the highlighter is removed when clicking on the debugger resume button"
   );
   invokeInTab("doEval");
-  await waitFor(
-    async () => await highlighterTestFront.isPausedDebuggerOverlayVisible()
-  );
+  await waitFor(() => highlighterTestFront.isPausedDebuggerOverlayVisible());
   ok(true, "Paused debugger overlay is visible again");
 
   info("Click debugger UI resume button");
-  debugger;
   const resumeButton = await waitFor(() => findElement(dbg, "resume"));
   resumeButton.click();
   await waitFor(async () => {

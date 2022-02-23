@@ -16,7 +16,6 @@ add_task(async function() {
   );
   const {
     selectors: { getSelectedSource },
-    getState,
     commands,
   } = dbg;
 
@@ -49,9 +48,7 @@ add_task(async function() {
   }
 
   info("Check that the paused overlay is displayed");
-  await waitFor(
-    async () => await highlighterTestFront.isPausedDebuggerOverlayVisible()
-  );
+  await waitFor(() => highlighterTestFront.isPausedDebuggerOverlayVisible());
   ok(true, "Paused debugger overlay is visible");
 
   ok(

@@ -7,6 +7,7 @@
 
 requestLongerTimeout(4);
 
+/* import-globals-from ../../../framework/browser-toolbox/test/helpers-browser-toolbox.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/browser-toolbox/test/helpers-browser-toolbox.js",
   this
@@ -42,6 +43,7 @@ add_task(async function() {
 
   // The debugger should automatically be selected.
   await ToolboxTask.spawn(null, async () => {
+    /* global gToolbox */
     await waitUntil(() => gToolbox.currentToolId == "jsdebugger");
   });
   ok(true, "Debugger selected");

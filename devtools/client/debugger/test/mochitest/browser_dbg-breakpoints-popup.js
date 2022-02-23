@@ -252,7 +252,7 @@ add_task(async function testClosingOriginalTab() {
 
   info("Open a popup");
   const originalTab = gBrowser.selectedTab;
-  const popupBrowsingContext = await openPopup("about:blank");
+  await openPopup("about:blank");
   await wait(1000);
   const popupTab = gBrowser.selectedTab;
   gBrowser.selectedTab = originalTab;

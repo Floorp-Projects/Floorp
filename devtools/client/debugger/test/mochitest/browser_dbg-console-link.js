@@ -17,8 +17,6 @@ add_task(async function() {
 });
 
 async function waitForLink(toolbox, messageText) {
-  const { hud } = toolbox.getPanel("webconsole");
-
   return waitFor(async () => {
     const [message] = await findConsoleMessages(toolbox, messageText);
     if (!message) {

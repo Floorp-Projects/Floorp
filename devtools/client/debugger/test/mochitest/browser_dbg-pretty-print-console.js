@@ -45,7 +45,7 @@ add_task(async function() {
 
 async function waitForConsoleLink(dbg, messageText, linkText) {
   const { toolbox } = dbg;
-  const console = await toolbox.selectTool("webconsole");
+  await toolbox.selectTool("webconsole");
 
   return waitFor(async () => {
     // Wait until the message updates.
@@ -58,7 +58,6 @@ async function waitForConsoleLink(dbg, messageText, linkText) {
       return false;
     }
 
-    const linkText = linkEl.textContent;
-    return linkText == linkText ? linkEl : null;
+    return linkEl.textContent == linkText ? linkEl : false;
   });
 }

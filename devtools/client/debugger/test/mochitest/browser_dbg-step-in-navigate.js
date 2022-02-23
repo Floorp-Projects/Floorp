@@ -6,9 +6,6 @@
 
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple3.js", "long.js");
-  const {
-    selectors: { getIsWaitingOnBreak, getCurrentThread },
-  } = dbg;
 
   async function toggleBlackbox() {
     await selectSource(dbg, "simple3.js");
@@ -35,6 +32,7 @@ add_task(async function() {
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "long.js").id, 1);
 
   await resume(dbg);
+  await reloaded;
   await waitForSource(dbg, "simple3.js");
   await toggleBlackbox();
 });

@@ -10,10 +10,6 @@ add_task(async function() {
     "simple1.js",
     "simple2.js"
   );
-  const {
-    selectors: { getBreakpoints, getBreakpoint, getActiveSearch },
-    getState,
-  } = dbg;
 
   info("Add a breakpoint, wait for pause");
   const source = findSource(dbg, "simple2.js");

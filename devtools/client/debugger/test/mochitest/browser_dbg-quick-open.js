@@ -100,11 +100,6 @@ function assertColumn(dbg, columnNumber) {
   is(value, columnNumber, `goto column is ${columnNumber}`);
 }
 
-function waitForSymbols(dbg, url) {
-  const source = findSource(dbg, url);
-  return waitForState(dbg, state => dbg.selectors.getSymbols(state, source.id));
-}
-
 function resultCount(dbg) {
   return findAllElements(dbg, "resultItems").length;
 }

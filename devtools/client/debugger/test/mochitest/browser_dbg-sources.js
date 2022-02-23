@@ -14,7 +14,6 @@ add_task(async function() {
   );
   const {
     selectors: { getSelectedSource },
-    getState,
   } = dbg;
 
   // Expand nodes and make sure more sources appear.
@@ -38,7 +37,6 @@ add_task(async function() {
   // Ensure the source file clicked is now focused
   await waitForElementWithSelector(dbg, ".sources-list .focused");
 
-  const focusedNode = findElementWithSelector(dbg, ".sources-list .focused");
   const fourthNode = findElement(dbg, "sourceNode", 5);
   const selectedSource = getSelectedSource().url;
 

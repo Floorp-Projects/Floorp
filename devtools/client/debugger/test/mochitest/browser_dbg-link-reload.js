@@ -11,10 +11,6 @@ add_task(async function() {
     "doc-reload-link.html",
     "doc-reload-link.html"
   );
-  const {
-    selectors: { getSelectedSource, getIsPaused, getCurrentThread },
-    getState,
-  } = dbg;
 
   info("Add a breakpoint that will be hit on reload");
   await addBreakpoint(dbg, "doc-reload-link.html", 3);

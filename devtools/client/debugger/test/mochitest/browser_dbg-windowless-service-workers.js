@@ -172,11 +172,11 @@ async function checkWorkerThreads(dbg, count) {
 }
 
 async function checkWorkerStatus(dbg, status) {
-  // TODO: Re-Add support for showing service worker status (Bug 1641099)
-  return;
+  /* TODO: Re-Add support for showing service worker status (Bug 1641099)
   await waitUntil(() => {
     const threads = dbg.selectors.getThreads();
     return threads.some(t => t.serviceWorkerStatus == status);
   });
   ok(true, `Have thread with status ${status}`);
+  */
 }
