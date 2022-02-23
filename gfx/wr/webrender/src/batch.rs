@@ -1080,7 +1080,7 @@ impl BatchBuilder {
             batch_features |= BatchFeatures::REPETITION;
         }
 
-        if transform_kind != TransformedRectKind::AxisAligned {
+        if transform_kind != TransformedRectKind::AxisAligned || prim_instance.anti_aliased {
             batch_features |= BatchFeatures::ANTIALIASING;
         }
 
