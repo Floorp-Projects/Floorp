@@ -13,7 +13,7 @@
 #include "JustificationUtils.h"
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/WritingModes.h"
-#include "BlockReflowInput.h"
+#include "BlockReflowState.h"
 #include "nsLineBox.h"
 
 class nsFloatManager;

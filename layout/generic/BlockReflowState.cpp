@@ -6,7 +6,7 @@
 
 /* state used in reflow of block frames */
 
-#include "BlockReflowInput.h"
+#include "BlockReflowState.h"
 
 #include <algorithm>
 #include "LayoutLogging.h"
