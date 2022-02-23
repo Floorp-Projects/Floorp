@@ -16058,10 +16058,10 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-firefox-netflix-fis-e10s**
-        - ✅
-        - ✅
-        - ✅
-        - ✅
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-live-chrome-netflix-e10s**
         - ❌
         - ❌
