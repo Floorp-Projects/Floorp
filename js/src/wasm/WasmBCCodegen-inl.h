@@ -266,7 +266,8 @@ void BaseCompiler::branchTo(Assembler::Condition c, RegRef lhs, ImmWord rhs,
 // Debugger API.
 
 void BaseCompiler::insertBreakablePoint(CallSiteDesc::Kind kind) {
-  fr.loadTlsPtr(WasmTlsReg);
+  // There is no need to load the WasmTlsReg here, the tls value is obtained
+  // through other means inside WasmHandleDebugTrap.
   masm.nopPatchableToCall(CallSiteDesc(iter_.lastOpcodeOffset(), kind));
 }
 
