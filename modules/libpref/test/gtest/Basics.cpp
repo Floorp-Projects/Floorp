@@ -44,10 +44,10 @@ TEST(PrefsBasics, Serialize)
 
   nsCString str;
   Preferences::SerializePreferences(
-      str, [](const char* aPref) -> bool { return false; });
+      str, [](const char* aPref, bool) -> bool { return false; });
   ASSERT_STREQ(str.Data(), "");
 
-  Preferences::SerializePreferences(str, [](const char* aPref) -> bool {
+  Preferences::SerializePreferences(str, [](const char* aPref, bool) -> bool {
     return strncmp(aPref, "foo.bool", 8) == 0;
   });
   ASSERT_STREQ(str.Data(), "B-:8/foo.bool:T:F\n");

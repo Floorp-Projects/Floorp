@@ -42,8 +42,8 @@ bool GPUProcessHost::Launch(StringVector aExtraOpts) {
   MOZ_ASSERT(!mGPUChild);
   MOZ_ASSERT(!gfxPlatform::IsHeadless());
 
-  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>(
-      dom::ContentParent::ShouldSyncPreference);
+  mPrefSerializer =
+      MakeUnique<ipc::SharedPreferenceSerializer>(ShouldSyncPreference);
   if (!mPrefSerializer->SerializeToSharedMemory()) {
     return false;
   }
