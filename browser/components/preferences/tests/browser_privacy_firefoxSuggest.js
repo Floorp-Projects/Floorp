@@ -8,6 +8,7 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
+  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
@@ -43,10 +44,9 @@ const EXPECTED_L10N_IDS = {
   },
 };
 
-// Allow more time for Mac machines so they don't time out in verify mode.
-if (AppConstants.platform == "macosx") {
-  requestLongerTimeout(3);
-}
+// This test can take a while due to the many permutations some of these tasks
+// run through, so request a longer timeout.
+requestLongerTimeout(10);
 
 // The following tasks check the visibility of the Firefox Suggest UI based on
 // the value of the feature pref. See doVisibilityTest().
@@ -126,12 +126,16 @@ async function doVisibilityTest({
 }) {
   info(
     "Running visibility test: " +
-      JSON.stringify({
-        initialScenario,
-        initialExpectedVisibility,
-        newScenario,
-        newExpectedVisibility,
-      })
+      JSON.stringify(
+        {
+          initialScenario,
+          initialExpectedVisibility,
+          newScenario,
+          newExpectedVisibility,
+        },
+        null,
+        2
+      )
   );
 
   // Set the initial scenario.
@@ -500,73 +504,112 @@ add_task(async function clickLearnMore() {
   await SpecialPowers.popPrefEnv();
 });
 
-// Tests the visibility of the best match checkbox when the best match feature is
-// initially disabled and is then enabled via preferences.
-add_task(async function bestMatchVisibility_falseToTrue() {
-  await doBestMatchVisibilityTest(false, true);
-});
-
-// Tests the visibility of the best match checkbox when the best match feature is
-// initially enabled and is then disabled via preferences.
-add_task(async function bestMatchVisibility_trueToFalse() {
-  await doBestMatchVisibilityTest(true, false);
+// Tests the visibility of the best match checkbox based on the values of
+// `browser.urlbar.quicksuggest.enabled` and `browser.urlbar.bestMatch.enabled`.
+add_task(async function bestMatchVisibility() {
+  for (let initialQuickSuggest of [false, true]) {
+    for (let initialBestMatch of [false, true]) {
+      for (let newQuickSuggest of [false, true]) {
+        for (let newBestMatch of [false, true]) {
+          await doBestMatchVisibilityTest({
+            initialQuickSuggest,
+            initialBestMatch,
+            newQuickSuggest,
+            newBestMatch,
+          });
+        }
+      }
+    }
+  }
 });
 
 /**
  * Runs a test that checks the visibility of the Firefox Suggest best match
- * checkbox. It sets the best match feature pref, opens about:preferences and
- * checks the visibility of the toggle, sets the feature pref again, and checks
- * the visibility of the toggle again.
+ * checkbox. It does the following:
  *
- * @param {boolean} initialEnabled
- *   Whether to enable the best match feature before about:preferences is
- *   opened.
- * @param {boolean} newEnabled
- *   Whether to enable the best match feature after about:preferences is
- *   opened.
+ * 1. Sets the quick suggest and best match feature prefs
+ * 2. Opens about:preferences and checks the visibility of the checkbox
+ * 3. Sets the quick suggest and best match feature prefs again
+ * 4. Checks the visibility of the checkbox again
+ *
+ * @param {boolean} initialQuickSuggest
+ *   The value to set for `browser.urlbar.quicksuggest.enabled` before
+ *   about:preferences is opened.
+ * @param {boolean} initialBestMatch
+ *   The value to set for `browser.urlbar.bestMatch.enabled` before
+ *   about:preferences is opened.
+ * @param {boolean} newQuickSuggest
+ *   The value to set for `browser.urlbar.quicksuggest.enabled` while
+ *   about:preferences is open.
+ * @param {boolean} newBestMatch
+ *   The value to set for `browser.urlbar.bestMatch.enabled` while
+ *   about:preferences is open.
  */
-async function doBestMatchVisibilityTest(initialEnabled, newEnabled) {
+async function doBestMatchVisibilityTest({
+  initialQuickSuggest,
+  initialBestMatch,
+  newQuickSuggest,
+  newBestMatch,
+}) {
   info(
     "Running best match visibility test: " +
-      JSON.stringify({ initialEnabled, newEnabled })
+      JSON.stringify(
+        {
+          initialQuickSuggest,
+          initialBestMatch,
+          newQuickSuggest,
+          newBestMatch,
+        },
+        null,
+        2
+      )
   );
 
-  // Set the initial enabled status.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.bestMatch.enabled", initialEnabled]],
-  });
+  // Set the initial pref values.
+  Services.prefs.setBoolPref(
+    "browser.urlbar.quicksuggest.enabled",
+    initialQuickSuggest
+  );
+  Services.prefs.setBoolPref(
+    "browser.urlbar.bestMatch.enabled",
+    initialBestMatch
+  );
+  await UrlbarQuickSuggest.readyPromise;
 
   // Open prefs and check the initial visibility.
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-
   let doc = gBrowser.selectedBrowser.contentDocument;
   let container = doc.getElementById(BEST_MATCH_CONTAINER_ID);
   Assert.equal(
     BrowserTestUtils.is_visible(container),
-    initialEnabled,
+    initialBestMatch,
     "The checkbox container has the expected initial visibility"
   );
 
-  // Set the new enabled status.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.bestMatch.enabled", newEnabled]],
-  });
+  // Set the new pref values.
+  Services.prefs.setBoolPref(
+    "browser.urlbar.quicksuggest.enabled",
+    newQuickSuggest
+  );
+  Services.prefs.setBoolPref("browser.urlbar.bestMatch.enabled", newBestMatch);
+  await UrlbarQuickSuggest.readyPromise;
 
   // Check visibility again.
   Assert.equal(
     BrowserTestUtils.is_visible(container),
-    newEnabled,
-    "The checkbox container has the expected visibility after setting enabled status"
+    newBestMatch,
+    "The checkbox container has the expected visibility after setting prefs"
   );
 
   // Clean up.
   gBrowser.removeCurrentTab();
-  await SpecialPowers.popPrefEnv();
-  await SpecialPowers.popPrefEnv();
+  Services.prefs.clearUserPref("browser.urlbar.quicksuggest.enabled");
+  Services.prefs.clearUserPref("browser.urlbar.bestMatch.enabled");
+  await UrlbarQuickSuggest.readyPromise;
 }
 
-// Tests the visibility of the best match checkbox container when the best match feature is
-// enabled via a Nimbus experiment before about:preferences is opened.
+// Tests the visibility of the best match checkbox when the best match feature
+// is enabled via a Nimbus experiment before about:preferences is opened.
 add_task(async function bestMatchVisibility_experiment_beforeOpen() {
   await QuickSuggestTestUtils.withExperiment({
     valueOverrides: {
@@ -587,8 +630,8 @@ add_task(async function bestMatchVisibility_experiment_beforeOpen() {
   });
 });
 
-// Tests the visibility of the best match checkbox container when the best match feature is
-// enabled via a Nimbus experiment after about:preferences is opened.
+// Tests the visibility of the best match checkbox when the best match feature
+// is enabled via a Nimbus experiment after about:preferences is opened.
 add_task(async function bestMatchVisibility_experiment_afterOpen() {
   // Open prefs and check the initial visibility.
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
@@ -662,7 +705,8 @@ add_task(async function bestMatchToggle() {
   await SpecialPowers.popPrefEnv();
 });
 
-// Clicks the learn-more link for best match and checks the help page is opened in a new tab.
+// Clicks the learn-more link for best match and checks the help page is opened
+// in a new tab.
 add_task(async function clickBestMatchLearnMore() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.bestMatch.enabled", true]],
