@@ -199,23 +199,6 @@ WindowsUIUtils::SetWindowIcon(mozIDOMWindowProxy* aWindow,
 }
 
 NS_IMETHODIMP
-WindowsUIUtils::SetWindowIconFromExe(mozIDOMWindowProxy* aWindow,
-                                     const nsAString& aExe, uint16_t aIndex) {
-  NS_ENSURE_ARG(aWindow);
-
-  nsCOMPtr<nsIWidget> widget =
-      nsGlobalWindowOuter::Cast(aWindow)->GetMainWidget();
-  nsWindow* window = static_cast<nsWindow*>(widget.get());
-
-  HICON icon = ::LoadIconW(::GetModuleHandleW(PromiseFlatString(aExe).get()),
-                           MAKEINTRESOURCEW(aIndex));
-  window->SetBigIcon(icon);
-  window->SetSmallIcon(icon);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 WindowsUIUtils::SetWindowIconNoData(mozIDOMWindowProxy* aWindow) {
   NS_ENSURE_ARG(aWindow);
 
