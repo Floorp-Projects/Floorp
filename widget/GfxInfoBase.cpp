@@ -234,6 +234,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_DMABUF:
       name = BLOCKLIST_PREF_BRANCH "dmabuf";
       break;
+    case nsIGfxInfo::FEATURE_VAAPI:
+      name = BLOCKLIST_PREF_BRANCH "vaapi";
+      break;
     case nsIGfxInfo::FEATURE_WEBRENDER_SHADER_CACHE:
       name = BLOCKLIST_PREF_BRANCH "webrender.program-binary-disk";
       break;
@@ -485,6 +488,9 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
   }
   if (aFeature.EqualsLiteral("DMABUF")) {
     return nsIGfxInfo::FEATURE_DMABUF;
+  }
+  if (aFeature.EqualsLiteral("VAAPI")) {
+    return nsIGfxInfo::FEATURE_VAAPI;
   }
   if (aFeature.EqualsLiteral("WEBRENDER_PARTIAL_PRESENT")) {
     return nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT;
@@ -1370,6 +1376,7 @@ void GfxInfoBase::EvaluateDownloadedBlocklist(
                         nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS,
                         nsIGfxInfo::FEATURE_X11_EGL,
                         nsIGfxInfo::FEATURE_DMABUF,
+                        nsIGfxInfo::FEATURE_VAAPI,
                         nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT,
                         0};
 
