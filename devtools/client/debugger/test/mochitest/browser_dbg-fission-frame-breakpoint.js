@@ -13,7 +13,7 @@ add_task(async function() {
     "simple2.js"
   );
   const {
-    selectors: { getSelectedSource, getIsPaused, getCurrentThread },
+    selectors: { getSelectedSource },
   } = dbg;
 
   // Add breakpoint within the iframe, which is hit early on load

@@ -38,7 +38,6 @@ async function breakpointSteps(dbg, target, fixture, { line, column }, steps) {
 async function runSteps(dbg, source, steps) {
   const {
     selectors: { getVisibleSelectedFrame },
-    getState,
   } = dbg;
 
   for (const [i, [type, position]] of steps.entries()) {

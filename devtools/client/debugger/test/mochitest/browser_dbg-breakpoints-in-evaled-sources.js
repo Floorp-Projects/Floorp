@@ -12,8 +12,6 @@ const EVALED_SOURCE_TEXT = `setTimeout(function() {
   console.log("SECOND LINE");
 }, 10)`;
 
-// doc-scripts.html contains some javascript on which we can set breakpoints.
-const REGULAR_SOURCE_FILE = "doc-scripts.html";
 /**
  * Check against blank debugger panel issues when attempting to restore
  * breakpoints set in evaled sources (Bug 1720512).

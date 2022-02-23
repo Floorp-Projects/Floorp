@@ -22,11 +22,7 @@ add_task(async function() {
 // console if necessary.  This cleans up the split console pref so
 // it won't pollute other tests.
 function getSplitConsole(dbg) {
-  const { toolbox, win } = dbg;
-
-  if (!win) {
-    win = toolbox.win;
-  }
+  const { toolbox } = dbg;
 
   if (!toolbox.splitConsole) {
     pressKey(dbg, "Escape");

@@ -8,8 +8,6 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "long.js");
 
-  const cursorPosition = { line: undefined, column: undefined };
-
   await selectSource(dbg, "long.js");
   await waitForSelectedSource(dbg, "long.js");
 

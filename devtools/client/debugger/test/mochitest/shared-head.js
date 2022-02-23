@@ -2,12 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-/* eslint-disable no-unused-vars */
-
 /**
  * Helper methods to drive with the debugger during mochitests. This file can be safely
  * required from other panel test files.
  */
+
+/* eslint-disable no-unused-vars */
+/* import-globals-from ./head.js */
+// Assume that shared-head is always imported before this file
+/* import-globals-from ../../../shared/test/shared-head.js */
 
 /**
  * Helper method to create a "dbg" context for other tools to use
@@ -656,7 +659,7 @@ registerCleanupFunction(() => {
  */
 function pauseTest() {
   info("Test paused. Invoke resumeTest to continue.");
-  return new Promise(resolve => (resumeTest = resolve));
+  return new Promise(resolve => (window.resumeTest = resolve));
 }
 
 /**
@@ -1181,29 +1184,25 @@ async function togglePauseOnExceptions(
  */
 function invokeInTab(fnc, ...args) {
   info(`Invoking in tab: ${fnc}(${args.map(uneval).join(",")})`);
-  return ContentTask.spawn(
-    gBrowser.selectedBrowser,
-    { fnc, args },
-    ({ fnc, args }) => content.wrappedJSObject[fnc](...args)
+  return ContentTask.spawn(gBrowser.selectedBrowser, { fnc, args }, options =>
+    content.wrappedJSObject[options.fnc](...options.args)
   );
 }
 
 function clickElementInTab(selector) {
   info(`click element ${selector} in tab`);
 
-  return SpecialPowers.spawn(
-    gBrowser.selectedBrowser,
-    [{ selector }],
-    function({ selector }) {
-      const element = content.document.querySelector(selector);
-      // Run the click in another event loop in order to immediately resolve spawn's promise.
-      // Otherwise if we pause on click and navigate, the JSWindowActor used by spawn will
-      // be destroyed while its query is still pending. And this would reject the promise.
-      content.setTimeout(() => {
-        element.click();
-      });
-    }
-  );
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], function(
+    _selector
+  ) {
+    const element = content.document.querySelector(_selector);
+    // Run the click in another event loop in order to immediately resolve spawn's promise.
+    // Otherwise if we pause on click and navigate, the JSWindowActor used by spawn will
+    // be destroyed while its query is still pending. And this would reject the promise.
+    content.setTimeout(() => {
+      element.click();
+    });
+  });
 }
 
 const isLinux = Services.appinfo.OS === "Linux";

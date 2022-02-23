@@ -75,7 +75,6 @@ function isFrameSelected(dbg, index, title) {
 
   const {
     selectors: { getSelectedFrame, getCurrentThread },
-    getState,
   } = dbg;
 
   const frame = getSelectedFrame(getCurrentThread());

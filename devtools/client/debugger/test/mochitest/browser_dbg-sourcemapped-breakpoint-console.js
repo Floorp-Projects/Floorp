@@ -74,7 +74,7 @@ async function evalInConsoleAtPoint(
 async function assertConsoleEval(dbg, statements) {
   const { hud } = await dbg.toolbox.selectTool("webconsole");
 
-  for (const [index, statement] of statements.entries()) {
+  for (const statement of statements.values()) {
     await dbg.client.evaluate(`window.TEST_RESULT = false;`);
     await evaluateExpressionInConsole(hud, `TEST_RESULT = ${statement};`);
 

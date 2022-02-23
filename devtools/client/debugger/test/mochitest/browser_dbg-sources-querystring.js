@@ -10,16 +10,11 @@ add_task(async function() {
     "simple1.js?x=1",
     "simple1.js?x=2"
   );
-  const {
-    selectors: { getSelectedSource },
-    getState,
-  } = dbg;
 
   // Expand nodes and make sure more sources appear.
   await assertSourceCount(dbg, 2);
   await clickElement(dbg, "sourceDirectoryLabel", 2);
 
-  const labels = [getLabel(dbg, 4), getLabel(dbg, 3)];
   is(getLabel(dbg, 3), "simple1.js?x=1", "simple1.js?x=1 exists");
   is(getLabel(dbg, 4), "simple1.js?x=2", "simple1.js?x=2 exists");
 
