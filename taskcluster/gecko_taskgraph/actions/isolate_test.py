@@ -9,8 +9,11 @@ import logging
 import os
 import re
 
-from taskgraph.util.taskcluster import get_artifact, get_task_definition, list_artifacts
-
+from gecko_taskgraph.util.taskcluster import (
+    list_artifacts,
+    get_artifact,
+    get_task_definition,
+)
 from ..util.parameterization import resolve_task_references
 from .registry import register_callback_action
 from .util import create_task_from_def, fetch_graph_and_labels, add_args_to_command
