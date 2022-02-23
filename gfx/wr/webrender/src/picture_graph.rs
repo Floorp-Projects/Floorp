@@ -108,6 +108,7 @@ impl PictureGraph {
 
                 match pictures[pic_index.0].assign_surface(
                     frame_context,
+                    parent_surface_index,
                     tile_caches,
                     surfaces,
                 ) {
