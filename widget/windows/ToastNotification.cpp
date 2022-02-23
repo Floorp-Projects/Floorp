@@ -57,6 +57,18 @@ nsresult ToastNotification::BackgroundDispatch(nsIRunnable* runnable) {
 }
 
 NS_IMETHODIMP
+ToastNotification::GetSuppressForScreenSharing(bool* aRetVal) {
+  *aRetVal = mSuppressForScreenSharing;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ToastNotification::SetSuppressForScreenSharing(bool aSuppress) {
+  mSuppressForScreenSharing = aSuppress;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ToastNotification::Observe(nsISupports* aSubject, const char* aTopic,
                            const char16_t* aData) {
   // Got quit-application
@@ -107,9 +119,23 @@ ToastNotification::ShowPersistentNotification(const nsAString& aPersistentData,
 }
 
 NS_IMETHODIMP
+ToastNotification::SetManualDoNotDisturb(bool aDoNotDisturb) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ToastNotification::GetManualDoNotDisturb(bool* aRet) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
                              nsIObserver* aAlertListener) {
   NS_ENSURE_ARG(aAlert);
+
+  if (mSuppressForScreenSharing) {
+    return NS_OK;
+  }
 
   nsAutoString cookie;
   MOZ_TRY(aAlert->GetCookie(cookie));
