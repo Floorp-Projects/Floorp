@@ -9569,14 +9569,14 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
 
         case TokenKind::In:
           // if the LHS is a private name, and the operator is In,
-          // ensure we're construcing an ergnomic brand check of
+          // ensure we're construcing an ergonomic brand check of
           // '#x in y', rather than having a higher precedence operator
           // like + cause a different reduction, such as
           // 1 + #x in y.
           if (handler_.isPrivateName(pn)) {
             if (depth > 0 && Precedence(kindStack[depth - 1]) >=
                                  Precedence(ParseNodeKind::InExpr)) {
-              error(JSMSG_ILLEGAL_PRIVATE_NAME);
+              error(JSMSG_INVALID_PRIVATE_NAME_PRECEDENCE);
               return null();
             }
 
