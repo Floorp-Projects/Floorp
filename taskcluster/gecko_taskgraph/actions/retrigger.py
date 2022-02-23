@@ -3,11 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import logging
-import textwrap
 import sys
 
-from taskgraph.util.taskcluster import get_task_definition, rerun_task
+import logging
+import textwrap
 
 from .util import (
     combine_task_graph_files,
@@ -20,7 +19,7 @@ from .util import (
     rename_browsertime_vismet_task,
 )
 from .registry import register_callback_action
-from gecko_taskgraph.util.taskcluster import state_task
+from gecko_taskgraph.util import taskcluster
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +67,7 @@ def retrigger_decision_action(parameters, graph_config, input, task_group_id, ta
 
     # make all of the timestamps relative; they will then be turned back into
     # absolute timestamps relative to the current time.
-    task = get_task_definition(task_id)
+    task = taskcluster.get_task_definition(task_id)
     task = relativize_datestamps(task)
     create_task_from_def(
         task, parameters["level"], action_tag="retrigger-decision-task"
@@ -150,7 +149,7 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
         parameters, graph_config
     )
 
-    task = get_task_definition(task_id)
+    task = taskcluster.get_task_definition(task_id)
     label = task["metadata"]["name"]
 
     is_browsertime = "browsertime" in label
@@ -207,7 +206,7 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
     schema={"type": "object", "properties": {}},
 )
 def rerun_action(parameters, graph_config, input, task_group_id, task_id):
-    task = get_task_definition(task_id)
+    task = taskcluster.get_task_definition(task_id)
     parameters = dict(parameters)
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
         parameters, graph_config
@@ -224,7 +223,7 @@ def rerun_action(parameters, graph_config, input, task_group_id, task_id):
 
 
 def _rerun_task(task_id, label):
-    state = state_task(task_id)
+    state = taskcluster.state_task(task_id)
     if state not in RERUN_STATES:
         logger.warning(
             "No need to rerun {}: state '{}' not in {}!".format(
@@ -232,7 +231,7 @@ def _rerun_task(task_id, label):
             )
         )
         return
-    rerun_task(task_id)
+    taskcluster.rerun_task(task_id)
     logger.info(f"Reran {label}")
 
 
