@@ -47,7 +47,7 @@ static MOZ_MAYBE_UNUSED JSObject* GetDelegateInternal(gc::Cell* key) {
   return nullptr;
 }
 
-static JSObject* GetDelegateInternal(JSObject* key) {
+static MOZ_MAYBE_UNUSED JSObject* GetDelegateInternal(JSObject* key) {
   JSObject* delegate = UncheckedUnwrapWithoutExpose(key);
   return (key == delegate) ? nullptr : delegate;
 }
@@ -84,7 +84,11 @@ void WeakMap<K, V>::assertMapIsSameZoneWithValue(const V& v) {
 
 template <class K, class V>
 WeakMap<K, V>::WeakMap(JSContext* cx, JSObject* memOf)
-    : Base(cx->zone()), WeakMapBase(memOf, cx->zone()) {
+    : WeakMap(cx->zone(), memOf) {}
+
+template <class K, class V>
+WeakMap<K, V>::WeakMap(JS::Zone* zone, JSObject* memOf)
+    : Base(zone), WeakMapBase(memOf, zone) {
   using ElemType = typename K::ElementType;
   using NonPtrType = std::remove_pointer_t<ElemType>;
 
@@ -95,8 +99,8 @@ WeakMap<K, V>::WeakMap(JSContext* cx, JSObject* memOf)
   static_assert(JS::IsCCTraceKind(NonPtrType::TraceKind),
                 "Object's TraceKind should be added to CC graph.");
 
-  zone()->gcWeakMapList().insertFront(this);
-  if (zone()->gcState() > Zone::Prepare) {
+  zone->gcWeakMapList().insertFront(this);
+  if (zone->gcState() > Zone::Prepare) {
     mapColor = CellColor::Black;
   }
 }
@@ -397,6 +401,11 @@ bool WeakMap<K, V>::findSweepGroupEdges() {
     }
   }
   return true;
+}
+
+template <class K, class V>
+size_t WeakMap<K, V>::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+  return mallocSizeOf(this) + shallowSizeOfExcludingThis(mallocSizeOf);
 }
 
 #if DEBUG
