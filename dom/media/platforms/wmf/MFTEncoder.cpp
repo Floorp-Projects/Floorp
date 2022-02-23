@@ -687,6 +687,9 @@ HRESULT MFTEncoder::GetMPEGSequenceHeader(nsTArray<UINT8>& aHeader) {
 
   UINT32 length = 0;
   hr = outputType->GetBlobSize(MF_MT_MPEG_SEQUENCE_HEADER, &length);
+  if (hr == MF_E_ATTRIBUTENOTFOUND || length == 0) {
+    return S_OK;
+  }
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   aHeader.SetCapacity(length);
