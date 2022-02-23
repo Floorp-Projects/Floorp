@@ -2582,30 +2582,30 @@ void MacroAssembler::absFloat64x2(FloatRegister src, FloatRegister dest) {
 
 // NaN-propagating minimum
 
-void MacroAssembler::minFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::minFloat32x4(lhsDest, Operand(rhs), temp1, temp2,
-                                        lhsDest);
+void MacroAssembler::minFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest, FloatRegister temp1,
+                                  FloatRegister temp2) {
+  MacroAssemblerX86Shared::minFloat32x4(lhs, rhs, temp1, temp2, dest);
 }
 
-void MacroAssembler::minFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::minFloat64x2(lhsDest, Operand(rhs), temp1, temp2,
-                                        lhsDest);
+void MacroAssembler::minFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest, FloatRegister temp1,
+                                  FloatRegister temp2) {
+  MacroAssemblerX86Shared::minFloat64x2(lhs, rhs, temp1, temp2, dest);
 }
 
 // NaN-propagating maximum
 
-void MacroAssembler::maxFloat32x4(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::maxFloat32x4(lhsDest, Operand(rhs), temp1, temp2,
-                                        lhsDest);
+void MacroAssembler::maxFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest, FloatRegister temp1,
+                                  FloatRegister temp2) {
+  MacroAssemblerX86Shared::maxFloat32x4(lhs, rhs, temp1, temp2, dest);
 }
 
-void MacroAssembler::maxFloat64x2(FloatRegister rhs, FloatRegister lhsDest,
-                                  FloatRegister temp1, FloatRegister temp2) {
-  MacroAssemblerX86Shared::maxFloat64x2(lhsDest, Operand(rhs), temp1, temp2,
-                                        lhsDest);
+void MacroAssembler::maxFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest, FloatRegister temp1,
+                                  FloatRegister temp2) {
+  MacroAssemblerX86Shared::maxFloat64x2(lhs, rhs, temp1, temp2, dest);
 }
 
 // Compare-based minimum
