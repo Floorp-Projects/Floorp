@@ -12,8 +12,7 @@
 async function test() {
   let useTouchpad = (location.search == "?touchpad");
 
-  const utils = SpecialPowers.getDOMWindowUtils(window);
-  const deviceScale = utils.screenPixelsPerCSSPixel;
+  const deviceScale = window.devicePixelRatio;
   let target2 = document.getElementById("target2")
 
   info("deviceScale " + deviceScale);

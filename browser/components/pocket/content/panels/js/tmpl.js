@@ -19,13 +19,13 @@ templates['signup_shell'] = template({"compiler":[6,">= 2.0.0-beta.1"],"main":fu
     + alias3(((helper = (helper = helpers.utmCampaign || (depth0 != null ? depth0.utmCampaign : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"utmCampaign","hash":{},"data":data}) : helper)))
     + "&utm_source="
     + alias3(((helper = (helper = helpers.utmSource || (depth0 != null ? depth0.utmSource : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"utmSource","hash":{},"data":data}) : helper)))
-    + "&s=ffi\" target=\"_blank\" data-l10n-id=\"pocket-panel-signup-learn-more\"></a></p>\n		</div>\n		<div class=\"pkt_ext_introstorytwo_img\"></div>\n	</div>\n</div>\n<div class=\"pkt_ext_signupdetail\">\n	<h4 data-l10n-id=\"pocket-panel-signup-signup-cta\"></h4>\n  <p class=\"btn-container\"><a href=\"https://"
+    + "&s=ffi\" target=\"_blank\" data-l10n-id=\"pocket-panel-signup-learn-more\"></a></p>\n		</div>\n		<div class=\"pkt_ext_introstorytwo_img\"></div>\n	</div>\n</div>\n<div class=\"pkt_ext_signupdetail\">\n	<h4 data-l10n-id=\"pocket-panel-signup-signup-cta\"></h4>\n  <p class=\"btn-container btn-container-firefox\"><a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/ff_signup?utm_campaign="
     + alias3(((helper = (helper = helpers.utmCampaign || (depth0 != null ? depth0.utmCampaign : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"utmCampaign","hash":{},"data":data}) : helper)))
     + "&utm_source="
     + alias3(((helper = (helper = helpers.utmSource || (depth0 != null ? depth0.utmSource : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"utmSource","hash":{},"data":data}) : helper)))
-    + "&s=ffi\" target=\"_blank\" class=\"btn signup-btn-firefox\"><span class=\"logo\"></span><span class=\"text\" data-l10n-id=\"pocket-panel-signup-signup-firefox\"></span></a></p>\n  <p class=\"btn-container\"><a href=\"https://"
+    + "&s=ffi\" target=\"_blank\" class=\"btn signup-btn-firefox\"><span class=\"logo\"></span><span class=\"text\" data-l10n-id=\"pocket-panel-signup-signup-firefox\"></span></a></p>\n  <p class=\"btn-container btn-container-email\"><a href=\"https://"
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/signup?utm_campaign="
     + alias3(((helper = (helper = helpers.utmCampaign || (depth0 != null ? depth0.utmCampaign : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"utmCampaign","hash":{},"data":data}) : helper)))
@@ -45,29 +45,6 @@ templates['home_shell'] = template({"compiler":[6,">= 2.0.0-beta.1"],"main":func
   return "<div class=\"pkt_ext_wrapperhome\">\n  <div class=\"pkt_ext_home\">\n    <div class=\"pkt_ext_header\">\n      <div class=\"pkt_ext_logo\"></div>\n      <a class=\"pkt_ext_mylist\" href=\"https://"
     + this.escapeExpression(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : helpers.helperMissing),(typeof helper === "function" ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/a?src=ff_ext_home\" target=\"_blank\">\n        <span class=\"pkt_ext_mylist_icon\"></span>\n        <span data-l10n-id=\"pocket-panel-home-my-list\"></span>\n      </a>\n    </div>\n    <div class=\"pkt_ext_hr\"></div>\n    <div class=\"pkt_ext_detail\">\n      <h2 data-l10n-id=\"pocket-panel-home-welcome-back\"></h2>\n      <p data-l10n-id=\"pocket-panel-home-paragraph\"></p>\n      <div class=\"pkt_ext_more\"></div>\n    </div>\n  </div>\n</div>\n";
-},"useData":true});
-templates['popular_topics'] = template({"1":function(depth0,helpers,partials,data) {
-    var stack1, alias1=this.lambda, alias2=this.escapeExpression;
-
-  return "    <li>\n      <a class=\"pkt_ext_topic\" href=\"https://"
-    + alias2(alias1(((stack1 = (data && data.root)) && stack1.pockethost), depth0))
-    + "/explore/"
-    + alias2(alias1((depth0 != null ? depth0.topic : depth0), depth0))
-    + "?utm_source="
-    + alias2(alias1(((stack1 = (data && data.root)) && stack1.utmsource), depth0))
-    + "\">\n        "
-    + alias2(alias1((depth0 != null ? depth0.title : depth0), depth0))
-    + "\n        <span class=\"pkt_ext_chevron_right\"></span>\n      </a>\n    </li>\n";
-},"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
-    var stack1, helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;
-
-  return "<h3 data-l10n-id=\"pocket-panel-home-explore-popular-topics\"></h3>\n<ul>\n"
-    + ((stack1 = helpers.each.call(depth0,(depth0 != null ? depth0.topics : depth0),{"name":"each","hash":{},"fn":this.program(1, data, 0),"inverse":this.noop,"data":data})) != null ? stack1 : "")
-    + "</ul>\n<a class=\"pkt_ext_discover\" href=\"https://"
-    + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
-    + "/explore?utm_source="
-    + alias3(((helper = (helper = helpers.utmsource || (depth0 != null ? depth0.utmsource : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"utmsource","hash":{},"data":data}) : helper)))
-    + "\" data-l10n-id=\"pocket-panel-home-discover-more\"></a>\n";
 },"useData":true});
 templates['explore_more'] = template({"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
     var helper, alias1=helpers.helperMissing, alias2="function", alias3=this.escapeExpression;

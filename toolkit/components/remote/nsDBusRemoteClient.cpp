@@ -15,29 +15,36 @@
 #include <dlfcn.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
-using mozilla::LogLevel;
+#undef LOG
+#ifdef MOZ_LOGGING
 static mozilla::LazyLogModule sRemoteLm("nsDBusRemoteClient");
+#  define LOG(str, ...) \
+    MOZ_LOG(sRemoteLm, mozilla::LogLevel::Debug, (str, ##__VA_ARGS__))
+#else
+#  define LOG(...)
+#endif
 
 nsDBusRemoteClient::nsDBusRemoteClient() {
   mConnection = nullptr;
-  MOZ_LOG(sRemoteLm, LogLevel::Debug,
-          ("nsDBusRemoteClient::nsDBusRemoteClient"));
+  LOG("nsDBusRemoteClient::nsDBusRemoteClient");
 }
 
 nsDBusRemoteClient::~nsDBusRemoteClient() {
-  MOZ_LOG(sRemoteLm, LogLevel::Debug,
-          ("nsDBusRemoteClient::~nsDBusRemoteClient"));
+  LOG("nsDBusRemoteClient::~nsDBusRemoteClient");
   Shutdown();
 }
 
 nsresult nsDBusRemoteClient::Init() {
-  MOZ_LOG(sRemoteLm, LogLevel::Debug, ("nsDBusRemoteClient::Init"));
+  LOG("nsDBusRemoteClient::Init");
 
   if (mConnection) return NS_OK;
 
   mConnection =
       already_AddRefed<DBusConnection>(dbus_bus_get(DBUS_BUS_SESSION, nullptr));
-  if (!mConnection) return NS_ERROR_FAILURE;
+  if (!mConnection) {
+    LOG("  failed to get DBus session");
+    return NS_ERROR_FAILURE;
+  }
 
   dbus_connection_set_exit_on_disconnect(mConnection, false);
   dbus_connection_setup_with_g_main(mConnection, nullptr);
@@ -46,7 +53,7 @@ nsresult nsDBusRemoteClient::Init() {
 }
 
 void nsDBusRemoteClient::Shutdown(void) {
-  MOZ_LOG(sRemoteLm, LogLevel::Debug, ("nsDBusRemoteClient::Shutdown"));
+  LOG("nsDBusRemoteClient::Shutdown");
   // This connection is owned by libdbus and we don't need to close it
   mConnection = nullptr;
 }
@@ -56,21 +63,23 @@ nsresult nsDBusRemoteClient::SendCommandLine(
     const char* aDesktopStartupID, char** aResponse, bool* aWindowFound) {
   NS_ENSURE_TRUE(aProgram, NS_ERROR_INVALID_ARG);
 
-  MOZ_LOG(sRemoteLm, LogLevel::Debug, ("nsDBusRemoteClient::SendCommandLine"));
+  LOG("nsDBusRemoteClient::SendCommandLine");
 
   int commandLineLength;
   char* commandLine =
       ConstructCommandLine(argc, argv, aDesktopStartupID, &commandLineLength);
-  if (!commandLine) return NS_ERROR_FAILURE;
+  if (!commandLine) {
+    LOG("  failed to create command line");
+    return NS_ERROR_FAILURE;
+  }
 
   nsresult rv =
       DoSendDBusCommandLine(aProgram, aProfile, commandLine, commandLineLength);
   free(commandLine);
+
   *aWindowFound = NS_SUCCEEDED(rv);
 
-  MOZ_LOG(sRemoteLm, LogLevel::Debug,
-          ("DoSendDBusCommandLine returning 0x%" PRIx32 "\n",
-           static_cast<uint32_t>(rv)));
+  LOG("DoSendDBusCommandLine %s", NS_SUCCEEDED(rv) ? "OK" : "FAILED");
   return rv;
 }
 
@@ -93,6 +102,7 @@ bool nsDBusRemoteClient::GetRemoteDestinationName(const char* aProgram,
   static auto sDBusValidateBusName = (bool (*)(const char*, DBusError*))dlsym(
       RTLD_DEFAULT, "dbus_validate_bus_name");
   if (!sDBusValidateBusName) {
+    LOG("  failed to get dbus_validate_bus_name()");
     return false;
   }
 
@@ -103,6 +113,7 @@ bool nsDBusRemoteClient::GetRemoteDestinationName(const char* aProgram,
     if (!sDBusValidateBusName(aDestinationName.get(), nullptr)) {
       // We failed completelly to get a valid bus name - just quit
       // to prevent crash at dbus_bus_request_name().
+      LOG("  failed to validate profile DBus name");
       return false;
     }
   }
@@ -114,12 +125,16 @@ nsresult nsDBusRemoteClient::DoSendDBusCommandLine(const char* aProgram,
                                                    const char* aProfile,
                                                    const char* aBuffer,
                                                    int aLength) {
+  LOG("nsDBusRemoteClient::DoSendDBusCommandLine()");
+
   nsAutoCString appName(aProgram);
   appName.ReplaceChar("+/=-", '_');
 
   nsAutoCString destinationName;
-  if (!GetRemoteDestinationName(appName.get(), aProfile, destinationName))
+  if (!GetRemoteDestinationName(appName.get(), aProfile, destinationName)) {
+    LOG("  failed to get remote destination name");
     return NS_ERROR_FAILURE;
+  }
 
   nsAutoCString pathName;
   pathName = nsPrintfCString("/org/mozilla/%s/Remote", appName.get());
@@ -128,11 +143,16 @@ nsresult nsDBusRemoteClient::DoSendDBusCommandLine(const char* aProgram,
       RTLD_DEFAULT, "dbus_validate_path");
   if (!sDBusValidatePathName ||
       !sDBusValidatePathName(pathName.get(), nullptr)) {
+    LOG("  failed to validate path name");
     return NS_ERROR_FAILURE;
   }
 
   nsAutoCString remoteInterfaceName;
   remoteInterfaceName = nsPrintfCString("org.mozilla.%s", appName.get());
+
+  LOG("  DBus destination: %s\n", destinationName.get());
+  LOG("  DBus path: %s\n", pathName.get());
+  LOG("  DBus interface: %s\n", remoteInterfaceName.get());
 
   RefPtr<DBusMessage> msg =
       already_AddRefed<DBusMessage>(dbus_message_new_method_call(
@@ -141,18 +161,26 @@ nsresult nsDBusRemoteClient::DoSendDBusCommandLine(const char* aProgram,
           remoteInterfaceName.get(),  // interface to call on
           "OpenURL"));                // method name
   if (!msg) {
+    LOG("  failed to create DBus message");
     return NS_ERROR_FAILURE;
   }
 
   // append arguments
   if (!dbus_message_append_args(msg, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE, &aBuffer,
                                 aLength, DBUS_TYPE_INVALID)) {
+    LOG("  failed to create DBus message");
     return NS_ERROR_FAILURE;
   }
 
   // send message and get a handle for a reply
   RefPtr<DBusMessage> reply = already_AddRefed<DBusMessage>(
       dbus_connection_send_with_reply_and_block(mConnection, msg, -1, nullptr));
+
+#ifdef MOZ_LOGGING
+  if (!reply) {
+    LOG("  failed to get DBus reply");
+  }
+#endif
 
   return reply ? NS_OK : NS_ERROR_FAILURE;
 }

@@ -635,10 +635,8 @@ void InitUIThread() {
 }  // namespace mozilla
 
 // See SpinInternalEventLoop below
-MessageChannel::SyncStackFrame::SyncStackFrame(MessageChannel* channel,
-                                               bool interrupt)
-    : mInterrupt(interrupt),
-      mSpinNestedEvents(false),
+MessageChannel::SyncStackFrame::SyncStackFrame(MessageChannel* channel)
+    : mSpinNestedEvents(false),
       mListenerNotified(false),
       mChannel(channel),
       mPrev(mChannel->mTopFrame),
@@ -977,8 +975,7 @@ bool MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages) {
   NS_ASSERTION(
       mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION,
       "Shouldn't be here for channels that don't use message deferral!");
-  NS_ASSERTION(mTopFrame && !mTopFrame->mInterrupt,
-               "Top frame is not a sync frame!");
+  NS_ASSERTION(mTopFrame, "No top frame!");
 
   MonitorAutoUnlock unlock(*mMonitor);
 
@@ -1073,135 +1070,6 @@ bool MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages) {
         // Message was for child, we should wait a bit.
         SwitchToThread();
       }
-    }
-  }
-
-  if (timerId) {
-    KillTimer(nullptr, timerId);
-    timerId = 0;
-  }
-
-  return WaitResponse(timedout);
-}
-
-bool MessageChannel::WaitForInterruptNotify() {
-  mMonitor->AssertCurrentThreadOwns();
-
-  // Receiving the interrupt notification may require JS to execute on a
-  // worker.
-  dom::AutoYieldJSThreadExecution yield;
-
-  if (!gUIThreadId) {
-    mozilla::ipc::windows::InitUIThread();
-  }
-
-  // Re-use sync notification wait code if this channel does not require
-  // Windows message deferral behavior.
-  if (!(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION)) {
-    return WaitForSyncNotify(true);
-  }
-
-  if (!InterruptStackDepth()) {
-    // There is currently no way to recover from this condition.
-    MOZ_CRASH("StackDepth() is 0 in call to MessageChannel::WaitForNotify!");
-  }
-
-  NS_ASSERTION(
-      mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION,
-      "Shouldn't be here for channels that don't use message deferral!");
-  NS_ASSERTION(mTopFrame && mTopFrame->mInterrupt,
-               "Top frame is not a sync frame!");
-
-  MonitorAutoUnlock unlock(*mMonitor);
-
-  bool timedout = false;
-
-  UINT_PTR timerId = 0;
-  TimeoutData timeoutData = {0};
-
-  // gWindowHook is used as a flag variable for the loop below: if it is set
-  // and we start to spin a nested event loop, we need to clear the hook and
-  // process deferred/pending messages.
-  while (1) {
-    NS_ASSERTION((!!gWindowHook) == MessageChannel::IsPumpingMessages(),
-                 "gWindowHook out of sync with reality");
-
-    if (mTopFrame->mSpinNestedEvents) {
-      if (gWindowHook && timerId) {
-        KillTimer(nullptr, timerId);
-        timerId = 0;
-      }
-      DeneuteredWindowRegion deneuteredRgn;
-      SpinInternalEventLoop();
-      BOOL success = ResetEvent(mEvent);
-      if (!success) {
-        gfxDevCrash(mozilla::gfx::LogReason::MessageChannelInvalidHandle)
-            << "WindowsMessageChannel::WaitForInterruptNotify::"
-               "SpinNestedEvents failed to reset event. GetLastError: "
-            << GetLastError();
-      }
-      return true;
-    }
-
-    if (mTimeoutMs != kNoTimeout && !timerId) {
-      InitTimeoutData(&timeoutData, mTimeoutMs);
-      timerId = SetTimer(nullptr, 0, mTimeoutMs, nullptr);
-      NS_ASSERTION(timerId, "SetTimer failed!");
-    }
-
-    NeuteredWindowRegion neuteredRgn(true);
-
-    MSG msg = {0};
-
-    // Don't get wrapped up in here if the child connection dies.
-    {
-      MonitorAutoLock lock(*mMonitor);
-      if (!Connected()) {
-        break;
-      }
-    }
-
-    DWORD result =
-        MsgWaitForMultipleObjects(1, &mEvent, FALSE, INFINITE, QS_ALLINPUT);
-    if (result == WAIT_OBJECT_0) {
-      // Our NotifyWorkerThread event was signaled
-      BOOL success = ResetEvent(mEvent);
-      if (!success) {
-        gfxDevCrash(mozilla::gfx::LogReason::MessageChannelInvalidHandle)
-            << "WindowsMessageChannel::WaitForInterruptNotify::"
-               "WaitForMultipleObjects failed to reset event. GetLastError: "
-            << GetLastError();
-      }
-      break;
-    } else if (result != (WAIT_OBJECT_0 + 1)) {
-      NS_ERROR("Wait failed!");
-      break;
-    }
-
-    if (TimeoutHasExpired(timeoutData)) {
-      // A timeout was specified and we've passed it. Break out.
-      timedout = true;
-      break;
-    }
-
-    // See MessageChannel's WaitFor*Notify for details.
-    bool haveSentMessagesPending =
-        (HIWORD(GetQueueStatus(QS_SENDMESSAGE)) & QS_SENDMESSAGE) != 0;
-
-    // Run all COM messages *after* looking at the queue status.
-    if (gCOMWindow) {
-      if (PeekMessageW(&msg, gCOMWindow, 0, 0, PM_REMOVE)) {
-        TranslateMessage(&msg);
-        ::DispatchMessageW(&msg);
-      }
-    }
-
-    // PeekMessage markes the messages as "old" so that they don't wake up
-    // MsgWaitForMultipleObjects every time.
-    if (!PeekMessageW(&msg, nullptr, 0, 0, PM_NOREMOVE) &&
-        !haveSentMessagesPending) {
-      // Message was for child, we should wait a bit.
-      SwitchToThread();
     }
   }
 

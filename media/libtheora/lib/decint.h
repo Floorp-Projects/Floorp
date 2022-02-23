@@ -11,7 +11,7 @@
  ********************************************************************
 
   function:
-    last mod: $Id: decint.h 17457 2010-09-24 02:05:49Z tterribe $
+    last mod: $Id$
 
  ********************************************************************/
 
@@ -162,7 +162,6 @@ struct th_dec_ctx{
 # endif
 # if defined(HAVE_CAIRO)
   /*Output metrics for debugging.*/
-  int                    telemetry;
   int                    telemetry_mbmode;
   int                    telemetry_mv;
   int                    telemetry_qi;

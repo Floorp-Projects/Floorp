@@ -46,7 +46,7 @@ ParentToParentStream ToParentToParentStream(
   MOZ_ASSERT(XRE_IsParentProcess());
 
   ParentToParentStream stream;
-  MOZ_ALWAYS_SUCCEEDS(nsContentUtils::GenerateUUIDInPlace(stream.uuid()));
+  stream.uuid() = nsID::GenerateUUID();
   GetRemoteLazyInputStreamStorage()->AddStream(aStream.get(), stream.uuid(),
                                                aStreamSize, 0);
   return stream;

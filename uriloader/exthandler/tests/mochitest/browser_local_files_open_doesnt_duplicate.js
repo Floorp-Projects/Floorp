@@ -26,7 +26,8 @@ add_task(async function setup() {
     let handlerApp = Cc[
       "@mozilla.org/uriloader/local-handler-app;1"
     ].createInstance(Ci.nsILocalHandlerApp);
-    handlerApp.executable = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
+    handlerApp.executable = Services.dirsvc.get("TmpD", Ci.nsIFile);
+    handlerApp.executable.append("foopydoo.exe");
     mimeInfo.possibleApplicationHandlers.appendElement(handlerApp);
     mimeInfo.preferredApplicationHandler = handlerApp;
   }
@@ -51,7 +52,10 @@ add_task(async function open_from_dialog() {
   let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
   let openedFile = getChromeDir(getResolvedURI(gTestPath));
   openedFile.append("file_pdf_binary_octet_stream.pdf");
-  let loadingTab = BrowserTestUtils.addTab(gBrowser, openedFile.path);
+  let expectedPath = openedFile.isSymlink()
+    ? openedFile.target
+    : openedFile.path;
+  let loadingTab = BrowserTestUtils.addTab(gBrowser, expectedPath);
 
   let dialogWindow = await dialogWindowPromise;
   is(
@@ -70,10 +74,10 @@ add_task(async function open_from_dialog() {
   let [, openedPath] = await openingPromise;
   is(
     openedPath,
-    openedFile.path,
+    expectedPath,
     "Should have opened file directly (not created a copy)."
   );
-  if (openedPath != openedFile.path) {
+  if (openedPath != expectedPath) {
     await IOUtils.setPermissions(openedPath, 0o666);
     await IOUtils.remove(openedPath);
   }
@@ -98,15 +102,18 @@ add_task(async function open_directly() {
 
   let openedFile = getChromeDir(getResolvedURI(gTestPath));
   openedFile.append("file_pdf_binary_octet_stream.pdf");
-  let loadingTab = BrowserTestUtils.addTab(gBrowser, openedFile.path);
+  let expectedPath = openedFile.isSymlink()
+    ? openedFile.target
+    : openedFile.path;
+  let loadingTab = BrowserTestUtils.addTab(gBrowser, expectedPath);
 
   let [, openedPath] = await openingPromise;
   is(
     openedPath,
-    openedFile.path,
+    expectedPath,
     "Should have opened file directly (not created a copy)."
   );
-  if (openedPath != openedFile.path) {
+  if (openedPath != expectedPath) {
     await IOUtils.setPermissions(openedPath, 0o666);
     await IOUtils.remove(openedPath);
   }

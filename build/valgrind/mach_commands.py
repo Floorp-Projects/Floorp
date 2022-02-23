@@ -8,6 +8,7 @@ import json
 import logging
 import mozinfo
 import os
+import time
 
 from mach.decorators import (
     Command,
@@ -131,6 +132,7 @@ def valgrind_test(command_context, suppressions):
             "--show-possibly-lost=no",
             "--track-origins=yes",
             "--trace-children=yes",
+            "--trace-children-skip=*/dbus-launch",
             "-v",  # Enable verbosity to get the list of used suppressions
             # Avoid excessive delays in the presence of spinlocks.
             # See bug 1309851.
@@ -173,8 +175,34 @@ def valgrind_test(command_context, suppressions):
                 env=env,
                 process_args=kp_kwargs,
             )
+            start_time = time.monotonic()
             runner.start(debug_args=valgrind_args)
             exitcode = runner.wait(timeout=timeout)
+            end_time = time.monotonic()
+            if "MOZ_AUTOMATION" in os.environ:
+                data = {
+                    "framework": {"name": "build_metrics"},
+                    "suites": [
+                        {
+                            "name": "valgrind",
+                            "value": end_time - start_time,
+                            "lowerIsBetter": True,
+                            "shouldAlert": False,
+                            "subtests": [],
+                        }
+                    ],
+                }
+                if "TASKCLUSTER_INSTANCE_TYPE" in os.environ:
+                    # Include the instance type so results can be grouped.
+                    data["suites"][0]["extraOptions"] = [
+                        "taskcluster-%s" % os.environ["TASKCLUSTER_INSTANCE_TYPE"],
+                    ]
+                command_context.log(
+                    logging.INFO,
+                    "valgrind-perfherder",
+                    {"data": json.dumps(data)},
+                    "PERFHERDER_DATA: {data}",
+                )
         except BinaryNotFoundException as e:
             binary_not_found_exception = e
         finally:

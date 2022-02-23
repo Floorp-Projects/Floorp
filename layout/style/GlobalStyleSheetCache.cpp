@@ -7,6 +7,7 @@
 #include "GlobalStyleSheetCache.h"
 
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsExceptionHandler.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_layout.h"

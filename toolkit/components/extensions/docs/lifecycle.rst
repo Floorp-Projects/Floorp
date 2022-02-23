@@ -14,7 +14,7 @@ APIs that allocate any resources (e.g., adding elements to the browser's
 user interface, setting up internal event listeners, etc.) must free
 these resources when the extension for which they are allocated is
 shut down.  An API does this by using the ``callOnClose()``
-method on an `Extension <reference.html#extension-class>`_ object. 
+method on an `Extension <reference.html#extension-class>`_ object.
 
 Extension Uninstall and Update
 ------------------------------

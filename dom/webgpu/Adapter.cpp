@@ -86,10 +86,10 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
   }
 
   ffi::WGPULimits limits = {};
-  Maybe<RawId> id = mBridge->AdapterRequestDevice(mId, aDesc, &limits);
-  if (id.isSome()) {
+  auto request = mBridge->AdapterRequestDevice(mId, aDesc, &limits);
+  if (request) {
     RefPtr<Device> device =
-        new Device(this, id.value(), MakeUnique<ffi::WGPULimits>(limits));
+        new Device(this, request->mId, MakeUnique<ffi::WGPULimits>(limits));
     // copy over the features
     for (const auto& feature : aDesc.mRequiredFeatures) {
       NS_ConvertASCIItoUTF16 string(
@@ -97,9 +97,30 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
       dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(device->mFeatures,
                                                              string, aRv);
     }
-    promise->MaybeResolve(device);
+
+    request->mPromise->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [promise, device](bool aSuccess) {
+          if (aSuccess) {
+            promise->MaybeResolve(device);
+          } else {
+            // In this path, request->mId has an error entry in the wgpu
+            // registry, so let Device::~Device clean things up on both the
+            // child and parent side.
+            promise->MaybeRejectWithInvalidStateError(
+                "Unable to fulfill requested features and limits");
+          }
+        },
+        [promise, device](const ipc::ResponseRejectReason& aReason) {
+          // We can't be sure how far along the WebGPUParent got in handling
+          // our AdapterRequestDevice message, but we can't communicate with it,
+          // so clear up our client state for this Device without trying to
+          // communicate with the parent about it.
+          device->CleanupUnregisteredInParent();
+          promise->MaybeRejectWithNotSupportedError("IPC error");
+        });
   } else {
-    promise->MaybeRejectWithNotSupportedError("Unable to instanciate a Device");
+    promise->MaybeRejectWithNotSupportedError("Unable to instantiate a Device");
   }
 
   return promise.forget();

@@ -254,7 +254,7 @@ std::vector<PatchInfo> FindTextLikePatches(
   ZeroFillImage(&is_screenshot_like);
   uint8_t* JXL_RESTRICT screenshot_row = is_screenshot_like.Row(0);
   const size_t screenshot_stride = is_screenshot_like.PixelsPerRow();
-  const auto process_row = [&](uint64_t y, int _) {
+  const auto process_row = [&](const uint32_t y, size_t /* thread */) {
     for (uint64_t x = 0; x < opsin.xsize() / kPatchSide; x++) {
       bool all_same = true;
       for (size_t iy = 0; iy < static_cast<size_t>(kPatchSide); iy++) {
@@ -288,8 +288,8 @@ std::vector<PatchInfo> FindTextLikePatches(
       has_screenshot_areas = true;
     }
   };
-  RunOnPool(pool, 0, opsin.ysize() / kPatchSide, ThreadPool::SkipInit(),
-            process_row, "IsScreenshotLike");
+  JXL_CHECK(RunOnPool(pool, 0, opsin.ysize() / kPatchSide, ThreadPool::NoInit,
+                      process_row, "IsScreenshotLike"));
 
   // TODO(veluca): also parallelize the rest of this function.
   if (WantDebugOutput(aux_out)) {
@@ -559,7 +559,8 @@ std::vector<PatchInfo> FindTextLikePatches(
 
 void FindBestPatchDictionary(const Image3F& opsin,
                              PassesEncoderState* JXL_RESTRICT state,
-                             ThreadPool* pool, AuxOut* aux_out, bool is_xyb) {
+                             const JxlCmsInterface& cms, ThreadPool* pool,
+                             AuxOut* aux_out, bool is_xyb) {
   std::vector<PatchInfo> info =
       FindTextLikePatches(opsin, state, pool, aux_out, is_xyb);
 
@@ -715,7 +716,7 @@ void FindBestPatchDictionary(const Image3F& opsin,
         90.f - cparams.butteraugli_distance * 5.f;
   }
 
-  RoundtripPatchFrame(&reference_frame, state, 0, cparams, pool, true);
+  RoundtripPatchFrame(&reference_frame, state, 0, cparams, cms, pool, true);
 
   // TODO(veluca): this assumes that applying patches is commutative, which is
   // not true for all blending modes. This code only produces kAdd patches, so
@@ -727,8 +728,8 @@ void FindBestPatchDictionary(const Image3F& opsin,
 
 void RoundtripPatchFrame(Image3F* reference_frame,
                          PassesEncoderState* JXL_RESTRICT state, int idx,
-                         CompressParams& cparams, ThreadPool* pool,
-                         bool subtract) {
+                         CompressParams& cparams, const JxlCmsInterface& cms,
+                         ThreadPool* pool, bool subtract) {
   FrameInfo patch_frame_info;
   cparams.resampling = 1;
   cparams.ec_resampling = 1;
@@ -768,7 +769,8 @@ void RoundtripPatchFrame(Image3F* reference_frame,
   PassesEncoderState roundtrip_state;
   auto special_frame = std::unique_ptr<BitWriter>(new BitWriter());
   JXL_CHECK(EncodeFrame(cparams, patch_frame_info, state->shared.metadata, ib,
-                        &roundtrip_state, pool, special_frame.get(), nullptr));
+                        &roundtrip_state, cms, pool, special_frame.get(),
+                        nullptr));
   const Span<const uint8_t> encoded = special_frame->GetSpan();
   state->special_frames.emplace_back(std::move(special_frame));
   if (subtract) {

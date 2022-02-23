@@ -42,7 +42,7 @@ use api::{FilterOp, FilterPrimitive, FontInstanceKey, FontSize, GlyphInstance, G
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth, QualitySettings};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlendMode, StackingContextFlags};
 use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDescriptor, ReferenceFrameMapper};
-use api::{Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDescriptor, ImageMask, ItemTag};
+use api::{APZScrollGeneration, HasScrollLinkedEffect, Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDescriptor, ImageMask, ItemTag};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::{ReferenceTransformBinding, Rotation, FillRule, SpatialTreeItem, ReferenceFrameDescriptor};
 use api::units::*;
@@ -786,16 +786,16 @@ impl<'a> SceneBuilder<'a> {
             if cfg!(feature = "display_list_stats") {
                 let stats = traversal.debug_stats();
                 let total_bytes: usize = stats.iter().map(|(_, stats)| stats.num_bytes).sum();
-                println!("item, total count, total bytes, % of DL bytes, bytes per item");
+                debug!("item, total count, total bytes, % of DL bytes, bytes per item");
                 for (label, stats) in stats {
-                    println!("{}, {}, {}kb, {}%, {}",
+                    debug!("{}, {}, {}kb, {}%, {}",
                         label,
                         stats.total_count,
                         stats.num_bytes / 1000,
                         ((stats.num_bytes as f32 / total_bytes.max(1) as f32) * 100.0) as usize,
                         stats.num_bytes / stats.total_count.max(1));
                 }
-                println!();
+                debug!("");
             }
         }
 
@@ -916,6 +916,8 @@ impl<'a> SceneBuilder<'a> {
             &content_size,
             ScrollFrameKind::Explicit,
             info.external_scroll_offset,
+            info.scroll_offset_generation,
+            info.has_scroll_linked_effect,
             SpatialNodeUid::external(info.key, pipeline_id, instance_id),
         );
     }
@@ -978,6 +980,7 @@ impl<'a> SceneBuilder<'a> {
             ReferenceFrameKind::Transform {
                 is_2d_scale_translation: true,
                 should_snap: true,
+                paired_with_perspective: false,
             },
             bounds.min.to_vector(),
             SpatialNodeUid::root_reference_frame(iframe_pipeline_id, instance_id),
@@ -997,6 +1000,8 @@ impl<'a> SceneBuilder<'a> {
                 is_root_pipeline,
             },
             LayoutVector2D::zero(),
+            APZScrollGeneration::default(),
+            HasScrollLinkedEffect::No,
             SpatialNodeUid::root_scroll_frame(iframe_pipeline_id, instance_id),
         );
 
@@ -1721,7 +1726,7 @@ impl<'a> SceneBuilder<'a> {
     ) {
         // Add primitive to the top-most stacking context on the stack.
         if prim_instance.is_chased() {
-            println!("\tadded to stacking context at {}", self.sc_stack.len());
+            info!("\tadded to stacking context at {}", self.sc_stack.len());
         }
 
         // If we have a valid stacking context, the primitive gets added to that.
@@ -2233,7 +2238,30 @@ impl<'a> SceneBuilder<'a> {
             });
 
             let mut prim_list = PrimitiveList::empty();
+
+            // Web content often specifies `preserve-3d` on pages that don't actually need
+            // a 3d rendering context (as a hint / hack to convince other browsers to
+            // layerize these elements to an off-screen surface). Detect cases where the
+            // preserve-3d has no effect on correctness and convert them to pass-through
+            // pictures instead. This has two benefits for WR:
+            //
+            // (1) We get correct subpixel-snapping behavior between preserve-3d elements
+            //     that don't have complex transforms without additional complexity of
+            //     handling subpixel-snapping across different surfaces.
+            // (2) We can draw this content directly in to the parent surface / tile cache,
+            //     which is a performance win by avoiding allocating, drawing,
+            //     plane-splitting and blitting an off-screen surface.
+            let mut needs_3d_context = false;
+
             for ext_prim in prims.drain(..) {
+                // If all the preserve-3d elements are in the root coordinate system, we
+                // know that there is no need for a true 3d rendering context / plane-split.
+                // TODO(gw): We can expand this in future to handle this in more cases
+                //           (e.g. a non-root coord system that is 2d within the 3d context).
+                if !self.spatial_tree.is_root_coord_system(ext_prim.spatial_node_index) {
+                    needs_3d_context = true;
+                }
+
                 prim_list.add_prim(
                     ext_prim.instance,
                     LayoutRect::zero(),
@@ -2243,16 +2271,31 @@ impl<'a> SceneBuilder<'a> {
                 );
             }
 
+            let context_3d = if needs_3d_context {
+                Picture3DContext::In {
+                    root_data: Some(Vec::new()),
+                    ancestor_index,
+                    plane_splitter_index,
+                }
+            } else {
+                // If we didn't need a 3d rendering context, walk the child pictures
+                // that make up this context and disable the off-screen surface and
+                // 3d render context.
+                for child_pic_index in &prim_list.child_pictures {
+                    let child_pic = &mut self.prim_store.pictures[child_pic_index.0];
+                    child_pic.composite_mode = None;
+                    child_pic.context_3d = Picture3DContext::Out;
+                }
+
+                Picture3DContext::Out
+            };
+
             // This is the acttual picture representing our 3D hierarchy root.
             let pic_index = PictureIndex(self.prim_store.pictures
                 .alloc()
                 .init(PicturePrimitive::new_image(
                     None,
-                    Picture3DContext::In {
-                        root_data: Some(Vec::new()),
-                        ancestor_index,
-                        plane_splitter_index,
-                    },
+                    context_3d,
                     true,
                     stacking_context.prim_flags,
                     prim_list,
@@ -2408,7 +2451,7 @@ impl<'a> SceneBuilder<'a> {
         instance: PipelineInstanceId,
     ) {
         if let ChasePrimitive::Id(id) = self.config.chase_primitive {
-            println!("Chasing {:?} by index", id);
+            debug!("Chasing {:?} by index", id);
             register_prim_chase_id(id);
         }
 
@@ -2421,6 +2464,7 @@ impl<'a> SceneBuilder<'a> {
             ReferenceFrameKind::Transform {
                 is_2d_scale_translation: true,
                 should_snap: true,
+                paired_with_perspective: false,
             },
             LayoutVector2D::zero(),
             SpatialNodeUid::root_reference_frame(pipeline_id, instance),
@@ -2442,6 +2486,8 @@ impl<'a> SceneBuilder<'a> {
                 is_root_pipeline: true,
             },
             LayoutVector2D::zero(),
+            APZScrollGeneration::default(),
+            HasScrollLinkedEffect::No,
             SpatialNodeUid::root_scroll_frame(pipeline_id, instance),
         );
     }
@@ -2594,6 +2640,8 @@ impl<'a> SceneBuilder<'a> {
         content_size: &LayoutSize,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
+        scroll_offset_generation: APZScrollGeneration,
+        has_scroll_linked_effect: HasScrollLinkedEffect,
         uid: SpatialNodeUid,
     ) -> SpatialNodeIndex {
         let node_index = self.spatial_tree.add_scroll_frame(
@@ -2604,6 +2652,8 @@ impl<'a> SceneBuilder<'a> {
             content_size,
             frame_kind,
             external_scroll_offset,
+            scroll_offset_generation,
+            has_scroll_linked_effect,
             uid,
         );
         self.id_to_index_mapper_stack.last_mut().unwrap().add_spatial_node(new_node_id, node_index);
@@ -2873,7 +2923,7 @@ impl<'a> SceneBuilder<'a> {
         prim_instance: &PrimitiveInstance,
     ) {
         if ChasePrimitive::LocalRect(*rect) == self.config.chase_primitive {
-            println!("Chasing {:?} by local rect", prim_instance.id);
+            debug!("Chasing {:?} by local rect", prim_instance.id);
             register_prim_chase_id(prim_instance.id);
         }
     }

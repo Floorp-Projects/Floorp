@@ -46,16 +46,15 @@ static void dumpNode(const JS::ubi::Node& node) {
 
 JS_PUBLIC_API void dumpPaths(JSContext* cx, Node node,
                              uint32_t maxNumPaths /* = 10 */) {
-  mozilla::Maybe<AutoCheckCannotGC> nogc;
-
-  JS::ubi::RootList rootList(cx, nogc, true);
-  MOZ_ASSERT(rootList.init());
-
-  NodeSet targets;
-  bool ok = targets.putNew(node);
+  JS::ubi::RootList rootList(cx, true);
+  auto [ok, nogc] = rootList.init();
   MOZ_ASSERT(ok);
 
-  auto paths = ShortestPaths::Create(cx, nogc.ref(), maxNumPaths, &rootList,
+  NodeSet targets;
+  ok = targets.putNew(node);
+  MOZ_ASSERT(ok);
+
+  auto paths = ShortestPaths::Create(cx, nogc, maxNumPaths, &rootList,
                                      std::move(targets));
   MOZ_ASSERT(paths.isSome());
 

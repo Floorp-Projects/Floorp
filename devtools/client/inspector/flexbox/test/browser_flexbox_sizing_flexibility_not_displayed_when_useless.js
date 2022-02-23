@@ -16,7 +16,7 @@ add_task(async function() {
   info(
     "Select an item with flex:0 and wait for the sizing info to be rendered"
   );
-  let onUpdate = waitUntilAction(store, "UPDATE_FLEXBOX");
+  let onUpdate = waitForDispatch(store, "UPDATE_FLEXBOX");
   await selectNode("#did-not-grow-or-shrink div", inspector);
   await onUpdate;
 
@@ -32,7 +32,7 @@ add_task(async function() {
   info(
     "Select a more complex item which also doesn't flex and wait for the sizing info"
   );
-  onUpdate = waitUntilAction(store, "UPDATE_FLEXBOX");
+  onUpdate = waitForDispatch(store, "UPDATE_FLEXBOX");
   await selectNode(
     "#just-enough-space-for-clamped-items div:last-child",
     inspector

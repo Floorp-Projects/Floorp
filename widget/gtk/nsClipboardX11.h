@@ -10,62 +10,23 @@
 
 #include <gtk/gtk.h>
 
+#include "mozilla/Maybe.h"
+#include "nsClipboard.h"
+
 class nsRetrievalContextX11 : public nsRetrievalContext {
  public:
-  enum State { INITIAL, COMPLETED, TIMED_OUT };
-
-  virtual const char* GetClipboardData(const char* aMimeType,
-                                       int32_t aWhichClipboard,
-                                       uint32_t* aContentLength) override;
-  virtual const char* GetClipboardText(int32_t aWhichClipboard) override;
-  virtual void ReleaseClipboardData(const char* aClipboardData) override;
-
-  virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
-                              int* aTargetNums) override;
-
-  virtual bool HasSelectionSupport(void) override;
-
-  // Call this when data or text has been retrieved.
-  void Complete(ClipboardDataType aDataType, const void* aData,
-                int aDataRequestNumber);
+  ClipboardData GetClipboardData(const char* aMimeType,
+                                 int32_t aWhichClipboard) override;
+  mozilla::GUniquePtr<char> GetClipboardText(int32_t aWhichClipboard) override;
+  ClipboardTargets GetTargetsImpl(int32_t aWhichClipboard) override;
 
   nsRetrievalContextX11();
 
  private:
-  bool WaitForClipboardData(ClipboardDataType aDataType,
-                            GtkClipboard* clipboard,
-                            const char* aMimeType = nullptr);
-
-  /**
-   * Spins X event loop until timing out or being completed. Returns
-   * null if we time out, otherwise returns the completed data (passing
-   * ownership to caller).
-   */
-  bool WaitForX11Content();
-
-  State mState;
-  int mClipboardRequestNumber;
-  void* mClipboardData;
-  uint32_t mClipboardDataLength;
-  GdkAtom mTargetMIMEType;
-};
-
-class ClipboardRequestHandler {
- public:
-  ClipboardRequestHandler(nsRetrievalContextX11* aContext,
-                          ClipboardDataType aDataType, int aDataRequestNumber)
-      : mContext(aContext),
-        mDataRequestNumber(aDataRequestNumber),
-        mDataType(aDataType) {}
-
-  void Complete(const void* aData) {
-    mContext->Complete(mDataType, aData, mDataRequestNumber);
-  }
-
- private:
-  nsRetrievalContextX11* mContext;
-  int mDataRequestNumber;
-  ClipboardDataType mDataType;
+  // Spins X event loop until timing out or being completed.
+  ClipboardData WaitForClipboardData(ClipboardDataType aDataType,
+                                     int32_t aWhichClipboard,
+                                     const char* aMimeType = nullptr);
 };
 
 #endif /* __nsClipboardX11_h_ */

@@ -3,8 +3,10 @@ Getting Set Up To Work On The Firefox Codebase
 
 This page will help you get set up to build Firefox on your own machine.
 
+Don't hesitate to look at the :ref:`Firefox Contributors Quick Reference <Firefox Contributors' Quick Reference>` to read a quick tutorial.
+
 .. toctree::
-   :caption: Thank you for contributing to Firefox 
+   :caption: Thank you for contributing to Firefox
 
    /contributing/contributing_to_mozilla
 

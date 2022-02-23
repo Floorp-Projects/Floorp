@@ -5,7 +5,7 @@ concepts, so go read them.
 
 # Quick Intro
 
-Just like the [React introduction](react.html), this is a quick
+Just like the [React introduction](react.md), this is a quick
 introduction to redux, focusing on how it fits into React and why we
 chose it.
 

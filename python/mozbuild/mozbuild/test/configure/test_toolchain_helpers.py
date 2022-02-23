@@ -99,7 +99,7 @@ class TestCompilerPreprocessor(unittest.TestCase):
         input.name = "foo"
         pp.do_include(input)
 
-        self.assertEquals(pp.out.getvalue(), '1 . 2 . c "D"')
+        self.assertEqual(pp.out.getvalue(), '1 . 2 . c "D"')
 
     def test_normalization(self):
         pp = CompilerPreprocessor(
@@ -133,7 +133,7 @@ class TestCompilerPreprocessor(unittest.TestCase):
         input.name = "foo"
         pp.do_include(input)
 
-        self.assertEquals(pp.out.getvalue(), "WFOO\nBAR\nNO_FOO\n")
+        self.assertEqual(pp.out.getvalue(), "WFOO\nBAR\nNO_FOO\n")
 
     def test_condition(self):
         pp = CompilerPreprocessor({"A": 1, "B": "2", "C": "0L"})
@@ -163,7 +163,7 @@ class TestCompilerPreprocessor(unittest.TestCase):
         input.name = "foo"
         pp.do_include(input)
 
-        self.assertEquals("IFDEF_A\nIF_A\nIF_NOT_B\nIF_NOT_C\n", pp.out.getvalue())
+        self.assertEqual("IFDEF_A\nIF_A\nIF_NOT_B\nIF_NOT_C\n", pp.out.getvalue())
 
 
 class FakeCompiler(dict):
@@ -263,7 +263,7 @@ class TestFakeCompiler(unittest.TestCase):
     def test_fake_compiler(self):
         with MockedOpen({"file": "A B C", "file.c": "A B C"}):
             compiler = FakeCompiler({"A": "1", "B": "2"})
-            self.assertEquals(compiler(None, ["-E", "file"]), (0, "1 2 C", ""))
+            self.assertEqual(compiler(None, ["-E", "file"]), (0, "1 2 C", ""))
 
             compiler = FakeCompiler(
                 {
@@ -274,50 +274,48 @@ class TestFakeCompiler(unittest.TestCase):
                     "*.c": {"B": "42"},
                 }
             )
-            self.assertEquals(compiler(None, ["-E", "file"]), (0, "1 2 C", ""))
-            self.assertEquals(
-                compiler(None, ["-E", "-foo", "file"]), (0, "1 2 foo", "")
-            )
-            self.assertEquals(
+            self.assertEqual(compiler(None, ["-E", "file"]), (0, "1 2 C", ""))
+            self.assertEqual(compiler(None, ["-E", "-foo", "file"]), (0, "1 2 foo", ""))
+            self.assertEqual(
                 compiler(None, ["-E", "-bar", "file"]), (0, "1 bar bar", "")
             )
-            self.assertEquals(compiler(None, ["-E", "-qux", "file"]), (0, "1 B C", ""))
-            self.assertEquals(
+            self.assertEqual(compiler(None, ["-E", "-qux", "file"]), (0, "1 B C", ""))
+            self.assertEqual(
                 compiler(None, ["-E", "-foo", "-bar", "file"]), (0, "1 bar bar", "")
             )
-            self.assertEquals(
+            self.assertEqual(
                 compiler(None, ["-E", "-bar", "-foo", "file"]), (0, "1 bar foo", "")
             )
-            self.assertEquals(
+            self.assertEqual(
                 compiler(None, ["-E", "-bar", "-qux", "file"]), (0, "1 B bar", "")
             )
-            self.assertEquals(
+            self.assertEqual(
                 compiler(None, ["-E", "-qux", "-bar", "file"]), (0, "1 bar bar", "")
             )
-            self.assertEquals(compiler(None, ["-E", "file.c"]), (0, "1 42 C", ""))
-            self.assertEquals(
+            self.assertEqual(compiler(None, ["-E", "file.c"]), (0, "1 42 C", ""))
+            self.assertEqual(
                 compiler(None, ["-E", "-bar", "file.c"]), (0, "1 bar bar", "")
             )
 
     def test_multiple_definitions(self):
         compiler = FakeCompiler({"A": 1, "B": 2}, {"C": 3})
 
-        self.assertEquals(compiler, {None: {"A": 1, "B": 2, "C": 3}})
+        self.assertEqual(compiler, {None: {"A": 1, "B": 2, "C": 3}})
         compiler = FakeCompiler({"A": 1, "B": 2}, {"B": 4, "C": 3})
 
-        self.assertEquals(compiler, {None: {"A": 1, "B": 4, "C": 3}})
+        self.assertEqual(compiler, {None: {"A": 1, "B": 4, "C": 3}})
         compiler = FakeCompiler(
             {"A": 1, "B": 2}, {None: {"B": 4, "C": 3}, "-foo": {"D": 5}}
         )
 
-        self.assertEquals(compiler, {None: {"A": 1, "B": 4, "C": 3}, "-foo": {"D": 5}})
+        self.assertEqual(compiler, {None: {"A": 1, "B": 4, "C": 3}, "-foo": {"D": 5}})
 
         compiler = FakeCompiler(
             {None: {"A": 1, "B": 2}, "-foo": {"D": 5}},
             {"-foo": {"D": 5}, "-bar": {"E": 6}},
         )
 
-        self.assertEquals(
+        self.assertEqual(
             compiler, {None: {"A": 1, "B": 2}, "-foo": {"D": 5}, "-bar": {"E": 6}}
         )
 
@@ -370,7 +368,7 @@ class CompilerResult(ReadOnlyNamespace):
 class TestCompilerResult(unittest.TestCase):
     def test_compiler_result(self):
         result = CompilerResult()
-        self.assertEquals(
+        self.assertEqual(
             result.__dict__,
             {
                 "wrapper": [],
@@ -389,7 +387,7 @@ class TestCompilerResult(unittest.TestCase):
             language="C",
             flags=["-std=gnu99"],
         )
-        self.assertEquals(
+        self.assertEqual(
             result.__dict__,
             {
                 "wrapper": [],
@@ -402,7 +400,7 @@ class TestCompilerResult(unittest.TestCase):
         )
 
         result2 = result + {"flags": ["-m32"]}
-        self.assertEquals(
+        self.assertEqual(
             result2.__dict__,
             {
                 "wrapper": [],
@@ -414,14 +412,14 @@ class TestCompilerResult(unittest.TestCase):
             },
         )
         # Original flags are untouched.
-        self.assertEquals(result.flags, ["-std=gnu99"])
+        self.assertEqual(result.flags, ["-std=gnu99"])
 
         result3 = result + {
             "compiler": "/usr/bin/gcc-4.7",
             "version": "4.7.3",
             "flags": ["-m32"],
         }
-        self.assertEquals(
+        self.assertEqual(
             result3.__dict__,
             {
                 "wrapper": [],

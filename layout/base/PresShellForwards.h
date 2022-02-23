@@ -181,8 +181,6 @@ enum class ResolutionChangeOrigin : uint8_t {
 enum class AddCanvasBackgroundColorFlags {
   None = 0,
   ForceDraw = 1 << 0,
-  AddForSubDocument = 1 << 1,
-  AppendUnscrolledOnly = 1 << 2,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AddCanvasBackgroundColorFlags)

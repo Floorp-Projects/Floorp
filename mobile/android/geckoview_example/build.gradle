@@ -14,15 +14,15 @@ android {
         manifestPlaceholders = project.ext.manifestPlaceholders
 
         applicationId "org.mozilla.geckoview_example"
-        versionCode 1
-        versionName "1.0"
+        versionCode project.ext.versionCode
+        versionName project.ext.versionName
 
         multiDexEnabled true
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     dexOptions {
@@ -51,13 +51,13 @@ android {
 }
 
 dependencies {
-    implementation "androidx.annotation:annotation:1.0.0"
-    implementation "androidx.appcompat:appcompat:1.0.0"
-    implementation "androidx.preference:preference:1.0.0"
+    implementation "androidx.annotation:annotation:1.3.0"
+    implementation "androidx.appcompat:appcompat:1.4.0"
+    implementation "androidx.preference:preference:1.1.1"
 
     implementation project(path: ':geckoview')
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'com.google.android.material:material:1.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.2'
+    implementation 'com.google.android.material:material:1.4.0'
 
-    implementation 'androidx.multidex:multidex:2.0.0'
+    implementation 'androidx.multidex:multidex:2.0.1'
 }

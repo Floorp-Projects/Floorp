@@ -78,15 +78,3 @@ export async function mapLocation(state, sourceMaps, location) {
 
   return sourceMaps.getOriginalLocation(location);
 }
-
-export function isOriginalSource(source) {
-  if (!source) {
-    return false;
-  }
-
-  if (!source.hasOwnProperty("isOriginal")) {
-    throw new Error("source must have an isOriginal property");
-  }
-
-  return source.isOriginal;
-}

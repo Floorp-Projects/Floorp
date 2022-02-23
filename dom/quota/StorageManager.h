@@ -42,6 +42,8 @@ class StorageManager final : public nsISupports, public nsWrapperCache {
 
   already_AddRefed<Promise> Estimate(ErrorResult& aRv);
 
+  already_AddRefed<Promise> GetDirectory();
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StorageManager)
 

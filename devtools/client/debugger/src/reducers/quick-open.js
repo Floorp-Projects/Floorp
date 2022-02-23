@@ -39,15 +39,3 @@ export default function update(state = initialQuickOpenState(), action) {
       return state;
   }
 }
-
-export function getQuickOpenEnabled(state) {
-  return state.quickOpen.enabled;
-}
-
-export function getQuickOpenQuery(state) {
-  return state.quickOpen.query;
-}
-
-export function getQuickOpenType(state) {
-  return state.quickOpen.searchType;
-}

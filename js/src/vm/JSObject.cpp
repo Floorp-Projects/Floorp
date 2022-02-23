@@ -62,6 +62,7 @@
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
+#include "vm/Watchtower.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 #ifdef ENABLE_RECORD_TUPLE
 #  include "builtin/RecordObject.h"
@@ -690,6 +691,12 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
       if (iter->configurable() ||
           (level == IntegrityLevel::Frozen && iter->isDataDescriptor() &&
            iter->writable())) {
+        // Private fields on objects don't participate in the frozen state, and
+        // so should be elided from checking for frozen state.
+        if (iter->key().isPrivateName()) {
+          continue;
+        }
+
         *result = false;
         return true;
       }
@@ -722,6 +729,9 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
       if (desc->configurable() ||
           (level == IntegrityLevel::Frozen && desc->isDataDescriptor() &&
            desc->writable())) {
+        // Since we don't request JSITER_PRIVATE in GetPropertyKeys above, we
+        // should never see a private name here.
+        MOZ_ASSERT(!id.isPrivateName());
         *result = false;
         return true;
       }
@@ -1162,6 +1172,10 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
   // JITs to better optimize objects that can never swap.
   MOZ_RELEASE_ASSERT(js::ObjectMayBeSwapped(a));
   MOZ_RELEASE_ASSERT(js::ObjectMayBeSwapped(b));
+
+  if (!Watchtower::watchObjectSwap(cx, a, b)) {
+    oomUnsafe.crash("Watchtower::watchObjectSwap");
+  }
 
   /*
    * Neither object may be in the nursery, but ensure we update any embedded
@@ -2162,6 +2176,15 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
     return true;
   }
 
+#ifdef NIGHTLY_BUILD
+  if (key == JSProto_Array &&
+      !cx->realm()->creationOptions().getArrayGroupingEnabled() &&
+      (id == NameToId(cx->names().groupBy) ||
+       id == NameToId(cx->names().groupByToMap))) {
+    return true;
+  }
+#endif
+
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   if (key == JSProto_Array && !cx->options().changeArrayByCopy() &&
       (id == NameToId(cx->names().withAt) ||
@@ -2806,7 +2829,7 @@ JS_PUBLIC_API void js::DumpValue(const Value& val, js::GenericPrinter& out) {
 }
 
 JS_PUBLIC_API void js::DumpId(jsid id, js::GenericPrinter& out) {
-  out.printf("jsid %p = ", (void*)JSID_BITS(id));
+  out.printf("jsid %p = ", (void*)id.asRawBits());
   dumpValue(IdToValue(id), out);
   out.putChar('\n');
 }
@@ -2822,7 +2845,7 @@ static void DumpProperty(const NativeObject* obj, PropMap* map, uint32_t index,
   } else if (id.isSymbol()) {
     id.toSymbol()->dump(out);
   } else {
-    out.printf("id %p", reinterpret_cast<void*>(JSID_BITS(id)));
+    out.printf("id %p", reinterpret_cast<void*>(id.asRawBits()));
   }
 
   if (prop.isDataProperty()) {
@@ -3408,7 +3431,7 @@ void JSObject::traceChildren(JSTracer* trc) {
   bool ctorGetSucceeded = GetPropertyPure(
       cx, obj, NameToId(cx->names().constructor), ctor.address());
   if (ctorGetSucceeded && ctor.isObject() && &ctor.toObject() == defaultCtor) {
-    jsid speciesId = SYMBOL_TO_JSID(cx->wellKnownSymbols().species);
+    jsid speciesId = PropertyKey::Symbol(cx->wellKnownSymbols().species);
     JSFunction* getter;
     if (GetGetterPure(cx, defaultCtor, speciesId, &getter) && getter &&
         isDefaultSpecies(cx, getter)) {
@@ -3438,7 +3461,7 @@ void JSObject::traceChildren(JSTracer* trc) {
   // Step 5.
   RootedObject ctorObj(cx, &ctor.toObject());
   RootedValue s(cx);
-  RootedId speciesId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
+  RootedId speciesId(cx, PropertyKey::Symbol(cx->wellKnownSymbols().species));
   if (!GetProperty(cx, ctorObj, ctor, speciesId, &s)) {
     return nullptr;
   }
@@ -3492,7 +3515,7 @@ bool js::Unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp) {
   } else if (obj->is<RecordObject>()) {
     vp.setExtendedPrimitive(*obj->as<RecordObject>().unbox());
   } else if (obj->is<TupleObject>()) {
-    vp.setExtendedPrimitive(*obj->as<TupleObject>().unbox());
+    vp.setExtendedPrimitive(obj->as<TupleObject>().unbox());
 #endif
   } else {
     vp.setUndefined();

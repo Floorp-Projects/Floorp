@@ -10,10 +10,11 @@
 #include <windows.h>
 
 #include "DefaultBrowser.h"
+#include "DefaultPDF.h"
 #include "Notification.h"
 
 HRESULT SendDefaultBrowserPing(
-    const DefaultBrowserInfo& browserInfo,
+    const DefaultBrowserInfo& browserInfo, const DefaultPdfInfo& pdfInfo,
     const NotificationActivities& activitiesPerformed);
 
 #endif  // __DEFAULT_BROWSER_TELEMETRY_H__

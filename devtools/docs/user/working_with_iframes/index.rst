@@ -23,4 +23,3 @@ To set an iframe as the target for the developer tools:
 
 .. note::
   The iframe context picker button feature is enabled by default (if it has been disabled the iframe button is never displayed). The feature can be re-enabled from the Settings menu, using the "Select an iframe as the currently targeted document" checkbox.
-

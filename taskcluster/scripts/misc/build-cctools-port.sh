@@ -87,8 +87,6 @@ cd $LDID_SOURCE_DIR
 make -j `nproc --all` install INSTALLPREFIX=$CROSSTOOLS_BUILD_DIR LDFLAGS="-Wl,-Bstatic -lcrypto -Wl,-Bdynamic -ldl -pthread"
 
 strip $CROSSTOOLS_BUILD_DIR/bin/*
-# cctools-port doesn't include dsymutil but clang will need to find it.
-cp $CLANG_DIR/bin/dsymutil $CROSSTOOLS_BUILD_DIR/bin/x86_64-apple-darwin-dsymutil
 # various build scripts based on cmake want to find `lipo` without a prefix
 cp $CROSSTOOLS_BUILD_DIR/bin/x86_64-apple-darwin-lipo $CROSSTOOLS_BUILD_DIR/bin/lipo
 

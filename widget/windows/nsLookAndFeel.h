@@ -44,8 +44,6 @@
 #define SYS_COLOR_COUNT (SYS_COLOR_MAX - SYS_COLOR_MIN + 1)
 
 class nsLookAndFeel final : public nsXPLookAndFeel {
-  static OperatingSystemVersion GetOperatingSystemVersion();
-
  public:
   nsLookAndFeel();
   virtual ~nsLookAndFeel();

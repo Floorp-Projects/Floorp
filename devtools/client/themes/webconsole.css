@@ -596,6 +596,10 @@ a.learn-more-link.webconsole-learn-more-link {
   margin-inline: 5px;
 }
 
+.webconsole-filterbar-primary .devtools-togglebutton {
+  font-variant-numeric: tabular-nums;
+}
+
 .split-console-close-button-wrapper {
   min-height: var(--primary-toolbar-height);
   /* We will need to display the close button in the right-top always. */

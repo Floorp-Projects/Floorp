@@ -11,12 +11,15 @@
 
 #include "jsapi.h"
 
+#include "builtin/Array.h"  // IsArray()
 #include "builtin/TupleObject.h"
 #include "gc/Allocator.h"
 #include "gc/AllocKind.h"
 #include "gc/Nursery.h"
 #include "gc/Tracer.h"
+
 #include "js/TypeDecls.h"
+#include "js/Value.h"
 #include "util/StringBuffer.h"
 #include "vm/EqualityOperations.h"
 #include "vm/GlobalObject.h"
@@ -25,10 +28,207 @@
 #include "vm/SelfHosting.h"
 #include "vm/ToSource.h"
 
+#include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
+
+static bool TupleConstructor(JSContext* cx, unsigned argc, Value* vp);
+
+static const JSFunctionSpec tuple_static_methods[] = {
+    JS_FN("isTuple", tuple_is_tuple, 1, 0),
+    JS_SELF_HOSTED_FN("from", "TupleFrom", 1, 0), JS_FN("of", tuple_of, 0, 0),
+    JS_FS_END};
+
+static const JSFunctionSpec tuple_methods[] = {
+    JS_SELF_HOSTED_FN("toSorted", "TupleToSorted", 1, 0),
+    JS_SELF_HOSTED_FN("toSpliced", "TupleToSpliced", 2, 0),
+    JS_SELF_HOSTED_FN("concat", "TupleConcat", 0, 0),
+    JS_SELF_HOSTED_FN("includes", "TupleIncludes", 1, 0),
+    JS_SELF_HOSTED_FN("indexOf", "TupleIndexOf", 1, 0),
+    JS_SELF_HOSTED_FN("join", "TupleJoin", 1, 0),
+    JS_SELF_HOSTED_FN("lastIndexOf", "TupleLastIndexOf", 1, 0),
+    JS_SELF_HOSTED_FN("toLocaleString", "TupleToLocaleString", 2, 0),
+    JS_SELF_HOSTED_FN("toString", "TupleToString", 0, 0),
+    JS_SELF_HOSTED_FN("entries", "TupleEntries", 0, 0),
+    JS_SELF_HOSTED_FN("every", "TupleEvery", 1, 0),
+    JS_SELF_HOSTED_FN("filter", "TupleFilter", 1, 0),
+    JS_SELF_HOSTED_FN("find", "TupleFind", 1, 0),
+    JS_SELF_HOSTED_FN("findIndex", "TupleFindIndex", 1, 0),
+    JS_SELF_HOSTED_FN("forEach", "TupleForEach", 1, 0),
+    JS_SELF_HOSTED_FN("keys", "TupleKeys", 0, 0),
+    JS_SELF_HOSTED_FN("map", "TupleMap", 1, 0),
+    JS_SELF_HOSTED_FN("reduce", "TupleReduce", 1, 0),
+    JS_SELF_HOSTED_FN("reduceRight", "TupleReduceRight", 1, 0),
+    JS_SELF_HOSTED_FN("some", "TupleSome", 1, 0),
+    JS_SELF_HOSTED_FN("values", "$TupleValues", 0, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "$TupleValues", 0, 0),
+    JS_SELF_HOSTED_FN("flat", "TupleFlat", 0, 0),
+    JS_SELF_HOSTED_FN("flatMap", "TupleFlatMap", 1, 0),
+    JS_SELF_HOSTED_FN("toReversed", "TupleToReversed", 0, 0),
+    JS_FN("with", tuple_with, 2, 0),
+    JS_FN("slice", tuple_slice, 2, 0),
+    JS_FN("valueOf", tuple_value_of, 0, 0),
+    JS_FS_END};
+
+Shape* TupleType::getInitialShape(JSContext* cx) {
+  return SharedShape::getInitialShape(cx, &TupleType::class_, cx->realm(),
+                                      TaggedProto(nullptr), 0);
+  // tuples don't have slots, but only integer-indexed elements.
+}
+
+// Prototype methods
+
+// Proposal
+// Tuple.prototype.with()
+bool js::tuple_with(JSContext* cx, unsigned argc, Value* vp) {
+  AutoGeckoProfilerEntry pseudoFrame(
+      cx, "Tuple.prototype.with", JS::ProfilingCategoryPair::JS,
+      uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
+
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  /* Step 1. */
+  RootedValue v(cx, args.thisv());
+
+  mozilla::Maybe<TupleType&> maybeTuple = js::ThisTupleValue(cx, v);
+  if (!maybeTuple) {
+    return false;
+  }
+
+  Rooted<TupleType*> tuple(cx, &(*maybeTuple));
+
+  /* Step 2. */
+  HeapSlotArray t = tuple->getDenseElements();
+
+  uint64_t length = tuple->getDenseInitializedLength();
+  TupleType* list = TupleType::createUninitialized(cx, length);
+  if (!list) {
+    return false;
+  }
+
+  /* Step 4 */
+  uint64_t index;
+  if (!ToIndex(cx, args.get(0), JSMSG_BAD_TUPLE_INDEX, &index)) {
+    return false;
+  }
+  /* Step 5 */
+  if (index >= length) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BAD_TUPLE_INDEX, "Tuple.with");
+    return false;
+  }
+  /* Step 6 */
+  RootedValue value(cx, args.get(1));
+  if (value.isObject()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_RECORD_TUPLE_NO_OBJECT, "Tuple.with");
+    return false;
+  }
+  /* Step 7 */
+  uint64_t before = index;
+  uint64_t after = length - index - 1;
+  list->copyDenseElements(0, t, before);
+  list->setDenseInitializedLength(index + 1);
+  list->initDenseElement(index, value);
+  list->copyDenseElements(index + 1, t + uint32_t(index + 1), after);
+  list->setDenseInitializedLength(length);
+  list->finishInitialization(cx);
+  /* Step 8 */
+  args.rval().setExtendedPrimitive(*list);
+  return true;
+}
+
+// Proposal
+// Tuple.prototype.slice()
+bool js::tuple_slice(JSContext* cx, unsigned argc, Value* vp) {
+  AutoGeckoProfilerEntry pseudoFrame(
+      cx, "Tuple.prototype.slice", JS::ProfilingCategoryPair::JS,
+      uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
+
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedValue v(cx, args.thisv());
+
+  /* Steps 1-2. */
+  mozilla::Maybe<TupleType&> maybeList = js::ThisTupleValue(cx, v);
+  if (!maybeList) {
+    return false;
+  }
+
+  Rooted<TupleType*> list(cx, &(*maybeList));
+  /* Step 3. */
+  uint32_t len = list->getDenseInitializedLength();
+
+  /* Step 4. */
+  double relativeStart;
+  if (!ToInteger(cx, args.get(0), &relativeStart)) {
+    return false;
+  }
+
+  /* Step 5. */
+  uint32_t k;
+  if (relativeStart < 0.0) {
+    k = std::max(len + relativeStart, 0.0);
+  } else {
+    k = std::min(relativeStart, double(len));
+  }
+
+  /* Step 6. */
+  double relativeEnd;
+  if (argc > 1 && !args.get(1).isUndefined()) {
+    if (!ToInteger(cx, args.get(1), &relativeEnd)) {
+      return false;
+    }
+  } else {
+    relativeEnd = len;
+  }
+
+  /* Step 7. */
+  uint32_t finalIndex;
+  if (relativeEnd < 0.0) {
+    finalIndex = std::max(len + relativeEnd, 0.0);
+  } else {
+    finalIndex = std::min(relativeEnd, double(len));
+  }
+
+  /* Step 8. */
+
+  uint32_t newLen = finalIndex >= k ? finalIndex - k : 0;
+  TupleType* newList = TupleType::createUninitialized(cx, newLen);
+  if (!newList) {
+    return false;
+  }
+
+  /* Step 9. */
+  HeapSlotArray oldElements = list->getDenseElements();
+  newList->copyDenseElements(0, oldElements + k, newLen);
+  newList->setDenseInitializedLength(newLen);
+  newList->finishInitialization(cx);
+  /* Step 10. */
+  args.rval().setExtendedPrimitive(*newList);
+  return true;
+}
+
+// Proposal
+// Tuple.prototype.valueOf()
+bool js::tuple_value_of(JSContext* cx, unsigned argc, Value* vp) {
+  AutoGeckoProfilerEntry pseudoFrame(
+      cx, "Tuple.prototype.valueOf", JS::ProfilingCategoryPair::JS,
+      uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
+
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  /* Step 1. */
+  HandleValue thisv = args.thisv();
+  mozilla::Maybe<TupleType&> tuple = js::ThisTupleValue(cx, thisv);
+  if (!tuple) {
+    return false;
+  }
+
+  args.rval().setExtendedPrimitive(*tuple);
+  return true;
+}
 
 TupleType* TupleType::create(JSContext* cx, uint32_t length,
                              const Value* elements) {
@@ -51,17 +251,11 @@ TupleType* TupleType::create(JSContext* cx, uint32_t length,
   return tup;
 }
 
-TupleType* TupleType::createUninitialized(JSContext* cx, uint32_t length) {
-  RootedShape shape(
-      cx, SharedShape::getInitialShape(
-              cx, &TupleType::class_, cx->realm(), TaggedProto(nullptr),
-              // tuples don't have slots, but only integer-indexed elements.
-              /* nfixed = */ 0));
+static TupleType* allocate(JSContext* cx, gc::AllocKind allocKind) {
+  RootedShape shape(cx, TupleType::getInitialShape(cx));
   if (!shape) {
     return nullptr;
   }
-
-  gc::AllocKind allocKind = GuessArrayGCKind(length);
 
   JSObject* obj =
       js::AllocateObject(cx, allocKind, 0, gc::DefaultHeap, &TupleType::class_);
@@ -70,14 +264,23 @@ TupleType* TupleType::createUninitialized(JSContext* cx, uint32_t length) {
   }
 
   TupleType* tup = static_cast<TupleType*>(obj);
-
   tup->initShape(shape);
   tup->initEmptyDynamicSlots();
+  tup->setFixedElements(0);
+  return tup;
+}
+
+TupleType* TupleType::createUninitialized(JSContext* cx, uint32_t length) {
+  gc::AllocKind allocKind = GuessArrayGCKind(length);
+
+  TupleType* tup = allocate(cx, allocKind);
+  if (!tup) {
+    return nullptr;
+  }
 
   uint32_t capacity =
       gc::GetGCKindSlots(allocKind) - ObjectElements::VALUES_PER_HEADER;
 
-  tup->setFixedElements(0);
   new (tup->getElementsHeader()) ObjectElements(capacity, length);
 
   if (!tup->ensureElements(cx, length)) {
@@ -172,7 +375,6 @@ bool TupleType::sameValue(JSContext* cx, TupleType* lhs, TupleType* rhs,
                           bool* equal) {
   return sameValueWith<SameValue>(cx, lhs, rhs, equal);
 }
-
 bool TupleType::sameValueZero(TupleType* lhs, TupleType* rhs) {
   MOZ_ASSERT(lhs->isAtomized());
   MOZ_ASSERT(rhs->isAtomized());
@@ -235,7 +437,7 @@ bool TupleType::sameValueWith(JSContext* cx, TupleType* lhs, TupleType* rhs,
   return true;
 }
 
-JSString* js::TupleToSource(JSContext* cx, TupleType* tup) {
+JSString* js::TupleToSource(JSContext* cx, Handle<TupleType*> tup) {
   JSStringBuilder sb(cx);
 
   if (!sb.append("#[")) {
@@ -297,30 +499,119 @@ bool TupleConstructor(JSContext* cx, unsigned argc, Value* vp) {
                        BEGIN: Tuple.prototype methods
 \*===========================================================================*/
 
-bool IsTuple(HandleValue v) {
+static bool ArrayToTuple(JSContext* cx, const CallArgs& args) {
+  RootedArrayObject aObj(cx, &args.rval().toObject().as<ArrayObject>());
+  TupleType* tup = TupleType::createUnchecked(cx, aObj);
+
+  if (!tup) {
+    return false;
+  }
+
+  args.rval().setExtendedPrimitive(*tup);
+  return true;
+}
+
+// Takes an array as a single argument and returns a tuple of the
+// array elements, without copying the array
+// Should only be called from self-hosted tuple methods;
+// assumes all elements are non-objects and the array is packed
+bool js::tuple_construct(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  MOZ_ASSERT(args[0].toObject().is<ArrayObject>());
+
+  args.rval().set(args[0]);
+  return ArrayToTuple(cx, args);
+}
+
+bool js::tuple_is_tuple(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return IsTupleUnchecked(cx, args);
+}
+
+TupleType* TupleType::createUnchecked(JSContext* cx, HandleArrayObject aObj) {
+  gc::AllocKind allocKind = GuessArrayGCKind(aObj->getDenseInitializedLength());
+
+  RootedShape shape(cx, TupleType::getInitialShape(cx));
+  if (!shape) {
+    return nullptr;
+  }
+
+  JSObject* obj =
+      js::AllocateObject(cx, allocKind, 0, gc::DefaultHeap, &TupleType::class_);
+
+  if (!obj) {
+    return nullptr;
+  }
+
+  TupleType* tup = static_cast<TupleType*>(obj);
+  tup->initShape(shape);
+  tup->initEmptyDynamicSlots();
+  tup->setFixedElements(0);
+
+  if (!tup) {
+    return nullptr;
+  }
+
+  tup->elements_ = aObj->getElementsHeader()->elements();
+
+  aObj->shrinkCapacityToInitializedLength(cx);
+
+  tup->finishInitialization(cx);
+  return tup;
+}
+
+bool js::tuple_of(JSContext* cx, unsigned argc, Value* vp) {
+  /* Step 1 */
+  CallArgs args = CallArgsFromVp(argc, vp);
+  size_t len = args.length();
+  Value* items = args.array();
+
+  /* Step 2 */
+  for (size_t i = 0; i < len; i++) {
+    if (items[i].isObject()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_RECORD_TUPLE_NO_OBJECT, "Tuple.of");
+      return false;
+    }
+  }
+  /* Step 3 */
+  ArrayObject* result = js::NewDenseCopiedArray(cx, len, items, GenericObject);
+  if (!result) {
+    return false;
+  }
+  args.rval().setObject(*result);
+  /* Step 4 */
+  return ArrayToTuple(cx, args);
+}
+
+bool js::IsTuple(const Value& v) {
   if (v.isExtendedPrimitive()) return v.toExtendedPrimitive().is<TupleType>();
   if (v.isObject()) return v.toObject().is<TupleObject>();
   return false;
-};
-
-static MOZ_ALWAYS_INLINE TupleType* ThisTupleValue(HandleValue val) {
-  MOZ_ASSERT(IsTuple(val));
-  return val.isExtendedPrimitive() ? &val.toExtendedPrimitive().as<TupleType>()
-                                   : val.toObject().as<TupleObject>().unbox();
 }
+
+// Caller is responsible for rooting the result
+TupleType& TupleType::thisTupleValue(const Value& val) {
+  MOZ_ASSERT(IsTuple(val));
+  return (val.isExtendedPrimitive() ? val.toExtendedPrimitive().as<TupleType>()
+                                    : val.toObject().as<TupleObject>().unbox());
+}
+
+bool HandleIsTuple(HandleValue v) { return IsTuple(v.get()); }
 
 // 8.2.3.2 get Tuple.prototype.length
 bool lengthAccessor_impl(JSContext* cx, const CallArgs& args) {
   // Step 1.
-  TupleType* tuple = ThisTupleValue(args.thisv());
+  TupleType& tuple = TupleType::thisTupleValue(args.thisv().get());
   // Step 2.
-  args.rval().setInt32(tuple->length());
+  args.rval().setInt32(tuple.length());
   return true;
 }
 
 bool TupleType::lengthAccessor(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsTuple, lengthAccessor_impl>(cx, args);
+  return CallNonGenericMethod<HandleIsTuple, lengthAccessor_impl>(cx, args);
 }
 
 /*===========================================================================*\
@@ -334,14 +625,15 @@ const JSClass TupleType::protoClass_ = {
     "Tuple.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_Tuple),
     JS_NULL_CLASS_OPS, &TupleType::classSpec_};
 
-const JSPropertySpec properties_[] = {
+/* static */ const JSPropertySpec properties_[] = {
+    JS_STRING_SYM_PS(toStringTag, "Tuple", JSPROP_READONLY),
     JS_PSG("length", TupleType::lengthAccessor, 0), JS_PS_END};
 
 const ClassSpec TupleType::classSpec_ = {
-    GenericCreateConstructor<TupleConstructor, 1, gc::AllocKind::FUNCTION>,
+    GenericCreateConstructor<TupleConstructor, 0, gc::AllocKind::FUNCTION>,
     GenericCreatePrototype<TupleType>,
+    tuple_static_methods,
     nullptr,
-    nullptr,
-    nullptr,
+    tuple_methods,
     properties_,
     nullptr};

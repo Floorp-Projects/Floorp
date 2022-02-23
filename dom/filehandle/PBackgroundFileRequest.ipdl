@@ -4,6 +4,8 @@
 
 include protocol PBackgroundFileHandle;
 
+include "mozilla/dom/indexedDB/ActorsChild.h";
+
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
 namespace mozilla {
@@ -47,6 +49,7 @@ union FileRequestResponse
   FileRequestFlushResponse;
 };
 
+[ManualDealloc, ChildImpl="indexedDB::BackgroundFileRequestChild", ParentImpl=virtual]
 protocol PBackgroundFileRequest
 {
   manager PBackgroundFileHandle;

@@ -132,7 +132,11 @@ class LSObject final : public Storage {
 
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(LSObject); }
 
+  const RefPtr<LSDatabase>& DatabaseStrongRef() const { return mDatabase; }
+
   const nsString& DocumentURI() const { return mDocumentURI; }
+
+  bool InExplicitSnapshot() const { return mInExplicitSnapshot; }
 
   LSRequestChild* StartRequest(nsIEventTarget* aMainEventTarget,
                                const LSRequestParams& aParams,
@@ -178,8 +182,11 @@ class LSObject final : public Storage {
   void EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
                            ErrorResult& aError) override;
 
-  bool GetHasActiveSnapshot(nsIPrincipal& aSubjectPrincipal,
-                            ErrorResult& aError) override;
+  bool GetHasSnapshot(nsIPrincipal& aSubjectPrincipal,
+                      ErrorResult& aError) override;
+
+  int64_t GetSnapshotUsage(nsIPrincipal& aSubjectPrincipal,
+                           ErrorResult& aError) override;
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -225,8 +232,6 @@ class LSObject final : public Storage {
    */
   void OnChange(const nsAString& aKey, const nsAString& aOldValue,
                 const nsAString& aNewValue);
-
-  nsresult EndExplicitSnapshotInternal();
 
   // Storage overrides.
   void LastRelease() override;

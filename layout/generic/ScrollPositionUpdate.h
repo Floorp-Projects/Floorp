@@ -9,6 +9,7 @@
 #include <iosfwd>
 
 #include "nsPoint.h"
+#include "mozilla/ScrollGeneration.h"
 #include "mozilla/ScrollOrigin.h"
 #include "mozilla/ScrollTypes.h"
 #include "Units.h"
@@ -30,30 +31,6 @@ enum class ScrollUpdateType {
 };
 
 enum class ScrollTriggeredByScript : bool { No, Yes };
-
-struct ScrollGeneration {
- private:
-  // Private constructor; use New() to get a new instance.
-  explicit ScrollGeneration(uint64_t aValue);
-
- public:
-  // Dummy constructor, needed for IPDL purposes. Not intended for manual use.
-  ScrollGeneration();
-
-  // Returns a new ScrollGeneration with a unique value.
-  static ScrollGeneration New();
-
-  bool operator<(const ScrollGeneration& aOther) const;
-  bool operator==(const ScrollGeneration& aOther) const;
-  bool operator!=(const ScrollGeneration& aOther) const;
-
-  friend std::ostream& operator<<(std::ostream& aStream,
-                                  const ScrollGeneration& aGen);
-
- private:
-  static uint64_t sCounter;
-  uint64_t mValue;
-};
 
 /**
  * This class represents an update to the scroll position that is initiated by
@@ -94,7 +71,7 @@ class ScrollPositionUpdate {
 
   bool operator==(const ScrollPositionUpdate& aOther) const;
 
-  ScrollGeneration GetGeneration() const;
+  MainThreadScrollGeneration GetGeneration() const;
   ScrollUpdateType GetType() const;
   ScrollMode GetMode() const;
   ScrollOrigin GetOrigin() const;
@@ -117,7 +94,7 @@ class ScrollPositionUpdate {
                                   const ScrollPositionUpdate& aUpdate);
 
  private:
-  ScrollGeneration mScrollGeneration;
+  MainThreadScrollGeneration mScrollGeneration;
   // Refer to the ScrollUpdateType documentation for what the types mean.
   // All fields are populated for all types, except as noted below.
   ScrollUpdateType mType;

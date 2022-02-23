@@ -19,8 +19,7 @@
 #include "nsWrapperCache.h"
 #include "nsIGlobalObject.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ReadableByteStreamController;
 
@@ -31,13 +30,10 @@ class ReadableStreamBYOBRequest final : public nsISupports,
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ReadableStreamBYOBRequest)
 
  public:
-  explicit ReadableStreamBYOBRequest(nsIGlobalObject* aGlobal)
-      : mGlobal(aGlobal) {
-    mozilla::HoldJSObjects(this);
-  }
+  explicit ReadableStreamBYOBRequest(nsIGlobalObject* aGlobal);
 
  protected:
-  ~ReadableStreamBYOBRequest() { mozilla::DropJSObjects(this); };
+  ~ReadableStreamBYOBRequest();
 
  public:
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
@@ -55,9 +51,7 @@ class ReadableStreamBYOBRequest final : public nsISupports,
                                              ErrorResult& aRv);
 
   ReadableByteStreamController* Controller() { return mController; }
-  void SetController(ReadableByteStreamController* aController) {
-    mController = aController;
-  }
+  void SetController(ReadableByteStreamController* aController);
 
   JSObject* View() { return mView; }
   void SetView(JS::HandleObject aView) { mView = aView; }
@@ -69,7 +63,6 @@ class ReadableStreamBYOBRequest final : public nsISupports,
   JS::Heap<JSObject*> mView;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

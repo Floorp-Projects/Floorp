@@ -1219,16 +1219,17 @@ security:
       - 1558870
       - 1630155
       - 1689269
+      - 1754650
     description: >
       Counts of how often Web Authentication was used in this session, keyed
       by authenticator protocol, method and result. Currently: U2FRegisterFinish,
       U2FRegisterAbort, U2FSignFinish, U2FSignAbort.
-    expires: "100"
+    expires: "112"
     kind: uint
     keyed: true
     notification_emails:
       - seceng-telemetry@mozilla.com
-      - jjones@mozilla.com
+      - rmf@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2047,6 +2048,19 @@ pictureinpicture:
       - 'firefox'
     record_in_processes:
       - main
+  toggle_enabled:
+    bug_numbers:
+      - 1639774
+    description: Whether the user has Picture-in-Picture enabled.
+    expires: "never"
+    kind: boolean
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
 
 preferences:
   created_new_user_prefs_file:
@@ -2310,24 +2324,6 @@ media:
     record_in_processes:
       - 'content'
 
-  wmf_process_usage:
-    bug_numbers:
-      - 1690372
-      - 1720616
-    description: >
-      Record whether the WMF decoder module is used in content or chrome process.
-    expires: "99"
-    kind: boolean
-    notification_emails:
-      - alwu@mozilla.com
-      - bvandyk@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-      - 'content'
-
   video_hardware_decoding_support:
     bug_numbers:
       - 1733722
@@ -2388,7 +2384,7 @@ dom.contentprocess:
     description: >
       The number of times a process crashed early but we could verify it was not
       because of buildID mismatch between the parent and the content processes.
-    expires: "100"
+    expires: "105"
     kind: uint
     notification_emails:
       - alissy@mozilla.com
@@ -4257,9 +4253,10 @@ pdf.viewer:
   is_attachment:
     bug_numbers:
       - 1736864
+      - 1754659
     description: >
       How many times a PDF that sends Content-Disposition: attachment is opened.
-    expires: "100"
+    expires: "103"
     kind: uint
     notification_emails:
       - rtestard@mozilla.com
@@ -4983,6 +4980,29 @@ update:
       - application-update-telemetry-alerts@mozilla.com
       - bytesized@mozilla.com
     release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
+  suppress_prompts:
+    bug_numbers:
+      - 1749155
+    description: >
+      When an update is available and app.update.auto is disabled, a popup is
+      opened prompting the user to download and install the update. The pref
+      app.update.suppressPrompts causes Firefox Nightly to wait up to 7 days
+      before showing the prompt, instead showing a badge and banner in the
+      meantime. It also prevents Nightly from showing update restart prompts,
+      instead showing a badge and banner immediately. This value is set for
+      the users who set this pref to true.
+    expires: never
+    kind: boolean
+    keyed: false
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+      - bytesized@mozilla.com
+    release_channel_collection: opt-in
     products:
       - 'firefox'
     record_in_processes:
@@ -5779,6 +5799,7 @@ startup:
       - 1522934
       - 1570652
       - 1623406
+      - 1749887
     description: >
       How the profile was selected during startup. One of the following reasons:
         unknown:
@@ -5811,7 +5832,7 @@ startup:
           A first run of the application created a new profile to use.
         default:
           The default profile was selected as normal.
-    expires: "99"
+    expires: "never"
     keyed: false
     kind: string
     notification_emails:
@@ -5820,7 +5841,7 @@ startup:
       - gkaberere@mozilla.com
       - jhollek@mozilla.com
       - echo@mozilla.com
-      - wlachance@mozilla.com
+      - shong@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -7354,6 +7375,58 @@ contextual.services.quicksuggest:
       - main
 
 power:
+  cpu_time_per_process_type_ms:
+    bug_numbers:
+      - 1747138
+    description: >
+      CPU time used by each process type in ms.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    keyed: true
+    keys: &per_process_type_keys
+      - parent.active
+      - parent.active.playing-audio
+      - parent.active.playing-video
+      - parent.inactive
+      - parent.inactive.playing-audio
+      - parent.inactive.playing-video
+      - prealloc
+      - privilegedabout
+      - rdd
+      - socket
+      - web.background
+      - web.background-perceivable
+      - web.foreground
+      - extension
+      - gpu
+      - gmplugin
+      - utility
+
+  gpu_time_per_process_type_ms:
+    bug_numbers:
+      - 1747138
+    description: >
+      GPU time used by each process type in ms.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'gpu'
+    keyed: true
+    keys: *per_process_type_keys
+
   total_cpu_time_ms:
     bug_numbers:
       - 1736040
@@ -7389,6 +7462,40 @@ power:
     record_in_processes:
       - 'main'
       - 'gpu'
+
+gifft.validation:
+  main_ping_assembling:
+    bug_numbers:
+      - 1753689
+    description: >
+      The value `true` recorded when a "main" ping is about to be assembled.
+      To be used for validating GIFFT.
+    expires: "102"
+    kind: boolean
+    notification_emails:
+      - chutten@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
+  mirror_for_main_ping_assembling:
+    bug_numbers:
+      - 1753689
+    description: >
+      The value `true` recorded when a "main" ping is about to be assembled.
+      To be used for validating GIFFT.
+      Mirror for Glean's `gifft.validation.main_ping_assembling`.
+    expires: "102"
+    kind: boolean
+    notification_emails:
+      - chutten@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
@@ -7571,6 +7678,7 @@ telemetry.test:
     keyed: true
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
     products:
       - 'firefox'
       - 'fennec'

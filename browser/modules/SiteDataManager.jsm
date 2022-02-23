@@ -510,7 +510,6 @@ var SiteDataManager = {
       const kFlags =
         Ci.nsIClearDataService.CLEAR_COOKIES |
         Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-        Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
         Ci.nsIClearDataService.CLEAR_EME |
         Ci.nsIClearDataService.CLEAR_ALL_CACHES;
       promises.push(
@@ -646,7 +645,7 @@ var SiteDataManager = {
       Services.clearData.deleteData(
         Ci.nsIClearDataService.CLEAR_COOKIES |
           Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-          Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
+          Ci.nsIClearDataService.CLEAR_HSTS |
           Ci.nsIClearDataService.CLEAR_EME,
         resolve
       );

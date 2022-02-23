@@ -1,10 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::ToTokens;
-use syn::{self, Ident};
+use syn::Ident;
 
-use codegen::{ExtractAttribute, OuterFromImpl, TraitImpl};
-use options::ForwardAttrs;
-use util::PathList;
+use crate::codegen::{ExtractAttribute, OuterFromImpl, TraitImpl};
+use crate::options::ForwardAttrs;
+use crate::util::PathList;
 
 pub struct FromTypeParamImpl<'a> {
     pub base: TraitImpl<'a>,
@@ -32,19 +32,22 @@ impl<'a> ToTokens for FromTypeParamImpl<'a> {
             self.base.fallback_decl()
         };
 
-        let passed_ident = self.ident
+        let passed_ident = self
+            .ident
             .as_ref()
             .map(|i| quote!(#i: #input.ident.clone(),));
         let passed_attrs = self.attrs.as_ref().map(|i| quote!(#i: __fwd_attrs,));
-        let passed_bounds = self.bounds
+        let passed_bounds = self
+            .bounds
             .as_ref()
             .map(|i| quote!(#i: #input.bounds.clone().into_iter().collect::<Vec<_>>(),));
-        let passed_default = self.default
+        let passed_default = self
+            .default
             .as_ref()
             .map(|i| quote!(#i: #input.default.clone(),));
         let initializers = self.base.initializers();
 
-        let map = self.base.map_fn();
+        let post_transform = self.base.post_transform_call();
 
         self.wrap(
             quote! {
@@ -65,7 +68,7 @@ impl<'a> ToTokens for FromTypeParamImpl<'a> {
                         #passed_default
                         #passed_attrs
                         #initializers
-                    }) #map
+                    }) #post_transform
                 }
             },
             tokens,
@@ -75,7 +78,7 @@ impl<'a> ToTokens for FromTypeParamImpl<'a> {
 
 impl<'a> ExtractAttribute for FromTypeParamImpl<'a> {
     fn attr_names(&self) -> &PathList {
-        &self.attr_names
+        self.attr_names
     }
 
     fn forwarded_attrs(&self) -> Option<&ForwardAttrs> {

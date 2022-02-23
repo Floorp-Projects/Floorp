@@ -23,9 +23,9 @@ add_task(async function() {
   // If it is there, do actual testing
   sanityChecks();
 
-  // The linux only tests are the ones that can behave differently based on
-  // existence of SNAP
   add_task(testFileAccessLinuxOnly); // eslint-disable-line no-undef
+
+  add_task(testFileAccessLinuxSnap); // eslint-disable-line no-undef
 
   add_task(cleanupBrowserTabs); // eslint-disable-line no-undef
 });

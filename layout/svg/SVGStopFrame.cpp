@@ -10,6 +10,7 @@
 #include "nsGkAtoms.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/SVGGradientFrame.h"
 #include "mozilla/SVGObserverUtils.h"
 
 // This is a very simple frame whose only purpose is to capture style change

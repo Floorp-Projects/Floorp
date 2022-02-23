@@ -1,7 +1,5 @@
-use syn;
-
-use usage::{self, UsesLifetimes, UsesTypeParams};
-use {
+use crate::{
+    usage::{self, UsesLifetimes, UsesTypeParams},
     FromDeriveInput, FromField, FromGenericParam, FromGenerics, FromMeta, FromTypeParam,
     FromVariant, Result,
 };

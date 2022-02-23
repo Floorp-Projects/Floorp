@@ -17,7 +17,7 @@
         '<(DEPTH)/exports.gyp:nss_exports'
       ],
       'conditions': [
-        [ 'cc_is_clang==1', {
+        [ 'cc_is_clang==1 and force_integrated_as!=1', {
           'cflags': [
             '-no-integrated-as',
           ],
@@ -326,7 +326,7 @@
         '<(DEPTH)/exports.gyp:nss_exports'
       ],
       'conditions': [
-        [ 'cc_is_clang==1', {
+        [ 'cc_is_clang==1 and force_integrated_as!=1', {
           'cflags': [
             '-no-integrated-as',
           ],

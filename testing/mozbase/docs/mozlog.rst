@@ -114,7 +114,7 @@ emitted:
     same as the actual result (string enum, same as ``status``).
 
   ``known_intermittent``
-    A list of known intermittent statuses for that test. Omitted if there are 
+    A list of known intermittent statuses for that test. Omitted if there are
     no intermittent statuses expected. (items in the list are string enum, same as ``status``)
 
 ``test_end``
@@ -137,7 +137,7 @@ emitted:
     actual status (string enum, same as ``status``).
 
   ``known_intermittent``
-    A list of known intermittent statuses for that test. Omitted if there are 
+    A list of known intermittent statuses for that test. Omitted if there are
     no intermittent statuses expected. (items in the list are string enum, same as ``status``)
 
 ``process_output``

@@ -54,6 +54,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // this value.  See UrlbarProviderPlaces.
   ["autoFill.stddevMultiplier", [0.0, "float"]],
 
+  // Whether the best match feature is enabled.
+  ["bestMatch.enabled", true],
+
   // Whether using `ctrl` when hitting return/enter in the URL bar
   // (or clicking 'go') should prefix 'www.' and suffix
   // browser.fixup.alternate.suffix to the URL bar value prior to
@@ -179,6 +182,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether speculative connections should be enabled.
   ["speculativeConnect.enabled", true],
 
+  // When `bestMatch.enabled` is true, this controls whether results will
+  // include best matches.
+  ["suggest.bestmatch", true],
+
   // Whether results will include the user's bookmarks.
   ["suggest.bookmark", true],
 
@@ -209,6 +216,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Whether results will include top sites and the view will open on focus.
   ["suggest.topsites", true],
+
+  // JSON'ed array of blocked quick suggest URL digests.
+  ["quickSuggest.blockedDigests", ""],
 
   // Global toggle for whether the quick suggest feature is enabled, i.e.,
   // sponsored and recommended results related to the user's search string.

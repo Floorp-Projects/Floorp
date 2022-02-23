@@ -114,6 +114,18 @@ const nodeSpec = generateActorSpec({
         events: RetVal("json"),
       },
     },
+    enableEventListener: {
+      request: {
+        eventListenerInfoId: Arg(0),
+      },
+      response: {},
+    },
+    disableEventListener: {
+      request: {
+        eventListenerInfoId: Arg(0),
+      },
+      response: {},
+    },
     modifyAttributes: {
       request: {
         modifications: Arg(0, "array:json"),

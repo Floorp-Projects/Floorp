@@ -2,12 +2,14 @@
 include protocol PTestActorPunningPunned;
 include protocol PTestActorPunningSub;
 include "mozilla/_ipdltest/IPDLUnitTestUtils.h";
+include "mozilla/_ipdltest/TestActorPunning.h";
 
 using struct mozilla::_ipdltest::Bad from "mozilla/_ipdltest/IPDLUnitTestUtils.h";
 
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestActorPunningChild", ParentImpl="TestActorPunningParent"]
 protocol PTestActorPunning {
     manages PTestActorPunningPunned;
     manages PTestActorPunningSub;

@@ -70,6 +70,10 @@ class Connection final : public mozIStorageConnection,
    *        implement both the async (`mozIStorageAsyncConnection`) and sync
    *        (`mozIStorageConnection`) interfaces, but async connections may not
    *        call sync operations from the main thread.
+   * @param aInterruptible
+   *        If |true|, the pending operations can be interrupted by invokind the
+   *        Interrupt() method.
+   *        If |false|, method Interrupt() must not be used.
    * @param aIgnoreLockingMode
    *        If |true|, ignore locks in force on the file. Only usable with
    *        read-only connections. Defaults to false.
@@ -80,7 +84,7 @@ class Connection final : public mozIStorageConnection,
    */
   Connection(Service* aService, int aFlags,
              ConnectionOperation aSupportedOperations,
-             bool aIgnoreLockingMode = false);
+             bool aInterruptible = false, bool aIgnoreLockingMode = false);
 
   /**
    * Creates the connection to an in-memory database.
@@ -386,12 +390,6 @@ class Connection final : public mozIStorageConnection,
   nsCOMPtr<nsIFile> mDatabaseFile;
 
   /**
-   * The filename that will be reported to telemetry for this connection. By
-   * default this will be the leaf of the path to the database file.
-   */
-  nsCString mTelemetryFilename;
-
-  /**
    * Lazily created thread for asynchronous statement execution.  Consumers
    * should use getAsyncExecutionTarget rather than directly accessing this
    * field.
@@ -401,28 +399,10 @@ class Connection final : public mozIStorageConnection,
   nsCOMPtr<nsIThread> mAsyncExecutionThread;
 
   /**
-   * Set to true by Close() or AsyncClose() prior to shutdown.
-   *
-   * If false, we guarantee both that the underlying sqlite3 database
-   * connection is still open and that getAsyncExecutionTarget() can
-   * return a thread. Once true, either the sqlite3 database
-   * connection is being shutdown or it has been
-   * shutdown. Additionally, once true, getAsyncExecutionTarget()
-   * returns null.
-   *
-   * This variable should be accessed while holding the
-   * sharedAsyncExecutionMutex.
+   * The filename that will be reported to telemetry for this connection. By
+   * default this will be the leaf of the path to the database file.
    */
-  bool mAsyncExecutionThreadShuttingDown;
-
-  /**
-   * Set to true just prior to calling sqlite3_close on the
-   * connection.
-   *
-   * This variable should be accessed while holding the
-   * sharedAsyncExecutionMutex.
-   */
-  bool mConnectionClosed;
+  nsCString mTelemetryFilename;
 
   /**
    * Stores the default behavior for all transactions run on this connection.
@@ -451,29 +431,58 @@ class Connection final : public mozIStorageConnection,
    */
   nsCOMPtr<mozIStorageProgressHandler> mProgressHandler;
 
+  // This is here for two reasons: 1) It's used to make sure that the
+  // connections do not outlive the service.  2) Our custom collating functions
+  // call its localeCompareStrings() method.
+  RefPtr<Service> mStorageService;
+
+  nsresult synchronousClose();
+
   /**
    * Stores the flags we passed to sqlite3_open_v2.
    */
   const int mFlags;
 
-  /**
-   * Stores whether we should ask sqlite3_open_v2 to ignore locking.
-   */
-  const bool mIgnoreLockingMode;
-
-  // This is here for two reasons: 1) It's used to make sure that the
-  // connections do not outlive the service.  2) Our custom collating functions
-  // call its localeCompareStrings() method.
-  RefPtr<Service> mStorageService;
+  uint32_t mTransactionNestingLevel;
 
   /**
    * Indicates which operations are supported on this connection.
    */
   const ConnectionOperation mSupportedOperations;
 
-  nsresult synchronousClose();
+  /**
+   * Stores whether this connection is interruptible.
+   */
+  const bool mInterruptible;
 
-  uint32_t mTransactionNestingLevel;
+  /**
+   * Stores whether we should ask sqlite3_open_v2 to ignore locking.
+   */
+  const bool mIgnoreLockingMode;
+
+  /**
+   * Set to true by Close() or AsyncClose() prior to shutdown.
+   *
+   * If false, we guarantee both that the underlying sqlite3 database
+   * connection is still open and that getAsyncExecutionTarget() can
+   * return a thread. Once true, either the sqlite3 database
+   * connection is being shutdown or it has been
+   * shutdown. Additionally, once true, getAsyncExecutionTarget()
+   * returns null.
+   *
+   * This variable should be accessed while holding the
+   * sharedAsyncExecutionMutex.
+   */
+  bool mAsyncExecutionThreadShuttingDown;
+
+  /**
+   * Set to true just prior to calling sqlite3_close on the
+   * connection.
+   *
+   * This variable should be accessed while holding the
+   * sharedAsyncExecutionMutex.
+   */
+  bool mConnectionClosed;
 };
 
 /**

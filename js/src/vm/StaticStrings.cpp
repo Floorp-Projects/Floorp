@@ -6,23 +6,18 @@
 
 #include "vm/StaticStrings.h"
 
-#include "mozilla/Assertions.h"
-#include "mozilla/HashFunctions.h"
-#include "mozilla/Range.h"
+#include "mozilla/HashFunctions.h"  // mozilla::HashString
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stddef.h>  // size_t
+#include <stdint.h>  // uint32_t
 
-#include "NamespaceImports.h"
+#include "js/HashTable.h"   // js::HashNumber
+#include "js/TypeDecls.h"   // Latin1Char
+#include "vm/Realm.h"       // AutoAllocInAtomsZone
+#include "vm/StringType.h"  // JSString, JSLinearString
 
-#include "gc/Allocator.h"
-#include "gc/AllocKind.h"
-#include "gc/Tracer.h"
-#include "js/HashTable.h"
-#include "js/TypeDecls.h"
-
-#include "vm/Realm-inl.h"
-#include "vm/StringType-inl.h"
+#include "vm/Realm-inl.h"       // AutoAllocInAtomsZone
+#include "vm/StringType-inl.h"  // NewInlineStringForAtom
 
 using namespace js;
 
@@ -43,12 +38,9 @@ bool StaticStrings::init(JSContext* cx) {
   static_assert(UNIT_STATIC_LIMIT - 1 <= JSString::MAX_LATIN1_CHAR,
                 "Unit strings must fit in Latin1Char.");
 
-  using Latin1Range = mozilla::Range<const Latin1Char>;
-
   for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++) {
     Latin1Char ch = Latin1Char(i);
-    JSLinearString* s =
-        NewInlineString<NoGC>(cx, Latin1Range(&ch, 1), gc::TenuredHeap);
+    JSLinearString* s = NewInlineStringForAtom(cx, &ch, 1);
     if (!s) {
       return false;
     }
@@ -58,8 +50,7 @@ bool StaticStrings::init(JSContext* cx) {
 
   for (uint32_t i = 0; i < NUM_LENGTH2_ENTRIES; i++) {
     Latin1Char buffer[] = {firstCharOfLength2(i), secondCharOfLength2(i)};
-    JSLinearString* s =
-        NewInlineString<NoGC>(cx, Latin1Range(buffer, 2), gc::TenuredHeap);
+    JSLinearString* s = NewInlineStringForAtom(cx, buffer, 2);
     if (!s) {
       return false;
     }
@@ -75,11 +66,10 @@ bool StaticStrings::init(JSContext* cx) {
           getLength2IndexStatic(char(i / 10) + '0', char(i % 10) + '0');
       intStaticTable[i] = length2StaticTable[index];
     } else {
-      Latin1Char buffer[] = {Latin1Char('0' + (i / 100)),
-                             Latin1Char('0' + ((i / 10) % 10)),
-                             Latin1Char('0' + (i % 10))};
-      JSLinearString* s =
-          NewInlineString<NoGC>(cx, Latin1Range(buffer, 3), gc::TenuredHeap);
+      Latin1Char buffer[] = {Latin1Char(firstCharOfLength3(i)),
+                             Latin1Char(secondCharOfLength3(i)),
+                             Latin1Char(thirdCharOfLength3(i))};
+      JSLinearString* s = NewInlineStringForAtom(cx, buffer, 3);
       if (!s) {
         return false;
       }
@@ -93,26 +83,4 @@ bool StaticStrings::init(JSContext* cx) {
   }
 
   return true;
-}
-
-inline void TraceStaticString(JSTracer* trc, JSAtom* atom, const char* name) {
-  MOZ_ASSERT(atom->isPermanentAtom());
-  TraceProcessGlobalRoot(trc, atom, name);
-}
-
-void StaticStrings::trace(JSTracer* trc) {
-  /* These strings never change, so barriers are not needed. */
-
-  for (auto& s : unitStaticTable) {
-    TraceStaticString(trc, s, "unit-static-string");
-  }
-
-  for (auto& s : length2StaticTable) {
-    TraceStaticString(trc, s, "length2-static-string");
-  }
-
-  /* This may mark some strings more than once, but so be it. */
-  for (auto& s : intStaticTable) {
-    TraceStaticString(trc, s, "int-static-string");
-  }
 }

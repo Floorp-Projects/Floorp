@@ -10,9 +10,10 @@ use mozprofile::preferences::Pref;
 use mozprofile::profile::{PrefFile, Profile};
 use mozrunner::runner::{FirefoxProcess, FirefoxRunner, Runner, RunnerProcess};
 use std::fs;
-use std::path::PathBuf;
+use std::io::Read;
+use std::path::{Path, PathBuf};
 use std::time;
-
+use url::{Host, Url};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 
 /// A running Gecko instance.
@@ -22,7 +23,7 @@ pub(crate) enum Browser {
     Remote(RemoteBrowser),
 
     /// An existing browser instance not controlled by GeckoDriver
-    Existing,
+    Existing(u16),
 }
 
 impl Browser {
@@ -30,7 +31,15 @@ impl Browser {
         match self {
             Browser::Local(x) => x.close(wait_for_shutdown),
             Browser::Remote(x) => x.close(),
-            Browser::Existing => Ok(()),
+            Browser::Existing(_) => Ok(()),
+        }
+    }
+
+    pub(crate) fn marionette_port(&mut self) -> Option<u16> {
+        match self {
+            Browser::Local(x) => x.marionette_port(),
+            Browser::Remote(x) => x.marionette_port(),
+            Browser::Existing(x) => Some(*x),
         }
     }
 }
@@ -38,14 +47,18 @@ impl Browser {
 #[derive(Debug)]
 /// A local Firefox process, running on this (host) device.
 pub(crate) struct LocalBrowser {
-    process: FirefoxProcess,
+    marionette_port: u16,
     prefs_backup: Option<PrefsBackup>,
+    process: FirefoxProcess,
+    profile_path: PathBuf,
 }
 
 impl LocalBrowser {
     pub(crate) fn new(
         options: FirefoxOptions,
         marionette_port: u16,
+        allow_hosts: Vec<Host>,
+        allow_origins: Vec<Url>,
         jsdebugger: bool,
     ) -> WebDriverResult<LocalBrowser> {
         let binary = options.binary.ok_or_else(|| {
@@ -70,6 +83,8 @@ impl LocalBrowser {
             &mut profile,
             is_custom_profile,
             options.prefs,
+            allow_hosts,
+            allow_origins,
             jsdebugger,
         )
         .map_err(|e| {
@@ -79,6 +94,7 @@ impl LocalBrowser {
             )
         })?;
 
+        let profile_path = profile.path.clone();
         let mut runner = FirefoxRunner::new(&binary, profile);
 
         runner.arg("--marionette");
@@ -109,8 +125,10 @@ impl LocalBrowser {
         };
 
         Ok(LocalBrowser {
-            process,
+            marionette_port,
             prefs_backup,
+            process,
+            profile_path,
         })
     }
 
@@ -132,6 +150,17 @@ impl LocalBrowser {
         Ok(())
     }
 
+    fn marionette_port(&mut self) -> Option<u16> {
+        if self.marionette_port != 0 {
+            return Some(self.marionette_port);
+        }
+        let port = read_marionette_port(&self.profile_path);
+        if let Some(port) = port {
+            self.marionette_port = port;
+        }
+        port
+    }
+
     pub(crate) fn check_status(&mut self) -> Option<String> {
         match self.process.try_wait() {
             Ok(Some(status)) => Some(
@@ -146,10 +175,33 @@ impl LocalBrowser {
     }
 }
 
+fn read_marionette_port(profile_path: &Path) -> Option<u16> {
+    let port_file = profile_path.join("MarionetteActivePort");
+    let mut port_str = String::with_capacity(6);
+    let mut file = match fs::File::open(&port_file) {
+        Ok(file) => file,
+        Err(_) => {
+            trace!("Failed to open {}", &port_file.to_string_lossy());
+            return None;
+        }
+    };
+    if let Err(e) = file.read_to_string(&mut port_str) {
+        trace!("Failed to read {}: {}", &port_file.to_string_lossy(), e);
+        return None;
+    };
+    println!("Read port: {}", port_str);
+    let port = port_str.parse::<u16>().ok();
+    if port.is_none() {
+        warn!("Failed fo convert {} to u16", &port_str);
+    }
+    port
+}
+
 #[derive(Debug)]
 /// A remote instance, running on a (target) Android device.
 pub(crate) struct RemoteBrowser {
     handler: AndroidHandler,
+    marionette_port: u16,
 }
 
 impl RemoteBrowser {
@@ -157,6 +209,8 @@ impl RemoteBrowser {
         options: FirefoxOptions,
         marionette_port: u16,
         websocket_port: Option<u16>,
+        allow_hosts: Vec<Host>,
+        allow_origins: Vec<Url>,
     ) -> WebDriverResult<RemoteBrowser> {
         let android_options = options.android.unwrap();
 
@@ -172,6 +226,8 @@ impl RemoteBrowser {
             &mut profile,
             is_custom_profile,
             options.prefs,
+            allow_hosts,
+            allow_origins,
             false,
         )
         .map_err(|e| {
@@ -185,12 +241,19 @@ impl RemoteBrowser {
 
         handler.launch()?;
 
-        Ok(RemoteBrowser { handler })
+        Ok(RemoteBrowser {
+            handler,
+            marionette_port,
+        })
     }
 
     fn close(self) -> WebDriverResult<()> {
         self.handler.force_stop()?;
         Ok(())
+    }
+
+    fn marionette_port(&mut self) -> Option<u16> {
+        Some(self.marionette_port)
     }
 }
 
@@ -199,6 +262,8 @@ fn set_prefs(
     profile: &mut Profile,
     custom_profile: bool,
     extra_prefs: Vec<(String, Pref)>,
+    allow_hosts: Vec<Host>,
+    allow_origins: Vec<Url>,
     js_debugger: bool,
 ) -> WebDriverResult<Option<PrefsBackup>> {
     let prefs = profile.user_prefs().map_err(|_| {
@@ -232,8 +297,27 @@ fn set_prefs(
     prefs.insert("marionette.port", Pref::new(port));
     prefs.insert("remote.log.level", logging::max_level().into());
 
-    // Deprecated since Firefox 91.
-    prefs.insert("marionette.log.level", logging::max_level().into());
+    // Origins and host names to allow for WebDriver BiDi
+    prefs.insert(
+        "remote.hosts.allowed",
+        Pref::new(
+            allow_hosts
+                .iter()
+                .map(|host| host.to_string())
+                .collect::<Vec<String>>()
+                .join(","),
+        ),
+    );
+    prefs.insert(
+        "remote.origins.allowed",
+        Pref::new(
+            allow_origins
+                .iter()
+                .map(|origin| origin.to_string())
+                .collect::<Vec<String>>()
+                .join(","),
+        ),
+    );
 
     prefs.write().map_err(|e| {
         WebDriverError::new(
@@ -284,12 +368,15 @@ impl PrefsBackup {
 #[cfg(test)]
 mod tests {
     use super::set_prefs;
+    use crate::browser::read_marionette_port;
     use crate::capabilities::FirefoxOptions;
     use mozprofile::preferences::{Pref, PrefValue};
     use mozprofile::profile::Profile;
     use serde_json::{Map, Value};
     use std::fs::File;
     use std::io::{Read, Write};
+    use std::path::Path;
+    use tempfile::tempdir;
 
     fn example_profile() -> Value {
         let mut profile_data = Vec::with_capacity(1024);
@@ -304,7 +391,7 @@ mod tests {
     #[test]
     fn test_remote_log_level() {
         let mut profile = Profile::new().unwrap();
-        set_prefs(2828, &mut profile, false, vec![], false).ok();
+        set_prefs(2828, &mut profile, false, vec![], vec![], vec![], false).ok();
         let user_prefs = profile.user_prefs().unwrap();
 
         let pref = user_prefs.get("remote.log.level").unwrap();
@@ -344,7 +431,8 @@ mod tests {
 
         let mut profile = opts.profile.expect("valid firefox profile");
 
-        set_prefs(2828, &mut profile, true, opts.prefs, false).expect("set preferences");
+        set_prefs(2828, &mut profile, true, opts.prefs, vec![], vec![], false)
+            .expect("set preferences");
 
         let prefs_set = profile.user_prefs().expect("valid user preferences");
         println!("{:#?}", prefs_set.prefs);
@@ -384,7 +472,7 @@ mod tests {
             .read_to_string(&mut initial_prefs_data)
             .unwrap();
 
-        let backup = set_prefs(2828, &mut profile, true, vec![], false)
+        let backup = set_prefs(2828, &mut profile, true, vec![], vec![], vec![], false)
             .unwrap()
             .unwrap();
         let user_prefs = profile.user_prefs().unwrap();
@@ -419,5 +507,25 @@ mod tests {
             .read_to_string(&mut final_prefs_data)
             .unwrap();
         assert_eq!(final_prefs_data, initial_prefs_data);
+    }
+
+    #[test]
+    fn test_local_marionette_port() {
+        fn create_port_file(profile_path: &Path, data: &[u8]) {
+            let port_path = profile_path.join("MarionetteActivePort");
+            let mut file = File::create(&port_path).unwrap();
+            file.write_all(data).unwrap();
+        }
+
+        let profile_dir = tempdir().unwrap();
+        let profile_path = profile_dir.path();
+        assert_eq!(read_marionette_port(&profile_path), None);
+        assert_eq!(read_marionette_port(&profile_path), None);
+        create_port_file(&profile_path, b"");
+        assert_eq!(read_marionette_port(&profile_path), None);
+        create_port_file(&profile_path, b"1234");
+        assert_eq!(read_marionette_port(&profile_path), Some(1234));
+        create_port_file(&profile_path, b"1234abc");
+        assert_eq!(read_marionette_port(&profile_path), None);
     }
 }

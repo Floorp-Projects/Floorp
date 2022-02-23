@@ -37,7 +37,7 @@ Staying on top of the bugs in your component means:
 
    -  Members of your team do not see the bug queue and get the
       ‘wiggins’
-      
+
 Who Triages
 -----------
 

@@ -4,9 +4,6 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 
 const PROVIDER_PREF_BRANCH =
   "browser.newtabpage.activity-stream.asrouter.providers.";
@@ -52,12 +49,6 @@ class _ASRouterPreferences {
   constructor() {
     Object.assign(this, DEFAULT_STATE);
     this._callbacks = new Set();
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "disableCaptivePortalVPNPromo",
-      "browser.newtabpage.activity-stream.asrouter.disable-captive-portal-vpn-promo",
-      false
-    );
   }
 
   _transformPersonalizedCfrScores(value) {

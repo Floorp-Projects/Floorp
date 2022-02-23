@@ -77,7 +77,7 @@ add_task(async function click_dropmarker() {
   ok(!dropmarker.hasAttribute("open"), "should start with the panel closed");
   ok(!isActive(), "should start with the profiler inactive");
 
-  const popupShownPromise = waitForProfilerPopupEvent("popupshown");
+  const popupShownPromise = waitForProfilerPopupEvent(window, "popupshown");
   dropmarker.click();
   await popupShownPromise;
 
@@ -87,7 +87,7 @@ add_task(async function click_dropmarker() {
   await getElementByLabel(document, "Start Recording");
 
   info("Press Escape to close the panel.");
-  const popupHiddenPromise = waitForProfilerPopupEvent("popuphidden");
+  const popupHiddenPromise = waitForProfilerPopupEvent(window, "popuphidden");
   EventUtils.synthesizeKey("KEY_Escape");
   await popupHiddenPromise;
   ok(!dropmarker.hasAttribute("open"), "panel should be closed");

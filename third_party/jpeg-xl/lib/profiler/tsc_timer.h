@@ -22,7 +22,6 @@
 #include <windows.h>
 // Undef macros to avoid collisions
 #undef LoadFence
-#undef StoreFence
 #endif
 
 #if defined(__MACH__)

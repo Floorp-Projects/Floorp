@@ -63,7 +63,7 @@ ia2AccessibleImage::get_imagePosition(enum IA2CoordinateType aCoordType,
           ? nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE
           : nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
-  nsIntPoint pos = imageAcc->Position(geckoCoordType);
+  LayoutDeviceIntPoint pos = imageAcc->Position(geckoCoordType);
   *aX = pos.x;
   *aY = pos.y;
   return S_OK;
@@ -79,7 +79,7 @@ ia2AccessibleImage::get_imageSize(long* aHeight, long* aWidth) {
   ImageAccessible* imageAcc = ImageAcc();
   if (!imageAcc) return CO_E_OBJNOTCONNECTED;
 
-  nsIntSize size = imageAcc->Size();
+  LayoutDeviceIntSize size = imageAcc->Size();
   *aHeight = size.width;
   *aWidth = size.height;
   return S_OK;

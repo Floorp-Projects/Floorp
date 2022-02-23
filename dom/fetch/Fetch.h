@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_Fetch_h
 #define mozilla_dom_Fetch_h
 
+#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsProxyRelease.h"
@@ -18,7 +19,12 @@
 #include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/FetchStreamReader.h"
+#ifdef MOZ_DOM_STREAMS
+#  include "mozilla/dom/ReadableStream.h"
+#  include "mozilla/dom/ReadableStreamDefaultReaderBinding.h"
+#endif
 #include "mozilla/dom/RequestBinding.h"
+#include "mozilla/dom/workerinternals/RuntimeService.h"
 
 class nsIGlobalObject;
 class nsIEventTarget;
@@ -39,7 +45,8 @@ class BlobImpl;
 class InternalRequest;
 class
     OwningBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString;
-class ReadableStream;
+
+class ReadableStreamDefaultReader;
 class RequestOrUSVString;
 class WorkerPrivate;
 
@@ -158,9 +165,7 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
   }
 
 #ifdef MOZ_DOM_STREAMS
-  already_AddRefed<ReadableStream> GetBody(ErrorResult& aRv) {
-    MOZ_CRASH("MOZ_DOM_STREAMS:NYI");
-  }
+  already_AddRefed<ReadableStream> GetBody(JSContext* aCx, ErrorResult& aRv);
 #else
   void GetBody(JSContext* aCx, JS::MutableHandle<JSObject*> aBodyOut,
                ErrorResult& aRv);
@@ -171,6 +176,19 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
 
   const nsAString& BodyLocalPath() const;
 
+#ifdef MOZ_DOM_STREAMS
+  // If the body contains a ReadableStream body object, this method produces a
+  // tee() of it.
+  //
+  // This is marked as a script boundary minimize changes required for
+  // annotation while we work out how to correctly annotate this code.
+  // Tracked in Bug 1750650.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  void MaybeTeeReadableStreamBody(JSContext* aCx, ReadableStream** aBodyOut,
+                                  FetchStreamReader** aStreamReader,
+                                  nsIInputStream** aInputStream,
+                                  ErrorResult& aRv);
+#else
   // If the body contains a ReadableStream body object, this method produces a
   // tee() of it.
   void MaybeTeeReadableStreamBody(JSContext* aCx,
@@ -178,6 +196,7 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
                                   FetchStreamReader** aStreamReader,
                                   nsIInputStream** aInputStream,
                                   ErrorResult& aRv);
+#endif
 
   // Utility public methods accessed by various runnables.
 
@@ -210,15 +229,25 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
     mFetchStreamReader = nullptr;
   }
 
+#ifndef MOZ_DOM_STREAMS
   void SetReadableStreamBody(JSObject* aBody) override {
     mReadableStreamBody = aBody;
   }
-
   JSObject* GetReadableStreamBody() override { return mReadableStreamBody; }
+#else
+  void SetReadableStreamBody(ReadableStream* aBody) override {
+    mReadableStreamBody = aBody;
+  }
+  ReadableStream* GetReadableStreamBody() override {
+    return mReadableStreamBody;
+  }
+#endif
 
   void MarkAsRead() override { mBodyUsed = true; }
 
   virtual AbortSignalImpl* GetSignalImpl() const = 0;
+
+  virtual AbortSignalImpl* GetSignalImplToConsumeBody() const = 0;
 
   // AbortFollower
   void RunAbortAlgorithm() override;
@@ -230,33 +259,48 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
  protected:
   nsCOMPtr<nsIGlobalObject> mOwner;
 
-  // Always set whenever the FetchBody is created on the worker thread.
-  WorkerPrivate* mWorkerPrivate;
+#ifdef MOZ_DOM_STREAMS
+  // This is the ReadableStream exposed to content. It's underlying source is a
+  // BodyStream object. This needs to be traversed by subclasses.
+  RefPtr<ReadableStream> mReadableStreamBody;
 
+  // This is the Reader used to retrieve data from the body. This needs to be
+  // traversed by subclasses.
+  RefPtr<ReadableStreamDefaultReader> mReadableStreamReader;
+#else
   // This is the ReadableStream exposed to content. It's underlying source is a
   // BodyStream object.
   JS::Heap<JSObject*> mReadableStreamBody;
 
   // This is the Reader used to retrieve data from the body.
   JS::Heap<JSObject*> mReadableStreamReader;
+#endif
   RefPtr<FetchStreamReader> mFetchStreamReader;
 
   explicit FetchBody(nsIGlobalObject* aOwner);
 
   virtual ~FetchBody();
 
+#ifdef MOZ_DOM_STREAMS
+  void SetReadableStreamBody(JSContext* aCx, ReadableStream* aBody);
+#else
   void SetReadableStreamBody(JSContext* aCx, JSObject* aBody);
+#endif
 
  private:
   Derived* DerivedClass() const {
     return static_cast<Derived*>(const_cast<FetchBody*>(this));
   }
 
+#ifdef MOZ_DOM_STREAMS
+  void LockStream(JSContext* aCx, ReadableStream* aStream, ErrorResult& aRv);
+#else
   void LockStream(JSContext* aCx, JS::HandleObject aStream, ErrorResult& aRv);
+#endif
 
-  bool IsOnTargetThread() { return NS_IsMainThread() == !mWorkerPrivate; }
-
-  void AssertIsOnTargetThread() { MOZ_ASSERT(IsOnTargetThread()); }
+  void AssertIsOnTargetThread() {
+    MOZ_ASSERT(NS_IsMainThread() == !GetCurrentThreadWorkerPrivate());
+  }
 
   // Only ever set once, always on target thread.
   bool mBodyUsed;
@@ -279,6 +323,7 @@ class EmptyBody final : public FetchBody<EmptyBody> {
   nsIGlobalObject* GetParentObject() const { return mOwner; }
 
   AbortSignalImpl* GetSignalImpl() const override { return mAbortSignalImpl; }
+  AbortSignalImpl* GetSignalImplToConsumeBody() const final { return nullptr; }
 
   const UniquePtr<mozilla::ipc::PrincipalInfo>& GetPrincipalInfo() const {
     return mPrincipalInfo;

@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !this.hasOwnProperty("ReadableStream")
+
 ignoreUnhandledRejections();
 
 var g = newGlobal({ newCompartment:  true });

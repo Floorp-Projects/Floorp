@@ -43,6 +43,21 @@ nsHttpActivityDistributor::ObserveActivity(nsISupports* aHttpChannel,
 }
 
 NS_IMETHODIMP
+nsHttpActivityDistributor::ObserveConnectionActivity(
+    const nsACString& aHost, int32_t aPort, bool aSSL, bool aHasECH,
+    bool aIsHttp3, uint32_t aActivityType, uint32_t aActivitySubtype,
+    PRTime aTimestamp, const nsACString& aExtraStringData) {
+  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
+
+  for (size_t i = 0; i < mObservers.Length(); i++) {
+    Unused << mObservers[i]->ObserveConnectionActivity(
+        aHost, aPort, aSSL, aHasECH, aIsHttp3, aActivityType, aActivitySubtype,
+        aTimestamp, aExtraStringData);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHttpActivityDistributor::ObserveActivityWithArgs(
     const HttpActivityArgs& aArgs, uint32_t aActivityType,
     uint32_t aActivitySubtype, PRTime aTimestamp, uint64_t aExtraSizeData,
@@ -105,6 +120,13 @@ nsHttpActivityDistributor::ObserveActivityWithArgs(
       Unused << self->ObserveActivity(
           nsCOMPtr<nsISupports>(do_QueryObject(channel)), aActivityType,
           aActivitySubtype, aTimestamp, aExtraSizeData, extraStringData);
+    } else if (args.type() == HttpActivityArgs::THttpConnectionActivity) {
+      const HttpConnectionActivity& activity =
+          args.get_HttpConnectionActivity();
+      Unused << self->ObserveConnectionActivity(
+          activity.host(), activity.port(), activity.ssl(), activity.hasECH(),
+          activity.isHttp3(), aActivityType, aActivitySubtype, aTimestamp,
+          activity.connInfoKey());
     }
   };
 
@@ -117,16 +139,26 @@ nsHttpActivityDistributor::ObserveActivityWithArgs(
   return NS_OK;
 }
 
+bool nsHttpActivityDistributor::Activated() { return mActivated; }
+
+bool nsHttpActivityDistributor::ObserveProxyResponseEnabled() {
+  return mObserveProxyResponse;
+}
+
+bool nsHttpActivityDistributor::ObserveConnectionEnabled() {
+  return mObserveConnection;
+}
+
 NS_IMETHODIMP
 nsHttpActivityDistributor::GetIsActive(bool* isActive) {
   NS_ENSURE_ARG_POINTER(isActive);
-  MutexAutoLock lock(mLock);
   if (XRE_IsSocketProcess()) {
     *isActive = mActivated;
     return NS_OK;
   }
 
-  *isActive = !!mObservers.Length();
+  MutexAutoLock lock(mLock);
+  *isActive = mActivated = !!mObservers.Length();
   return NS_OK;
 }
 
@@ -140,6 +172,10 @@ NS_IMETHODIMP nsHttpActivityDistributor::SetIsActive(bool aActived) {
 NS_IMETHODIMP
 nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver* aObserver) {
   MOZ_ASSERT(XRE_IsParentProcess());
+  if (!NS_IsMainThread()) {
+    // We only support calling this from the main thread.
+    return NS_ERROR_FAILURE;
+  }
 
   ObserverHandle observer(
       new ObserverHolder("nsIHttpActivityObserver", aObserver));
@@ -153,14 +189,17 @@ nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver* aObserver) {
     mObservers.AppendElement(observer);
   }
 
-  if (nsIOService::UseSocketProcess() && wasEmpty) {
-    auto task = []() {
-      SocketProcessParent* parent = SocketProcessParent::GetSingleton();
-      if (parent && parent->CanSend()) {
-        Unused << parent->SendOnHttpActivityDistributorActivated(true);
-      }
-    };
-    gIOService->CallOrWaitForSocketProcess(task);
+  if (wasEmpty) {
+    mActivated = true;
+    if (nsIOService::UseSocketProcess()) {
+      auto task = []() {
+        SocketProcessParent* parent = SocketProcessParent::GetSingleton();
+        if (parent && parent->CanSend()) {
+          Unused << parent->SendOnHttpActivityDistributorActivated(true);
+        }
+      };
+      gIOService->CallOrWaitForSocketProcess(task);
+    }
   }
   return NS_OK;
 }
@@ -168,18 +207,23 @@ nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver* aObserver) {
 NS_IMETHODIMP
 nsHttpActivityDistributor::RemoveObserver(nsIHttpActivityObserver* aObserver) {
   MOZ_ASSERT(XRE_IsParentProcess());
+  if (!NS_IsMainThread()) {
+    // We only support calling this from the main thread.
+    return NS_ERROR_FAILURE;
+  }
 
   ObserverHandle observer(
       new ObserverHolder("nsIHttpActivityObserver", aObserver));
 
-  bool isEmpty = false;
   {
     MutexAutoLock lock(mLock);
-    if (!mObservers.RemoveElement(observer)) return NS_ERROR_FAILURE;
-    isEmpty = mObservers.IsEmpty();
+    if (!mObservers.RemoveElement(observer)) {
+      return NS_ERROR_FAILURE;
+    }
+    mActivated = mObservers.IsEmpty();
   }
 
-  if (nsIOService::UseSocketProcess() && isEmpty) {
+  if (nsIOService::UseSocketProcess() && !mActivated) {
     auto task = []() {
       SocketProcessParent* parent = SocketProcessParent::GetSingleton();
       if (parent && parent->CanSend()) {
@@ -195,16 +239,58 @@ NS_IMETHODIMP
 nsHttpActivityDistributor::GetObserveProxyResponse(
     bool* aObserveProxyResponse) {
   NS_ENSURE_ARG_POINTER(aObserveProxyResponse);
-
-  MutexAutoLock lock(mLock);
-  *aObserveProxyResponse = mObserveProxyResponse;
+  bool result = mObserveProxyResponse;
+  *aObserveProxyResponse = result;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHttpActivityDistributor::SetObserveProxyResponse(bool aObserveProxyResponse) {
-  MutexAutoLock lock(mLock);
+  if (!NS_IsMainThread()) {
+    // We only support calling this from the main thread.
+    return NS_ERROR_FAILURE;
+  }
+
   mObserveProxyResponse = aObserveProxyResponse;
+  if (nsIOService::UseSocketProcess()) {
+    auto task = [aObserveProxyResponse]() {
+      SocketProcessParent* parent = SocketProcessParent::GetSingleton();
+      if (parent && parent->CanSend()) {
+        Unused << parent->SendOnHttpActivityDistributorObserveProxyResponse(
+            aObserveProxyResponse);
+      }
+    };
+    gIOService->CallOrWaitForSocketProcess(task);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpActivityDistributor::GetObserveConnection(bool* aObserveConnection) {
+  NS_ENSURE_ARG_POINTER(aObserveConnection);
+
+  *aObserveConnection = mObserveConnection;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpActivityDistributor::SetObserveConnection(bool aObserveConnection) {
+  if (!NS_IsMainThread()) {
+    // We only support calling this from the main thread.
+    return NS_ERROR_FAILURE;
+  }
+
+  mObserveConnection = aObserveConnection;
+  if (nsIOService::UseSocketProcess()) {
+    auto task = [aObserveConnection]() {
+      SocketProcessParent* parent = SocketProcessParent::GetSingleton();
+      if (parent && parent->CanSend()) {
+        Unused << parent->SendOnHttpActivityDistributorObserveConnection(
+            aObserveConnection);
+      }
+    };
+    gIOService->CallOrWaitForSocketProcess(task);
+  }
   return NS_OK;
 }
 

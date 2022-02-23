@@ -17,6 +17,22 @@
 #   and not quoting it ensures that each of those arguments is passed
 #   as a separate argument to the actual LD.
 #
+# * In rare cases, we also need MOZ_CARGO_WRAP_LD_CXX, which is the
+#   equivalent of CXX, when linking C++ code. Usually, this should
+#   simply work by the use of CC and -lstdc++ (added by cc-rs).
+#   However, in the case of sanitizer runtimes, there is a separate
+#   runtime for C and C++ and linking C++ code with the C runtime can
+#   fail if the requested feature is in the C++ runtime only (bug 1747298).
+#
 # $@ is doubly quoted for the eval. See bug 1418598.
 
-eval ${MOZ_CARGO_WRAP_LD} ${MOZ_CARGO_WRAP_LDFLAGS} '"$@"'
+WRAP_LD=${MOZ_CARGO_WRAP_LD}
+for opt; do
+  case "$opt" in
+  -lc++|-lstdc++)
+    WRAP_LD=${MOZ_CARGO_WRAP_LD_CXX};
+    break;
+    ;;
+  esac
+done
+eval ${WRAP_LD} ${MOZ_CARGO_WRAP_LDFLAGS} '"$@"'

@@ -210,7 +210,7 @@ void XULTreeAccessible::SetCurrentItem(const LocalAccessible* aItem) {
   NS_ERROR("XULTreeAccessible::SetCurrentItem not implemented");
 }
 
-void XULTreeAccessible::SelectedItems(nsTArray<LocalAccessible*>* aItems) {
+void XULTreeAccessible::SelectedItems(nsTArray<Accessible*>* aItems) {
   if (!mTreeView) return;
 
   nsCOMPtr<nsITreeSelection> selection;
@@ -297,7 +297,7 @@ bool XULTreeAccessible::UnselectAll() {
   return true;
 }
 
-LocalAccessible* XULTreeAccessible::GetSelectedItem(uint32_t aIndex) {
+Accessible* XULTreeAccessible::GetSelectedItem(uint32_t aIndex) {
   if (!mTreeView) return nullptr;
 
   nsCOMPtr<nsITreeSelection> selection;
@@ -706,6 +706,8 @@ Relation XULTreeItemAccessibleBase::RelationByType(RelationType aType) const {
       return Relation();
   }
 }
+
+bool XULTreeItemAccessibleBase::HasPrimaryAction() const { return true; }
 
 uint8_t XULTreeItemAccessibleBase::ActionCount() const {
   // "activate" action is available for all treeitems, "expand/collapse" action

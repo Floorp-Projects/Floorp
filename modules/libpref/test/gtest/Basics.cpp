@@ -34,3 +34,21 @@ TEST(PrefsBasics, Errors)
   ASSERT_FLOAT_EQ(Preferences::GetFloat("foo.float", 1.0f, PrefValueKind::User),
                   4.44f);
 }
+
+TEST(PrefsBasics, Serialize)
+{
+  // Ensure that at least this one preference exists
+  Preferences::SetBool("foo.bool", true, PrefValueKind::Default);
+  ASSERT_EQ(Preferences::GetBool("foo.bool", false, PrefValueKind::Default),
+            true);
+
+  nsCString str;
+  Preferences::SerializePreferences(
+      str, [](const char* aPref) -> bool { return false; });
+  ASSERT_STREQ(str.Data(), "");
+
+  Preferences::SerializePreferences(str, [](const char* aPref) -> bool {
+    return strncmp(aPref, "foo.bool", 8) == 0;
+  });
+  ASSERT_STREQ(str.Data(), "B-:8/foo.bool:T:F\n");
+}

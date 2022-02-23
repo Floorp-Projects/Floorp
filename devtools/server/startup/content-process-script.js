@@ -126,7 +126,7 @@ class ContentProcessStartup {
         );
         break;
       case "debug:remove-session-data-entry":
-        this.addSessionDataEntry(
+        this.removeSessionDataEntry(
           msg.data.watcherActorID,
           msg.data.type,
           msg.data.entries

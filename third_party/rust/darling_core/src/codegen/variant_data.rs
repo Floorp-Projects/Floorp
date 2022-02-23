@@ -1,8 +1,7 @@
 use proc_macro2::TokenStream;
 
-use ast::Fields;
-use ast::Style;
-use codegen::Field;
+use crate::ast::{Fields, Style};
+use crate::codegen::Field;
 
 pub struct FieldsGen<'a> {
     fields: &'a Fields<Field<'a>>,
@@ -18,11 +17,12 @@ impl<'a> FieldsGen<'a> {
     }
 
     /// Create declarations for all the fields in the struct.
-    pub(in codegen) fn declarations(&self) -> TokenStream {
+    pub(in crate::codegen) fn declarations(&self) -> TokenStream {
         match *self.fields {
             Fields {
                 style: Style::Struct,
                 ref fields,
+                ..
             } => {
                 let vdr = fields.iter().map(Field::as_declaration);
                 quote!(#(#vdr)*)
@@ -32,7 +32,7 @@ impl<'a> FieldsGen<'a> {
     }
 
     /// Generate the loop which walks meta items looking for property matches.
-    pub(in codegen) fn core_loop(&self) -> TokenStream {
+    pub(in crate::codegen) fn core_loop(&self) -> TokenStream {
         let arms = self.fields.as_ref().map(Field::as_match);
 
         // If we're allowing unknown fields, then handling one is a no-op.
@@ -74,6 +74,7 @@ impl<'a> FieldsGen<'a> {
             Fields {
                 style: Style::Struct,
                 ref fields,
+                ..
             } => {
                 let checks = fields.iter().map(Field::as_presence_check);
                 quote!(#(#checks)*)
@@ -82,7 +83,7 @@ impl<'a> FieldsGen<'a> {
         }
     }
 
-    pub(in codegen) fn initializers(&self) -> TokenStream {
+    pub(in crate::codegen) fn initializers(&self) -> TokenStream {
         let inits = self.fields.as_ref().map(Field::as_initializer);
         let inits = inits.iter();
 

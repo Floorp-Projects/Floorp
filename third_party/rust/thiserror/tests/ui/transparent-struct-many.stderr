@@ -1,5 +1,5 @@
 error: #[error(transparent)] requires exactly one field
- --> $DIR/transparent-struct-many.rs:4:1
+ --> tests/ui/transparent-struct-many.rs:4:1
   |
 4 | #[error(transparent)]
   | ^^^^^^^^^^^^^^^^^^^^^

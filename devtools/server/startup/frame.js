@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* global content, addEventListener, addMessageListener, removeMessageListener,
+/* global content, docShell, addEventListener, addMessageListener, removeMessageListener,
   sendAsyncMessage */
 
 /*
@@ -79,12 +79,27 @@ try {
         const {
           WebExtensionTargetActor,
         } = require("devtools/server/actors/targets/webextension");
+        const {
+          createWebExtensionSessionContext,
+        } = require("devtools/server/actors/watcher/session-context");
+        const { browsingContext } = docShell;
         actor = new WebExtensionTargetActor(conn, {
           addonId,
           addonBrowsingContextGroupId,
           chromeGlobal,
           isTopLevelTarget: true,
           prefix,
+          sessionContext: createWebExtensionSessionContext(
+            {
+              addonId: addonId,
+              browsingContextID: browsingContext.id,
+              innerWindowId: browsingContext.currentWindowContext.innerWindowId,
+            },
+            {
+              isServerTargetSwitchingEnabled:
+                msg.data.isServerTargetSwitchingEnabled,
+            }
+          ),
         });
       } else {
         const {

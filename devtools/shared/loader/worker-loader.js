@@ -516,6 +516,7 @@ this.worker = new WorkerDebuggerLoader({
     setImmediate: setImmediate,
     retrieveConsoleEvents: this.retrieveConsoleEvents,
     setConsoleEventHandler: this.setConsoleEventHandler,
+    clearConsoleEvents: this.clearConsoleEvents,
     console: console,
     btoa: this.btoa,
     atob: this.atob,

@@ -148,7 +148,6 @@ void moz_container_class_init(MozContainerClass* klass) {
 
 void moz_container_init(MozContainer* container) {
   gtk_widget_set_can_focus(GTK_WIDGET(container), TRUE);
-  gtk_container_set_resize_mode(GTK_CONTAINER(container), GTK_RESIZE_IMMEDIATE);
   gtk_widget_set_redraw_on_allocate(GTK_WIDGET(container), FALSE);
 #ifdef MOZ_WAYLAND
   if (mozilla::widget::GdkIsWaylandDisplay()) {

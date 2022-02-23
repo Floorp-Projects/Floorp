@@ -8,7 +8,7 @@
 
 "use strict";
 
-/* import-globals-from ../../../content/contentAreaUtils.js */
+/* import-globals-from /toolkit/content/contentAreaUtils.js */
 
 const gUpdateElevationDialog = {
   openUpdateURL(event) {

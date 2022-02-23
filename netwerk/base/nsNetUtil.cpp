@@ -2722,7 +2722,26 @@ bool NS_IsAboutBlank(nsIURI* uri) {
     return false;
   }
 
-  return uri->GetSpecOrDefault().EqualsLiteral("about:blank");
+  nsAutoCString spec;
+  if (NS_FAILED(uri->GetSpec(spec))) {
+    return false;
+  }
+
+  return spec.EqualsLiteral("about:blank");
+}
+
+bool NS_IsAboutSrcdoc(nsIURI* uri) {
+  // GetSpec can be expensive for some URIs, so check the scheme first.
+  if (!uri->SchemeIs("about")) {
+    return false;
+  }
+
+  nsAutoCString spec;
+  if (NS_FAILED(uri->GetSpec(spec))) {
+    return false;
+  }
+
+  return spec.EqualsLiteral("about:srcdoc");
 }
 
 nsresult NS_GenerateHostPort(const nsCString& host, int32_t port,

@@ -2070,6 +2070,14 @@
     val: RawInt32Field
     result: Int32Id
 
+- name: LoadDoubleConstant
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    val: DoubleField
+    result: NumberId
+
 - name: LoadBooleanConstant
   shared: true
   transpile: true

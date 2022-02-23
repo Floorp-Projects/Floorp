@@ -170,6 +170,20 @@ More Examples
 
 `Browsertime docs <https://github.com/mozilla/browsertime/tree/master/docs/examples>`_
 
+Passing Additional Arguments to Browertime
+------------------------------------------
+
+Browsertime has many command line flags to configure its usage, see `Browsertime configuration <https://www.sitespeed.io/documentation/browsertime/configuration/>`_.
+
+We do not currently support passing additional arguments, this work can be tracked in `Bug 1750976 <https://bugzilla.mozilla.org/show_bug.cgi?id=1750976>`_.
+
+There are two options to work around this and enable additional arguments.
+
+1. Define additional arguments in `testing/raptor/raptor/browsertime/base.py <https://searchfox.org/mozilla-central/source/testing/raptor/raptor/browsertime/base.py#220-252>`_.
+
+2. Add a ``browsertime_args`` entry to the appropriate manifest with the desired arguments, i.e. `browsertime-tp6.ini <https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.ini>`_ for desktop page load tests. `Example of browsertime_args format <https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-process-switch.ini#27>`_.
+
+
 Running Browsertime on Try
 --------------------------
 You can run all of our browsertime pageload tests through ``./mach try fuzzy --full``. We use chimera mode in these tests which means that both cold and warm pageload variants are running at the same time.

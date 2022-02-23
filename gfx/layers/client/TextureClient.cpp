@@ -850,6 +850,14 @@ bool TextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) {
   return mData ? mData->Serialize(aOutDescriptor) : false;
 }
 
+bool TextureClient::CropYCbCrPlanes(const gfx::IntSize& aYSize,
+                                    const gfx::IntSize& aCbCrSize) {
+  if (!mData) {
+    return false;
+  }
+  return mData->CropYCbCrPlanes(aYSize, aCbCrSize);
+}
+
 // static
 PTextureChild* TextureClient::CreateIPDLActor() {
   TextureChild* c = new TextureChild();
@@ -1031,7 +1039,7 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
   PTextureChild* actor = aForwarder->GetTextureForwarder()->CreateTexture(
       desc, std::move(readLockDescriptor),
       aForwarder->GetCompositorBackendType(), GetFlags(), mSerial,
-      mExternalImageId, nullptr);
+      mExternalImageId);
 
   if (!actor) {
     gfxCriticalNote << static_cast<int32_t>(desc.type()) << ", "

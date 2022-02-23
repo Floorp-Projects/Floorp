@@ -1,0 +1,30 @@
+include protocol PMyManaged;
+include MyTypes;                          // for MyActorPair
+
+using MyActorEnum from "mozilla/myns/MyActorUtils.h";
+using mozilla::myns::MyData from "mozilla/MyDataTypes.h";
+[MoveOnly] using class mozilla::myns::MyOtherData from "mozilla/MyDataTypes.h";
+[RefCounted] using class mozilla::myns::MyThirdData from "mozilla/MyDataTypes.h";
+
+namespace mozilla {
+namespace myns {
+
+[Comparable] union MyUnion {
+    float; 
+    MyOtherData;
+};
+
+sync protocol PMyManager {
+  manages PMyManaged;
+  parent:
+    async __delete__(nsString aNote);
+    sync SomeMsg(MyActorPair? aActors, MyData[] aMyData)
+        returns (int32_t x, int32_t y, MyUnion aUnion);
+    async PMyManaged();
+  both:
+    [Tainted] async AnotherMsg(MyActorEnum aEnum, int32_t aNumber)
+        returns (MyOtherData aOtherData);
+};
+
+}    // namespace myns
+}    // namespace mozilla

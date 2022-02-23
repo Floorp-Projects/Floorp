@@ -6,7 +6,6 @@
 package org.mozilla.gecko.process;
 
 import android.app.Service;
-import android.content.ComponentCallbacks2;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
@@ -22,17 +21,16 @@ import org.mozilla.gecko.GeckoThread.ParcelFileDescriptors;
 import org.mozilla.gecko.IGeckoEditableChild;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.ICompositorSurfaceManager;
+import org.mozilla.gecko.gfx.ISurfaceAllocator;
 import org.mozilla.gecko.util.ThreadUtils;
 
 public class GeckoServiceChildProcess extends Service {
   private static final String LOGTAG = "ServiceChildProcess";
-  // Allowed elapsed time between full GCs while under constant memory pressure
-  private static final long LOW_MEMORY_ONGOING_RESET_TIME_MS = 10000;
 
   private static IProcessManager sProcessManager;
   private static String sOwnerProcessId;
+  private final MemoryController mMemoryController = new MemoryController();
 
-  private long mLastLowMemoryNotificationTime = 0;
   // Makes sure we don't reuse this process
   private static boolean sCreateCalled;
 
@@ -163,6 +161,13 @@ public class GeckoServiceChildProcess extends Service {
       throw new AssertionError(
           "Invalid call to IChildProcess.getCompositorSurfaceManager for non-GPU process.");
     }
+
+    @Override
+    public ISurfaceAllocator getSurfaceAllocator() {
+      Log.e(LOGTAG, "Invalid call to IChildProcess.getSurfaceAllocator for non-GPU process");
+      throw new AssertionError(
+          "Invalid call to IChildProcess.getSurfaceAllocator for non-GPU process.");
+    }
   }
 
   protected Binder createBinder() {
@@ -186,35 +191,23 @@ public class GeckoServiceChildProcess extends Service {
 
   @Override
   public void onTrimMemory(final int level) {
-    Log.i(LOGTAG, "onTrimMemory(" + level + ")");
+    mMemoryController.onTrimMemory(level);
 
     // This is currently a no-op in Service, but let's future-proof.
     super.onTrimMemory(level);
+  }
 
-    if (level < ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
-      // We're not currently interested in trim events for non-backgrounded processes.
-      return;
-    }
+  @Override
+  public void onLowMemory() {
+    mMemoryController.onLowMemory();
+    super.onLowMemory();
+  }
 
-    // See nsIMemory.idl for descriptions of the various arguments to the "memory-pressure"
-    // observer.
-    String observerArg = null;
-
-    final long currentNotificationTime = System.currentTimeMillis();
-    if (level >= ComponentCallbacks2.TRIM_MEMORY_COMPLETE
-        || (currentNotificationTime - mLastLowMemoryNotificationTime)
-            >= LOW_MEMORY_ONGOING_RESET_TIME_MS) {
-      // We do a full "low-memory" notification for both new and last-ditch onTrimMemory requests.
-      observerArg = "low-memory";
-      mLastLowMemoryNotificationTime = currentNotificationTime;
-    } else {
-      // If it has been less than ten seconds since the last time we sent a "low-memory"
-      // notification, we send a "low-memory-ongoing" notification instead.
-      // This prevents Gecko from re-doing full GC's repeatedly over and over in succession,
-      // as they are expensive and quickly result in diminishing returns.
-      observerArg = "low-memory-ongoing";
-    }
-
-    GeckoAppShell.notifyObservers("memory-pressure", observerArg);
+  /**
+   * Returns the surface allocator interface that should be used by this process to allocate
+   * Surfaces, for consumption in either the GPU process or parent process.
+   */
+  public static ISurfaceAllocator getSurfaceAllocator() throws RemoteException {
+    return sProcessManager.getSurfaceAllocator();
   }
 }

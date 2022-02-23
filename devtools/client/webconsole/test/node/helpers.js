@@ -12,7 +12,7 @@ const {
   stubPackets,
 } = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
 const {
-  getAllMessagesById,
+  getMutableMessagesById,
 } = require("devtools/client/webconsole/selectors/messages");
 const { getPrefsService } = require("devtools/client/webconsole/utils/prefs");
 const prefsService = getPrefsService({});
@@ -81,7 +81,7 @@ function clonePacket(packet) {
  * @return {Message} - The message, or undefined if the index does not exists in the map.
  */
 function getMessageAt(state, index) {
-  const messages = getAllMessagesById(state);
+  const messages = getMutableMessagesById(state);
   return messages.get([...messages.keys()][index]);
 }
 
@@ -102,7 +102,7 @@ function getFirstMessage(state) {
  * @return {Message} - The last message, or undefined if there are no message in store.
  */
 function getLastMessage(state) {
-  const lastIndex = getAllMessagesById(state).size - 1;
+  const lastIndex = getMutableMessagesById(state).size - 1;
   return getMessageAt(state, lastIndex);
 }
 
@@ -125,6 +125,8 @@ function getPrivatePacket(key) {
   const packet = clonePacket(stubPackets.get(key));
   if (packet.message) {
     packet.message.private = true;
+  } else if (packet.pageError) {
+    packet.pageError.private = true;
   }
   if (Object.getOwnPropertyNames(packet).includes("private")) {
     packet.private = true;

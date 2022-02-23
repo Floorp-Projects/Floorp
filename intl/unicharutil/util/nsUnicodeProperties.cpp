@@ -9,7 +9,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/HashTable.h"
-#include "nsCharTraits.h"
+#include "mozilla/intl/Segmenter.h"
 
 #include "BaseChars.h"
 #include "IsCombiningDiacritic.h"
@@ -167,145 +167,11 @@ bool IsClusterExtender(uint32_t aCh, uint8_t aCategory) {
       (aCh >= 0xe0020 && aCh <= 0xe007f));   // emoji (flag) tag characters
 }
 
-enum HSType {
-  HST_NONE = U_HST_NOT_APPLICABLE,
-  HST_L = U_HST_LEADING_JAMO,
-  HST_V = U_HST_VOWEL_JAMO,
-  HST_T = U_HST_TRAILING_JAMO,
-  HST_LV = U_HST_LV_SYLLABLE,
-  HST_LVT = U_HST_LVT_SYLLABLE
-};
-
-static HSType GetHangulSyllableType(uint32_t aCh) {
-  return HSType(intl::UnicodeProperties::GetIntPropertyValue(
-      aCh, intl::UnicodeProperties::IntProperty::HangulSyllableType));
-}
-
-void ClusterIterator::Next() {
-  if (AtEnd()) {
-    NS_WARNING("ClusterIterator has already reached the end");
-    return;
-  }
-
-  uint32_t ch = *mPos++;
-
-  if (mPos < mLimit && NS_IS_SURROGATE_PAIR(ch, *mPos)) {
-    ch = SURROGATE_TO_UCS4(ch, *mPos++);
-  } else if ((ch & ~0xff) == 0x1100 || (ch >= 0xa960 && ch <= 0xa97f) ||
-             (ch >= 0xac00 && ch <= 0xd7ff)) {
-    // Handle conjoining Jamo that make Hangul syllables
-    HSType hangulState = GetHangulSyllableType(ch);
-    while (mPos < mLimit) {
-      ch = *mPos;
-      HSType hangulType = GetHangulSyllableType(ch);
-      switch (hangulType) {
-        case HST_L:
-        case HST_LV:
-        case HST_LVT:
-          if (hangulState == HST_L) {
-            hangulState = hangulType;
-            mPos++;
-            continue;
-          }
-          break;
-        case HST_V:
-          if ((hangulState != HST_NONE) && (hangulState != HST_T) &&
-              (hangulState != HST_LVT)) {
-            hangulState = hangulType;
-            mPos++;
-            continue;
-          }
-          break;
-        case HST_T:
-          if (hangulState != HST_NONE && hangulState != HST_L) {
-            hangulState = hangulType;
-            mPos++;
-            continue;
-          }
-          break;
-        default:
-          break;
-      }
-      break;
-    }
-  }
-
-  const uint32_t kVS16 = 0xfe0f;
-  const uint32_t kZWJ = 0x200d;
-  // UTF-16 surrogate values for Fitzpatrick type modifiers
-  const uint32_t kFitzpatrickHigh = 0xD83C;
-  const uint32_t kFitzpatrickLowFirst = 0xDFFB;
-  const uint32_t kFitzpatrickLowLast = 0xDFFF;
-
-  bool baseIsEmoji = (GetEmojiPresentation(ch) == EmojiDefault) ||
-                     (GetEmojiPresentation(ch) == TextDefault &&
-                      ((mPos < mLimit && *mPos == kVS16) ||
-                       (mPos + 1 < mLimit && *mPos == kFitzpatrickHigh &&
-                        *(mPos + 1) >= kFitzpatrickLowFirst &&
-                        *(mPos + 1) <= kFitzpatrickLowLast)));
-  bool prevWasZwj = false;
-
-  while (mPos < mLimit) {
-    ch = *mPos;
-    size_t chLen = 1;
-
-    // Check for surrogate pairs; note that isolated surrogates will just
-    // be treated as generic (non-cluster-extending) characters here,
-    // which is fine for cluster-iterating purposes
-    if (mPos < mLimit - 1 && NS_IS_SURROGATE_PAIR(ch, *(mPos + 1))) {
-      ch = SURROGATE_TO_UCS4(ch, *(mPos + 1));
-      chLen = 2;
-    }
-
-    bool extendCluster =
-        IsClusterExtender(ch) ||
-        (baseIsEmoji && prevWasZwj &&
-         ((GetEmojiPresentation(ch) == EmojiDefault) ||
-          (GetEmojiPresentation(ch) == TextDefault && mPos + chLen < mLimit &&
-           *(mPos + chLen) == kVS16)));
-    if (!extendCluster) {
-      break;
-    }
-
-    prevWasZwj = (ch == kZWJ);
-    mPos += chLen;
-  }
-
-  NS_ASSERTION(mText < mPos && mPos <= mLimit,
-               "ClusterIterator::Next has overshot the string!");
-}
-
-void ClusterReverseIterator::Next() {
-  if (AtEnd()) {
-    NS_WARNING("ClusterReverseIterator has already reached the end");
-    return;
-  }
-
-  uint32_t ch;
-  do {
-    ch = *--mPos;
-
-    if (mPos > mLimit && NS_IS_SURROGATE_PAIR(*(mPos - 1), ch)) {
-      ch = SURROGATE_TO_UCS4(*--mPos, ch);
-    }
-
-    if (!IsClusterExtender(ch)) {
-      break;
-    }
-  } while (mPos > mLimit);
-
-  // XXX May need to handle conjoining Jamo
-
-  NS_ASSERTION(mPos >= mLimit,
-               "ClusterReverseIterator::Next has overshot the string!");
-}
-
-uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength) {
-  ClusterIterator iter(aText, aLength);
+uint32_t CountGraphemeClusters(Span<const char16_t> aText) {
+  intl::GraphemeClusterBreakIteratorUtf16 iter(aText);
   uint32_t result = 0;
-  while (!iter.AtEnd()) {
+  while (iter.Next()) {
     ++result;
-    iter.Next();
   }
   return result;
 }

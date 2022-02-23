@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBackground;
+include protocol PBackgroundStarter;
 include protocol PBrowser;
 include protocol PCompositorManager;
 include protocol PContentPermissionRequest;
@@ -153,6 +153,7 @@ using mozilla::PDMFactory::MediaCodecsSupported from "PDMFactory.h";
 using mozilla::RemoteDecodeIn from "mozilla/RemoteDecoderManagerChild.h";
 using mozilla::dom::PerformanceTimingData from "mozilla/dom/PerformanceTiming.h";
 [RefCounted] using mozilla::dom::FeaturePolicy from "mozilla/dom/FeaturePolicy.h";
+using Wireframe from "mozilla/dom/DocumentBinding.h";
 
 union ChromeRegistryItem
 {
@@ -429,7 +430,7 @@ union BlobURLDataRequestResult
  * and a content process. There is exactly one PContentParent/PContentChild pair
  * for each content process.
  */
-[NestedUpTo=inside_cpow, NeedsOtherPid]
+[ManualDealloc, NestedUpTo=inside_cpow, NeedsOtherPid]
 sync protocol PContent
 {
     manages PBrowser;
@@ -777,6 +778,12 @@ child:
     async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, nsIURI aDomain);
 
     /**
+     * Notify the child that it will soon be asked to shutdown.
+     * This is sent with high priority right before the normal shutdown.
+     */
+    [Priority=control] async ShutdownConfirmedHP();
+
+    /**
      * Notify the child to shutdown. The child will in turn call FinishShutdown
      * and let the parent close the channel.
      */
@@ -1016,12 +1023,15 @@ parent:
     async SessionHistoryEntryStoreWindowNameInContiguousEntries(MaybeDiscardedBrowsingContext aContext,
                                                                 nsString aName);
 
+    async SessionHistoryEntryWireframe(MaybeDiscardedBrowsingContext aContext,
+                                       Wireframe aWireframe);
+
     async GetLoadingSessionHistoryInfoFromParent(MaybeDiscardedBrowsingContext aContext)
         returns (LoadingSessionHistoryInfo? aLoadingInfo);
 
     async RemoveFromBFCache(MaybeDiscardedBrowsingContext aContext);
 
-    async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
+    async InitBackground(Endpoint<PBackgroundStarterParent> aEndpoint);
 
     async CreateGMPService();
 
@@ -1485,7 +1495,6 @@ parent:
                        bool aForWindowDotPrint,
                        nsIURI aURIToLoad,
                        nsCString aFeatures,
-                       float aFullZoom,
                        Principal aTriggeringPrincipal,
                        nsIContentSecurityPolicy aCsp,
                        nsIReferrerInfo aReferrerInfo,
@@ -1499,7 +1508,6 @@ parent:
       bool aCalledFromJS,
       nsIURI aURIToLoad,
       nsCString aFeatures,
-      float aFullZoom,
       nsString aName,
       nsIPrincipal aTriggeringPrincipal,
       nsIContentSecurityPolicy aCsp,
@@ -1724,7 +1732,7 @@ parent:
     async HistoryCommit(MaybeDiscardedBrowsingContext aContext,
                         uint64_t aLoadID, nsID aChangeID, uint32_t aLoadType,
                         bool aPersist, bool aCloneEntryChildren,
-                        bool aChannelExpired);
+                        bool aChannelExpired, uint32_t aCacheKey);
 
     async HistoryGo(MaybeDiscardedBrowsingContext aContext, int32_t aOffset,
                     uint64_t aHistoryEpoch, bool aRequireUserInteraction,

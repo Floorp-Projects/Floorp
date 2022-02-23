@@ -40,4 +40,3 @@ The context menu for each cookie includes the following commands:
 
 .. image:: cookie_table_widget_context.png
   :class: border
-

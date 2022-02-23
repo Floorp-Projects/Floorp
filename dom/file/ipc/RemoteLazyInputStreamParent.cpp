@@ -7,7 +7,6 @@
 #include "RemoteLazyInputStreamParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/InputStreamLengthHelper.h"
-#include "nsContentUtils.h"
 #include "RemoteLazyInputStreamStorage.h"
 
 namespace mozilla {
@@ -22,7 +21,7 @@ RemoteLazyInputStreamParent::CreateCommon(nsIInputStream* aInputStream,
   MOZ_ASSERT(aRv);
 
   nsID id;
-  *aRv = nsContentUtils::GenerateUUIDInPlace(id);
+  *aRv = nsID::GenerateUUIDInPlace(id);
   if (NS_WARN_IF(NS_FAILED(*aRv))) {
     return nullptr;
   }
@@ -258,11 +257,6 @@ mozilla::ipc::IPCResult RemoteLazyInputStreamParent::Recv__delete__() {
   MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
   mMigrating = true;
   return IPC_OK();
-}
-
-bool RemoteLazyInputStreamParent::HasValidStream() const {
-  auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
-  return storage ? storage->HasStream(mID) : false;
 }
 
 }  // namespace mozilla

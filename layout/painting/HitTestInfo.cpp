@@ -12,6 +12,8 @@
 #include "nsIFrame.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 
+using namespace mozilla::gfx;
+
 namespace mozilla {
 
 static StaticAutoPtr<const HitTestInfo> gEmptyHitTestInfo;

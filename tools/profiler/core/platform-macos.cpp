@@ -60,6 +60,45 @@ uint64_t RunningTimes::ConvertRawToJson(uint64_t aRawValue) {
   return aRawValue;
 }
 
+namespace mozilla::profiler {
+bool GetCpuTimeSinceThreadStartInNs(
+    uint64_t* aResult, const mozilla::profiler::PlatformData& aPlatformData) {
+  thread_extended_info_data_t threadInfoData;
+  mach_msg_type_number_t count = THREAD_EXTENDED_INFO_COUNT;
+  if (thread_info(aPlatformData.ProfiledThread(), THREAD_EXTENDED_INFO,
+                  (thread_info_t)&threadInfoData, &count) != KERN_SUCCESS) {
+    return false;
+  }
+
+  *aResult = threadInfoData.pth_user_time + threadInfoData.pth_system_time;
+  return true;
+}
+}  // namespace mozilla::profiler
+
+static RunningTimes GetProcessRunningTimesDiff(
+    PSLockRef aLock, RunningTimes& aPreviousRunningTimesToBeUpdated) {
+  AUTO_PROFILER_STATS(GetProcessRunningTimes);
+
+  RunningTimes newRunningTimes;
+  {
+    AUTO_PROFILER_STATS(GetProcessRunningTimes_task_info);
+
+    static const auto pid = getpid();
+    struct proc_taskinfo pti;
+    if ((unsigned long)proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &pti,
+                                    PROC_PIDTASKINFO_SIZE) >=
+        PROC_PIDTASKINFO_SIZE) {
+      newRunningTimes.SetThreadCPUDelta(pti.pti_total_user +
+                                        pti.pti_total_system);
+    }
+    newRunningTimes.SetPostMeasurementTimeStamp(TimeStamp::Now());
+  };
+
+  const RunningTimes diff = newRunningTimes - aPreviousRunningTimesToBeUpdated;
+  aPreviousRunningTimesToBeUpdated = newRunningTimes;
+  return diff;
+}
+
 static RunningTimes GetThreadRunningTimesDiff(
     PSLockRef aLock,
     ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData) {

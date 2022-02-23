@@ -1681,10 +1681,8 @@ void CounterStyle::GetCounterText(CounterValue aOrdinal,
       GetPad(pad);
       int32_t diff =
           pad.width -
-          narrow_cast<int32_t>(
-              unicode::CountGraphemeClusters(initialText.Data(),
-                                             initialText.Length()) +
-              unicode::CountGraphemeClusters(aResult.Data(), aResult.Length()));
+          narrow_cast<int32_t>(unicode::CountGraphemeClusters(initialText) +
+                               unicode::CountGraphemeClusters(aResult));
       if (diff > 0) {
         auto length = pad.symbol.Length();
         if (diff > LENGTH_LIMIT || length > LENGTH_LIMIT ||

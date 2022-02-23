@@ -19,14 +19,17 @@
 
 namespace jxl {
 
-// Options per-frame, this is not used for codestream-wide settings or global
-// encoder settings.
-typedef struct JxlEncoderOptionsValuesStruct {
+// The encoder options (such as quality, compression speed, ...) for a single
+// frame, but not encoder-wide options such as box-related options.
+typedef struct JxlEncoderFrameSettingsValuesStruct {
   // lossless is a separate setting from cparams because it is a combination
   // setting that overrides multiple settings inside of cparams.
   bool lossless;
   CompressParams cparams;
-} JxlEncoderOptionsValues;
+  JxlFrameHeader header;
+  std::vector<JxlBlendInfo> extra_channel_blend_info;
+  std::string frame_name;
+} JxlEncoderFrameSettingsValues;
 
 typedef std::array<uint8_t, 4> BoxType;
 
@@ -46,7 +49,7 @@ constexpr unsigned char kContainerHeader[] = {
 constexpr unsigned char kLevelBoxHeader[] = {0, 0, 0, 0x9, 'j', 'x', 'l', 'l'};
 
 struct JxlEncoderQueuedFrame {
-  JxlEncoderOptionsValues option_values;
+  JxlEncoderFrameSettingsValues option_values;
   ImageBundle frame;
 };
 
@@ -106,7 +109,9 @@ struct JxlEncoderStruct {
   JxlMemoryManager memory_manager;
   jxl::MemoryManagerUniquePtr<jxl::ThreadPool> thread_pool{
       nullptr, jxl::MemoryManagerDeleteHelper(&memory_manager)};
-  std::vector<jxl::MemoryManagerUniquePtr<JxlEncoderOptions>> encoder_options;
+  JxlCmsInterface cms;
+  std::vector<jxl::MemoryManagerUniquePtr<JxlEncoderFrameSettings>>
+      encoder_options;
 
   size_t num_queued_frames;
   size_t num_queued_boxes;
@@ -157,9 +162,9 @@ struct JxlEncoderStruct {
   void AppendBoxHeader(const jxl::BoxType& type, size_t size, bool unbounded);
 };
 
-struct JxlEncoderOptionsStruct {
+struct JxlEncoderFrameSettingsStruct {
   JxlEncoder* enc;
-  jxl::JxlEncoderOptionsValues values;
+  jxl::JxlEncoderFrameSettingsValues values;
 };
 
 #endif  // LIB_JXL_ENCODE_INTERNAL_H_

@@ -177,7 +177,7 @@ class Log extends Module {
     //   only react to events if there is a session & if the session subscribed
     //   to those events.
 
-    this.messageHandler.emitMessageHandlerEvent("log.entryAdded", entry);
+    this.emitProtocolEvent("log.entryAdded", entry);
   };
 
   #onJavaScriptError = (eventName, data = {}) => {
@@ -192,7 +192,7 @@ class Log extends Module {
       stackTrace: this.#buildStackTrace(stacktrace),
     };
 
-    this.messageHandler.emitMessageHandlerEvent("log.entryAdded", entry);
+    this.emitProtocolEvent("log.entryAdded", entry);
   };
 
   _getLogEntryLevelFromConsoleMethod(method) {

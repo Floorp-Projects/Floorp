@@ -244,6 +244,15 @@ async function test_strict_native_fallback() {
   setModeAndURI(2, "doh?noResponse=true");
   Services.prefs.setIntPref("network.trr.request_timeout_ms", 10);
   Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 10);
+  Services.prefs.setIntPref(
+    "network.trr.strict_fallback_request_timeout_ms",
+    10
+  );
+
+  Services.prefs.setBoolPref(
+    "network.trr.strict_native_fallback_allow_timeouts",
+    false
+  );
 
   let { inStatus } = await new TRRDNSListener(
     "timeout.example.com",
@@ -254,12 +263,31 @@ async function test_strict_native_fallback() {
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
   );
+  dns.clearCache(true);
+  await new TRRDNSListener("timeout.example.com", undefined, false);
+
+  dns.clearCache(true);
+  Services.prefs.setBoolPref(
+    "network.trr.strict_native_fallback_allow_timeouts",
+    true
+  );
+  await new TRRDNSListener("timeout.example.com", {
+    expectedAnswer: "127.0.0.1",
+  });
+
+  Services.prefs.setBoolPref(
+    "network.trr.strict_native_fallback_allow_timeouts",
+    false
+  );
 
   info("Now a connection error");
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2");
   Services.prefs.clearUserPref("network.trr.request_timeout_ms");
   Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
+  Services.prefs.clearUserPref(
+    "network.trr.strict_fallback_request_timeout_ms"
+  );
   ({ inStatus } = await new TRRDNSListener("closeme.com", undefined, false));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
@@ -332,6 +360,10 @@ async function test_strict_native_fallback() {
   setModeAndURI(2, "doh?noResponse=true");
   Services.prefs.setIntPref("network.trr.request_timeout_ms", 10);
   Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 10);
+  Services.prefs.setIntPref(
+    "network.trr.strict_fallback_request_timeout_ms",
+    10
+  );
   Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
 
   await new TRRDNSListener("timeout.example.com", "127.0.0.1"); // Should fallback
@@ -341,6 +373,9 @@ async function test_strict_native_fallback() {
   setModeAndURI(2, "doh?responseIP=2.2.2.2");
   Services.prefs.clearUserPref("network.trr.request_timeout_ms");
   Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
+  Services.prefs.clearUserPref(
+    "network.trr.strict_fallback_request_timeout_ms"
+  );
   await new TRRDNSListener("closeme.com", "127.0.0.1"); // Should fallback
 
   info("Now a decode error");
@@ -351,6 +386,9 @@ async function test_strict_native_fallback() {
   Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
   Services.prefs.clearUserPref("network.trr.request_timeout_ms");
   Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
+  Services.prefs.clearUserPref(
+    "network.trr.strict_fallback_request_timeout_ms"
+  );
 }
 
 async function test_no_answers_fallback() {
@@ -1035,6 +1073,10 @@ async function test_no_retry_without_doh() {
 async function test_connection_reuse_and_cycling() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.request_timeout_ms", 500);
+  Services.prefs.setIntPref(
+    "network.trr.strict_fallback_request_timeout_ms",
+    500
+  );
   Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 500);
 
   setModeAndURI(2, `doh?responseIP=9.8.7.6`);

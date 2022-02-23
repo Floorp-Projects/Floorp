@@ -13,8 +13,8 @@ methods that have a name starting with `test_`.
 You can additionally define [`setUp`] and [`tearDown`] instance
 methods to execute code before and after child tests, and
 [`setUpClass`]/[`tearDownClass`] for the parent test.  When you use
-these, it is important to remember calling the [`MarionetteTestCase`]
-superclass’ own `setUp`/`tearDown` methods since they handle
+these, it is important to remember calling the `MarionetteTestCase`
+superclass’ own [`setUp`]/[`tearDown`] methods since they handle
 setup/cleanup of the session.
 
 The test structure is illustrated here:
@@ -36,12 +36,12 @@ The test structure is illustrated here:
 	        # code to execute after all tests are run
 	        MarionetteTestCase.tearDown(self)
 
-[remote protocol]: Protocol.html
-[unittest]: https://docs.python.org/2.7/library/unittest.html
-[`setUp`]: https://docs.python.org/2.7/library/unittest.html#unittest.TestCase.setUp
-[`setUpClass`]: https://docs.python.org/2.7/library/unittest.html#unittest.TestCase.setUpClass
-[`tearDown`]: https://docs.python.org/2.7/library/unittest.html#unittest.TestCase.tearDown
-[`tearDownClass`]: https://docs.python.org/2.7/library/unittest.html#unittest.TestCase.tearDownClass
+[remote protocol]: Protocol.md
+[unittest]: https://docs.python.org/3/library/unittest.html
+[`setUp`]: https://docs.python.org/3/library/unittest.html#unittest.TestCase.setUp
+[`setUpClass`]: https://docs.python.org/3/library/unittest.html#unittest.TestCase.setUpClass
+[`tearDown`]: https://docs.python.org/3/library/unittest.html#unittest.TestCase.tearDown
+[`tearDownClass`]: https://docs.python.org/3/library/unittest.html#unittest.TestCase.tearDownClass
 
 
 Test assertions
@@ -67,5 +67,5 @@ The full API documentation is found [here], but the key objects are:
 
   * [`Marionette`]: client that speaks to Firefox.
 
-[here]: ../../../python/marionette_driver.html
-[`Marionette`]: ../../../python/marionette_driver.html#marionette_driver.marionette.Marionette
+[here]: /python/marionette_driver.rst
+[`Marionette`]: /python/marionette_driver.rst#marionette_driver.marionette.Marionette

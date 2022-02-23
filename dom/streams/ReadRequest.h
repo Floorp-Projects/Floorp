@@ -26,7 +26,8 @@ struct ReadRequest : public nsISupports,
 
   virtual void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
                           ErrorResult& aRv) = 0;
-  virtual void CloseSteps(JSContext* aCx, ErrorResult& aRv) = 0;
+  MOZ_CAN_RUN_SCRIPT virtual void CloseSteps(JSContext* aCx,
+                                             ErrorResult& aRv) = 0;
   virtual void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> e,
                           ErrorResult& aRv) = 0;
 

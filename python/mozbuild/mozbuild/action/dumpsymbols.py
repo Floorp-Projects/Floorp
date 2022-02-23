@@ -57,6 +57,9 @@ def dump_symbols(target, tracking_file, count_ctors=False):
     if objcopy:
         os.environ["OBJCOPY"] = objcopy
 
+    if buildconfig.substs.get("MOZ_THUNDERBIRD"):
+        sym_store_args.extend(["-s", os.path.join(buildconfig.topsrcdir, "comm")])
+
     args = (
         [
             sys.executable,

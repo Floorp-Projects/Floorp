@@ -186,8 +186,8 @@ bool Module::finishTier2(const LinkData& linkData2,
 
     const MetadataTier& metadataTier1 = metadata(Tier::Baseline);
 
-    auto stubs1 = code().codeTier(Tier::Baseline).lazyStubs().lock();
-    auto stubs2 = borrowedTier2->lazyStubs().lock();
+    auto stubs1 = code().codeTier(Tier::Baseline).lazyStubs().readLock();
+    auto stubs2 = borrowedTier2->lazyStubs().writeLock();
 
     MOZ_ASSERT(stubs2->entryStubsEmpty());
 
@@ -604,7 +604,7 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
         return false;
       }
 
-      if (!instance.initElems(cx, seg->tableIndex, *seg, offset, 0, count)) {
+      if (!instance.initElems(seg->tableIndex, *seg, offset, 0, count)) {
         return false;  // OOM
       }
     }

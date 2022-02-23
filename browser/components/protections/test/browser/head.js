@@ -86,14 +86,11 @@ registerCleanupFunction(function head_cleanup() {
   Services.logins.removeAllUserFacingLogins();
 });
 
-// Used to replace AboutProtectionsParent.VPNSubStatus and Region.current
-const getVPNOverrides = (hasSubscription = false, location = "us") => {
+// Used to replace AboutProtectionsParent.VPNSubStatus
+const getVPNOverrides = (hasSubscription = false) => {
   return {
     vpnOverrides: () => {
-      return {
-        hasSubscription,
-        location,
-      };
+      return hasSubscription;
     },
   };
 };

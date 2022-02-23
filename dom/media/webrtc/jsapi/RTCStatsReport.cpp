@@ -8,6 +8,7 @@
 #include "libwebrtcglue/SystemTime.h"
 #include "mozilla/dom/Performance.h"
 #include "nsRFPService.h"
+#include "WebrtcGlobal.h"
 
 namespace mozilla::dom {
 
@@ -114,20 +115,52 @@ JSObject* RTCStatsReport::WrapObject(JSContext* aCx,
 }
 
 void RTCStatsReport::Incorporate(RTCStatsCollection& aStats) {
-  SetRTCStats(aStats.mIceCandidatePairStats);
-  SetRTCStats(aStats.mIceCandidateStats);
-  SetRTCStats(aStats.mInboundRtpStreamStats);
-  SetRTCStats(aStats.mOutboundRtpStreamStats);
-  SetRTCStats(aStats.mRemoteInboundRtpStreamStats);
-  SetRTCStats(aStats.mRemoteOutboundRtpStreamStats);
-  SetRTCStats(aStats.mRtpContributingSourceStats);
-  SetRTCStats(aStats.mTrickledIceCandidateStats);
-  SetRTCStats(aStats.mDataChannelStats);
+  ForAllPublicRTCStatsCollectionMembers(
+      aStats, [&](auto... aMember) { (SetRTCStats(aMember), ...); });
 }
 
 void RTCStatsReport::Set(const nsAString& aKey, JS::Handle<JSObject*> aValue,
                          ErrorResult& aRv) {
   RTCStatsReport_Binding::MaplikeHelpers::Set(this, aKey, aValue, aRv);
+}
+
+namespace {
+template <size_t I, typename... Ts>
+bool MoveInto(std::tuple<Ts...>& aFrom, std::tuple<Ts*...>& aInto) {
+  return std::get<I>(aInto)->AppendElements(std::move(std::get<I>(aFrom)),
+                                            fallible);
+}
+
+template <size_t... Is, typename... Ts>
+bool MoveInto(std::tuple<Ts...>&& aFrom, std::tuple<Ts*...>& aInto,
+              std::index_sequence<Is...>) {
+  return (... && MoveInto<Is>(aFrom, aInto));
+}
+
+template <typename... Ts>
+bool MoveInto(std::tuple<Ts...>&& aFrom, std::tuple<Ts*...>& aInto) {
+  return MoveInto(std::move(aFrom), aInto, std::index_sequence_for<Ts...>());
+}
+}  // namespace
+
+void MergeStats(UniquePtr<RTCStatsCollection> aFromStats,
+                RTCStatsCollection* aIntoStats) {
+  auto fromTuple = ForAllRTCStatsCollectionMembers(
+      *aFromStats,
+      [&](auto&... aMember) { return std::make_tuple(std::move(aMember)...); });
+  auto intoTuple = ForAllRTCStatsCollectionMembers(
+      *aIntoStats,
+      [&](auto&... aMember) { return std::make_tuple(&aMember...); });
+  if (!MoveInto(std::move(fromTuple), intoTuple)) {
+    mozalloc_handle_oom(0);
+  }
+}
+
+void FlattenStats(nsTArray<UniquePtr<RTCStatsCollection>> aFromStats,
+                  RTCStatsCollection* aIntoStats) {
+  for (auto& stats : aFromStats) {
+    MergeStats(std::move(stats), aIntoStats);
+  }
 }
 
 }  // namespace mozilla::dom

@@ -9,6 +9,12 @@ const optionsLazy = {
     lineNumber: 1,
 };
 
+const optionsLazyCache = {
+  fileName: "compileToStencil-DATA.js",
+  lineNumber: 1,
+  fillRuntimeCache: true,
+};
+
 let result = 0;
 
 function testMainThread(script_str) {
@@ -26,6 +32,17 @@ function testMainThreadDelazifyAll(script_str) {
     const stencil = compileAndDelazifyAllToStencil(script_str, optionsLazy);
     result = evalStencil(stencil, optionsLazy);
     assertEq(result, 1);
+}
+
+function testMainThreadCacheAll(script_str) {
+  if (isLcovEnabled()) {
+    // Code-coverage implies forceFullParse = true, and as such it cannot be
+    // used while testing to incrementally delazify.
+    return;
+  }
+  const stencil = compileAndDelazifyAllToStencil(script_str, optionsLazyCache);
+  result = evalStencil(stencil, optionsLazy);
+  assertEq(result, 1);
 }
 
 function testOffThread(script_str) {
@@ -89,6 +106,7 @@ for (let s = 0; s < 3000; s++) {
     // console.log(s, ":", code);
     testMainThread(code);
     testMainThreadDelazifyAll(code);
+    testMainThreadCacheAll(code);
     if (helperThreadCount() > 0) {
         testOffThread(code);
     }

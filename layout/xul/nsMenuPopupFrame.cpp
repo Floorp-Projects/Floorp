@@ -1001,7 +1001,7 @@ void nsMenuPopupFrame::ShowPopup(bool aIsContextMenu) {
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
 
     if (mPopupType == ePopupTypeMenu) {
-      nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));
+      nsCOMPtr<nsISound> sound(do_GetService("@mozilla.org/sound;1"));
       if (sound) sound->PlayEventSound(nsISound::EVENT_MENU_POPUP);
     }
   }
@@ -2134,8 +2134,7 @@ nsMenuFrame* nsMenuPopupFrame::FindMenuWithShortcut(KeyboardEvent* aKeyEvent,
         return nullptr;
       }
 #ifdef XP_WIN
-      nsCOMPtr<nsISound> soundInterface =
-          do_CreateInstance("@mozilla.org/sound;1");
+      nsCOMPtr<nsISound> soundInterface = do_GetService("@mozilla.org/sound;1");
       if (soundInterface) soundInterface->Beep();
 #endif  // #ifdef XP_WIN
     }
@@ -2262,8 +2261,7 @@ nsMenuFrame* nsMenuPopupFrame::FindMenuWithShortcut(KeyboardEvent* aKeyEvent,
   // behavior on Windows - this item is in a menu popup off of the
   // menu bar, so beep and do nothing else
   if (isMenu) {
-    nsCOMPtr<nsISound> soundInterface =
-        do_CreateInstance("@mozilla.org/sound;1");
+    nsCOMPtr<nsISound> soundInterface = do_GetService("@mozilla.org/sound;1");
     if (soundInterface) soundInterface->Beep();
   }
 #endif  // #ifdef XP_WIN

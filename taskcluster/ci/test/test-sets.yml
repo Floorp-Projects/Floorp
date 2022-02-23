@@ -26,9 +26,6 @@ web-platform-tests-backlog:
     - web-platform-tests-backlog
     - web-platform-tests-reftest-backlog
 
-web-platform-tests-wdspec-headless:
-    - web-platform-tests-wdspec-headless
-
 mochitest-devtools-chrome:
     - mochitest-devtools-chrome
 
@@ -116,14 +113,8 @@ ccov-code-coverage-tests:
     - test-coverage
     - test-coverage-wpt
 
-mochitest-headless:
-    - mochitest-plain-headless
-
 mochitest-valgrind:
     - mochitest-valgrind
-
-marionette-headless:
-    - marionette-headless
 
 desktop-screenshot-capture:
     - browser-screenshots
@@ -147,6 +138,7 @@ linux1804-tests:
     - jsreftest
     - marionette
     - mochitest-a11y
+    - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-chrome-gpu
@@ -180,6 +172,7 @@ linux-talos-flex:
 # Windows
 
 windows-7-tests:
+    - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-webgpu
     - reftest
@@ -214,6 +207,7 @@ windows10-2004-tests:
     - jsreftest
     - marionette
     - mochitest-a11y
+    - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-chrome-gpu
@@ -242,12 +236,6 @@ windows10-64-2004-ccov-tests:
     - web-platform-tests-print-reftest
     - web-platform-tests-reftest
     - web-platform-tests-wdspec
-
-windows10-64-2004-failure-tests:
-    - mochitest-browser-chrome-failures
-
-windows10-32-2004-failure-tests:
-    - xpcshell-failures
 
 mingwclang-tests-debug:
     - cppunit
@@ -319,6 +307,7 @@ macosx1100-64-jittests:
 macosx1100-64-qr-tests:
     - crashtest
     - jsreftest
+    - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-chrome-gpu
     - mochitest-media
@@ -340,6 +329,7 @@ macosx1015-64-qr-tests:
     - jsreftest
     - marionette
     - mochitest-a11y
+    - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-chrome-gpu
@@ -468,10 +458,21 @@ android-hw-browsertime-profiling:
 linux-tsan-tests:
     - crashtest
     - mochitest-a11y
+    - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-media
     - mochitest-plain
+    - mochitest-webgpu
     - reftest
     - web-platform-tests
     - web-platform-tests-reftest
+    - xpcshell
+
+domstreams-tests:
+    - crashtest
+    - mochitest-plain
+    - test-verify
+    - test-verify-wpt
+    - web-platform-tests
+    - web-platform-tests-crashtest
     - xpcshell

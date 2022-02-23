@@ -44,11 +44,9 @@ add_task(async function test_helperapp() {
     // infinite tabs. We definitely don't want that. Avoid it by stubbing
     // our external URL handling bits:
     let oldAddTab = gBrowser.addTab;
-    registerCleanupFunction(
-      () => (gBrowser.addTab = gBrowser.loadOneTab = oldAddTab)
-    );
+    registerCleanupFunction(() => (gBrowser.addTab = oldAddTab));
     let wrongThingHappenedPromise = new Promise(resolve => {
-      gBrowser.addTab = gBrowser.loadOneTab = function(aURI) {
+      gBrowser.addTab = function(aURI) {
         ok(false, "Tried to open unexpected URL in a tab: " + aURI);
         resolve(null);
         // Pass a dummy object to avoid upsetting BrowserContentHandler -

@@ -328,16 +328,9 @@ pub(crate) mod test_receiver {
     use super::{Error, ReadByte, Reader, Res};
     use std::collections::VecDeque;
 
+    #[derive(Default)]
     pub struct TestReceiver {
         buf: VecDeque<u8>,
-    }
-
-    impl Default for TestReceiver {
-        fn default() -> Self {
-            Self {
-                buf: VecDeque::new(),
-            }
-        }
     }
 
     impl ReadByte for TestReceiver {

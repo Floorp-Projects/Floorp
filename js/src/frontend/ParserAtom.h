@@ -59,20 +59,22 @@ class SpecificParserAtomLookup;
 // These types correspond into indices in the StaticStrings arrays.
 enum class Length1StaticParserString : uint8_t;
 enum class Length2StaticParserString : uint16_t;
+enum class Length3StaticParserString : uint8_t;
 
 class ParserAtom;
 using ParserAtomIndex = TypedIndex<ParserAtom>;
 
 // ParserAtomIndex, WellKnownAtomId, Length1StaticParserString,
-// Length2StaticParserString, or null.
+// Length2StaticParserString, Length3StaticParserString, or null.
 //
 // 0x0000_0000  Null atom
 //
 // 0x1YYY_YYYY  28-bit ParserAtom
 //
 // 0x2000_YYYY  Well-known atom ID
-// 0x2001_YYYY  Static length-1 atom
-// 0x2002_YYYY  Static length-2 atom
+// 0x2001_YYYY  Static length-1 atom : whole Latin1 range
+// 0x2002_YYYY  Static length-2 atom : `[A-Za-z0-9$_]{2}`
+// 0x2003_YYYY  Static length-3 atom : decimal "100" to "255"
 class TaggedParserAtomIndex {
   uint32_t data_;
 
@@ -109,14 +111,16 @@ class TaggedParserAtomIndex {
   static constexpr uint32_t WellKnownSubTag = 0 << SubTagShift;
   static constexpr uint32_t Length1StaticSubTag = 1 << SubTagShift;
   static constexpr uint32_t Length2StaticSubTag = 2 << SubTagShift;
+  static constexpr uint32_t Length3StaticSubTag = 3 << SubTagShift;
 
  public:
   static constexpr uint32_t IndexLimit = Bit(IndexBit);
   static constexpr uint32_t SmallIndexLimit = Bit(SmallIndexBit);
 
-  static constexpr size_t Length1StaticLimit = 128U;
+  static constexpr size_t Length1StaticLimit = 256U;
   static constexpr size_t Length2StaticLimit =
       StaticStrings::NUM_LENGTH2_ENTRIES;
+  static constexpr size_t Length3StaticLimit = 256U;
 
  private:
   explicit TaggedParserAtomIndex(uint32_t data) : data_(data) {}
@@ -141,6 +145,8 @@ class TaggedParserAtomIndex {
       : data_(uint32_t(index) | WellKnownTag | Length1StaticSubTag) {}
   explicit constexpr TaggedParserAtomIndex(Length2StaticParserString index)
       : data_(uint32_t(index) | WellKnownTag | Length2StaticSubTag) {}
+  explicit constexpr TaggedParserAtomIndex(Length3StaticParserString index)
+      : data_(uint32_t(index) | WellKnownTag | Length3StaticSubTag) {}
 
   class WellKnown {
    public:
@@ -260,6 +266,10 @@ class TaggedParserAtomIndex {
     return (data_ & (TagMask | SubTagMask)) ==
            (WellKnownTag | Length2StaticSubTag);
   }
+  bool isLength3StaticParserString() const {
+    return (data_ & (TagMask | SubTagMask)) ==
+           (WellKnownTag | Length3StaticSubTag);
+  }
   bool isNull() const {
     bool result = !data_;
     MOZ_ASSERT_IF(result, (data_ & TagMask) == NullTag);
@@ -281,6 +291,10 @@ class TaggedParserAtomIndex {
   Length2StaticParserString toLength2StaticParserString() const {
     MOZ_ASSERT(isLength2StaticParserString());
     return Length2StaticParserString(data_ & SmallIndexMask);
+  }
+  Length3StaticParserString toLength3StaticParserString() const {
+    MOZ_ASSERT(isLength3StaticParserString());
+    return Length3StaticParserString(data_ & SmallIndexMask);
   }
 
   uint32_t* rawDataRef() { return &data_; }
@@ -602,11 +616,23 @@ class WellKnownParserAtoms {
               StaticStrings::getLength2Index(chars[0], chars[1])));
         }
         break;
+
+      case 3: {
+        int i;
+        if (StaticStrings::fitsInLength3Static(chars[0], chars[1], chars[2],
+                                               &i)) {
+          return TaggedParserAtomIndex(Length3StaticParserString(i));
+        }
+        break;
+      }
     }
 
     // No match on tiny Atoms
     return TaggedParserAtomIndex::null();
   }
+
+  TaggedParserAtomIndex lookupTinyIndexUTF8(const mozilla::Utf8Unit* utf8Ptr,
+                                            size_t nbyte) const;
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(this) +
@@ -760,15 +786,24 @@ class ParserAtomsTable {
                                Length1StaticParserString index);
   static void dumpCharsNoQuote(js::GenericPrinter& out,
                                Length2StaticParserString index);
+  static void dumpCharsNoQuote(js::GenericPrinter& out,
+                               Length3StaticParserString index);
 #endif
 
-  static void getLength1Content(Length1StaticParserString s, char contents[1]) {
-    contents[0] = char(s);
+  static void getLength1Content(Length1StaticParserString s,
+                                Latin1Char contents[1]) {
+    contents[0] = Latin1Char(s);
   }
 
   static void getLength2Content(Length2StaticParserString s, char contents[2]) {
     contents[0] = StaticStrings::firstCharOfLength2(size_t(s));
     contents[1] = StaticStrings::secondCharOfLength2(size_t(s));
+  }
+
+  static void getLength3Content(Length3StaticParserString s, char contents[3]) {
+    contents[0] = StaticStrings::firstCharOfLength3(int32_t(s));
+    contents[1] = StaticStrings::secondCharOfLength3(int32_t(s));
+    contents[2] = StaticStrings::thirdCharOfLength3(int32_t(s));
   }
 };
 

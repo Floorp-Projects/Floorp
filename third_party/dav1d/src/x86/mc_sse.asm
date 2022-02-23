@@ -308,10 +308,8 @@ HV_JMP_TABLE prep, bilin, ssse3, 7,    4, 8, 16, 32, 64, 128
     %endrep
 %endmacro
 
-%if ARCH_X86_64
 SCALED_JMP_TABLE put_8tap_scaled, ssse3, 2, 4, 8, 16, 32, 64, 128
 SCALED_JMP_TABLE prep_8tap_scaled, ssse3,   4, 8, 16, 32, 64, 128
-%endif
 
 %define table_offset(type, fn) type %+ fn %+ SUFFIX %+ _table - type %+ SUFFIX
 
@@ -3943,34 +3941,80 @@ cglobal prep_8tap_8bpc, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
  %endif
 %endmacro
 
-%macro REMAP_REG 2
+%macro SAVE_REG 1
+ %xdefine r%1_save  r%1
+ %xdefine r%1q_save r%1q
+ %xdefine r%1d_save r%1d
+ %if ARCH_X86_32
+  %define r%1m_save [rstk+stack_offset+(%1+1)*4]
+ %endif
+%endmacro
+
+%macro LOAD_REG 1
+ %xdefine r%1  r%1_save
+ %xdefine r%1q r%1q_save
+ %xdefine r%1d r%1d_save
+ %if ARCH_X86_32
+  %define r%1m r%1m_save
+ %endif
+ %undef r%1d_save
+ %undef r%1q_save
+ %undef r%1_save
+%endmacro
+
+%macro REMAP_REG 2-3
  %xdefine r%1  r%2
  %xdefine r%1q r%2q
  %xdefine r%1d r%2d
+ %if ARCH_X86_32
+  %if %3 == 0
+   %xdefine r%1m r%2m
+  %else
+   %define r%1m [rstk+stack_offset+(%1+1)*4]
+  %endif
+ %endif
 %endmacro
 
 %macro MCT_8TAP_SCALED_REMAP_REGS_TO_PREV 0
  %if isprep
-  %xdefine r14_save r14
-  %assign %%i 14
-  %rep 14
-   %assign %%j %%i-1
-   REMAP_REG %%i, %%j
-   %assign %%i %%i-1
-  %endrep
+  %if ARCH_X86_64
+   SAVE_REG 14
+   %assign %%i 14
+   %rep 14
+    %assign %%j %%i-1
+    REMAP_REG %%i, %%j
+    %assign %%i %%i-1
+   %endrep
+  %else
+   SAVE_REG 5
+   %assign %%i 5
+   %rep 5
+    %assign %%j %%i-1
+    REMAP_REG %%i, %%j, 0
+    %assign %%i %%i-1
+   %endrep
+  %endif
  %endif
 %endmacro
 
 %macro MCT_8TAP_SCALED_REMAP_REGS_TO_DEFAULT 0
  %if isprep
   %assign %%i 1
-  %rep 13
-   %assign %%j %%i+1
-   REMAP_REG %%i, %%j
-   %assign %%i %%i+1
-  %endrep
-  %xdefine r14 r14_save
-  %undef r14_save
+  %if ARCH_X86_64
+   %rep 13
+    %assign %%j %%i+1
+    REMAP_REG %%i, %%j
+    %assign %%i %%i+1
+   %endrep
+   LOAD_REG 14
+  %else
+   %rep 4
+    %assign %%j %%i+1
+    REMAP_REG %%i, %%j, 1
+    %assign %%i %%i+1
+   %endrep
+   LOAD_REG 5
+  %endif
  %endif
 %endmacro
 
@@ -3982,7 +4026,8 @@ cglobal prep_8tap_8bpc, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
  %endif
 %endmacro
 
-%macro MC_8TAP_SCALED_H 12 ; dst[0-1], tmp[0-5], weights[0-3]
+%if ARCH_X86_64
+ %macro MC_8TAP_SCALED_H 12 ; dst[0-1], tmp[0-5], weights[0-3]
     SWAP                m%2, m%5
     movq                m%1, [srcq+ r4]
     movq                m%2, [srcq+ r6]
@@ -4019,33 +4064,155 @@ cglobal prep_8tap_8bpc, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
     pmulhrsw            m%1, m12
     pmulhrsw            m%5, m12
     SWAP                m%2, m%5
-%endmacro
+ %endmacro
+%else
+ %macro MC_8TAP_SCALED_H 2-3 1 ; weights_mem_start, h_mem_start, load_fh_offsets
+  %if %3 == 1
+    mov                  r0, [esp+ 0]
+    mov                  rX, [esp+ 8]
+    mov                  r4, [esp+ 4]
+    mov                  r5, [esp+12]
+  %endif
+    movq                 m0, [srcq+r0]
+    movq                 m1, [srcq+rX]
+    movhps               m0, [srcq+r4]
+    movhps               m1, [srcq+r5]
+    add                srcq, ssq
+    movq                 m4, [srcq+r0]
+    movq                 m5, [srcq+rX]
+    movhps               m4, [srcq+r4]
+    movhps               m5, [srcq+r5]
+    mov                  r0, [esp+16]
+    mov                  rX, [esp+24]
+    mov                  r4, [esp+20]
+    mov                  r5, [esp+28]
+    sub                srcq, ssq
+    movq                 m2, [srcq+r0]
+    movq                 m3, [srcq+rX]
+    movhps               m2, [srcq+r4]
+    movhps               m3, [srcq+r5]
+    add                srcq, ssq
+    movq                 m6, [srcq+r0]
+    movq                 m7, [srcq+rX]
+    movhps               m6, [srcq+r4]
+    movhps               m7, [srcq+r5]
+    add                srcq, ssq
+    pmaddubsw            m0, [esp+%1+ 0]
+    pmaddubsw            m4, [esp+%1+ 0]
+    pmaddubsw            m1, [esp+%1+16]
+    pmaddubsw            m5, [esp+%1+16]
+    pmaddubsw            m2, [esp+%1+32]
+    pmaddubsw            m6, [esp+%1+32]
+    pmaddubsw            m3, [esp+%1+48]
+    pmaddubsw            m7, [esp+%1+48]
+    phaddw               m0, m1
+    phaddw               m4, m5
+    phaddw               m2, m3
+    phaddw               m6, m7
+    phaddw               m0, m2
+    phaddw               m4, m6
+    pmulhrsw             m0, m12
+    pmulhrsw             m4, m12
+  %if %2 != 0
+    mova        [esp+%2+ 0], m0
+    mova        [esp+%2+16], m4
+  %endif
+ %endmacro
+%endif
 
 %macro MC_8TAP_SCALED 1
 %ifidn %1, put
  %assign isprep 0
- %if required_stack_alignment <= STACK_ALIGNMENT
-cglobal put_8tap_scaled_8bpc, 4, 15, 16, 0x180, dst, ds, src, ss, w, h, mx, my, dx, dy
- %else
-cglobal put_8tap_scaled_8bpc, 4, 14, 16, 0x180, dst, ds, src, ss, w, h, mx, my, dx, dy
+ %if ARCH_X86_64
+  %if required_stack_alignment <= STACK_ALIGNMENT
+cglobal put_8tap_scaled_8bpc, 2, 15, 16, 0x180, dst, ds, src, ss, w, h, mx, my, dx, dy
+  %else
+cglobal put_8tap_scaled_8bpc, 2, 14, 16, 0x180, dst, ds, src, ss, w, h, mx, my, dx, dy
+  %endif
+ %else ; ARCH_X86_32
+  %if required_stack_alignment <= STACK_ALIGNMENT
+cglobal put_8tap_scaled_8bpc, 0, 7, 8, 0x200, dst, ds, src, ss, w, h, mx, my, dx, dy
+  %else
+cglobal put_8tap_scaled_8bpc, 0, 7, 8, -0x200-0x20, dst, ds, src, ss, w, h, mx, my, dx, dy
+  %endif
  %endif
  %xdefine base_reg r12
  %define rndshift 10
-%else
+%else ; prep
  %assign isprep 1
- %if required_stack_alignment <= STACK_ALIGNMENT
-cglobal prep_8tap_scaled_8bpc, 4, 15, 16, 0x180, tmp, src, ss, w, h, mx, my, dx, dy
-  %xdefine tmp_stridem r14q
- %else
-cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx, dy
-  %define tmp_stridem qword [rsp+0x138]
+ %if ARCH_X86_64
+  %if required_stack_alignment <= STACK_ALIGNMENT
+cglobal prep_8tap_scaled_8bpc, 2, 15, 16, 0x180, tmp, src, ss, w, h, mx, my, dx, dy
+   %xdefine tmp_stridem r14q
+  %else
+cglobal prep_8tap_scaled_8bpc, 2, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx, dy
+   %define tmp_stridem qword [rsp+0x138]
+  %endif
+  %xdefine base_reg r11
+ %else ; ARCH_X86_32
+  %if required_stack_alignment <= STACK_ALIGNMENT
+cglobal prep_8tap_scaled_8bpc, 0, 7, 8, 0x200, tmp, src, ss, w, h, mx, my, dx, dy
+  %else
+cglobal prep_8tap_scaled_8bpc, 0, 6, 8, 0x200, tmp, src, ss, w, h, mx, my, dx, dy
+  %endif
+  %define tmp_stridem dword [esp+0x138]
  %endif
- %xdefine base_reg r11
  %define rndshift 6
 %endif
-    LEA            base_reg, %1_8tap_scaled_8bpc_ssse3
-%define base base_reg-%1_8tap_scaled_8bpc_ssse3
+%if ARCH_X86_32
+    mov         [esp+0x1f0], t0d
+    mov         [esp+0x1f4], t1d
+ %if !isprep && required_stack_alignment > STACK_ALIGNMENT
+    mov                dstd, dstm
+    mov                 dsd, dsm
+    mov                srcd, srcm
+    mov                 ssd, ssm
+    mov                  hd, hm
+    mov                  r4, mxm
+  %define r0m  [esp+0x200]
+  %define dsm  [esp+0x204]
+  %define dsmp dsm
+  %define r1m  dsm
+  %define r2m  [esp+0x208]
+  %define ssm  [esp+0x20c]
+  %define r3m  ssm
+  %define hm   [esp+0x210]
+  %define mxm  [esp+0x214]
+    mov                 r0m, dstd
+    mov                 dsm, dsd
+    mov                 r2m, srcd
+    mov                 ssm, ssd
+    mov                  hm, hd
+    mov                  r0, mym
+    mov                  r1, dxm
+    mov                  r2, dym
+  %define mym [esp+0x218]
+  %define dxm [esp+0x09c]
+  %define dym [esp+0x21c]
+    mov                 mxm, r4
+    mov                 mym, r0
+    mov                 dxm, r1
+    mov                 dym, r2
     tzcnt                wd, wm
+ %endif
+ %if isprep && required_stack_alignment > STACK_ALIGNMENT
+  %xdefine base_reg r5
+ %else
+  %xdefine base_reg r6
+ %endif
+    mov                 ssd, ssm
+%endif
+    LEA            base_reg, %1_8tap_scaled_8bpc_ssse3
+%xdefine base base_reg-%1_8tap_scaled_8bpc_ssse3
+%if ARCH_X86_64 || isprep || required_stack_alignment <= STACK_ALIGNMENT
+    tzcnt                wd, wm
+%endif
+%if ARCH_X86_32
+ %define m8  m0
+ %define m9  m1
+ %define m14 m4
+ %define m15 m3
+%endif
     movd                 m8, dxm
     movd                m14, mxm
     pshufd               m8, m8, q0000
@@ -4054,25 +4221,31 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     mov                 r5d, t0d
  DECLARE_REG_TMP 5, 7
 %endif
+%if ARCH_X86_64
     mov                 dyd, dym
+%endif
 %ifidn %1, put
  %if WIN64
     mov                 r8d, hm
   DEFINE_ARGS dst, ds, src, ss, w, _, _, my, h, dy, ss3
   %define hm r5m
   %define dxm r8m
- %else
+ %elif ARCH_X86_64
   DEFINE_ARGS dst, ds, src, ss, w, h, _, my, dx, dy, ss3
   %define hm r6m
  %endif
- %if required_stack_alignment > STACK_ALIGNMENT
-  %define dsm [rsp+0x138]
-  %define rX r1
-  %define rXd r1d
+ %if ARCH_X86_64
+  %if required_stack_alignment > STACK_ALIGNMENT
+   %define dsm [rsp+0x138]
+   %define rX r1
+   %define rXd r1d
+  %else
+   %define dsm dsq
+   %define rX r14
+   %define rXd r14d
+  %endif
  %else
-  %define dsm dsq
-  %define rX r14
-  %define rXd r14d
+  %define rX r1
  %endif
 %else ; prep
  %if WIN64
@@ -4080,28 +4253,61 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
   DEFINE_ARGS tmp, src, ss, w, _, _, my, h, dy, ss3
   %define hm r4m
   %define dxm r7m
- %else
+ %elif ARCH_X86_64
   DEFINE_ARGS tmp, src, ss, w, h, _, my, dx, dy, ss3
   %define hm [rsp+0x94]
  %endif
  MCT_8TAP_SCALED_REMAP_REGS_TO_PREV
- %define rX r14
- %define rXd r14d
+ %if ARCH_X86_64
+  %define rX r14
+  %define rXd r14d
+ %else
+  %define rX r3
+ %endif
 %endif
+%if ARCH_X86_64
     mova                m10, [base+pd_0x3ff]
     mova                m12, [base+pw_8192]
-%ifidn %1, put
+ %ifidn %1, put
     mova                m13, [base+pd_512]
-%else
+ %else
     mova                m13, [base+pd_32]
+ %endif
+%else
+ %define m10 [base+pd_0x3ff]
+ %define m12 [base+pw_8192]
+ %ifidn %1, put
+  %define m13 [base+pd_512]
+ %else
+  %define m13 [base+pd_32]
+ %endif
 %endif
     pxor                 m9, m9
+%if ARCH_X86_64
     lea                ss3q, [ssq*3]
     movzx               r7d, t1b
     shr                 t1d, 16
     cmp                  hd, 6
     cmovs               t1d, r7d
     sub                srcq, ss3q
+%else
+ MCT_8TAP_SCALED_REMAP_REGS_TO_DEFAULT
+    mov                  r1, [esp+0x1f4]
+    lea                  r0, [ssq*3]
+    movzx                r2, r1b
+    shr                  r1, 16
+    cmp            dword hm, 6
+    cmovs                r1, r2
+    mov         [esp+0x1f4], r1
+    mov                  r1, r1m
+    mov                  r2, r2m
+    sub                srcq, r0
+ MCT_8TAP_SCALED_REMAP_REGS_TO_PREV
+ %define ss3q r0
+ %define myd r4
+ %define dyd dword dym
+ %define hd  dword hm
+%endif
     cmp                 dyd, 1024
     je .dy1
     cmp                 dyd, 2048
@@ -4111,35 +4317,65 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     jmp                  wq
 %ifidn %1, put
 .w2:
+ %if ARCH_X86_64
     mov                 myd, mym
     movzx               t0d, t0b
     dec                srcq
     movd                m15, t0d
+ %else
+    movzx                r4, byte [esp+0x1f0]
+    dec                srcq
+    movd                m15, r4
+ %endif
     punpckldq            m9, m8
     SWAP                 m8, m9
     paddd               m14, m8 ; mx+dx*[0-1]
+ %if ARCH_X86_64
     mova                m11, [base+pd_0x4000]
+ %else
+  %define m11 [base+pd_0x4000]
+ %endif
     pshufd              m15, m15, q0000
     pand                 m8, m14, m10
     psrld                m8, 6
     paddd               m15, m8
     movd                r4d, m15
     psrldq              m15, 4
+ %if ARCH_X86_64
     movd                r6d, m15
+ %else
+    movd                r3d, m15
+ %endif
     mova                 m5, [base+bdct_lb_dw]
     mova                 m6, [base+subpel_s_shuf2]
     movd                m15, [base+subpel_filters+r4*8+2]
+ %if ARCH_X86_64
     movd                 m7, [base+subpel_filters+r6*8+2]
+ %else
+    movd                 m7, [base+subpel_filters+r3*8+2]
+ %endif
     pxor                 m9, m9
     pcmpeqd              m8, m9
     psrld               m14, 10
+ %if ARCH_X86_32
+    mov                  r3, r3m
+    pshufb              m14, m5
+    paddb               m14, m6
+    mova        [rsp+0x180], m14
+    SWAP                 m5, m0
+    SWAP                 m6, m3
+  %define m8  m5
+  %define m15 m6
+ %endif
     movq                 m0, [srcq+ssq*0]
     movq                 m2, [srcq+ssq*2]
     movhps               m0, [srcq+ssq*1]
     movhps               m2, [srcq+ss3q ]
     lea                srcq, [srcq+ssq*4]
+ %if ARCH_X86_64
     pshufb              m14, m5
     paddb               m14, m6
+ %endif
     movq                 m1, [srcq+ssq*0]
     movq                 m3, [srcq+ssq*2]
     movhps               m1, [srcq+ssq*1]
@@ -4147,10 +4383,19 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     lea                srcq, [srcq+ssq*4]
     punpckldq           m15, m7
     punpcklqdq          m15, m15
+ %if ARCH_X86_64
     pand                m11, m8
     pandn                m8, m15
     SWAP                m15, m8
     por                 m15, m11
+ %else
+    pand                 m7, m8, m11
+    pandn                m8, m15
+  %define m8  m6
+  %define m15 m5
+    por                 m15, m7
+    mova        [rsp+0x190], m15
+ %endif
     pshufb               m0, m14
     pshufb               m2, m14
     pshufb               m1, m14
@@ -4169,8 +4414,17 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     pshufd               m5, m1, q0321 ; 5 6 7 _
     punpcklwd            m2, m1, m5    ; 45 56
     punpckhwd            m4, m1, m5    ; 67 __
+ %if ARCH_X86_32
+    mov                 myd, mym
+    mov                  r0, r0m
+    mova        [rsp+0x1a0], m3
+    mova        [rsp+0x1b0], m0
+    mova        [rsp+0x1c0], m2
+    mova        [rsp+0x1d0], m4
+ %endif
 .w2_loop:
     and                 myd, 0x3ff
+ %if ARCH_X86_64
     mov                 r6d, 64 << 24
     mov                 r4d, myd
     shr                 r4d, 6
@@ -4189,19 +4443,69 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     pmaddwd              m8, m4, m11
     paddd                m5, m6
     paddd                m7, m8
+ %else
+    mov                 mym, myd
+    mov                  r1, [esp+0x1f4]
+    xor                  r3, r3
+    shr                  r4, 6
+    lea                  r1, [r1+r4]
+    mov                  r4, 64 << 24
+    cmovnz               r4, [base+subpel_filters+r1*8+0]
+    cmovnz               r3, [base+subpel_filters+r1*8+4]
+    movd                 m7, r4
+    movd                 m6, r3
+    punpckldq            m7, m6
+    punpcklbw            m7, m7
+    psraw                m7, 8
+    pshufd               m5, m7, q0000
+    pshufd               m6, m7, q1111
+    pmaddwd              m3, m5
+    pmaddwd              m0, m6
+    pshufd               m5, m7, q2222
+    pshufd               m7, m7, q3333
+    pmaddwd              m2, m5
+    pmaddwd              m4, m7
+    paddd                m3, m0
+    paddd                m2, m4
+    SWAP                 m5, m3
+    SWAP                 m7, m2
+ %endif
     paddd                m5, m13
     paddd                m5, m7
     psrad                m5, 10
     packssdw             m5, m5
     packuswb             m5, m5
+ %if ARCH_X86_64
     pextrw              r6d, m5, 0
     mov              [dstq], r6w
     add                dstq, dsq
     dec                  hd
     jz .ret
     add                 myd, dyd
+ %else
+    pextrw              r3d, m5, 0
+    mov              [dstq], r3w
+    add                dstq, dsm
+    dec                  hd
+    jz .ret
+    mov                 myd, mym
+    add                 myd, dym
+ %endif
     test                myd, ~0x3ff
+ %if ARCH_X86_32
+    SWAP                 m3, m5
+    SWAP                 m2, m7
+    mova                 m3, [rsp+0x1a0]
+    mova                 m0, [rsp+0x1b0]
+    mova                 m2, [rsp+0x1c0]
+    mova                 m4, [rsp+0x1d0]
+  %define m14 [esp+0x180]
+  %define m15 [esp+0x190]
+ %endif
     jz .w2_loop
+ %if ARCH_X86_32
+    mov                  r3, r3m
+ %endif
     movq                 m5, [srcq]
     test                myd, 0x400
     jz .w2_skip_line
@@ -4216,6 +4520,12 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     palignr              m4, m5, m1, 12
     punpcklqdq           m1, m4, m4         ; 6 7 6 7
     punpcklwd            m4, m1, m5         ; 67 __
+ %if ARCH_X86_32
+    mova        [rsp+0x1a0], m3
+    mova        [rsp+0x1b0], m0
+    mova        [rsp+0x1c0], m2
+    mova        [rsp+0x1d0], m4
+ %endif
     jmp .w2_loop
 .w2_skip_line:
     movhps               m5, [srcq+ssq*1]
@@ -4231,23 +4541,42 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     mova                 m1, m4
     punpcklwd            m2, m4, m5         ; 45 56
     punpckhwd            m4, m5             ; 67 __
+ %if ARCH_X86_32
+    mova        [rsp+0x1a0], m3
+    mova        [rsp+0x1b0], m0
+    mova        [rsp+0x1c0], m2
+    mova        [rsp+0x1d0], m4
+ %endif
     jmp .w2_loop
-    SWAP                m15, m8, m9
 %endif
+INIT_XMM ssse3
 .w4:
+%if ARCH_X86_64
     mov                 myd, mym
-    mova                 m7, [base+rescale_mul]
     movzx               t0d, t0b
     dec                srcq
     movd                m15, t0d
-    pmaddwd              m8, m7
+%else
+ %define m8  m0
+ %xdefine m14 m4
+ %define m15 m3
+    movzx                r4, byte [esp+0x1f0]
+    dec                srcq
+    movd                m15, r4
+%endif
+    pmaddwd              m8, [base+rescale_mul]
+%if ARCH_X86_64
     mova                m11, [base+pd_0x4000]
+%else
+  %define m11 [base+pd_0x4000]
+%endif
     pshufd              m15, m15, q0000
     paddd               m14, m8 ; mx+dx*[0-3]
     pand                 m0, m14, m10
     psrld                m0, 6
     paddd               m15, m0
     psrldq               m7, m15, 8
+%if ARCH_X86_64
     movd                r4d, m15
     movd               r11d, m7
     psrldq              m15, 4
@@ -4258,30 +4587,59 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     movd                 m2, [base+subpel_filters+r11*8+2]
     movd                 m3, [base+subpel_filters+ r6*8+2]
     movd                 m4, [base+subpel_filters+r13*8+2]
+%else
+    movd                 r0, m15
+    movd                 rX, m7
+    psrldq              m15, 4
+    psrldq               m7, 4
+    movd                 r4, m15
+    movd                 r5, m7
+    movd                 m1, [base+subpel_filters+r0*8+2]
+    movd                 m2, [base+subpel_filters+rX*8+2]
+    movd                 m3, [base+subpel_filters+r4*8+2]
+    movd                 m7, [base+subpel_filters+r5*8+2]
+    movifprep            r3, r3m
+    SWAP                 m4, m7
+ %define m15 m1
+%endif
     mova                 m5, [base+bdct_lb_dw]
     movq                 m6, [base+subpel_s_shuf2]
-    pcmpeqd              m0, m9
     psrld               m14, 10
+    punpckldq           m15, m3
+    punpckldq            m2, m4
+    punpcklqdq          m15, m2
+    punpcklqdq           m6, m6
+    pshufb              m14, m5
+    paddb               m14, m6
+%if ARCH_X86_64
+    pcmpeqd              m0, m9
+    pand                m11, m0
+%else
+    mova        [esp+0x180], m14
+    SWAP                 m7, m4
+    pxor                 m3, m3
+    pcmpeqd              m0, m3
+    pand                 m2, m11, m0
+ %define m11 m2
+%endif
+    pandn                m0, m15
+%if ARCH_X86_64
+    SWAP                m15, m0
+%else
+ %define m15 m0
+%endif
+    por                 m15, m11
+%if ARCH_X86_64
     movu                 m7, [srcq+ssq*0]
     movu                 m9, [srcq+ssq*1]
     movu                 m8, [srcq+ssq*2]
     movu                m10, [srcq+ss3q ]
     lea                srcq, [srcq+ssq*4]
-    punpckldq           m15, m3
-    punpckldq            m2, m4
-    punpcklqdq           m6, m6
-    punpcklqdq          m15, m2
-    pshufb              m14, m5
-    paddb               m14, m6
     movu                 m2, [srcq+ssq*0]
     movu                 m4, [srcq+ssq*1]
     movu                 m3, [srcq+ssq*2]
     movu                 m5, [srcq+ss3q ]
     lea                srcq, [srcq+ssq*4]
-    pand                m11, m0
-    pandn                m0, m15
-    SWAP                m15, m0
-    por                 m15, m11
     pshufb               m7, m14
     pshufb               m9, m14
     pshufb               m8, m14
@@ -4320,8 +4678,71 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     mova         [rsp+0x00], m7
     mova         [rsp+0x10], m8
     mova         [rsp+0x20], m9
+%else
+    mova        [esp+0x190], m15
+    lea                ss3q, [ssq*3]
+    movu                 m2, [srcq+ssq*0]
+    movu                 m3, [srcq+ssq*1]
+    movu                 m7, [srcq+ssq*2]
+    movu                 m6, [srcq+ss3q ]
+    lea                srcq, [srcq+ssq*4]
+    pshufb               m2, m14
+    pshufb               m3, m14
+    pshufb               m7, m14
+    pshufb               m6, m14
+    pmaddubsw            m2, m15
+    pmaddubsw            m3, m15
+    pmaddubsw            m7, m15
+    pmaddubsw            m6, m15
+    phaddw               m2, m3
+    phaddw               m7, m6
+    movu                 m1, [srcq+ssq*0]
+    movu                 m5, [srcq+ssq*1]
+    movu                 m3, [srcq+ssq*2]
+    movu                 m6, [srcq+ss3q ]
+    lea                srcq, [srcq+ssq*4]
+    pshufb               m1, m14
+    pshufb               m5, m14
+    pshufb               m3, m14
+    pshufb               m6, m14
+    pmaddubsw            m1, m15
+    pmaddubsw            m5, m15
+    pmaddubsw            m3, m15
+    pmaddubsw            m6, m15
+    phaddw               m1, m5
+    phaddw               m3, m6
+    pmulhrsw             m2, m12
+    pmulhrsw             m7, m12
+    pmulhrsw             m1, m12
+    pmulhrsw             m3, m12
+    shufps               m4, m2, m7, q1032  ; 1 2
+    shufps               m5, m7, m1, q1032  ; 3 4
+    shufps               m6, m1, m3, q1032  ; 5 6
+    psrldq               m0, m3, 8          ; 7 _
+    mova        [esp+0x1a0], m0
+ %define m11 [esp+0x1a0]
+    punpcklwd            m0, m2, m4      ; 01
+    punpckhwd            m2, m4          ; 12
+    punpcklwd            m4, m7, m5      ; 23
+    punpckhwd            m7, m5          ; 34
+    punpcklwd            m5, m1, m6      ; 45
+    punpckhwd            m1, m6          ; 56
+    punpcklwd            m3, [esp+0x1a0] ; 67
+    mov                 myd, mym
+    mov                  r0, r0m
+    mova        [esp+0x1b0], m0 ; 01
+    mova        [esp+0x1c0], m4 ; 23
+    mova        [esp+0x1d0], m5 ; 45
+    mova        [esp+0x1e0], m3 ; 67
+    mova         [rsp+0x00], m2 ; 12
+    mova         [rsp+0x10], m7 ; 34
+    mova         [rsp+0x20], m1 ; 56
+    SWAP                 m1, m4
+    SWAP                 m2, m5
+%endif
 .w4_loop:
     and                 myd, 0x3ff
+%if ARCH_X86_64
     mov                 r6d, 64 << 24
     mov                 r4d, myd
     shr                 r4d, 6
@@ -4342,39 +4763,107 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     paddd                m6, m7
     paddd                m4, m13
     paddd                m4, m6
+%else
+    mov                 mym, myd
+    mov                  r5, [esp+0x1f4]
+    xor                  r3, r3
+    shr                  r4, 6
+    lea                  r5, [r5+r4]
+    mov                  r4, 64 << 24
+    cmovnz               r4, [base+subpel_filters+r5*8+0]
+    cmovnz               r3, [base+subpel_filters+r5*8+4]
+    movd                 m7, r4
+    movd                 m6, r3
+    punpckldq            m7, m6
+    punpcklbw            m7, m7
+    psraw                m7, 8
+    pshufd               m4, m7, q0000
+    pshufd               m5, m7, q1111
+    pshufd               m6, m7, q2222
+    pshufd               m7, m7, q3333
+    pmaddwd              m0, m4
+    pmaddwd              m1, m5
+    pmaddwd              m2, m6
+    pmaddwd              m3, m7
+    paddd                m0, m1
+    paddd                m2, m3
+    paddd                m0, m13
+    paddd                m0, m2
+    SWAP                 m4, m0
+%endif
     psrad                m4, rndshift
     packssdw             m4, m4
 %ifidn %1, put
     packuswb             m4, m4
     movd             [dstq], m4
-    add                dstq, dsq
+    add                dstq, dsmp
 %else
     movq             [tmpq], m4
     add                tmpq, 8
 %endif
     dec                  hd
     jz .ret
+%if ARCH_X86_64
     add                 myd, dyd
     test                myd, ~0x3ff
     jz .w4_loop
+%else
+    SWAP                 m0, m4
+    mov                 myd, mym
+    mov                  r3, r3m
+    add                 myd, dym
+    test                myd, ~0x3ff
+    jnz .w4_next_line
+    mova                 m0, [esp+0x1b0]
+    mova                 m1, [esp+0x1c0]
+    mova                 m2, [esp+0x1d0]
+    mova                 m3, [esp+0x1e0]
+    jmp .w4_loop
+.w4_next_line:
+  %define m14 [esp+0x180]
+  %define m15 [esp+0x190]
+%endif
     movu                 m4, [srcq]
     test                myd, 0x400
     jz .w4_skip_line
+%if ARCH_X86_64
     mova                 m0, [rsp+0x00]
     mova         [rsp+0x00], m1
     mova                 m1, [rsp+0x10]
     mova         [rsp+0x10], m2
     mova                 m2, [rsp+0x20]
     mova         [rsp+0x20], m3
+%else
+    mova                 m5, [esp+0x1c0]
+    mova                 m0, [rsp+0x000]
+    mova         [rsp+0x00], m5
+    mova        [esp+0x1b0], m0
+    mova                 m6, [esp+0x1d0]
+    mova                 m1, [rsp+0x010]
+    mova         [rsp+0x10], m6
+    mova        [esp+0x1c0], m1
+    mova                 m7, [esp+0x1e0]
+    mova                 m2, [rsp+0x020]
+    mova         [rsp+0x20], m7
+    mova        [esp+0x1d0], m2
+%endif
     pshufb               m4, m14
     pmaddubsw            m4, m15
     phaddw               m4, m4
     pmulhrsw             m4, m12
     punpcklwd            m3, m11, m4
+%if ARCH_X86_32
+    mova        [esp+0x1e0], m3
+%endif
     mova                m11, m4
     add                srcq, ssq
     jmp .w4_loop
 .w4_skip_line:
+%if ARCH_X86_32
+    mova                 m0, [esp+0x1c0]
+    mova                 m1, [esp+0x1d0]
+    mova                 m2, [esp+0x1e0]
+%endif
     movu                 m5, [srcq+ssq*1]
     lea                srcq, [srcq+ssq*2]
     mova                 m6, [rsp+0x10]
@@ -4385,17 +4874,27 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     pmaddubsw            m5, m15
     phaddw               m4, m5
     pmulhrsw             m4, m12
-    punpcklwd            m9, m11, m4
+    punpcklwd            m5, m11, m4
     mova         [rsp+0x00], m6
     mova         [rsp+0x10], m7
-    mova         [rsp+0x20], m9
+    mova         [rsp+0x20], m5
+%if ARCH_X86_64
     psrldq              m11, m4, 8
     mova                 m0, m1
     mova                 m1, m2
     mova                 m2, m3
     punpcklwd            m3, m4, m11
+%else
+    psrldq               m6, m4, 8
+    punpcklwd            m3, m4, m6
+    mova        [esp+0x1a0], m6
+    mova        [esp+0x1b0], m0
+    mova        [esp+0x1c0], m1
+    mova        [esp+0x1d0], m2
+    mova        [esp+0x1e0], m3
+%endif
     jmp .w4_loop
-    SWAP                 m0, m15
+INIT_XMM ssse3
 .w8:
     mov    dword [rsp+0x90], 1
     movifprep   tmp_stridem, 16
@@ -4419,9 +4918,23 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
 %ifidn %1, put
     movifnidn           dsm, dsq
 %endif
+%if ARCH_X86_64
     shr                 t0d, 16
-    sub                srcq, 3
     movd                m15, t0d
+%else
+ %define m8  m0
+ %xdefine m14 m4
+ %define m15 m3
+ %if isprep
+  %define ssq ssm
+ %endif
+    mov                  r4, [esp+0x1f0]
+    shr                  r4, 16
+    movd                m15, r4
+    mov                  r0, r0m
+    mov                 myd, mym
+%endif
+    sub                srcq, 3
     pslld                m7, m8, 2 ; dx*4
     pmaddwd              m8, [base+rescale_mul] ; dx*[0-3]
     pshufd              m15, m15, q0000
@@ -4430,42 +4943,81 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     mova        [rsp+0x120], m15
     mov         [rsp+0x098], srcq
     mov         [rsp+0x130], r0q ; dstq / tmpq
-%if UNIX64
+%if ARCH_X86_64 && UNIX64
     mov                  hm, hd
+%elif ARCH_X86_32
+    mov                  r5, hm
+    mov         [esp+0x094], myd
+    mov         [esp+0x134], r5
 %endif
     jmp .hloop
 .hloop_prep:
     dec   dword [rsp+0x090]
     jz .ret
+%if ARCH_X86_64
     add   qword [rsp+0x130], 8*(isprep+1)
     mov                  hd, hm
+%else
+    add   dword [esp+0x130], 8*(isprep+1)
+    mov                 myd, [esp+0x094]
+    mov                  r5, [esp+0x134]
+    mov                  r0, [esp+0x130]
+%endif
     mova                 m7, [rsp+0x100]
     mova                m14, [rsp+0x110]
+%if ARCH_X86_64
     mova                m10, [base+pd_0x3ff]
+%endif
     mova                m15, [rsp+0x120]
     pxor                 m9, m9
     mov                srcq, [rsp+0x098]
+%if ARCH_X86_64
     mov                 r0q, [rsp+0x130] ; dstq / tmpq
+%else
+    mov                 mym, myd
+    mov                  hm, r5
+    mov                 r0m, r0
+    mov                  r3, r3m
+%endif
     paddd               m14, m7
 .hloop:
+%if ARCH_X86_64
     mova                m11, [base+pq_0x40000000]
-    psrld                m4, m14, 10
-    mova              [rsp], m4
+%else
+ %define m11 [base+pq_0x40000000]
+%endif
+    psrld                m2, m14, 10
+    mova              [rsp], m2
     pand                 m6, m14, m10
     psrld                m6, 6
     paddd                m5, m15, m6
     pcmpeqd              m6, m9
-    psrldq               m4, m5, 8
+    psrldq               m2, m5, 8
+%if ARCH_X86_64
     movd                r4d, m5
-    movd                r6d, m4
+    movd                r6d, m2
     psrldq               m5, 4
-    psrldq               m4, 4
+    psrldq               m2, 4
     movd                r7d, m5
-    movd                r9d, m4
+    movd                r9d, m2
     movq                 m0, [base+subpel_filters+r4*8]
     movq                 m1, [base+subpel_filters+r6*8]
     movhps               m0, [base+subpel_filters+r7*8]
     movhps               m1, [base+subpel_filters+r9*8]
+%else
+    movd                 r0, m5
+    movd                 rX, m2
+    psrldq               m5, 4
+    psrldq               m2, 4
+    movd                 r4, m5
+    movd                 r5, m2
+    movq                 m0, [base+subpel_filters+r0*8]
+    movq                 m1, [base+subpel_filters+rX*8]
+    movhps               m0, [base+subpel_filters+r4*8]
+    movhps               m1, [base+subpel_filters+r5*8]
+    pxor                 m2, m2
+ %define m9 m2
+%endif
     paddd               m14, m7 ; mx+dx*[4-7]
     pand                 m5, m14, m10
     psrld                m5, 6
@@ -4473,6 +5025,7 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     pcmpeqd              m5, m9
     mova        [rsp+0x110], m14
     psrldq               m4, m15, 8
+%if ARCH_X86_64
     movd               r10d, m15
     movd               r11d, m4
     psrldq              m15, 4
@@ -4574,6 +5127,114 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     paddd                m5, m7
     paddd                m4, m8
     paddd                m5, m9
+%else
+    movd                 r0, m15
+    movd                 rX, m4
+    psrldq              m15, 4
+    psrldq               m4, 4
+    movd                 r4, m15
+    movd                 r5, m4
+    mova                m14, [esp+0x110]
+    movq                 m2, [base+subpel_filters+r0*8]
+    movq                 m3, [base+subpel_filters+rX*8]
+    movhps               m2, [base+subpel_filters+r4*8]
+    movhps               m3, [base+subpel_filters+r5*8]
+    psrld               m14, 10
+    mova           [esp+16], m14
+    mov                  r0, [esp+ 0]
+    mov                  rX, [esp+ 8]
+    mov                  r4, [esp+ 4]
+    mov                  r5, [esp+12]
+    mova         [esp+0x20], m0
+    mova         [esp+0x30], m1
+    mova         [esp+0x40], m2
+    mova         [esp+0x50], m3
+    pshufd               m4, m6, q1100
+    pshufd               m6, m6, q3322
+    pshufd               m7, m5, q1100
+    pshufd               m5, m5, q3322
+    pand                 m0, m11, m4
+    pand                 m1, m11, m6
+    pand                 m2, m11, m7
+    pand                 m3, m11, m5
+    pandn                m4, [esp+0x20]
+    pandn                m6, [esp+0x30]
+    pandn                m7, [esp+0x40]
+    pandn                m5, [esp+0x50]
+    por                  m0, m4
+    por                  m1, m6
+    por                  m2, m7
+    por                  m3, m5
+    mova         [esp+0x20], m0
+    mova         [esp+0x30], m1
+    mova         [esp+0x40], m2
+    mova         [esp+0x50], m3
+    MC_8TAP_SCALED_H   0x20, 0x140, 0 ; 0-1
+    MC_8TAP_SCALED_H   0x20, 0x160    ; 2-3
+    MC_8TAP_SCALED_H   0x20, 0x180    ; 4-5
+    MC_8TAP_SCALED_H   0x20, 0x1a0    ; 6-7
+    mova                 m5, [esp+0x180]
+    mova                 m6, [esp+0x190]
+    mova                 m7, [esp+0x1a0]
+    mova                 m0, [esp+0x1b0]
+    mov                 myd, mym
+    punpcklwd            m4, m5, m6      ; 45a
+    punpckhwd            m5, m6          ; 45b
+    punpcklwd            m6, m7, m0      ; 67a
+    punpckhwd            m7, m0          ; 67b
+    mova        [esp+0x180], m4
+    mova        [esp+0x190], m5
+    mova        [esp+0x1a0], m6
+    mova        [esp+0x1b0], m7
+    mova                 m1, [esp+0x140]
+    mova                 m2, [esp+0x150]
+    mova                 m3, [esp+0x160]
+    mova                 m4, [esp+0x170]
+    punpcklwd            m0, m1, m2      ; 01a
+    punpckhwd            m1, m2          ; 01b
+    punpcklwd            m2, m3, m4      ; 23a
+    punpckhwd            m3, m4          ; 23b
+    mova        [esp+0x140], m0
+    mova        [esp+0x150], m1
+    mova        [esp+0x160], m2
+    mova        [esp+0x170], m3
+.vloop:
+    mov                  r0, r0m
+    mov                  r5, [esp+0x1f4]
+    and                 myd, 0x3ff
+    mov                 mym, myd
+    xor                  r3, r3
+    shr                  r4, 6
+    lea                  r5, [r5+r4]
+    mov                  r4, 64 << 24
+    cmovnz               r4, [base+subpel_filters+r5*8+0]
+    cmovnz               r3, [base+subpel_filters+r5*8+4]
+    movd                 m7, r4
+    movd                 m6, r3
+    punpckldq            m7, m6
+    punpcklbw            m7, m7
+    psraw                m7, 8
+    pshufd               m4, m7, q0000
+    pshufd               m5, m7, q1111
+    pmaddwd              m0, m4
+    pmaddwd              m1, m4
+    pmaddwd              m2, m5
+    pmaddwd              m3, m5
+    pshufd               m6, m7, q2222
+    pshufd               m7, m7, q3333
+    paddd                m0, m2
+    paddd                m1, m3
+    pmaddwd              m2, [esp+0x180], m6
+    pmaddwd              m3, [esp+0x190], m6
+    pmaddwd              m4, [esp+0x1a0], m7
+    pmaddwd              m5, [esp+0x1b0], m7
+    paddd                m0, m2
+    paddd                m1, m3
+    paddd                m0, m13
+    paddd                m1, m13
+    paddd                m4, m0
+    paddd                m5, m1
+%endif
     psrad                m4, rndshift
     psrad                m5, rndshift
     packssdw             m4, m5
@@ -4587,6 +5248,7 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
 %endif
     dec                  hd
     jz .hloop_prep
+%if ARCH_X86_64
     add                 myd, dyd
     test                myd, ~0x3ff
     jz .vloop
@@ -4660,63 +5322,238 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     mova         [rsp+0x60], m6
     mova         [rsp+0x70], m7
     mova         [rsp+0x80], m4
+%else
+    mov                 r0m, r0
+    mov                 myd, mym
+    mov                  r3, r3m
+    add                 myd, dym
+    test                myd, ~0x3ff
+    mov                 mym, myd
+    jnz .next_line
+    mova                 m0, [esp+0x140]
+    mova                 m1, [esp+0x150]
+    mova                 m2, [esp+0x160]
+    mova                 m3, [esp+0x170]
     jmp .vloop
+.next_line:
+    test                myd, 0x400
+    mov                  r0, [esp+ 0]
+    mov                  rX, [esp+ 8]
+    mov                  r4, [esp+ 4]
+    mov                  r5, [esp+12]
+    jz .skip_line
+    mova                 m6, [base+unpckw]
+    mova                 m0, [esp+0x140]
+    mova                 m1, [esp+0x150]
+    mova                 m7, [esp+0x180]
+    movq                 m4, [srcq+r0]
+    movq                 m5, [srcq+rX]
+    movhps               m4, [srcq+r4]
+    movhps               m5, [srcq+r5]
+    pshufb               m0, m6         ; 0a 1a
+    pshufb               m1, m6         ; 0b 1b
+    pshufb               m7, m6         ; 4a 5a
+    mov                  r0, [esp+16]
+    mov                  rX, [esp+24]
+    mov                  r4, [esp+20]
+    mov                  r5, [esp+28]
+    movq                 m3, [srcq+r0]
+    movq                 m2, [srcq+rX]
+    movhps               m3, [srcq+r4]
+    movhps               m2, [srcq+r5]
+    add                srcq, ssq
+    pmaddubsw            m4, [esp+0x20]
+    pmaddubsw            m5, [esp+0x30]
+    pmaddubsw            m3, [esp+0x40]
+    pmaddubsw            m2, [esp+0x50]
+    phaddw               m4, m5
+    phaddw               m3, m2
+    mova                 m5, [esp+0x190]
+    mova                 m2, [esp+0x160]
+    phaddw               m4, m3
+    mova                 m3, [esp+0x170]
+    pmulhrsw             m4, m12        ; 8a 8b
+    mov                 myd, mym
+    pshufb               m5, m6         ; 4b 5b
+    pshufd               m6, m6, q1032
+    pshufb               m2, m6         ; 3a 2a
+    pshufb               m3, m6         ; 3b 2b
+    punpckhwd            m0, m2         ; 12a
+    punpckhwd            m1, m3         ; 12b
+    mova        [esp+0x140], m0
+    mova        [esp+0x150], m1
+    mova                 m0, [esp+0x1a0]
+    mova                 m1, [esp+0x1b0]
+    punpcklwd            m2, m7         ; 34a
+    punpcklwd            m3, m5         ; 34b
+    mova        [esp+0x160], m2
+    mova        [esp+0x170], m3
+    pshufb               m0, m6         ; 7a 6a
+    pshufb               m1, m6         ; 7b 6b
+    punpckhwd            m7, m0         ; 56a
+    punpckhwd            m5, m1         ; 56b
+    punpcklwd            m0, m4
+    punpckhqdq           m4, m4
+    punpcklwd            m1, m4
+    mova        [esp+0x180], m7
+    mova        [esp+0x190], m5
+    mova        [esp+0x1a0], m0
+    mova        [esp+0x1b0], m1
+    mova                 m0, [esp+0x140]
+    mova                 m1, [esp+0x150]
+    jmp .vloop
+.skip_line:
+    MC_8TAP_SCALED_H   0x20, 0x1c0, 0
+    mov                 myd, mym
+    mova                 m0, [esp+0x160]
+    mova                 m1, [esp+0x170]
+    mova                 m2, [esp+0x180]
+    mova                 m3, [esp+0x190]
+    mova         [esp+0x140], m0
+    mova         [esp+0x150], m1
+    mova                 m4, [esp+0x1a0]
+    mova                 m5, [esp+0x1b0]
+    mova        [esp+0x160], m2
+    mova        [esp+0x170], m3
+    mova                 m6, [esp+0x1c0]
+    mova                 m7, [esp+0x1d0]
+    mova        [esp+0x180], m4
+    mova        [esp+0x190], m5
+    punpcklwd            m4, m6, m7
+    punpckhwd            m6, m7
+    mova        [esp+0x1a0], m4
+    mova        [esp+0x1b0], m6
+%endif
+    jmp .vloop
+INIT_XMM ssse3
 .dy1:
     movzx                wd, word [base+%1_8tap_scaled_ssse3_dy1_table+wq*2]
     add                  wq, base_reg
     jmp                  wq
 %ifidn %1, put
 .dy1_w2:
+ %if ARCH_X86_64
     mov                 myd, mym
     movzx               t0d, t0b
     dec                srcq
     movd                m15, t0d
+ %else
+  %define m8  m0
+  %define m9  m1
+  %define m14 m4
+  %define m15 m3
+    movzx                r5, byte [esp+0x1f0]
+    dec                srcd
+    movd                m15, r5
+ %endif
     punpckldq            m9, m8
     SWAP                 m8, m9
     paddd               m14, m8 ; mx+dx*[0-1]
+ %if ARCH_X86_64
     mova                m11, [base+pd_0x4000]
+ %else
+  %define m11 [base+pd_0x4000]
+ %endif
     pshufd              m15, m15, q0000
     pand                 m8, m14, m10
     psrld                m8, 6
     paddd               m15, m8
     movd                r4d, m15
     psrldq              m15, 4
+ %if ARCH_X86_64
     movd                r6d, m15
+ %else
+    movd                r3d, m15
+ %endif
     mova                 m5, [base+bdct_lb_dw]
     mova                 m6, [base+subpel_s_shuf2]
     movd                m15, [base+subpel_filters+r4*8+2]
+ %if ARCH_X86_64
     movd                 m7, [base+subpel_filters+r6*8+2]
+ %else
+    movd                 m7, [base+subpel_filters+r3*8+2]
+ %endif
     pxor                 m9, m9
     pcmpeqd              m8, m9
     psrld               m14, 10
+ %if ARCH_X86_32
+    mov                  r3, r3m
+    pshufb              m14, m5
+    paddb               m14, m6
+    mova         [esp+0x00], m14
+  %define m14 [esp+0x00]
+    SWAP                 m5, m0
+    SWAP                 m6, m3
+  %define m8  m5
+  %define m15 m6
+ %endif
     movq                 m0, [srcq+ssq*0]
     movq                 m2, [srcq+ssq*2]
     movhps               m0, [srcq+ssq*1]
     movhps               m2, [srcq+ss3q ]
     lea                srcq, [srcq+ssq*4]
+ %if ARCH_X86_64
     shr                 myd, 6
     mov                 r4d, 64 << 24
     lea                 myd, [t1+myq]
     cmovnz              r4q, [base+subpel_filters+myq*8]
     pshufb              m14, m5
     paddb               m14, m6
+    movq                m10, r4
+ %else
+    mov                 myd, mym
+    mov                  r5, [esp+0x1f4]
+    xor                  r3, r3
+    shr                 myd, 6
+    lea                  r5, [r5+myd]
+    mov                  r4, 64 << 24
+    cmovnz               r4, [base+subpel_filters+r5*8+0]
+    cmovnz               r3, [base+subpel_filters+r5*8+4]
+  %define m10 m4
+    movd                m10, r4
+    movd                 m3, r3
+    mov                  r3, r3m
+    punpckldq           m10, m3
+ %endif
     movq                 m1, [srcq+ssq*0]
     movq                 m3, [srcq+ssq*2]
     movhps               m1, [srcq+ssq*1]
     add                srcq, ss3q
-    movq                m10, r4q
     punpcklbw           m10, m10
     psraw               m10, 8
     punpckldq           m15, m7
     punpcklqdq          m15, m15
+ %if ARCH_X86_64
     pand                m11, m8
+ %else
+    pand                 m7, m11, m8
+  %define m11 m7
+ %endif
     pandn                m8, m15
     SWAP                m15, m8
     por                 m15, m11
+ %if ARCH_X86_64
     pshufd               m8, m10, q0000
     pshufd               m9, m10, q1111
     pshufd              m11, m10, q3333
     pshufd              m10, m10, q2222
+ %else
+    mova         [esp+0x10], m15
+  %define m15 [esp+0x10]
+    mov                  r0, r0m
+    pshufd               m5, m4, q0000
+    pshufd               m6, m4, q1111
+    pshufd               m7, m4, q2222
+    pshufd               m4, m4, q3333
+  %define m8  [esp+0x20]
+  %define m9  [esp+0x30]
+  %define m10 [esp+0x40]
+  %define m11 [esp+0x50]
+    mova                 m8, m5
+    mova                 m9, m6
+    mova                m10, m7
+    mova                m11, m4
+ %endif
     pshufb               m0, m14
     pshufb               m2, m14
     pshufb               m1, m14
@@ -4758,30 +5595,46 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     psrad                m5, rndshift
     packssdw             m5, m5
     packuswb             m5, m5
-    pextrw              r4d, m5, 0
-    pextrw              r6d, m5, 1
+    movd                r4d, m5
     mov        [dstq+dsq*0], r4w
-    mov        [dstq+dsq*1], r6w
+    shr                 r4d, 16
+    mov        [dstq+dsq*1], r4w
     lea                dstq, [dstq+dsq*2]
     sub                  hd, 2
     jg .dy1_w2_loop
     RET
-    SWAP                m15, m8, m9
 %endif
+INIT_XMM ssse3
 .dy1_w4:
+%if ARCH_X86_64
     mov                 myd, mym
-    mova                 m7, [base+rescale_mul]
     movzx               t0d, t0b
     dec                srcq
     movd                m15, t0d
-    pmaddwd              m8, m7
+%else
+ %define m10 [base+pd_0x3ff]
+ %define m11 [base+pd_0x4000]
+ %define m8  m0
+ %xdefine m14 m4
+ %define m15 m3
+ %if isprep
+  %define ssq r3
+ %endif
+    movzx                r4, byte [esp+0x1f0]
+    dec                srcq
+    movd                m15, r4
+%endif
+    pmaddwd              m8, [base+rescale_mul]
+%if ARCH_X86_64
     mova                m11, [base+pd_0x4000]
+%endif
     pshufd              m15, m15, q0000
     paddd               m14, m8 ; mx+dx*[0-3]
     pand                 m8, m14, m10
     psrld                m8, 6
     paddd               m15, m8
     psrldq               m7, m15, 8
+%if ARCH_X86_64
     movd                r4d, m15
     movd               r11d, m7
     psrldq              m15, 4
@@ -4789,26 +5642,53 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     movd                r6d, m15
     movd               r13d, m7
     movd                m15, [base+subpel_filters+ r4*8+2]
-    movd                 m4, [base+subpel_filters+r11*8+2]
-    movd                 m5, [base+subpel_filters+ r6*8+2]
-    movd                 m7, [base+subpel_filters+r13*8+2]
-    movq                 m6, [base+subpel_s_shuf2]
+    movd                 m2, [base+subpel_filters+r11*8+2]
+    movd                 m3, [base+subpel_filters+ r6*8+2]
+    movd                 m4, [base+subpel_filters+r13*8+2]
     shr                 myd, 6
     mov                 r4d, 64 << 24
     lea                 myd, [t1+myq]
     cmovnz              r4q, [base+subpel_filters+myq*8]
+%else
+    movd                 r1, m15
+    movd                 r3, m7
+    psrldq              m15, 4
+    psrldq               m7, 4
+    movd                 r4, m15
+    movd                 r5, m7
+ %define m15 m5
+    SWAP                 m4, m7
+    movd                m15, [base+subpel_filters+r1*8+2]
+    movd                 m2, [base+subpel_filters+r3*8+2]
+    movd                 m3, [base+subpel_filters+r4*8+2]
+    movd                 m4, [base+subpel_filters+r5*8+2]
+    mov                 myd, mym
+    mov                  rX, [esp+0x1f4]
+    xor                  r5, r5
+    shr                 myd, 6
+    lea                  rX, [rX+myd]
+    mov                  r4, 64 << 24
+    cmovnz               r4, [base+subpel_filters+rX*8+0]
+    cmovnz               r5, [base+subpel_filters+rX*8+4]
+    mov                  r3, r3m
+ %if isprep
+    lea                ss3q, [ssq*3]
+ %endif
+%endif
+    punpckldq           m15, m3
+    punpckldq            m2, m4
+    punpcklqdq          m15, m2
+    movq                 m6, [base+subpel_s_shuf2]
+%if ARCH_X86_64
     pcmpeqd              m8, m9
     psrld               m14, 10
+    pshufb              m14, [base+bdct_lb_dw]
     movu                 m0, [srcq+ssq*0]
     movu                 m1, [srcq+ssq*1]
     movu                 m2, [srcq+ssq*2]
     movu                 m3, [srcq+ss3q ]
     lea                srcq, [srcq+ssq*4]
-    punpckldq           m15, m5
-    punpckldq            m4, m7
     punpcklqdq           m6, m6
-    punpcklqdq          m15, m4
-    pshufb              m14, [base+bdct_lb_dw]
     movu                 m4, [srcq+ssq*0]
     movu                 m5, [srcq+ssq*1]
     movu                 m7, [srcq+ssq*2]
@@ -4852,15 +5732,104 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     punpckhwd            m2, m3     ; 34
     punpcklwd            m9, m4, m5 ; 45
     punpckhwd            m4, m5     ; 56
+%else
+    pxor                 m3, m3
+    pcmpeqd              m8, m3
+    psrld               m14, 10
+    pshufb              m14, [base+bdct_lb_dw]
+    movu                 m1, [srcq+ssq*0]
+    movu                 m2, [srcq+ssq*1]
+    movu                 m3, [srcq+ssq*2]
+    add                srcq, ss3q
+    punpcklqdq           m6, m6
+    SWAP                 m4, m7
+    pand                 m7, m11, m8
+    pandn                m8, m15
+    SWAP                 m5, m0
+    por                 m15, m7
+    paddb               m14, m6
+    movu                 m0, [srcq+ssq*0]
+    movu                 m7, [srcq+ssq*1]
+    movu                 m6, [srcq+ssq*2]
+    pshufb               m1, m14
+    pshufb               m2, m14
+    pshufb               m3, m14
+    pshufb               m0, m14
+    pshufb               m7, m14
+    pshufb               m6, m14
+    pmaddubsw            m1, m15
+    pmaddubsw            m2, m15
+    pmaddubsw            m3, m15
+    mova         [esp+0x00], m14
+    mova         [esp+0x10], m15
+    pmaddubsw            m0, m15
+    pmaddubsw            m7, m15
+    pmaddubsw            m6, m15
+    phaddw               m1, m2
+    movu                 m2, [srcq+ss3q ]
+    lea                srcq, [srcq+ssq*4]
+    mov                  r0, r0m
+    phaddw               m3, m0
+    pshufb               m2, m14
+    pmaddubsw            m2, m15
+ %define m14 [esp+0x00]
+ %define m15 [esp+0x10]
+    phaddw               m7, m6
+    phaddw               m2, m2
+    movd                 m6, r4
+    movd                 m0, r5
+    punpckldq            m6, m0
+    punpcklbw            m6, m6
+    psraw                m6, 8
+    mova         [esp+0x20], m6
+    pmulhrsw             m1, m12 ; 0 1
+    pmulhrsw             m3, m12 ; 2 3
+    pmulhrsw             m7, m12 ; 4 5
+    pmulhrsw             m2, m12 ; 6 _
+    shufps               m0, m1, m3, q1032  ; 1 2
+    shufps               m4, m3, m7, q1032  ; 3 4
+    shufps               m5, m7, m2, q1032  ; 5 6
+    punpcklwd            m6, m1, m0 ; 01
+    punpckhwd            m1, m0     ; 12
+    mova         [esp+0x30], m1
+    punpcklwd            m1, m3, m4 ; 23
+    punpckhwd            m3, m4     ; 34
+    mova         [esp+0x40], m3
+    punpcklwd            m3, m7, m5 ; 45
+    punpckhwd            m7, m5     ; 56
+    mova         [esp+0x50], m7
+    mova         [esp+0x60], m2
+    mova                 m0, [esp+0x20]
+ %xdefine m8 m1
+ %xdefine m9 m3
+ %xdefine m10 m0
+    SWAP                 m7, m6
+    SWAP                 m1, m4
+    SWAP                 m3, m2
+%endif
     pshufd               m1, m10, q0000
     pshufd               m3, m10, q1111
     pshufd               m5, m10, q2222
     pshufd              m10, m10, q3333
+%if ARCH_X86_64
     mova         [rsp+0x00], m8
     mova         [rsp+0x10], m2
     mova         [rsp+0x20], m9
     mova         [rsp+0x30], m4
+%else
+    mova         [esp+0x70], m8
+    mova         [esp+0x80], m9
+    mova         [esp+0x90], m1
+    mova         [esp+0xa0], m3
+    mova         [esp+0xb0], m5
+    mova         [esp+0xc0], m10
+ %ifidn %1, put
+    mov                 dsd, dsm
+ %endif
+ %define m11 m6
+%endif
 .dy1_w4_loop:
+%if ARCH_X86_64
     movu                m11, [srcq+ssq*0]
     pmaddwd              m7, m1
     pmaddwd              m8, m3
@@ -4891,10 +5860,55 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     paddd                m7, m2
     mova                 m2, [rsp+0x30]
     paddd                m0, m11
+%else
+    SWAP                 m7, m6
+    SWAP                 m1, m4
+    SWAP                 m3, m2
+    movu                 m5, [srcq+ssq*0]
+    mova                 m0, [esp+0x30]
+    mova                 m2, [esp+0x40]
+    mova                 m4, [esp+0x50]
+    pmaddwd              m6, [esp+0x90]
+    pmaddwd              m1, [esp+0xa0]
+    pmaddwd              m0, [esp+0x90]
+    pmaddwd              m2, [esp+0xa0]
+    pmaddwd              m3, [esp+0xb0]
+    pmaddwd              m4, [esp+0xb0]
+    paddd                m6, m1
+    paddd                m0, m2
+    movu                 m7, [srcq+ssq*1]
+    lea                srcq, [srcq+ssq*2]
+    pshufb               m5, m14
+    pmaddubsw            m5, m15
+    paddd                m6, m13
+    paddd                m0, m13
+    paddd                m6, m3
+    paddd                m0, m4
+    pshufb               m7, m14
+    pmaddubsw            m7, m15
+    phaddw               m5, m7
+    mova                 m7, [rsp+0x80]
+    pmulhrsw             m5, m12
+    punpcklwd            m3, [esp+0x60], m5 ; 67
+    psrldq               m1, m5, 8
+    punpcklwd            m4, m5, m1         ; 78
+    pmaddwd              m2, m3, [esp+0xc0]
+    pmaddwd              m5, m4, [esp+0xc0]
+    mova         [esp+0x60], m1
+    paddd                m6, m2
+    mova                 m2, [esp+0x50]
+    paddd                m0, m5
+    SWAP                 m7, m6
+%endif
     psrad                m7, rndshift
     psrad                m0, rndshift
     packssdw             m7, m0
+%if ARCH_X86_64
     mova                 m0, [rsp+0x10]
+%else
+    mova                 m0, [esp+0x40]
+%define m11 m5
+%endif
 %ifidn %1, put
     packuswb             m7, m7
     psrldq              m11, m7, 4
@@ -4907,13 +5921,24 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
 %endif
     sub                  hd, 2
     jz .ret
+%if ARCH_X86_64
     mova                 m7, [rsp+0x00]
     mova         [rsp+0x00], m8
     mova         [rsp+0x10], m2
     mova         [rsp+0x20], m9
     mova         [rsp+0x30], m4
+%else
+    mova                 m7, [esp+0x70] ; 01
+    mova                 m1, [esp+0x80] ; 23
+    mova                 m2, [esp+0x50] ; 34
+    mova         [esp+0x30], m0
+    mova         [esp+0x70], m1
+    mova         [esp+0x40], m2
+    mova         [esp+0x80], m3
+    mova         [esp+0x50], m4
+%endif
     jmp .dy1_w4_loop
-    SWAP                 m8, m15
+INIT_XMM ssse3
 .dy1_w8:
     mov    dword [rsp+0x90], 1
     movifprep   tmp_stridem, 16
@@ -4938,6 +5963,7 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
 %ifidn %1, put
     movifnidn           dsm, dsq
 %endif
+%if ARCH_X86_64
     shr                 t0d, 16
     sub                srcq, 3
     shr                 myd, 6
@@ -4945,13 +5971,44 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     lea                 myd, [t1+myq]
     cmovnz              r4q, [base+subpel_filters+myq*8]
     movd                m15, t0d
+%else
+ %define m8   m0
+ %define m9   m1
+ %xdefine m14 m4
+ %xdefine m15 m3
+ %if isprep
+  %define ssq ssm
+ %endif
+    mov                  r5, [esp+0x1f0]
+    mov                  r3, [esp+0x1f4]
+    shr                  r5, 16
+    sub                srcq, 3
+    movd                m15, r5
+    xor                  r5, r5
+    shr                 myd, 6
+    lea                  r3, [r3+myd]
+    mov                  r4, 64 << 24
+    cmovnz               r4, [base+subpel_filters+r3*8+0]
+    cmovnz               r5, [base+subpel_filters+r3*8+4]
+    mov                  r0, r0m
+    mov                  r3, r3m
+%endif
     pslld                m7, m8, 2 ; dx*4
     pmaddwd              m8, [base+rescale_mul] ; dx*[0-3]
     pshufd              m15, m15, q0000
     paddd               m14, m8 ; mx+dx*[0-3]
+%if ARCH_X86_64
     movq                 m3, r4q
     punpcklbw            m3, m3
     psraw                m3, 8
+%else
+    movd                 m5, r4
+    movd                 m6, r5
+    punpckldq            m5, m6
+    punpcklbw            m5, m5
+    psraw                m5, 8
+    SWAP                 m3, m5
+%endif
     mova        [rsp+0x100], m7
     mova        [rsp+0x120], m15
     mov         [rsp+0x098], srcq
@@ -4964,42 +6021,81 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     mova        [rsp+0x150], m1
     mova        [rsp+0x160], m2
     mova        [rsp+0x170], m3
-%if UNIX64
+%if ARCH_X86_64 && UNIX64
     mov                  hm, hd
+%elif ARCH_X86_32
+    SWAP                  m5, m3
+    mov                   r5, hm
+    mov          [esp+0x134], r5
 %endif
     jmp .dy1_hloop
 .dy1_hloop_prep:
     dec   dword [rsp+0x090]
     jz .ret
+%if ARCH_X86_64
     add   qword [rsp+0x130], 8*(isprep+1)
     mov                  hd, hm
+%else
+    add   dword [rsp+0x130], 8*(isprep+1)
+    mov                  r5, [esp+0x134]
+    mov                  r0, [esp+0x130]
+%endif
     mova                 m7, [rsp+0x100]
     mova                m14, [rsp+0x110]
+%if ARCH_X86_64
     mova                m10, [base+pd_0x3ff]
+%else
+ %define m10 [base+pd_0x3ff]
+%endif
     mova                m15, [rsp+0x120]
-    pxor                 m9, m9
     mov                srcq, [rsp+0x098]
+%if ARCH_X86_64
     mov                 r0q, [rsp+0x130] ; dstq / tmpq
+%else
+    mov                  hm, r5
+    mov                 r0m, r0
+    mov                  r3, r3m
+%endif
     paddd               m14, m7
 .dy1_hloop:
+    pxor                 m9, m9
+%if ARCH_X86_64
     mova                m11, [base+pq_0x40000000]
-    psrld                m4, m14, 10
-    mova              [rsp], m4
+%else
+ %define m11 [base+pq_0x40000000]
+%endif
+    psrld                m2, m14, 10
+    mova              [rsp], m2
     pand                 m6, m14, m10
     psrld                m6, 6
     paddd                m5, m15, m6
     pcmpeqd              m6, m9
-    psrldq               m4, m5, 8
+    psrldq               m2, m5, 8
+%if ARCH_X86_64
     movd                r4d, m5
-    movd                r6d, m4
+    movd                r6d, m2
     psrldq               m5, 4
-    psrldq               m4, 4
+    psrldq               m2, 4
     movd                r7d, m5
-    movd                r9d, m4
+    movd                r9d, m2
     movq                 m0, [base+subpel_filters+r4*8]
     movq                 m1, [base+subpel_filters+r6*8]
     movhps               m0, [base+subpel_filters+r7*8]
     movhps               m1, [base+subpel_filters+r9*8]
+%else
+    movd                 r0, m5
+    movd                 rX, m2
+    psrldq               m5, 4
+    psrldq               m2, 4
+    movd                 r4, m5
+    movd                 r5, m2
+    movq                 m0, [base+subpel_filters+r0*8]
+    movq                 m1, [base+subpel_filters+rX*8]
+    movhps               m0, [base+subpel_filters+r4*8]
+    movhps               m1, [base+subpel_filters+r5*8]
+    pxor                 m2, m2
+ %define m9 m2
+%endif
     paddd               m14, m7 ; mx+dx*[4-7]
     pand                 m5, m14, m10
     psrld                m5, 6
@@ -5007,6 +6103,7 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     pcmpeqd              m5, m9
     mova        [rsp+0x110], m14
     psrldq               m4, m15, 8
+%if ARCH_X86_64
     movd               r10d, m15
     movd               r11d, m4
     psrldq              m15, 4
@@ -5025,8 +6122,6 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     psrldq               m4, 4
     movd               r13d, m14
     movd                rXd, m4
-    punpcklbw           m14, m14
-    psraw               m14, 8
     mov                 r4d, [rsp+ 0]
     mov                 r6d, [rsp+ 8]
     mov                 r7d, [rsp+ 4]
@@ -5083,7 +6178,85 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     mova         [rsp+0x70], m6
     mova         [rsp+0x80], m7
     mova                m14, [base+unpckw]
+%else
+    movd                 r0, m15
+    movd                 rX, m4
+    psrldq              m15, 4
+    psrldq               m4, 4
+    movd                 r4, m15
+    movd                 r5, m4
+    mova                m14, [esp+0x110]
+    movq                 m2, [base+subpel_filters+r0*8]
+    movq                 m3, [base+subpel_filters+rX*8]
+    movhps               m2, [base+subpel_filters+r4*8]
+    movhps               m3, [base+subpel_filters+r5*8]
+    psrld               m14, 10
+    mova           [esp+16], m14
+    mov                  r0, [esp+ 0]
+    mov                  rX, [esp+ 8]
+    mov                  r4, [esp+ 4]
+    mov                  r5, [esp+12]
+    mova         [esp+0x20], m0
+    mova         [esp+0x30], m1
+    mova         [esp+0x40], m2
+    mova         [esp+0x50], m3
+    pshufd               m4, m6, q1100
+    pshufd               m6, m6, q3322
+    pshufd               m7, m5, q1100
+    pshufd               m5, m5, q3322
+    pand                 m0, m11, m4
+    pand                 m1, m11, m6
+    pand                 m2, m11, m7
+    pand                 m3, m11, m5
+    pandn                m4, [esp+0x20]
+    pandn                m6, [esp+0x30]
+    pandn                m7, [esp+0x40]
+    pandn                m5, [esp+0x50]
+    por                  m0, m4
+    por                  m1, m6
+    por                  m2, m7
+    por                  m3, m5
+    mova        [esp+0x20], m0
+    mova        [esp+0x30], m1
+    mova        [esp+0x40], m2
+    mova        [esp+0x50], m3
+    MC_8TAP_SCALED_H   0x20, 0x60, 0 ; 0-1
+    MC_8TAP_SCALED_H   0x20, 0x180   ; 2-3
+    MC_8TAP_SCALED_H   0x20, 0x1a0   ; 4-5
+    MC_8TAP_SCALED_H   0x20, 0x1c0   ; 6-7
+    mova                 m5, [esp+0x1a0]
+    mova                 m6, [esp+0x1b0]
+    mova                 m7, [esp+0x1c0]
+    mova                 m0, [esp+0x1d0]
+    punpcklwd            m4, m5, m6      ; 45a
+    punpckhwd            m5, m6          ; 45b
+    punpcklwd            m6, m7, m0      ; 67a
+    punpckhwd            m7, m0          ; 67b
+    mova        [esp+0x1a0], m4
+    mova        [esp+0x1b0], m5
+    mova        [esp+0x1c0], m6
+    mova        [esp+0x1d0], m7
+    mova                 m1, [esp+0x060]
+    mova                 m2, [esp+0x070]
+    mova                 m3, [esp+0x180]
+    mova                 m4, [esp+0x190]
+    punpcklwd            m0, m1, m2      ; 01a
+    punpckhwd            m1, m2          ; 01b
+    punpcklwd            m2, m3, m4      ; 23a
+    punpckhwd            m3, m4          ; 23b
+    mova        [esp+0x060], m0
+    mova        [esp+0x070], m1
+    mova        [esp+0x180], m2
+    mova        [esp+0x190], m3
+ %define m8  [esp+0x140]
+ %define m9  [esp+0x150]
+ %define m10 [esp+0x160]
+ %define m11 [esp+0x170]
+%endif
 .dy1_vloop:
+%if ARCH_X86_32
+    mov                  r0, r0m
+%endif
     pmaddwd              m4, m0, m8
     pmaddwd              m5, m1, m8
     pmaddwd              m6, m2, m9
@@ -5092,14 +6265,24 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     paddd                m5, m13
     paddd                m4, m6
     paddd                m5, m7
+%if ARCH_X86_64
     pmaddwd              m6, [rsp+0x50], m10
     pmaddwd              m7, [rsp+0x60], m10
-    pmaddwd             m15, [rsp+0x70], m11
+%else
+    pmaddwd              m6, [rsp+0x1a0], m10
+    pmaddwd              m7, [rsp+0x1b0], m10
+%endif
     paddd                m4, m6
-    pmaddwd              m6, [rsp+0x80], m11
     paddd                m5, m7
-    paddd                m4, m15
-    paddd                m5, m6
+%if ARCH_X86_64
+    pmaddwd              m6, [rsp+0x70], m11
+    pmaddwd              m7, [rsp+0x80], m11
+%else
+    pmaddwd              m6, [rsp+0x1c0], m11
+    pmaddwd              m7, [rsp+0x1d0], m11
+%endif
+    paddd                m4, m6
+    paddd                m5, m7
     psrad                m4, rndshift
     psrad                m5, rndshift
     packssdw             m4, m5
@@ -5111,8 +6294,12 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     mova             [tmpq], m4
     add                tmpq, tmp_stridem
 %endif
+%if ARCH_X86_32
+    mov                 r0m, r0
+%endif
     dec                  hd
     jz .dy1_hloop_prep
+%if ARCH_X86_64
     movq                 m4, [srcq+ r4]
     movq                 m5, [srcq+ r6]
     movhps               m4, [srcq+ r7]
@@ -5152,73 +6339,212 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     mova         [rsp+0x60], m15
     mova         [rsp+0x70], m5
     mova         [rsp+0x80], m7
+%else
+    mov                  r0, [esp+ 0]
+    mov                  rX, [esp+ 8]
+    mov                  r4, [esp+ 4]
+    mov                  r5, [esp+12]
+    mova                 m6, [base+unpckw]
+    mova                 m0, [esp+0x060]
+    mova                 m1, [esp+0x070]
+    mova                 m7, [esp+0x1a0]
+    movq                 m4, [srcq+r0]
+    movq                 m5, [srcq+rX]
+    movhps               m4, [srcq+r4]
+    movhps               m5, [srcq+r5]
+    pshufb               m0, m6         ; 0a 1a
+    pshufb               m1, m6         ; 0b 1b
+    pshufb               m7, m6         ; 4a 5a
+    mov                  r0, [esp+16]
+    mov                  rX, [esp+24]
+    mov                  r4, [esp+20]
+    mov                  r5, [esp+28]
+    movq                 m3, [srcq+r0]
+    movq                 m2, [srcq+rX]
+    movhps               m3, [srcq+r4]
+    movhps               m2, [srcq+r5]
+    add                srcq, ssq
+    pmaddubsw            m4, [esp+0x20]
+    pmaddubsw            m5, [esp+0x30]
+    pmaddubsw            m3, [esp+0x40]
+    pmaddubsw            m2, [esp+0x50]
+    phaddw               m4, m5
+    phaddw               m3, m2
+    mova                 m5, [esp+0x1b0]
+    mova                 m2, [esp+0x180]
+    phaddw               m4, m3
+    mova                 m3, [esp+0x190]
+    pmulhrsw             m4, m12        ; 8a 8b
+    pshufb               m5, m6         ; 4b 5b
+    pshufd               m6, m6, q1032
+    pshufb               m2, m6         ; 3a 2a
+    pshufb               m3, m6         ; 3b 2b
+    punpckhwd            m0, m2         ; 12a
+    punpckhwd            m1, m3         ; 12b
+    mova         [esp+0x60], m0
+    mova         [esp+0x70], m1
+    mova                 m0, [esp+0x1c0]
+    mova                 m1, [esp+0x1d0]
+    punpcklwd            m2, m7         ; 34a
+    punpcklwd            m3, m5         ; 34b
+    mova        [esp+0x180], m2
+    mova        [esp+0x190], m3
+    pshufb               m0, m6         ; 7a 6a
+    pshufb               m1, m6         ; 7b 6b
+    punpckhwd            m7, m0         ; 56a
+    punpckhwd            m5, m1         ; 56b
+    punpcklwd            m0, m4
+    punpckhqdq           m4, m4
+    punpcklwd            m1, m4
+    mova        [esp+0x1a0], m7
+    mova        [esp+0x1b0], m5
+    mova        [esp+0x1c0], m0
+    mova        [esp+0x1d0], m1
+    mova                 m0, [esp+0x60]
+    mova                 m1, [esp+0x70]
+%endif
     jmp .dy1_vloop
+INIT_XMM ssse3
 .dy2:
     movzx                wd, word [base+%1_8tap_scaled_ssse3_dy2_table+wq*2]
     add                  wq, base_reg
     jmp                  wq
 %ifidn %1, put
 .dy2_w2:
+ %if ARCH_X86_64
     mov                 myd, mym
     movzx               t0d, t0b
     dec                srcq
     movd                m15, t0d
+ %else
+  %define m10 [base+pd_0x3ff]
+  %define m11 [base+pd_0x4000]
+  %define m8  m0
+  %define m9  m1
+  %define m14 m4
+  %define m15 m3
+    movzx                r5, byte [esp+0x1f0]
+    dec                srcd
+    movd                m15, r5
+ %endif
     punpckldq            m9, m8
     SWAP                 m8, m9
     paddd               m14, m8 ; mx+dx*[0-1]
+ %if ARCH_X86_64
     mova                m11, [base+pd_0x4000]
+ %endif
     pshufd              m15, m15, q0000
     pand                 m8, m14, m10
     psrld                m8, 6
     paddd               m15, m8
     movd                r4d, m15
     psrldq              m15, 4
+ %if ARCH_X86_64
     movd                r6d, m15
+ %else
+    movd                r3d, m15
+ %endif
     mova                 m5, [base+bdct_lb_dw]
     mova                 m6, [base+subpel_s_shuf2]
     movd                m15, [base+subpel_filters+r4*8+2]
+ %if ARCH_X86_64
     movd                 m7, [base+subpel_filters+r6*8+2]
+ %else
+    movd                 m7, [base+subpel_filters+r3*8+2]
+ %endif
     pxor                 m9, m9
     pcmpeqd              m8, m9
     psrld               m14, 10
+ %if ARCH_X86_32
+    mov                  r3, r3m
+    pshufb              m14, m5
+    paddb               m14, m6
+    mova         [esp+0x00], m14
+  %define m14 [esp+0x00]
+    SWAP                 m5, m0
+    SWAP                 m6, m3
+  %define m8  m5
+  %define m15 m6
+ %endif
     movq                 m0, [srcq+ssq*0]
     movq                 m1, [srcq+ssq*1]
     movhps               m0, [srcq+ssq*2]
     movhps               m1, [srcq+ss3q ]
     lea                srcq, [srcq+ssq*4]
-    pshufb              m14, m5
-    paddb               m14, m6
-    punpckldq           m15, m7
-    punpcklqdq          m15, m15
-    pand                m11, m8
-    pandn                m8, m15
-    SWAP                m15, m8
-    por                 m15, m11
-    movq                 m3, [srcq+ssq*0]
-    movhps               m3, [srcq+ssq*1]
-    lea                srcq, [srcq+ssq*2]
+ %if ARCH_X86_64
     shr                 myd, 6
     mov                 r4d, 64 << 24
     lea                 myd, [t1+myq]
     cmovnz              r4q, [base+subpel_filters+myq*8]
+    pshufb              m14, m5
+    paddb               m14, m6
+    movq                m10, r4q
+ %else
+    mov                 myd, mym
+    mov                  r3, [esp+0x1f4]
+    xor                  r5, r5
+    shr                 myd, 6
+    lea                  r3, [r3+myd]
+    mov                  r4, 64 << 24
+    cmovnz               r4, [base+subpel_filters+r3*8+0]
+    cmovnz               r5, [base+subpel_filters+r3*8+4]
+    mov                  r3, r3m
+  %define m10 m4
+    movd                m10, r4
+    movd                 m3, r5
+    punpckldq           m10, m3
+ %endif
+    movq                 m3, [srcq+ssq*0]
+    movhps               m3, [srcq+ssq*1]
+    lea                srcq, [srcq+ssq*2]
+    punpcklbw           m10, m10
+    psraw               m10, 8
+    punpckldq           m15, m7
+    punpcklqdq          m15, m15
+ %if ARCH_X86_64
+    pand                m11, m8
+ %else
+    pand                 m7, m11, m8
+  %define m11 m7
+ %endif
+    pandn                m8, m15
+    SWAP                m15, m8
+    por                 m15, m11
+ %if ARCH_X86_64
+    pshufd               m8, m10, q0000
+    pshufd               m9, m10, q1111
+    pshufd              m11, m10, q3333
+    pshufd              m10, m10, q2222
+ %else
+    mova         [esp+0x10], m15
+  %define m15 [esp+0x10]
+    mov                  r5, r0m
+  %define dstq r5
+    mov                 dsd, dsm
+    pshufd               m5, m4, q0000
+    pshufd               m6, m4, q1111
+    pshufd               m7, m4, q2222
+    pshufd               m4, m4, q3333
+  %define m8  [esp+0x20]
+  %define m9  [esp+0x30]
+  %define m10 [esp+0x40]
+  %define m11 [esp+0x50]
+    mova                 m8, m5
+    mova                 m9, m6
+    mova                m10, m7
+    mova                m11, m4
+ %endif
     pshufb               m0, m14
     pshufb               m1, m14
     pshufb               m3, m14
     pmaddubsw            m0, m15
     pmaddubsw            m1, m15
     pmaddubsw            m3, m15
-    movq                m11, r4q
-    punpcklbw           m11,  m11
-    psraw               m11, 8
     pslldq               m2, m3, 8
     phaddw               m0, m2
     phaddw               m1, m3
     pmulhrsw             m0, m12            ; 0 2 _ 4
     pmulhrsw             m1, m12            ; 1 3 _ 5
-    pshufd               m8, m11, q0000
-    pshufd               m9, m11, q1111
-    pshufd              m10, m11, q2222
-    pshufd              m11, m11, q3333
     pshufd               m2, m0, q3110      ; 0 2 2 4
     pshufd               m1, m1, q3110      ; 1 3 3 5
     punpcklwd            m3, m2, m1         ; 01 23
@@ -5263,22 +6589,39 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     sub                  hd, 2
     jg .dy2_w2_loop
     RET
-    SWAP                m15, m8, m9
 %endif
+INIT_XMM ssse3
 .dy2_w4:
+%if ARCH_X86_64
     mov                 myd, mym
-    mova                 m7, [base+rescale_mul]
     movzx               t0d, t0b
     dec                srcq
     movd                m15, t0d
-    pmaddwd              m8, m7
+%else
+ %define m10 [base+pd_0x3ff]
+ %define m11 [base+pd_0x4000]
+ %define m8  m0
+ %xdefine m14 m4
+ %define m15 m3
+ %define dstq r0
+ %if isprep
+  %define ssq r3
+ %endif
+    movzx                r4, byte [esp+0x1f0]
+    dec                srcq
+    movd                m15, r4
+%endif
+    pmaddwd              m8, [base+rescale_mul]
+%if ARCH_X86_64
     mova                m11, [base+pd_0x4000]
+%endif
     pshufd              m15, m15, q0000
     paddd               m14, m8 ; mx+dx*[0-3]
     pand                 m8, m14, m10
     psrld                m8, 6
     paddd               m15, m8
     psrldq               m7, m15, 8
+%if ARCH_X86_64
     movd                r4d, m15
     movd               r11d, m7
     psrldq              m15, 4
@@ -5286,14 +6629,45 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     movd                r6d, m15
     movd               r13d, m7
     movd                m15, [base+subpel_filters+ r4*8+2]
-    movd                 m4, [base+subpel_filters+r11*8+2]
-    movd                 m5, [base+subpel_filters+ r6*8+2]
-    movd                 m7, [base+subpel_filters+r13*8+2]
+    movd                 m2, [base+subpel_filters+r11*8+2]
+    movd                 m3, [base+subpel_filters+ r6*8+2]
+    movd                 m4, [base+subpel_filters+r13*8+2]
     movq                 m6, [base+subpel_s_shuf2]
     shr                 myd, 6
     mov                 r4d, 64 << 24
     lea                 myd, [t1+myq]
     cmovnz              r4q, [base+subpel_filters+myq*8]
+%else
+    movd                 r1, m15
+    movd                 r3, m7
+    psrldq              m15, 4
+    psrldq               m7, 4
+    movd                 r4, m15
+    movd                 r5, m7
+ %define m15 m5
+    SWAP                 m4, m7
+    movd                m15, [base+subpel_filters+r1*8+2]
+    movd                 m2, [base+subpel_filters+r3*8+2]
+    movd                 m3, [base+subpel_filters+r4*8+2]
+    movd                 m4, [base+subpel_filters+r5*8+2]
+    movq                 m6, [base+subpel_s_shuf2]
+    mov                 myd, mym
+    mov                  r3, [esp+0x1f4]
+    xor                  r5, r5
+    shr                 myd, 6
+    lea                  r3, [r3+myd]
+    mov                  r4, 64 << 24
+    cmovnz               r4, [base+subpel_filters+r3*8+0]
+    cmovnz               r5, [base+subpel_filters+r3*8+4]
+    mov                  r3, r3m
+ %if isprep
+    lea                ss3q, [ssq*3]
+ %endif
+%endif
+    punpckldq           m15, m3
+    punpckldq            m2, m4
+    punpcklqdq          m15, m2
+%if ARCH_X86_64
     pcmpeqd              m8, m9
     psrld               m14, 10
     movu                 m0, [srcq+ssq*0]
@@ -5301,10 +6675,7 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     movu                 m1, [srcq+ssq*1]
     movu                 m3, [srcq+ss3q ]
     lea                srcq, [srcq+ssq*4]
-    punpckldq           m15, m5
-    punpckldq            m4, m7
     punpcklqdq           m6, m6
-    punpcklqdq          m15, m4
     pshufb              m14, [base+bdct_lb_dw]
     movu                 m4, [srcq+ssq*0]
     movu                 m5, [srcq+ssq*1]
@@ -5339,6 +6710,75 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     pshufd               m9, m11, q1111
     pshufd              m10, m11, q2222
     pshufd              m11, m11, q3333
+%else
+    pxor                 m3, m3
+    pcmpeqd              m8, m3
+    psrld               m14, 10
+    pshufb              m14, [base+bdct_lb_dw]
+    movu                 m1, [srcq+ssq*0]
+    movu                 m2, [srcq+ssq*2]
+    movu                 m3, [srcq+ssq*1]
+    add                srcq, ss3q
+    punpcklqdq           m6, m6
+    SWAP                 m4, m7
+    pand                 m7, m11, m8
+    pandn                m8, m15
+    SWAP                m15, m8
+    por                 m15, m7
+    paddb               m14, m6
+    movu                 m0, [srcq+ssq*0]
+    movu                 m7, [srcq+ssq*1]
+    movu                 m6, [srcq+ssq*2]
+    add                srcq, ss3q
+    pshufb               m1, m14
+    pshufb               m2, m14
+    pshufb               m3, m14
+    pshufb               m0, m14
+    pshufb               m7, m14
+    pshufb               m6, m14
+    pmaddubsw            m1, m15
+    pmaddubsw            m2, m15
+    pmaddubsw            m3, m15
+    mova         [esp+0x00], m14
+    mova         [esp+0x10], m15
+    pmaddubsw            m0, m15
+    pmaddubsw            m7, m15
+    pmaddubsw            m6, m15
+ %define m14 [esp+0x00]
+ %define m15 [esp+0x10]
+    phaddw               m1, m2
+    phaddw               m3, m0
+    phaddw               m7, m6
+ %ifidn %1, put
+    mov                 dsd, dsm
+  %define dstq r5
+ %else
+  %define tmpq r5
+ %endif
+    movd                 m6, r4
+    movd                 m0, r5
+    punpckldq            m6, m0
+    punpcklbw            m6, m6
+    psraw                m6, 8
+    mov                  r5, r0m
+    pmulhrsw             m1, m12 ; 0 2
+    pmulhrsw             m3, m12 ; 1 3
+    pmulhrsw             m7, m12 ; 4 5
+    SWAP                 m0, m1, m3
+    SWAP                 m4, m7
+    pshufd               m2, m6, q0000
+    pshufd               m3, m6, q1111
+    pshufd               m7, m6, q2222
+    pshufd               m6, m6, q3333
+    mova         [esp+0x30], m2
+    mova         [esp+0x40], m3
+    mova         [esp+0x50], m7
+    mova         [esp+0x60], m6
+ %define m8  [esp+0x30]
+ %define m9  [esp+0x40]
+ %define m10 [esp+0x50]
+ %define m11 [esp+0x60]
+%endif
     psrldq               m5, m4, 8  ; 5 _
     punpckhwd            m2, m0, m1 ; 23
     punpcklwd            m0, m1     ; 01
@@ -5400,7 +6840,7 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     sub                  hd, 2
     jg .dy2_w4_loop
     MC_8TAP_SCALED_RET
-    SWAP                 m8, m15
+INIT_XMM ssse3
 .dy2_w8:
     mov    dword [rsp+0x90], 1
     movifprep   tmp_stridem, 16
@@ -5425,6 +6865,7 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
 %ifidn %1, put
     movifnidn           dsm, dsq
 %endif
+%if ARCH_X86_64
     shr                 t0d, 16
     sub                srcq, 3
     shr                 myd, 6
@@ -5432,13 +6873,49 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     lea                 myd, [t1+myq]
     cmovnz              r4q, [base+subpel_filters+myq*8]
     movd                m15, t0d
+%else
+ %define m10 [base+pd_0x3ff]
+ %define m11 [base+pd_0x4000]
+ %define m8   m0
+ %define m9   m1
+ %xdefine m14 m4
+ %xdefine m15 m3
+ %if isprep
+  %define tmpq r0
+  %define ssq ssm
+ %else
+  %define dstq r0
+ %endif
+    mov                  r5, [esp+0x1f0]
+    mov                  r3, [esp+0x1f4]
+    shr                  r5, 16
+    sub                srcq, 3
+    movd                m15, r5
+    xor                  r5, r5
+    shr                 myd, 6
+    lea                  r3, [r3+myd]
+    mov                  r4, 64 << 24
+    cmovnz               r4, [base+subpel_filters+r3*8+0]
+    cmovnz               r5, [base+subpel_filters+r3*8+4]
+    mov                  r0, r0m
+    mov                  r3, r3m
+%endif
     pslld                m7, m8, 2 ; dx*4
     pmaddwd              m8, [base+rescale_mul] ; dx*[0-3]
     pshufd              m15, m15, q0000
     paddd               m14, m8 ; mx+dx*[0-3]
+%if ARCH_X86_64
     movq                 m3, r4q
     punpcklbw            m3, m3
     psraw                m3, 8
+%else
+    movd                 m5, r4
+    movd                 m6, r5
+    punpckldq            m5, m6
+    punpcklbw            m5, m5
+    psraw                m5, 8
+    SWAP                 m3, m5
+%endif
     mova        [rsp+0x100], m7
     mova        [rsp+0x120], m15
     mov         [rsp+0x098], srcq
@@ -5451,42 +6928,81 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     mova        [rsp+0x150], m1
     mova        [rsp+0x160], m2
     mova        [rsp+0x170], m3
-%if UNIX64
+%if ARCH_X86_64 && UNIX64
     mov                  hm, hd
+%elif ARCH_X86_32
+    SWAP                  m5, m3
+    mov                   r5, hm
+    mov          [esp+0x134], r5
 %endif
     jmp .dy2_hloop
 .dy2_hloop_prep:
     dec   dword [rsp+0x090]
     jz .ret
+%if ARCH_X86_64
     add   qword [rsp+0x130], 8*(isprep+1)
     mov                  hd, hm
+%else
+    add   dword [rsp+0x130], 8*(isprep+1)
+    mov                  r5, [esp+0x134]
+    mov                  r0, [esp+0x130]
+%endif
     mova                 m7, [rsp+0x100]
     mova                m14, [rsp+0x110]
+%if ARCH_X86_64
     mova                m10, [base+pd_0x3ff]
+%else
+ %define m10 [base+pd_0x3ff]
+%endif
     mova                m15, [rsp+0x120]
-    pxor                 m9, m9
     mov                srcq, [rsp+0x098]
+%if ARCH_X86_64
     mov                 r0q, [rsp+0x130] ; dstq / tmpq
+%else
+    mov                  hm, r5
+    mov                 r0m, r0
+    mov                  r3, r3m
+%endif
     paddd               m14, m7
 .dy2_hloop:
+    pxor                 m9, m9
+%if ARCH_X86_64
     mova                m11, [base+pq_0x40000000]
-    psrld                m4, m14, 10
-    mova              [rsp], m4
+%else
+ %define m11 [base+pq_0x40000000]
+%endif
+    psrld                m2, m14, 10
+    mova              [rsp], m2
     pand                 m6, m14, m10
     psrld                m6, 6
     paddd                m5, m15, m6
     pcmpeqd              m6, m9
-    psrldq               m4, m5, 8
+    psrldq               m2, m5, 8
+%if ARCH_X86_64
     movd                r4d, m5
-    movd                r6d, m4
+    movd                r6d, m2
     psrldq               m5, 4
-    psrldq               m4, 4
+    psrldq               m2, 4
     movd                r7d, m5
-    movd                r9d, m4
+    movd                r9d, m2
     movq                 m0, [base+subpel_filters+r4*8]
     movq                 m1, [base+subpel_filters+r6*8]
     movhps               m0, [base+subpel_filters+r7*8]
     movhps               m1, [base+subpel_filters+r9*8]
+%else
+    movd                 r0, m5
+    movd                 rX, m2
+    psrldq               m5, 4
+    psrldq               m2, 4
+    movd                 r4, m5
+    movd                 r5, m2
+    movq                 m0, [base+subpel_filters+r0*8]
+    movq                 m1, [base+subpel_filters+rX*8]
+    movhps               m0, [base+subpel_filters+r4*8]
+    movhps               m1, [base+subpel_filters+r5*8]
+    pxor                 m2, m2
+ %define m9 m2
+%endif
     paddd               m14, m7 ; mx+dx*[4-7]
     pand                 m5, m14, m10
     psrld                m5, 6
@@ -5494,6 +7010,7 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     pcmpeqd              m5, m9
     mova        [rsp+0x110], m14
     psrldq               m4, m15, 8
+%if ARCH_X86_64
     movd               r10d, m15
     movd               r11d, m4
     psrldq              m15, 4
@@ -5567,7 +7084,83 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     mova         [rsp+0x60], m5
     mova         [rsp+0x70], m6
     mova         [rsp+0x80], m7
+%else
+    movd                 r0, m15
+    movd                 rX, m4
+    psrldq              m15, 4
+    psrldq               m4, 4
+    movd                 r4, m15
+    movd                 r5, m4
+    mova                m14, [esp+0x110]
+    movq                 m2, [base+subpel_filters+r0*8]
+    movq                 m3, [base+subpel_filters+rX*8]
+    movhps               m2, [base+subpel_filters+r4*8]
+    movhps               m3, [base+subpel_filters+r5*8]
+    psrld               m14, 10
+    mova           [esp+16], m14
+    mov                  r0, [esp+ 0]
+    mov                  rX, [esp+ 8]
+    mov                  r4, [esp+ 4]
+    mov                  r5, [esp+12]
+    mova         [esp+0x20], m0
+    mova         [esp+0x30], m1
+    mova         [esp+0x40], m2
+    mova         [esp+0x50], m3
+    pshufd               m4, m6, q1100
+    pshufd               m6, m6, q3322
+    pshufd               m7, m5, q1100
+    pshufd               m5, m5, q3322
+    pand                 m0, m11, m4
+    pand                 m1, m11, m6
+    pand                 m2, m11, m7
+    pand                 m3, m11, m5
+    pandn                m4, [esp+0x20]
+    pandn                m6, [esp+0x30]
+    pandn                m7, [esp+0x40]
+    pandn                m5, [esp+0x50]
+    por                  m0, m4
+    por                  m1, m6
+    por                  m2, m7
+    por                  m3, m5
+    mova        [esp+0x20], m0
+    mova        [esp+0x30], m1
+    mova        [esp+0x40], m2
+    mova        [esp+0x50], m3
+    MC_8TAP_SCALED_H   0x20, 0x60, 0 ; 0-1
+    MC_8TAP_SCALED_H   0x20, 0x180   ; 2-3
+    MC_8TAP_SCALED_H   0x20, 0x1a0   ; 4-5
+    MC_8TAP_SCALED_H   0x20, 0x1c0   ; 6-7
+    mova                 m5, [esp+0x1a0]
+    mova                 m6, [esp+0x1b0]
+    mova                 m7, [esp+0x1c0]
+    mova                 m0, [esp+0x1d0]
+    punpcklwd            m4, m5, m6      ; 45a
+    punpckhwd            m5, m6          ; 45b
+    punpcklwd            m6, m7, m0      ; 67a
+    punpckhwd            m7, m0          ; 67b
+    mova        [esp+0x1a0], m4
+    mova        [esp+0x1b0], m5
+    mova        [esp+0x1c0], m6
+    mova        [esp+0x1d0], m7
+    mova                 m1, [esp+0x060]
+    mova                 m2, [esp+0x070]
+    mova                 m3, [esp+0x180]
+    mova                 m4, [esp+0x190]
+    punpcklwd            m0, m1, m2      ; 01a
+    punpckhwd            m1, m2          ; 01b
+    punpcklwd            m2, m3, m4      ; 23a
+    punpckhwd            m3, m4          ; 23b
+    mova        [esp+0x180], m2
+    mova        [esp+0x190], m3
+ %define m8  [esp+0x140]
+ %define m9  [esp+0x150]
+ %define m10 [esp+0x160]
+ %define m11 [esp+0x170]
+%endif
 .dy2_vloop:
+%if ARCH_X86_32
+    mov                  r0, r0m
+%endif
     pmaddwd              m4, m0, m8
     pmaddwd              m5, m1, m8
     pmaddwd              m6, m2, m9
@@ -5576,14 +7169,24 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     paddd                m5, m13
     paddd                m4, m6
     paddd                m5, m7
+%if ARCH_X86_64
     pmaddwd              m6, [rsp+0x50], m10
     pmaddwd              m7, [rsp+0x60], m10
-    pmaddwd             m15, [rsp+0x70], m11
+%else
+    pmaddwd              m6, [esp+0x1a0], m10
+    pmaddwd              m7, [esp+0x1b0], m10
+%endif
     paddd                m4, m6
-    pmaddwd              m6, [rsp+0x80], m11
     paddd                m5, m7
-    paddd                m4, m15
-    paddd                m5, m6
+%if ARCH_X86_64
+    pmaddwd              m6, [rsp+0x70], m11
+    pmaddwd              m7, [rsp+0x80], m11
+%else
+    pmaddwd              m6, [esp+0x1c0], m11
+    pmaddwd              m7, [esp+0x1d0], m11
+%endif
+    paddd                m4, m6
+    paddd                m5, m7
     psrad                m4, rndshift
     psrad                m5, rndshift
     packssdw             m4, m5
@@ -5595,8 +7198,12 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     mova             [tmpq], m4
     add                tmpq, tmp_stridem
 %endif
+%if ARCH_X86_32
+    mov                 r0m, r0
+%endif
     dec                  hd
     jz .dy2_hloop_prep
+%if ARCH_X86_64
     mova                 m8, [rsp+0x10]
     mova                 m9, [rsp+0x20]
     mova                m10, [rsp+0x30]
@@ -5620,9 +7227,32 @@ cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 0x180, tmp, src, ss, w, h, mx, my, dx,
     mova         [rsp+0x80], m2
     mova                 m2, m3
     mova                 m3, m4
+%else
+    MC_8TAP_SCALED_H   0x20, 0
+    punpcklwd            m6, m0, m4
+    punpckhwd            m7, m0, m4
+    mova                 m0, [esp+0x180] ; 01a
+    mova                 m1, [esp+0x190] ; 01b
+    mova                 m2, [rsp+0x1a0]  ; 23a
+    mova                 m3, [esp+0x1b0]  ; 23b
+    mova                 m4, [esp+0x1c0]  ; 45a
+    mova                 m5, [esp+0x1d0]  ; 45b
+    mova        [esp+0x180], m2
+    mova        [esp+0x190], m3
+    mova        [esp+0x1a0], m4
+    mova        [esp+0x1b0], m5
+    mova        [esp+0x1c0], m6          ; 67a
+    mova        [esp+0x1d0], m7          ; 67b
+%endif
     jmp .dy2_vloop
 .ret:
     MC_8TAP_SCALED_RET 0
+%if ARCH_X86_32 && !isprep && required_stack_alignment > STACK_ALIGNMENT
+ %define r0m [rstk+stack_offset+ 4]
+ %define r1m [rstk+stack_offset+ 8]
+ %define r2m [rstk+stack_offset+12]
+ %define r3m [rstk+stack_offset+16]
+%endif
 %undef isprep
 %endmacro
 
@@ -5633,11 +7263,12 @@ cglobal %1_bilin_scaled_8bpc
     jmp mangle(private_prefix %+ _%1_8tap_scaled_8bpc %+ SUFFIX)
 %endmacro
 
-%if ARCH_X86_64
 %if WIN64
 DECLARE_REG_TMP 6, 5
-%else
+%elif ARCH_X86_64
 DECLARE_REG_TMP 6, 8
+%else
+DECLARE_REG_TMP 1, 2
 %endif
 BILIN_SCALED_FN put
 FN put_8tap_scaled, sharp,          SHARP,   SHARP
@@ -5653,8 +7284,10 @@ MC_8TAP_SCALED put
 
 %if WIN64
 DECLARE_REG_TMP 5, 4
-%else
+%elif ARCH_X86_64
 DECLARE_REG_TMP 6, 7
+%else
+DECLARE_REG_TMP 1, 2
 %endif
 BILIN_SCALED_FN prep
 FN prep_8tap_scaled, sharp,          SHARP,   SHARP
@@ -5667,7 +7300,6 @@ FN prep_8tap_scaled, smooth_regular, SMOOTH,  REGULAR
 FN prep_8tap_scaled, regular_smooth, REGULAR, SMOOTH
 FN prep_8tap_scaled, regular,        REGULAR, REGULAR
 MC_8TAP_SCALED prep
-%endif
 
 %if ARCH_X86_32
  %macro SAVE_ALPHA_BETA 0
@@ -7772,7 +9404,7 @@ cglobal resize_8bpc, 0, 6, 8, 3 * 16, dst, dst_stride, src, src_stride, \
     pshufd               m5, m5, q0000
 
 %if ARCH_X86_64
-    DEFINE_ARGS dst, dst_stride, src, src_stride, dst_w, h, x, picptr
+    DEFINE_ARGS dst, dst_stride, src, src_stride, dst_w, h, x
     LEA                  r7, $$
 %define base r7-$$
 %else

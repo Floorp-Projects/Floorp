@@ -72,6 +72,7 @@ add_task(async function() {
     "Should work if a there is a selection, starting with the number"
   );
 
+  widget.destroy();
   triggerKey = null;
 });
 

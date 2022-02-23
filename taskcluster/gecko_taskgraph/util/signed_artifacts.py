@@ -186,7 +186,9 @@ def get_signed_artifacts(input, formats, behavior=None):
 
 
 def get_geckoview_artifacts_to_sign(config, job):
-    upstream_artifacts = get_geckoview_upstream_artifacts(config, job)
+    upstream_artifacts = []
+    for package in job["attributes"]["maven_packages"]:
+        upstream_artifacts += get_geckoview_upstream_artifacts(config, job, package)
     return [
         path
         for upstream_artifact in upstream_artifacts

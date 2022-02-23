@@ -2871,9 +2871,9 @@ void MacroAssembler::Push(PropertyKey key, Register scratchReg) {
 
     if (key.isString()) {
       JSString* str = key.toString();
-      MOZ_ASSERT((uintptr_t(str) & JSID_TYPE_MASK) == 0);
-      static_assert(JSID_TYPE_STRING == 0,
-                    "need to orPtr JSID_TYPE_STRING tag if it's not 0");
+      MOZ_ASSERT((uintptr_t(str) & PropertyKey::TypeMask) == 0);
+      static_assert(PropertyKey::StringTypeTag == 0,
+                    "need to orPtr StringTypeTag if it's not 0");
       Push(ImmGCPtr(str));
     } else {
       MOZ_ASSERT(key.isSymbol());
@@ -2882,7 +2882,7 @@ void MacroAssembler::Push(PropertyKey key, Register scratchReg) {
     }
   } else {
     MOZ_ASSERT(key.isInt());
-    Push(ImmWord(key.asBits));
+    Push(ImmWord(key.asRawBits()));
   }
 }
 
@@ -2891,19 +2891,19 @@ void MacroAssembler::movePropertyKey(PropertyKey key, Register dest) {
     // See comment in |Push(PropertyKey, ...)| above for an explanation.
     if (key.isString()) {
       JSString* str = key.toString();
-      MOZ_ASSERT((uintptr_t(str) & JSID_TYPE_MASK) == 0);
-      static_assert(JSID_TYPE_STRING == 0,
+      MOZ_ASSERT((uintptr_t(str) & PropertyKey::TypeMask) == 0);
+      static_assert(PropertyKey::StringTypeTag == 0,
                     "need to orPtr JSID_TYPE_STRING tag if it's not 0");
       movePtr(ImmGCPtr(str), dest);
     } else {
       MOZ_ASSERT(key.isSymbol());
       JS::Symbol* sym = key.toSymbol();
       movePtr(ImmGCPtr(sym), dest);
-      orPtr(Imm32(JSID_TYPE_SYMBOL), dest);
+      orPtr(Imm32(PropertyKey::SymbolTypeTag), dest);
     }
   } else {
     MOZ_ASSERT(key.isInt());
-    movePtr(ImmWord(key.asBits), dest);
+    movePtr(ImmWord(key.asRawBits()), dest);
   }
 }
 
@@ -2976,7 +2976,7 @@ void MacroAssembler::PushEmptyRooted(VMFunctionData::RootType rootType) {
       Push(UndefinedValue());
       break;
     case VMFunctionData::RootId:
-      Push(ImmWord(JSID_BITS(JSID_VOID)));
+      Push(ImmWord(JS::PropertyKey::Void().asRawBits()));
       break;
   }
 }
@@ -3751,9 +3751,9 @@ void MacroAssembler::wasmInterruptCheck(Register tls,
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-size_t MacroAssembler::wasmStartTry() {
+[[nodiscard]] bool MacroAssembler::wasmStartTry(size_t* tryNoteIndex) {
   wasm::WasmTryNote tryNote = wasm::WasmTryNote(currentOffset(), 0, 0);
-  return append(tryNote);
+  return append(tryNote, tryNoteIndex);
 }
 #endif
 
@@ -3885,13 +3885,27 @@ CodeOffset MacroAssembler::asmCallIndirect(const wasm::CallSiteDesc& desc,
                                            const wasm::CalleeDesc& callee) {
   MOZ_ASSERT(callee.which() == wasm::CalleeDesc::AsmJSTable);
 
-  Register scratch = WasmTableCallScratchReg0;
-  Register index = WasmTableCallIndexReg;
+  const Register scratch = WasmTableCallScratchReg0;
+  const Register index = WasmTableCallIndexReg;
+
+  // Optimization opportunity: when offsetof(FunctionTableElem, code) == 0, as
+  // it is at present, we can probably generate better code here by folding
+  // the address computation into the load.
+
+  static_assert(sizeof(wasm::FunctionTableElem) == 8 ||
+                    sizeof(wasm::FunctionTableElem) == 16,
+                "elements of function tables are two words");
 
   // asm.js tables require no signature check, and have had their index
   // masked into range and thus need no bounds check.
   loadWasmGlobalPtr(callee.tableFunctionBaseGlobalDataOffset(), scratch);
-  loadPtr(BaseIndex(scratch, index, ScalePointer), scratch);
+  if (sizeof(wasm::FunctionTableElem) == 8) {
+    computeEffectiveAddress(BaseIndex(scratch, index, TimesEight), scratch);
+  } else {
+    lshift32(Imm32(4), index);
+    addPtr(index, scratch);
+  }
+  loadPtr(Address(scratch, offsetof(wasm::FunctionTableElem, code)), scratch);
   storePtr(WasmTlsReg,
            Address(getStackPointer(), WasmCallerTlsOffsetBeforeCall));
   storePtr(WasmTlsReg,
@@ -3899,17 +3913,39 @@ CodeOffset MacroAssembler::asmCallIndirect(const wasm::CallSiteDesc& desc,
   return call(desc, scratch);
 }
 
-CodeOffset MacroAssembler::wasmCallIndirect(
-    const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee,
-    bool needsBoundsCheck, mozilla::Maybe<uint32_t> tableSize) {
+// In principle, call_indirect requires an expensive context switch to the
+// callee's instance and realm before the call and an almost equally expensive
+// switch back to the caller's ditto after.  However, if the caller's tls is the
+// same as the callee's tls then no context switch is required, and it only
+// takes a compare-and-branch at run-time to test this - all values are in
+// registers already.  We therefore generate two call paths, one for the fast
+// call without the context switch (which additionally avoids a null check) and
+// one for the slow call with the context switch.
+
+void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
+                                      const wasm::CalleeDesc& callee,
+                                      bool needsBoundsCheck,
+                                      mozilla::Maybe<uint32_t> tableSize,
+                                      CodeOffset* fastCallOffset,
+                                      CodeOffset* slowCallOffset) {
+  static_assert(sizeof(wasm::FunctionTableElem) == 2 * sizeof(void*),
+                "Exactly two pointers or index scaling won't work correctly");
   MOZ_ASSERT(callee.which() == wasm::CalleeDesc::WasmTable);
 
-  Register scratch = WasmTableCallScratchReg0;
-  Register index = WasmTableCallIndexReg;
-
+  const int shift = sizeof(wasm::FunctionTableElem) == 8 ? 3 : 4;
   wasm::BytecodeOffset trapOffset(desc.lineOrBytecode());
+  const Register calleeScratch = WasmTableCallScratchReg0;
+  const Register index = WasmTableCallIndexReg;
 
-  // WebAssembly throws if the index is out-of-bounds.
+  // Check the table index and throw if out-of-bounds.
+  //
+  // Frequently the table size is known, so optimize for that.  Otherwise
+  // compare with a memory operand when that's possible.  (There's little sense
+  // in hoisting the load of the bound into a register at a higher level and
+  // reusing that register, because a hoisted value would either have to be
+  // spilled and re-loaded before the next call_indirect, or would be abandoned
+  // because we could not trust that a hoisted value would not have changed.)
+
   if (needsBoundsCheck) {
     Label ok;
     if (tableSize.isSome()) {
@@ -3924,12 +3960,9 @@ CodeOffset MacroAssembler::wasmCallIndirect(
     bind(&ok);
   }
 
-  // Load the base pointer of the table.  Do this as early as we can to avoid
-  // waiting for the value below.
-  loadWasmGlobalPtr(callee.tableFunctionBaseGlobalDataOffset(), scratch);
-
   // Write the functype-id into the ABI functype-id register.
-  wasm::TypeIdDesc funcTypeId = callee.wasmTableSigId();
+
+  const wasm::TypeIdDesc funcTypeId = callee.wasmTableSigId();
   switch (funcTypeId.kind()) {
     case wasm::TypeIdDescKind::Global:
       loadWasmGlobalPtr(funcTypeId.globalDataOffset(), WasmTableCallSigReg);
@@ -3941,22 +3974,83 @@ CodeOffset MacroAssembler::wasmCallIndirect(
       break;
   }
 
-  // Load the callee from the table.
-  loadPtr(BaseIndex(scratch, index, ScalePointer), scratch);
+  // Load the base pointer of the table and compute the address of the callee in
+  // the table.
 
-#ifdef ENABLE_WASM_CALL_INDIRECT_NULL
-  CodeOffset callOffset = call(desc, scratch);
-  append(wasm::Trap::IndirectCallToNull,
-         wasm::TrapSite(callOffset.offset(), trapOffset));
-  return callOffset;
+  loadWasmGlobalPtr(callee.tableFunctionBaseGlobalDataOffset(), calleeScratch);
+  shiftIndex32AndAdd(index, shift, calleeScratch);
+
+  // Load the callee tls and decide whether to take the fast path or the slow
+  // path.
+
+  Label fastCall;
+  Label done;
+  const Register newTlsTemp = WasmTableCallScratchReg1;
+  loadPtr(Address(calleeScratch, offsetof(wasm::FunctionTableElem, tls)),
+          newTlsTemp);
+  branchPtr(Assembler::Equal, WasmTlsReg, newTlsTemp, &fastCall);
+
+  // Slow path: Save context, check for null, setup new context, call, restore
+  // context.
+  //
+  // TODO: The slow path could usefully be out-of-line and the test above would
+  // just fall through to the fast path.  This keeps the fast-path code dense,
+  // and has correct static prediction for the branch (forward conditional
+  // branches predicted not taken, normally).
+
+  storePtr(WasmTlsReg,
+           Address(getStackPointer(), WasmCallerTlsOffsetBeforeCall));
+  movePtr(newTlsTemp, WasmTlsReg);
+  storePtr(WasmTlsReg,
+           Address(getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
+
+#ifdef WASM_HAS_HEAPREG
+  // Use the null pointer exception resulting from loading HeapReg from a null
+  // Tls to handle a call to a null slot.
+  loadWasmPinnedRegsFromTls(mozilla::Some(trapOffset));
 #else
   Label nonNull;
-  branchTestPtr(Assembler::NonZero, scratch, scratch, &nonNull);
+  branchTestPtr(Assembler::NonZero, WasmTlsReg, WasmTlsReg, &nonNull);
   wasmTrap(wasm::Trap::IndirectCallToNull, trapOffset);
   bind(&nonNull);
 
-  return call(desc, scratch);
+  loadWasmPinnedRegsFromTls();
 #endif
+  switchToWasmTlsRealm(index, WasmTableCallScratchReg1);
+
+  loadPtr(Address(calleeScratch, offsetof(wasm::FunctionTableElem, code)),
+          calleeScratch);
+
+  *slowCallOffset = call(desc, calleeScratch);
+
+  // Restore registers and realm and join up with the fast path.
+
+  loadPtr(Address(getStackPointer(), WasmCallerTlsOffsetBeforeCall),
+          WasmTlsReg);
+  loadWasmPinnedRegsFromTls();
+  switchToWasmTlsRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
+  jump(&done);
+
+  // Fast path: just load the code pointer and go.  The tls and heap register
+  // are the same as in the caller, and nothing will be null.
+  //
+  // (In particular, the code pointer will not be null: if it were, the tls
+  // would have been null, and then it would not have been equivalent to our
+  // current tls.  So no null check is needed on the fast path.)
+
+  bind(&fastCall);
+
+  loadPtr(Address(calleeScratch, offsetof(wasm::FunctionTableElem, code)),
+          calleeScratch);
+
+  // We use a different type of call site for the fast call since the Tls slots
+  // in the frame do not have valid values.
+
+  wasm::CallSiteDesc newDesc(desc.lineOrBytecode(),
+                             wasm::CallSiteDesc::IndirectFast);
+  *fastCallOffset = call(newDesc, calleeScratch);
+
+  bind(&done);
 }
 
 void MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
@@ -4144,6 +4238,21 @@ void MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length,
   if (JitOptions.spectreIndexMasking) {
     and32(Imm32(length - 1), index);
   }
+}
+
+void MacroAssembler::loadWasmPinnedRegsFromTls(
+    mozilla::Maybe<wasm::BytecodeOffset> trapOffset) {
+#ifdef WASM_HAS_HEAPREG
+  static_assert(offsetof(wasm::TlsData, memoryBase) < 4096,
+                "We count only on the low page being inaccessible");
+  if (trapOffset) {
+    append(wasm::Trap::IndirectCallToNull,
+           wasm::TrapSite(currentOffset(), *trapOffset));
+  }
+  loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
+#else
+  MOZ_ASSERT(!trapOffset);
+#endif
 }
 
 //}}} check_macroassembler_style

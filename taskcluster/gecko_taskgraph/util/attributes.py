@@ -61,6 +61,7 @@ _COPYABLE_ATTRIBUTES = (
     "l10n_chunk",
     "locale",
     "mar-channel-id",
+    "maven_packages",
     "nightly",
     "required_signoffs",
     "shippable",

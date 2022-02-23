@@ -32,8 +32,8 @@ two distinct systems.
 
 [profiles]: https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data
 [_Automation preferences_]: #automation-preferences
-[`args` capability]: ./Capabilities.html#capability-args
-[`profile` capability]: ./Capabilities.html#capability-profile
+[`args` capability]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities/firefoxOptions#args_array_of_strings
+[`profile` capability]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities/firefoxOptions#profile_string
 [known bug concerning `--profile`]: https://github.com/mozilla/geckodriver/issues/1058
 
 
@@ -96,7 +96,7 @@ the `--marionette-port <port>` flag is used specifically to instruct
 the Marionette server in Firefox which port to use.
 
 [user.js file]: http://kb.mozillazine.org/User.js_file
-[`prefs` capability]: ./Capabilities.html#capability-prefs
+[`prefs` capability]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities/firefoxOptions#prefs_preferences_object
 
 
 Temporary profiles not being removed

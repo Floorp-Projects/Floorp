@@ -104,19 +104,12 @@ void nsHtml5Parser::SetDocumentCharset(NotNull<const Encoding*> aEncoding,
                                          (nsCharsetSource)aCharsetSource);
 }
 
-NS_IMETHODIMP
-nsHtml5Parser::GetChannel(nsIChannel** aChannel) {
+nsresult nsHtml5Parser::GetChannel(nsIChannel** aChannel) {
   if (GetStreamParser()) {
     return GetStreamParser()->GetChannel(aChannel);
   } else {
     return NS_ERROR_NOT_AVAILABLE;
   }
-}
-
-NS_IMETHODIMP
-nsHtml5Parser::GetDTD(nsIDTD** aDTD) {
-  *aDTD = nullptr;
-  return NS_OK;
 }
 
 nsIStreamListener* nsHtml5Parser::GetStreamListener() {
@@ -157,7 +150,7 @@ NS_IMETHODIMP_(bool)
 nsHtml5Parser::IsComplete() { return mExecutor->IsComplete(); }
 
 NS_IMETHODIMP
-nsHtml5Parser::Parse(nsIURI* aURL, void* /* legacy; ignored */) {
+nsHtml5Parser::Parse(nsIURI* aURL) {
   /*
    * Do NOT cause WillBuildModel to be called synchronously from here!
    * The document won't be ready for it until OnStartRequest!
@@ -477,26 +470,6 @@ nsHtml5Parser::Terminate() {
   return executor->DidBuildModel(true);
 }
 
-NS_IMETHODIMP
-nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
-                             nsTArray<nsString>& aTagStack) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHtml5Parser::BuildModel() {
-  MOZ_ASSERT_UNREACHABLE("Don't call this!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHtml5Parser::CancelParsingEvents() {
-  MOZ_ASSERT_UNREACHABLE("Don't call this!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-void nsHtml5Parser::Reset() { MOZ_ASSERT_UNREACHABLE("Don't call this!"); }
-
 bool nsHtml5Parser::IsInsertionPointDefined() {
   return !mExecutor->IsFlushing() && !mInsertionPointPermanentlyUndefined &&
          (!GetStreamParser() || mScriptNestingLevel != 0);
@@ -659,7 +632,7 @@ nsresult nsHtml5Parser::StartExecutor() {
    * We know we're in document.open(), so our document must already
    * have a script global andthe WillBuildModel call is safe.
    */
-  return executor->WillBuildModel(eDTDMode_unknown);
+  return executor->WillBuildModel();
 }
 
 nsresult nsHtml5Parser::Initialize(mozilla::dom::Document* aDoc, nsIURI* aURI,

@@ -216,11 +216,8 @@ void DManipEventHandler::TransitionToState(State aNewState) {
   // End the previous sequence.
   switch (prevState) {
     case State::ePanning: {
-      // ePanning -> eNone, ePinching: PanEnd
-      // ePanning -> eInertia: we don't want to end the current scroll sequence.
-      if (aNewState != State::eInertia) {
-        SendPan(Phase::eEnd, 0.f, 0.f, false);
-      }
+      // ePanning -> *: PanEnd
+      SendPan(Phase::eEnd, 0.f, 0.f, false);
       break;
     }
     case State::eInertia: {
@@ -292,11 +289,9 @@ DManipEventHandler::OnContentUpdated(IDirectManipulationViewport* viewport,
     return S_OK;
   }
 
-  float windowScale = mWindow ? mWindow->GetDefaultScale().scale : 1.f;
-
   float scale = transform[0];
-  float xoffset = transform[4] * windowScale;
-  float yoffset = transform[5] * windowScale;
+  float xoffset = transform[4];
+  float yoffset = transform[5];
 
   // Not different from last time.
   if (FuzzyEqualsMultiplicative(scale, mLastScale) && xoffset == mLastXOffset &&
@@ -306,7 +301,7 @@ DManipEventHandler::OnContentUpdated(IDirectManipulationViewport* viewport,
 
   // Consider this is a Scroll when scale factor equals 1.0.
   if (FuzzyEqualsMultiplicative(scale, 1.f)) {
-    if (mState == State::eNone || mState == State::eInertia) {
+    if (mState == State::eNone) {
       TransitionToState(State::ePanning);
     }
   } else {
@@ -316,11 +311,10 @@ DManipEventHandler::OnContentUpdated(IDirectManipulationViewport* viewport,
 
   if (mState == State::ePanning || mState == State::eInertia) {
     // Accumulate the offset (by not updating mLastX/YOffset) until we have at
-    // least one pixel both before and after scaling by the window scale.
+    // least one pixel.
     float dx = std::abs(mLastXOffset - xoffset);
     float dy = std::abs(mLastYOffset - yoffset);
-    float minDelta = std::max(1.f, windowScale);
-    if (dx < minDelta && dy < minDelta) {
+    if (dx < 1.f && dy < 1.f) {
       return S_OK;
     }
   }

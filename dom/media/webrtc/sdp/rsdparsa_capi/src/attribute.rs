@@ -296,7 +296,7 @@ pub enum RustSdpSsrcGroupSemantic {
     Duplication,
     FlowIdentification,
     ForwardErrorCorrection,
-    ForwardErrorCorrectionFR,
+    ForwardErrorCorrectionFr,
     SIM,
 }
 
@@ -310,10 +310,10 @@ impl<'a> From<&'a SdpSsrcGroupSemantic> for RustSdpSsrcGroupSemantic {
             SdpSsrcGroupSemantic::ForwardErrorCorrection => {
                 RustSdpSsrcGroupSemantic::ForwardErrorCorrection
             }
-            SdpSsrcGroupSemantic::ForwardErrorCorrectionFR => {
-                RustSdpSsrcGroupSemantic::ForwardErrorCorrectionFR
+            SdpSsrcGroupSemantic::ForwardErrorCorrectionFr => {
+                RustSdpSsrcGroupSemantic::ForwardErrorCorrectionFr
             }
-            SdpSsrcGroupSemantic::SIM => RustSdpSsrcGroupSemantic::SIM,
+            SdpSsrcGroupSemantic::Sim => RustSdpSsrcGroupSemantic::SIM,
         }
     }
 }
@@ -884,7 +884,7 @@ pub unsafe extern "C" fn sdp_get_rtcpfbs(
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct RustSdpAttributeImageAttrXYRange {
+pub struct RustSdpAttributeImageAttrXyRange {
     // range
     pub min: u32,
     pub max: u32,
@@ -894,19 +894,19 @@ pub struct RustSdpAttributeImageAttrXYRange {
     pub discrete_values: *const Vec<u32>,
 }
 
-impl<'a> From<&'a SdpAttributeImageAttrXYRange> for RustSdpAttributeImageAttrXYRange {
-    fn from(other: &SdpAttributeImageAttrXYRange) -> Self {
+impl<'a> From<&'a SdpAttributeImageAttrXyRange> for RustSdpAttributeImageAttrXyRange {
+    fn from(other: &SdpAttributeImageAttrXyRange) -> Self {
         match other {
-            &SdpAttributeImageAttrXYRange::Range(min, max, step) => {
-                RustSdpAttributeImageAttrXYRange {
+            &SdpAttributeImageAttrXyRange::Range(min, max, step) => {
+                RustSdpAttributeImageAttrXyRange {
                     min,
                     max,
                     step: step.unwrap_or(1),
                     discrete_values: ptr::null(),
                 }
             }
-            &SdpAttributeImageAttrXYRange::DiscreteValues(ref discrete_values) => {
-                RustSdpAttributeImageAttrXYRange {
+            &SdpAttributeImageAttrXyRange::DiscreteValues(ref discrete_values) => {
+                RustSdpAttributeImageAttrXyRange {
                     min: 0,
                     max: 1,
                     step: 1,
@@ -966,8 +966,8 @@ impl<'a> From<&'a SdpAttributeImageAttrPRange> for RustSdpAttributeImageAttrPRan
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeImageAttrSet {
-    pub x: RustSdpAttributeImageAttrXYRange,
-    pub y: RustSdpAttributeImageAttrXYRange,
+    pub x: RustSdpAttributeImageAttrXyRange,
+    pub y: RustSdpAttributeImageAttrXyRange,
 
     pub has_sar: bool,
     pub sar: RustSdpAttributeImageAttrSRange,
@@ -981,8 +981,8 @@ pub struct RustSdpAttributeImageAttrSet {
 impl<'a> From<&'a SdpAttributeImageAttrSet> for RustSdpAttributeImageAttrSet {
     fn from(other: &SdpAttributeImageAttrSet) -> Self {
         RustSdpAttributeImageAttrSet {
-            x: RustSdpAttributeImageAttrXYRange::from(&other.x),
-            y: RustSdpAttributeImageAttrXYRange::from(&other.y),
+            x: RustSdpAttributeImageAttrXyRange::from(&other.x),
+            y: RustSdpAttributeImageAttrXyRange::from(&other.y),
 
             has_sar: other.sar.is_some(),
             sar: match other.sar {

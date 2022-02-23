@@ -64,6 +64,11 @@ def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
             for test in test_types[testtype]["default_tests"]
         ]
 
+    # Disable non-local connections except for remote tests.
+    if "test_tags" in kwargs and "remote" not in kwargs.get("test_tags"):
+        # Causes Firefox to crash when using non-local connections.
+        os.environ["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
+
     kwargs["logger"] = kwargs.pop("log", None)
     if not kwargs["logger"]:
         kwargs["logger"] = commandline.setup_logging(

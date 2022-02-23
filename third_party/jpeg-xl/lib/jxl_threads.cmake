@@ -74,6 +74,18 @@ set_target_properties(jxl_threads PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
+  set_target_properties(jxl_threads PROPERTIES
+      LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/jxl/jxl.version)
+  if(APPLE)
+  set_property(TARGET ${target} APPEND_STRING PROPERTY
+      LINK_FLAGS "-Wl,-exported_symbols_list,${CMAKE_CURRENT_SOURCE_DIR}/jxl/jxl_osx.syms")
+  elseif(WIN32)
+    # Nothing needed here, we use __declspec(dllexport) (jxl_threads_export.h)
+  else()
+  set_property(TARGET jxl_threads APPEND_STRING PROPERTY
+      LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/jxl/jxl.version")
+  endif()  # APPLE
+
 # Compile the shared library such that the JXL_THREADS_EXPORT symbols are
 # exported. Users of the library will not set this flag and therefore import
 # those symbols.

@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test slow download from an http site that gets upgraded to https</title>
+</head>
+<body>
+  <a href="http://example.com/browser/dom/security/test/https-first/file_slow_download.sjs" download="large-dummy-file.txt" id="testlink">download by attribute</a>
+  <script>
+    // click the link to start download
+    let testlink = document.getElementById("testlink");
+    testlink.click();
+  </script>
+  </body>
+</html>

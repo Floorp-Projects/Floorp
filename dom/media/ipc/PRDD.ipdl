@@ -32,7 +32,7 @@ namespace mozilla {
 // (RemoteDataDecoder) process. There is one instance of this protocol,
 // with the RDDParent living on the main thread of the RDD process and
 // the RDDChild living on the main thread of the UI process.
-[NeedsOtherPid]
+[ManualDealloc, NeedsOtherPid]
 protocol PRDD
 {
 parent:
@@ -43,7 +43,8 @@ parent:
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
 
   async NewContentRemoteDecoderManager(
-            Endpoint<PRemoteDecoderManagerParent> endpoint);
+            Endpoint<PRemoteDecoderManagerParent> endpoint,
+            bool allowHardwareDecoding);
 
   async RequestMemoryReport(uint32_t generation,
                             bool anonymize,

@@ -11,7 +11,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "lib/extras/color_hints.h"
+#include "lib/extras/dec/color_hints.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
@@ -23,7 +23,7 @@ namespace extras {
 
 // Decodes `bytes` into `io`.
 Status DecodeImagePSD(const Span<const uint8_t> bytes,
-                      const ColorHints& color_hints, ThreadPool* pool,
+                      const extras::ColorHints& color_hints, ThreadPool* pool,
                       CodecInOut* io);
 
 // Not implemented yet

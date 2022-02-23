@@ -17,7 +17,7 @@ module.exports = function(sessionId) {
       sessionId,
       getMarkerDescription: function({ action, state }) {
         const { messages } = action;
-        const totalMessageCount = state.messages.messagesById.size;
+        const totalMessageCount = state.messages.mutableMessagesById.size;
         return `${messages.length} messages handled, store now has ${totalMessageCount} messages`;
       },
     },

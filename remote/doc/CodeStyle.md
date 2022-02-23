@@ -68,6 +68,6 @@ This will run the linters on the changed files before a push and
 abort if there are any problems.  This is convenient for avoiding
 a try run failing due to a simple linting issue.
 
-[mozlint]: /tools/lint/usage.html
-[eslint]: https://eslint.org/
-[enable automatic linting]: https://firefox-source-docs.mozilla.org/tools/lint/usage.html#using-a-vcs-hook
+[mozlint]: /code-quality/lint/mozlint.rst
+[eslint]: /code-quality/lint/linters/eslint.rst
+[enable automatic linting]: /tools/lint/usage.html#using-a-vcs-hook

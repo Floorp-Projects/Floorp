@@ -10,11 +10,13 @@
 
 PageInformation::PageInformation(uint64_t aTabID, uint64_t aInnerWindowID,
                                  const nsCString& aUrl,
-                                 uint64_t aEmbedderInnerWindowID)
+                                 uint64_t aEmbedderInnerWindowID,
+                                 bool aIsPrivateBrowsing)
     : mTabID(aTabID),
       mInnerWindowID(aInnerWindowID),
       mUrl(aUrl),
-      mEmbedderInnerWindowID(aEmbedderInnerWindowID) {}
+      mEmbedderInnerWindowID(aEmbedderInnerWindowID),
+      mIsPrivateBrowsing(aIsPrivateBrowsing) {}
 
 bool PageInformation::Equals(PageInformation* aOtherPageInfo) const {
   // It's enough to check inner window IDs because they are unique for each
@@ -32,6 +34,7 @@ void PageInformation::StreamJSON(SpliceableJSONWriter& aWriter) const {
   aWriter.DoubleProperty("innerWindowID", InnerWindowID());
   aWriter.StringProperty("url", Url());
   aWriter.DoubleProperty("embedderInnerWindowID", EmbedderInnerWindowID());
+  aWriter.BoolProperty("isPrivateBrowsing", IsPrivateBrowsing());
   aWriter.EndObject();
 }
 

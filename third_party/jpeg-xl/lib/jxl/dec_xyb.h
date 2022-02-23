@@ -41,6 +41,11 @@ struct OutputEncodingInfo {
   Status Set(const CodecMetadata& metadata, const ColorEncoding& default_enc);
   bool all_default_opsin = true;
   bool color_encoding_is_original = false;
+  // Luminances of color_encoding's primaries, used for the HLG inverse OOTF.
+  // Default to sRGB's.
+  float luminances[3] = {0.2126, 0.7152, 0.0722};
+  // Also used for the HLG inverse OOTF.
+  float intensity_target;
 };
 
 // Converts `inout` (not padded) from opsin to linear sRGB in-place. Called from
@@ -60,11 +65,8 @@ void OpsinToLinear(const Image3F& opsin, const Rect& rect, ThreadPool* pool,
 void YcbcrToRgb(const Image3F& ycbcr, Image3F* rgb, const Rect& rect);
 
 bool HasFastXYBTosRGB8();
-void FastXYBTosRGB8(const Image3F& input, const Rect& input_rect,
-                    const Rect& output_buf_rect, const ImageF* alpha,
-                    const Rect& alpha_rect, bool is_rgba,
-                    uint8_t* JXL_RESTRICT output_buf, size_t xsize,
-                    size_t output_stride);
+void FastXYBTosRGB8(const float* input[4], uint8_t* output, bool is_rgba,
+                    size_t xsize);
 
 }  // namespace jxl
 

@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
-  BuiltInThemeConfig: "resource:///modules/BuiltInThemeConfig.jsm",
+  BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   fxAccounts: "resource://gre/modules/FxAccounts.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
@@ -47,8 +47,9 @@ const MAX_BUTTONS = 4;
 
 // Array of which colorway/theme ids can be activated.
 XPCOMUtils.defineLazyGetter(this, "COLORWAY_IDS", () =>
-  [...BuiltInThemeConfig.keys()].filter(id =>
-    id.endsWith("-colorway@mozilla.org")
+  [...BuiltInThemes.builtInThemeMap.keys()].filter(
+    id =>
+      id.endsWith("-colorway@mozilla.org") && !BuiltInThemes.themeIsExpired(id)
   )
 );
 

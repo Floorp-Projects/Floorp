@@ -384,6 +384,14 @@
   --menuitem-icon-image: url("chrome://devtools/skin/images/command-noautohide.svg");
 }
 
+#toolbox-meatball-menu-pseudo-locale-accented {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/command-accented.svg");
+}
+
+#toolbox-meatball-menu-pseudo-locale-bidi {
+  --menuitem-icon-image: url("chrome://devtools/skin/images/command-bidi.svg");
+}
+
 #toolbox-meatball-menu-settings {
   --menuitem-icon-image: url("chrome://devtools/skin/images/settings.svg");
 }

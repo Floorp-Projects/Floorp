@@ -9,9 +9,8 @@ import collections
 
 @attr.s(frozen=True)
 class Graph:
-    """
-    Generic representation of a directed acyclic graph with labeled edges
-    connecting the nodes.  Graph operations are implemented in a functional
+    """Generic representation of a directed acyclic graph with labeled edges
+    connecting the nodes. Graph operations are implemented in a functional
     manner, so the data structure is immutable.
 
     It permits at most one edge of a given name between any set of nodes.  The
@@ -21,27 +20,27 @@ class Graph:
     The `nodes` and `edges` attributes may be accessed in a read-only fashion.
     The `nodes` attribute is a set of node names, while `edges` is a set of
     `(left, right, name)` tuples representing an edge named `name` going from
-    node `left` to node `right..
+    node `left` to node `right`..
     """
 
     nodes = attr.ib(converter=frozenset)
     edges = attr.ib(converter=frozenset)
 
     def transitive_closure(self, nodes, reverse=False):
-        """
-        Return the transitive closure of <nodes>: the graph containing all
+        """Return the transitive closure of <nodes>: the graph containing all
         specified nodes as well as any nodes reachable from them, and any
         intervening edges.
 
         If `reverse` is true, the "reachability" will be reversed and this
         will return the set of nodes that can reach the specified nodes.
 
-        Example
-        -------
+        Example:
 
-        a ------> b ------> c
-                  |
-                  `-------> d
+        .. code-block::
+
+            a ------> b ------> c
+                      |
+                      `-------> d
 
         transitive_closure([b]).nodes == set([a, b])
         transitive_closure([c]).nodes == set([c, b, a])
@@ -49,7 +48,10 @@ class Graph:
         transitive_closure([b], reverse=True).nodes == set([b, c, d])
         """
         assert isinstance(nodes, set)
-        assert nodes <= self.nodes
+        if not (nodes <= self.nodes):
+            raise Exception(
+                f"Unknown nodes in transitive closure: {nodes - self.nodes}"
+            )
 
         # generate a new graph by expanding along edges until reaching a fixed
         # point

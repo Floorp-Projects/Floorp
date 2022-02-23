@@ -1,0 +1,5 @@
+likely-confusing unicode character found '\u{206c}'
+     --> tests/parse-fail/confusing-line-comment7.wat:1:13
+      |
+    1 | (module) ;; 
+      |             ^

@@ -214,7 +214,6 @@ export RUSTC
 export RUSTDOC
 export RUSTFMT
 export MOZ_SRC=$(topsrcdir)
-export MOZ_DIST=$(ABS_DIST)
 export LIBCLANG_PATH=$(MOZ_LIBCLANG_PATH)
 export CLANG_PATH=$(MOZ_CLANG_PATH)
 export PKG_CONFIG
@@ -318,8 +317,10 @@ cargo_linker_env_var := CARGO_TARGET_$(call varize,$(RUST_TARGET))_LINKER
 
 export MOZ_CARGO_WRAP_LDFLAGS
 export MOZ_CARGO_WRAP_LD
+export MOZ_CARGO_WRAP_LD_CXX
 export MOZ_CARGO_WRAP_HOST_LDFLAGS
 export MOZ_CARGO_WRAP_HOST_LD
+export MOZ_CARGO_WRAP_HOST_LD_CXX
 # Exporting from make always exports a value. Setting a value per-recipe
 # would export an empty value for the host recipes. When not doing a
 # cross-compile, the --target for those is the same, and cargo will use
@@ -382,16 +383,22 @@ $(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LDFLAGS:=$(HOST_LDFLAGS) 
 
 ifeq (,$(filter clang-cl,$(CC_TYPE)))
 $(TARGET_RECIPES): MOZ_CARGO_WRAP_LD:=$(CC)
+$(TARGET_RECIPES): MOZ_CARGO_WRAP_LD_CXX:=$(CXX)
 else
 $(TARGET_RECIPES): MOZ_CARGO_WRAP_LD:=$(LINKER)
+$(TARGET_RECIPES): MOZ_CARGO_WRAP_LD_CXX:=$(LINKER)
 endif
 
 ifeq (,$(filter clang-cl,$(HOST_CC_TYPE)))
 $(HOST_RECIPES): MOZ_CARGO_WRAP_LD:=$(HOST_CC)
+$(HOST_RECIPES): MOZ_CARGO_WRAP_LD_CXX:=$(HOST_CXX)
 $(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LD:=$(HOST_CC)
+$(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LD_CXX:=$(HOST_CXX)
 else
 $(HOST_RECIPES): MOZ_CARGO_WRAP_LD:=$(HOST_LINKER)
+$(HOST_RECIPES): MOZ_CARGO_WRAP_LD_CXX:=$(HOST_LINKER)
 $(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LD:=$(HOST_LINKER)
+$(TARGET_RECIPES) $(HOST_RECIPES): MOZ_CARGO_WRAP_HOST_LD_CXX:=$(HOST_LINKER)
 endif
 
 ifdef RUST_LIBRARY_FILE

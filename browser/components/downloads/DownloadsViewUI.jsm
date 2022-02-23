@@ -172,6 +172,8 @@ var DownloadsViewUI = {
     // Get the state and ensure only the appropriate items are displayed.
     let state = parseInt(element.getAttribute("state"), 10);
 
+    const document = contextMenu.ownerDocument;
+
     const {
       DOWNLOAD_NOTSTARTED,
       DOWNLOAD_DOWNLOADING,
@@ -223,7 +225,21 @@ var DownloadsViewUI = {
 
     let download = element._shell.download;
     let mimeInfo = DownloadsCommon.getMimeInfo(download);
-    let { preferredAction, useSystemDefault } = mimeInfo ? mimeInfo : {};
+    let { preferredAction, useSystemDefault, defaultDescription } = mimeInfo
+      ? mimeInfo
+      : {};
+
+    // Hide the "Delete" item if there's no file data to delete.
+    contextMenu.querySelector(".downloadDeleteFileMenuItem").hidden = !(
+      download.target?.exists || download.target?.partFileExists
+    );
+
+    // Hide the "Go To Download Page" item if there's no referrer. Ideally the
+    // Downloads API will require a referrer (see bug 1723712) to create a
+    // download, but this fallback will ensure any failures aren't user facing.
+    contextMenu.querySelector(
+      ".downloadOpenReferrerMenuItem"
+    ).hidden = !download.source.referrerInfo?.originalReferrer;
 
     // Hide the "use system viewer" and "always use system viewer" items
     // if the feature is disabled or this download doesn't support it:
@@ -235,11 +251,52 @@ var DownloadsViewUI = {
     );
     let canViewInternally = element.hasAttribute("viewable-internally");
     useSystemViewerItem.hidden =
-      !DownloadsCommon.openInSystemViewerItemEnabled || !canViewInternally;
+      !DownloadsCommon.openInSystemViewerItemEnabled ||
+      !canViewInternally ||
+      !download.target?.exists;
 
     alwaysUseSystemViewerItem.hidden =
       !DownloadsCommon.alwaysOpenInSystemViewerItemEnabled ||
       !canViewInternally;
+
+    // Set menuitem labels to display the system viewer's name. Stop the l10n
+    // mutation observer temporarily since we're going to synchronously
+    // translate the elements to avoid translation delay. See bug 1737951 & bug
+    // 1746748. This can be simplified when they're resolved.
+    try {
+      document.l10n.pauseObserving();
+      // Handler descriptions longer than 40 characters will be skipped to avoid
+      // unreasonably stretching the context menu.
+      if (defaultDescription && defaultDescription.length < 40) {
+        document.l10n.setAttributes(
+          useSystemViewerItem,
+          "downloads-cmd-use-system-default-named",
+          { handler: defaultDescription }
+        );
+        document.l10n.setAttributes(
+          alwaysUseSystemViewerItem,
+          "downloads-cmd-always-use-system-default-named",
+          { handler: defaultDescription }
+        );
+      } else {
+        // In the unlikely event that defaultDescription is somehow missing/invalid,
+        // fall back to the static "Open In System Viewer" label.
+        document.l10n.setAttributes(
+          useSystemViewerItem,
+          "downloads-cmd-use-system-default"
+        );
+        document.l10n.setAttributes(
+          alwaysUseSystemViewerItem,
+          "downloads-cmd-always-use-system-default"
+        );
+      }
+    } finally {
+      document.l10n.resumeObserving();
+    }
+    document.l10n.translateElements([
+      useSystemViewerItem,
+      alwaysUseSystemViewerItem,
+    ]);
 
     // If non default mime-type or cannot be opened internally, display
     // "always open similar files" item instead so that users can add a new
@@ -297,6 +354,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "improvementsIsOn",
   "browser.download.improvements_to_download_panel",
   false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  DownloadsViewUI,
+  "clearHistoryOnDelete",
+  "browser.download.clearHistoryOnDelete",
+  0
 );
 
 DownloadsViewUI.BaseView = class {
@@ -976,7 +1040,9 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       case "downloadsCmd_alwaysOpenSimilarFiles":
         // This property is false if the download did not succeed.
         return this.download.target.exists;
+
       case "downloadsCmd_show":
+      case "downloadsCmd_deleteFile":
         let { target } = this.download;
         return target.exists || target.partFileExists;
 
@@ -1067,6 +1133,14 @@ DownloadsViewUI.DownloadElementShell.prototype = {
 
   cmd_delete() {
     DownloadsCommon.deleteDownload(this.download).catch(Cu.reportError);
+  },
+
+  async downloadsCmd_deleteFile() {
+    // Remove the download from the session and history downloads, delete part files.
+    await DownloadsCommon.deleteDownloadFiles(
+      this.download,
+      DownloadsViewUI.clearHistoryOnDelete
+    );
   },
 
   downloadsCmd_openInSystemViewer() {

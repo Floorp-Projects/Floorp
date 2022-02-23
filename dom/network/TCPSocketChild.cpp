@@ -90,10 +90,6 @@ void TCPSocketChild::SendOpen(nsITCPSocketCallback* aSocket, bool aUseSSL,
                               bool aUseArrayBuffers) {
   mSocket = aSocket;
 
-  if (mIPCEventTarget) {
-    gNeckoChild->SetEventTargetForActor(this, mIPCEventTarget);
-  }
-
   AddIPDLReference();
   gNeckoChild->SendPTCPSocketConstructor(this, mHost, mPort);
   PTCPSocketChild::SendOpen(mHost, mPort, aUseSSL, aUseArrayBuffers);

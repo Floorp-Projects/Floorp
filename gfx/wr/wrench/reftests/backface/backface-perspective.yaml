@@ -1,0 +1,20 @@
+# Checks a special case where CSS has both perspective and a transform.
+# In this case, the backface visibility should be computed based on the perspective
+# parent, not the immediate parent.
+# The immediate parent is `rotate-y(-120)`, which is obviously back facing.
+# But perspective transform makes it front-facing (since the frustum side panels are rotated even more).
+root:
+  items:
+    - type: stacking-context
+      bounds: 0 0 300 100
+      perspective: 100
+      items:
+      - type: stacking-context
+        bounds: 0 0 100 100
+        transform: rotate-y(-120)
+        paired-with-perspective: true
+        backface-visible: false
+        items:
+        - type: rect
+          bounds: 0 0 100 100
+          color: red

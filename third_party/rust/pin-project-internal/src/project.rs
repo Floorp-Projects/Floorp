@@ -1,8 +1,11 @@
 use proc_macro2::{Span, TokenStream};
 use quote::ToTokens;
 use syn::{
+    parse_quote,
     visit_mut::{self, VisitMut},
-    *,
+    Expr, ExprLet, ExprMatch, Ident, ImplItem, Item, ItemFn, ItemImpl, ItemUse, Lifetime, Local,
+    Pat, PatBox, PatIdent, PatOr, PatPath, PatReference, PatStruct, PatTupleStruct, PatType, Path,
+    PathArguments, PathSegment, Result, Stmt, Type, TypePath, UseTree,
 };
 
 use crate::utils::{

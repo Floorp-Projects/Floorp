@@ -334,6 +334,8 @@ struct InternalBarrierMethods {};
 
 template <typename T>
 struct InternalBarrierMethods<T*> {
+  static_assert(std::is_base_of_v<gc::Cell, T>, "Expected a GC thing type");
+
   static bool isMarkable(const T* v) { return v != nullptr; }
 
   static void preBarrier(T* v) { gc::PreWriteBarrier(v); }
@@ -366,13 +368,13 @@ struct InternalBarrierMethods<Value> {
 
     // If the target needs an entry, add it.
     js::gc::StoreBuffer* sb;
-    if ((next.isObject() || next.isString() || next.isBigInt()) &&
+    if (next.isNurseryAllocatableGCThing() &&
         (sb = next.toGCThing()->storeBuffer())) {
       // If we know that the prev has already inserted an entry, we can
       // skip doing the lookup to add the new entry. Note that we cannot
       // safely assert the presence of the entry because it may have been
       // added via a different store buffer.
-      if ((prev.isObject() || prev.isString() || prev.isBigInt()) &&
+      if (prev.isNurseryAllocatableGCThing() &&
           prev.toGCThing()->storeBuffer()) {
         return;
       }
@@ -380,7 +382,7 @@ struct InternalBarrierMethods<Value> {
       return;
     }
     // Remove the prev entry if the new value does not need it.
-    if ((prev.isObject() || prev.isString() || prev.isBigInt()) &&
+    if (prev.isNurseryAllocatableGCThing() &&
         (sb = prev.toGCThing()->storeBuffer())) {
       sb->unputValue(vp);
     }
@@ -749,6 +751,64 @@ class HeapPtr : public WriteBarriered<T> {
   }
 };
 
+/*
+ * A pre-barriered heap pointer, for use inside the JS engine.
+ *
+ * Similar to GCPtr, but used for a pointer to a malloc-allocated structure
+ * containing GC thing pointers.
+ *
+ * It must only be stored in memory that has GC lifetime. It must not be used in
+ * contexts where it may be implicitly moved or deleted, e.g. most containers.
+ *
+ * A post-barrier is unnecessary since malloc-allocated structures cannot be in
+ * the nursery.
+ */
+template <class T>
+class GCStructPtr : public BarrieredBase<T> {
+ public:
+  // This is sometimes used to hold tagged pointers.
+  static constexpr uintptr_t MaxTaggedPointer = 0x2;
+
+  GCStructPtr() : BarrieredBase<T>(JS::SafelyInitialized<T>::create()) {}
+
+  // Implicitly adding barriers is a reasonable default.
+  MOZ_IMPLICIT GCStructPtr(const T& v) : BarrieredBase<T>(v) {}
+
+  GCStructPtr(const GCStructPtr<T>& other) : BarrieredBase<T>(other) {}
+
+  GCStructPtr(GCStructPtr<T>&& other) : BarrieredBase<T>(other.release()) {}
+
+  ~GCStructPtr() {
+    // No barriers are necessary as this only happens when the GC is sweeping.
+    MOZ_ASSERT_IF(isTraceable(),
+                  CurrentThreadIsGCSweeping() || CurrentThreadIsGCFinalizing());
+  }
+
+  void init(const T& v) {
+    MOZ_ASSERT(this->get() == JS::SafelyInitialized<T>());
+    AssertTargetIsNotGray(v);
+    this->value = v;
+  }
+
+  void set(JS::Zone* zone, const T& v) {
+    pre(zone);
+    this->value = v;
+  }
+
+  T get() const { return this->value; }
+  operator T() const { return get(); }
+  T operator->() const { return get(); }
+
+ protected:
+  bool isTraceable() const { return uintptr_t(get()) > MaxTaggedPointer; }
+
+  void pre(JS::Zone* zone) {
+    if (isTraceable()) {
+      PreWriteBarrier(zone, get());
+    }
+  }
+};
+
 }  // namespace js
 
 namespace JS {
@@ -933,8 +993,7 @@ class HeapSlot : public WriteBarriered<Value> {
 #ifdef DEBUG
     assertPreconditionForPostWriteBarrier(owner, kind, slot, target);
 #endif
-    if (this->value.isObject() || this->value.isString() ||
-        this->value.isBigInt()) {
+    if (this->value.isNurseryAllocatableGCThing()) {
       gc::Cell* cell = this->value.toGCThing();
       if (cell->storeBuffer()) {
         cell->storeBuffer()->putSlot(owner, kind, slot, 1);

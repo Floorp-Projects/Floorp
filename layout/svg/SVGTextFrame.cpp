@@ -855,6 +855,10 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   if (aFlags & eNoHorizontalOverflow) {
     x = 0.0;
     width = textRun->GetAdvanceWidth(range, &provider);
+    if (width < 0.0) {
+      x = width;
+      width = -width;
+    }
   } else {
     x = metrics.mBoundingBox.x;
     width = metrics.mBoundingBox.width;
@@ -5360,6 +5364,24 @@ gfxRect SVGTextFrame::TransformFrameRectFromTextChild(
                          NSAppUnitsToFloatPixels(mRect.y, factor));
 
   return result - framePosition;
+}
+
+Rect SVGTextFrame::TransformFrameRectFromTextChild(
+    const Rect& aRect, const nsIFrame* aChildFrame) {
+  nscoord appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
+  nsRect r = LayoutDevicePixel::ToAppUnits(
+      LayoutDeviceRect::FromUnknownRect(aRect), appUnitsPerDevPixel);
+  gfxRect resultCssUnits = TransformFrameRectFromTextChild(r, aChildFrame);
+  float devPixelPerCSSPixel =
+      float(AppUnitsPerCSSPixel()) / appUnitsPerDevPixel;
+  resultCssUnits.Scale(devPixelPerCSSPixel);
+  return ToRect(resultCssUnits);
+}
+
+Point SVGTextFrame::TransformFramePointFromTextChild(
+    const Point& aPoint, const nsIFrame* aChildFrame) {
+  return TransformFrameRectFromTextChild(Rect(aPoint, Size(1, 1)), aChildFrame)
+      .TopLeft();
 }
 
 void SVGTextFrame::AppendDirectlyOwnedAnonBoxes(

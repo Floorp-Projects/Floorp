@@ -15,31 +15,52 @@ kind-dependencies:
     - build
 
 job-defaults:
-    platform: linux64/opt
-    require-build:
-        linux64/opt: build-linux64/opt
     worker-type: b-linux
     worker:
         max-run-time: 3600
         docker-image: {in-tree: debian11-amd64-build}
-        env:
-            LD_LIBRARY_PATH: /builds/worker/fetches
-            JSSHELL: ./js
     treeherder:
         kind: test
         tier: 3
-    fetches:
-        build:
-            - target.jsshell.zip
-            - target.fuzztest.tests.tar.gz
 
 jobs:
     simple:
+        platform: linux64/opt
+        require-build:
+            linux64/opt: build-linux64/opt
         description: Simple Fuzzing Test
         treeherder:
             symbol: simple-fuzzing
+        fetches:
+            build:
+                - target.jsshell.zip
+                - target.fuzztest.tests.tar.gz
+        worker:
+            env:
+                LD_LIBRARY_PATH: /builds/worker/fetches
+                JSSHELL: ./js
         run:
             using: run-task
             command: >-
                 cd $MOZ_FETCHES_DIR &&
                 python3 tools/fuzzing/smoke/smoke.py
+
+    python:
+        platform: linux64-asan-fuzzing/opt
+        require-build:
+            linux64-asan-fuzzing/opt: build-linux64-asan-fuzzing/opt
+        description: Python Fuzzing Smoke Tests
+        treeherder:
+            symbol: fuzzing-python
+        fetches:
+            build:
+                - target.tar.bz2
+        run:
+            using: run-task
+            cwd: '{checkout}'
+            command: >
+                export GECKO_BINARY_PATH=$MOZ_FETCHES_DIR/firefox/firefox &&
+                ./mach python-test --subsuite fuzzing
+        when:
+            files-changed:
+                - 'tools/fuzzing/smoke/**'

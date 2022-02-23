@@ -228,10 +228,8 @@ _cmap_closure (hb_face_t	   *face,
 	       const hb_set_t	   *unicodes,
 	       hb_set_t		   *glyphset)
 {
-  OT::cmap::accelerator_t cmap;
-  cmap.init (face);
+  OT::cmap::accelerator_t cmap (face);
   cmap.table->closure_glyphs (unicodes, glyphset);
-  cmap.fini ();
 }
 
 static void _colr_closure (hb_face_t *face,
@@ -239,8 +237,7 @@ static void _colr_closure (hb_face_t *face,
                            hb_map_t *palettes_map,
                            hb_set_t *glyphs_colred)
 {
-  OT::COLR::accelerator_t colr;
-  colr.init (face);
+  OT::COLR::accelerator_t colr (face);
   if (!colr.is_valid ()) return;
 
   unsigned iteration_count = 0;
@@ -248,7 +245,6 @@ static void _colr_closure (hb_face_t *face,
   unsigned glyphs_num;
   {
     glyphs_num = glyphs_colred->get_population ();
-
     // Collect all glyphs referenced by COLRv0
     hb_set_t glyphset_colrv0;
     for (hb_codepoint_t gid : glyphs_colred->iter ())
@@ -264,7 +260,6 @@ static void _colr_closure (hb_face_t *face,
   colr.closure_V0palette_indices (glyphs_colred, &palette_indices);
   _remap_indexes (&layer_indices, layers_map);
   _remap_palette_indexes (&palette_indices, palettes_map);
-  colr.fini ();
 }
 
 static inline void
@@ -295,8 +290,7 @@ _populate_unicodes_to_retain (const hb_set_t *unicodes,
                               const hb_set_t *glyphs,
                               hb_subset_plan_t *plan)
 {
-  OT::cmap::accelerator_t cmap;
-  cmap.init (plan->source);
+  OT::cmap::accelerator_t cmap (plan->source);
 
   constexpr static const int size_threshold = 4096;
 
@@ -344,8 +338,6 @@ _populate_unicodes_to_retain (const hb_set_t *unicodes,
 
   + plan->codepoint_to_glyph->keys ()   | hb_sink (plan->unicodes);
   + plan->codepoint_to_glyph->values () | hb_sink (plan->_glyphset_gsub);
-
-  cmap.fini ();
 }
 
 static void
@@ -354,13 +346,9 @@ _populate_gids_to_retain (hb_subset_plan_t* plan,
 			  bool close_over_gpos,
 			  bool close_over_gdef)
 {
-  OT::glyf::accelerator_t glyf;
+  OT::glyf::accelerator_t glyf (plan->source);
 #ifndef HB_NO_SUBSET_CFF
-  OT::cff1::accelerator_t cff;
-#endif
-  glyf.init (plan->source);
-#ifndef HB_NO_SUBSET_CFF
-  cff.init (plan->source);
+  OT::cff1::accelerator_t cff (plan->source);
 #endif
 
   plan->_glyphset_gsub->add (0); // Not-def
@@ -397,6 +385,7 @@ _populate_gids_to_retain (hb_subset_plan_t* plan,
   _colr_closure (plan->source, plan->colrv1_layers, plan->colr_palettes, &cur_glyphset);
   _remove_invalid_gids (&cur_glyphset, plan->source->get_num_glyphs ());
 
+  hb_set_set (plan->_glyphset_colred, &cur_glyphset);
   // Populate a full set of glyphs to retain by adding all referenced
   // composite glyphs.
   for (hb_codepoint_t gid : cur_glyphset.iter ())
@@ -419,11 +408,6 @@ _populate_gids_to_retain (hb_subset_plan_t* plan,
 				       plan->layout_variation_indices,
 				       plan->layout_variation_idx_map);
 #endif
-
-#ifndef HB_NO_SUBSET_CFF
-  cff.fini ();
-#endif
-  glyf.fini ();
 }
 
 static void
@@ -511,6 +495,7 @@ hb_subset_plan_create (hb_face_t	 *face,
   plan->_glyphset = hb_set_create ();
   plan->_glyphset_gsub = hb_set_create ();
   plan->_glyphset_mathed = hb_set_create ();
+  plan->_glyphset_colred = hb_set_create ();
   plan->codepoint_to_glyph = hb_map_create ();
   plan->glyph_map = hb_map_create ();
   plan->reverse_glyph_map = hb_map_create ();
@@ -579,6 +564,7 @@ hb_subset_plan_destroy (hb_subset_plan_t *plan)
   hb_set_destroy (plan->_glyphset);
   hb_set_destroy (plan->_glyphset_gsub);
   hb_set_destroy (plan->_glyphset_mathed);
+  hb_set_destroy (plan->_glyphset_colred);
   hb_map_destroy (plan->gsub_lookups);
   hb_map_destroy (plan->gpos_lookups);
   hb_map_destroy (plan->gsub_features);

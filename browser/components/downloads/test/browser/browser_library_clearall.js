@@ -42,7 +42,7 @@ async function testClearingDownloads(clearCallback) {
     httpUrl("file3.txt"),
   ];
 
-  let listbox = win.document.getElementById("downloadsRichListBox");
+  let listbox = win.document.getElementById("downloadsListBox");
   ok(listbox, "download list box present");
 
   let promiseLength = waitForChildrenLength(listbox, DOWNLOAD_DATA.length);

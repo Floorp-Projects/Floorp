@@ -9,7 +9,6 @@
 
 const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 
-import { isOriginalSource } from "../utils/source-maps";
 import { endTruncateStr } from "./utils";
 import { truncateMiddleText } from "../utils/text";
 import { parse as parseURL } from "../utils/url";
@@ -59,6 +58,60 @@ export function shouldBlackbox(source) {
   }
 
   return true;
+}
+
+/**
+ * Checks if the frame is within a line ranges which are blackboxed
+ * in the source.
+ *
+ * @param {Object}  frame
+ *                  The current frame
+ * @param {Object}  source
+ *                  The source related to the frame
+ * @param {Object}  blackboxedRanges
+ *                  The currently blackboxedRanges for all the sources.
+ * @param {Boolean} isFrameBlackBoxed
+ *                  If the frame is within the blackboxed range
+ *                  or not.
+ */
+export function isFrameBlackBoxed(frame, source, blackboxedRanges) {
+  return (
+    !!source?.isBlackBoxed &&
+    (!blackboxedRanges[source.url].length ||
+      !!findBlackBoxRange(source, blackboxedRanges, {
+        start: frame.location.line,
+        end: frame.location.line,
+      }))
+  );
+}
+
+/**
+ * Checks if a blackbox range exist for the line range.
+ * That is if any start and end lines overlap any of the
+ * blackbox ranges
+ *
+ * @param {Object}  source
+ *                  The current selected source
+ * @param {Object}  blackboxedRanges
+ *                  The store of blackboxedRanges
+ * @param {Object}  lineRange
+ *                  The start/end line range `{ start: <Number>, end: <Number> }`
+ * @return {Object} blackboxRange
+ *                  The first matching blackbox range that all or part of the
+ *                  specified lineRange sits within.
+ */
+export function findBlackBoxRange(source, blackboxedRanges, lineRange) {
+  const ranges = blackboxedRanges[source.url];
+  if (!ranges || !ranges.length) {
+    return null;
+  }
+
+  return ranges.find(
+    range =>
+      (lineRange.start >= range.start.line &&
+        lineRange.start <= range.end.line) ||
+      (lineRange.end >= range.start.line && lineRange.end <= range.end.line)
+  );
 }
 
 /**
@@ -469,30 +522,37 @@ export function getRelativeUrl(source, root) {
   return url.slice(url.indexOf(root) + root.length + 1);
 }
 
-export function underRoot(source, root, threads) {
+/**
+ * Checks if the source is descendant of the root identified by the
+ * root url specified. The root might likely be projectDirectoryRoot which
+ * is a defined by a pref that allows users restrict the source tree to
+ * a subset of sources.
+ *
+ * @params {Object} source
+ *                  The source object
+ * @params {String} rootUrl
+ *                  The url for the root node
+ * @params {Array}  threads
+ *                  A list of existing threads
+ */
+export function isDescendantOfRoot(source, rootUrl, threads) {
   // source.url doesn't include thread actor ID, so remove the thread actor ID from the root
   threads.forEach(thread => {
-    if (root.includes(thread.actor)) {
-      root = root.slice(thread.actor.length + 1);
+    if (rootUrl.includes(thread.actor)) {
+      rootUrl = rootUrl.slice(thread.actor.length + 1);
     }
   });
 
   if (source.url && source.url.includes("chrome://")) {
     const { group, path } = getURL(source);
-    return (group + path).includes(root);
+    return (group + path).includes(rootUrl);
   }
 
-  return !!source.url && source.url.includes(root);
-}
-
-export function isOriginal(source) {
-  // Pretty-printed sources are given original IDs, so no need
-  // for any additional check
-  return isOriginalSource(source);
+  return !!source.url && source.url.includes(rootUrl);
 }
 
 export function isGenerated(source) {
-  return !isOriginal(source);
+  return !source.isOriginal;
 }
 
 export function getSourceQueryString(source) {

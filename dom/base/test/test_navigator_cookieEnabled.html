@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1753586
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Navigator.cookieEnabled</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  "use strict";
+
+  /** Test for Bug 1753586 **/
+
+  const BEHAVIOR_REJECT = 2;
+  const BEHAVIOR_REJECT_TRACKER = 4;
+  const BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN = 5;
+
+  const TESTS = [
+    { cookieBehavior: BEHAVIOR_REJECT, expect: false },
+    { cookieBehavior: BEHAVIOR_REJECT_TRACKER, expect: true },
+    {
+      cookieBehavior: BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+      expect: true,
+    },
+  ];
+
+  SimpleTest.waitForExplicitFinish();
+
+  function createAndWaitIframeLoading(win, src, sandbox) {
+    return new Promise(resolve => {
+      let iframe = win.document.createElement("iframe");
+
+      iframe.addEventListener(
+        "load",
+        () => resolve(iframe),
+        { once: true }
+      );
+
+      win.document.body.appendChild(iframe);
+      if (sandbox) {
+        iframe.sandbox = sandbox;
+      }
+      iframe.src = src;
+    });
+  }
+
+  async function runTestInAnotherWindow(expect) {
+    let win = window.open();
+
+    is(
+      win.navigator.cookieEnabled,
+      expect,
+      `Navigator.cookieEnabled returns expected value in first-party context.`
+    );
+
+    // Create a first-party iframe and check if navigator.cookieEnabled is
+    // expected.
+    let iframe = await createAndWaitIframeLoading(
+      win,
+      "http://mochi.test:8888/"
+    );
+
+    await SpecialPowers.spawn(iframe, [expect], value => {
+      is(
+        content.navigator.cookieEnabled,
+        value,
+        "Navigator.cookieEnabled returns expected value in first-party iframe."
+      );
+    });
+
+    // Create a third-party iframe and check if navigator.cookieEnabled is
+    // expected.
+    iframe = await createAndWaitIframeLoading(
+      win,
+      "http://example.com/"
+    );
+
+    await SpecialPowers.spawn(iframe, [expect], value => {
+      is(
+        content.navigator.cookieEnabled,
+        value,
+        "Navigator.cookieEnabled returns expected value in third-party iframe."
+      );
+    });
+
+    // Create a sandboxed iframe and check if navigator.cookieEnabled is
+    // expected. It should still return true even if setting cookies in
+    // sandboxed iframe will throw a security error.
+    iframe = await createAndWaitIframeLoading(
+      win,
+      "http://mochi.test:8888/",
+      "allow-scripts"
+    );
+
+    await SpecialPowers.spawn(iframe, [expect], value => {
+      is(
+        content.navigator.cookieEnabled,
+        value,
+        "Navigator.cookieEnabled returns expected value in sandboxed iframe."
+      );
+    });
+
+    win.close();
+  }
+
+  add_task(async function doTests() {
+    for (let test of TESTS) {
+      await SpecialPowers.pushPrefEnv({"set": [
+        ["network.cookie.cookieBehavior", test.cookieBehavior],
+      ]});
+
+      // We need to run the test in another window so that the cookieBehavior
+      // setting would take effect.
+      await runTestInAnotherWindow(test.expect);
+    }
+  });
+
+  </script>
+</head>
+<body>
+</body>
+</html>

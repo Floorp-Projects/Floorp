@@ -12,15 +12,15 @@
 
 // Public name: ech-public.example.com
 const ECH_CONFIG_FIXED =
-  "AEv+CgBHTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAEAAwBkABZlY2gtcHVibGljLmV4YW1wbGUuY29tAAA=";
+  "AEn+DQBFTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAEAA2QWZWNoLXB1YmxpYy5leGFtcGxlLmNvbQAA";
 
 // Public name: ech-public.example.com, Unsupported AEAD to prompt retry_configs from a trusted host.
 const ECH_CONFIG_TRUSTED_RETRY =
-  "AEv+CgBHTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAEAAQBkABZlY2gtcHVibGljLmV4YW1wbGUuY29tAAA=";
+  "AEn+DQBFTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAMAA2QWZWNoLXB1YmxpYy5leGFtcGxlLmNvbQAA";
 
 // Public name: selfsigned.example.com. Unsupported AEAD to prompt retry_configs from an untrusted host.
 const ECH_CONFIG_UNTRUSTED_RETRY =
-  "AEv+CgBHTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAEAAQBkABZzZWxmc2lnbmVkLmV4YW1wbGUuY29tAAA=";
+  "AEn+DQBFTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAMAA2QWc2VsZnNpZ25lZC5leGFtcGxlLmNvbQAA";
 
 function shouldBeAcceptedEch(aTransportSecurityInfo) {
   Assert.ok(

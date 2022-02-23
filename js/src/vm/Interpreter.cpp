@@ -809,7 +809,7 @@ extern bool JS::InstanceofOperator(JSContext* cx, HandleObject obj,
 
   /* Step 2. */
   RootedValue hasInstance(cx);
-  RootedId id(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().hasInstance));
+  RootedId id(cx, PropertyKey::Symbol(cx->wellKnownSymbols().hasInstance));
   if (!GetProperty(cx, obj, obj, id, &hasInstance)) {
     return false;
   }
@@ -4740,7 +4740,7 @@ JSObject* js::LambdaArrow(JSContext* cx, HandleFunction fun,
   }
 
   MOZ_ASSERT(clone->isArrow());
-  clone->setExtendedSlot(0, newTargetv);
+  clone->setExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT, newTargetv);
 
   MOZ_ASSERT(fun->global() == clone->global());
   return clone;
@@ -5203,7 +5203,7 @@ static bool OptimizeArgumentsSpreadCall(JSContext* cx, HandleObject obj,
   }
 
   Handle<ArgumentsObject*> args = obj.as<ArgumentsObject>();
-  if (args->isAnyElementDeleted() || args->hasOverriddenLength() ||
+  if (args->hasOverriddenElement() || args->hasOverriddenLength() ||
       args->hasOverriddenIterator()) {
     return true;
   }
@@ -5261,7 +5261,7 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg,
 ArrayObject* js::ArrayFromArgumentsObject(JSContext* cx,
                                           Handle<ArgumentsObject*> args) {
   MOZ_ASSERT(!args->hasOverriddenLength());
-  MOZ_ASSERT(!args->isAnyElementDeleted());
+  MOZ_ASSERT(!args->hasOverriddenElement());
 
   uint32_t length = args->initialLength();
   auto* array = NewDenseFullyAllocatedArray(cx, length);

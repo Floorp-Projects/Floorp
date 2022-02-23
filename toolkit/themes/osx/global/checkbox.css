@@ -6,10 +6,6 @@
 
 %include ../../shared/checkbox.inc.css
 
-checkbox:not([native]):-moz-focusring > .checkbox-check {
-  outline: 2px solid var(--focus-outline-color, -moz-mac-focusring);
-}
-
 checkbox:where([native]) {
   appearance: auto;
   -moz-default-appearance: checkbox-container;

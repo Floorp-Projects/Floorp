@@ -7,20 +7,9 @@
  * @module reducers/tabs
  */
 
-import { createSelector } from "reselect";
 import { isOriginalId } from "devtools-source-map";
-import move from "lodash-move";
 
 import { isSimilarTab, persistTabs } from "../utils/tabs";
-import { makeShallowQuery } from "../utils/resource";
-import { getPrettySourceURL } from "../utils/source";
-
-import {
-  getSource,
-  getSpecificSourceByURL,
-  getSources,
-  resourceAsSourceBase,
-} from "./sources";
 
 export function initialTabState() {
   return { tabs: [] };
@@ -65,71 +54,6 @@ function update(state = initialTabState(), action) {
     default:
       return state;
   }
-}
-
-/**
- * Gets the next tab to select when a tab closes. Heuristics:
- * 1. if the selected tab is available, it remains selected
- * 2. if it is gone, the next available tab to the left should be active
- * 3. if the first tab is active and closed, select the second tab
- *
- * @memberof reducers/tabs
- * @static
- */
-export function getNewSelectedSourceId(state, tabList) {
-  const { selectedLocation } = state.sources;
-  const availableTabs = state.tabs.tabs;
-  if (!selectedLocation) {
-    return "";
-  }
-
-  const selectedTab = getSource(state, selectedLocation.sourceId);
-  if (!selectedTab) {
-    return "";
-  }
-
-  const matchingTab = availableTabs.find(tab =>
-    isSimilarTab(tab, selectedTab.url, isOriginalId(selectedLocation.sourceId))
-  );
-
-  if (matchingTab) {
-    const { sources } = state.sources;
-    if (!sources) {
-      return "";
-    }
-
-    const selectedSource = getSpecificSourceByURL(
-      state,
-      selectedTab.url,
-      selectedTab.isOriginal
-    );
-
-    if (selectedSource) {
-      return selectedSource.id;
-    }
-
-    return "";
-  }
-
-  const tabUrls = tabList.map(tab => tab.url);
-  const leftNeighborIndex = Math.max(tabUrls.indexOf(selectedTab.url) - 1, 0);
-  const lastAvailbleTabIndex = availableTabs.length - 1;
-  const newSelectedTabIndex = Math.min(leftNeighborIndex, lastAvailbleTabIndex);
-  const availableTab = availableTabs[newSelectedTabIndex];
-
-  if (availableTab) {
-    const tabSource = getSpecificSourceByURL(
-      state,
-      availableTab.url,
-      availableTab.isOriginal
-    );
-
-    if (tabSource) {
-      return tabSource.id;
-    }
-  }
-
-  return "";
 }
 
 function matchesSource(tab, source) {
@@ -227,47 +151,27 @@ function updateTabList(
 }
 
 function moveTabInList(state, { url, tabIndex: newIndex }) {
-  let { tabs } = state;
+  const { tabs } = state;
   const currentIndex = tabs.findIndex(tab => tab.url == url);
-  tabs = move(tabs, currentIndex, newIndex);
-  return { tabs };
+  return moveTab(tabs, currentIndex, newIndex);
 }
 
 function moveTabInListBySourceId(state, { sourceId, tabIndex: newIndex }) {
-  let { tabs } = state;
+  const { tabs } = state;
   const currentIndex = tabs.findIndex(tab => tab.sourceId == sourceId);
-  tabs = move(tabs, currentIndex, newIndex);
-  return { tabs };
+  return moveTab(tabs, currentIndex, newIndex);
 }
 
-// Selectors
+function moveTab(tabs, currentIndex, newIndex) {
+  const item = tabs[currentIndex];
 
-export const getTabs = state => state.tabs.tabs;
+  const newTabs = Array.from(tabs);
+  // Remove the item from its current location
+  newTabs.splice(currentIndex, 1);
+  // And add it to the new one
+  newTabs.splice(newIndex, 0, item);
 
-export const getSourceTabs = createSelector(
-  state => state.tabs,
-  ({ tabs }) => tabs.filter(tab => tab.sourceId)
-);
-
-export const getSourcesForTabs = state => {
-  const tabs = getSourceTabs(state);
-  const sources = getSources(state);
-  return querySourcesForTabs(sources, tabs);
-};
-
-const querySourcesForTabs = makeShallowQuery({
-  filter: (_, tabs) => tabs.map(({ sourceId }) => sourceId),
-  map: resourceAsSourceBase,
-  reduce: items => items,
-});
-
-export function tabExists(state, sourceId) {
-  return !!getSourceTabs(state).find(tab => tab.sourceId == sourceId);
-}
-
-export function hasPrettyTab(state, sourceUrl) {
-  const prettyUrl = getPrettySourceURL(sourceUrl);
-  return !!getSourceTabs(state).find(tab => tab.url === prettyUrl);
+  return { tabs: newTabs };
 }
 
 export default update;

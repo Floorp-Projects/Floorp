@@ -16,39 +16,8 @@ namespace mozilla {
 
 namespace {
 
-inline nsresult CreateExceptionListKey(const nsACString& aFirstPartyOrigin,
-                                       const nsACString& aThirdPartyOrigin,
-                                       nsACString& aExceptionListKey) {
-  MOZ_ASSERT(!aFirstPartyOrigin.IsEmpty());
-  MOZ_ASSERT(!aThirdPartyOrigin.IsEmpty());
-
-  // Don't allow exceptions for everything
-  if (aFirstPartyOrigin.EqualsLiteral("*") &&
-      aThirdPartyOrigin.EqualsLiteral("*")) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  aExceptionListKey.Assign(aFirstPartyOrigin);
-  aExceptionListKey.Append(",");
-  aExceptionListKey.Append(aThirdPartyOrigin);
-
-  return NS_OK;
-}
-
-inline nsresult CreateUnifiedOriginString(const nsACString& aInput,
-                                          nsACString& aOutput) {
-  nsCOMPtr<nsIURI> uri;
-  if (aInput.EqualsLiteral("*")) {
-    aOutput.AssignLiteral("*");
-    return NS_OK;
-  }
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aInput);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return nsContentUtils::GetASCIIOrigin(uri, aOutput);
-}
+static constexpr std::array<nsLiteralCString, 2> kSupportedSchemes = {
+    {"https://"_ns, "http://"_ns}};
 
 StaticRefPtr<PartitioningExceptionList> gPartitioningExceptionList;
 
@@ -72,16 +41,15 @@ bool PartitioningExceptionList::Check(const nsACString& aFirstPartyOrigin,
        PromiseFlatCString(aFirstPartyOrigin).get(),
        PromiseFlatCString(aThirdPartyOrigin).get()));
 
-  nsAutoCString key, wildcardFirstPartyKey, wildcardThirdPartyKey;
-  CreateExceptionListKey(aFirstPartyOrigin, aThirdPartyOrigin, key);
-  CreateExceptionListKey("*"_ns, aThirdPartyOrigin, wildcardFirstPartyKey);
-  CreateExceptionListKey(aFirstPartyOrigin, "*"_ns, wildcardThirdPartyKey);
+  for (PartitionExceptionListEntry& entry : GetOrCreate()->mExceptionList) {
+    if (OriginMatchesPattern(aFirstPartyOrigin, entry.mFirstParty) &&
+        OriginMatchesPattern(aThirdPartyOrigin, entry.mThirdParty)) {
+      LOG(("Found partitioning exception list entry for %s and %s",
+           PromiseFlatCString(aFirstPartyOrigin).get(),
+           PromiseFlatCString(aThirdPartyOrigin).get()));
 
-  if (GetOrCreate()->mExceptionList.Contains(key) ||
-      GetOrCreate()->mExceptionList.Contains(wildcardFirstPartyKey) ||
-      GetOrCreate()->mExceptionList.Contains(wildcardThirdPartyKey)) {
-    LOG(("URI is in exception list"));
-    return true;
+      return true;
+    }
   }
 
   return false;
@@ -135,10 +103,11 @@ PartitioningExceptionList::OnExceptionListUpdate(const nsACString& aList) {
       continue;
     }
 
-    nsAutoCString firstPartyOrigin;
-    rv = CreateUnifiedOriginString(*originsIt, firstPartyOrigin);
+    PartitionExceptionListEntry entry;
+
+    rv = GetExceptionListPattern(*originsIt, entry.mFirstParty);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      continue;
     }
 
     ++originsIt;
@@ -148,21 +117,101 @@ PartitioningExceptionList::OnExceptionListUpdate(const nsACString& aList) {
       continue;
     }
 
-    nsAutoCString thirdPartyOrigin;
-    rv = CreateUnifiedOriginString(*originsIt, thirdPartyOrigin);
+    rv = GetExceptionListPattern(*originsIt, entry.mThirdParty);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      continue;
     }
 
-    nsAutoCString key;
-    rv = CreateExceptionListKey(firstPartyOrigin, thirdPartyOrigin, key);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (entry.mFirstParty.mSuffix == "*" && entry.mThirdParty.mSuffix == "*") {
+      LOG(("Ignoring *,* exception entry"));
+      continue;
     }
-    LOG(("onExceptionListUpdate: %s", key.get()));
 
-    mExceptionList.AppendElement(key);
+    LOG(("onExceptionListUpdate: %s%s - %s%s", entry.mFirstParty.mScheme.get(),
+         entry.mFirstParty.mSuffix.get(), entry.mThirdParty.mScheme.get(),
+         entry.mThirdParty.mSuffix.get()));
+
+    mExceptionList.AppendElement(entry);
   }
+
+  return NS_OK;
+}
+
+nsresult PartitioningExceptionList::GetSchemeFromOrigin(
+    const nsACString& aOrigin, nsACString& aScheme,
+    nsACString& aOriginNoScheme) {
+  NS_ENSURE_FALSE(aOrigin.IsEmpty(), NS_ERROR_INVALID_ARG);
+
+  for (const auto& scheme : kSupportedSchemes) {
+    if (aOrigin.Length() <= scheme.Length() ||
+        !StringBeginsWith(aOrigin, scheme)) {
+      continue;
+    }
+    aScheme = Substring(aOrigin, 0, scheme.Length());
+    aOriginNoScheme = Substring(aOrigin, scheme.Length());
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+bool PartitioningExceptionList::OriginMatchesPattern(
+    const nsACString& aOrigin, const PartitionExceptionListPattern& aPattern) {
+  if (NS_WARN_IF(aOrigin.IsEmpty())) {
+    return false;
+  }
+
+  if (aPattern.mSuffix == "*") {
+    return true;
+  }
+
+  nsAutoCString scheme, originNoScheme;
+  nsresult rv = GetSchemeFromOrigin(aOrigin, scheme, originNoScheme);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // Always strict match scheme.
+  if (scheme != aPattern.mScheme) {
+    return false;
+  }
+
+  if (!aPattern.mIsWildCard) {
+    // aPattern is not a wildcard, match strict.
+    return originNoScheme == aPattern.mSuffix;
+  }
+
+  // For wildcard patterns, check if origin suffix matches pattern suffix.
+  return StringEndsWith(originNoScheme, aPattern.mSuffix);
+}
+
+// Parses a string with an origin or an origin-pattern into a
+// PartitionExceptionListPattern.
+nsresult PartitioningExceptionList::GetExceptionListPattern(
+    const nsACString& aOriginPattern, PartitionExceptionListPattern& aPattern) {
+  NS_ENSURE_FALSE(aOriginPattern.IsEmpty(), NS_ERROR_INVALID_ARG);
+
+  if (aOriginPattern == "*") {
+    aPattern.mIsWildCard = true;
+    aPattern.mSuffix = "*";
+
+    return NS_OK;
+  }
+
+  nsAutoCString originPatternNoScheme;
+  nsresult rv = GetSchemeFromOrigin(aOriginPattern, aPattern.mScheme,
+                                    originPatternNoScheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (StringBeginsWith(originPatternNoScheme, "*"_ns)) {
+    NS_ENSURE_TRUE(originPatternNoScheme.Length() > 2, NS_ERROR_INVALID_ARG);
+
+    aPattern.mIsWildCard = true;
+    aPattern.mSuffix = Substring(originPatternNoScheme, 1);
+
+    return NS_OK;
+  }
+
+  aPattern.mIsWildCard = false;
+  aPattern.mSuffix = originPatternNoScheme;
 
   return NS_OK;
 }

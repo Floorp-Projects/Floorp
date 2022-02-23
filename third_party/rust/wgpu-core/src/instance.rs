@@ -270,14 +270,25 @@ impl<A: HalApi> Adapter<A> {
         // We are currently taking the filtering and blending together,
         // but we may reconsider this in the future if there are formats
         // in the wild for which these two capabilities do not match.
-        let filterable = caps.contains(Tfc::SAMPLED_LINEAR)
-            && (!caps.contains(Tfc::COLOR_ATTACHMENT)
-                || caps.contains(Tfc::COLOR_ATTACHMENT_BLEND));
+        flags.set(
+            wgt::TextureFormatFeatureFlags::FILTERABLE,
+            caps.contains(Tfc::SAMPLED_LINEAR)
+                && (!caps.contains(Tfc::COLOR_ATTACHMENT)
+                    || caps.contains(Tfc::COLOR_ATTACHMENT_BLEND)),
+        );
+
+        flags.set(
+            wgt::TextureFormatFeatureFlags::MULTISAMPLE,
+            caps.contains(Tfc::MULTISAMPLE),
+        );
+        flags.set(
+            wgt::TextureFormatFeatureFlags::MULTISAMPLE_RESOLVE,
+            caps.contains(Tfc::MULTISAMPLE_RESOLVE),
+        );
 
         wgt::TextureFormatFeatures {
             allowed_usages,
             flags,
-            filterable,
         }
     }
 
@@ -535,7 +546,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             None => return,
         };
 
-        profiling::scope!("enumerating", format!("{:?}", A::VARIANT));
+        profiling::scope!("enumerating", &*format!("{:?}", A::VARIANT));
         let hub = HalApi::hub(self);
         let mut token = Token::root();
 

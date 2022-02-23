@@ -300,7 +300,7 @@ public class GeckoView extends FrameLayout {
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({BACKEND_SURFACE_VIEW, BACKEND_TEXTURE_VIEW})
-  /* protected */ @interface ViewBackend {}
+  public @interface ViewBackend {}
 
   /**
    * Set which view should be used by this GeckoView instance to display content.
@@ -560,10 +560,16 @@ public class GeckoView extends FrameLayout {
     if (mSession != null) {
       final GeckoRuntime runtime = mSession.getRuntime();
       if (runtime != null) {
-        // onConfigurationChanged is not called for 180 degree orientation changes,
-        // we will miss such rotations and the screen orientation will not be
-        // updated.
-        runtime.orientationChanged(newConfig.orientation);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+          // onConfigurationChanged is not called for 180 degree orientation changes,
+          // we will miss such rotations and the screen orientation will not be
+          // updated.
+          //
+          // If API is 17+, we use DisplayManager API to detect all degree
+          // orientation change.
+          runtime.orientationChanged(newConfig.orientation);
+        }
+
         runtime.configurationChanged(newConfig);
       }
     }
@@ -711,7 +717,7 @@ public class GeckoView extends FrameLayout {
   }
 
   @Override
-  public void dispatchDraw(final Canvas canvas) {
+  public void dispatchDraw(final @Nullable Canvas canvas) {
     super.dispatchDraw(canvas);
 
     if (mSession != null) {

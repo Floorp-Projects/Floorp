@@ -12,6 +12,7 @@
 #include "mozilla/java/WebResponseWrappers.h"
 #include "mozilla/widget/WindowEvent.h"
 
+class nsPIDOMWindowOuter;
 class nsWindow;
 
 namespace mozilla {
@@ -61,8 +62,7 @@ class GeckoViewSupport final
                    jni::Object::Param aDispatcher,
                    jni::Object::Param aSessionAccessibility,
                    jni::Object::Param aInitData, jni::String::Param aId,
-                   jni::String::Param aChromeURI, int32_t aScreenId,
-                   bool aPrivateMode);
+                   jni::String::Param aChromeURI, bool aPrivateMode);
 
   // Close and destroy the nsWindow.
   void Close();

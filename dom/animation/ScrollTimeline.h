@@ -92,9 +92,6 @@ class ScrollTimeline final : public AnimationTimeline {
     }
   };
 
-  ScrollTimeline() = delete;
-  ScrollTimeline(Document* aDocument, const Scroller& aScroller);
-
   // FIXME: Bug 1737918: Rewrite this because @scroll-timeline will be obsolete.
   static already_AddRefed<ScrollTimeline> FromRule(
       const RawServoScrollTimelineRule& aRule, Document* aDocument,
@@ -148,13 +145,16 @@ class ScrollTimeline final : public AnimationTimeline {
   virtual ~ScrollTimeline() { Teardown(); }
 
  private:
+  ScrollTimeline() = delete;
+  ScrollTimeline(Document* aDocument, const Scroller& aScroller,
+                 StyleScrollDirection aDirection);
+
   // Note: This function is required to be idempotent, as it can be called from
   // both cycleCollection::Unlink() and ~ScrollTimeline(). When modifying this
   // function, be sure to preserve this property.
   void Teardown() { UnregisterFromScrollSource(); }
 
-  // Register/Unregister this scroll timeline to the element property.
-  void RegisterWithScrollSource();
+  // Unregister this scroll timeline to the element property.
   void UnregisterFromScrollSource();
 
   const nsIScrollableFrame* GetScrollFrame() const;
@@ -209,7 +209,16 @@ class ScrollTimeline final : public AnimationTimeline {
  */
 class ScrollTimelineSet {
  public:
-  using NonOwningScrollTimelineSet = HashSet<ScrollTimeline*>;
+  // Use StyleScrollDirection as the key, so we reuse the ScrollTimeline with
+  // the same source and the same direction.
+  // Note: the drawback of using the direction as the key is that we have to
+  // update this once we support more descriptors. This implementation assumes
+  // scroll-offsets will be obsolute. However, I'm pretty sure @scroll-timeline
+  // will be obsolute, based on the spec issue. We may have to do a lot of
+  // updates after the spec updates, so this tentative implmentation should be
+  // enough for now.
+  using NonOwningScrollTimelineMap =
+      HashMap<StyleScrollDirection, ScrollTimeline*>;
 
   ~ScrollTimelineSet() = default;
 
@@ -217,18 +226,20 @@ class ScrollTimelineSet {
   static ScrollTimelineSet* GetOrCreateScrollTimelineSet(Element* aElement);
   static void DestroyScrollTimelineSet(Element* aElement);
 
-  void AddScrollTimeline(ScrollTimeline& aScrollTimeline) {
-    Unused << mScrollTimelines.put(&aScrollTimeline);
+  NonOwningScrollTimelineMap::AddPtr LookupForAdd(StyleScrollDirection aKey) {
+    return mScrollTimelines.lookupForAdd(aKey);
   }
-  void RemoveScrollTimeline(ScrollTimeline& aScrollTimeline) {
-    mScrollTimelines.remove(&aScrollTimeline);
+  void Add(NonOwningScrollTimelineMap::AddPtr& aPtr, StyleScrollDirection aKey,
+           ScrollTimeline* aScrollTimeline) {
+    Unused << mScrollTimelines.add(aPtr, aKey, aScrollTimeline);
   }
+  void Remove(StyleScrollDirection aKey) { mScrollTimelines.remove(aKey); }
 
   bool IsEmpty() const { return mScrollTimelines.empty(); }
 
   void ScheduleAnimations() const {
     for (auto iter = mScrollTimelines.iter(); !iter.done(); iter.next()) {
-      iter.get()->ScheduleAnimations();
+      iter.get().value()->ScheduleAnimations();
     }
   }
 
@@ -241,9 +252,11 @@ class ScrollTimelineSet {
   // The ScrollTimeline is generated only by CSS, so if all the associated
   // Animations are gone, we don't need the ScrollTimeline anymore, so
   // ScrollTimelineSet doesn't have to keep it for the source element.
+  // We rely on ScrollTimeline::Teardown() to remove the unused ScrollTimeline
+  // from this hash map.
   // FIXME: Bug 1676794: We may have to update here if it's possible to create
   // ScrollTimeline via script.
-  NonOwningScrollTimelineSet mScrollTimelines;
+  NonOwningScrollTimelineMap mScrollTimelines;
 };
 
 }  // namespace dom

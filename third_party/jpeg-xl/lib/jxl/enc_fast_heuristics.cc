@@ -69,8 +69,8 @@ Status Heuristics(PassesEncoderState* enc_state,
   // TODO(veluca): DC CfL?
   size_t xcolortiles = DivCeil(frame_dim.xsize_blocks, kColorTileDimInBlocks);
   size_t ycolortiles = DivCeil(frame_dim.ysize_blocks, kColorTileDimInBlocks);
-  RunOnPool(
-      pool, 0, xcolortiles * ycolortiles, ThreadPool::SkipInit(),
+  JXL_RETURN_IF_ERROR(RunOnPool(
+      pool, 0, xcolortiles * ycolortiles, ThreadPool::NoInit,
       [&](size_t tile_id, size_t _) {
         size_t tx = tile_id % xcolortiles;
         size_t ty = tile_id / xcolortiles;
@@ -101,11 +101,11 @@ Status Heuristics(PassesEncoderState* enc_state,
           res = std::max(-128.0f, std::min(127.0f, roundf(best)));
         }
       },
-      "CfL");
+      "CfL"));
   Image3F pooled(frame_dim.xsize_padded / 4, frame_dim.ysize_padded / 4);
   Image3F summed(frame_dim.xsize_padded / 4, frame_dim.ysize_padded / 4);
-  RunOnPool(
-      pool, 0, frame_dim.ysize_padded / 4, ThreadPool::SkipInit(),
+  JXL_RETURN_IF_ERROR(RunOnPool(
+      pool, 0, frame_dim.ysize_padded / 4, ThreadPool::NoInit,
       [&](size_t y, size_t _) {
         for (size_t c = 0; c < 3; c++) {
           float* JXL_RESTRICT row_out = pooled.PlaneRow(c, y);
@@ -129,7 +129,7 @@ Status Heuristics(PassesEncoderState* enc_state,
           }
         }
       },
-      "MaxPool");
+      "MaxPool"));
   // TODO(veluca): better handling of the border
   // TODO(veluca): consider some faster blurring method.
   // TODO(veluca): parallelize.
@@ -263,8 +263,8 @@ Status Heuristics(PassesEncoderState* enc_state,
   // compute block sizes.
   // TODO(veluca): maybe this could be done per group: it would allow choosing
   // floating blocks better.
-  RunOnPool(
-      pool, 0, xcolortiles * ycolortiles, ThreadPool::SkipInit(),
+  JXL_RETURN_IF_ERROR(RunOnPool(
+      pool, 0, xcolortiles * ycolortiles, ThreadPool::NoInit,
       [&](size_t tile_id, size_t _) {
         size_t tx = tile_id % xcolortiles;
         size_t ty = tile_id / xcolortiles;
@@ -329,7 +329,7 @@ Status Heuristics(PassesEncoderState* enc_state,
           }
         }
       },
-      "QF+ACS+EPF");
+      "QF+ACS+EPF"));
   aux_out->DumpPlaneNormalized("qf", quant_field);
   aux_out->DumpPlaneNormalized("epf", shared.epf_sharpness);
   DumpAcStrategy(shared.ac_strategy, frame_dim.xsize_padded,
@@ -351,8 +351,8 @@ namespace jxl {
 HWY_EXPORT(Heuristics);
 Status FastEncoderHeuristics::LossyFrameHeuristics(
     PassesEncoderState* enc_state, ModularFrameEncoder* modular_frame_encoder,
-    const ImageBundle* linear, Image3F* opsin, ThreadPool* pool,
-    AuxOut* aux_out) {
+    const ImageBundle* linear, Image3F* opsin, const JxlCmsInterface& cms,
+    ThreadPool* pool, AuxOut* aux_out) {
   return HWY_DYNAMIC_DISPATCH(Heuristics)(enc_state, modular_frame_encoder,
                                           linear, opsin, pool, aux_out);
 }

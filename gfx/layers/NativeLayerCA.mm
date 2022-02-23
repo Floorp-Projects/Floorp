@@ -1254,6 +1254,11 @@ static NSString* NSStringForOSType(OSType type) {
 bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
   MOZ_ASSERT([mContentCALayer isKindOfClass:[AVSampleBufferDisplayLayer class]]);
 
+  // If the layer can't handle a new sample, early exit.
+  if (!((AVSampleBufferDisplayLayer*)mContentCALayer).readyForMoreMediaData) {
+    return false;
+  }
+
   // Convert the IOSurfaceRef into a CMSampleBuffer, so we can enqueue it in mContentCALayer
   CVPixelBufferRef pixelBuffer = nullptr;
   CVReturn cvValue =

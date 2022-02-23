@@ -34,7 +34,7 @@ namespace widget {
 class WindowSurfaceProvider final {
  public:
   WindowSurfaceProvider();
-  ~WindowSurfaceProvider();
+  ~WindowSurfaceProvider() = default;
 
   /**
    * Initializes the WindowSurfaceProvider by giving it the window
@@ -67,6 +67,15 @@ class WindowSurfaceProvider final {
   void CleanupWindowSurface();
 
   RefPtr<WindowSurface> mWindowSurface;
+
+  /* While CleanupResources() can be called from Main thread when nsWindow is
+   * destroyed/hidden, StartRemoteDrawingInRegion()/EndRemoteDrawingInRegion()
+   * is called from Compositor thread during rendering.
+   *
+   * As nsWindow CleanupResources() call comes from Gtk/X11 we can't synchronize
+   * that with WebRender so we use lock to synchronize the access.
+   */
+  mozilla::Mutex mMutex;
   // WindowSurface needs to be re-created as underlying window was changed.
   mozilla::Atomic<bool> mWindowSurfaceValid;
 #ifdef MOZ_WAYLAND

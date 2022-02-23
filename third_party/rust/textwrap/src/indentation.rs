@@ -4,56 +4,71 @@
 //! The functions here can be used to uniformly indent or dedent
 //! (unindent) word wrapped lines of text.
 
-/// Add prefix to each non-empty line.
+/// Indent each line by the given prefix.
+///
+/// # Examples
 ///
 /// ```
 /// use textwrap::indent;
 ///
-/// assert_eq!(indent("
-/// Foo
-/// Bar
-/// ", "  "), "
-///   Foo
-///   Bar
-/// ");
+/// assert_eq!(indent("First line.\nSecond line.\n", "  "),
+///            "  First line.\n  Second line.\n");
 /// ```
 ///
-/// Empty lines (lines consisting only of whitespace) are not indented
-/// and the whitespace is replaced by a single newline (`\n`):
+/// When indenting, trailing whitespace is stripped from the prefix.
+/// This means that empty lines remain empty afterwards:
 ///
 /// ```
 /// use textwrap::indent;
 ///
-/// assert_eq!(indent("
-/// Foo
-///
-/// Bar
-///   \t
-/// Baz
-/// ", "->"), "
-/// ->Foo
-///
-/// ->Bar
-///
-/// ->Baz
-/// ");
+/// assert_eq!(indent("First line.\n\n\nSecond line.\n", "  "),
+///            "  First line.\n\n\n  Second line.\n");
 /// ```
 ///
-/// Leading and trailing whitespace on non-empty lines is kept
-/// unchanged:
+/// Notice how `"\n\n\n"` remained as `"\n\n\n"`.
+///
+/// This feature is useful when you want to indent text and have a
+/// space between your prefix and the text. In this case, you _don't_
+/// want a trailing space on empty lines:
 ///
 /// ```
 /// use textwrap::indent;
 ///
-/// assert_eq!(indent(" \t  Foo   ", "->"), "-> \t  Foo   \n");
+/// assert_eq!(indent("foo = 123\n\nprint(foo)\n", "# "),
+///            "# foo = 123\n#\n# print(foo)\n");
+/// ```
+///
+/// Notice how `"\n\n"` became `"\n#\n"` instead of `"\n# \n"` which
+/// would have trailing whitespace.
+///
+/// Leading and trailing whitespace coming from the text itself is
+/// kept unchanged:
+///
+/// ```
+/// use textwrap::indent;
+///
+/// assert_eq!(indent(" \t  Foo   ", "->"), "-> \t  Foo   ");
 /// ```
 pub fn indent(s: &str, prefix: &str) -> String {
-    let mut result = String::new();
-    for line in s.lines() {
-        if line.chars().any(|c| !c.is_whitespace()) {
-            result.push_str(prefix);
-            result.push_str(line);
+    // We know we'll need more than s.len() bytes for the output, but
+    // without counting '\n' characters (which is somewhat slow), we
+    // don't know exactly how much. However, we can preemptively do
+    // the first doubling of the output size.
+    let mut result = String::with_capacity(2 * s.len());
+    let trimmed_prefix = prefix.trim_end();
+    for (idx, line) in s.split_terminator('\n').enumerate() {
+        if idx > 0 {
+            result.push('\n');
         }
+        if line.trim().is_empty() {
+            result.push_str(trimmed_prefix);
+        } else {
+            result.push_str(prefix);
+        }
+        result.push_str(line);
+    }
+    if s.ends_with('\n') {
+        // split_terminator will have eaten the final '\n'.
         result.push('\n');
     }
     result
@@ -138,41 +153,43 @@ pub fn dedent(s: &str) -> String {
 mod tests {
     use super::*;
 
-    /// Add newlines. Ensures that the final line in the vector also
-    /// has a newline.
-    fn add_nl(lines: &[&str]) -> String {
-        lines.join("\n") + "\n"
-    }
-
     #[test]
     fn indent_empty() {
         assert_eq!(indent("\n", "  "), "\n");
     }
 
     #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     fn indent_nonempty() {
-        let x = vec!["  foo",
-                     "bar",
-                     "  baz"];
-        let y = vec!["//  foo",
-                     "//bar",
-                     "//  baz"];
-        assert_eq!(indent(&add_nl(&x), "//"), add_nl(&y));
+        let text = [
+            "  foo\n",
+            "bar\n",
+            "  baz\n",
+        ].join("");
+        let expected = [
+            "//   foo\n",
+            "// bar\n",
+            "//   baz\n",
+        ].join("");
+        assert_eq!(indent(&text, "// "), expected);
     }
 
     #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     fn indent_empty_line() {
-        let x = vec!["  foo",
-                     "bar",
-                     "",
-                     "  baz"];
-        let y = vec!["//  foo",
-                     "//bar",
-                     "",
-                     "//  baz"];
-        assert_eq!(indent(&add_nl(&x), "//"), add_nl(&y));
+        let text = [
+            "  foo",
+            "bar",
+            "",
+            "  baz",
+        ].join("\n");
+        let expected = [
+            "//   foo",
+            "// bar",
+            "//",
+            "//   baz",
+        ].join("\n");
+        assert_eq!(indent(&text, "// "), expected);
     }
 
     #[test]
@@ -181,114 +198,150 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     fn dedent_multi_line() {
-        let x = vec!["    foo",
-                     "  bar",
-                     "    baz"];
-        let y = vec!["  foo",
-                     "bar",
-                     "  baz"];
-        assert_eq!(dedent(&add_nl(&x)), add_nl(&y));
+        let x = [
+            "    foo",
+            "  bar",
+            "    baz",
+        ].join("\n");
+        let y = [
+            "  foo",
+            "bar",
+            "  baz"
+        ].join("\n");
+        assert_eq!(dedent(&x), y);
     }
 
     #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     fn dedent_empty_line() {
-        let x = vec!["    foo",
-                     "  bar",
-                     "   ",
-                     "    baz"];
-        let y = vec!["  foo",
-                     "bar",
-                     "",
-                     "  baz"];
-        assert_eq!(dedent(&add_nl(&x)), add_nl(&y));
+        let x = [
+            "    foo",
+            "  bar",
+            "   ",
+            "    baz"
+        ].join("\n");
+        let y = [
+            "  foo",
+            "bar",
+            "",
+            "  baz"
+        ].join("\n");
+        assert_eq!(dedent(&x), y);
     }
 
     #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     fn dedent_blank_line() {
-        let x = vec!["      foo",
-                     "",
-                     "        bar",
-                     "          foo",
-                     "          bar",
-                     "          baz"];
-        let y = vec!["foo",
-                     "",
-                     "  bar",
-                     "    foo",
-                     "    bar",
-                     "    baz"];
-        assert_eq!(dedent(&add_nl(&x)), add_nl(&y));
+        let x = [
+            "      foo",
+            "",
+            "        bar",
+            "          foo",
+            "          bar",
+            "          baz",
+        ].join("\n");
+        let y = [
+            "foo",
+            "",
+            "  bar",
+            "    foo",
+            "    bar",
+            "    baz",
+        ].join("\n");
+        assert_eq!(dedent(&x), y);
     }
 
     #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     fn dedent_whitespace_line() {
-        let x = vec!["      foo",
-                     " ",
-                     "        bar",
-                     "          foo",
-                     "          bar",
-                     "          baz"];
-        let y = vec!["foo",
-                     "",
-                     "  bar",
-                     "    foo",
-                     "    bar",
-                     "    baz"];
-        assert_eq!(dedent(&add_nl(&x)), add_nl(&y));
+        let x = [
+            "      foo",
+            " ",
+            "        bar",
+            "          foo",
+            "          bar",
+            "          baz",
+        ].join("\n");
+        let y = [
+            "foo",
+            "",
+            "  bar",
+            "    foo",
+            "    bar",
+            "    baz",
+        ].join("\n");
+        assert_eq!(dedent(&x), y);
     }
 
     #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     fn dedent_mixed_whitespace() {
-        let x = vec!["\tfoo",
-                     "  bar"];
-        let y = vec!["\tfoo",
-                     "  bar"];
-        assert_eq!(dedent(&add_nl(&x)), add_nl(&y));
+        let x = [
+            "\tfoo",
+            "  bar",
+        ].join("\n");
+        let y = [
+            "\tfoo",
+            "  bar",
+        ].join("\n");
+        assert_eq!(dedent(&x), y);
     }
 
     #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     fn dedent_tabbed_whitespace() {
-        let x = vec!["\t\tfoo",
-                     "\t\t\tbar"];
-        let y = vec!["foo",
-                     "\tbar"];
-        assert_eq!(dedent(&add_nl(&x)), add_nl(&y));
+        let x = [
+            "\t\tfoo",
+            "\t\t\tbar",
+        ].join("\n");
+        let y = [
+            "foo",
+            "\tbar",
+        ].join("\n");
+        assert_eq!(dedent(&x), y);
     }
 
     #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     fn dedent_mixed_tabbed_whitespace() {
-        let x = vec!["\t  \tfoo",
-                     "\t  \t\tbar"];
-        let y = vec!["foo",
-                     "\tbar"];
-        assert_eq!(dedent(&add_nl(&x)), add_nl(&y));
+        let x = [
+            "\t  \tfoo",
+            "\t  \t\tbar",
+        ].join("\n");
+        let y = [
+            "foo",
+            "\tbar",
+        ].join("\n");
+        assert_eq!(dedent(&x), y);
     }
 
     #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     fn dedent_mixed_tabbed_whitespace2() {
-        let x = vec!["\t  \tfoo",
-                     "\t    \tbar"];
-        let y = vec!["\tfoo",
-                     "  \tbar"];
-        assert_eq!(dedent(&add_nl(&x)), add_nl(&y));
+        let x = [
+            "\t  \tfoo",
+            "\t    \tbar",
+        ].join("\n");
+        let y = [
+            "\tfoo",
+            "  \tbar",
+        ].join("\n");
+        assert_eq!(dedent(&x), y);
     }
 
     #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     fn dedent_preserve_no_terminating_newline() {
-        let x = vec!["  foo",
-                     "    bar"].join("\n");
-        let y = vec!["foo",
-                     "  bar"].join("\n");
+        let x = [
+            "  foo",
+            "    bar",
+        ].join("\n");
+        let y = [
+            "foo",
+            "  bar",
+        ].join("\n");
         assert_eq!(dedent(&x), y);
     }
 }

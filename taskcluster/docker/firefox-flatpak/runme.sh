@@ -137,13 +137,17 @@ install -D -m644 -t "${appdir}/lib/firefox/distribution" policies.json
 install -D -m644 -t "${appdir}/lib/firefox/browser/defaults/preferences" default-preferences.js
 install -D -m755 launch-script.sh "${appdir}/bin/firefox"
 
+# We need to set GTK_PATH to load cups printing backend which is missing in
+# freedesktop sdk.
 flatpak build-finish build                                      \
         --share=ipc                                             \
         --share=network                                         \
+        --env=GTK_PATH=/app/lib/gtkmodules                      \
         --socket=pulseaudio                                     \
         --socket=wayland                                        \
         --socket=x11                                            \
         --socket=pcsc                                           \
+        --socket=cups                                           \
         --require-version=0.11.1                                \
         --persist=.mozilla                                      \
         --filesystem=xdg-download:rw                            \

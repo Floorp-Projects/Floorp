@@ -12,7 +12,8 @@ using mozilla::OriginAttributesPattern
 namespace mozilla {
 namespace dom {
 
-[RefCounted] sync protocol PBackgroundSessionStorageManager
+[ChildImpl=virtual, ParentImpl=virtual]
+sync protocol PBackgroundSessionStorageManager
 {
  manager PBackground;
  manages PBackgroundSessionStorageCache;

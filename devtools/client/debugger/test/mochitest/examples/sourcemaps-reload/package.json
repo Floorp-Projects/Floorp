@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Rebuild assets for sourcemaps-reload test, see README.md in the same folder",
   "scripts": {
+    "pack": "cd v1 && webpack && cd ../v2 && webpack && cd ../v3 && webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

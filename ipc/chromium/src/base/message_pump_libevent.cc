@@ -18,7 +18,7 @@
 #include "base/time.h"
 #include "nsDependentSubstring.h"
 #include "event.h"
-#include "mozilla/ProfilerLabels.h"
+#include "GeckoProfiler.h"
 #include "mozilla/UniquePtr.h"
 
 // This macro checks that the _EVENT_SIZEOF_* constants defined in
@@ -105,8 +105,15 @@ bool MessagePumpLibevent::FileDescriptorWatcher::StopWatchingFileDescriptor() {
   return (rv == 0);
 }
 
+bool MessagePumpLibevent::awake_ = false;
+
 // Called if a byte is received on the wakeup pipe.
 void MessagePumpLibevent::OnWakeup(int socket, short flags, void* context) {
+  if (!awake_) {
+    profiler_thread_wake();
+    awake_ = true;
+  }
+
   AUTO_PROFILER_LABEL("MessagePumpLibevent::OnWakeup", OTHER);
 
   base::MessagePumpLibevent* that =
@@ -238,6 +245,10 @@ bool MessagePumpLibevent::WatchFileDescriptor(int fd, bool persistent,
 
 void MessagePumpLibevent::OnLibeventNotification(int fd, short flags,
                                                  void* context) {
+  if (!awake_) {
+    profiler_thread_wake();
+    awake_ = true;
+  }
   AUTO_PROFILER_LABEL("MessagePumpLibevent::OnLibeventNotification", OTHER);
 
   Watcher* watcher = static_cast<Watcher*>(context);
@@ -307,6 +318,10 @@ bool MessagePumpLibevent::CatchSignal(int sig, SignalEvent* sigevent,
 
 void MessagePumpLibevent::OnLibeventSignalNotification(int sig, short flags,
                                                        void* context) {
+  if (!awake_) {
+    profiler_thread_wake();
+    awake_ = true;
+  }
   AUTO_PROFILER_LABEL("MessagePumpLibevent::OnLibeventSignalNotification",
                       OTHER);
 
@@ -343,6 +358,8 @@ void MessagePumpLibevent::Run(Delegate* delegate) {
     // but to service all pending events when it wakes up.
     AUTO_PROFILER_LABEL("MessagePumpLibevent::Run::Wait", IDLE);
     if (delayed_work_time_.is_null()) {
+      profiler_thread_sleep();
+      awake_ = false;
       event_base_loop(event_base_, EVLOOP_ONCE);
     } else {
       TimeDelta delay = delayed_work_time_ - TimeTicks::Now();
@@ -351,6 +368,8 @@ void MessagePumpLibevent::Run(Delegate* delegate) {
         poll_tv.tv_sec = delay.InSeconds();
         poll_tv.tv_usec = delay.InMicroseconds() % Time::kMicrosecondsPerSecond;
         event_base_loopexit(event_base_, &poll_tv);
+        profiler_thread_sleep();
+        awake_ = false;
         event_base_loop(event_base_, EVLOOP_ONCE);
       } else {
         // It looks like delayed_work_time_ indicates a time in the past, so we

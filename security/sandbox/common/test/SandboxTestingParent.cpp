@@ -9,6 +9,8 @@
 #include "nsIObserverService.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/Services.h"
+#include "mozilla/SyncRunnable.h"
+#include "nsDirectoryServiceUtils.h"
 
 namespace mozilla {
 
@@ -76,21 +78,17 @@ void SandboxTestingParent::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 mozilla::ipc::IPCResult SandboxTestingParent::RecvReportTestResults(
-    const nsCString& testName, bool shouldSucceed, bool didSucceed,
-    const nsCString& resultMessage) {
+    const nsCString& testName, bool passed, const nsCString& resultMessage) {
   NS_DispatchToMainThread(
       NS_NewRunnableFunction("SandboxReportTestResults", [=]() {
         nsCOMPtr<nsIObserverService> observerService =
             mozilla::services::GetObserverService();
         MOZ_RELEASE_ASSERT(observerService);
-        nsCString shouldPermit(shouldSucceed ? "true"_ns : "false"_ns);
-        nsCString wasPermitted(didSucceed ? "true"_ns : "false"_ns);
+        nsCString passedStr(passed ? "true"_ns : "false"_ns);
         nsString json;
         json += u"{ \"testid\" : \""_ns + NS_ConvertUTF8toUTF16(testName) +
-                u"\", \"shouldPermit\" : "_ns +
-                NS_ConvertUTF8toUTF16(shouldPermit) +
-                u", \"wasPermitted\" : "_ns +
-                NS_ConvertUTF8toUTF16(wasPermitted) + u", \"message\" : \""_ns +
+                u"\", \"passed\" : "_ns + NS_ConvertUTF8toUTF16(passedStr) +
+                u", \"message\" : \""_ns +
                 NS_ConvertUTF8toUTF16(resultMessage) + u"\" }"_ns;
         observerService->NotifyObservers(nullptr, "sandbox-test-result",
                                          json.BeginReading());
@@ -107,6 +105,21 @@ mozilla::ipc::IPCResult SandboxTestingParent::RecvTestCompleted() {
         MOZ_RELEASE_ASSERT(observerService);
         observerService->NotifyObservers(nullptr, "sandbox-test-done", 0);
       }));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SandboxTestingParent::RecvGetSpecialDirectory(
+    const nsCString& aSpecialDirName, nsString* aDirPath) {
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "SandboxTestingParent::RecvGetSpecialDirectory", [&]() {
+        nsCOMPtr<nsIFile> dir;
+        NS_GetSpecialDirectory(aSpecialDirName.get(), getter_AddRefs(dir));
+        if (dir) {
+          dir->GetPath(*aDirPath);
+        }
+      });
+  SyncRunnable::DispatchToThread(GetMainThreadEventTarget(), runnable,
+                                 /*aForceDispatch*/ true);
   return IPC_OK();
 }
 

@@ -195,6 +195,8 @@ def _instantiate_metrics(
     objects, and merge them into a single tree.
     """
     global_no_lint = content.get("no_lint", [])
+    global_tags = content.get("$tags", [])
+    assert isinstance(global_tags, list)
 
     for category_key, category_val in content.items():
         if category_key.startswith("$"):
@@ -243,6 +245,10 @@ def _instantiate_metrics(
 
             if metric_obj is not None:
                 metric_obj.no_lint = list(set(metric_obj.no_lint + global_no_lint))
+                if len(global_tags):
+                    metric_obj.metadata["tags"] = list(
+                        set(metric_obj.metadata.get("tags", []) + global_tags)
+                    )
 
                 if isinstance(filepath, Path):
                     metric_obj.defined_in["filepath"] = str(filepath)

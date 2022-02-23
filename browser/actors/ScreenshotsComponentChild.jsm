@@ -7,6 +7,14 @@
 
 var EXPORTED_SYMBOLS = ["ScreenshotsComponentChild"];
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ScreenshotsOverlayChild: "resource:///modules/ScreenshotsOverlayChild.jsm",
+});
+
 class ScreenshotsComponentChild extends JSWindowActorChild {
   receiveMessage(message) {
     switch (message.name) {
@@ -20,6 +28,26 @@ class ScreenshotsComponentChild extends JSWindowActorChild {
         return this.getVisibleBounds();
     }
     return null;
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "keydown":
+        if (event.key === "Escape") {
+          this.requestCancelScreenshot();
+        }
+        break;
+      case "beforeunload":
+        this.requestCancelScreenshot();
+        break;
+    }
+  }
+
+  /**
+   * Send a request to cancel the screenshot to the parent process
+   */
+  requestCancelScreenshot() {
+    this.sendAsyncMessage("Screenshots:CancelScreenshot", null);
   }
 
   /**
@@ -64,13 +92,23 @@ class ScreenshotsComponentChild extends JSWindowActorChild {
    * @returns {Boolean} true when document is ready and the overlay is shown
    * otherwise false
    */
-  async startScreenshotsOverlay(details = {}) {
+  async startScreenshotsOverlay() {
     try {
       await this.documentIsReady();
     } catch (ex) {
       console.warn(`ScreenshotsComponentChild: ${ex.message}`);
       return false;
     }
+    await this.documentIsReady();
+    let overlay =
+      this._overlay ||
+      (this._overlay = new ScreenshotsOverlayChild.AnonymousContentOverlay(
+        this.document,
+        this
+      ));
+    this.document.addEventListener("keydown", this);
+    this.document.ownerGlobal.addEventListener("beforeunload", this);
+    overlay.initialize();
     return true;
   }
 
@@ -81,7 +119,9 @@ class ScreenshotsComponentChild extends JSWindowActorChild {
    *   true when the overlay has been removed otherwise false
    */
   endScreenshotsOverlay() {
-    // this function will be implemented soon
+    this.document.removeEventListener("keydown", this);
+    this.document.ownerGlobal.removeEventListener("beforeunload", this);
+    this._overlay?.tearDown();
     return true;
   }
 

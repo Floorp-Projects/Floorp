@@ -92,15 +92,21 @@ impl Http3TestServer {
         }
     }
 
-    fn handle_streeam_writable(&mut self, mut stream: Http3OrWebTransportStream) {
+    fn handle_stream_writable(&mut self, mut stream: Http3OrWebTransportStream) {
         if let Some(data) = self.responses.get_mut(&stream) {
-            let sent = stream.send_data(&data).unwrap();
-            if sent < data.len() {
-                let new_d = (*data).split_off(sent);
-                *data = new_d;
-            } else {
-                stream.stream_close_send().unwrap();
-                self.responses.remove(&stream);
+            match stream.send_data(&data) {
+                Ok(sent) => {
+                    if sent < data.len() {
+                        let new_d = (*data).split_off(sent);
+                        *data = new_d;
+                    } else {
+                        stream.stream_close_send().unwrap();
+                        self.responses.remove(&stream);
+                    }
+                }
+                Err(_) => {
+                    eprintln!("Unexpected error");
+                }
             }
         }
     }
@@ -329,7 +335,7 @@ impl HttpServer for Http3TestServer {
                         }
                     }
                 }
-                Http3ServerEvent::DataWritable { stream } => self.handle_streeam_writable(stream),
+                Http3ServerEvent::DataWritable { stream } => self.handle_stream_writable(stream),
                 Http3ServerEvent::StateChange { conn, state } => {
                     if matches!(state, neqo_http3::Http3State::Connected) {
                         let mut h = DefaultHasher::new();

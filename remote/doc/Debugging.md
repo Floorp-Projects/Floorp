@@ -29,7 +29,7 @@ you can use the `toolkit.dump.emit` [preference]:
 Logging observer notifications
 ------------------------------
 
-[System observer notifications] are used extensively throughout the
+Observer notifications are used extensively throughout the
 code and it can sometimes be useful to log these to see what is
 available and when they are fired.
 
@@ -47,7 +47,7 @@ This enables `LogLevel::Debug` level information and places all
 output in the file service.log in your current working directory.
 
 
-[preference]: ./Prefs.html
+[preference]: Prefs.md
 [System observer notifications]: https://developer.mozilla.org/en-US/docs/Archive/Add-ons/Overlay_Extensions/XUL_School/Observer_Notifications
 [prlog.h]: https://searchfox.org/mozilla-central/source/nsprpub/pr/include/prlog.h
 [wiki]: https://wiki.mozilla.org/Remote/Developer_Resources

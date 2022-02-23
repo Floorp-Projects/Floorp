@@ -5,7 +5,7 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use super::{Array, MTLTextureType, NSUInteger};
+use super::{MTLTextureType, NSUInteger};
 use objc::runtime::{NO, YES};
 
 #[repr(u64)]
@@ -161,6 +161,24 @@ impl StructMemberRef {
     }
 }
 
+pub enum MTLStructMemberArray {}
+
+foreign_obj_type! {
+    type CType = MTLStructMemberArray;
+    pub struct StructMemberArray;
+    pub struct StructMemberArrayRef;
+}
+
+impl StructMemberArrayRef {
+    pub fn object_at(&self, index: NSUInteger) -> Option<&StructMemberRef> {
+        unsafe { msg_send![self, objectAtIndexedSubscript: index] }
+    }
+
+    pub fn count(&self) -> NSUInteger {
+        unsafe { msg_send![self, count] }
+    }
+}
+
 pub enum MTLStructType {}
 
 foreign_obj_type! {
@@ -170,7 +188,7 @@ foreign_obj_type! {
 }
 
 impl StructTypeRef {
-    pub fn members(&self) -> &Array<StructMember> {
+    pub fn members(&self) -> &StructMemberArrayRef {
         unsafe { msg_send![self, members] }
     }
 

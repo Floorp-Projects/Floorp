@@ -131,7 +131,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   const std::string mPCHandle;
-  RefPtr<JsepTransceiver> mJsepTransceiver;
+  const RefPtr<JsepTransceiver> mJsepTransceiver;
   bool mHaveStartedReceiving = false;
   bool mHaveSetupTransport = false;
   nsCOMPtr<nsISerialEventTarget> mMainThread;

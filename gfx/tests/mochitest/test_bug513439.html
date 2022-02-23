@@ -21,12 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=513439
 
 SimpleTest.waitForExplicitFinish();
 
-var domWindowUtils = SpecialPowers.DOMWindowUtils;
 SpecialPowers.pushPrefEnv({set: [["layout.css.devPixelsPerPx", "2"]]}, () => {
-  is(domWindowUtils.screenPixelsPerCSSPixel, 2, "devPixelsPerPx wasn't set correctly");
+  is(window.devicePixelRatio, 2, "devPixelsPerPx wasn't set correctly");
 
   SpecialPowers.pushPrefEnv({set: [["layout.css.devPixelsPerPx", "1.5"]]}, () => {
-    is(domWindowUtils.screenPixelsPerCSSPixel, 1.5, "devPixelsPerPx wasn't set correctly");
+    is(window.devicePixelRatio, 1.5, "devPixelsPerPx wasn't set correctly");
     SimpleTest.finish();
   });
 });

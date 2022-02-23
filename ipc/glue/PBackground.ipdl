@@ -80,7 +80,7 @@ using class mozilla::dom::SSCacheCopy from "mozilla/dom/PBackgroundSessionStorag
 namespace mozilla {
 namespace ipc {
 
-[RefCounted, NeedsOtherPid]
+[NeedsOtherPid, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PBackground
 {
   manages PBackgroundDataBridge;
@@ -271,8 +271,7 @@ parent:
 
   async PMediaTransport();
 
-  async PVerifySSLServerCert(ByteArray aServerCert,
-                             ByteArray[] aPeerCertChain,
+  async PVerifySSLServerCert(ByteArray[] aPeerCertChain,
                              nsCString aHostName,
                              int32_t aPort,
                              OriginAttributes aOriginAttributes,

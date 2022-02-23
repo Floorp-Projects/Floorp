@@ -42,10 +42,6 @@ class MediaEngineWebRTC : public MediaEngine {
  public:
   MediaEngineWebRTC();
 
-  // Enable periodic fake "devicechange" event. Must always be called from the
-  // same thread, and must be disabled before shutdown.
-  void SetFakeDeviceChangeEventsEnabled(bool aEnable) override;
-
   // Clients should ensure to clean-up sources video/audio sources
   // before invoking Shutdown on this class.
   void Shutdown() override;
@@ -68,13 +64,10 @@ class MediaEngineWebRTC : public MediaEngine {
 
   void DeviceListChanged() { mDeviceListChangeEvent.Notify(); }
 
-  static void FakeDeviceChangeEventTimerTick(nsITimer* aTimer, void* aClosure);
-
   MediaEventListener mCameraListChangeListener;
   MediaEventListener mMicrophoneListChangeListener;
   MediaEventListener mSpeakerListChangeListener;
   MediaEventProducer<void> mDeviceListChangeEvent;
-  nsCOMPtr<nsITimer> mFakeDeviceChangeEventTimer;
 };
 
 }  // namespace mozilla

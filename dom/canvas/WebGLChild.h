@@ -7,6 +7,7 @@
 #define WEBGLCHILD_H_
 
 #include "mozilla/dom/PWebGLChild.h"
+#include "mozilla/WeakPtr.h"
 
 #include <string>
 

@@ -472,7 +472,7 @@ nsHTTPSOnlyUtils::PotentiallyDowngradeHttpsFirstRequest(nsIChannel* aChannel,
     // corresponding NS_ERROR_*.
     // To do so we convert the response status to  an nsresult error
     // Every NS_OK that is NOT an 4xx or 5xx error code won't get downgraded.
-    if (responseStatus >= 400 && responseStatus < 512) {
+    if (responseStatus >= 400 && responseStatus < 600) {
       // HttpProxyResponseToErrorCode() maps 400 and 404 on
       // the same error as a 500 status which would lead to no downgrade
       // later on. For that reason we explicit filter for 400 and 404 status
@@ -986,8 +986,11 @@ TestHTTPAnswerRunnable::Notify(nsITimer* aTimer) {
   nsCOMPtr<nsIChannel> origChannel = mDocumentLoadListener->GetChannel();
   nsCOMPtr<nsILoadInfo> origLoadInfo = origChannel->LoadInfo();
   uint32_t origHttpsOnlyStatus = origLoadInfo->GetHttpsOnlyStatus();
-  if ((origHttpsOnlyStatus &
-       nsILoadInfo::HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS)) {
+  uint32_t topLevelLoadInProgress =
+      origHttpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS;
+  uint32_t downloadInProgress =
+      origHttpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_DOWNLOAD_IN_PROGRESS;
+  if (topLevelLoadInProgress || downloadInProgress) {
     return NS_OK;
   }
 

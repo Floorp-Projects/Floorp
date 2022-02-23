@@ -468,6 +468,17 @@ class BaseMatrix {
 
     return MatrixSize(major, minor);
   }
+
+  /**
+   * Returns true if the matrix preserves distances, i.e. a rigid transformation
+   * that doesn't change size or shape). Such a matrix has uniform unit scaling
+   * and an orthogonal basis.
+   */
+  bool PreservesDistance() const {
+    return FuzzyEqual(_11 * _11 + _12 * _12, 1.0) &&
+           FuzzyEqual(_21 * _21 + _22 * _22, 1.0) &&
+           FuzzyEqual(_11 * _21 + _12 * _22, 0.0);
+  }
 };
 
 typedef BaseMatrix<Float> Matrix;

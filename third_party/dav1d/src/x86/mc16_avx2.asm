@@ -3017,11 +3017,11 @@ cglobal prep_8tap_scaled_16bpc, 4, 14, 16, 0xe0, tmp, src, ss, w, h, mx, my, dx,
 %endif
     dec                  hd
     jz .ret
-    mova                xm8, [rsp+0x00]
-    movd                xm9, [rsp+0x30]
     add                 myd, dyd
     test                myd, ~0x3ff
     jz .w4_loop
+    mova                xm8, [rsp+0x00]
+    movd                xm9, [rsp+0x30]
     movu                xm4, [srcq]
     movu                xm5, [srcq+r4]
     test                myd, 0x400
@@ -5789,7 +5789,7 @@ cglobal resize_16bpc, 6, 12, 16, dst, dst_stride, src, src_stride, \
     vpbroadcastd         m5, dxm
     vpbroadcastd         m8, mx0m
     vpbroadcastd         m6, src_wm
- DEFINE_ARGS dst, dst_stride, src, src_stride, dst_w, h, x, picptr, _, pxmax
+ DEFINE_ARGS dst, dst_stride, src, src_stride, dst_w, h, x, _, _, pxmax
     LEA                  r7, $$
 %define base r7-$$
     vpbroadcastd         m3, [base+pd_64]

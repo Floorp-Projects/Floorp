@@ -17,6 +17,7 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    "HTMLSelectEventListener.cpp",
     "nsButtonFrameRenderer.cpp",
     "nsCheckboxRadioFrame.cpp",
     "nsColorControlFrame.cpp",
@@ -50,5 +51,3 @@ LOCAL_INCLUDES += [
     "/dom/base",
     "/dom/html",
 ]
-
-REQUIRES_UNIFIED_BUILD = True

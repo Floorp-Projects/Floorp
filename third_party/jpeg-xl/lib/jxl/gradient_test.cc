@@ -25,6 +25,7 @@
 #include "lib/jxl/dec_file.h"
 #include "lib/jxl/dec_params.h"
 #include "lib/jxl/enc_cache.h"
+#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_file.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/image.h"
@@ -164,9 +165,11 @@ void TestGradient(ThreadPool* pool, uint32_t color0, uint32_t color1,
   PaddedBytes compressed;
   AuxOut* aux_out = nullptr;
   PassesEncoderState enc_state;
-  EXPECT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed, aux_out, pool));
+  EXPECT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed, GetJxlCms(),
+                         aux_out, pool));
   EXPECT_TRUE(DecodeFile(dparams, compressed, &io2, pool));
-  EXPECT_TRUE(io2.Main().TransformTo(io2.metadata.m.color_encoding, pool));
+  EXPECT_TRUE(
+      io2.Main().TransformTo(io2.metadata.m.color_encoding, GetJxlCms(), pool));
 
   if (use_gradient) {
     // Test that the gradient map worked. For that, we take a second derivative

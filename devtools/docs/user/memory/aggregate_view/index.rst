@@ -53,7 +53,7 @@ Each type gets a row in the table, and rows are ordered by the amount of memory 
 - The "Total Bytes" column shows you the number of bytes occupied by objects in each category, and that number as a percentage of the whole heap size for that tab.
 
 
-The screenshots in this section are taken from a snapshot of the `monster example page <https://developer.mozilla.org/en-US/docs/Tools/Memory/Monster_example>`_.
+The screenshots in this section are taken from a snapshot of the :doc:`monster example page <../monster_example/index>`.
 
 
 For example, in the screenshot above, you can see that:
@@ -74,9 +74,9 @@ Click this to see every instance of that type. For example, the entry for ``Arra
   :class: center
 
 
-For each instance, you can see the `retained size and shallow size <https://developer.mozilla.org/en-US/docs/Tools/Memory/Dominators#shallow_and_retained_size>`_ of that instance. In this case, you can see that the first three arrays have a fairly large shallow size (5% of the total heap usage) and a much larger retained size (26% of the total).
+For each instance, you can see the :ref:`retained size and shallow size <shallow-and-retained-size>` of that instance. In this case, you can see that the first three arrays have a fairly large shallow size (5% of the total heap usage) and a much larger retained size (26% of the total).
 
-On the right-hand side is a pane that just says "Select an item to view its retaining paths". If you select an item, you'll see the `Retaining paths panel <https://developer.mozilla.org/en-US/docs/Tools/Memory/Dominators_view#retaining_paths_panel>`_ for that item:
+On the right-hand side is a pane that just says "Select an item to view its retaining paths". If you select an item, you'll see the :ref:`Retaining paths panel <memory-dominators-view-retaining-paths-panel>` for that item:
 
 .. image:: memory-tool-in-group-retaining-paths.png
   :class: center

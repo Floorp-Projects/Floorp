@@ -96,7 +96,7 @@ running
 
 .. code-block:: shell
 
-  ./mach npm test --prefix=browser/components/newtab && 
+  ./mach npm test --prefix=browser/components/newtab &&
   ./mach npm run debugcoverage --prefix=browser/components/newtab
 
 Detailed Docs

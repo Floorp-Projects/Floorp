@@ -7,6 +7,7 @@
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
 
+#include "js/loader/LoadedScript.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -25,12 +26,12 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTargetBinding.h"
-#include "mozilla/dom/LoadedScript.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/EventTimelineMarker.h"
@@ -1233,11 +1234,13 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
-      CORS_NONE, aElement->OwnerDoc()->GetReferrerPolicy(), aElement,
-      aElement->OwnerDoc()->NodePrincipal(), nullptr);
+  RefPtr<JS::loader::ScriptFetchOptions> fetchOptions =
+      new JS::loader::ScriptFetchOptions(
+          CORS_NONE, aElement->OwnerDoc()->GetReferrerPolicy(),
+          aElement->OwnerDoc()->NodePrincipal());
 
-  RefPtr<EventScript> eventScript = new EventScript(fetchOptions, uri);
+  RefPtr<JS::loader::EventScript> eventScript =
+      new JS::loader::EventScript(fetchOptions, uri, aElement);
 
   JS::CompileOptions options(cx);
   // Use line 0 to make the function body starts from line 1.
@@ -2143,13 +2146,11 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(EventListenerManager::ListenerSignalFollower)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(
     EventListenerManager::ListenerSignalFollower)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListener)
-  AbortFollower::Traverse(static_cast<AbortFollower*>(tmp), cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(
     EventListenerManager::ListenerSignalFollower)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mListener)
-  AbortFollower::Unlink(static_cast<AbortFollower*>(tmp));
   tmp->mListenerManager = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 

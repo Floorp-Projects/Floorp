@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "bumpalo"
-version = "3.8.0"
+version = "3.9.1"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
 exclude = ["/.github/*", "/benches", "/tests", "valgrind.supp", "bumpalo.png"]
 description = "A fast bump allocation arena for Rust."

@@ -57,7 +57,6 @@ imgRequest::imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey)
       mLoadId(nullptr),
       mFirstProxy(nullptr),
       mValidator(nullptr),
-      mInnerWindowId(0),
       mCORSMode(CORS_NONE),
       mImageErrorCode(NS_OK),
       mImageAvailable(false),
@@ -65,6 +64,7 @@ imgRequest::imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey)
       mIsCrossSiteNoCORSRequest(false),
       mMutex("imgRequest"),
       mProgressTracker(new ProgressTracker()),
+      mInnerWindowId(0),
       mIsMultiPartChannel(false),
       mIsInCache(false),
       mDecodeRequested(false),
@@ -274,6 +274,16 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy* proxy, nsresult aStatus) {
   }
 
   return NS_OK;
+}
+
+uint64_t imgRequest::InnerWindowID() const {
+  MutexAutoLock lock(mMutex);
+  return mInnerWindowId;
+}
+
+void imgRequest::SetInnerWindowID(uint64_t aInnerWindowId) {
+  MutexAutoLock lock(mMutex);
+  mInnerWindowId = aInnerWindowId;
 }
 
 void imgRequest::CancelAndAbort(nsresult aStatus) {
@@ -556,8 +566,7 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry,
   //
   // We have the original URI in the cache key though, probably we should be
   // using that instead of relying on Init() getting called.
-  auto info = nsContentUtils::GetSubresourceCacheValidationInfo(
-      aRequest, uri, nsContentUtils::SubresourceKind::Image);
+  auto info = nsContentUtils::GetSubresourceCacheValidationInfo(aRequest, uri);
 
   // Expiration time defaults to 0. We set the expiration time on our entry if
   // it hasn't been set yet.
@@ -961,6 +970,7 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInStr,
   RefPtr<ProgressTracker> progressTracker;
   bool isMultipart = false;
   bool newPartPending = false;
+  uint64_t innerWindowId = 0;
 
   // Retrieve and update our state.
   {
@@ -970,6 +980,7 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInStr,
     isMultipart = mIsMultiPartChannel;
     newPartPending = mNewPartPending;
     mNewPartPending = false;
+    innerWindowId = mInnerWindowId;
   }
 
   // If this is a new part, we need to sniff its content type and create an
@@ -977,7 +988,7 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInStr,
   if (newPartPending) {
     NewPartResult result =
         PrepareForNewPart(aRequest, aInStr, aCount, mURI, isMultipart, image,
-                          progressTracker, mInnerWindowId);
+                          progressTracker, innerWindowId);
     bool succeeded = result.mSucceeded;
 
     if (result.mImage) {

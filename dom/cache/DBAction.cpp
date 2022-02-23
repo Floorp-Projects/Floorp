@@ -182,7 +182,8 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
           // Expression.
           MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
               nsCOMPtr<mozIStorageConnection>, storageService,
-              OpenDatabaseWithFileURL, dbFileUrl, ""_ns),
+              OpenDatabaseWithFileURL, dbFileUrl, ""_ns,
+              mozIStorageService::CONNECTION_DEFAULT),
           // Predicate.
           IsDatabaseCorruptionError,
           // Fallback.
@@ -197,7 +198,8 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
 
             QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
                 nsCOMPtr<mozIStorageConnection>, storageService,
-                OpenDatabaseWithFileURL, dbFileUrl, ""_ns));
+                OpenDatabaseWithFileURL, dbFileUrl, ""_ns,
+                mozIStorageService::CONNECTION_DEFAULT));
           })));
 
   // Check the schema to make sure it is not too old.
@@ -211,7 +213,8 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
 
     QM_TRY_UNWRAP(conn, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
                             nsCOMPtr<mozIStorageConnection>, storageService,
-                            OpenDatabaseWithFileURL, dbFileUrl, ""_ns));
+                            OpenDatabaseWithFileURL, dbFileUrl, ""_ns,
+                            mozIStorageService::CONNECTION_DEFAULT));
   }
 
   QM_TRY(MOZ_TO_RESULT(db::InitializeConnection(*conn)));

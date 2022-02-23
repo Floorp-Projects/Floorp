@@ -12,6 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://remote/content/shared/Log.jsm",
+  truncate: "chrome://remote/content/shared/Format.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
@@ -22,14 +23,29 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
 const webProgressListeners = new Set();
 
 /**
- * Wait until the initial load of the given browsing context is done.
+ * Wait until the initial load of the given WebProgress is done.
  *
- * @param {BrowsingContext} browsingContext
- *     The browsing context to check.
+ * @param {WebProgress} webProgress
+ *     The WebProgress instance to observe.
+ * @param {Object=} options
+ * @param {Boolean=} options.resolveWhenStarted
+ *     Flag to indicate that the Promise has to be resolved when the
+ *     page load has been started. Otherwise wait until the page has
+ *     finished loading. Defaults to `false`.
+ *
+ * @returns {Promise}
+ *     Promise which resolves when the page load is in the expected state.
+ *     Values as returned:
+ *       - {nsIURI} currentURI The current URI of the page
+ *       - {nsIURI} targetURI Target URI of the navigation
  */
-function waitForInitialNavigationCompleted(browsingContext) {
+async function waitForInitialNavigationCompleted(webProgress, options = {}) {
+  const { resolveWhenStarted = false } = options;
+
+  const browsingContext = webProgress.browsingContext;
+
   // Start the listener right away to avoid race conditions.
-  const listener = new ProgressListener(browsingContext.webProgress);
+  const listener = new ProgressListener(webProgress, { resolveWhenStarted });
   const navigated = listener.start();
 
   // Right after a browsing context has been attached it could happen that
@@ -44,38 +60,58 @@ function waitForInitialNavigationCompleted(browsingContext) {
   // no longer loading, assume the navigation is done and return.
   if (!isInitial && !listener.isLoadingDocument) {
     logger.trace(
-      `[${browsingContext.id}] Document already finished loading: ${browsingContext.currentURI?.spec}`
+      truncate`[${browsingContext.id}] Document already finished loading: ${browsingContext.currentURI?.spec}`
     );
 
+    // Will resolve the navigated promise.
     listener.stop();
-    return Promise.resolve();
   }
 
-  return navigated;
+  await navigated;
+
+  return {
+    currentURI: listener.currentURI,
+    targetURI: listener.targetURI,
+  };
 }
 
 /**
- * WebProgressListener to observe page loads.
- *
- * @param {WebProgress} webProgress
- *     The web progress to attach the listener to.
- * @param {Object=} options
- * @param {Number=} options.unloadTimeout
- *     Time to allow before the page gets unloaded. Defaults to 200ms.
+ * WebProgressListener to observe for page loads.
  */
 class ProgressListener {
-  #resolve;
+  #resolveWhenStarted;
   #unloadTimeout;
-  #unloadTimer;
   #webProgress;
 
+  #resolve;
+  #seenStartFlag;
+  #targetURI;
+  #unloadTimer;
+
+  /**
+   * Create a new WebProgressListener instance.
+   *
+   * @param {WebProgress} webProgress
+   *     The web progress to attach the listener to.
+   * @param {Object=} options
+   * @param {Boolean=} options.resolveWhenStarted
+   *     Flag to indicate that the Promise has to be resolved when the
+   *     page load has been started. Otherwise wait until the page has
+   *     finished loading. Defaults to `false`.
+   * @param {Number=} options.unloadTimeout
+   *     Time to allow before the page gets unloaded. Defaults to 200ms.
+   */
   constructor(webProgress, options = {}) {
-    const { unloadTimeout = 200 } = options;
+    const { resolveWhenStarted = false, unloadTimeout = 200 } = options;
+
+    this.#resolveWhenStarted = resolveWhenStarted;
+    this.#unloadTimeout = unloadTimeout;
+    this.#webProgress = webProgress;
 
     this.#resolve = null;
-    this.#unloadTimeout = unloadTimeout;
+    this.#seenStartFlag = false;
+    this.#targetURI = null;
     this.#unloadTimer = null;
-    this.#webProgress = webProgress;
   }
 
   get browsingContext() {
@@ -86,29 +122,60 @@ class ProgressListener {
     return this.#webProgress.browsingContext.currentURI;
   }
 
+  get targetURI() {
+    return this.#targetURI;
+  }
+
   get isLoadingDocument() {
     return this.#webProgress.isLoadingDocument;
   }
 
-  onStateChange(progress, request, flag, status) {
-    const isStart = flag & Ci.nsIWebProgressListener.STATE_START;
-    const isStop = flag & Ci.nsIWebProgressListener.STATE_STOP;
+  #checkLoadingState(request, options = {}) {
+    const { isStart = false, isStop = false } = options;
 
-    if (isStart) {
-      this.#unloadTimer?.cancel();
+    if (isStart && !this.#seenStartFlag) {
+      this.#seenStartFlag = true;
+
+      this.#targetURI = this.#getTargetURI(request);
+
       logger.trace(
-        `[${this.browsingContext.id}] Web progress state=start: ${this.currentURI?.spec}`
+        truncate`[${this.browsingContext.id}] ${this.constructor.name} state=start: ${this.targetURI?.spec}`
       );
+
+      if (this.#unloadTimer) {
+        this.#unloadTimer.cancel();
+        this.#unloadTimer = null;
+      }
+
+      if (this.#resolveWhenStarted) {
+        // Return immediately when the load should not be awaited.
+        this.stop();
+        return;
+      }
     }
 
-    if (isStop) {
+    if (isStop && this.#seenStartFlag) {
       logger.trace(
-        `[${this.browsingContext.id}] Web progress state=stop: ${this.currentURI?.spec}`
+        truncate`[${this.browsingContext.id}] ${this.constructor.name} state=stop: ${this.currentURI.spec}`
       );
 
-      this.#resolve();
       this.stop();
     }
+  }
+
+  #getTargetURI(request) {
+    try {
+      return request.QueryInterface(Ci.nsIChannel).originalURI;
+    } catch (e) {}
+
+    return null;
+  }
+
+  onStateChange(progress, request, flag, status) {
+    this.#checkLoadingState(request, {
+      isStart: flag & Ci.nsIWebProgressListener.STATE_START,
+      isStop: flag & Ci.nsIWebProgressListener.STATE_STOP,
+    });
   }
 
   /**
@@ -122,17 +189,32 @@ class ProgressListener {
       throw new Error(`Progress listener already started`);
     }
 
+    if (this.#webProgress.isLoadingDocument) {
+      this.#targetURI = this.#getTargetURI(this.#webProgress.documentRequest);
+
+      if (this.#resolveWhenStarted) {
+        // Resolve immediately when the page is already loading and there
+        // is no requirement to wait for it to finish.
+        return Promise.resolve();
+      }
+    }
+
     const promise = new Promise(resolve => (this.#resolve = resolve));
 
+    // Enable all state notifications to get informed about an upcoming load
+    // as early as possible.
     this.#webProgress.addProgressListener(
       this,
-      Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
-        Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
+      Ci.nsIWebProgress.NOTIFY_STATE_ALL
     );
 
     webProgressListeners.add(this);
 
-    if (!this.#webProgress.isLoadingDocument) {
+    if (this.#webProgress.isLoadingDocument) {
+      this.#checkLoadingState(this.#webProgress.documentRequest, {
+        isStart: true,
+      });
+    } else {
       // If the document is not loading yet wait some time for the navigation
       // to be started.
       this.#unloadTimer = Cc["@mozilla.org/timer;1"].createInstance(
@@ -140,8 +222,11 @@ class ProgressListener {
       );
       this.#unloadTimer.initWithCallback(
         () => {
-          logger.trace("No initial navigation detected");
-          this.#resolve();
+          logger.trace(
+            truncate`[${this.browsingContext.id}] No navigation detected: ${this.currentURI?.spec}`
+          );
+          // Assume the target is the currently loaded URI.
+          this.#targetURI = this.currentURI;
           this.stop();
         },
         this.#unloadTimeout,
@@ -163,17 +248,22 @@ class ProgressListener {
     this.#unloadTimer?.cancel();
     this.#unloadTimer = null;
 
-    this.#resolve = null;
-
     this.#webProgress.removeProgressListener(
       this,
-      Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
-        Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
+      Ci.nsIWebProgress.NOTIFY_STATE_ALL
     );
     webProgressListeners.delete(this);
+
+    if (!this.#targetURI) {
+      // If no target URI has been set yet it should be the current URI
+      this.#targetURI = this.browsingContext.currentURI;
+    }
+
+    this.#resolve();
+    this.#resolve = null;
   }
 
-  get toString() {
+  toString() {
     return `[object ${this.constructor.name}]`;
   }
 

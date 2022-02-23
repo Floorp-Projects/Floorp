@@ -13,8 +13,8 @@ var t_fail = t.step_func(function(reason) {
 });
 t.step(function() {
 
-var offscreenCanvas = new OffscreenCanvas(100, 50);
-var ctx = offscreenCanvas.getContext('2d');
+var canvas = new OffscreenCanvas(100, 50);
+var ctx = canvas.getContext('2d');
 
 _assertSame(ctx.letterSpacing, '0px', "ctx.letterSpacing", "'0px'");
 _assertSame(ctx.wordSpacing, '0px', "ctx.wordSpacing", "'0px'");
@@ -31,6 +31,11 @@ ctx.letterSpacing = '-1px';
 ctx.wordSpacing = '-1px';
 _assertSame(ctx.letterSpacing, '-1px', "ctx.letterSpacing", "'-1px'");
 _assertSame(ctx.wordSpacing, '-1px', "ctx.wordSpacing", "'-1px'");
+
+ctx.letterSpacing = '1PX';
+ctx.wordSpacing = '1EM';
+_assertSame(ctx.letterSpacing, '1px', "ctx.letterSpacing", "'1px'");
+_assertSame(ctx.wordSpacing, '1em', "ctx.wordSpacing", "'1em'");
 t.done();
 
 });

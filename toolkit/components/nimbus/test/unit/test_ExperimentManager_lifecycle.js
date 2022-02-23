@@ -63,6 +63,41 @@ add_task(async function test_onStartup_setRolloutActive_called() {
   );
 });
 
+add_task(async function test_startup_unenroll() {
+  Services.prefs.setBoolPref("app.shield.optoutstudies.enabled", false);
+  const store = ExperimentFakes.store();
+  const sandbox = sinon.createSandbox();
+  let recipe = ExperimentFakes.experiment("startup_unenroll", {
+    experimentType: "unittest",
+    source: "test",
+  });
+  // Test initializing ExperimentManager with an active
+  // recipe in the store. If the user has opted out it should
+  // unenroll.
+  await store.init();
+  let enrollmentPromise = new Promise(resolve =>
+    store.on(`update:${recipe.slug}`, resolve)
+  );
+  store.addEnrollment(recipe);
+  await enrollmentPromise;
+
+  const manager = ExperimentFakes.manager(store);
+  const unenrollStub = sandbox.stub(manager, "unenroll");
+
+  await manager.onStartup();
+
+  Assert.ok(
+    unenrollStub.calledOnce,
+    "Unenrolled from active experiment if user opt out is true"
+  );
+  Assert.ok(
+    unenrollStub.calledWith("startup_unenroll", "studies-opt-out"),
+    "Called unenroll for expected recipe"
+  );
+
+  Services.prefs.clearUserPref("app.shield.optoutstudies.enabled");
+});
+
 /**
  * onRecipe()
  * - should add recipe slug to .session[source]

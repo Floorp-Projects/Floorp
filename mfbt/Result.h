@@ -449,6 +449,11 @@ class [[nodiscard]] Result final {
   using Impl = typename detail::SelectResultImpl<V, E>::Type;
 
   Impl mImpl;
+  // Are you getting this error?
+  // > error: implicit instantiation of undefined template
+  // > 'mozilla::detail::ResultImplementation<$V,$E,
+  // >                      mozilla::detail::PackingStrategy::Variant>'
+  // You need to include "ResultVariant.h"!
 
  public:
   using ok_type = V;

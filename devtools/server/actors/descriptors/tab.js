@@ -25,6 +25,9 @@ loader.lazyImporter(
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const { tabDescriptorSpec } = require("devtools/shared/specs/descriptors/tab");
 const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
+const {
+  createBrowserElementSessionContext,
+} = require("devtools/server/actors/watcher/session-context");
 
 loader.lazyRequireGetter(
   this,
@@ -183,11 +186,10 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     if (!this.watcher) {
       this.watcher = new WatcherActor(
         this.conn,
-        {
-          type: "browser-element",
-          browserId: this._browser.browserId,
-        },
-        config
+        createBrowserElementSessionContext(this._browser, {
+          isServerTargetSwitchingEnabled: config.isServerTargetSwitchingEnabled,
+          isPopupDebuggingEnabled: config.isPopupDebuggingEnabled,
+        })
       );
       this.manage(this.watcher);
     }

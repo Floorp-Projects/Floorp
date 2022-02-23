@@ -35,10 +35,6 @@
   text-decoration: underline;
 }
 
-.text-link:-moz-focusring {
-  border-color: #fff;
-}
-
 #rightBox {
   margin-inline: 30px;
   padding-top: 64px;

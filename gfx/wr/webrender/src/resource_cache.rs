@@ -1044,7 +1044,7 @@ impl ResourceCache {
         let tile_size = match self.resources.image_templates.get(key.as_image()) {
             Some(template) => template.tiling.unwrap(),
             None => {
-                //println!("Missing image template (key={:?})!", key);
+                //debug!("Missing image template (key={:?})!", key);
                 return;
             }
         };

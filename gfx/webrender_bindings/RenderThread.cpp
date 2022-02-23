@@ -17,6 +17,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/layers/CompositableInProcessManager.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorManagerParent.h"
@@ -35,6 +36,7 @@
 #  include "GLLibraryEGL.h"
 #  include "mozilla/widget/WinCompositorWindowThread.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/webrender/DCLayerTree.h"
 //#  include "nsWindowsHelpers.h"
 //#  include <d3d11.h>
 #endif
@@ -84,7 +86,7 @@ RenderThread::~RenderThread() { MOZ_ASSERT(mRenderTexturesDeferred.empty()); }
 RenderThread* RenderThread::Get() { return sRenderThread; }
 
 // static
-void RenderThread::Start() {
+void RenderThread::Start(uint32_t aNamespace) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sRenderThread);
 
@@ -115,6 +117,7 @@ void RenderThread::Start() {
 #ifdef XP_WIN
   widget::WinCompositorWindowThread::Start();
 #endif
+  layers::CompositableInProcessManager::Initialize(aNamespace);
   layers::SharedSurfacesParent::Initialize();
 
   RefPtr<Runnable> runnable = WrapRunnable(
@@ -140,6 +143,7 @@ void RenderThread::ShutDown() {
   task.Wait();
 
   layers::SharedSurfacesParent::Shutdown();
+  layers::CompositableInProcessManager::Shutdown();
 
   sRenderThread = nullptr;
 #ifdef XP_WIN
@@ -156,6 +160,15 @@ void RenderThread::ShutDownTask(layers::SynchronousTask* aTask) {
   MOZ_ASSERT(IsInRenderThread());
   LOG("RenderThread::ShutDownTask()");
 
+  {
+    // Clear RenderTextureHosts
+    MutexAutoLock lock(mRenderTextureMapLock);
+    mRenderTexturesDeferred.clear();
+    mRenderTextures.clear();
+    mSyncObjectNeededRenderTextures.clear();
+    mRenderTextureOps.clear();
+  }
+
   // Let go of our handle to the (internally ref-counted) thread pool.
   mThreadPool.Release();
   mThreadPoolLP.Release();
@@ -163,6 +176,10 @@ void RenderThread::ShutDownTask(layers::SynchronousTask* aTask) {
   // Releasing on the render thread will allow us to avoid dispatching to remove
   // remaining textures from the texture map.
   layers::SharedSurfacesParent::ShutdownRenderThread();
+
+#ifdef XP_WIN
+  DCLayerTree::Shutdown();
+#endif
 
   ClearAllBlobImageResources();
   ClearSingletonGL();
@@ -798,8 +815,6 @@ void RenderThread::DeferredRenderTextureHostDestroy() {
 
 RenderTextureHost* RenderThread::GetRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  MOZ_ASSERT(IsInRenderThread());
-
   MutexAutoLock lock(mRenderTextureMapLock);
   auto it = mRenderTextures.find(aExternalImageId);
   MOZ_ASSERT(it != mRenderTextures.end());
@@ -858,7 +873,22 @@ static DeviceResetReason GLenumToResetReason(GLenum aReason) {
 void RenderThread::HandleDeviceReset(const char* aWhere, GLenum aReason) {
   MOZ_ASSERT(IsInRenderThread());
 
+  // This happens only on simulate device reset.
   if (aReason == LOCAL_GL_NO_ERROR) {
+    MOZ_ASSERT(XRE_IsGPUProcess());
+
+    if (!mHandlingDeviceReset) {
+      mHandlingDeviceReset = true;
+
+      MutexAutoLock lock(mRenderTextureMapLock);
+      mRenderTexturesDeferred.clear();
+      for (const auto& entry : mRenderTextures) {
+        entry.second->ClearCachedResources();
+      }
+      // Simulate DeviceReset does not need to notify the device reset to
+      // GPUProcessManager. It is already done by
+      // GPUProcessManager::SimulateDeviceReset().
+    }
     return;
   }
 

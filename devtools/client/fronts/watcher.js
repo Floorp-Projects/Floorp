@@ -98,6 +98,15 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
   }
 
   /**
+   * Memoized getter for the "blackboxing" actor
+   */
+  async getBlackboxingActor() {
+    if (!this._blackboxingActor) {
+      this._blackboxingActor = await super.getBlackboxingActor();
+    }
+    return this._blackboxingActor;
+  }
+  /**
    * Memoized getter for the "breakpoint-list" actor
    */
   async getBreakpointListActor() {

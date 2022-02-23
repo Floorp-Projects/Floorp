@@ -3,6 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    "doc-utils.js",
     "l10n.js",
-    "mdn-utils.js",
 )

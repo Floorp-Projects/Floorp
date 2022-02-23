@@ -43,14 +43,15 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(ScrollTimeline,
 
 TimingParams ScrollTimeline::sTiming;
 
-ScrollTimeline::ScrollTimeline(Document* aDocument, const Scroller& aScroller)
+ScrollTimeline::ScrollTimeline(Document* aDocument, const Scroller& aScroller,
+                               StyleScrollDirection aDirection)
     : AnimationTimeline(aDocument->GetParentObject()),
       mDocument(aDocument),
       // FIXME: Bug 1737918: We may have to udpate the constructor arguments
       // because this can be nearest, root, or a specific container. For now,
       // the input is a source element directly and it is the root element.
       mSource(aScroller),
-      mDirection(StyleScrollDirection::Auto) {
+      mDirection(aDirection) {
   MOZ_ASSERT(aDocument);
 
   // Use default values except for |mDuration| and |mFill|.
@@ -59,24 +60,34 @@ ScrollTimeline::ScrollTimeline(Document* aDocument, const Scroller& aScroller)
   sTiming = TimingParams(SCROLL_TIMELINE_DURATION_MILLISEC, 0.0,
                          std::numeric_limits<float>::infinity(),
                          PlaybackDirection::Alternate, FillMode::Both);
-
-  RegisterWithScrollSource();
 }
 
 already_AddRefed<ScrollTimeline> ScrollTimeline::FromRule(
     const RawServoScrollTimelineRule& aRule, Document* aDocument,
     const NonOwningAnimationTarget& aTarget) {
-  // FIXME: Use ScrollingElement in the next patch.
-  RefPtr<ScrollTimeline> timeline = new ScrollTimeline(
-      aDocument, Scroller::Auto(aTarget.mElement->OwnerDoc()));
-
-  // FIXME: Bug 1737918: applying new spec update.
   // Note: If the rules changes after we build the scroll-timeline rule, we
-  // rebuild the animtions, so does the timeline object (because now we create
-  // the scroll-timeline for each animation).
-  // FIXME: Bug 1738135: If the scroll timeline is hold by Element, we have to
-  // update it once the rule is changed.
-  timeline->mDirection = Servo_ScrollTimelineRule_GetOrientation(&aRule);
+  // rebuild all CSS animtions, and then try to look up the scroll-timeline by
+  // the new source and the new direction. If we cannot find a specific
+  // timeline, we create one, and the unused scroll-timeline object will be
+  // dropped automatically becuase no animation owns it and its ref-count
+  // becomes zero.
+
+  StyleScrollDirection direction =
+      Servo_ScrollTimelineRule_GetOrientation(&aRule);
+
+  // FIXME: Bug 1737918: applying new spec update, e.g. other scrollers and
+  // other style values.
+  RefPtr<ScrollTimeline> timeline;
+  auto autoScroller = Scroller::Auto(aTarget.mElement->OwnerDoc());
+  auto* set =
+      ScrollTimelineSet::GetOrCreateScrollTimelineSet(autoScroller.mElement);
+  auto p = set->LookupForAdd(direction);
+  if (!p) {
+    timeline = new ScrollTimeline(aDocument, autoScroller, direction);
+    set->Add(p, direction, timeline);
+  } else {
+    timeline = p->value();
+  }
   return timeline.forget();
 }
 
@@ -113,17 +124,6 @@ Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {
                                         SCROLL_TIMELINE_DURATION_MILLISEC);
 }
 
-void ScrollTimeline::RegisterWithScrollSource() {
-  if (!mSource) {
-    return;
-  }
-
-  if (ScrollTimelineSet* scrollTimelineSet =
-          ScrollTimelineSet::GetOrCreateScrollTimelineSet(mSource.mElement)) {
-    scrollTimelineSet->AddScrollTimeline(*this);
-  }
-}
-
 void ScrollTimeline::UnregisterFromScrollSource() {
   if (!mSource) {
     return;
@@ -131,7 +131,7 @@ void ScrollTimeline::UnregisterFromScrollSource() {
 
   if (ScrollTimelineSet* scrollTimelineSet =
           ScrollTimelineSet::GetScrollTimelineSet(mSource.mElement)) {
-    scrollTimelineSet->RemoveScrollTimeline(*this);
+    scrollTimelineSet->Remove(mDirection);
     if (scrollTimelineSet->IsEmpty()) {
       ScrollTimelineSet::DestroyScrollTimelineSet(mSource.mElement);
     }

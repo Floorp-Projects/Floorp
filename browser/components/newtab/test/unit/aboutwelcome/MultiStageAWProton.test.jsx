@@ -31,14 +31,16 @@ describe("MultiStageAboutWelcomeProton module", () => {
       const SCREEN_PROPS = {
         order: 0,
         content: {
+          position: "corner",
           title: "test title",
-          subtitle: "test subtitle",
+          hero_text: "test subtitle",
         },
       };
       const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
       assert.ok(wrapper.exists());
       assert.equal(wrapper.find(".welcome-text h1").text(), "test title");
       assert.equal(wrapper.find(".section-left h1").text(), "test subtitle");
+      assert.equal(wrapper.find("main").prop("pos"), "corner");
     });
 
     it("should autoClose on last screen", () => {
@@ -156,6 +158,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
             id: "AW_PIN_FIREFOX",
             order: 0,
             content: {
+              position: "corner",
               help_text: {
                 deleteIfNotEn: true,
                 text: {

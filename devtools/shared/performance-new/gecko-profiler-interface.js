@@ -11,12 +11,6 @@
 const { Ci } = require("chrome");
 const Services = require("Services");
 
-loader.lazyImporter(
-  this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
-
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(
   this,
@@ -41,11 +35,6 @@ class ActorReadyGeckoProfilerInterface {
       };
       Services.obs.addObserver(this._observer, "profiler-started");
       Services.obs.addObserver(this._observer, "profiler-stopped");
-      Services.obs.addObserver(
-        this._observer,
-        "chrome-document-global-created"
-      );
-      Services.obs.addObserver(this._observer, "last-pb-context-exited");
     }
 
     EventEmitter.decorate(this);
@@ -57,11 +46,6 @@ class ActorReadyGeckoProfilerInterface {
     }
     Services.obs.removeObserver(this._observer, "profiler-started");
     Services.obs.removeObserver(this._observer, "profiler-stopped");
-    Services.obs.removeObserver(
-      this._observer,
-      "chrome-document-global-created"
-    );
-    Services.obs.removeObserver(this._observer, "last-pb-context-exited");
   }
 
   startProfiler(options) {
@@ -172,13 +156,6 @@ class ActorReadyGeckoProfilerInterface {
     return IS_SUPPORTED_PLATFORM;
   }
 
-  isLockedForPrivateBrowsing() {
-    if (!IS_SUPPORTED_PLATFORM) {
-      return false;
-    }
-    return !Services.profiler.CanProfile();
-  }
-
   /**
    * Watch for events that happen within the browser. These can affect the
    * current availability and state of the Gecko Profiler.
@@ -187,17 +164,6 @@ class ActorReadyGeckoProfilerInterface {
     // Note! If emitting new events make sure and update the list of bridged
     // events in the perf actor.
     switch (topic) {
-      case "chrome-document-global-created":
-        if (
-          subject.isChromeWindow &&
-          PrivateBrowsingUtils.isWindowPrivate(subject)
-        ) {
-          this.emit("profile-locked-by-private-browsing");
-        }
-        break;
-      case "last-pb-context-exited":
-        this.emit("profile-unlocked-from-private-browsing");
-        break;
       case "profiler-started":
         const param = subject.QueryInterface(Ci.nsIProfilerStartParams);
         this.emit(

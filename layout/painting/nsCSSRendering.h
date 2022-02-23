@@ -684,8 +684,8 @@ struct nsCSSRendering {
   static nsRect GetTextDecorationRect(nsPresContext* aPresContext,
                                       const DecorationRectParams& aParams);
 
-  static CompositionOp GetGFXBlendMode(mozilla::StyleBlend mBlendMode) {
-    switch (mBlendMode) {
+  static CompositionOp GetGFXBlendMode(mozilla::StyleBlend aBlendMode) {
+    switch (aBlendMode) {
       case mozilla::StyleBlend::Normal:
         return CompositionOp::OP_OVER;
       case mozilla::StyleBlend::Multiply:
@@ -718,6 +718,8 @@ struct nsCSSRendering {
         return CompositionOp::OP_COLOR;
       case mozilla::StyleBlend::Luminosity:
         return CompositionOp::OP_LUMINOSITY;
+      case mozilla::StyleBlend::PlusLighter:
+        return CompositionOp::OP_ADD;
       default:
         MOZ_ASSERT(false);
         return CompositionOp::OP_OVER;

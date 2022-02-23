@@ -407,18 +407,18 @@ UniqueChars LDefinition::toString() const {
 static UniqueChars PrintUse(const LUse* use) {
   switch (use->policy()) {
     case LUse::REGISTER:
-      return JS_smprintf("v%u:r", use->virtualRegister());
+      return JS_smprintf("v%u:R", use->virtualRegister());
     case LUse::FIXED:
-      return JS_smprintf("v%u:%s", use->virtualRegister(),
+      return JS_smprintf("v%u:F:%s", use->virtualRegister(),
                          AnyRegister::FromCode(use->registerCode()).name());
     case LUse::ANY:
-      return JS_smprintf("v%u:r?", use->virtualRegister());
+      return JS_smprintf("v%u:A", use->virtualRegister());
     case LUse::KEEPALIVE:
-      return JS_smprintf("v%u:*", use->virtualRegister());
+      return JS_smprintf("v%u:KA", use->virtualRegister());
     case LUse::STACK:
-      return JS_smprintf("v%u:s", use->virtualRegister());
+      return JS_smprintf("v%u:S", use->virtualRegister());
     case LUse::RECOVERED_INPUT:
-      return JS_smprintf("v%u:**", use->virtualRegister());
+      return JS_smprintf("v%u:RI", use->virtualRegister());
     default:
       MOZ_CRASH("invalid use policy");
   }

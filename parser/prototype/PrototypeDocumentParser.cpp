@@ -8,16 +8,14 @@
 
 #include "nsXULPrototypeCache.h"
 #include "nsXULContentSink.h"
-#include "nsParserCIID.h"
 #include "mozilla/Encoding.h"
 #include "nsCharsetSource.h"
+#include "nsParser.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/URL.h"
 #include "mozilla/dom/PrototypeDocumentContentSink.h"
 
 using namespace mozilla::dom;
-
-static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
 namespace mozilla {
 namespace parser {
@@ -61,7 +59,7 @@ NS_IMETHODIMP_(bool)
 PrototypeDocumentParser::IsComplete() { return mIsComplete; }
 
 NS_IMETHODIMP
-PrototypeDocumentParser::Parse(nsIURI* aURL, void* aKey) {
+PrototypeDocumentParser::Parse(nsIURI* aURL) {
   // Look in the chrome cache: we've got this puppy loaded
   // already.
   nsXULPrototypeDocument* proto =
@@ -197,9 +195,7 @@ nsresult PrototypeDocumentParser::PrepareToLoadPrototype(
   NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to initialize datasource sink");
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create parser");
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIParser> parser = new nsParser();
 
   parser->SetCommand(eViewNormal);
 

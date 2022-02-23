@@ -1,6 +1,8 @@
 {
+    "cc": "/usr/bin/gcc",
+    "cxx": "/usr/bin/g++",
+    "as": "/usr/bin/gcc",
     "build_wasm": false,
-    "wasi-compiler-rt": null,
     "patches": [
         "profile-g4a10504e1f70c.patch"
     ]

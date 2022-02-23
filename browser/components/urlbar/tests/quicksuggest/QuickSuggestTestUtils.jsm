@@ -22,6 +22,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -199,47 +201,100 @@ class QSTestUtils {
    * Asserts a result is a quick suggest result.
    *
    * @param {string} url
-   *   The expected URL.
+   *   The expected URL. At least one of `url` and `originalUrl` must be given.
+   * @param {string} originalUrl
+   *   The expected original URL (the URL with an unreplaced timestamp
+   *   template). At least one of `url` and `originalUrl` must be given.
    * @param {object} window
    * @param {number} [index]
    *   The expected index of the quick suggest result. Pass -1 to use the index
    *   of the last result.
    * @param {boolean} [isSponsored]
    *   Whether the result is expected to be sponsored.
+   * @param {boolean} [isBestMatch]
+   *   Whether the result is expected to be a best match.
    * @returns {result}
    *   The quick suggest result.
    */
   async assertIsQuickSuggest({
     url,
+    originalUrl,
     window,
     index = -1,
     isSponsored = true,
+    isBestMatch = false,
   } = {}) {
+    this.Assert.ok(
+      url || originalUrl,
+      "At least one of url and originalUrl is specified"
+    );
+
     if (index < 0) {
-      index = UrlbarTestUtils.getResultCount(window) - 1;
-      this.Assert.greater(
-        index,
-        -1,
-        "Sanity check: Result count should be > 0"
-      );
+      let resultCount = UrlbarTestUtils.getResultCount(window);
+      if (isBestMatch) {
+        index = 1;
+        this.Assert.greater(
+          resultCount,
+          1,
+          "Sanity check: Result count should be > 1"
+        );
+      } else {
+        index = resultCount - 1;
+        this.Assert.greater(
+          resultCount,
+          0,
+          "Sanity check: Result count should be > 0"
+        );
+      }
     }
 
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
-    this.Assert.equal(details.type, UrlbarUtils.RESULT_TYPE.URL);
-    this.Assert.equal(details.isSponsored, isSponsored, "Result isSponsored");
-    this.Assert.equal(details.url, url, "Result URL");
-    this.Assert.equal(
-      details.displayed.action,
-      isSponsored ? "Sponsored" : "",
-      "Result action text"
+    let { result } = details;
+
+    this.info?.(
+      `Checking actual result at index ${index}: ` + JSON.stringify(result)
     );
 
-    let helpButton = details.element.row._elements.get("helpButton");
-    this.Assert.ok(helpButton, "The help button should be present");
     this.Assert.equal(
-      details.result.payload.helpUrl,
-      LEARN_MORE_URL,
-      "Result helpURL"
+      result.providerName,
+      "UrlbarProviderQuickSuggest",
+      "Result provider name is UrlbarProviderQuickSuggest"
+    );
+    this.Assert.equal(details.type, UrlbarUtils.RESULT_TYPE.URL);
+    this.Assert.equal(details.isSponsored, isSponsored, "Result isSponsored");
+    if (url) {
+      this.Assert.equal(details.url, url, "Result URL");
+    }
+    if (originalUrl) {
+      this.Assert.equal(
+        result.payload.originalUrl,
+        originalUrl,
+        "Result original URL"
+      );
+    }
+
+    this.Assert.equal(!!result.isBestMatch, isBestMatch, "Result isBestMatch");
+
+    let { row } = details.element;
+
+    let sponsoredElement = isBestMatch
+      ? row._elements.get("bottom")
+      : row._elements.get("action");
+    this.Assert.ok(sponsoredElement, "Result sponsored label element exists");
+    this.Assert.equal(
+      sponsoredElement.textContent,
+      isSponsored ? "Sponsored" : "",
+      "Result sponsored label"
+    );
+
+    let helpButton = row._buttons.get("help");
+    this.Assert.ok(helpButton, "The help button should be present");
+    this.Assert.equal(result.payload.helpUrl, LEARN_MORE_URL, "Result helpURL");
+
+    this.Assert.equal(
+      !!row._buttons.get("block"),
+      isBestMatch,
+      "The block button is present iff the suggestion is a best match"
     );
 
     return details;
@@ -472,20 +527,20 @@ class QSTestUtils {
    *   }
    */
   assertTimestampsReplaced(result, urls) {
-    let template = "%YYYYMMDDHH%";
+    let { timestampTemplate, timestampLength } = UrlbarProviderQuickSuggest;
 
     // Parse the timestamp strings from each payload property and save them in
     // `urls[key].timestamp`.
     urls = { ...urls };
     for (let [key, url] of Object.entries(urls)) {
-      let index = url.indexOf(template);
+      let index = url.indexOf(timestampTemplate);
       this.Assert.ok(
         index >= 0,
-        `Timestamp template ${template} is in URL ${url} for key ${key}`
+        `Timestamp template ${timestampTemplate} is in URL ${url} for key ${key}`
       );
       let value = result.payload[key];
       this.Assert.ok(value, "Key is in result payload: " + key);
-      let timestamp = value.substring(index, index + template.length - 2);
+      let timestamp = value.substring(index, index + timestampLength);
 
       // Set `urls[key]` to an object that's helpful in the logged info message
       // below.

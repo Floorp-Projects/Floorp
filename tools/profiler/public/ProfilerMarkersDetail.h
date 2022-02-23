@@ -26,17 +26,6 @@
 // Implemented in platform.cpp
 mozilla::ProfileChunkedBuffer& profiler_get_core_buffer();
 
-namespace profiler_markers_detail {
-
-// Get the core buffer from the profiler, and cache it in a
-// non-templated-function static reference.
-inline mozilla::ProfileChunkedBuffer& CachedCoreBuffer() {
-  static mozilla::ProfileChunkedBuffer& coreBuffer = profiler_get_core_buffer();
-  return coreBuffer;
-}
-
-}  // namespace profiler_markers_detail
-
 #endif  // MOZ_GECKO_PROFILER
 
 #endif  // ProfilerMarkersDetail_h

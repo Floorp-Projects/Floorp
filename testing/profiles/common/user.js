@@ -28,6 +28,8 @@ user_pref("browser.pagethumbnails.capturing_disabled", true);
 // Tell the search service we are running in the US.  This also has the desired
 // side-effect of preventing our geoip lookup.
 user_pref("browser.search.region", "US");
+// disable infobar for tests
+user_pref("browser.search.removeEngineInfobar.enabled", false);
 // Disable webapp updates.  Yes, it is supposed to be an integer.
 user_pref("browser.webapps.checkForUpdates", 0);
 // We do not wish to display datareporting policy notifications as it might
@@ -78,3 +80,10 @@ user_pref("browser.topsites.contile.enabled", false);
 // Default Glean to "record but don't report" mode. Docs:
 // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/preferences.html
 user_pref("telemetry.fog.test.localhost_port", -1);
+// Disable overlay scrollbars on GTK for testing. A bunch of tests (specially
+// mochitests) assume scrollbars take space. We disable them on macOS (where
+// overlay is also the default) at the system level as well, so this is
+// probably ok.
+//
+// We test the relevant overlay scrollbar code-paths on Android.
+user_pref("widget.gtk.overlay-scrollbars.enabled", false);

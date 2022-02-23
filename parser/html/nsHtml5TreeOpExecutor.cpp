@@ -150,8 +150,7 @@ nsHtml5TreeOpExecutor::WillParse() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsHtml5TreeOpExecutor::WillBuildModel(nsDTDMode aDTDMode) {
+nsresult nsHtml5TreeOpExecutor::WillBuildModel() {
   mDocument->AddObserver(this);
   WillBuildModelImpl();
   GetDocument()->BeginLoad();
@@ -382,10 +381,8 @@ nsHtml5TreeOpExecutor::WillInterrupt() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsHtml5TreeOpExecutor::WillResume() {
+void nsHtml5TreeOpExecutor::WillResume() {
   MOZ_ASSERT_UNREACHABLE("Don't call. For interface compat only.");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -1286,10 +1283,6 @@ void nsHtml5TreeOpExecutor::UpdateReferrerInfoFromMeta(
 }
 
 void nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP) {
-  if (!StaticPrefs::security_csp_enable()) {
-    return;
-  }
-
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsresult rv = NS_OK;

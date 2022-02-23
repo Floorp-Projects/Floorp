@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 
-use options::ForwardAttrs;
-use util::PathList;
+use crate::options::ForwardAttrs;
+use crate::util::PathList;
 
 /// Infrastructure for generating an attribute extractor.
 pub trait ExtractAttribute {
@@ -20,6 +20,14 @@ pub trait ExtractAttribute {
 
     /// Gets the name used by the generated impl to return to the `syn` item passed as input.
     fn param_name(&self) -> TokenStream;
+
+    /// Get the tokens to access a borrowed list of attributes where extraction will take place.
+    ///
+    /// By default, this will be `&#input.attrs` where `#input` is `self.param_name()`.
+    fn attrs_accessor(&self) -> TokenStream {
+        let input = self.param_name();
+        quote!(&#input.attrs)
+    }
 
     /// Gets the core from-meta-item loop that should be used on matching attributes.
     fn core_loop(&self) -> TokenStream;
@@ -48,7 +56,7 @@ pub trait ExtractAttribute {
             };
         }
 
-        let input = self.param_name();
+        let attrs_accessor = self.attrs_accessor();
 
         // The block for parsing attributes whose names have been claimed by the target
         // struct. If no attributes were claimed, this is a pass-through.
@@ -57,13 +65,23 @@ pub trait ExtractAttribute {
             let core_loop = self.core_loop();
             quote!(
                 #(#attr_names)|* => {
-                    if let ::darling::export::Ok(::syn::Meta::List(ref __data)) = __attr.parse_meta() {
-                        let __items = &__data.nested;
+                    match ::darling::util::parse_attribute_to_meta_list(__attr) {
+                        ::darling::export::Ok(__data) => {
+                            if __data.nested.is_empty() {
+                                continue;
+                            }
 
-                        #core_loop
-                    } else {
-                        // darling currently only supports list-style
-                        continue
+                            let __items = &__data.nested;
+
+                            #core_loop
+                        }
+                        // darling was asked to handle this attribute name, but the actual attribute
+                        // isn't one that darling can work with. This either indicates a typing error
+                        // or some misunderstanding of the meta attribute syntax; in either case, the
+                        // caller should get a useful error.
+                        ::darling::export::Err(__err) => {
+                            __errors.push(__err);
+                        }
                     }
                 }
             )
@@ -84,7 +102,7 @@ pub trait ExtractAttribute {
             use ::darling::ToTokens;
             let mut __fwd_attrs: ::darling::export::Vec<::syn::Attribute> = vec![];
 
-            for __attr in &#input.attrs {
+            for __attr in #attrs_accessor {
                 // Filter attributes based on name
                 match  ::darling::export::ToString::to_string(&__attr.path.clone().into_token_stream()).as_str() {
                     #parse_handled

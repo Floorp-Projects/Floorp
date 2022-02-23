@@ -28,7 +28,6 @@ import { recordEvent } from "../../utils/telemetry";
 import { comparePosition } from "../../utils/location";
 import { getTextAtPosition } from "../../utils/source";
 import { getMappedScopesForLocation } from "../pause/mapScopes";
-import { isOriginalSource } from "../../utils/source-maps";
 import { validateNavigateContext } from "../../utils/context";
 
 // This file has the primitive operations used to modify individual breakpoints
@@ -67,7 +66,7 @@ async function clientSetBreakpoint(
   );
   const shouldMapBreakpointExpressions =
     isMapScopesEnabled(getState()) &&
-    isOriginalSource(getSource(getState(), breakpoint.location?.sourceId)) &&
+    getSource(getState(), breakpoint.location?.sourceId).isOriginal &&
     (breakpoint.options.logValue || breakpoint.options.condition);
 
   if (shouldMapBreakpointExpressions) {

@@ -92,6 +92,12 @@ class RemoteDataDecoder : public MediaDataDecoder,
     return mNumPendingInputs > 0;
   }
 
+  // Returns true if we are in a state which requires a new decoder to be
+  // created. In this case all errors will be reported as
+  // NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER to avoid reporting errors as fatal when
+  // they can be fixed with a new decoder.
+  virtual bool NeedsNewDecoder() const { return false; }
+
   // The following members must only be accessed on mThread.
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseHolder<DecodePromise> mDrainPromise;

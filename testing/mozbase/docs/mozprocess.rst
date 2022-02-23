@@ -77,7 +77,7 @@ In the following example the command's output will be stored in a file *output.l
 
     import sys
     from mozprocess import processhandler
-    
+
     fd = open('output.log', 'w')
 
     def tostdout(line):
@@ -197,7 +197,7 @@ Except on Windows, you can specify the signal with which to kill method the proc
 
     import time
     from mozprocess import processhandler
-    
+
     command = './proc_sleep_echo.sh' # Windows: 'proc_sleep_echo.bat'
     p = processhandler.ProcessHandler(command)
     p.run()
@@ -244,13 +244,13 @@ Consider the following scripts:
 
     #!/bin/sh
     ./proc_child.sh
-    for i in 1 2 3 4 5 
+    for i in 1 2 3 4 5
     do
         echo $i
         sleep 1
     done
 
-For windows users consider: 
+For windows users consider:
 
 **proc_child.bat**:
 

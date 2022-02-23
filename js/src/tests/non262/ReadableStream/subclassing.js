@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) -- needs drainJobQueue
+// |reftest| skip-if(!xulRuntime.shell||!this.hasOwnProperty('ReadableStream')) -- needs drainJobQueue
 
 if ("ignoreUnhandledRejections" in this) {
   ignoreUnhandledRejections();

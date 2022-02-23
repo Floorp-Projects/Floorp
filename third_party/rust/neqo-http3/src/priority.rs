@@ -1,4 +1,4 @@
-use crate::{Error, HFrame, Header, Res};
+use crate::{frames::HFrame, Error, Header, Res};
 use neqo_transport::StreamId;
 use sfv::{BareItem, Item, ListEntry, Parser};
 use std::convert::TryFrom;
@@ -111,9 +111,9 @@ impl PriorityHandler {
         }
     }
 
-    pub fn priority(&self) -> Priority {
+    /*pub fn priority(&self) -> Priority {
         self.priority
-    }
+    }*/
 
     /// Returns if an priority update will be issued
     pub fn maybe_update_priority(&mut self, priority: Priority) -> bool {

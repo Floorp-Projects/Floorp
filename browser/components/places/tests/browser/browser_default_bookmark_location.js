@@ -105,40 +105,49 @@ add_task(async function test_shortcut_location() {
  * bookmark location.
  */
 add_task(async function test_context_menu_link() {
-  await withBookmarksDialog(
-    true,
-    async function openDialog() {
-      const contextMenu = win.document.getElementById("contentAreaContextMenu");
-      is(contextMenu.state, "closed", "checking if popup is closed");
-      let promisePopupShown = BrowserTestUtils.waitForEvent(
-        contextMenu,
-        "popupshown"
-      );
-      BrowserTestUtils.synthesizeMouseAtCenter(
-        "a[href*=config]", // Bookmark about:config
-        { type: "contextmenu", button: 2 },
-        win.gBrowser.selectedBrowser
-      );
-      await promisePopupShown;
-      contextMenu.activateItem(
-        win.document.getElementById("context-bookmarklink")
-      );
-    },
-    async function test(dialogWin) {
-      let expectedFolder = "BookmarksToolbarFolderTitle";
-      let expectedFolderName = PlacesUtils.getString(expectedFolder);
-
-      let folderPicker = dialogWin.document.getElementById(
-        "editBMPanel_folderMenuList"
-      );
-
-      // Check the initial state of the folder picker.
-      await TestUtils.waitForCondition(
-        () => folderPicker.selectedItem.label == expectedFolderName,
-        "The folder is the expected one."
-      );
+  for (let t = 0; t < 2; t++) {
+    if (t == 1) {
+      // For the second iteration, ensure that the default folder is invalid first.
+      await createAndRemoveDefaultFolder();
     }
-  );
+
+    await withBookmarksDialog(
+      true,
+      async function openDialog() {
+        const contextMenu = win.document.getElementById(
+          "contentAreaContextMenu"
+        );
+        is(contextMenu.state, "closed", "checking if popup is closed");
+        let promisePopupShown = BrowserTestUtils.waitForEvent(
+          contextMenu,
+          "popupshown"
+        );
+        BrowserTestUtils.synthesizeMouseAtCenter(
+          "a[href*=config]", // Bookmark about:config
+          { type: "contextmenu", button: 2 },
+          win.gBrowser.selectedBrowser
+        );
+        await promisePopupShown;
+        contextMenu.activateItem(
+          win.document.getElementById("context-bookmarklink")
+        );
+      },
+      async function test(dialogWin) {
+        let expectedFolder = "BookmarksToolbarFolderTitle";
+        let expectedFolderName = PlacesUtils.getString(expectedFolder);
+
+        let folderPicker = dialogWin.document.getElementById(
+          "editBMPanel_folderMenuList"
+        );
+
+        // Check the initial state of the folder picker.
+        await TestUtils.waitForCondition(
+          () => folderPicker.selectedItem.label == expectedFolderName,
+          "The folder is the expected one."
+        );
+      }
+    );
+  }
 });
 
 /**

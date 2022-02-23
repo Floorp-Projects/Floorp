@@ -68,6 +68,7 @@ constexpr bool TestForInvalidHostCharacters(char c) {
   // Testing for these:
   // CONTROL_CHARACTERS " #/:?@[\\]*<>|\"";
   return (c > 0 && c < 32) ||  // The control characters are [1, 31]
+         c == 0x7F ||          // // DEL (delete)
          c == ' ' || c == '#' || c == '/' || c == ':' || c == '?' || c == '@' ||
          c == '[' || c == '\\' || c == ']' || c == '*' || c == '<' ||
          c == '^' ||
@@ -601,6 +602,12 @@ nsresult nsStandardURL::NormalizeIPv4(const nsACString& host,
       return NS_ERROR_FAILURE;
     }
     ipv4 += number << (8 * (3 - i));
+  }
+
+  // A special case for ipv4 URL like "127." should have the same result as
+  // "127".
+  if (dotCount == 1 && dotIndex[0] == length - 1) {
+    ipv4 = (ipv4 & 0xff000000) >> 24;
   }
 
   uint8_t ipSegments[4];

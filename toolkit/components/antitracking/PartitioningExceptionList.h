@@ -32,8 +32,30 @@ class PartitioningExceptionList : public nsIPartitioningExceptionListObserver {
   nsresult Init();
   void Shutdown();
 
+  struct PartitionExceptionListPattern {
+    nsCString mScheme;
+    nsCString mSuffix;
+    bool mIsWildCard = false;
+  };
+
+  struct PartitionExceptionListEntry {
+    PartitionExceptionListPattern mFirstParty;
+    PartitionExceptionListPattern mThirdParty;
+  };
+
+  static nsresult GetSchemeFromOrigin(const nsACString& aOrigin,
+                                      nsACString& aScheme,
+                                      nsACString& aOriginNoScheme);
+
+  static bool OriginMatchesPattern(
+      const nsACString& aOrigin, const PartitionExceptionListPattern& aPattern);
+
+  static nsresult GetExceptionListPattern(
+      const nsACString& aOriginPattern,
+      PartitionExceptionListPattern& aPattern);
+
   nsCOMPtr<nsIPartitioningExceptionListService> mService;
-  nsTArray<nsCString> mExceptionList;
+  nsTArray<PartitionExceptionListEntry> mExceptionList;
 };
 
 }  // namespace mozilla

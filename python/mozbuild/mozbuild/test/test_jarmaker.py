@@ -362,7 +362,7 @@ class Test_relativesrcdir(unittest.TestCase):
     def test_en_US(self):
         jm = self.jm
         jm.makeJar(self.fake_empty_file, "/NO_OUTPUT_REQUIRED")
-        self.assertEquals(
+        self.assertEqual(
             jm.localedirs,
             [
                 os.path.join(
@@ -375,13 +375,13 @@ class Test_relativesrcdir(unittest.TestCase):
         jm = self.jm
         jm.l10nbase = "/L10N_BASE"
         jm.makeJar(self.fake_empty_file, "/NO_OUTPUT_REQUIRED")
-        self.assertEquals(jm.localedirs, [os.path.join("/L10N_BASE", "browser")])
+        self.assertEqual(jm.localedirs, [os.path.join("/L10N_BASE", "browser")])
 
     def test_l10n_merge(self):
         jm = self.jm
         jm.l10nbase = "/L10N_MERGE"
         jm.makeJar(self.fake_empty_file, "/NO_OUTPUT_REQUIRED")
-        self.assertEquals(
+        self.assertEqual(
             jm.localedirs,
             [
                 os.path.join("/L10N_MERGE", "browser"),
@@ -398,7 +398,7 @@ relativesrcdir dom/locales:
         )
         jarcontents.name = "override.mn"
         jm.makeJar(jarcontents, "/NO_OUTPUT_REQUIRED")
-        self.assertEquals(
+        self.assertEqual(
             jm.localedirs,
             [os.path.join(os.path.abspath("/TOPSOURCEDIR"), "dom/locales", "en-US")],
         )
@@ -414,7 +414,7 @@ relativesrcdir dom/locales:
         )
         jarcontents.name = "override.mn"
         jm.makeJar(jarcontents, "/NO_OUTPUT_REQUIRED")
-        self.assertEquals(jm.localedirs, [os.path.join("/L10N_BASE", "dom")])
+        self.assertEqual(jm.localedirs, [os.path.join("/L10N_BASE", "dom")])
 
 
 class Test_fluent(unittest.TestCase):

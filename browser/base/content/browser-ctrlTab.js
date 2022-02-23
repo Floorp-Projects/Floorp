@@ -575,6 +575,13 @@ var ctrlTab = {
           this.removeClosingTabFromUI(event.target);
         }
         break;
+      case "TabHide":
+        this.detachTab(event.target);
+        break;
+      case "TabShow":
+        this.attachTab(event.target);
+        this._sortRecentlyUsedTabs();
+        break;
       case "keydown":
         this.onKeyDown(event);
         break;
@@ -640,11 +647,17 @@ var ctrlTab = {
 
     aCallback(urls);
   },
-
+  _sortRecentlyUsedTabs() {
+    this._recentlyUsedTabs.sort(
+      (tab1, tab2) => tab2.lastAccessed - tab1.lastAccessed
+    );
+  },
   _initRecentlyUsedTabs() {
-    this._recentlyUsedTabs = Array.prototype.filter
-      .call(gBrowser.tabs, tab => !tab.closing)
-      .sort((tab1, tab2) => tab2.lastAccessed - tab1.lastAccessed);
+    this._recentlyUsedTabs = Array.prototype.filter.call(
+      gBrowser.tabs,
+      tab => !tab.closing && !tab.hidden
+    );
+    this._sortRecentlyUsedTabs();
   },
 
   _init: function ctrlTab__init(enable) {
@@ -659,6 +672,8 @@ var ctrlTab = {
     tabContainer[toggleEventListener]("TabAttrModified", this);
     tabContainer[toggleEventListener]("TabSelect", this);
     tabContainer[toggleEventListener]("TabClose", this);
+    tabContainer[toggleEventListener]("TabHide", this);
+    tabContainer[toggleEventListener]("TabShow", this);
 
     if (enable) {
       Services.els.addSystemEventListener(document, "keydown", this, false);

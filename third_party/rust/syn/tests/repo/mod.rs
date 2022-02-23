@@ -10,7 +10,7 @@ use std::path::Path;
 use tar::Archive;
 use walkdir::DirEntry;
 
-const REVISION: &str = "ac2d9fc509e36d1b32513744adf58c34bcc4f43c";
+const REVISION: &str = "e100ec5bc7cd768ec17d75448b29c9ab4a39272b";
 
 #[rustfmt::skip]
 static EXCLUDE: &[&str] = &[
@@ -46,16 +46,31 @@ static EXCLUDE: &[&str] = &[
     "src/tools/rustfmt/tests/target/configs/spaces_around_ranges/true.rs",
     "src/tools/rustfmt/tests/target/type.rs",
 
+    // Clippy lint lists represented as expressions
+    "src/tools/clippy/clippy_lints/src/lib.deprecated.rs",
+    "src/tools/clippy/clippy_lints/src/lib.register_all.rs",
+    "src/tools/clippy/clippy_lints/src/lib.register_cargo.rs",
+    "src/tools/clippy/clippy_lints/src/lib.register_complexity.rs",
+    "src/tools/clippy/clippy_lints/src/lib.register_correctness.rs",
+    "src/tools/clippy/clippy_lints/src/lib.register_internal.rs",
+    "src/tools/clippy/clippy_lints/src/lib.register_lints.rs",
+    "src/tools/clippy/clippy_lints/src/lib.register_nursery.rs",
+    "src/tools/clippy/clippy_lints/src/lib.register_pedantic.rs",
+    "src/tools/clippy/clippy_lints/src/lib.register_perf.rs",
+    "src/tools/clippy/clippy_lints/src/lib.register_restriction.rs",
+    "src/tools/clippy/clippy_lints/src/lib.register_style.rs",
+    "src/tools/clippy/clippy_lints/src/lib.register_suspicious.rs",
+
     // Not actually test cases
     "src/test/rustdoc-ui/test-compile-fail2.rs",
     "src/test/rustdoc-ui/test-compile-fail3.rs",
-    "src/test/ui/include-single-expr-helper.rs",
-    "src/test/ui/include-single-expr-helper-1.rs",
     "src/test/ui/json-bom-plus-crlf-multifile-aux.rs",
     "src/test/ui/lint/expansion-time-include.rs",
     "src/test/ui/macros/auxiliary/macro-comma-support.rs",
     "src/test/ui/macros/auxiliary/macro-include-items-expr.rs",
-    "src/test/ui/parser/auxiliary/issue-21146-inc.rs",
+    "src/test/ui/macros/include-single-expr-helper.rs",
+    "src/test/ui/macros/include-single-expr-helper-1.rs",
+    "src/test/ui/parser/issues/auxiliary/issue-21146-inc.rs",
 ];
 
 pub fn base_dir_filter(entry: &DirEntry) -> bool {

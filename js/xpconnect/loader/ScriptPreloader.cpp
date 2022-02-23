@@ -775,7 +775,10 @@ nsresult ScriptPreloader::Run() {
   result = WriteCache();
   Unused << NS_WARN_IF(result.isErr());
 
-  result = mChildCache->WriteCache();
+  {
+    MonitorAutoLock lock(mChildCache->mSaveMonitor);
+    result = mChildCache->WriteCache();
+  }
   Unused << NS_WARN_IF(result.isErr());
 
   NS_DispatchToMainThread(

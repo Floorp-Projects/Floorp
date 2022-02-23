@@ -139,6 +139,19 @@ class ContextMenuChild extends JSWindowActorChild {
                   "contextmenu",
                   1
                 );
+                let args = {
+                  method: "contextMenu",
+                  firstTimeToggle: (!Services.prefs.getBoolPref(
+                    "media.videocontrols.picture-in-picture.video-toggle.has-used"
+                  )).toString(),
+                };
+                Services.telemetry.recordEvent(
+                  "pictureinpicture",
+                  "opened_method",
+                  "method",
+                  null,
+                  args
+                );
                 let event = new this.contentWindow.CustomEvent(
                   "MozTogglePictureInPicture",
                   {
@@ -160,9 +173,9 @@ class ContextMenuChild extends JSWindowActorChild {
         break;
       }
 
-      case "ContextMenu:ToggleShowPassword": {
+      case "ContextMenu:ToggleRevealPassword": {
         let target = ContentDOMReference.resolve(message.data.targetIdentifier);
-        target.showPassword = !target.showPassword;
+        target.revealPassword = !target.revealPassword;
         break;
       }
 
@@ -776,8 +789,8 @@ class ContextMenuChild extends JSWindowActorChild {
     const context = this.context;
 
     context.timeStamp = aEvent.timeStamp;
-    context.screenX = aEvent.screenX;
-    context.screenY = aEvent.screenY;
+    context.screenXDevPx = aEvent.screenX * this.contentWindow.devicePixelRatio;
+    context.screenYDevPx = aEvent.screenY * this.contentWindow.devicePixelRatio;
     context.mozInputSource = aEvent.mozInputSource;
 
     let node = aEvent.composedTarget;
@@ -1067,7 +1080,7 @@ class ContextMenuChild extends JSWindowActorChild {
       context.onEditable = (editFlags & SpellCheckHelper.EDITABLE) !== 0;
       context.onPassword = (editFlags & SpellCheckHelper.PASSWORD) !== 0;
       context.passwordRevealed =
-        context.onPassword && context.target.showPassword;
+        context.onPassword && context.target.revealPassword;
       context.onSpellcheckable =
         (editFlags & SpellCheckHelper.SPELLCHECKABLE) !== 0;
 

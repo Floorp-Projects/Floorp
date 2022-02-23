@@ -141,6 +141,10 @@ function CssRuleView(inspector, document, store) {
   // Allow tests to override debouncing behavior, as this can cause intermittents.
   this.debounce = debounce;
 
+  // Variable used to stop the propagation of mouse events to children
+  // when we are updating a value by dragging the mouse and we then release it
+  this.childHasDragged = false;
+
   this._outputParser = new OutputParser(document, this.cssProperties);
 
   this._onAddRule = this._onAddRule.bind(this);
@@ -389,6 +393,11 @@ CssRuleView.prototype = {
    * @param {MouseEvent|UIEvent} event
    */
   handleEvent(event) {
+    if (this.childHasDragged) {
+      this.childHasDragged = false;
+      event.stopPropagation();
+      return;
+    }
     switch (event.type) {
       case "click":
         this.handleClickEvent(event);
@@ -1400,7 +1409,11 @@ CssRuleView.prototype = {
   highlightRule: function(rule) {
     const isRuleSelectorHighlighted = this._highlightRuleSelector(rule);
     const isStyleSheetHighlighted = this._highlightStyleSheet(rule);
-    let isHighlighted = isRuleSelectorHighlighted || isStyleSheetHighlighted;
+    const isAncestorRulesHighlighted = this._highlightAncestorRules(rule);
+    let isHighlighted =
+      isRuleSelectorHighlighted ||
+      isStyleSheetHighlighted ||
+      isAncestorRulesHighlighted;
 
     // Highlight search matches in the rule properties
     for (const textProp of rule.textProps) {
@@ -1446,6 +1459,34 @@ CssRuleView.prototype = {
     }
 
     return isSelectorHighlighted;
+  },
+
+  /**
+   * Highlights the ancestor rules data (@media / @layer) that matches the filter search
+   * value and returns a boolean indicating whether or not element was highlighted.
+   *
+   * @return {Boolean} true if the element was highlighted, false otherwise.
+   */
+  _highlightAncestorRules: function(rule) {
+    const element = rule.editor.ancestorDataEl;
+    if (!element) {
+      return false;
+    }
+
+    let isHighlighted = false;
+    for (let i = 0; i < element.childNodes.length; i++) {
+      const child = element.childNodes[i];
+      const dataText = child.innerText.toLowerCase();
+      const matches = this.searchData.strictSearchValue
+        ? dataText === this.searchData.strictSearchValue
+        : dataText.includes(this.searchValue);
+      if (matches) {
+        isHighlighted = true;
+        child.classList.add("ruleview-highlight");
+      }
+    }
+
+    return isHighlighted;
   },
 
   /**

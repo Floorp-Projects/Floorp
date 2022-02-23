@@ -41,6 +41,8 @@ class RemoteSandboxBroker : public AbstractSandboxBroker {
   bool SetSecurityLevelForSocketProcess() override;
   bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
                                    bool aIsRemoteLaunch = false) override;
+  bool SetSecurityLevelForUtilityProcess(
+      mozilla::ipc::SandboxingKind aSandbox) override;
   bool AllowReadFile(wchar_t const* file) override;
   void AddHandleToShare(HANDLE aHandle) override;
 

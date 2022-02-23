@@ -20,7 +20,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/dom/CryptoBuffer.h"
 #include "mozilla/dom/CryptoKey.h"
-#include "mozilla/psm/PSMIPCCommon.h"
 #include "ipc/IPCMessageUtils.h"
 
 namespace mozilla {

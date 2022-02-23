@@ -12,16 +12,16 @@
 
 [package]
 name = "tokio-timer"
-version = "0.2.11"
+version = "0.2.13"
 authors = ["Carl Lerche <me@carllerche.com>"]
 description = "Timer facilities for Tokio\n"
 homepage = "https://github.com/tokio-rs/tokio"
-documentation = "https://docs.rs/tokio-timer/0.2.11/tokio_timer"
+documentation = "https://docs.rs/tokio-timer/0.2.13/tokio_timer"
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/tokio-rs/tokio"
 [dependencies.crossbeam-utils]
-version = "0.6.0"
+version = "0.7.0"
 
 [dependencies.futures]
 version = "0.1.19"
@@ -32,7 +32,7 @@ version = "0.4.1"
 [dependencies.tokio-executor]
 version = "0.1.1"
 [dev-dependencies.rand]
-version = "0.6"
+version = "0.7"
 
 [dev-dependencies.tokio]
 version = "0.1.7"

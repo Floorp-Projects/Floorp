@@ -68,8 +68,21 @@ from . import validate_ping
     is_flag=True,
     help=("Require tags to be specified for metrics and pings."),
 )
+@click.option(
+    "--expire-by-version",
+    help="Expire metrics by version, with the provided major version.",
+    type=click.INT,
+    required=False,
+)
 def translate(
-    input, format, output, option, allow_reserved, allow_missing_files, require_tags
+    input,
+    format,
+    output,
+    option,
+    allow_reserved,
+    allow_missing_files,
+    require_tags,
+    expire_by_version,
 ):
     """
     Translate metrics.yaml and pings.yaml files to other formats.
@@ -89,6 +102,7 @@ def translate(
                 "allow_reserved": allow_reserved,
                 "allow_missing_files": allow_missing_files,
                 "require_tags": require_tags,
+                "expire_by_version": expire_by_version,
             },
         )
     )

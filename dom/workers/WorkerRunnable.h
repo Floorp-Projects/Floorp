@@ -78,6 +78,10 @@ class WorkerRunnable : public nsIRunnable, public nsICancelableRunnable {
   // If you override Cancel() then you'll need to either call the base class
   // Cancel() method or override IsCanceled() so that the Run() method bails out
   // appropriately.
+  // Cancel() should not be called more than once and we throw
+  // NS_ERROR_UNEXPECTED if it is. If you override it, ensure to call the base
+  // class method first and bail out on failure to avoid unexpected side
+  // effects.
   nsresult Cancel() override;
 
   // The return value is true if and only if both PreDispatch and
@@ -85,6 +89,7 @@ class WorkerRunnable : public nsIRunnable, public nsICancelableRunnable {
   bool Dispatch();
 
   // See above note about Cancel().
+  // TODO: Check if we can remove the possibility to override IsCanceled.
   virtual bool IsCanceled() const { return mCanceled != 0; }
 
   // True if this runnable is handled by running JavaScript in some global that

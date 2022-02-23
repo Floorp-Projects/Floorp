@@ -13,6 +13,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/KeyEventHandler.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ShortcutKeys.h"
 #include "mozilla/StaticPtr.h"
@@ -21,6 +22,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/KeyboardEvent.h"
+#include "mozilla/widget/IMEData.h"
 #include "nsAtom.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -29,6 +31,7 @@
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsIDocShell.h"
+#include "nsIWidget.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 
@@ -396,11 +399,26 @@ bool GlobalKeyListener::IsReservedKey(WidgetKeyboardEvent* aKeyEvent,
     return false;
   }
 
-  if (reserved == ReservedKey_True) {
-    return true;
+  if (reserved != ReservedKey_True &&
+      !nsContentUtils::ShouldBlockReservedKeys(aKeyEvent)) {
+    return false;
   }
 
-  return nsContentUtils::ShouldBlockReservedKeys(aKeyEvent);
+  // Okay, the key handler is reserved, but if the key combination is mapped to
+  // an edit command or a selection navigation command, we should not treat it
+  // as reserved since user wants to do the mapped thing(s) in editor.
+  if (MOZ_UNLIKELY(!aKeyEvent->IsTrusted() || !aKeyEvent->mWidget)) {
+    return true;
+  }
+  widget::InputContext inputContext = aKeyEvent->mWidget->GetInputContext();
+  if (!inputContext.mIMEState.IsEditable()) {
+    return true;
+  }
+  return MOZ_UNLIKELY(!aKeyEvent->IsEditCommandsInitialized(
+             inputContext.GetNativeKeyBindingsType())) ||
+         aKeyEvent
+             ->EditCommandsConstRef(inputContext.GetNativeKeyBindingsType())
+             .IsEmpty();
 }
 
 bool GlobalKeyListener::HasHandlerForEvent(dom::KeyboardEvent* aEvent,
@@ -584,8 +602,13 @@ bool XULKeySetGlobalKeyListener::IsExecutableElement(
     return false;
   }
 
-  aElement->GetAttr(nsGkAtoms::oncommand, value);
-  return !value.IsEmpty();
+  // Internal keys are defined as <key> elements so that the menu label
+  // and disabled state can be updated properly, but the command is executed
+  // by some other means. This will typically be because the key is defined
+  // as a shortcut defined in ShortcutKeyDefinitions.cpp instead, or on Mac,
+  // some special system defined keys.
+  return !aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::internal,
+                                nsGkAtoms::_true, eCaseMatters);
 }
 
 already_AddRefed<dom::EventTarget> XULKeySetGlobalKeyListener::GetHandlerTarget(

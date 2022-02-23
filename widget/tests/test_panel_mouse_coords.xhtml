@@ -59,8 +59,8 @@ function sendMouseEvent() {
 }
 
 function checkCoords(event) {
-  isfuzzy(event.clientX, rect.left + 1, window.windowUtils.screenPixelsPerCSSPixel, "Motion x coordinate");
-  isfuzzy(event.clientY, rect.top + 2, window.windowUtils.screenPixelsPerCSSPixel, "Motion y coordinate");
+  isfuzzy(event.clientX, rect.left + 1, window.devicePixelRatio, "Motion x coordinate");
+  isfuzzy(event.clientY, rect.top + 2, window.devicePixelRatio, "Motion y coordinate");
   done();
 }
 

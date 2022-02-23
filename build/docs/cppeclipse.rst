@@ -51,4 +51,3 @@ Currently, regeneration rewrites the original project files. **If
 you've made any customizations to the projects, they will likely get
 overwritten.** We would like to improve this user experience in the
 future.
-

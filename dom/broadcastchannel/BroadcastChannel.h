@@ -78,7 +78,7 @@ class BroadcastChannel final : public DOMEventTargetHelper {
   RefPtr<WorkerRef> mWorkerRef;
 
   nsString mChannel;
-  nsString mOriginNoSuffix;
+  nsString mOriginForEvents;
 
   enum { StateActive, StateClosed } mState;
 

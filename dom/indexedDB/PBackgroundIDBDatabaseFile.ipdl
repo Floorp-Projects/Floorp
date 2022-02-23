@@ -8,6 +8,7 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 protocol PBackgroundIDBDatabaseFile
 {
   manager PBackgroundIDBDatabase;

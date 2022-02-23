@@ -42,14 +42,14 @@ Status InitializePassesSharedState(const FrameHeader& frame_header,
   }
 
   shared->quant_dc = ImageB(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
-  if (!(frame_header.flags & FrameHeader::kUseDcFrame) || encoder) {
-    shared->dc_storage =
-        Image3F(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
-  } else {
+
+  bool use_dc_frame = !!(frame_header.flags & FrameHeader::kUseDcFrame);
+  if (!encoder && use_dc_frame) {
     if (frame_header.dc_level == 4) {
       return JXL_FAILURE("Invalid DC level for kUseDcFrame: %u",
                          frame_header.dc_level);
     }
+    shared->dc_storage = Image3F();
     shared->dc = &shared->dc_frames[frame_header.dc_level];
     if (shared->dc->xsize() == 0) {
       return JXL_FAILURE(
@@ -58,9 +58,11 @@ Status InitializePassesSharedState(const FrameHeader& frame_header,
           frame_header.dc_level, frame_header.dc_level + 1);
     }
     ZeroFillImage(&shared->quant_dc);
+  } else {
+    shared->dc_storage =
+        Image3F(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
+    shared->dc = &shared->dc_storage;
   }
-
-  shared->dc_storage = Image3F(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
 
   return true;
 }

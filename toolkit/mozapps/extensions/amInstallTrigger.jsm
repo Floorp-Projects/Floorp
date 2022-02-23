@@ -16,6 +16,8 @@ const MSG_INSTALL_ENABLED = "WebInstallerIsInstallEnabled";
 const MSG_INSTALL_ADDON = "WebInstallerInstallAddonFromWebpage";
 const MSG_INSTALL_CALLBACK = "WebInstallerInstallCallback";
 
+const SUPPORTED_XPI_SCHEMES = ["http", "https"];
+
 var log = Log.repository.getLogger("AddonManager.InstallTrigger");
 log.level =
   Log.Level[
@@ -140,6 +142,18 @@ InstallTrigger.prototype = {
       throw new this._window.Error(
         "Insufficient permissions to install: " + url.spec
       );
+    }
+
+    if (!SUPPORTED_XPI_SCHEMES.includes(url.scheme)) {
+      Cu.reportError(
+        `InstallTrigger call disallowed on install url with unsupported scheme: ${JSON.stringify(
+          {
+            installPrincipal: this._principal.spec,
+            installURL: url.spec,
+          }
+        )}`
+      );
+      throw new this._window.Error(`Unsupported scheme`);
     }
 
     let iconUrl = null;

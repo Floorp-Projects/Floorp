@@ -157,7 +157,8 @@ class MOZ_STACK_CLASS ContentEventHandler {
 
   nsresult InitBasic(bool aRequireFlush = true);
   MOZ_CAN_RUN_SCRIPT nsresult
-  InitCommon(SelectionType aSelectionType = SelectionType::eNormal,
+  InitCommon(EventMessage aEventMessage,
+             SelectionType aSelectionType = SelectionType::eNormal,
              bool aRequireFlush = true);
   /**
    * InitRootContent() computes the root content of current focused editor.

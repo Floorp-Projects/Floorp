@@ -258,22 +258,6 @@ class WakeLockObserversManager final
   }
 };
 
-class ScreenConfigurationObserversManager final
-    : public CachingObserversManager<ScreenConfiguration> {
- protected:
-  void EnableNotifications() override {
-    PROXY_IF_SANDBOXED(EnableScreenConfigurationNotifications());
-  }
-
-  void DisableNotifications() override {
-    PROXY_IF_SANDBOXED(DisableScreenConfigurationNotifications());
-  }
-
-  void GetCurrentInformationInternal(ScreenConfiguration* aInfo) override {
-    PROXY_IF_SANDBOXED(GetCurrentScreenConfiguration(aInfo));
-  }
-};
-
 typedef mozilla::ObserverList<SensorData> SensorObserverList;
 StaticAutoPtr<SensorObserverList> sSensorObservers[NUM_SENSOR_TYPE];
 
@@ -394,19 +378,6 @@ void NotifyWakeLockChange(const WakeLockInformation& aInfo) {
   WakeLockObservers()->BroadcastInformation(aInfo);
 }
 
-MOZ_IMPL_HAL_OBSERVER(ScreenConfiguration)
-
-void GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) {
-  *aScreenConfiguration =
-      ScreenConfigurationObservers()->GetCurrentInformation();
-}
-
-void NotifyScreenConfigurationChange(
-    const ScreenConfiguration& aScreenConfiguration) {
-  ScreenConfigurationObservers()->CacheInformation(aScreenConfiguration);
-  ScreenConfigurationObservers()->BroadcastCachedInformation();
-}
-
 RefPtr<mozilla::MozPromise<bool, bool, false>> LockScreenOrientation(
     const ScreenOrientation& aOrientation) {
   AssertMainThread();
@@ -469,7 +440,6 @@ void Shutdown() {
   sBatteryObservers = nullptr;
   sNetworkObservers = nullptr;
   sWakeLockObservers = nullptr;
-  sScreenConfigurationObservers = nullptr;
 
   for (auto& sensorObserver : sSensorObservers) {
     sensorObserver = nullptr;

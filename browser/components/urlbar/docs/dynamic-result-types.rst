@@ -805,4 +805,3 @@ The listener should return a view update object.
 
 This step is the same as step 5 above. Bundle a CSS file in your extension and
 declare it in the top-level ``stylesheet`` property of your view template.
-

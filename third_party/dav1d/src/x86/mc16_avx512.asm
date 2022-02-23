@@ -131,6 +131,16 @@ warp8x8_permC: db -1,  0, -1,  1, -1,  8, -1,  9, -1,  4, -1,  5, -1, 12, -1, 13
 warp8x8_permD: db -1,  2, -1,  3, -1, 10, -1, 11, -1,  6, -1,  7, -1, 14, -1, 15
 warp_shift_h:  db 11, 19, 11, 19, 43, 51, 43, 51, 13, 21, 13, 21, 45, 53, 45, 53
 blend_shuf:    db  0,  1,  0,  1,  0,  1,  0,  1,  2,  3,  2,  3,  2,  3,  2,  3
+resize_permA:  dd  0,  4,  8, 12,  1,  5,  9, 13, 16, 20, 24, 28, 17, 21, 25, 29
+resize_permB:  dd  2,  6, 10, 14,  3,  7, 11, 15, 18, 22, 26, 30, 19, 23, 27, 31
+resize_permC:  dq  0,  1,  4,  5,  8,  9, 12, 13
+resize_permD:  dq  2,  3,  6,  7, 10, 11, 14, 15
+resize_permE:  dq  0,  2,  4,  6
+resize_shufA:  db -1,  0, -1,  1, -1,  4, -1,  5, -1,  8, -1,  9, -1, 12, -1, 13
+resize_shufB:  db -1,  2, -1,  3, -1,  6, -1,  7, -1, 10, -1, 11, -1, 14, -1, 15
+rescale_mul:   dd  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
+resize_shuf:   db  0,  1,  0,  1,  0,  1,  0,  1,  0,  1,  2,  3,  4,  5,  6,  7
+               db  8,  9, 10, 11, 12, 13, 14, 15, 14, 15, 14, 15, 14, 15, 14, 15
 
 prep_hv_shift:    dq  6,  4
 put_bilin_h_rnd:  dw  8,  8, 10, 10
@@ -151,9 +161,12 @@ pw_m512:  times 2 dw -512
 pw_2:     times 2 dw 2
 pw_64:    times 2 dw 64
 pd_32:    dd 32
+pd_63:    dd 63
 pd_128:   dd 128
 pd_640:   dd 640
 pd_2176:  dd 2176
+pd_16384: dd 16384
+pd_0_4:   dd 0, 4
 
 %define pw_16 prep_mul
 %define pd_512 warp_8x8_rnd_h
@@ -237,6 +250,7 @@ cextern mc_subpel_filters
 
 cextern mc_warp_filter
 cextern obmc_masks_avx2
+cextern resize_filter
 
 SECTION .text
 
@@ -4706,6 +4720,147 @@ cglobal blend_h_16bpc, 3, 7, 9, dst, ds, tmp, w, h, mask
     add                dstq, dsq
     inc                  hq
     jl .w128
+    RET
+
+cglobal resize_16bpc, 6, 12, 32, dst, dst_stride, src, src_stride, \
+                                 dst_w, h, src_w, dx, mx0, pxmax
+    sub          dword mx0m, 4<<14
+    sub        dword src_wm, 8
+    mov                  r6, ~0
+    vpbroadcastd         m5, dxm
+    vpbroadcastd         m8, mx0m
+    vpbroadcastd         m6, src_wm
+    kmovq                k6, r6
+ DEFINE_ARGS dst, dst_stride, src, src_stride, dst_w, h, x, _, _, pxmax
+    LEA                  r7, $$
+%define base r7-$$
+    vpbroadcastd         m3, [base+pd_16384]
+    vpbroadcastd         m7, [base+pd_63]
+    mova                m24, [base+resize_permA]
+    mova                m25, [base+resize_permB]
+    mova                m26, [base+resize_permC]
+    mova                m27, [base+resize_permD]
+    vbroadcasti32x4     m28, [base+resize_shufA]
+    vbroadcasti32x4     m29, [base+resize_shufB]
+    mova                m30, [base+resize_permE]
+    vpbroadcastw       ym31, pxmaxm
+    vpdpwssd             m8, m5, [base+rescale_mul] ; mx+dx*[0-15]
+    pslld                m5, 4                      ; dx*16
+    pslld                m6, 14
+    pxor                 m2, m2
+.loop_y:
+    xor                  xd, xd
+    mova                 m4, m8     ; per-line working version of mx
+.loop_x:
+    pmaxsd               m0, m4, m2
+    psrad                m9, m4, 8  ; filter offset (unmasked)
+    pminsd               m0, m6     ; iclip(mx, 0, src_w-8)
+    psubd                m1, m4, m0 ; pshufb offset
+    psrad                m0, 14     ; clipped src_x offset
+    psrad                m1, 14     ; pshufb edge_emu offset
+    vptestmd             k5, m1, m1
+    pand                 m9, m7     ; filter offset (masked)
+    ktestw               k5, k5
+    jz .load
+    vpbroadcastq        m14, [base+pd_0_4]
+    vpermq              m10, m0, q1100
+    vpermq              m11, m0, q3322
+    vpermq              m20, m1, q1100
+    vpermq              m21, m1, q3322
+    punpckldq           m10, m10
+    punpckldq           m11, m11
+    punpckldq           m20, m20
+    punpckldq           m21, m21
+    paddd               m10, m14
+    paddd               m11, m14
+    paddd               m20, m14
+    paddd               m21, m14
+    vextracti32x8      ym12, m10, 1
+    vextracti32x8      ym13, m11, 1
+    vextracti32x8      ym22, m20, 1
+    vextracti32x8      ym23, m21, 1
+    kmovq                k1, k6
+    kmovq                k2, k6
+    kmovq                k3, k6
+    kmovq                k4, k6
+    vpgatherdq      m16{k1}, [srcq+ym10*2] ; 0 1 2 3
+    vpgatherdq      m17{k2}, [srcq+ym11*2] ; 4 5 6 7
+    vpgatherdq      m18{k3}, [srcq+ym12*2] ; 8 9 A B
+    vpgatherdq      m19{k4}, [srcq+ym13*2] ; C D E F
+    kmovq                k1, k6
+    kmovq                k2, k6
+    kmovq                k3, k6
+    kmovq                k4, k6
+    vpgatherdq       m0{k1}, [base+resize_shuf+8+ym20*2]
+    vpgatherdq       m1{k2}, [base+resize_shuf+8+ym21*2]
+    vpgatherdq      m14{k3}, [base+resize_shuf+8+ym22*2]
+    vpgatherdq      m15{k4}, [base+resize_shuf+8+ym23*2]
+    pshufb              m16, m0
+    pshufb              m17, m1
+    pshufb              m18, m14
+    pshufb              m19, m15
+    mova                m20, m24
+    mova                m22, m24
+    mova                m21, m25
+    mova                m23, m25
+    vpermi2d            m20, m16, m17 ; 0-3a 0-3b 4-7a 4-7b
+    vpermi2d            m21, m16, m17 ; 0-3c 0-3d 4-7c 4-7d
+    vpermi2d            m22, m18, m19 ; 8-Ba 8-Bb C-Fa C-Fb
+    vpermi2d            m23, m18, m19 ; 8-Bc 8-Bd C-Fc C-Fd
+    mova                m15, m26
+    mova                m17, m26
+    mova                m16, m27
+    mova                m18, m27
+    vpermi2q            m15, m20, m22 ; 0-3a 4-7a 8-Ba C-Fa
+    vpermi2q            m16, m20, m22 ; 0-3b 4-7b 8-Bb C-Fb
+    vpermi2q            m17, m21, m23 ; 0-3c 4-7c 8-Bc C-Fc
+    vpermi2q            m18, m21, m23 ; 0-3d 4-7d 8-Bd C-Fd
+    kmovq                k1, k6
+    kmovq                k2, k6
+    vpgatherdd      m11{k1}, [base+resize_filter+m9*8+0]
+    vpgatherdd      m13{k2}, [base+resize_filter+m9*8+4]
+    pshufb              m10, m11, m28
+    pshufb              m11, m11, m29
+    pshufb              m12, m13, m28
+    pshufb              m13, m13, m29
+    jmp .filter
+.load:
+    kmovq                k1, k6
+    kmovq                k2, k6
+    kmovq                k3, k6
+    kmovq                k4, k6
+    vpgatherdd      m11{k1}, [base+resize_filter+m9*8+0]
+    vpgatherdd      m13{k2}, [base+resize_filter+m9*8+4]
+    pshufb              m10, m11, m28
+    pshufb              m11, m11, m29
+    pshufb              m12, m13, m28
+    pshufb              m13, m13, m29
+    vpgatherdd      m15{k3}, [srcq+m0*2+ 0]
+    vpgatherdd      m16{k4}, [srcq+m0*2+ 4]
+    kmovq                k1, k6
+    kmovq                k2, k6
+    vpgatherdd      m17{k1}, [srcq+m0*2+ 8]
+    vpgatherdd      m18{k2}, [srcq+m0*2+12]
+.filter:
+    mova                m14, m2
+    vpdpwssd            m14, m15, m10
+    vpdpwssd            m14, m16, m11
+    vpdpwssd            m14, m17, m12
+    vpdpwssd            m14, m18, m13
+    psubd               m14, m3, m14
+    psrad               m14, 15
+    packusdw            m14, m14
+    vpermq              m14, m30, m14
+    pminsw             ym14, ym31
+    mova        [dstq+xq*2], ym14
+    paddd                m4, m5
+    add                  xd, 16
+    cmp                  xd, dst_wd
+    jl .loop_x
+    add                dstq, dst_strideq
+    add                srcq, src_strideq
+    dec                  hd
+    jg .loop_y
     RET
 
 %endif ; ARCH_X86_64

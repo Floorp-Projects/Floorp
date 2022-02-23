@@ -93,7 +93,7 @@ UNIFIED_SOURCES += [
     "testProfileStrings.cpp",
     "testPromise.cpp",
     "testPropCache.cpp",
-    "testReadableStream.cpp",
+    "testRecordTupleToSource.cpp",
     "testRegExp.cpp",
     "testResolveRecursion.cpp",
     "tests.cpp",
@@ -157,6 +157,11 @@ if not CONFIG["JS_CODEGEN_NONE"]:
         "testJitRegisterSet.cpp",
         "testJitRValueAlloc.cpp",
         "testsJit.cpp",
+    ]
+
+if not CONFIG["MOZ_DOM_STREAMS"]:
+    UNIFIED_SOURCES += [
+        "testReadableStream.cpp",
     ]
 
 if CONFIG["NIGHTLY_BUILD"]:

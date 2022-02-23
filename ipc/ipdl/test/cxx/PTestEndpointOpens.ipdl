@@ -2,9 +2,12 @@
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 include protocol PTestEndpointOpensOpened;
 
+include "mozilla/_ipdltest/TestEndpointOpens.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestEndpointOpensChild", ParentImpl="TestEndpointOpensParent"]
 protocol PTestEndpointOpens {
 child:
   async Start();

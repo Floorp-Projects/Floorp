@@ -16,6 +16,10 @@ class IPCWorkerRef;
 class WorkerPrivate;
 }  // namespace dom
 
+namespace webgpu {
+class WebGPUChild;
+}  // namespace webgpu
+
 namespace gfx {
 class DataSourceSurface;
 
@@ -35,11 +39,14 @@ class CanvasManagerChild final : public PCanvasManagerChild {
   static bool CreateParent(
       mozilla::ipc::Endpoint<PCanvasManagerParent>&& aEndpoint);
 
+  RefPtr<webgpu::WebGPUChild> GetWebGPUChild();
+
  private:
   ~CanvasManagerChild();
   void Destroy();
 
   RefPtr<mozilla::dom::IPCWorkerRef> mWorkerRef;
+  RefPtr<webgpu::WebGPUChild> mWebGPUChild;
   const uint32_t mId;
 
   static MOZ_THREAD_LOCAL(CanvasManagerChild*) sLocalManager;

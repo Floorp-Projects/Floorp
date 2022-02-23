@@ -32,14 +32,8 @@ class UnsupportedBrowserItem extends PureComponent {
   }
 
   render() {
-    const { id, name, versions } = this.props;
-
-    const versionsTitle = versions
-      .map(({ alias, version }) => version + (alias ? `(${alias})` : ""))
-      .join(", ");
-    const title = `${name} ${versionsTitle}`;
-
-    return dom.li({}, BrowserIcon({ id, name, title }));
+    const { id, name } = this.props;
+    return dom.li({}, BrowserIcon({ id, name }));
   }
 }
 

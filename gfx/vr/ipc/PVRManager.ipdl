@@ -11,6 +11,8 @@ include LayersMessages;
 include GamepadEventTypes;
 
 include "VRMessageUtils.h";
+include "VRManagerParent.h";
+include "VRManagerChild.h";
 
 using struct mozilla::gfx::VRFieldOfView from "gfxVR.h";
 using struct mozilla::gfx::VRDisplayInfo from "gfxVR.h";
@@ -32,7 +34,7 @@ namespace gfx {
  * enumeration and sensor state between the compositor thread and
  * content threads/processes.
  */
-[NeedsOtherPid]
+[ManualDealloc, NeedsOtherPid, ChildImpl="VRManagerChild", ParentImpl="VRManagerParent"]
 sync protocol PVRManager
 {
   manages PVRLayer;

@@ -17,8 +17,8 @@ async function getDocumentVisibilityState(browser) {
   return visibility;
 }
 
-// Waits for the master password prompt and cancels it.
-function observeMasterPasswordDialog(window, result) {
+// Waits for the primary password prompt and cancels it.
+function observePrimaryPasswordDialog(window, result) {
   let closedPromise;
   function topicObserver(subject) {
     let expected = "Password Required - " + BRAND_FULL_NAME;
@@ -35,12 +35,12 @@ function observeMasterPasswordDialog(window, result) {
 
   let waited = TestUtils.waitForCondition(() => {
     return result.wasShown;
-  }, "Wait for master password dialog");
+  }, "Wait for primary password dialog");
 
   return Promise.all([waited, closedPromise])
     .catch(ex => {
       info(
-        `observeMasterPasswordDialog, caught exception from topicObserved: ${ex}`
+        `observePrimaryPasswordDialog, caught exception from topicObserved: ${ex}`
       );
     })
     .finally(() => {
@@ -157,21 +157,21 @@ testUrls.forEach(testUrl => {
 });
 
 testUrlsWithForm.forEach(testUrl => {
-  add_task(async function test_immediate_autofill_with_masterpassword() {
-    // Set master password prompt timeout to 3s.
+  add_task(async function test_immediate_autofill_with_primarypassword() {
+    // Set primary password prompt timeout to 3s.
     // If this test goes intermittent, you likely have to increase this value.
     await SpecialPowers.pushPrefEnv({
       set: [["signon.masterPasswordReprompt.timeout_ms", 3000]],
     });
 
-    LoginTestUtils.masterPassword.enable();
+    LoginTestUtils.primaryPassword.enable();
     await LoginTestUtils.reloadData();
     info(
-      `Have enabled masterPassword, now isLoggedIn? ${Services.logins.isLoggedIn}`
+      `Have enabled primaryPassword, now isLoggedIn? ${Services.logins.isLoggedIn}`
     );
 
     registerCleanupFunction(async function() {
-      LoginTestUtils.masterPassword.disable();
+      LoginTestUtils.primaryPassword.disable();
       await LoginTestUtils.reloadData();
     });
 
@@ -189,7 +189,7 @@ testUrlsWithForm.forEach(testUrl => {
 
     info(
       "load a background login form tab with a matching saved login " +
-        "and wait to see if the master password dialog is shown"
+        "and wait to see if the primary password dialog is shown"
     );
     is(
       await getDocumentVisibilityState(tab2.linkedBrowser),
@@ -201,7 +201,7 @@ testUrlsWithForm.forEach(testUrl => {
     is(tab1Visibility, "hidden", "The first tab should be backgrounded");
 
     dialogResult = { wasShown: false };
-    dialogObserved = observeMasterPasswordDialog(
+    dialogObserved = observePrimaryPasswordDialog(
       tab1.ownerGlobal,
       dialogResult
     );

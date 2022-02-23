@@ -98,7 +98,7 @@ impl super::Adapter {
             device_type: if (desc.Flags & dxgi::DXGI_ADAPTER_FLAG_SOFTWARE) != 0 {
                 workarounds.avoid_cpu_descriptor_overwrites = true;
                 wgt::DeviceType::Cpu
-            } else if features_architecture.CacheCoherentUMA != 0 {
+            } else if features_architecture.UMA != 0 {
                 wgt::DeviceType::IntegratedGpu
             } else {
                 wgt::DeviceType::DiscreteGpu
@@ -183,9 +183,10 @@ impl super::Adapter {
             | wgt::Features::POLYGON_MODE_LINE
             | wgt::Features::POLYGON_MODE_POINT
             | wgt::Features::VERTEX_WRITABLE_STORAGE
+            | wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
             | wgt::Features::TIMESTAMP_QUERY
             | wgt::Features::TEXTURE_COMPRESSION_BC
-            | wgt::Features::CLEAR_COMMANDS
+            | wgt::Features::CLEAR_TEXTURE
             | wgt::Features::TEXTURE_FORMAT_16BIT_NORM;
         //TODO: in order to expose this, we need to run a compute shader
         // that extract the necessary statistics out of the D3D12 result.
@@ -239,7 +240,7 @@ impl super::Adapter {
                     max_uniform_buffers_per_shader_stage: full_heap_count,
                     max_uniform_buffer_binding_size: d3d12::D3D12_REQ_CONSTANT_BUFFER_ELEMENT_COUNT
                         * 16,
-                    max_storage_buffer_binding_size: !0,
+                    max_storage_buffer_binding_size: crate::auxil::MAX_I32_BINDING_SIZE,
                     max_vertex_buffers: d3d12::D3D12_VS_INPUT_REGISTER_COUNT
                         .min(crate::MAX_VERTEX_BUFFERS as u32),
                     max_vertex_attributes: d3d12::D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT,
@@ -331,13 +332,16 @@ impl crate::Adapter<super::Api> for super::Adapter {
         );
 
         let mut caps = Tfc::COPY_SRC | Tfc::COPY_DST;
-        let can_image = 0
-            != data.Support1
-                & (d3d12::D3D12_FORMAT_SUPPORT1_TEXTURE1D
-                    | d3d12::D3D12_FORMAT_SUPPORT1_TEXTURE2D
-                    | d3d12::D3D12_FORMAT_SUPPORT1_TEXTURE3D
-                    | d3d12::D3D12_FORMAT_SUPPORT1_TEXTURECUBE);
-        caps.set(Tfc::SAMPLED, can_image);
+        let is_texture = data.Support1
+            & (d3d12::D3D12_FORMAT_SUPPORT1_TEXTURE1D
+                | d3d12::D3D12_FORMAT_SUPPORT1_TEXTURE2D
+                | d3d12::D3D12_FORMAT_SUPPORT1_TEXTURE3D
+                | d3d12::D3D12_FORMAT_SUPPORT1_TEXTURECUBE)
+            != 0;
+        caps.set(
+            Tfc::SAMPLED,
+            is_texture && data.Support1 & d3d12::D3D12_FORMAT_SUPPORT1_SHADER_LOAD != 0,
+        );
         caps.set(
             Tfc::SAMPLED_LINEAR,
             data.Support1 & d3d12::D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE != 0,
@@ -361,6 +365,19 @@ impl crate::Adapter<super::Api> for super::Adapter {
         caps.set(
             Tfc::STORAGE_READ_WRITE,
             data.Support2 & d3d12::D3D12_FORMAT_SUPPORT2_UAV_TYPED_LOAD != 0,
+        );
+
+        let no_msaa_load = caps.contains(Tfc::SAMPLED)
+            && data.Support1 & d3d12::D3D12_FORMAT_SUPPORT1_MULTISAMPLE_LOAD == 0;
+        let no_msaa_target = data.Support1
+            & (d3d12::D3D12_FORMAT_SUPPORT1_RENDER_TARGET
+                | d3d12::D3D12_FORMAT_SUPPORT1_DEPTH_STENCIL)
+            != 0
+            && data.Support1 & d3d12::D3D12_FORMAT_SUPPORT1_MULTISAMPLE_RENDERTARGET == 0;
+        caps.set(Tfc::MULTISAMPLE, !no_msaa_load && !no_msaa_target);
+        caps.set(
+            Tfc::MULTISAMPLE_RESOLVE,
+            data.Support1 & d3d12::D3D12_FORMAT_SUPPORT1_MULTISAMPLE_RESOLVE != 0,
         );
 
         caps

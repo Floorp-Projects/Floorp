@@ -376,6 +376,9 @@ interface mixin WebGL2RenderingContextBase
     [Throws] // Another overhead throws.
     void texImage2D(GLenum target, GLint level, GLint internalformat,
                     GLenum format, GLenum type, ImageData source);
+    [Throws] // Another overhead throws.
+    void texImage2D(GLenum target, GLint level, GLint internalformat,
+                    GLenum format, GLenum type, OffscreenCanvas source);
 
     [Throws] // Another overhead throws.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
@@ -396,6 +399,9 @@ interface mixin WebGL2RenderingContextBase
     [Throws] // Another overhead throws.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, ImageData source);
+    [Throws] // Another overhead throws.
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLenum format, GLenum type, OffscreenCanvas source);
 
     // WebGL2 entrypoints:
     [Throws] // Another overhead throws.
@@ -421,6 +427,10 @@ interface mixin WebGL2RenderingContextBase
     void texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLint border, GLenum format, GLenum type,
                     ImageData source);
+    [Throws] // Another overhead throws.
+    void texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                    GLint border, GLenum format, GLenum type,
+                    OffscreenCanvas source);
     [Throws] // Another overhead throws.
     void texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLint border, GLenum format, GLenum type, [AllowShared] ArrayBufferView srcData,
@@ -449,6 +459,10 @@ interface mixin WebGL2RenderingContextBase
     void texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLsizei depth, GLint border, GLenum format, GLenum type,
                     ImageData source);
+    [Throws] // Another overhead throws.
+    void texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                    GLsizei depth, GLint border, GLenum format, GLenum type,
+                    OffscreenCanvas source);
     [Throws] // Another overhead throws.
     void texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLsizei depth, GLint border, GLenum format, GLenum type, [AllowShared] ArrayBufferView? srcData);
@@ -482,6 +496,10 @@ interface mixin WebGL2RenderingContextBase
                        ImageData source);
     [Throws] // Another overhead throws.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
+                       GLsizei height, GLenum format, GLenum type,
+                       OffscreenCanvas source);
+    [Throws] // Another overhead throws.
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
                        GLsizei height, GLenum format, GLenum type, [AllowShared] ArrayBufferView srcData,
                        GLuint srcOffset);
 
@@ -509,6 +527,10 @@ interface mixin WebGL2RenderingContextBase
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                        GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
                        ImageData source);
+    [Throws] // Another overhead throws.
+    void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+                       GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
+                       OffscreenCanvas source);
     [Throws] // Another overhead throws.
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                        GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,

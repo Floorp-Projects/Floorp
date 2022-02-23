@@ -13,7 +13,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
-#include "mozilla/dom/WritableStream.h"
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -25,6 +24,7 @@
 namespace mozilla::dom {
 
 class Promise;
+class WritableStream;
 
 class WritableStreamDefaultWriter final : public nsISupports,
                                           public nsWrapperCache {
@@ -94,6 +94,22 @@ extern void WritableStreamDefaultWriterEnsureClosedPromiseRejected(
 extern void WritableStreamDefaultWriterEnsureReadyPromiseRejected(
     WritableStreamDefaultWriter* aWriter, JS::Handle<JS::Value> aError,
     ErrorResult& aRv);
+
+extern Nullable<double> WritableStreamDefaultWriterGetDesiredSize(
+    WritableStreamDefaultWriter* aWriter);
+
+extern void WritableStreamDefaultWriterRelease(
+    JSContext* aCx, WritableStreamDefaultWriter* aWriter, ErrorResult& aRv);
+
+MOZ_CAN_RUN_SCRIPT extern already_AddRefed<Promise>
+WritableStreamDefaultWriterWrite(JSContext* aCx,
+                                 WritableStreamDefaultWriter* aWriter,
+                                 JS::Handle<JS::Value> aChunk,
+                                 ErrorResult& aRv);
+
+MOZ_CAN_RUN_SCRIPT extern already_AddRefed<Promise>
+WritableStreamDefaultWriterCloseWithErrorPropagation(
+    JSContext* aCx, WritableStreamDefaultWriter* aWriter, ErrorResult& aRv);
 
 }  // namespace mozilla::dom
 

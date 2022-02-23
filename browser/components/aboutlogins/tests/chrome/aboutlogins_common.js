@@ -79,7 +79,7 @@ Object.defineProperty(window, "AboutLoginsUtils", {
     setFocus(element) {
       return element.focus();
     },
-    async promptForMasterPassword(resolve, messageId) {
+    async promptForPrimaryPassword(resolve, messageId) {
       resolve(true);
     },
     doLoginsMatch(login1, login2) {
@@ -92,6 +92,6 @@ Object.defineProperty(window, "AboutLoginsUtils", {
     fileImportEnabled: SpecialPowers.getBoolPref(
       "signon.management.page.fileImport.enabled"
     ),
-    masterPasswordEnabled: false,
+    primaryPasswordEnabled: false,
   },
 });

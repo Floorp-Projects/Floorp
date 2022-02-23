@@ -4,11 +4,11 @@
 // delazified in some cases.
 
 let obj = [];
-let fun = obj.indexOf;
+let fun = obj.map;
 assertEq(isLazyFunction(fun), true);
 
 // Delazify
-fun.call(obj);
+fun.call(obj, x => x);
 assertEq(isLazyFunction(fun), false);
 
 // Relazify

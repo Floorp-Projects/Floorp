@@ -49,7 +49,7 @@ update_channel (both)
 
 version, build_id (both)
   Version number and Build ID of the installed product, from ``application.ini``. This is **not** the version of the installer itself.
- 
+
   stub: 0 if the installation failed
 
   full: ``""`` if not found [#versionfailure]_
@@ -62,9 +62,9 @@ from_msi (full)
 
 _64bit_build (both)
   True if a 64-bit build was selected for installation.
-  
+
   stub: This means the OS is 64-bit, the RAM requirement was met, and no third-party software that blocks 64-bit installations was found
-  
+
   full: Hardcoded based on the architecture to be installed
 
 _64bit_os (both)
@@ -94,17 +94,17 @@ set_default (both)
 
 new_default (both)
   True if the new installation is now the default browser (registered to handle the http protocol).
- 
+
   full: Checks the association using ``AppAssocReg::QueryCurrentDefault`` and :abbr:`HKCU (HKEY_CURRENT_USER)`.
 
   stub: [DEPRECATED] [#stubnewdefault]_
 
 old_default (both)
   True if firefox.exe in a different directory is now the default browser, mutually exclusive with new_default. The details are the same as new_default.
- 
+
 had_old_install (both)
   True if at least one existing installation of Firefox was found on the system prior to this installation.
-  
+
   full: Checks for the installation directory given in the ``Software\Mozilla\${BrandFullName}`` registry keys, either :abbr:`HKLM` or :abbr:`HKCU`
 
   stub: Checks for the top level profile directory ``%LOCALAPPDATA%\Mozilla\Firefox``
@@ -229,6 +229,6 @@ Footnotes
 
 .. [#stubsetdefault] We no longer attempt to change the default browser setting in the streamlined stub, so set_default should always be false.
 
-.. [#stubnewdefault] We no longer attempt to change the default browser setting in the streamlined stub, so new_default should usually be false, but the stub still checks the association at ``Software\Classes\http\shell\open\command`` in :abbr:`HKLM` or :abbr:`HKCU`. 
+.. [#stubnewdefault] We no longer attempt to change the default browser setting in the streamlined stub, so new_default should usually be false, but the stub still checks the association at ``Software\Classes\http\shell\open\command`` in :abbr:`HKLM` or :abbr:`HKCU`.
 
 .. [#downloadphase] ``download_time`` was previously called ``download_phase_time``, this includes retries during the download phase. There was a different ``download_time`` field that specifically measured only the time of the last download, this is still submitted but it is ignored during ingestion.

@@ -43,12 +43,11 @@ Accounts, communication
 [#webdriver:mozilla.org]: https://chat.mozilla.org/#/room/#webdriver:mozilla.org
 [Bugzilla]: https://bugzilla.mozilla.org/
 [Mozillians]: https://mozillians.org/
-[logbot]: https://mozilla.logbot.info/ateam/
 
 Getting the code, running tests
 -------------------------------
 
-Follow the documentation on [Contributing](Contributing.html) to get a sense of
+Follow the documentation on [Contributing](Contributing.md) to get a sense of
 our projects, and which is of most interest for you. You will also learn how to
 get the Firefox source code, build your custom Firefox build, and how to run the
 tests.
@@ -59,7 +58,7 @@ Work on bugs and get code review
 
 Once you are familiar with the code of the test harnesses, and the tests you might
 want to start with your first contribution. The necessary steps to submit and verify
-your patches are laid out in [Patches.md](Patches.html).
+your patches are laid out in [Patches](Patches.md).
 
 
 Resources

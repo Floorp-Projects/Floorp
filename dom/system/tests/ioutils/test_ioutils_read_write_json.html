@@ -36,8 +36,7 @@
     const PRIMITIVES = [123, true, false, "hello, world", null];
 
     add_task(async function read_json() {
-      const tmpDir = await PathUtils.getTempDir();
-      const filename = PathUtils.join(tmpDir, "test_ioutils_read_json.tmp");
+      const filename = PathUtils.join(PathUtils.tempDir, "test_ioutils_read_json.tmp");
 
       info("Testing IOUtils.readJSON() with a serialized object...");
       await IOUtils.writeUTF8(filename, JSON.stringify(OBJECT));
@@ -72,7 +71,7 @@
       }
 
       info("Testing IOUtils.readJSON() with a file that does not exist...");
-      const notExistsFilename = PathUtils.join(tmpDir, "test_ioutils_read_json_not_exists.tmp");
+      const notExistsFilename = PathUtils.join(PathUtils.tempDir, "test_ioutils_read_json_not_exists.tmp");
       ok(!await IOUtils.exists(notExistsFilename), `${notExistsFilename} should not exist`);
       await Assert.rejects(
         IOUtils.readJSON(notExistsFilename),
@@ -81,7 +80,7 @@
       );
 
       info("Testing IOUtils.readJSON() with a file that does not contain JSON");
-      const invalidFilename = PathUtils.join(tmpDir, "test_ioutils_read_json_invalid.tmp");
+      const invalidFilename = PathUtils.join(PathUtils.tempDir, "test_ioutils_read_json_invalid.tmp");
       await IOUtils.writeUTF8(invalidFilename, ":)");
 
       await Assert.rejects(
@@ -94,8 +93,7 @@
     });
 
     add_task(async function write_json() {
-      const tmpDir = await PathUtils.getTempDir();
-      const filename = PathUtils.join(tmpDir, "test_ioutils_write_json.tmp");
+      const filename = PathUtils.join(PathUtils.tempDir, "test_ioutils_write_json.tmp");
 
       info("Testing IOUtils.writeJSON() with an object...");
       await IOUtils.writeJSON(filename, OBJECT);
@@ -143,8 +141,7 @@
     });
 
     add_task(async function test_append_json() {
-      const tmpDir = await PathUtils.getTempDir();
-      const filename = PathUtils.join(tmpDir, "test_ioutils_append_json.tmp");
+      const filename = PathUtils.join(PathUtils.tempDir, "test_ioutils_append_json.tmp");
 
       await IOUtils.writeJSON(filename, OBJECT);
 

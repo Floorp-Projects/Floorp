@@ -80,9 +80,9 @@ bool doResolve(JS::HandleObject obj, JS::HandleId id, bool* resolvedp) {
   AutoIncrCounters incr(this);
   CHECK(obj == obj1 || obj == obj2);
 
-  CHECK(JSID_IS_STRING(id));
+  CHECK(id.isString());
 
-  JSLinearString* str = JS_EnsureLinearString(cx, JSID_TO_STRING(id));
+  JSLinearString* str = JS_EnsureLinearString(cx, id.toString());
   CHECK(str);
   JS::RootedValue v(cx);
   if (JS_LinearStringEqualsLiteral(str, "x")) {

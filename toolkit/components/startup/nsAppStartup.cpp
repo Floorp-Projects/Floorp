@@ -823,9 +823,7 @@ nsAppStartup::GetStartupInfo(JSContext* aCx,
   TimeStamp procTime = StartupTimeline::Get(StartupTimeline::PROCESS_CREATION);
 
   if (procTime.IsNull()) {
-    bool error = false;
-
-    procTime = TimeStamp::ProcessCreation(&error);
+    procTime = TimeStamp::ProcessCreation();
 
     StartupTimeline::Record(StartupTimeline::PROCESS_CREATION, procTime);
   }

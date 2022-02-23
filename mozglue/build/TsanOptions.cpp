@@ -172,7 +172,7 @@ extern "C" const char* __tsan_default_suppressions() {
          // No Upstream Bug Filed!
          //
          // Probably benign - sqlite has a few optimizations where it does
-         // racy reads and then does properly synchornized integrity checks
+         // racy reads and then does properly synchronized integrity checks
          // afterwards. Some concern of compiler optimizations messing this
          // up due to "volatile" being too weak for this.
          "race:third_party/sqlite3/*\n"
@@ -184,7 +184,10 @@ extern "C" const char* __tsan_default_suppressions() {
          // fix already up for review.
          "race:StrongRuleNode::ensure_child\n"
          // No Bug - permanent
-         // Upstream Bug: https://github.com/rayon-rs/rayon/issues/812
+         // Upstream Bugs:
+         //
+         //  * https://github.com/rayon-rs/rayon/issues/812
+         //  * https://github.com/crossbeam-rs/crossbeam/issues/589
          //
          // Probably a false-positive from crossbeam's deque not being
          // understood by tsan.
@@ -192,6 +195,7 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:crossbeam_deque*::push\n"
          "race:crossbeam_deque*::write\n"
          "race:crossbeam_deque*::read\n"
+         "race:crossbeam_deque*::steal\n"
 
 
 
@@ -221,10 +225,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:Clamp_S32_D32_nofilter_trans_shaderproc\n"
          "race:SkSpriteBlitter_Memcpy\n"
 
-         // Bug 1606651
-         "race:nsPluginTag::nsPluginTag\n"
-         "race:nsFakePluginTag\n"
-
          // Bug 1606800
          "race:CallInitFunc\n"
 
@@ -234,10 +234,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1615123
          "race:_dl_deallocate_tls\n"
          "race:__libc_memalign\n"
-
-         // Bug 1664535
-         "race:setNeedsIncrementalBarrier\n"
-         "race:needsIncrementalBarrier\n"
 
          // Bug 1664803
          "race:Sampler::sSigHandlerCoordinator\n"
@@ -299,6 +295,11 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:js::wasm::Code::commitTier2\n"
          "race:js::wasm::Code::setTier2\n"
          "race:js::wasm::Code::setAndBorrowTier2\n"
+
+         // Bug 1755449
+         // The Glean init thread is used to perform I/O and other blocking operations.
+         // It is never joined with the main thread, but this is being re-evaluated.
+         "thread:glean::initialize\n"
 
       // End of suppressions.
       ;  // Please keep this semicolon.

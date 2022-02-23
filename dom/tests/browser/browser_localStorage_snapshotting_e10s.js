@@ -77,6 +77,28 @@ async function endExplicitSnapshot(knownTab) {
   });
 }
 
+async function verifyHasSnapshot(knownTab, expectedHasSnapshot) {
+  let hasSnapshot = await SpecialPowers.spawn(
+    knownTab.tab.linkedBrowser,
+    [],
+    function() {
+      return content.wrappedJSObject.getHasSnapshot();
+    }
+  );
+  is(hasSnapshot, expectedHasSnapshot, "Correct has snapshot");
+}
+
+async function verifySnapshotUsage(knownTab, expectedSnapshotUsage) {
+  let snapshotUsage = await SpecialPowers.spawn(
+    knownTab.tab.linkedBrowser,
+    [],
+    function() {
+      return content.wrappedJSObject.getSnapshotUsage();
+    }
+  );
+  is(snapshotUsage, expectedSnapshotUsage, "Correct snapshot usage");
+}
+
 // We spin up a ton of child processes.
 requestLongerTimeout(4);
 
@@ -466,4 +488,163 @@ add_task(async function() {
   await cleanupTabs(knownTabs);
 
   clearOrigin();
+});
+
+/**
+ * Verify that snapshots are able to work with negative usage. This can happen
+ * when there's an item stored in localStorage with given size and then two
+ * snaphots (created at the same time) mutate the item. The first one replases
+ * it with something bigger and the other one removes it.
+ */
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Force multiple web and webIsolated content processes so that the
+      // multi-e10s logic works correctly.
+      ["dom.ipc.processCount", 4],
+      ["dom.ipc.processCount.webIsolated", 2],
+      // Disable snapshot peak usage pre-incrementation to make the testing
+      // easier.
+      ["dom.storage.snapshot_peak_usage.initial_preincrement", 0],
+      ["dom.storage.snapshot_peak_usage.reduced_initial_preincrement", 0],
+      ["dom.storage.snapshot_peak_usage.gradual_preincrement", 0],
+      ["dom.storage.snapshot_peak_usage.reuced_gradual_preincrement", 0],
+      // Enable LocalStorage's testing API so we can explicitly create
+      // snapshots when needed.
+      ["dom.storage.testing", true],
+    ],
+  });
+
+  // Ensure that there is no localstorage data by forcing the origin to be
+  // cleared prior to the start of our test.
+  await clearOriginStorageEnsuringNoPreload(HELPER_PAGE_ORIGIN);
+
+  // Open tabs.  Don't configure any of them yet.
+  const knownTabs = new KnownTabs();
+  const writerTab1 = await openTestTab(
+    HELPER_PAGE_URL,
+    "writer1",
+    knownTabs,
+    true
+  );
+  const writerTab2 = await openTestTab(
+    HELPER_PAGE_URL,
+    "writer2",
+    knownTabs,
+    true
+  );
+
+  // Apply the initial mutation using an explicit snapshot. The explicit
+  // snapshot here ensures that the parent process have received the changes.
+  await beginExplicitSnapshot(writerTab1);
+  await applyMutations(writerTab1, [["key", "something"]]);
+  await endExplicitSnapshot(writerTab1);
+
+  // Begin explicit snapshots in both tabs. Both tabs should see the initial
+  // state.
+  await beginExplicitSnapshot(writerTab1);
+  await beginExplicitSnapshot(writerTab2);
+
+  // Apply the first mutation in writerTab1 and end the explicit snapshot.
+  await applyMutations(writerTab1, [["key", "somethingBigger"]]);
+  await endExplicitSnapshot(writerTab1);
+
+  // Apply the second mutation in writerTab2 and end the explicit snapshot.
+  await applyMutations(writerTab2, [["key", null]]);
+  await endExplicitSnapshot(writerTab2);
+
+  // Verify the final state, it should match the state after the second
+  // mutation has been applied and "commited". An explicit snapshot is used.
+  await beginExplicitSnapshot(writerTab1);
+  await verifyState(writerTab1, {});
+  await endExplicitSnapshot(writerTab1);
+
+  // Clean up.
+  await cleanupTabs(knownTabs);
+
+  clearOriginStorageEnsuringNoPreload(HELPER_PAGE_ORIGIN);
+});
+
+/**
+ * Verify that snapshot usage is correctly updated after each operation.
+ */
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Force multiple web and webIsolated content processes so that the
+      // multi-e10s logic works correctly.
+      ["dom.ipc.processCount", 4],
+      ["dom.ipc.processCount.webIsolated", 2],
+      // Disable snapshot peak usage pre-incrementation to make the testing
+      // easier.
+      ["dom.storage.snapshot_peak_usage.initial_preincrement", 0],
+      ["dom.storage.snapshot_peak_usage.reduced_initial_preincrement", 0],
+      ["dom.storage.snapshot_peak_usage.gradual_preincrement", 0],
+      ["dom.storage.snapshot_peak_usage.reuced_gradual_preincrement", 0],
+      // Enable LocalStorage's testing API so we can explicitly create
+      // snapshots when needed.
+      ["dom.storage.testing", true],
+    ],
+  });
+
+  // Ensure that there is no localstorage data by forcing the origin to be
+  // cleared prior to the start of our test.
+  await clearOriginStorageEnsuringNoPreload(HELPER_PAGE_ORIGIN);
+
+  // Open tabs.  Don't configure any of them yet.
+  const knownTabs = new KnownTabs();
+  const writerTab1 = await openTestTab(
+    HELPER_PAGE_URL,
+    "writer1",
+    knownTabs,
+    true
+  );
+  const writerTab2 = await openTestTab(
+    HELPER_PAGE_URL,
+    "writer2",
+    knownTabs,
+    true
+  );
+
+  // Apply the initial mutation using an explicit snapshot. The explicit
+  // snapshot here ensures that the parent process have received the changes.
+  await beginExplicitSnapshot(writerTab1);
+  await verifySnapshotUsage(writerTab1, 0);
+  await applyMutations(writerTab1, [["key", "something"]]);
+  await verifySnapshotUsage(writerTab1, 12);
+  await endExplicitSnapshot(writerTab1);
+  await verifyHasSnapshot(writerTab1, false);
+
+  // Begin an explicit snapshot in writerTab1 and apply the first mutatation
+  // in it.
+  await beginExplicitSnapshot(writerTab1);
+  await verifySnapshotUsage(writerTab1, 12);
+  await applyMutations(writerTab1, [["key", "somethingBigger"]]);
+  await verifySnapshotUsage(writerTab1, 18);
+
+  // Begin an explicit snapshot in writerTab2 and apply the second mutatation
+  // in it.
+  await beginExplicitSnapshot(writerTab2);
+  await verifySnapshotUsage(writerTab2, 18);
+  await applyMutations(writerTab2, [[null, null]]);
+  await verifySnapshotUsage(writerTab2, 6);
+
+  // End explicit snapshots in both tabs.
+  await endExplicitSnapshot(writerTab1);
+  await verifyHasSnapshot(writerTab1, false);
+  await endExplicitSnapshot(writerTab2);
+  await verifyHasSnapshot(writerTab2, false);
+
+  // Verify the final state, it should match the state after the second
+  // mutation has been applied and "commited". An explicit snapshot is used.
+  await beginExplicitSnapshot(writerTab1);
+  await verifySnapshotUsage(writerTab1, 0);
+  await verifyState(writerTab1, {});
+  await endExplicitSnapshot(writerTab1);
+  await verifyHasSnapshot(writerTab1, false);
+
+  // Clean up.
+  await cleanupTabs(knownTabs);
+
+  clearOriginStorageEnsuringNoPreload(HELPER_PAGE_ORIGIN);
 });

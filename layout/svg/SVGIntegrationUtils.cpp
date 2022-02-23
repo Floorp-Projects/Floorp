@@ -493,7 +493,6 @@ static bool PaintMaskSurface(const PaintFramesParams& aParams,
                              DrawTarget* aMaskDT, float aOpacity,
                              ComputedStyle* aSC,
                              const nsTArray<SVGMaskFrame*>& aMaskFrames,
-                             const Matrix& aMaskSurfaceMatrix,
                              const nsPoint& aOffsetToUserSpace) {
   MOZ_ASSERT(aMaskFrames.Length() > 0);
   MOZ_ASSERT(aMaskDT->GetFormat() == SurfaceFormat::A8);
@@ -596,7 +595,8 @@ static MaskPaintResult CreateAndPaintMaskSurface(
     return paintResult;
   }
 
-  const Rect& maskSurfaceRect = aParams.maskRect.valueOr(Rect());
+  const LayoutDeviceRect& maskSurfaceRect =
+      aParams.maskRect.valueOr(LayoutDeviceRect());
   if (aParams.maskRect.isSome() && maskSurfaceRect.IsEmpty()) {
     // XXX: Is this ever true?
     paintResult.transparentBlackMask = true;
@@ -604,7 +604,7 @@ static MaskPaintResult CreateAndPaintMaskSurface(
   }
 
   RefPtr<DrawTarget> maskDT = ctx.GetDrawTarget()->CreateClippedDrawTarget(
-      maskSurfaceRect, SurfaceFormat::A8);
+      maskSurfaceRect.ToUnknownRect(), SurfaceFormat::A8);
   if (!maskDT || !maskDT->IsValid()) {
     return paintResult;
   }
@@ -621,7 +621,7 @@ static MaskPaintResult CreateAndPaintMaskSurface(
 
   bool isMaskComplete = PaintMaskSurface(
       aParams, maskDT, paintResult.opacityApplied ? aOpacity : 1.0, aSC,
-      aMaskFrames, maskSurfaceMatrix, aOffsetToUserSpace);
+      aMaskFrames, aOffsetToUserSpace);
 
   if (!isMaskComplete ||
       (aParams.imgParams.result != ImgDrawResult::SUCCESS &&
@@ -727,12 +727,11 @@ bool SVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
     // Create one extra draw target for drawing positioned mask, so that we do
     // not have to copy the content of maskTarget before painting
     // clip-path into it.
-    if (!maskTarget->CanCreateSimilarDrawTarget(maskTarget->GetSize(),
-                                                SurfaceFormat::A8)) {
-      return false;
-    }
-    maskTarget = maskTarget->CreateSimilarDrawTarget(maskTarget->GetSize(),
-                                                     SurfaceFormat::A8);
+    maskTarget = maskTarget->CreateClippedDrawTarget(Rect(), SurfaceFormat::A8);
+    // XXX: We set the transform to identity because that's what the code that
+    // previously used CreateSimilarSurface was implicitly doing. However, it's
+    // not obvious to me why that's the right thing to do.
+    maskTarget->SetTransform(Matrix());
   }
 
   nsIFrame* firstFrame =
@@ -779,8 +778,7 @@ bool SVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
     EffectOffsets offsets = MoveContextOriginToUserSpace(frame, aParams);
     aOutIsMaskComplete = PaintMaskSurface(
         aParams, maskTarget, shouldPushOpacity ? 1.0 : maskUsage.opacity,
-        firstFrame->Style(), maskFrames, ctx.CurrentMatrix(),
-        offsets.offsetToUserSpace);
+        firstFrame->Style(), maskFrames, offsets.offsetToUserSpace);
   }
 
   // Paint clip-path onto ctx.

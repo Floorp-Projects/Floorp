@@ -851,7 +851,7 @@ bool ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
       cx, GCHashSet<jsid>(cx, trapResult.length()));
 
   for (size_t i = 0, len = trapResult.length(); i < len; i++) {
-    MOZ_ASSERT(!JSID_IS_VOID(trapResult[i]));
+    MOZ_ASSERT(!trapResult[i].isVoid());
 
     auto ptr = uncheckedResultKeys.lookupForAdd(trapResult[i]);
     if (ptr) {
@@ -908,7 +908,7 @@ bool ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
 
   // Step 19.
   for (size_t i = 0; i < targetNonconfigurableKeys.length(); ++i) {
-    MOZ_ASSERT(!JSID_IS_VOID(targetNonconfigurableKeys[i]));
+    MOZ_ASSERT(!targetNonconfigurableKeys[i].isVoid());
 
     auto ptr = uncheckedResultKeys.lookup(targetNonconfigurableKeys[i]);
 
@@ -928,7 +928,7 @@ bool ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
 
   // Step 21.
   for (size_t i = 0; i < targetConfigurableKeys.length(); ++i) {
-    MOZ_ASSERT(!JSID_IS_VOID(targetConfigurableKeys[i]));
+    MOZ_ASSERT(!targetConfigurableKeys[i].isVoid());
 
     auto ptr = uncheckedResultKeys.lookup(targetConfigurableKeys[i]);
 

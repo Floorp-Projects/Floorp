@@ -15,6 +15,7 @@ namespace dom {
  * SharedWorkerParent and SharedWorkerService getting/creating the
  * SharedWorkerManager if it doesn't already exist. Main-thread to PBackground.
  */
+[ManualDealloc]
 protocol PSharedWorker
 {
   manager PBackground;

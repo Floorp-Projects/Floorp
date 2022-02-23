@@ -1,9 +1,12 @@
 
 include protocol PTestActorPunning;
 
+include "mozilla/_ipdltest/TestActorPunning.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestActorPunningSubChild", ParentImpl="TestActorPunningSubParent"]
 protocol PTestActorPunningSub {
     manager PTestActorPunning;
 

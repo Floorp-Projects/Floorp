@@ -121,10 +121,12 @@ static inline DWRITE_FONT_STRETCH DWriteFontStretchFromStretch(
 ScaledFontDWrite::ScaledFontDWrite(IDWriteFontFace* aFontFace,
                                    const RefPtr<UnscaledFont>& aUnscaledFont,
                                    Float aSize, bool aUseEmbeddedBitmap,
-                                   bool aGDIForced, const gfxFontStyle* aStyle)
+                                   bool aUseMultistrikeBold, bool aGDIForced,
+                                   const gfxFontStyle* aStyle)
     : ScaledFontBase(aUnscaledFont, aSize),
       mFontFace(aFontFace),
       mUseEmbeddedBitmap(aUseEmbeddedBitmap),
+      mUseMultistrikeBold(aUseMultistrikeBold),
       mGDIForced(aGDIForced) {
   if (aStyle) {
     mStyle = SkFontStyle(aStyle->weight.ToIntRounded(),
@@ -391,14 +393,16 @@ bool UnscaledFontDWrite::GetFontDescriptor(FontDescriptorOutput aCb,
 
 ScaledFontDWrite::InstanceData::InstanceData(
     const wr::FontInstanceOptions* aOptions,
-    const wr::FontInstancePlatformOptions* aPlatformOptions)
-    : mUseEmbeddedBitmap(false), mApplySyntheticBold(false) {
+    const wr::FontInstancePlatformOptions* aPlatformOptions) {
   if (aOptions) {
     if (aOptions->flags & wr::FontInstanceFlags::EMBEDDED_BITMAPS) {
       mUseEmbeddedBitmap = true;
     }
     if (aOptions->flags & wr::FontInstanceFlags::SYNTHETIC_BOLD) {
-      mApplySyntheticBold = true;
+      mUseBoldSimulation = true;
+    }
+    if (aOptions->flags & wr::FontInstanceFlags::MULTISTRIKE_BOLD) {
+      mUseMultistrikeBold = true;
     }
     if (aOptions->flags & wr::FontInstanceFlags::FORCE_GDI) {
       mGDIForced = true;
@@ -466,8 +470,11 @@ bool ScaledFontDWrite::GetWRFontInstanceOptions(
   wr::FontInstanceOptions options;
   options.render_mode = wr::ToFontRenderMode(GetDefaultAAMode());
   options.flags = wr::FontInstanceFlags{0};
-  if (HasSyntheticBold()) {
+  if (HasBoldSimulation()) {
     options.flags |= wr::FontInstanceFlags::SYNTHETIC_BOLD;
+  }
+  if (UseMultistrikeBold()) {
+    options.flags |= wr::FontInstanceFlags::MULTISTRIKE_BOLD;
   }
   if (UseEmbeddedBitmaps()) {
     options.flags |= wr::FontInstanceFlags::EMBEDDED_BITMAPS;
@@ -614,7 +621,7 @@ already_AddRefed<ScaledFont> UnscaledFontDWrite::CreateScaledFont(
       *reinterpret_cast<const ScaledFontDWrite::InstanceData*>(aInstanceData);
 
   IDWriteFontFace* face = mFontFace;
-  if (instanceData.mApplySyntheticBold) {
+  if (instanceData.mUseBoldSimulation) {
     if (!InitBold()) {
       gfxWarning() << "Failed creating bold IDWriteFontFace.";
       return nullptr;
@@ -636,9 +643,9 @@ already_AddRefed<ScaledFont> UnscaledFontDWrite::CreateScaledFont(
     }
   }
 
-  return MakeAndAddRef<ScaledFontDWrite>(face, this, aGlyphSize,
-                                         instanceData.mUseEmbeddedBitmap,
-                                         instanceData.mGDIForced);
+  return MakeAndAddRef<ScaledFontDWrite>(
+      face, this, aGlyphSize, instanceData.mUseEmbeddedBitmap,
+      instanceData.mUseMultistrikeBold, instanceData.mGDIForced, nullptr);
 }
 
 already_AddRefed<ScaledFont> UnscaledFontDWrite::CreateScaledFontFromWRFont(

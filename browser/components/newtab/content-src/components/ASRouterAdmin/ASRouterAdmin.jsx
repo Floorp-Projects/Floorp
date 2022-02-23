@@ -1838,7 +1838,7 @@ export class ASRouterAdminInner extends React.PureComponent {
               Need help using these tools? Check out our{" "}
               <a
                 target="blank"
-                href="https://github.com/mozilla/activity-stream/blob/master/content-src/asrouter/docs/debugging-docs.md"
+                href="https://firefox-source-docs.mozilla.org/browser/components/newtab/content-src/asrouter/docs/index.html"
               >
                 documentation
               </a>

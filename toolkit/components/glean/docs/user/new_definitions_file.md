@@ -81,7 +81,7 @@ There are three values accepted in the `expires` field of `metrics.yaml`s for FO
 * `expired` - For marking a metric as manually expired.
   Not usually used, but sometimes helpful for internal tests.
 * `never` - For marking a metric as part of a permanent data collection.
-  Metrics marked with `never` must have [instrumentation tests](testing.md).
+  Metrics marked with `never` must have [instrumentation tests](../dev/testing.md).
 
 For more information on what expiry means and the
 `metrics.yaml` format, see

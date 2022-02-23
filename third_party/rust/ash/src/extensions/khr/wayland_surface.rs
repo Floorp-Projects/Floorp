@@ -1,29 +1,23 @@
 use crate::prelude::*;
 use crate::vk;
 use crate::RawPtr;
-use crate::{EntryCustom, Instance};
+use crate::{Entry, Instance};
 use std::ffi::CStr;
 use std::mem;
 
 #[derive(Clone)]
 pub struct WaylandSurface {
     handle: vk::Instance,
-    wayland_surface_fn: vk::KhrWaylandSurfaceFn,
+    fp: vk::KhrWaylandSurfaceFn,
 }
 
 impl WaylandSurface {
-    pub fn new<L>(entry: &EntryCustom<L>, instance: &Instance) -> Self {
-        let surface_fn = vk::KhrWaylandSurfaceFn::load(|name| unsafe {
-            mem::transmute(entry.get_instance_proc_addr(instance.handle(), name.as_ptr()))
+    pub fn new(entry: &Entry, instance: &Instance) -> Self {
+        let handle = instance.handle();
+        let fp = vk::KhrWaylandSurfaceFn::load(|name| unsafe {
+            mem::transmute(entry.get_instance_proc_addr(handle, name.as_ptr()))
         });
-        Self {
-            handle: instance.handle(),
-            wayland_surface_fn: surface_fn,
-        }
-    }
-
-    pub fn name() -> &'static CStr {
-        vk::KhrWaylandSurfaceFn::name()
+        Self { handle, fp }
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateWaylandSurfaceKHR.html>"]
@@ -33,7 +27,7 @@ impl WaylandSurface {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::SurfaceKHR> {
         let mut surface = mem::zeroed();
-        self.wayland_surface_fn
+        self.fp
             .create_wayland_surface_khr(
                 self.handle,
                 create_info,
@@ -51,7 +45,7 @@ impl WaylandSurface {
         wl_display: &mut vk::wl_display,
     ) -> bool {
         let b = self
-            .wayland_surface_fn
+            .fp
             .get_physical_device_wayland_presentation_support_khr(
                 physical_device,
                 queue_family_index,
@@ -61,8 +55,12 @@ impl WaylandSurface {
         b > 0
     }
 
+    pub fn name() -> &'static CStr {
+        vk::KhrWaylandSurfaceFn::name()
+    }
+
     pub fn fp(&self) -> &vk::KhrWaylandSurfaceFn {
-        &self.wayland_surface_fn
+        &self.fp
     }
 
     pub fn instance(&self) -> vk::Instance {

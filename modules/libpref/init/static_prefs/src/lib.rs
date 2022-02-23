@@ -8,7 +8,4 @@
 //! `modules/libpref/init/generate_static_pref_list.py`, from
 //! `modules/libpref/init/StaticPrefList.yaml`.
 
-include!(concat!(
-    env!("MOZ_TOPOBJDIR"),
-    "/modules/libpref/static_prefs.rs"
-));
+include!(mozbuild::objdir_path!("modules/libpref/static_prefs.rs"));

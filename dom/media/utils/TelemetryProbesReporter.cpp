@@ -575,6 +575,10 @@ void TelemetryProbesReporter::ReportResultForVideoFrameStatistics(
     LOG("DROPPED_FRAMES_IN_VIDEO_PLAYBACK = %u", percentage);
     Telemetry::Accumulate(Telemetry::VIDEO_DROPPED_FRAMES_PROPORTION,
                           percentage);
+    const uint32_t proportion = 10000 * droppedFrames / parsedFrames;
+    Telemetry::Accumulate(Telemetry::VIDEO_DROPPED_FRAMES_PROPORTION_EXPONENTIAL,
+                          proportion);
+
   }
 }
 

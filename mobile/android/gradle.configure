@@ -378,6 +378,7 @@ def gradle_android_archive_geckoview_tasks(build_config, aab_enabled):
         "geckoview:publish{geckoview.variant.name}PublicationToMavenRepository".format(
             geckoview=build_config.geckoview
         ),
+        "exoplayer2:publishDebugPublicationToMavenRepository",
     ]
 
     if aab_enabled:
@@ -544,21 +545,10 @@ set_config(
 )
 
 
-@dependable
-def gradle_android_dependencies():
-    """Gradle tasks that download all dependencies."""
-    # These tasks download most dependencies from each configuration, the
-    # notable exception is dependencies added at runtime by gradle plugins
-    return [
-        "downloadDependencies",
-    ]
-
-
 @depends(
     gradle_android_api_lint_tasks,
     gradle_android_format_lint_check_tasks,
     gradle_android_checkstyle_tasks,
-    gradle_android_dependencies,
 )
 @imports(_from="itertools", _import="chain")
 def gradle_android_dependencies_tasks(*tasks):
@@ -598,6 +588,17 @@ option(
         "https://plugins.gradle.org/m2/",
     ),
     help="Comma-separated URLs of Maven repositories containing Gradle dependencies.",
+)
+
+option(
+    "--allow-insecure-gradle-repositories",
+    help="Gradle is allowed to connect to insecure Maven repositories.",
+)
+
+set_config(
+    "ALLOW_INSECURE_GRADLE_REPOSITORIES",
+    True,
+    when="--allow-insecure-gradle-repositories",
 )
 
 

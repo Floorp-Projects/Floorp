@@ -32,42 +32,6 @@
             new focusChecker("lb_apple"),
           ],
         },
-        {
-          ID: "combobox",
-          actionIndex: 0,
-          actionName: "open",
-          events: CLICK_EVENTS,
-          eventSeq: [
-            new focusChecker("cb_orange"),
-          ],
-        },
-        {
-          ID: "cb_apple",
-          actionIndex: 0,
-          actionName: "select",
-          events: CLICK_EVENTS,
-          eventSeq: [
-            new focusChecker("combobox"),
-          ],
-        },
-        {
-          ID: "combobox",
-          actionIndex: 0,
-          actionName: "open",
-          events: CLICK_EVENTS,
-          eventSeq: [
-            new focusChecker("cb_apple"),
-          ],
-        },
-        {
-          ID: "combobox",
-          actionIndex: 0,
-          actionName: "close",
-          events: CLICK_EVENTS,
-          eventSeq: [
-            new focusChecker("combobox"),
-          ],
-        },
       ];
 
       testActions(actionsArray);

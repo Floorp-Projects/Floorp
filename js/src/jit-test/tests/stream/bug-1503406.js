@@ -1,3 +1,4 @@
+// |jit-test| skip-if: !this.hasOwnProperty("ReadableStream")
 let g = newGlobal();
 let reader = g.eval(`
     let stream = new ReadableStream({

@@ -18,36 +18,9 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    function openComboboxNCheckStates(aID) {
-      this.combobox = getAccessible(aID);
-      this.comboboxList = this.combobox.firstChild;
-      this.comboboxOption = this.comboboxList.firstChild;
-
-      this.eventSeq = [
-        new invokerChecker(EVENT_FOCUS, this.comboboxOption),
-      ];
-
-      this.invoke = function openComboboxNCheckStates_invoke() {
-        getNode(aID).focus();
-        synthesizeKey("VK_DOWN", { altKey: true });
-      };
-
-      this.finalCheck = function openComboboxNCheckStates_invoke() {
-        // Expanded state on combobox.
-        testStates(this.combobox, STATE_EXPANDED);
-
-        // Floating state on combobox list.
-        testStates(this.comboboxList, STATE_FLOATING);
-      };
-
-      this.getID = function openComboboxNCheckStates_getID() {
-        return "open combobox and test states";
-      };
-    }
 
     // gA11yEventDumpToConsole = true;
 
-    var gQueue = null;
     function doTest() {
       // combobox
       var combobox = getAccessible("combobox");
@@ -60,11 +33,11 @@
 
       var opt1 = comboboxList.firstChild;
       testStates(opt1, STATE_SELECTABLE | STATE_SELECTED | STATE_FOCUSABLE,
-                 EXT_STATE_ACTIVE, STATE_FOCUSED, 0);
+                 0, STATE_FOCUSED, 0);
 
       var opt2 = comboboxList.lastChild;
       testStates(opt2, STATE_SELECTABLE | STATE_FOCUSABLE, 0, STATE_SELECTED, 0,
-                 STATE_FOCUSED, EXT_STATE_ACTIVE);
+                 STATE_FOCUSED, 0);
 
       // collapsed combobox
       testStates("collapsedcombobox",
@@ -123,10 +96,7 @@
 //                 STATE_SELECTABLE | STATE_SELECTED | STATE_FOCUSABLE,
 //                 EXT_STATE_ACTIVE);
 
-      // open combobox
-      gQueue = new eventQueue();
-      gQueue.push(new openComboboxNCheckStates("combobox"));
-      gQueue.invoke(); // Will call */SimpleTest.finish();
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();

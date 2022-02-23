@@ -474,6 +474,8 @@ void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
     instructionsExpected++;
   }
 
+  // NOTE: the generated code must match the assembly code in gen_load in
+  // GenerateAtomicOperations.py
   asMasm().memoryBarrierBefore(access.sync());
 
   {
@@ -625,6 +627,8 @@ void MacroAssemblerCompat::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
 void MacroAssemblerCompat::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
                                          MemOperand dstAddr, AnyRegister valany,
                                          Register64 val64) {
+  // NOTE: the generated code must match the assembly code in gen_store in
+  // GenerateAtomicOperations.py
   asMasm().memoryBarrierBefore(access.sync());
 
   {
@@ -2334,6 +2338,8 @@ static void CompareExchange(MacroAssembler& masm,
 
   MOZ_ASSERT(ptr.base().asUnsized() != output);
 
+  // NOTE: the generated code must match the assembly code in gen_cmpxchg in
+  // GenerateAtomicOperations.py
   masm.memoryBarrierBefore(sync);
 
   Register scratch = temps.AcquireX().asUnsized();
@@ -2365,6 +2371,8 @@ static void AtomicExchange(MacroAssembler& masm,
   Register scratch2 = temps.AcquireX().asUnsized();
   MemOperand ptr = ComputePointerForAtomic(masm, mem, scratch2);
 
+  // NOTE: the generated code must match the assembly code in gen_exchange in
+  // GenerateAtomicOperations.py
   masm.memoryBarrierBefore(sync);
 
   Register scratch = temps.AcquireX().asUnsized();
@@ -2395,6 +2403,8 @@ static void AtomicFetchOp(MacroAssembler& masm,
   Register scratch2 = temps.AcquireX().asUnsized();
   MemOperand ptr = ComputePointerForAtomic(masm, mem, scratch2);
 
+  // NOTE: the generated code must match the assembly code in gen_fetchop in
+  // GenerateAtomicOperations.py
   masm.memoryBarrierBefore(sync);
 
   Register scratch = temps.AcquireX().asUnsized();
@@ -3131,6 +3141,12 @@ void MacroAssembler::copySignFloat32(FloatRegister lhs, FloatRegister rhs,
   bit(ARMFPRegister(output.encoding(), vixl::VectorFormat::kFormat8B),
       ARMFPRegister(rhs.encoding(), vixl::VectorFormat::kFormat8B),
       ARMFPRegister(scratch.encoding(), vixl::VectorFormat::kFormat8B));
+}
+
+void MacroAssembler::shiftIndex32AndAdd(Register indexTemp32, int shift,
+                                        Register pointer) {
+  Add(ARMRegister(pointer, 64), ARMRegister(pointer, 64),
+      Operand(ARMRegister(indexTemp32, 64), vixl::LSL, shift));
 }
 
 //}}} check_macroassembler_style

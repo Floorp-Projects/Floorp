@@ -5,4 +5,4 @@
 toolkit.jar:
   content/global/aboutProcesses.html                (content/aboutProcesses.html)
   content/global/aboutProcesses.js                  (content/aboutProcesses.js)
-* content/global/aboutProcesses.css                 (content/aboutProcesses.css)
+  content/global/aboutProcesses.css                 (content/aboutProcesses.css)

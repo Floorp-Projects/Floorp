@@ -122,32 +122,6 @@ TableTls& Instance::tableTls(const TableDesc& td) const {
   return *(TableTls*)(globalData() + td.globalDataOffset);
 }
 
-void* Instance::checkedCallEntry(const uint32_t functionIndex,
-                                 const Tier tier) const {
-  uint8_t* codeBaseTier = codeBase(tier);
-  const MetadataTier& metadataTier = metadata(tier);
-  const CodeRangeVector& codeRanges = metadataTier.codeRanges;
-  const Uint32Vector& funcToCodeRange = metadataTier.funcToCodeRange;
-  return codeBaseTier +
-         codeRanges[funcToCodeRange[functionIndex]].funcCheckedCallEntry();
-}
-
-static bool IsImportedFunction(const uint32_t functionIndex,
-                               const MetadataTier& metadataTier) {
-  return functionIndex < metadataTier.funcImports.length();
-}
-
-static bool IsJSExportedFunction(JSFunction* fun) {
-  // There's an assumption here that the function is in fact an imported
-  // function.  The caller must ensure this.
-  return !IsWasmExportedFunction(fun);
-}
-
-// TODO: This could usefully be used in WasmValidate.cpp too.
-static bool IsNullFunction(const uint32_t functionIndex) {
-  return functionIndex == NullFuncIndex;
-}
-
 // TODO(1626251): Consolidate definitions into Iterable.h
 static bool IterableToArray(JSContext* cx, HandleValue iterable,
                             MutableHandle<ArrayObject*> array) {
@@ -857,224 +831,62 @@ static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
   return 0;
 }
 
-void* Instance::ensureAndGetIndirectStub(Tier tier, uint32_t funcIndex) {
-  const CodeTier& codeTier = code(tier);
-  auto stubs = codeTier.lazyStubs().lock();
-
-  void* stub_entry = stubs->lookupIndirectStub(funcIndex, tlsData());
-  if (stub_entry) {
-    return stub_entry;
-  }
-
-  VectorOfIndirectStubTarget targets;
-  void* entry = checkedCallEntry(funcIndex, tier);
-  if (!targets.append(IndirectStubTarget{funcIndex, entry, tlsData()}) ||
-      !stubs->createManyIndirectStubs(targets, codeTier)) {
-    return nullptr;
-  }
-
-  stub_entry = stubs->lookupIndirectStub(funcIndex, tlsData());
-  MOZ_ASSERT(stub_entry);
-  return stub_entry;
-}
-
-bool Instance::createManyIndirectStubs(
-    const VectorOfIndirectStubTarget& targets, const Tier tier) {
-  if (targets.empty()) {
-    return true;
-  }
-
-  const CodeTier& codeTier = code(tier);
-  auto stubs = codeTier.lazyStubs().lock();
-  return stubs->createManyIndirectStubs(targets, codeTier);
-}
-
-void* Instance::getIndirectStub(uint32_t funcIndex, TlsData* targetTlsData,
-                                const Tier tier) const {
-  MOZ_ASSERT(funcIndex != NullFuncIndex);
-
-  auto stubs = code(tier).lazyStubs().lock();
-  return stubs->lookupIndirectStub(funcIndex, targetTlsData);
-}
-
-static void RemoveDuplicates(VectorOfIndirectStubTarget* vector) {
-  auto comparator = [](const IndirectStubTarget& lhs,
-                       const IndirectStubTarget& rhs) {
-    if (lhs.functionIdx == rhs.functionIdx) {
-      const auto lshTls = reinterpret_cast<uintptr_t>(lhs.tls);
-      const auto rshTls = reinterpret_cast<uintptr_t>(rhs.tls);
-      return lshTls < rshTls;
-    }
-    return lhs.functionIdx < rhs.functionIdx;
-  };
-  std::sort(vector->begin(), vector->end(), comparator);
-  auto* newEnd = std::unique(vector->begin(), vector->end());
-  vector->erase(newEnd, vector->end());
-}
-
-bool Instance::ensureIndirectStubs(JSContext* cx,
-                                   const Uint32Vector& elemFuncIndices,
-                                   uint32_t srcOffset, uint32_t len,
-                                   const Tier tier, const bool tableIsPublic) {
-  const MetadataTier& metadataTier = metadata(tier);
-  VectorOfIndirectStubTarget targets;
-
-  for (uint32_t i = 0; i < len; i++) {
-    const uint32_t funcIndex = elemFuncIndices[srcOffset + i];
-    if (IsNullFunction(funcIndex)) {
-      continue;
-    }
-
-    if (IsImportedFunction(funcIndex, metadataTier)) {
-      FuncImportTls& import =
-          funcImportTls(metadataTier.funcImports[funcIndex]);
-      JSFunction* fun = import.fun;
-      if (IsJSExportedFunction(fun)) {
-        continue;
-      }
-
-      Rooted<WasmInstanceObject*> calleeInstanceObj(
-          cx, ExportedFunctionToInstanceObject(fun));
-      Instance& calleeInstance = calleeInstanceObj->instance();
-      TlsData* calleeTls = calleeInstance.tlsData();
-      if (getIndirectStub(funcIndex, calleeTls, tier)) {
-        continue;
-      }
-
-      Tier calleeTier = calleeInstance.code().bestTier();
-      const CodeRange& calleeCodeRange =
-          calleeInstanceObj->getExportedFunctionCodeRange(fun, calleeTier);
-      void* calleeEntry = calleeInstance.codeBase(calleeTier) +
-                          calleeCodeRange.funcCheckedCallEntry();
-      if (!targets.append(
-              IndirectStubTarget{funcIndex, calleeEntry, calleeTls})) {
-        return false;
-      }
-      continue;
-    }
-
-    if (!tableIsPublic || getIndirectStub(funcIndex, tlsData(), tier)) {
-      continue;
-    }
-
-    if (!targets.append(IndirectStubTarget{
-            funcIndex, checkedCallEntry(funcIndex, tier), tlsData()})) {
-      return false;
-    }
-  }
-
-  // This removes duplicates from the list.  In addition, we have already
-  // filtered these so that those that have stubs at the tier are not in this
-  // list.  So these are unique (funcIndex,tls) pairs that do not yet appear in
-  // the list for the tier.
-
-  RemoveDuplicates(&targets);
-  return createManyIndirectStubs(targets, tier);
-}
-
-bool Instance::ensureIndirectStub(JSContext* cx, FuncRef* ref, const Tier tier,
-                                  const bool tableIsPublic) {
-  if (ref->isNull()) {
-    return true;
-  }
-
-  uint32_t functionIndex = ExportedFunctionToFuncIndex(ref->asJSFunction());
-  Uint32Vector functionIndices;
-  if (!functionIndices.append(functionIndex)) {
-    return false;
-  }
-
-  return ensureIndirectStubs(cx, functionIndices, 0, 1u, tier, tableIsPublic);
-}
-
-bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
-                         const ElemSegment& seg, uint32_t dstOffset,
-                         uint32_t srcOffset, uint32_t len) {
+bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
+                         uint32_t dstOffset, uint32_t srcOffset, uint32_t len) {
   Table& table = *tables_[tableIndex];
   MOZ_ASSERT(dstOffset <= table.length());
   MOZ_ASSERT(len <= table.length() - dstOffset);
 
-  const Tier tier = code().bestTier();
+  Tier tier = code().bestTier();
   const MetadataTier& metadataTier = metadata(tier);
   const FuncImportVector& funcImports = metadataTier.funcImports;
+  const CodeRangeVector& codeRanges = metadataTier.codeRanges;
+  const Uint32Vector& funcToCodeRange = metadataTier.funcToCodeRange;
   const Uint32Vector& elemFuncIndices = seg.elemFuncIndices;
   MOZ_ASSERT(srcOffset <= elemFuncIndices.length());
   MOZ_ASSERT(len <= elemFuncIndices.length() - srcOffset);
 
-  if (table.isFunction()) {
-    // The purpose of this call is to avoid OOM handling below when we store
-    // code pointers in the table.  This ensures that either the table is
-    // updated with all pointers, or with none.
-    if (!ensureIndirectStubs(cx, elemFuncIndices, srcOffset, len, tier,
-                             table.isPublic())) {
-      return false;
-    }
-  }
-
+  uint8_t* codeBaseTier = codeBase(tier);
   for (uint32_t i = 0; i < len; i++) {
     uint32_t funcIndex = elemFuncIndices[srcOffset + i];
-    if (IsNullFunction(funcIndex)) {
+    if (funcIndex == NullFuncIndex) {
       table.setNull(dstOffset + i);
-      continue;
-    }
-
-    if (!table.isFunction()) {
+    } else if (!table.isFunction()) {
       // Note, fnref must be rooted if we do anything more than just store it.
       void* fnref = Instance::refFunc(this, funcIndex);
       if (fnref == AnyRef::invalid().forCompiledCode()) {
         return false;  // OOM, which has already been reported.
       }
       table.fillAnyRef(dstOffset + i, 1, AnyRef::fromCompiledCode(fnref));
-      continue;
-    }
-
-    // Table-of-function and function is not null.  We need to compute the code
-    // pointer to install in the table.
-
-    void* code = nullptr;
-    if (IsImportedFunction(funcIndex, metadataTier)) {
-      FuncImportTls& import = funcImportTls(funcImports[funcIndex]);
-      JSFunction* fun = import.fun;
-      if (IsJSExportedFunction(fun)) {
-        code = checkedCallEntry(funcIndex, tier);
-      } else {
-        code = getIndirectStub(funcIndex, import.tls, tier);
-        MOZ_ASSERT(code);
-      }
     } else {
-      // The function is an internal wasm function that belongs to the current
-      // instance. If table is isPublic then some other module can
-      // import this table and call its functions so we have to use indirect
-      // stub, otherwise we can use checked call entry because we don't cross
-      // instance's borders.
-      if (table.isPublic()) {
-        code = getIndirectStub(funcIndex, tlsData(), tier);
-        MOZ_ASSERT(code);
-      } else {
-        code = checkedCallEntry(funcIndex, tier);
+      if (funcIndex < metadataTier.funcImports.length()) {
+        FuncImportTls& import = funcImportTls(funcImports[funcIndex]);
+        JSFunction* fun = import.fun;
+        if (IsWasmExportedFunction(fun)) {
+          // This element is a wasm function imported from another
+          // instance. To preserve the === function identity required by
+          // the JS embedding spec, we must set the element to the
+          // imported function's underlying CodeRange.funcCheckedCallEntry and
+          // Instance so that future Table.get()s produce the same
+          // function object as was imported.
+          WasmInstanceObject* calleeInstanceObj =
+              ExportedFunctionToInstanceObject(fun);
+          Instance& calleeInstance = calleeInstanceObj->instance();
+          Tier calleeTier = calleeInstance.code().bestTier();
+          const CodeRange& calleeCodeRange =
+              calleeInstanceObj->getExportedFunctionCodeRange(fun, calleeTier);
+          void* code = calleeInstance.codeBase(calleeTier) +
+                       calleeCodeRange.funcCheckedCallEntry();
+          table.setFuncRef(dstOffset + i, code, &calleeInstance);
+          continue;
+        }
       }
+      void* code =
+          codeBaseTier +
+          codeRanges[funcToCodeRange[funcIndex]].funcCheckedCallEntry();
+      table.setFuncRef(dstOffset + i, code, this);
     }
-
-    // Install the code pointer along with the current instance.
-    //
-    // Using the current instance is correct:
-    //
-    // - if it's an imported JS function, the current instance is correct,
-    //   because that's how we've always done it
-    //
-    // - if it's an indirect stub for an imported function, the current instance
-    //   is correct because it keeps the stub code alive, and the indirect stub
-    //   holds the correct remote instance for that call.
-    //
-    // - otherwise it's a local function, and the current instance is correct in
-    //   either case.
-
-    // Utter paranoia to use _RELEASE_ here but we must never store null, all
-    // null stores should be handled above.
-    MOZ_RELEASE_ASSERT(code);
-    table.setFuncRef(dstOffset + i, code, this);
   }
-
   return true;
 }
 
@@ -1119,7 +931,7 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
     return -1;
   }
 
-  if (!instance->initElems(cx, tableIndex, seg, dstOffset, srcOffset, len)) {
+  if (!instance->initElems(tableIndex, seg, dstOffset, srcOffset, len)) {
     return -1;  // OOM, which has already been reported.
   }
 
@@ -1148,11 +960,7 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
       break;
     case TableRepr::Func:
       MOZ_RELEASE_ASSERT(!table.isAsmJS());
-      if (!table.fillFuncRef(Nothing(), start, len,
-                             FuncRef::fromCompiledCode(value), cx)) {
-        ReportOutOfMemory(cx);
-        return -1;
-      }
+      table.fillFuncRef(start, len, FuncRef::fromCompiledCode(value), cx);
       break;
   }
 
@@ -1165,7 +973,6 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
 
   JSContext* cx = instance->tlsData()->cx;
   const Table& table = *instance->tables()[tableIndex];
-
   if (index >= table.length()) {
     ReportTrapError(cx, JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
     return AnyRef::invalid().forCompiledCode();
@@ -1183,7 +990,6 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
       return FuncRef::fromJSFunction(fun).forCompiledCode();
     }
   }
-
   MOZ_CRASH("Should not happen");
 }
 
@@ -1192,43 +998,25 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
   MOZ_ASSERT(SASigTableGrow.failureMode == FailureMode::Infallible);
 
   JSContext* cx = instance->tlsData()->cx;
+  RootedAnyRef ref(cx, AnyRef::fromCompiledCode(initValue));
   Table& table = *instance->tables()[tableIndex];
 
-  switch (table.repr()) {
-    case TableRepr::Ref: {
-      uint32_t oldSize = table.grow(delta);
-      if (oldSize != uint32_t(-1) && initValue != nullptr) {
-        table.fillAnyRef(oldSize, delta, AnyRef::fromCompiledCode(initValue));
-      }
-      return oldSize;
-    }
-    case TableRepr::Func: {
-      RootedFuncRef functionForFill(cx, FuncRef::fromCompiledCode(initValue));
-      const Tier tier = instance->code().bestTier();
+  uint32_t oldSize = table.grow(delta);
 
-      // Call ensureIndirectStub first so as to be able to signal OOM before the
-      // table is grown; we don't want a grown table that then can't be
-      // initialized because a stub can't be created for the function.
-      //
-      // Be sure to use the same tier for creating the stub and filling the
-      // table, or the later call to fillFuncRef may want to create a new stub
-      // for the better tier and may OOM anyway, and it must not.
-      if (!instance->ensureIndirectStub(cx, functionForFill.address(), tier,
-                                        table.isPublic())) {
-        return -1;
-      }
-
-      uint32_t oldSize = table.grow(delta);
-      if (oldSize != uint32_t(-1) && initValue != nullptr) {
+  if (oldSize != uint32_t(-1) && initValue != nullptr) {
+    switch (table.repr()) {
+      case TableRepr::Ref:
+        table.fillAnyRef(oldSize, delta, ref);
+        break;
+      case TableRepr::Func:
         MOZ_RELEASE_ASSERT(!table.isAsmJS());
-        MOZ_ALWAYS_TRUE(
-            table.fillFuncRef(Some(tier), oldSize, delta, functionForFill, cx));
-      }
-      return oldSize;
+        table.fillFuncRef(oldSize, delta, FuncRef::fromAnyRefUnchecked(ref),
+                          cx);
+        break;
     }
   }
 
-  MOZ_CRASH("Should not happen");
+  return oldSize;
 }
 
 /* static */ int32_t Instance::tableSet(Instance* instance, uint32_t index,
@@ -1249,11 +1037,7 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
       break;
     case TableRepr::Func:
       MOZ_RELEASE_ASSERT(!table.isAsmJS());
-      if (!table.fillFuncRef(Nothing(), index, 1,
-                             FuncRef::fromCompiledCode(value), cx)) {
-        ReportOutOfMemory(cx);
-        return -1;
-      }
+      table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value), cx);
       break;
   }
 
@@ -1975,8 +1759,7 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
   // We have to calculate |scanStart|, the lowest address that is described by
   // |map|, by consulting |map->frameOffsetFromTop|.
 
-  const size_t numMappedBytes =
-      (map->numMappedWords + frame->numberOfTrampolineSlots()) * sizeof(void*);
+  const size_t numMappedBytes = map->numMappedWords * sizeof(void*);
   const uintptr_t scanStart = uintptr_t(frame) +
                               (map->frameOffsetFromTop * sizeof(void*)) -
                               numMappedBytes;
@@ -2004,9 +1787,6 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
 #endif
 
   uintptr_t* stackWords = (uintptr_t*)scanStart;
-  const uint32_t trampolineBeginIdx =
-      map->numMappedWords - static_cast<uint32_t>(map->frameOffsetFromTop) +
-      frame->numberOfTrampolineSlots();
 
   // If we have some exit stub words, this means the map also covers an area
   // created by a exit stub, and so the highest word of that should be a
@@ -2017,15 +1797,8 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
           TrapExitDummyValue);
 
   // And actually hand them off to the GC.
-  uint32_t stackIdx = 0;
-  for (uint32_t mapIdx = 0; mapIdx < map->numMappedWords;
-       ++mapIdx, ++stackIdx) {
-    if (frame->callerIsTrampolineFP() && mapIdx == trampolineBeginIdx) {
-      // Skip trampoline frame.
-      stackIdx += frame->numberOfTrampolineSlots();
-    }
-
-    if (map->getBit(mapIdx) == 0) {
+  for (uint32_t i = 0; i < map->numMappedWords; i++) {
+    if (map->getBit(i) == 0) {
       continue;
     }
 
@@ -2035,11 +1808,10 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
 
     // This assertion seems at least moderately effective in detecting
     // discrepancies or misalignments between the map and reality.
-    MOZ_ASSERT(
-        js::gc::IsCellPointerValidOrNull((const void*)stackWords[stackIdx]));
+    MOZ_ASSERT(js::gc::IsCellPointerValidOrNull((const void*)stackWords[i]));
 
-    if (stackWords[stackIdx]) {
-      TraceRoot(trc, (JSObject**)&stackWords[stackIdx],
+    if (stackWords[i]) {
+      TraceRoot(trc, (JSObject**)&stackWords[i],
                 "Instance::traceWasmFrame: normal word");
     }
   }
@@ -2072,25 +1844,6 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
   }
 
   return scanStart + numMappedBytes - 1;
-}
-
-Instance* Instance::getOriginalInstanceAndFunction(Tier tier, uint32_t funcIdx,
-                                                   JSFunction** fun) {
-  const MetadataTier& metadataTier = metadata(tier);
-  const FuncImportVector& funcImports = metadataTier.funcImports;
-
-  if (IsImportedFunction(funcIdx, metadataTier)) {
-    FuncImportTls& import = funcImportTls(funcImports[funcIdx]);
-    *fun = import.fun;
-    if (IsJSExportedFunction(*fun)) {
-      return this;
-    }
-    WasmInstanceObject* calleeInstanceObj =
-        ExportedFunctionToInstanceObject(*fun);
-    return &calleeInstanceObj->instance();
-  }
-
-  return this;
 }
 
 WasmMemoryObject* Instance::memory() const { return memory_; }
@@ -2148,7 +1901,7 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
   //
   // Also see doc block for stubs in WasmJS.cpp.
 
-  auto stubs = instance.code(tier).lazyStubs().lock();
+  auto stubs = instance.code(tier).lazyStubs().writeLock();
   *interpEntry = stubs->lookupInterpEntry(fe.funcIndex());
   if (*interpEntry) {
     return true;
@@ -2169,7 +1922,7 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
   }
 
   MOZ_RELEASE_ASSERT(prevTier == Tier::Baseline && tier == Tier::Optimized);
-  auto stubs2 = instance.code(tier).lazyStubs().lock();
+  auto stubs2 = instance.code(tier).lazyStubs().writeLock();
 
   // If it didn't have a stub in the first tier, background compilation
   // shouldn't have made one in the second tier.

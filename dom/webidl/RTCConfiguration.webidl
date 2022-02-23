@@ -31,11 +31,11 @@ enum RTCBundlePolicy {
 };
 
 dictionary RTCConfiguration {
-    sequence<RTCIceServer> iceServers;
+    sequence<RTCIceServer> iceServers = [];
     RTCIceTransportPolicy  iceTransportPolicy = "all";
     RTCBundlePolicy bundlePolicy = "balanced";
     DOMString? peerIdentity = null;
-    sequence<RTCCertificate> certificates;
+    sequence<RTCCertificate> certificates = [];
 
     // Non-standard. Only here to be able to detect and warn in web console.
     // Uses DOMString over enum as a trade-off between type errors and safety.

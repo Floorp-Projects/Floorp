@@ -36,6 +36,7 @@
 #endif
 
 namespace mozilla {
+enum class NativeKeyBindingsType : uint8_t;
 namespace widget {
 
 class HeadlessWidget : public nsBaseWidget {
@@ -70,8 +71,7 @@ class HeadlessWidget : public nsBaseWidget {
   virtual void Resize(double aX, double aY, double aWidth, double aHeight,
                       bool aRepaint) override;
   virtual void SetSizeMode(nsSizeMode aMode) override;
-  virtual nsresult MakeFullScreen(bool aFullScreen,
-                                  nsIScreen* aTargetScreen = nullptr) override;
+  virtual nsresult MakeFullScreen(bool aFullScreen) override;
   virtual void Enable(bool aState) override;
   virtual bool IsEnabled() const override;
   virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;

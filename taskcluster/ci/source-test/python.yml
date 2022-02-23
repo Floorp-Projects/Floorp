@@ -36,6 +36,7 @@ job-defaults:
 
 firefox-ci:
     description: taskcluster/gecko_taskgraph unit tests
+    always-target: false
     python-version: [3]
     treeherder:
         symbol: ci
@@ -248,6 +249,10 @@ mozterm:
 
 mozversioncontrol:
     description: python/mozversioncontrol unit tests
+    platform:
+        - linux1804-64/opt
+        - macosx1015-64/opt
+        - windows10-64/opt
     python-version: [3]
     treeherder:
         symbol: vcs

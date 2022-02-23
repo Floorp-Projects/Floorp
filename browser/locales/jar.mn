@@ -16,9 +16,6 @@
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/browser/
-# bookmarks.html is produced by LOCALIZED_GENERATED_FILES.
-    locale/browser/bookmarks.html                  (bookmarks.html)
-
     locale/browser/accounts.properties             (%chrome/browser/accounts.properties)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
     locale/browser/customizableui/customizableWidgets.properties (%chrome/browser/customizableui/customizableWidgets.properties)
@@ -39,7 +36,6 @@
     locale/browser/feeds/subscribe.properties       (%chrome/browser/feeds/subscribe.properties)
     locale/browser/syncSetup.properties         (%chrome/browser/syncSetup.properties)
 % locale browser-region @AB_CD@ %locale/browser-region/
-    locale/browser-region/region.properties        (%chrome/browser-region/region.properties)
 # the following files are browser-specific overrides
     locale/browser/netError.dtd                (%chrome/overrides/netError.dtd)
     locale/browser/appstrings.properties       (%chrome/overrides/appstrings.properties)

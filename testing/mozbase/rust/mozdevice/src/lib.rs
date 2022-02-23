@@ -8,7 +8,7 @@ pub mod shell;
 #[cfg(test)]
 pub mod test;
 
-use log::{debug, warn};
+use log::{debug, info, trace, warn};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::BTreeMap;
@@ -202,7 +202,7 @@ fn read_response(stream: &mut TcpStream, has_output: bool, has_length: bool) -> 
                     warn!("adb server response contained hexstring len {} but remaining message length is {}", n, message.len());
                 }
 
-                debug!(
+                trace!(
                     "adb server response was {:?}",
                     std::str::from_utf8(&message)?
                 );
@@ -370,6 +370,25 @@ pub struct Device {
     pub tempfile: UnixPathBuf,
 }
 
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct RemoteDirEntry {
+    depth: usize,
+    metadata: RemoteMetadata,
+    name: String,
+}
+
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub enum RemoteMetadata {
+    RemoteFile(RemoteFileMetadata),
+    RemoteDir,
+    RemoteSymlink,
+}
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct RemoteFileMetadata {
+    mode: usize,
+    size: usize,
+}
+
 impl Device {
     pub fn new(host: Host, serial: DeviceSerial, storage: AndroidStorageInput) -> Result<Device> {
         let mut device = Device {
@@ -408,12 +427,12 @@ impl Device {
         };
 
         if device.is_rooted {
-            debug!("Device is rooted");
+            info!("Device is rooted");
 
             // Set Permissive=1 if we have root.
             device.execute_host_shell_command("setenforce permissive")?;
         } else {
-            debug!("Device is unrooted");
+            info!("Device is unrooted");
         }
 
         Ok(device)
@@ -458,18 +477,17 @@ impl Device {
         let mut stream = self.host.connect()?;
 
         let switch_command = format!("host:transport:{}", self.serial);
-        debug!("execute_host_command: >> {:?}", &switch_command);
+        trace!("execute_host_command: >> {:?}", &switch_command);
         stream.write_all(encode_message(&switch_command)?.as_bytes())?;
         let _bytes = read_response(&mut stream, false, false)?;
-        debug!("execute_host_command: << {:?}", _bytes);
+        trace!("execute_host_command: << {:?}", _bytes);
         // TODO: should we assert no bytes were read?
 
-        debug!("execute_host_command: >> {:?}", &command);
+        trace!("execute_host_command: >> {:?}", &command);
         stream.write_all(encode_message(command)?.as_bytes())?;
         let bytes = read_response(&mut stream, has_output, has_length)?;
-
         let response = std::str::from_utf8(&bytes)?;
-        debug!("execute_host_command: << {:?}", response);
+        trace!("execute_host_command: << {:?}", response);
 
         // Unify new lines by removing possible carriage returns
         Ok(response.replace("\r\n", "\n"))
@@ -649,9 +667,208 @@ impl Device {
             .and(Ok(()))
     }
 
+    pub fn list_dir(&self, src: &UnixPath) -> Result<Vec<RemoteDirEntry>> {
+        let src = src.to_path_buf();
+        let mut queue = vec![(src.clone(), 0, "".to_string())];
+
+        let mut listings = Vec::new();
+
+        while let Some((next, depth, prefix)) = queue.pop() {
+            for listing in self.list_dir_flat(&next, depth, prefix)? {
+                if listing.metadata == RemoteMetadata::RemoteDir {
+                    let mut child = src.clone();
+                    child.push(listing.name.clone());
+                    queue.push((child, depth + 1, listing.name.clone()));
+                }
+
+                listings.push(listing);
+            }
+        }
+
+        Ok(listings)
+    }
+
+    fn list_dir_flat(
+        &self,
+        src: &UnixPath,
+        depth: usize,
+        prefix: String,
+    ) -> Result<Vec<RemoteDirEntry>> {
+        // Implement the ADB protocol to list a directory from the device.
+        let mut stream = self.host.connect()?;
+
+        // Send "host:transport" command with device serial
+        let message = encode_message(&format!("host:transport:{}", self.serial))?;
+        stream.write_all(message.as_bytes())?;
+        let _bytes = read_response(&mut stream, false, true)?;
+
+        // Send "sync:" command to initialize file transfer
+        let message = encode_message("sync:")?;
+        stream.write_all(message.as_bytes())?;
+        let _bytes = read_response(&mut stream, false, true)?;
+
+        // Send "LIST" command with name of the directory
+        stream.write_all(SyncCommand::List.code())?;
+        let args_ = format!("{}", src.display());
+        let args = args_.as_bytes();
+        write_length_little_endian(&mut stream, args.len())?;
+        stream.write_all(args)?;
+
+        // Use the maximum 64KB buffer to transfer the file contents.
+        let mut buf = [0; 64 * 1024];
+
+        let mut listings = Vec::new();
+
+        // Read "DENT" command one or more times for the directory entries
+        loop {
+            stream.read_exact(&mut buf[0..4])?;
+
+            if &buf[0..4] == SyncCommand::Dent.code() {
+                // From https://github.com/cstyan/adbDocumentation/blob/6d025b3e4af41be6f93d37f516a8ac7913688623/README.md:
+                //
+                // A four-byte integer representing file mode - first 9 bits of this mode represent
+                // the file permissions, as with chmod mode. Bits 14 to 16 seem to represent the
+                // file type, one of 0b100 (file), 0b010 (directory), 0b101 (symlink)
+                // A four-byte integer representing file size.
+                // A four-byte integer representing last modified time in seconds since Unix Epoch.
+                // A four-byte integer representing file name length.
+                // A utf-8 string representing the file name.
+                let mode = read_length_little_endian(&mut stream)?;
+                let size = read_length_little_endian(&mut stream)?;
+                let _time = read_length_little_endian(&mut stream)?;
+                let name_length = read_length_little_endian(&mut stream)?;
+                stream.read_exact(&mut buf[0..name_length])?;
+
+                let mut name = std::str::from_utf8(&buf[0..name_length])?.to_owned();
+
+                if name == "." || name == ".." {
+                    continue;
+                }
+
+                if !prefix.is_empty() {
+                    name = format!("{}/{}", prefix, &name);
+                }
+
+                let file_type = (mode >> 13) & 0b111;
+                let metadata = match file_type {
+                    0b010 => RemoteMetadata::RemoteDir,
+                    0b100 => RemoteMetadata::RemoteFile(RemoteFileMetadata {
+                        mode: mode & 0b111111111,
+                        size,
+                    }),
+                    0b101 => RemoteMetadata::RemoteSymlink,
+                    _ => return Err(DeviceError::Adb(format!("Invalid file mode {}", file_type))),
+                };
+
+                listings.push(RemoteDirEntry {
+                    name,
+                    depth,
+                    metadata,
+                });
+            } else if &buf[0..4] == SyncCommand::Done.code() {
+                // "DONE" command indicates end of file transfer
+                break;
+            } else if &buf[0..4] == SyncCommand::Fail.code() {
+                let n = buf.len().min(read_length_little_endian(&mut stream)?);
+
+                stream.read_exact(&mut buf[0..n])?;
+
+                let message = std::str::from_utf8(&buf[0..n])
+                    .map(|s| format!("adb error: {}", s))
+                    .unwrap_or_else(|_| "adb error was not utf-8".into());
+
+                return Err(DeviceError::Adb(message));
+            } else {
+                return Err(DeviceError::Adb("FAIL (unknown)".to_owned()));
+            }
+        }
+
+        Ok(listings)
+    }
+
     pub fn path_exists(&self, path: &UnixPath, enable_run_as: bool) -> Result<bool> {
         self.execute_host_shell_command_as(format!("ls {}", path.display()).as_str(), enable_run_as)
             .map(|path| !path.contains("No such file or directory"))
+    }
+
+    pub fn pull(&self, src: &UnixPath, buffer: &mut dyn Write) -> Result<()> {
+        // Implement the ADB protocol to receive a file from the device.
+        let mut stream = self.host.connect()?;
+
+        // Send "host:transport" command with device serial
+        let message = encode_message(&format!("host:transport:{}", self.serial))?;
+        stream.write_all(message.as_bytes())?;
+        let _bytes = read_response(&mut stream, false, true)?;
+
+        // Send "sync:" command to initialize file transfer
+        let message = encode_message("sync:")?;
+        stream.write_all(message.as_bytes())?;
+        let _bytes = read_response(&mut stream, false, true)?;
+
+        // Send "RECV" command with name of the file
+        stream.write_all(SyncCommand::Recv.code())?;
+        let args_string = format!("{}", src.display());
+        let args = args_string.as_bytes();
+        write_length_little_endian(&mut stream, args.len())?;
+        stream.write_all(args)?;
+
+        // Use the maximum 64KB buffer to transfer the file contents.
+        let mut buf = [0; 64 * 1024];
+
+        // Read "DATA" command one or more times for the file content
+        loop {
+            stream.read_exact(&mut buf[0..4])?;
+
+            if &buf[0..4] == SyncCommand::Data.code() {
+                let len = read_length_little_endian(&mut stream)?;
+                stream.read_exact(&mut buf[0..len])?;
+                buffer.write_all(&buf[0..len])?;
+            } else if &buf[0..4] == SyncCommand::Done.code() {
+                // "DONE" command indicates end of file transfer
+                break;
+            } else if &buf[0..4] == SyncCommand::Fail.code() {
+                let n = buf.len().min(read_length_little_endian(&mut stream)?);
+
+                stream.read_exact(&mut buf[0..n])?;
+
+                let message = std::str::from_utf8(&buf[0..n])
+                    .map(|s| format!("adb error: {}", s))
+                    .unwrap_or_else(|_| "adb error was not utf-8".into());
+
+                return Err(DeviceError::Adb(message));
+            } else {
+                return Err(DeviceError::Adb("FAIL (unknown)".to_owned()));
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn pull_dir(&self, src: &UnixPath, dest_dir: &Path) -> Result<()> {
+        let src = src.to_path_buf();
+        let dest_dir = dest_dir.to_path_buf();
+
+        for entry in self.list_dir(&src)? {
+            match entry.metadata {
+                RemoteMetadata::RemoteSymlink => {} // Ignored.
+                RemoteMetadata::RemoteDir => {
+                    let mut d = dest_dir.clone();
+                    d.push(&entry.name);
+
+                    std::fs::create_dir_all(&d)?;
+                }
+                RemoteMetadata::RemoteFile(_) => {
+                    let mut s = src.clone();
+                    s.push(&entry.name);
+                    let mut d = dest_dir.clone();
+                    d.push(&entry.name);
+
+                    self.pull(&s, &mut File::create(d)?)?;
+                }
+            }
+        }
+
+        Ok(())
     }
 
     pub fn push(&self, buffer: &mut dyn Read, dest: &UnixPath, mode: u32) -> Result<()> {
@@ -760,14 +977,14 @@ impl Device {
                     enable_run_as,
                 );
                 if self.remove(dest1).is_err() {
-                    debug!("Failed to remove {}", dest1.display());
+                    warn!("Failed to remove {}", dest1.display());
                 }
                 result?;
             }
             Ok(())
         } else if buf.starts_with(SyncCommand::Fail.code()) {
             if enable_run_as && self.remove(dest1).is_err() {
-                debug!("Failed to remove {}", dest1.display());
+                warn!("Failed to remove {}", dest1.display());
             }
             let n = buf.len().min(read_length_little_endian(&mut stream)?);
 
@@ -780,7 +997,7 @@ impl Device {
             Err(DeviceError::Adb(message))
         } else {
             if self.remove(dest1).is_err() {
-                debug!("Failed to remove {}", dest1.display());
+                warn!("Failed to remove {}", dest1.display());
             }
             Err(DeviceError::Adb("FAIL (unknown)".to_owned()))
         }

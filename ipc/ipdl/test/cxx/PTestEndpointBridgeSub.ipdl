@@ -3,10 +3,13 @@
 
 include protocol PTestEndpointBridgeMainSub;
 
+include "mozilla/_ipdltest/TestEndpointBridgeMain.h";
+
 namespace mozilla {
 namespace _ipdltest {
 
 
+[ManualDealloc, ChildImpl="TestEndpointBridgeSubChild", ParentImpl="TestEndpointBridgeSubParent"]
 protocol PTestEndpointBridgeSub {
 child:
   async Ping();

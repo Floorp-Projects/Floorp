@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Test for page up/down in collapsed select (bug 1488828)</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<style>
+.reframe {
+  display: flex;
+}
+</style>
+<div id="container">
+  <select>
+    <option>ABC</option>
+    <option>DEF</option>
+  </select>
+</div>
+<script>
+(async function() {
+  SimpleTest.waitForExplicitFinish();
+
+  const utils = SpecialPowers.DOMWindowUtils;
+  const select = document.querySelector("select");
+  await SimpleTest.promiseFocus(window);
+
+  ok(!select.openInParentProcess, "Should not be open")
+
+  select.focus();
+  synthesizeKey("VK_SPACE");
+
+  ok(SpecialPowers.wrap(select).openInParentProcess, "Should open");
+
+  const container = document.getElementById("container");
+  container.getBoundingClientRect(); // flush layout
+
+  const frameCountBeforeReframe = utils.framesConstructed;
+
+  container.classList.add("reframe");
+
+  container.getBoundingClientRect(); // flush layout
+
+  ok(utils.framesConstructed > frameCountBeforeReframe, "Should have reframed");
+  ok(SpecialPowers.wrap(select).openInParentProcess, "Should remain open");
+
+  select.remove();
+
+  container.getBoundingClientRect(); // flush layout
+  ok(!SpecialPowers.wrap(select).openInParentProcess, "Should close after removal");
+
+  SimpleTest.finish();
+}());
+</script>

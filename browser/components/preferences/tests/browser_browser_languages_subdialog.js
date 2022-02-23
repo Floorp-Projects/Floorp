@@ -223,8 +223,8 @@ async function selectLocale(localeCode, available, selected, dialogDoc) {
 async function openDialog(doc, search = false) {
   let dialogLoaded = promiseLoadSubDialog(BROWSER_LANGUAGES_URL);
   if (search) {
-    doc.getElementById("defaultBrowserLanguageSearch").doCommand();
-    doc.getElementById("defaultBrowserLanguage").menupopup.hidePopup();
+    doc.getElementById("primaryBrowserLocaleSearch").doCommand();
+    doc.getElementById("primaryBrowserLocale").menupopup.hidePopup();
   } else {
     doc.getElementById("manageBrowserLanguagesButton").doCommand();
   }
@@ -246,6 +246,8 @@ add_task(async function testDisabledBrowserLanguages() {
     set: [
       ["intl.multilingual.enabled", true],
       ["intl.multilingual.downloadEnabled", true],
+      ["intl.multilingual.liveReload", false],
+      ["intl.multilingual.liveReloadBidirectional", false],
       ["intl.locale.requested", "en-US,pl,he,de"],
       ["extensions.langpacks.signatures.required", false],
       ["extensions.getAddons.langpacks.url", langpacksUrl],
@@ -341,6 +343,8 @@ add_task(async function testReorderingBrowserLanguages() {
     set: [
       ["intl.multilingual.enabled", true],
       ["intl.multilingual.downloadEnabled", true],
+      ["intl.multilingual.liveReload", false],
+      ["intl.multilingual.liveReloadBidirectional", false],
       ["intl.locale.requested", "en-US,pl,he,de"],
       ["extensions.langpacks.signatures.required", false],
     ],
@@ -441,6 +445,8 @@ add_task(async function testAddAndRemoveSelectedLanguages() {
     set: [
       ["intl.multilingual.enabled", true],
       ["intl.multilingual.downloadEnabled", true],
+      ["intl.multilingual.liveReload", false],
+      ["intl.multilingual.liveReloadBidirectional", false],
       ["intl.locale.requested", "en-US"],
       ["extensions.langpacks.signatures.required", false],
     ],
@@ -550,6 +556,8 @@ add_task(async function testInstallFromAMO() {
     set: [
       ["intl.multilingual.enabled", true],
       ["intl.multilingual.downloadEnabled", true],
+      ["intl.multilingual.liveReload", false],
+      ["intl.multilingual.liveReloadBidirectional", false],
       ["intl.locale.requested", "en-US"],
       ["extensions.getAddons.langpacks.url", langpacksUrl],
       ["extensions.langpacks.signatures.required", false],
@@ -564,6 +572,17 @@ add_task(async function testInstallFromAMO() {
   let doc = gBrowser.contentDocument;
   let messageBar = doc.getElementById("confirmBrowserLanguage");
   is(messageBar.hidden, true, "The message bar is hidden at first");
+
+  // Verify only en-US is listed on the main pane.
+  let getMainPaneLocales = () => {
+    let available = doc.getElementById("primaryBrowserLocale");
+    let availableLocales = Array.from(available.menupopup.children);
+    return availableLocales
+      .map(item => item.value)
+      .sort()
+      .join(",");
+  };
+  is(getMainPaneLocales(), "en-US,search", "Only en-US installed to start");
 
   // Open the dialog.
   let { dialog, dialogDoc, available, selected } = await openDialog(doc, true);
@@ -647,6 +666,9 @@ add_task(async function testInstallFromAMO() {
   dialog.acceptDialog();
   await dialogClosed;
 
+  // Verify pl is now available to select.
+  is(getMainPaneLocales(), "en-US,pl,search", "en-US and pl now available");
+
   // Disable the Polish langpack.
   langpack = await AddonManager.getAddonByID("langpack-pl@firefox.mozilla.org");
   await langpack.disable();
@@ -695,6 +717,8 @@ add_task(async function testDownloadEnabled() {
     set: [
       ["intl.multilingual.enabled", true],
       ["intl.multilingual.downloadEnabled", true],
+      ["intl.multilingual.liveReload", false],
+      ["intl.multilingual.liveReloadBidirectional", false],
     ],
   });
 
@@ -703,7 +727,7 @@ add_task(async function testDownloadEnabled() {
   });
   let doc = gBrowser.contentDocument;
 
-  let defaultMenulist = doc.getElementById("defaultBrowserLanguage");
+  let defaultMenulist = doc.getElementById("primaryBrowserLocale");
   ok(
     hasSearchOption(defaultMenulist.menupopup),
     "There's a search option in the General pane"
@@ -723,6 +747,8 @@ add_task(async function testDownloadDisabled() {
     set: [
       ["intl.multilingual.enabled", true],
       ["intl.multilingual.downloadEnabled", false],
+      ["intl.multilingual.liveReload", false],
+      ["intl.multilingual.liveReloadBidirectional", false],
     ],
   });
 
@@ -731,7 +757,7 @@ add_task(async function testDownloadDisabled() {
   });
   let doc = gBrowser.contentDocument;
 
-  let defaultMenulist = doc.getElementById("defaultBrowserLanguage");
+  let defaultMenulist = doc.getElementById("primaryBrowserLocale");
   ok(
     !hasSearchOption(defaultMenulist.menupopup),
     "There's no search option in the General pane"
@@ -751,6 +777,8 @@ add_task(async function testReorderMainPane() {
     set: [
       ["intl.multilingual.enabled", true],
       ["intl.multilingual.downloadEnabled", false],
+      ["intl.multilingual.liveReload", false],
+      ["intl.multilingual.liveReloadBidirectional", false],
       ["intl.locale.requested", "en-US"],
       ["extensions.langpacks.signatures.required", false],
     ],
@@ -775,7 +803,7 @@ add_task(async function testReorderMainPane() {
   let messageBar = doc.getElementById("confirmBrowserLanguage");
   is(messageBar.hidden, true, "The message bar is hidden at first");
 
-  let available = doc.getElementById("defaultBrowserLanguage");
+  let available = doc.getElementById("primaryBrowserLocale");
   let availableLocales = Array.from(available.menupopup.children);
   let availableCodes = availableLocales
     .map(item => item.value)
@@ -789,8 +817,7 @@ add_task(async function testReorderMainPane() {
 
   is(available.selectedItem.value, "en-US", "English is selected");
 
-  let hebrew =
-    availableLocales[availableLocales.findIndex(item => item.value == "he")];
+  let hebrew = availableLocales.find(item => item.value == "he");
   hebrew.click();
   available.menupopup.hidePopup();
 
@@ -804,6 +831,225 @@ add_task(async function testReorderMainPane() {
     messageBar.querySelector("button").getAttribute("locales"),
     "he,en-US",
     "The locales are set on the message bar button"
+  );
+
+  await Promise.all(addons.map(addon => addon.uninstall()));
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  assertTelemetryRecorded([["reorder", "main"]]);
+});
+
+add_task(async function testLiveLanguageReloading() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["intl.multilingual.enabled", true],
+      ["intl.multilingual.downloadEnabled", true],
+      ["intl.multilingual.liveReload", true],
+      ["intl.multilingual.liveReloadBidirectional", false],
+      ["intl.locale.requested", "en-US,fr,he,de"],
+      ["extensions.langpacks.signatures.required", false],
+    ],
+  });
+
+  // Clear the telemetry from other tests.
+  Services.telemetry.clearEvents();
+
+  let langpacks = await createTestLangpacks();
+  let addons = await Promise.all(
+    langpacks.map(async ([locale, file]) => {
+      let install = await AddonTestUtils.promiseInstallFile(file);
+      return install.addon;
+    })
+  );
+
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+
+  let available = doc.getElementById("primaryBrowserLocale");
+  let availableLocales = Array.from(available.menupopup.children);
+
+  is(
+    Services.locale.appLocaleAsBCP47,
+    "en-US",
+    "The app locale starts as English."
+  );
+
+  Assert.deepEqual(
+    Services.locale.requestedLocales,
+    ["en-US", "fr", "he", "de"],
+    "The locale order starts as what was initially requested."
+  );
+
+  // French and English are both LTR languages.
+  let french = availableLocales.find(item => item.value == "fr");
+
+  french.click();
+  available.menupopup.hidePopup();
+
+  is(
+    Services.locale.appLocaleAsBCP47,
+    "fr",
+    "The app locale was changed to French"
+  );
+
+  Assert.deepEqual(
+    Services.locale.requestedLocales,
+    ["fr", "en-US", "he", "de"],
+    "The locale order is switched to french first."
+  );
+
+  await Promise.all(addons.map(addon => addon.uninstall()));
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  assertTelemetryRecorded([["reorder", "main"]]);
+});
+
+add_task(async function testLiveLanguageReloadingBidiOff() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["intl.multilingual.enabled", true],
+      ["intl.multilingual.downloadEnabled", true],
+      ["intl.multilingual.liveReload", true],
+      ["intl.multilingual.liveReloadBidirectional", false],
+      ["intl.locale.requested", "en-US,fr,he,de"],
+      ["extensions.langpacks.signatures.required", false],
+    ],
+  });
+
+  // Clear the telemetry from other tests.
+  Services.telemetry.clearEvents();
+
+  let langpacks = await createTestLangpacks();
+  let addons = await Promise.all(
+    langpacks.map(async ([locale, file]) => {
+      let install = await AddonTestUtils.promiseInstallFile(file);
+      return install.addon;
+    })
+  );
+
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+
+  let available = doc.getElementById("primaryBrowserLocale");
+  let availableLocales = Array.from(available.menupopup.children);
+
+  is(
+    Services.locale.appLocaleAsBCP47,
+    "en-US",
+    "The app locale starts as English."
+  );
+
+  Assert.deepEqual(
+    Services.locale.requestedLocales,
+    ["en-US", "fr", "he", "de"],
+    "The locale order starts as what was initially requested."
+  );
+
+  let messageBar = doc.getElementById("confirmBrowserLanguage");
+  is(messageBar.hidden, true, "The message bar is hidden at first");
+
+  // English is LTR and Hebrew is RTL.
+  let hebrew = availableLocales.find(item => item.value == "he");
+
+  hebrew.click();
+  available.menupopup.hidePopup();
+
+  await BrowserTestUtils.waitForCondition(
+    () => !messageBar.hidden,
+    "Wait for message bar to show"
+  );
+
+  is(messageBar.hidden, false, "The message bar is now shown");
+
+  is(
+    Services.locale.appLocaleAsBCP47,
+    "en-US",
+    "The app locale remains in English"
+  );
+
+  Assert.deepEqual(
+    Services.locale.requestedLocales,
+    ["en-US", "fr", "he", "de"],
+    "The locale order did not change."
+  );
+
+  await Promise.all(addons.map(addon => addon.uninstall()));
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  assertTelemetryRecorded([["reorder", "main"]]);
+});
+
+add_task(async function testLiveLanguageReloadingBidiOn() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["intl.multilingual.enabled", true],
+      ["intl.multilingual.downloadEnabled", true],
+      ["intl.multilingual.liveReload", true],
+      ["intl.multilingual.liveReloadBidirectional", true],
+      ["intl.locale.requested", "en-US,fr,he,de"],
+      ["extensions.langpacks.signatures.required", false],
+    ],
+  });
+
+  // Clear the telemetry from other tests.
+  Services.telemetry.clearEvents();
+
+  let langpacks = await createTestLangpacks();
+  let addons = await Promise.all(
+    langpacks.map(async ([locale, file]) => {
+      let install = await AddonTestUtils.promiseInstallFile(file);
+      return install.addon;
+    })
+  );
+
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+
+  let available = doc.getElementById("primaryBrowserLocale");
+  let availableLocales = Array.from(available.menupopup.children);
+
+  is(
+    Services.locale.appLocaleAsBCP47,
+    "en-US",
+    "The app locale starts as English."
+  );
+
+  Assert.deepEqual(
+    Services.locale.requestedLocales,
+    ["en-US", "fr", "he", "de"],
+    "The locale order starts as what was initially requested."
+  );
+
+  let messageBar = doc.getElementById("confirmBrowserLanguage");
+  is(messageBar.hidden, true, "The message bar is hidden at first");
+
+  // English is LTR and Hebrew is RTL.
+  let hebrew = availableLocales.find(item => item.value == "he");
+
+  hebrew.click();
+  available.menupopup.hidePopup();
+
+  is(messageBar.hidden, true, "The message bar is still hidden");
+
+  is(
+    Services.locale.appLocaleAsBCP47,
+    "he",
+    "The app locale was changed to Hebrew."
+  );
+
+  Assert.deepEqual(
+    Services.locale.requestedLocales,
+    ["he", "en-US", "fr", "de"],
+    "The locale changed with Hebrew first."
   );
 
   await Promise.all(addons.map(addon => addon.uninstall()));

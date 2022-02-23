@@ -6,6 +6,6 @@ visual-metrics:
     description: "Browsertime visual metrics analsyis script"
     fetch:
         type: static-url
-        url: https://raw.githubusercontent.com/sitespeedio/browsertime/f27fdac113108f0da72c347b5585f0e49da0f54a/browsertime/visualmetrics.py
-        sha256: bf179468dff2572e9ad8ec6c32c793521536c4e9bebeeadd8aab0954b1a4f28c
-        size: 91634
+        url: https://raw.githubusercontent.com/sitespeedio/browsertime/c547875d4b5e2982c2b3a7fc823bde2d6a59aed6/browsertime/visualmetrics.py
+        sha256: 8063f3428e2824a2dbad5b474baf364e4816827a93337bf0c63d1ed606f1022b
+        size: 93169

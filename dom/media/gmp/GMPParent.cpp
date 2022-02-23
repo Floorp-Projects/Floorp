@@ -14,6 +14,7 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/dom/WidevineCDMManifestBinding.h"
+#include "mozilla/FOGIPC.h"
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -381,6 +382,12 @@ mozilla::ipc::IPCResult GMPParent::RecvPGMPContentChildDestroyed() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult GMPParent::RecvFOGData(ByteBuf&& aBuf) {
+  GMP_PARENT_LOG_DEBUG("GMPParent RecvFOGData");
+  glean::FOGData(std::move(aBuf));
+  return IPC_OK();
+}
+
 void GMPParent::CloseIfUnused() {
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   GMP_PARENT_LOG_DEBUG("%s", __FUNCTION__);
@@ -694,8 +701,11 @@ bool GMPParent::DeallocPGMPStorageParent(PGMPStorageParent* aActor) {
 mozilla::ipc::IPCResult GMPParent::RecvPGMPStorageConstructor(
     PGMPStorageParent* aActor) {
   GMPStorageParent* p = (GMPStorageParent*)aActor;
-  if (NS_WARN_IF(NS_FAILED(p->Init()))) {
-    return IPC_FAIL_NO_REASON(this);
+  if (NS_FAILED(p->Init())) {
+    // TODO: Verify if this is really a good reason to IPC_FAIL.
+    // There might be shutdown edge cases here.
+    return IPC_FAIL(this,
+                    "GMPParent::RecvPGMPStorageConstructor: p->Init() failed.");
   }
   return IPC_OK();
 }
@@ -897,7 +907,7 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
 #if XP_WIN
     // psapi.dll added for GetMappedFileNameW, which could possibly be avoided
     // in future versions, see bug 1383611 for details.
-    mLibs = "dxva2.dll, ole32.dll, psapi.dll"_ns;
+    mLibs = "dxva2.dll, ole32.dll, psapi.dll, winmm.dll"_ns;
 #endif
   } else if (mDisplayName.EqualsASCII("fake")) {
     // The fake CDM just exposes a key system with id "fake".

@@ -66,6 +66,25 @@ function createFrameForUri(uri) {
   return `<iframe src="${encodeURI(uri)}"></iframe>`;
 }
 
+/**
+ * Create a XUL browser element in the provided XUL tab, with the provided type.
+ *
+ * @param {xul:tab} tab
+ *     The XUL tab in which the browser element should be inserted.
+ * @param {String} type
+ *     The type attribute of the browser element, "chrome" or "content".
+ * @return {xul:browser}
+ *     The created browser element.
+ */
+function createParentBrowserElement(tab, type) {
+  const parentBrowser = gBrowser.ownerDocument.createXULElement("browser");
+  parentBrowser.setAttribute("type", type);
+  const container = gBrowser.getBrowserContainer(tab.linkedBrowser);
+  container.appendChild(parentBrowser);
+
+  return parentBrowser;
+}
+
 // Create a test page with 2 iframes:
 // - one with a different eTLD+1 (example.com)
 // - one with a nested iframe on a different eTLD+1 (example.net)
@@ -93,4 +112,65 @@ function createTestMarkupWithFrames() {
   return `https://example.org/document-builder.sjs?html=${encodeURI(
     TEST_URI_MARKUP
   )}`;
+}
+
+/**
+ * Install a sidebar extension.
+ *
+ * @return {Object}
+ *     Return value with two properties:
+ *     - extension: test wrapper as returned by SpecialPowers.loadExtension.
+ *       Make sure to explicitly call extension.unload() before the end of the test.
+ *     - sidebarBrowser: the browser element containing the extension sidebar.
+ */
+async function installSidebarExtension() {
+  info("Load the test extension");
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      sidebar_action: {
+        default_panel: "sidebar.html",
+      },
+    },
+    useAddonManager: "temporary",
+
+    files: {
+      "sidebar.html": `
+        <!DOCTYPE html>
+        <html>
+          Test extension
+          <script src="sidebar.js"></script>
+        </html>
+      `,
+      "sidebar.js": function() {
+        browser.test.sendMessage("sidebar-loaded", {
+          bcId: SpecialPowers.wrap(window).browsingContext.id,
+        });
+      },
+      "tab.html": `
+        <!DOCTYPE html>
+        <html>
+          Test extension (tab)
+          <script src="tab.js"></script>
+        </html>
+      `,
+      "tab.js": function() {
+        browser.test.sendMessage("tab-loaded", {
+          bcId: SpecialPowers.wrap(window).browsingContext.id,
+        });
+      },
+    },
+  });
+
+  info("Wait for the extension to start");
+  await extension.startup();
+
+  info("Wait for the extension browsing context");
+  const { bcId } = await extension.awaitMessage("sidebar-loaded");
+  const sidebarBrowser = BrowsingContext.get(bcId).top.embedderElement;
+  ok(sidebarBrowser, "Got a browser element for the extension sidebar");
+
+  return {
+    extension,
+    sidebarBrowser,
+  };
 }

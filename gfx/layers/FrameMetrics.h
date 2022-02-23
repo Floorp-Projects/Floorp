@@ -87,7 +87,6 @@ struct FrameMetrics {
         mCompositionBounds(0, 0, 0, 0),
         mCompositionBoundsWidthIgnoringScrollbars(0),
         mDisplayPort(0, 0, 0, 0),
-        mCriticalDisplayPort(0, 0, 0, 0),
         mScrollableRect(0, 0, 0, 0),
         mCumulativeResolution(),
         mDevPixelsPerCSSPixel(1),
@@ -116,7 +115,6 @@ struct FrameMetrics {
            mCompositionBoundsWidthIgnoringScrollbars ==
                aOther.mCompositionBoundsWidthIgnoringScrollbars &&
            mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
-           mCriticalDisplayPort.IsEqualEdges(aOther.mCriticalDisplayPort) &&
            mScrollableRect.IsEqualEdges(aOther.mScrollableRect) &&
            mCumulativeResolution == aOther.mCumulativeResolution &&
            mDevPixelsPerCSSPixel == aOther.mDevPixelsPerCSSPixel &&
@@ -300,12 +298,6 @@ struct FrameMetrics {
 
   const CSSRect& GetDisplayPort() const { return mDisplayPort; }
 
-  void SetCriticalDisplayPort(const CSSRect& aCriticalDisplayPort) {
-    mCriticalDisplayPort = aCriticalDisplayPort;
-  }
-
-  const CSSRect& GetCriticalDisplayPort() const { return mCriticalDisplayPort; }
-
   void SetCumulativeResolution(
       const LayoutDeviceToLayerScale& aCumulativeResolution) {
     mCumulativeResolution = aCumulativeResolution;
@@ -355,11 +347,14 @@ struct FrameMetrics {
 
   const CSSToParentLayerScale& GetZoom() const { return mZoom; }
 
-  void SetScrollGeneration(const ScrollGeneration& aScrollGeneration) {
+  void SetScrollGeneration(
+      const MainThreadScrollGeneration& aScrollGeneration) {
     mScrollGeneration = aScrollGeneration;
   }
 
-  ScrollGeneration GetScrollGeneration() const { return mScrollGeneration; }
+  MainThreadScrollGeneration GetScrollGeneration() const {
+    return mScrollGeneration;
+  }
 
   ViewID GetScrollId() const { return mScrollId; }
 
@@ -542,14 +537,6 @@ struct FrameMetrics {
   // where scrollPort = CalculateCompositedSizeInCssPixels().
   CSSRect mDisplayPort;
 
-  // If non-empty, the area of a frame's contents that is considered critical
-  // to paint. Area outside of this area (i.e. area inside mDisplayPort, but
-  // outside of mCriticalDisplayPort) is considered low-priority, and may be
-  // painted with lower precision, or not painted at all.
-  //
-  // The same restrictions for mDisplayPort apply here.
-  CSSRect mCriticalDisplayPort;
-
   // The scrollable bounds of a frame. This is determined by reflow.
   // Ordinarily the x and y will be 0 and the width and height will be the
   // size of the element being scrolled. However for RTL pages or elements
@@ -610,7 +597,7 @@ struct FrameMetrics {
   CSSToParentLayerScale mZoom;
 
   // The scroll generation counter used to acknowledge the scroll offset update.
-  ScrollGeneration mScrollGeneration;
+  MainThreadScrollGeneration mScrollGeneration;
 
   // A bounding size for our composition bounds (no larger than the
   // cross-process RCD-RSF's composition size), in local CSS pixels.
@@ -822,6 +809,8 @@ struct ScrollMetadata {
         mIsRDMTouchSimulationActive(false),
         mDidContentGetPainted(true),
         mPrefersReducedMotion(false),
+        mForceMousewheelAutodir(false),
+        mForceMousewheelAutodirHonourRoot(false),
         mOverscrollBehavior() {}
 
   bool operator==(const ScrollMetadata& aOther) const {
@@ -839,6 +828,9 @@ struct ScrollMetadata {
            mIsRDMTouchSimulationActive == aOther.mIsRDMTouchSimulationActive &&
            mDidContentGetPainted == aOther.mDidContentGetPainted &&
            mPrefersReducedMotion == aOther.mPrefersReducedMotion &&
+           mForceMousewheelAutodir == aOther.mForceMousewheelAutodir &&
+           mForceMousewheelAutodirHonourRoot ==
+               aOther.mForceMousewheelAutodirHonourRoot &&
            mDisregardedDirection == aOther.mDisregardedDirection &&
            mOverscrollBehavior == aOther.mOverscrollBehavior &&
            mScrollUpdates == aOther.mScrollUpdates;
@@ -912,6 +904,18 @@ struct ScrollMetadata {
 
   void SetPrefersReducedMotion(bool aValue) { mPrefersReducedMotion = aValue; }
   bool PrefersReducedMotion() const { return mPrefersReducedMotion; }
+
+  void SetForceMousewheelAutodir(bool aValue) {
+    mForceMousewheelAutodir = aValue;
+  }
+  bool ForceMousewheelAutodir() const { return mForceMousewheelAutodir; }
+
+  void SetForceMousewheelAutodirHonourRoot(bool aValue) {
+    mForceMousewheelAutodirHonourRoot = aValue;
+  }
+  bool ForceMousewheelAutodirHonourRoot() const {
+    return mForceMousewheelAutodirHonourRoot;
+  }
 
   bool DidContentGetPainted() const { return mDidContentGetPainted; }
 
@@ -1022,6 +1026,11 @@ struct ScrollMetadata {
   // non-essential motion it uses (see the prefers-reduced-motion
   // media query).
   bool mPrefersReducedMotion : 1;
+
+  // Whether privileged code has requested that autodir behaviour be
+  // enabled for the scroll frame.
+  bool mForceMousewheelAutodir : 1;
+  bool mForceMousewheelAutodirHonourRoot : 1;
 
   // The disregarded direction means the direction which is disregarded anyway,
   // even if the scroll frame overflows in that direction and the direction is

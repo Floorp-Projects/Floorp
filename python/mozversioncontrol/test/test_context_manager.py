@@ -13,7 +13,7 @@ def test_context_manager(repo):
     is_git = repo.vcs == "git"
     cmd = ["show", "--no-patch"] if is_git else ["tip"]
 
-    vcs = get_repository_object(repo.strpath)
+    vcs = get_repository_object(repo.dir)
     output_subprocess = vcs._run(*cmd)
     assert is_git or vcs._client.server is None
     assert "Initial commit" in output_subprocess

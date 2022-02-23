@@ -80,6 +80,11 @@ bool AudioSinkWrapper::HasUnplayedFrames(TrackType aType) const {
   return mAudioSink ? mAudioSink->HasUnplayedFrames() : false;
 }
 
+media::TimeUnit AudioSinkWrapper::UnplayedDuration(TrackType aType) const {
+  AssertOwnerThread();
+  return mAudioSink ? mAudioSink->UnplayedDuration() : media::TimeUnit::Zero();
+}
+
 void AudioSinkWrapper::SetVolume(double aVolume) {
   AssertOwnerThread();
   mParams.mVolume = aVolume;

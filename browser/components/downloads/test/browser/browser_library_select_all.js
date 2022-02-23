@@ -38,7 +38,7 @@ add_task(async function test_select_all() {
     win.close();
   });
 
-  let listbox = win.document.getElementById("downloadsRichListBox");
+  let listbox = win.document.getElementById("downloadsListBox");
   Assert.ok(listbox, "download list box present");
   listbox.focus();
   await TestUtils.waitForCondition(

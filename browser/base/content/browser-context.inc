@@ -297,10 +297,10 @@
       <menuitem id="context-selectall"
                 data-l10n-id="text-action-select-all"
                 command="cmd_selectAll"/>
-      <menuitem id="context-toggle-show-password"
+      <menuitem id="context-reveal-password"
                 type="checkbox"
-                data-l10n-id="main-context-menu-toggle-show-password"
-                oncommand="gContextMenu.toggleShowPassword();"/>
+                data-l10n-id="main-context-menu-reveal-password"
+                oncommand="gContextMenu.toggleRevealPassword();"/>
       <menuitem id="context-print-selection"
                 data-l10n-id="main-context-menu-print-selection"
                 oncommand="gContextMenu.printSelection();"/>

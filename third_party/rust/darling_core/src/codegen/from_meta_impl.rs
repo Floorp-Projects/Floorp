@@ -1,9 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::ToTokens;
-use syn;
 
-use ast::{Data, Fields, Style};
-use codegen::{Field, OuterFromImpl, TraitImpl, Variant};
+use crate::ast::{Data, Fields, Style};
+use crate::codegen::{Field, OuterFromImpl, TraitImpl, Variant};
 
 pub struct FromMetaImpl<'a> {
     pub base: TraitImpl<'a>,
@@ -53,7 +52,7 @@ impl<'a> ToTokens for FromMetaImpl<'a> {
                 let decls = base.local_declarations();
                 let core_loop = base.core_loop();
                 let default = base.fallback_decl();
-                let map = base.map_fn();
+                let post_transform = base.post_transform_call();
 
                 quote!(
                     fn from_list(__items: &[::syn::NestedMeta]) -> ::darling::Result<Self> {
@@ -72,7 +71,7 @@ impl<'a> ToTokens for FromMetaImpl<'a> {
 
                         ::darling::export::Ok(Self {
                             #(#inits),*
-                        }) #map
+                        }) #post_transform
                     }
                 )
             }

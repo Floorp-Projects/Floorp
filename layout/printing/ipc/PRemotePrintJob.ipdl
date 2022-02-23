@@ -9,7 +9,8 @@ include protocol PPrinting;
 namespace mozilla {
 namespace layout {
 
-[RefCounted] async protocol PRemotePrintJob
+[ChildImpl=virtual, ParentImpl=virtual]
+async protocol PRemotePrintJob
 {
   manager PPrinting;
 

@@ -31,8 +31,7 @@ The preferred method, is using the
 :ref:`mach` command-line tool to run the
 debugger, which can bypass several optional defaults. Use "mach help
 run" to get more details. If inside the source directory, you would use
-"./mach". If you have previously :ref:`added mach to your path <Adding_mach_to_your_shell>`,
-then just use "mach". Please note that :ref:`mach is aware of mozconfigs <mach_and_mozconfigs>`.
+"./mach". Please note that :ref:`mach is aware of mozconfigs <mach_and_mozconfigs>`.
 
 .. code:: bash
 
@@ -85,7 +84,7 @@ you have to set a breakpoint you can set a breakpoint in ``_dl_open``.
 This function is called when a new library is loaded, when you can
 finally set your breakpoint.
 
-How do I set a breakpoint when a component is loaded? 
+How do I set a breakpoint when a component is loaded?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In Firefox Version 57 (and possibly earlier) XPCOM_BREAK_ON_LOAD does
@@ -145,7 +144,7 @@ One suggestion is this:
    $47 = {114, 100, 102, 58, 110, 117, 108, 108, 0, 0, 8, 0, 0, 0, 37432,
    16514}
 
- 
+
 
 .. code::
 
@@ -285,7 +284,7 @@ JS stack in addition to the C++ stack.
 
 .. code::
 
-   (gdb) call DumpJSStack() 
+   (gdb) call DumpJSStack()
 
 See `https://developer.mozilla.org/en-US/docs/Mozilla/Debugging/Debugging_JavaScript <https://developer.mozilla.org/en-US/docs/Mozilla/Debugging/Debugging_JavaScript>`__
 for more JS debugging tricks.
@@ -500,5 +499,3 @@ See also
    -  Copyright Information: © 1998-2008 by individual mozilla.org
       contributors; content available under a `Creative Commons
       license <https://www.mozilla.org/foundation/licensing/website-content.html>`__
-
- 

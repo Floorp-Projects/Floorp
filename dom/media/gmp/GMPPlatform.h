@@ -10,6 +10,12 @@
 #include <functional>
 
 namespace mozilla {
+namespace ipc {
+class ByteBuf;
+}  // namespace ipc
+}  // namespace mozilla
+
+namespace mozilla {
 namespace gmp {
 
 class GMPChild;
@@ -21,6 +27,8 @@ GMPErr RunOnMainThread(GMPTask* aTask);
 GMPTask* NewGMPTask(std::function<void()>&& aFunction);
 
 GMPErr SetTimerOnMainThread(GMPTask* aTask, int64_t aTimeoutMS);
+
+void SendFOGData(ipc::ByteBuf&& buf);
 
 }  // namespace gmp
 }  // namespace mozilla

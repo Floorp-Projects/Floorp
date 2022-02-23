@@ -329,5 +329,3 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
     CONFIGURE_SUBST_FILES += [
         "extra-bindgen-flags",
     ]
-
-REQUIRES_UNIFIED_BUILD = True

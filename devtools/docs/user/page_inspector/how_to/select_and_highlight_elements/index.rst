@@ -31,5 +31,3 @@ With the node picker
   :width: 20
 
 To select an element in the page itself, activate the "node picker" by clicking its icon: |image1| (also called the *Select Element* icon). After that, as you move the mouse around the page, the element under the mouse is highlighted. Click the element to select it:
-
-

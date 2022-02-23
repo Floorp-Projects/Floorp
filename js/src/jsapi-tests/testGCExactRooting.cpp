@@ -378,8 +378,7 @@ BEGIN_TEST(testGCRootedVector) {
     char letter = 'a' + i;
     bool match;
     ShapePropertyIter<NoGC> iter(shapes[i]);
-    CHECK(JS_StringEqualsAscii(cx, JSID_TO_STRING(iter->key()), &letter, 1,
-                               &match));
+    CHECK(JS_StringEqualsAscii(cx, iter->key().toString(), &letter, 1, &match));
     CHECK(match);
   }
 
@@ -450,8 +449,7 @@ BEGIN_TEST(testTraceableFifo) {
     char letter = 'a' + i;
     bool match;
     ShapePropertyIter<NoGC> iter(shapes.front());
-    CHECK(JS_StringEqualsAscii(cx, JSID_TO_STRING(iter->key()), &letter, 1,
-                               &match));
+    CHECK(JS_StringEqualsAscii(cx, iter->key().toString(), &letter, 1, &match));
     CHECK(match);
     shapes.popFront();
   }
@@ -496,8 +494,7 @@ static bool CheckVector(JSContext* cx, Handle<ShapeVec> shapes) {
     char letter = 'a' + i;
     bool match;
     ShapePropertyIter<NoGC> iter(shapes[i]);
-    if (!JS_StringEqualsAscii(cx, JSID_TO_STRING(iter->key()), &letter, 1,
-                              &match)) {
+    if (!JS_StringEqualsAscii(cx, iter->key().toString(), &letter, 1, &match)) {
       return false;
     }
     if (!match) {

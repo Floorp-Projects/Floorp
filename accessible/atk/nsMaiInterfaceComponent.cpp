@@ -105,7 +105,8 @@ AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj, gint aX, gint aY,
       node = browser->GetOwnerElement();
     }
     MOZ_ASSERT(node);
-    nsIntPoint winCoords = nsCoreUtils::GetScreenCoordsForWindow(node);
+    mozilla::LayoutDeviceIntPoint winCoords =
+        nsCoreUtils::GetScreenCoordsForWindow(node);
     aX += winCoords.x;
     aY += winCoords.y;
   }
@@ -138,11 +139,11 @@ void getExtentsHelper(AtkObject* aAtkObj, gint* aX, gint* aY, gint* aWidth,
       return;
     }
 
-    nsIntRect screenRect = accWrap->Bounds();
+    mozilla::LayoutDeviceIntRect screenRect = accWrap->Bounds();
     if (screenRect.IsEmpty()) return;
 
     if (aCoordType == ATK_XY_WINDOW) {
-      nsIntPoint winCoords =
+      mozilla::LayoutDeviceIntPoint winCoords =
           nsCoreUtils::GetScreenCoordsForWindow(accWrap->GetNode());
       screenRect.x -= winCoords.x;
       screenRect.y -= winCoords.y;

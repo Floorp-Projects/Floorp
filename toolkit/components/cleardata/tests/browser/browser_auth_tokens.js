@@ -65,7 +65,7 @@ function runTest({ deleteBy, hasUserInput }) {
   testLoggedIn(false);
 
   info("Setup primary password and login");
-  LoginTestUtils.masterPassword.enable(true);
+  LoginTestUtils.primaryPassword.enable(true);
   testLoggedIn(true);
 
   info(
@@ -87,7 +87,7 @@ function runTest({ deleteBy, hasUserInput }) {
     Ci.nsISecretDecoderRing
   );
   sdr.logoutAndTeardown();
-  LoginTestUtils.masterPassword.disable();
+  LoginTestUtils.primaryPassword.disable();
 }
 
 add_task(async function test_deleteAll() {

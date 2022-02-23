@@ -38,5 +38,38 @@ assertEq('h' in obj, false);
 Object.freeze(obj);
 A.inca(obj);  // Despite being frozen, private names are modifiable.
 assertEq(A.gs(obj), 3);
+assertEq(Object.isFrozen(obj), true);
+
+var proxy = new Proxy({}, {});
+assertEq(Object.isFrozen(proxy), false);
+
+new A(proxy);
+assertEq(A.gs(proxy), 1);
+
+// Note: this doesn't exercise the non-native object
+// path in TestIntegrityLevel like you might expect.
+//
+// For that see below.
+Object.freeze(proxy);
+assertEq(Object.isFrozen(proxy), true);
+
+A.inca(proxy);
+assertEq(A.gs(proxy), 2)
+
+var target = { a: 10 };
+Object.freeze(target);
+new A(target);
+assertEq(Object.isFrozen(target), true)
+
+var getOwnKeys = [];
+var proxy = new Proxy(target, {
+  getOwnPropertyDescriptor: function (target, key) {
+    getOwnKeys.push(key);
+    return Reflect.getOwnPropertyDescriptor(target, key);
+  },
+});
+
+Object.isFrozen(proxy);
+assertEq(getOwnKeys.length, 1);
 
 if (typeof reportCompare === 'function') reportCompare(0, 0);

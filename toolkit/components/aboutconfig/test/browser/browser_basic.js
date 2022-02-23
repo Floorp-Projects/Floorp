@@ -37,10 +37,6 @@ add_task(async function test_load_settings() {
     // here or point to a different preference in the same file.
     Assert.equal(this.getRow("font.language.group").value, "x-western");
     Assert.equal(this.getRow("intl.ellipsis").value, "\u2026");
-    Assert.equal(
-      this.getRow("gecko.handlerService.schemes.mailto.1.uriTemplate").value,
-      "https://mail.google.com/mail/?extsrc=mailto&url=%s"
-    );
 
     // Test to see if user created value is not empty string when it matches
     // /^chrome:\/\/.+\/locale\/.+\.properties/.

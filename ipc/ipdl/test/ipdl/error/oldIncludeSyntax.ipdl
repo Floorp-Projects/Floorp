@@ -1,4 +1,4 @@
-//error: bad syntax near `Foo.ipdl'
+//error: bad syntax near `"Foo.ipdl"'
 
 include protocol "Foo.ipdl";
 

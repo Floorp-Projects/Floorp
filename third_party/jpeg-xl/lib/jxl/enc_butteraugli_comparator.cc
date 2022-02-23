@@ -14,14 +14,14 @@
 namespace jxl {
 
 JxlButteraugliComparator::JxlButteraugliComparator(
-    const ButteraugliParams& params)
-    : params_(params) {}
+    const ButteraugliParams& params, const JxlCmsInterface& cms)
+    : params_(params), cms_(cms) {}
 
 Status JxlButteraugliComparator::SetReferenceImage(const ImageBundle& ref) {
   const ImageBundle* ref_linear_srgb;
   ImageMetadata metadata = *ref.metadata();
   ImageBundle store(&metadata);
-  if (!TransformIfNeeded(ref, ColorEncoding::LinearSRGB(ref.IsGray()),
+  if (!TransformIfNeeded(ref, ColorEncoding::LinearSRGB(ref.IsGray()), cms_,
                          /*pool=*/nullptr, &store, &ref_linear_srgb)) {
     return false;
   }
@@ -46,6 +46,7 @@ Status JxlButteraugliComparator::CompareWith(const ImageBundle& actual,
   ImageMetadata metadata = *actual.metadata();
   ImageBundle store(&metadata);
   if (!TransformIfNeeded(actual, ColorEncoding::LinearSRGB(actual.IsGray()),
+                         cms_,
                          /*pool=*/nullptr, &store, &actual_linear_srgb)) {
     return false;
   }
@@ -72,21 +73,24 @@ float JxlButteraugliComparator::BadQualityScore() const {
 }
 
 float ButteraugliDistance(const ImageBundle& rgb0, const ImageBundle& rgb1,
-                          const ButteraugliParams& params, ImageF* distmap,
+                          const ButteraugliParams& params,
+                          const JxlCmsInterface& cms, ImageF* distmap,
                           ThreadPool* pool) {
-  JxlButteraugliComparator comparator(params);
-  return ComputeScore(rgb0, rgb1, &comparator, distmap, pool);
+  JxlButteraugliComparator comparator(params, cms);
+  return ComputeScore(rgb0, rgb1, &comparator, cms, distmap, pool);
 }
 
 float ButteraugliDistance(const CodecInOut& rgb0, const CodecInOut& rgb1,
-                          const ButteraugliParams& params, ImageF* distmap,
+                          const ButteraugliParams& params,
+                          const JxlCmsInterface& cms, ImageF* distmap,
                           ThreadPool* pool) {
-  JxlButteraugliComparator comparator(params);
+  JxlButteraugliComparator comparator(params, cms);
   JXL_ASSERT(rgb0.frames.size() == rgb1.frames.size());
   float max_dist = 0.0f;
   for (size_t i = 0; i < rgb0.frames.size(); ++i) {
-    max_dist = std::max(max_dist, ComputeScore(rgb0.frames[i], rgb1.frames[i],
-                                               &comparator, distmap, pool));
+    max_dist =
+        std::max(max_dist, ComputeScore(rgb0.frames[i], rgb1.frames[i],
+                                        &comparator, cms, distmap, pool));
   }
   return max_dist;
 }

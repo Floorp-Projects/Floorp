@@ -49,7 +49,3 @@ LOCAL_INCLUDES += [
     "/dom/base",
     "/dom/html",
 ]
-
-DEFINES["DEBUG_TABLE_STRATEGY_off"] = True
-
-REQUIRES_UNIFIED_BUILD = True

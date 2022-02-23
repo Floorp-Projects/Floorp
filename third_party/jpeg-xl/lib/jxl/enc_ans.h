@@ -93,6 +93,7 @@ struct EntropyEncodingData {
 
 // Integer to be encoded by an entropy coder, either ANS or Huffman.
 struct Token {
+  Token() {}
   Token(uint32_t c, uint32_t value)
       : is_lz77_length(false), context(c), value(value) {}
   uint32_t is_lz77_length : 1;

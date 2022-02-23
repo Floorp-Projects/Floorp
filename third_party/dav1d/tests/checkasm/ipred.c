@@ -192,8 +192,8 @@ static void check_cfl_ac(Dav1dIntraPredDSPContext *const c) {
 }
 
 static void check_cfl_pred(Dav1dIntraPredDSPContext *const c) {
-    ALIGN_STK_64(pixel, c_dst, 32 * 32,);
-    ALIGN_STK_64(pixel, a_dst, 32 * 32,);
+    PIXEL_RECT(c_dst, 32, 32);
+    PIXEL_RECT(a_dst, 32, 32);
     ALIGN_STK_64(int16_t, ac, 32 * 32,);
     ALIGN_STK_64(pixel, topleft_buf, 257,);
     pixel *const topleft = topleft_buf + 128;
@@ -215,8 +215,6 @@ static void check_cfl_pred(Dav1dIntraPredDSPContext *const c) {
                     const int bitdepth_max = 0xff;
 #endif
 
-                    const ptrdiff_t stride = w * sizeof(pixel);
-
                     int alpha = ((rnd() & 15) + 1) * (1 - (rnd() & 2));
 
                     for (int i = -h * 2; i <= w * 2; i++)
@@ -229,14 +227,17 @@ static void check_cfl_pred(Dav1dIntraPredDSPContext *const c) {
                     for (int i = 0; i < w * h; i++)
                         ac[i] -= luma_avg;
 
-                    call_ref(c_dst, stride, topleft, w, h, ac, alpha
-                             HIGHBD_TAIL_SUFFIX);
-                    call_new(a_dst, stride, topleft, w, h, ac, alpha
-                             HIGHBD_TAIL_SUFFIX);
-                    checkasm_check_pixel(c_dst, stride, a_dst, stride,
-                                         w, h, "dst");
+                    CLEAR_PIXEL_RECT(c_dst);
+                    CLEAR_PIXEL_RECT(a_dst);
 
-                    bench_new(a_dst, stride, topleft, w, h, ac, alpha
+                    call_ref(c_dst, c_dst_stride, topleft, w, h, ac, alpha
+                             HIGHBD_TAIL_SUFFIX);
+                    call_new(a_dst, a_dst_stride, topleft, w, h, ac, alpha
+                             HIGHBD_TAIL_SUFFIX);
+                    checkasm_check_pixel_padded(c_dst, c_dst_stride, a_dst, a_dst_stride,
+                                                w, h, "dst");
+
+                    bench_new(a_dst, a_dst_stride, topleft, w, h, ac, alpha
                               HIGHBD_TAIL_SUFFIX);
                 }
             }
@@ -244,8 +245,8 @@ static void check_cfl_pred(Dav1dIntraPredDSPContext *const c) {
 }
 
 static void check_pal_pred(Dav1dIntraPredDSPContext *const c) {
-    ALIGN_STK_64(pixel, c_dst, 64 * 64,);
-    ALIGN_STK_64(pixel, a_dst, 64 * 64,);
+    PIXEL_RECT(c_dst, 64, 64);
+    PIXEL_RECT(a_dst, 64, 64);
     ALIGN_STK_64(uint8_t, idx, 64 * 64,);
     ALIGN_STK_16(uint16_t, pal, 8,);
 
@@ -261,7 +262,6 @@ static void check_pal_pred(Dav1dIntraPredDSPContext *const c) {
 #else
                 const int bitdepth_max = 0xff;
 #endif
-                const ptrdiff_t stride = w * sizeof(pixel);
 
                 for (int i = 0; i < 8; i++)
                     pal[i] = rnd() & bitdepth_max;
@@ -269,11 +269,15 @@ static void check_pal_pred(Dav1dIntraPredDSPContext *const c) {
                 for (int i = 0; i < w * h; i++)
                     idx[i] = rnd() & 7;
 
-                call_ref(c_dst, stride, pal, idx, w, h);
-                call_new(a_dst, stride, pal, idx, w, h);
-                checkasm_check_pixel(c_dst, stride, a_dst, stride, w, h, "dst");
+                CLEAR_PIXEL_RECT(c_dst);
+                CLEAR_PIXEL_RECT(a_dst);
 
-                bench_new(a_dst, stride, pal, idx, w, h);
+                call_ref(c_dst, c_dst_stride, pal, idx, w, h);
+                call_new(a_dst, a_dst_stride, pal, idx, w, h);
+                checkasm_check_pixel_padded(c_dst, c_dst_stride,
+                                            a_dst, a_dst_stride, w, h, "dst");
+
+                bench_new(a_dst, a_dst_stride, pal, idx, w, h);
             }
     report("pal_pred");
 }

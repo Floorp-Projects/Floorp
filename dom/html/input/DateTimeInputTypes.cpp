@@ -334,6 +334,12 @@ nsresult TimeInputType::GetRangeUnderflowMessage(nsAString& aMessage) {
 
 // input type=week
 
+nsresult WeekInputType::GetBadInputMessage(nsAString& aMessage) {
+  return nsContentUtils::GetMaybeLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, "FormValidationInvalidWeek",
+      mInputElement->OwnerDoc(), aMessage);
+}
+
 bool WeekInputType::ConvertStringToNumber(nsAString& aValue,
                                           Decimal& aResultValue) const {
   uint32_t year, week;
@@ -397,6 +403,12 @@ bool WeekInputType::ConvertNumberToString(Decimal aValue,
 
 // input type=month
 
+nsresult MonthInputType::GetBadInputMessage(nsAString& aMessage) {
+  return nsContentUtils::GetMaybeLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, "FormValidationInvalidMonth",
+      mInputElement->OwnerDoc(), aMessage);
+}
+
 bool MonthInputType::ConvertStringToNumber(nsAString& aValue,
                                            Decimal& aResultValue) const {
   uint32_t year, month;
@@ -445,6 +457,12 @@ bool MonthInputType::ConvertNumberToString(Decimal aValue,
 }
 
 // input type=datetime-local
+
+nsresult DateTimeLocalInputType::GetBadInputMessage(nsAString& aMessage) {
+  return nsContentUtils::GetMaybeLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, "FormValidationInvalidDateTime",
+      mInputElement->OwnerDoc(), aMessage);
+}
 
 bool DateTimeLocalInputType::ConvertStringToNumber(
     nsAString& aValue, Decimal& aResultValue) const {

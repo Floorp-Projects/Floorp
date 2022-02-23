@@ -113,15 +113,14 @@ class ContentBlocking final {
   // For IPC only.
   typedef MozPromise<nsresult, bool, true> ParentAccessGrantPromise;
   static RefPtr<ParentAccessGrantPromise> SaveAccessForOriginOnParentProcess(
-      nsIPrincipal* aParentPrincipal, nsIPrincipal* aTrackingPrinciapl,
-      const nsCString& aTrackingOrigin, int aAllowMode,
+      nsIPrincipal* aParentPrincipal, nsIPrincipal* aTrackingPrincipal,
+      int aAllowMode,
       uint64_t aExpirationTime =
           StaticPrefs::privacy_restrict3rdpartystorage_expiration());
 
   static RefPtr<ParentAccessGrantPromise> SaveAccessForOriginOnParentProcess(
       uint64_t aTopLevelWindowId, dom::BrowsingContext* aParentContext,
-      nsIPrincipal* aTrackingPrinciapl, const nsCString& aTrackingOrigin,
-      int aAllowMode,
+      nsIPrincipal* aTrackingPrincipal, int aAllowMode,
       uint64_t aExpirationTime =
           StaticPrefs::privacy_restrict3rdpartystorage_expiration());
 

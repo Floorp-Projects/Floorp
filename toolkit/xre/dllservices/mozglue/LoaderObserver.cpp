@@ -12,21 +12,6 @@
 #include "mozilla/StackWalk_windows.h"
 #include "mozilla/TimeStamp.h"
 
-namespace {
-
-struct LoadContext {
-  LoadContext(mozilla::ProfilerLabel&& aLabel,
-              mozilla::UniquePtr<char[]>&& aDynamicStringStorage)
-      : mProfilerLabel(std::move(aLabel)),
-        mDynamicStringStorage(std::move(aDynamicStringStorage)),
-        mStartTime(mozilla::TimeStamp::Now()) {}
-  mozilla::ProfilerLabel mProfilerLabel;
-  mozilla::UniquePtr<char[]> mDynamicStringStorage;
-  mozilla::TimeStamp mStartTime;
-};
-
-}  // anonymous namespace
-
 namespace mozilla {
 
 extern glue::Win32SRWLock gDllServicesLock;
@@ -39,11 +24,11 @@ void LoaderObserver::OnBeginDllLoad(void** aContext,
   MOZ_ASSERT(aContext);
   if (IsProfilerPresent()) {
     UniquePtr<char[]> utf8RequestedDllName(WideToUTF8(aRequestedDllName));
-    const char* dynamicString = utf8RequestedDllName.get();
-    *aContext = new LoadContext(
-        ProfilerLabelBegin("mozilla::glue::LoaderObserver::OnBeginDllLoad",
-                           dynamicString, &aContext),
-        std::move(utf8RequestedDllName));
+    BASE_PROFILER_MARKER_TEXT(
+        "DllLoad", OTHER, MarkerTiming::IntervalStart(),
+        mozilla::ProfilerString8View::WrapNullTerminatedString(
+            utf8RequestedDllName.get()));
+    *aContext = utf8RequestedDllName.release();
   }
 
 #ifdef _M_AMD64
@@ -65,14 +50,12 @@ void LoaderObserver::OnEndDllLoad(void* aContext, NTSTATUS aNtStatus,
   DesuppressStackWalking();
 #endif
 
-  UniquePtr<LoadContext> loadContext(static_cast<LoadContext*>(aContext));
-  if (loadContext && IsValidProfilerLabel(loadContext->mProfilerLabel)) {
-    ProfilerLabelEnd(loadContext->mProfilerLabel);
+  if (aContext) {
+    UniquePtr<char[]> utf8RequestedDllName{static_cast<char*>(aContext)};
     BASE_PROFILER_MARKER_TEXT(
-        "DllLoad", OTHER,
-        MarkerTiming::IntervalUntilNowFrom(loadContext->mStartTime),
+        "DllLoad", OTHER, MarkerTiming::IntervalEnd(),
         mozilla::ProfilerString8View::WrapNullTerminatedString(
-            loadContext->mDynamicStringStorage.get()));
+            utf8RequestedDllName.get()));
   }
 
   // We want to record a denied DLL load regardless of |aNtStatus| because

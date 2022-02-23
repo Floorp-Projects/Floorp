@@ -102,7 +102,6 @@
 #include "WrapperFactory.h"
 #include <algorithm>
 #include "nsGlobalWindow.h"
-#include "nsDOMMutationObserver.h"
 #include "GeometryUtils.h"
 #include "nsIAnimationObserver.h"
 #include "nsChildContentList.h"
@@ -2110,14 +2109,20 @@ void nsINode::ReplaceChildren(const Sequence<OwningNodeOrString>& aNodes,
   if (aRv.Failed()) {
     return;
   }
+  MOZ_ASSERT(node);
+  return ReplaceChildren(node, aRv);
+}
 
-  EnsurePreInsertionValidity(*node, nullptr, aRv);
-  if (aRv.Failed()) {
-    return;
+void nsINode::ReplaceChildren(nsINode* aNode, ErrorResult& aRv) {
+  if (aNode) {
+    EnsurePreInsertionValidity(*aNode, nullptr, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
   }
 
   // Needed when used in combination with contenteditable (maybe)
-  mozAutoDocUpdate updateBatch(doc, true);
+  mozAutoDocUpdate updateBatch(OwnerDoc(), true);
 
   nsAutoMutationBatch mb(this, true, false);
 
@@ -2127,8 +2132,10 @@ void nsINode::ReplaceChildren(const Sequence<OwningNodeOrString>& aNodes,
   }
   mb.RemovalDone();
 
-  AppendChild(*node, aRv);
-  mb.NodesAdded();
+  if (aNode) {
+    AppendChild(*aNode, aRv);
+    mb.NodesAdded();
+  }
 }
 
 void nsINode::RemoveChildNode(nsIContent* aKid, bool aNotify) {

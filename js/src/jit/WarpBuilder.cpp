@@ -2312,12 +2312,9 @@ bool WarpBuilder::buildSuspend(BytecodeLocation loc, MDefinition* gen,
   int32_t slotsToCopy = current->stackDepth() - info().firstLocalSlot();
   MOZ_ASSERT(slotsToCopy >= 0);
   if (slotsToCopy > 0) {
-    auto* arraySlot = MLoadFixedSlot::New(
-        alloc(), genObj, AbstractGeneratorObject::stackStorageSlot());
-    current->add(arraySlot);
-
-    auto* arrayObj = MUnbox::New(alloc(), arraySlot, MIRType::Object,
-                                 MUnbox::Mode::Infallible);
+    auto* arrayObj = MLoadFixedSlotAndUnbox::New(
+        alloc(), genObj, AbstractGeneratorObject::stackStorageSlot(),
+        MUnbox::Mode::Infallible, MIRType::Object);
     current->add(arrayObj);
 
     auto* stackStorage = MElements::New(alloc(), arrayObj);
@@ -2802,24 +2799,15 @@ bool WarpBuilder::build_InitElemInc(BytecodeLocation loc) {
   return buildIC(loc, CacheKind::SetElem, {obj, index, val});
 }
 
-static LambdaFunctionInfo LambdaInfoFromSnapshot(JSFunction* fun,
-                                                 const WarpLambda* snapshot) {
-  return LambdaFunctionInfo(fun, snapshot->baseScript(), snapshot->flags(),
-                            snapshot->nargs());
-}
-
 bool WarpBuilder::build_Lambda(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
-
-  auto* snapshot = getOpSnapshot<WarpLambda>(loc);
 
   MDefinition* env = current->environmentChain();
 
   JSFunction* fun = loc.getFunction(script_);
   MConstant* funConst = constant(ObjectValue(*fun));
 
-  auto* ins = MLambda::New(alloc(), env, funConst,
-                           LambdaInfoFromSnapshot(fun, snapshot));
+  auto* ins = MLambda::New(alloc(), env, funConst);
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins, loc);
@@ -2828,16 +2816,13 @@ bool WarpBuilder::build_Lambda(BytecodeLocation loc) {
 bool WarpBuilder::build_LambdaArrow(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
-  auto* snapshot = getOpSnapshot<WarpLambda>(loc);
-
   MDefinition* env = current->environmentChain();
   MDefinition* newTarget = current->pop();
 
   JSFunction* fun = loc.getFunction(script_);
   MConstant* funConst = constant(ObjectValue(*fun));
 
-  auto* ins = MLambdaArrow::New(alloc(), env, newTarget, funConst,
-                                LambdaInfoFromSnapshot(fun, snapshot));
+  auto* ins = MLambdaArrow::New(alloc(), env, newTarget, funConst);
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins, loc);

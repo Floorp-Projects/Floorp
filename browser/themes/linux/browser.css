@@ -1,8 +1,6 @@
-%if 0
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-%endif
 
 @namespace html url("http://www.w3.org/1999/xhtml");
 
@@ -25,10 +23,6 @@
   --panel-separator-color: ThreeDShadow;
 
   --chrome-content-separator-color: ThreeDShadow;
-}
-
-:root:not(:-moz-lwtheme) {
-  --focus-outline-color: -moz-accent-color;
 }
 
 #TabsToolbar:not(:-moz-lwtheme),
@@ -248,13 +242,12 @@ menuitem.bookmark-item {
   border-top-style: solid;
   color: -moz-dialogText;
   text-shadow: none;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (-moz-content-prefers-color-scheme: dark) {
   #statuspanel-label {
-    background-color: hsl(240, 1%, 20%);
-    border-color: hsl(240, 1%, 40%);
-    color: rgb(249, 249, 250);
+    color-scheme: dark;
   }
 }
 

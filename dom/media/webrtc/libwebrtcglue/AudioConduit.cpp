@@ -488,7 +488,7 @@ void WebrtcAudioConduit::OnRtpReceived(MediaPacket&& aPacket,
                                        webrtc::RTPHeader&& aHeader) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
-  if (mRecvStreamConfig.rtp.remote_ssrc != aHeader.ssrc) {
+  if (mAllowSsrcChange && mRecvStreamConfig.rtp.remote_ssrc != aHeader.ssrc) {
     CSFLogDebug(LOGTAG, "%s: switching from SSRC %u to %u", __FUNCTION__,
                 mRecvStreamConfig.rtp.remote_ssrc, aHeader.ssrc);
     OverrideRemoteSSRC(aHeader.ssrc);
@@ -873,6 +873,36 @@ void WebrtcAudioConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,
     CSFLogError(LOGTAG, "%s DeliverPacket Failed for %s packet, %d",
                 __FUNCTION__, type == PacketType::RTP ? "RTP" : "RTCP", status);
   }
+}
+
+Maybe<int> WebrtcAudioConduit::ActiveSendPayloadType() const {
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+
+  auto stats = GetSenderStats();
+  if (!stats) {
+    return Nothing();
+  }
+
+  if (!stats->codec_payload_type) {
+    return Nothing();
+  }
+
+  return Some(*stats->codec_payload_type);
+}
+
+Maybe<int> WebrtcAudioConduit::ActiveRecvPayloadType() const {
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+
+  auto stats = GetReceiverStats();
+  if (!stats) {
+    return Nothing();
+  }
+
+  if (!stats->codec_payload_type) {
+    return Nothing();
+  }
+
+  return Some(*stats->codec_payload_type);
 }
 
 }  // namespace mozilla

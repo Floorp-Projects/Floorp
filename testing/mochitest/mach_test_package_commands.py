@@ -70,10 +70,13 @@ def run_test(context, is_junit, **kwargs):
         "mochitest-webgl2-deqp": "webgl2-deqp",
         "mochitest-webgpu": "webgpu",
         "mochitest-devtools-chrome": "devtools",
+        "mochitest-browser-a11y": "a11y",
         "mochitest-remote": "remote",
     }
     args.subsuite = subsuites.get(suite)
     if args.subsuite == "devtools":
+        args.flavor = "browser"
+    if args.subsuite == "a11y":
         args.flavor = "browser"
 
     if not args.test_paths:

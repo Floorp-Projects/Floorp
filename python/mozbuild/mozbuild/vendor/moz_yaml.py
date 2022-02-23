@@ -115,6 +115,9 @@ updatebot:
   # Bugzilla email address for a maintainer of the library, used for needinfos
   maintainer-bz: tom@mozilla.com
 
+  # Optional: A query string for ./mach try fuzzy. If omitted ./mach try auto will be used
+  fuzzy-query: media
+
   # The tasks that Updatebot can run. Only one of each task is currently permitted
   # optional
   tasks:
@@ -166,16 +169,22 @@ vendoring:
 
   # List of patch files to apply after vendoring. Applied in the order
   # specified, and alphabetically if globbing is used. Patches must apply
-  # cleanly before changes are pushed
+  # cleanly before changes are pushed.
+  # Patch files should be relative to the vendor-directory rather than the gecko
+  # root directory.
   # All patch files are implicitly added to the keep file list.
   # optional
   patches:
     - file
     - path/to/file
     - path/*.patch
+    - path/**  # Captures all files and subdirectories below path
+    - path/*   # Captures all files but _not_ subdirectories below path. Equivalent to `path/`
 
-  # List of files that are not deleted while vendoring
-  # Implicitly contains "moz.yaml", any files referenced as patches
+  # List of files that are not removed from the destination directory while vendoring
+  # in a new version of the library. Intended for mozilla files not present in upstream.
+  # Implicitly contains "moz.yaml", "moz.build", and any files referenced in
+  # "patches"
   # optional
   keep:
     - file
@@ -183,7 +192,7 @@ vendoring:
     - another/path
     - *.mozilla
 
-  # Files/paths that will not be vendored from source repository
+  # Files/paths that will not be vendored from the upstream repository
   # Implicitly contains ".git", and ".gitignore"
   # optional
   exclude:
@@ -193,8 +202,8 @@ vendoring:
     - docs
     - src/*.test
 
-  # Files/paths that will always be vendored, even if they would
-  # otherwise be excluded by "exclude".
+  # Files/paths that will always be vendored from source repository, even if
+  # they would otherwise be excluded by "exclude".
   # optional
   include:
     - file
@@ -372,6 +381,7 @@ def _schema_1():
             "updatebot": {
                 Required("maintainer-phab"): All(str, Length(min=1)),
                 Required("maintainer-bz"): All(str, Length(min=1)),
+                "fuzzy-query": All(str, Length(min=1)),
                 "tasks": All(
                     UpdatebotTasks(),
                     [

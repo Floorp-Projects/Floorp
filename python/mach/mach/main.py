@@ -17,7 +17,7 @@ import sys
 import traceback
 import uuid
 from collections.abc import Iterable
-from typing import Union, List
+from typing import Union, Dict, List
 from pathlib import Path
 
 from .base import (
@@ -174,6 +174,18 @@ class ContextWrapper(object):
         setattr(object.__getattribute__(self, "_context"), key, value)
 
 
+class MachCommandReference:
+    """A reference to a mach command.
+
+    Holds the metadata for a mach command.
+    """
+
+    module: Path
+
+    def __init__(self, module: Union[str, Path]):
+        self.module = Path(module)
+
+
 class Mach(object):
     """Main mach driver type.
 
@@ -269,6 +281,22 @@ To see more help for a specific command, run:
                 raise
 
             raise MissingFileError(f"{path} does not exist")
+
+    def load_commands_from_spec(
+        self, spec: Dict[str, MachCommandReference], topsrcdir: str, missing_ok=False
+    ):
+        """Load mach commands based on the given spec.
+
+        Takes a dictionary mapping command names to their metadata.
+        """
+        modules = set(spec[command].module for command in spec)
+
+        for path in modules:
+            try:
+                self.load_commands_from_file(topsrcdir / path)
+            except MissingFileError:
+                if not missing_ok:
+                    raise
 
     def load_commands_from_entry_point(self, group="mach.providers"):
         """Scan installed packages for mach command provider entry points. An
@@ -471,7 +499,11 @@ To see more help for a specific command, run:
         self.log_manager.register_structured_logger(logging.getLogger("mach"))
 
         write_times = True
-        if args.log_no_times or "MACH_NO_WRITE_TIMES" in os.environ:
+        if (
+            args.log_no_times
+            or "MACH_NO_WRITE_TIMES" in os.environ
+            or "MOZ_AUTOMATION" in os.environ
+        ):
             write_times = False
 
         # Always enable terminal logging. The log manager figures out if we are

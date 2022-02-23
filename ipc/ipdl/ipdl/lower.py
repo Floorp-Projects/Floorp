@@ -11,7 +11,6 @@ import ipdl.ast
 import ipdl.builtin
 from ipdl.cxx.ast import *
 from ipdl.cxx.code import *
-from ipdl.direct_call import VIRTUAL_CALL_CLASSES, DIRECT_CALL_OVERRIDES
 from ipdl.type import ActorType, UnionType, TypeVisitor, builtinHeaderIncludes
 from ipdl.util import hash_str
 
@@ -1317,22 +1316,6 @@ class Protocol(ipdl.ast.Protocol):
         assert self.decl.type.isToplevel()
         return ExprVar("ShouldContinueFromReplyTimeout")
 
-    def enteredCxxStackVar(self):
-        assert self.decl.type.isToplevel()
-        return ExprVar("EnteredCxxStack")
-
-    def exitedCxxStackVar(self):
-        assert self.decl.type.isToplevel()
-        return ExprVar("ExitedCxxStack")
-
-    def enteredCallVar(self):
-        assert self.decl.type.isToplevel()
-        return ExprVar("EnteredCall")
-
-    def exitedCallVar(self):
-        assert self.decl.type.isToplevel()
-        return ExprVar("ExitedCall")
-
     def routingId(self, actorThis=None):
         if self.decl.type.isToplevel():
             return ExprVar("MSG_ROUTING_CONTROL")
@@ -1427,15 +1410,11 @@ class _DecorateWithCxxStuff(ipdl.ast.Visitor):
                 Typedef(Type("mozilla::ipc::ActorHandle"), "ActorHandle"),
                 Typedef(Type("base::ProcessId"), "ProcessId"),
                 Typedef(Type("mozilla::ipc::ProtocolId"), "ProtocolId"),
-                Typedef(Type("mozilla::ipc::Transport"), "Transport"),
                 Typedef(Type("mozilla::ipc::Endpoint"), "Endpoint", ["FooSide"]),
                 Typedef(
                     Type("mozilla::ipc::ManagedEndpoint"),
                     "ManagedEndpoint",
                     ["FooSide"],
-                ),
-                Typedef(
-                    Type("mozilla::ipc::TransportDescriptor"), "TransportDescriptor"
                 ),
                 Typedef(Type("mozilla::UniquePtr"), "UniquePtr", ["T"]),
                 Typedef(
@@ -1662,6 +1641,10 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             self.hdrfile.addthing(
                 CppDirective("include", '"' + _ipdlhHeaderName(inc.tu) + '.h"')
             )
+            # Inherit cpp includes defined by imported header files, as they may
+            # be required to serialize an imported `using` type.
+            for cxxinc in inc.tu.cxxIncludes:
+                cxxinc.accept(self)
         else:
             self.cppIncludeHeaders += [
                 _protocolHeaderName(inc.tu.protocol, "parent") + ".h",
@@ -1906,10 +1889,15 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
     else:
         syncEnum = "ASYNC"
 
+    # FIXME(bug ???) - remove support for interrupt messages from the IPDL compiler.
     if md.decl.type.isInterrupt():
-        interruptEnum = "INTERRUPT"
-    else:
-        interruptEnum = "NOT_INTERRUPT"
+        func.addcode(
+            """
+            static_assert(
+                false,
+                "runtime support for intr messages has been removed from IPDL");
+            """
+        )
 
     if md.decl.type.isCtor():
         ctorEnum = "CONSTRUCTOR"
@@ -1927,7 +1915,6 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
             messageEnum(compression),
             messageEnum(ctorEnum),
             messageEnum(syncEnum),
-            messageEnum(interruptEnum),
             messageEnum(replyEnum),
         ],
     )
@@ -3511,19 +3498,19 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         self.hdrfile.addthings([traitsdecl, Whitespace.NL] + _includeGuardEnd(hf))
 
-        # make the .cpp file
-        if (self.protocol.name, self.side) not in VIRTUAL_CALL_CLASSES:
-            if (self.protocol.name, self.side) in DIRECT_CALL_OVERRIDES:
-                (_, header_file) = DIRECT_CALL_OVERRIDES[self.protocol.name, self.side]
-            else:
-                assert self.protocol.name.startswith("P")
-                header_file = "{}/{}{}.h".format(
-                    "/".join(n.name for n in self.protocol.namespaces),
-                    self.protocol.name[1:],
-                    self.side.capitalize(),
-                )
-            self.externalIncludes.add(header_file)
+        # If the implementation type is not overridden, add an implicit import
+        # for the default implementation header file. Explicit implementation
+        # types will specify their headers manually with `include`.
+        if self.protocol.implAttribute(self.side) is None:
+            assert self.protocol.name.startswith("P")
+            self.externalIncludes.add(
+                "".join(n.name + "/" for n in self.protocol.namespaces)
+                + self.protocol.name[1:]
+                + self.side.capitalize()
+                + ".h"
+            )
 
+        # make the .cpp file
         cf.addthings(
             [
                 _DISCLAIMER,
@@ -3585,33 +3572,46 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.externalIncludes.add(inc.file)
 
     def visitInclude(self, inc):
-        ip = inc.tu.protocol
-        if not ip:
-            return
+        if inc.tu.filetype == "header":
+            # Including a header will declare any globals defined by "using"
+            # statements into our scope. To serialize these, we also may need
+            # cxx include statements, so visit them as well.
+            for cxxinc in inc.tu.cxxIncludes:
+                cxxinc.accept(self)
+            for using in inc.tu.using:
+                using.accept(self)
+        else:
+            # Includes for protocols only include types explicitly exported by
+            # those protocols.
+            ip = inc.tu.protocol
+            if ip == self.protocol:
+                return
 
-        self.actorForwardDecls.extend(
-            [
-                _makeForwardDeclForActor(ip.decl.type, self.side),
-                _makeForwardDeclForActor(ip.decl.type, _otherSide(self.side)),
-                Whitespace.NL,
-            ]
-        )
-        self.protocolCxxIncludes.append(_protocolHeaderName(ip, self.side))
-
-        if ip.decl.fullname is not None:
-            self.includedActorTypedefs.append(
-                Typedef(
-                    Type(_actorName(ip.decl.fullname, self.side.title())),
-                    _actorName(ip.decl.shortname, self.side.title()),
-                )
+            self.actorForwardDecls.extend(
+                [
+                    _makeForwardDeclForActor(ip.decl.type, self.side),
+                    _makeForwardDeclForActor(ip.decl.type, _otherSide(self.side)),
+                    Whitespace.NL,
+                ]
             )
+            self.protocolCxxIncludes.append(_protocolHeaderName(ip, self.side))
 
-            self.includedActorTypedefs.append(
-                Typedef(
-                    Type(_actorName(ip.decl.fullname, _otherSide(self.side).title())),
-                    _actorName(ip.decl.shortname, _otherSide(self.side).title()),
+            if ip.decl.fullname is not None:
+                self.includedActorTypedefs.append(
+                    Typedef(
+                        Type(_actorName(ip.decl.fullname, self.side.title())),
+                        _actorName(ip.decl.shortname, self.side.title()),
+                    )
                 )
-            )
+
+                self.includedActorTypedefs.append(
+                    Typedef(
+                        Type(
+                            _actorName(ip.decl.fullname, _otherSide(self.side).title())
+                        ),
+                        _actorName(ip.decl.shortname, _otherSide(self.side).title()),
+                    )
+                )
 
     def visitProtocol(self, p):
         self.hdrfile.addcode(
@@ -3722,7 +3722,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     defaultRecv = MethodDefn(recvDecl)
                     defaultRecv.addcode("return IPC_OK();\n")
                     self.cls.addstmt(defaultRecv)
-                elif (self.protocol.name, self.side) in VIRTUAL_CALL_CLASSES:
+                elif self.protocol.implAttribute(self.side) == "virtual":
                     # If we're using virtual calls, we need the methods to be
                     # declared on the base class.
                     recvDecl.methodspec = MethodSpec.PURE
@@ -3730,7 +3730,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         # If we're using virtual calls, we need the methods to be declared on
         # the base class.
-        if (self.protocol.name, self.side) in VIRTUAL_CALL_CLASSES:
+        if self.protocol.implAttribute(self.side) == "virtual":
             for md in p.messageDecls:
                 managed = md.decl.type.constructedType()
                 if not ptype.isManagerOf(managed) or md.decl.type.isDtor():
@@ -3802,28 +3802,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             )
             shouldcontinue.addcode("return true;\n")
 
-            # void Entered*()/Exited*(); default to no-op
-            entered = MethodDefn(
-                MethodDecl(p.enteredCxxStackVar().name, methodspec=MethodSpec.OVERRIDE)
-            )
-            exited = MethodDefn(
-                MethodDecl(p.exitedCxxStackVar().name, methodspec=MethodSpec.OVERRIDE)
-            )
-            enteredcall = MethodDefn(
-                MethodDecl(p.enteredCallVar().name, methodspec=MethodSpec.OVERRIDE)
-            )
-            exitedcall = MethodDefn(
-                MethodDecl(p.exitedCallVar().name, methodspec=MethodSpec.OVERRIDE)
-            )
-
             self.cls.addstmts(
                 [
                     processingerror,
                     shouldcontinue,
-                    entered,
-                    exited,
-                    enteredcall,
-                    exitedcall,
                     Whitespace.NL,
                 ]
             )
@@ -4524,16 +4506,18 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     ##
 
     def concreteThis(self):
-        if (self.protocol.name, self.side) in VIRTUAL_CALL_CLASSES:
+        implAttr = self.protocol.implAttribute(self.side)
+        if implAttr == "virtual":
             return ExprVar.THIS
 
-        if (self.protocol.name, self.side) in DIRECT_CALL_OVERRIDES:
-            (class_name, _) = DIRECT_CALL_OVERRIDES[self.protocol.name, self.side]
-        else:
+        if implAttr is None:
             assert self.protocol.name.startswith("P")
-            class_name = "{}{}".format(self.protocol.name[1:], self.side.capitalize())
+            className = self.protocol.name[1:] + self.side.capitalize()
+        else:
+            assert isinstance(implAttr, ipdl.ast.StringLiteral)
+            className = implAttr.value
 
-        return ExprCode("static_cast<${class_name}*>(this)", class_name=class_name)
+        return ExprCode("static_cast<${className}*>(this)", className=className)
 
     def thisCall(self, function, args):
         return ExprCall(ExprSelect(self.concreteThis(), "->", function), args=args)

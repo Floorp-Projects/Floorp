@@ -313,13 +313,13 @@ void HyperTextAccessibleWrap::AttributedTextForRange(
   }
 }
 
-nsIntRect HyperTextAccessibleWrap::BoundsForRange(
+LayoutDeviceIntRect HyperTextAccessibleWrap::BoundsForRange(
     int32_t aStartOffset, HyperTextAccessible* aEndContainer,
     int32_t aEndOffset) {
-  nsIntRect rect;
+  LayoutDeviceIntRect rect;
   HyperTextIterator iter(this, aStartOffset, aEndContainer, aEndOffset);
   while (iter.Next()) {
-    nsIntRect stringRect = iter.mCurrentContainer->TextBounds(
+    LayoutDeviceIntRect stringRect = iter.mCurrentContainer->TextBounds(
         iter.mCurrentStartOffset, iter.mCurrentEndOffset);
     rect.UnionRect(rect, stringRect);
   }

@@ -935,7 +935,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       packet.why = reason;
 
       if (!sourceActor) {
-        // If the frame location is in a source that not pass the 'allowSource'
+        // If the frame location is in a source that not pass the 'isHiddenSource'
         // check and thus has no actor, we do not bother pausing.
         return undefined;
       }
@@ -1429,12 +1429,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // there is an active Debugger.Source that represents the SaveFrame's
       // source, it will have already been created in the server.
       if (frame instanceof Debugger.Frame) {
-        const sourceActor = this.sourcesManager.createSourceActor(
-          frame.script.source
-        );
-        if (!sourceActor) {
-          continue;
-        }
+        this.sourcesManager.createSourceActor(frame.script.source);
       }
 
       if (RESTARTED_FRAMES.has(frame)) {
@@ -2063,13 +2058,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    *
    * @param aSource Debugger.Source
    *        The source that will be stored.
-   * @returns true, if the source was added; false otherwise.
    */
   _addSource(source) {
-    if (!this.sourcesManager.allowSource(source)) {
-      return false;
-    }
-
     // Preloaded WebExtension content scripts may be cached internally by
     // ExtensionContent.jsm and ThreadActor would ignore them on a page reload
     // because it finds them in the _debuggerSourcesSeen WeakSet,
@@ -2112,7 +2102,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     this._debuggerSourcesSeen.add(source);
-    return true;
   },
 
   /**

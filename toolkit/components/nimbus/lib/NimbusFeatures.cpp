@@ -16,44 +16,75 @@ namespace mozilla {
 
 static nsTHashSet<nsCString> sExposureFeatureSet;
 
-void NimbusFeatures::GetPrefName(const nsACString& aFeatureId,
+void NimbusFeatures::GetPrefName(const nsACString& branchPrefix,
+                                 const nsACString& aFeatureId,
                                  const nsACString& aVariable,
                                  nsACString& aPref) {
-  // This branch is used to store experiment data
-  constexpr auto kSyncDataPrefBranch = "nimbus.syncdatastore."_ns;
-  aPref.Truncate();
-  aPref.Append(kSyncDataPrefBranch);
-  aPref.Append(aFeatureId);
+  nsAutoCString featureAndVariable;
+  featureAndVariable.Append(aFeatureId);
   if (!aVariable.IsEmpty()) {
-    aPref.Append(".");
-    aPref.Append(aVariable);
+    featureAndVariable.Append(".");
+    featureAndVariable.Append(aVariable);
   }
+  aPref.Truncate();
+  aPref.Append(branchPrefix);
+  aPref.Append(featureAndVariable);
 }
 
+/**
+ * Returns the variable value configured via experiment or rollout.
+ * If a fallback pref is defined in the FeatureManifest and it
+ * has a user value set this takes precedence over remote configurations.
+ */
 bool NimbusFeatures::GetBool(const nsACString& aFeatureId,
                              const nsACString& aVariable, bool aDefault) {
-  nsAutoCString pref;
-  GetPrefName(aFeatureId, aVariable, pref);
-  if (Preferences::HasUserValue(pref.get())) {
-    return Preferences::GetBool(pref.get(), aDefault);
+  auto prefName = GetNimbusFallbackPrefName(aFeatureId, aVariable);
+  if (prefName.isSome() && Preferences::HasUserValue(prefName->get())) {
+    return Preferences::GetBool(prefName->get(), aDefault);
   }
 
-  auto prefName = GetNimbusFallbackPrefName(aFeatureId, aVariable);
+  nsAutoCString experimentPref;
+  GetPrefName(kSyncDataPrefBranch, aFeatureId, aVariable, experimentPref);
+  if (Preferences::HasUserValue(experimentPref.get())) {
+    return Preferences::GetBool(experimentPref.get(), aDefault);
+  }
+
+  nsAutoCString rolloutPref;
+  GetPrefName(kSyncRolloutsPrefBranch, aFeatureId, aVariable, rolloutPref);
+  if (Preferences::HasUserValue(rolloutPref.get())) {
+    return Preferences::GetBool(rolloutPref.get(), aDefault);
+  }
+
   if (prefName.isSome()) {
     return Preferences::GetBool(prefName->get(), aDefault);
   }
   return aDefault;
 }
 
+/**
+ * Returns the variable value configured via experiment or rollout.
+ * If a fallback pref is defined in the FeatureManifest and it
+ * has a user value set this takes precedence over remote configurations.
+ */
 int NimbusFeatures::GetInt(const nsACString& aFeatureId,
                            const nsACString& aVariable, int aDefault) {
-  nsAutoCString pref;
-  GetPrefName(aFeatureId, aVariable, pref);
-  if (Preferences::HasUserValue(pref.get())) {
-    return Preferences::GetInt(pref.get(), aDefault);
+  auto prefName = GetNimbusFallbackPrefName(aFeatureId, aVariable);
+  if (prefName.isSome() && Preferences::HasUserValue(prefName->get())) {
+    return Preferences::GetInt(prefName->get(), aDefault);
   }
 
-  auto prefName = GetNimbusFallbackPrefName(aFeatureId, aVariable);
+  nsAutoCString experimentPref;
+  GetPrefName(kSyncDataPrefBranch, aFeatureId, aVariable, experimentPref);
+  if (Preferences::HasUserValue(experimentPref.get())) {
+    return Preferences::GetInt(experimentPref.get(), aDefault);
+  }
+
+  nsAutoCString rolloutPref;
+  GetPrefName(kSyncRolloutsPrefBranch, aFeatureId, aVariable, rolloutPref);
+  if (Preferences::HasUserValue(rolloutPref.get())) {
+    return Preferences::GetInt(rolloutPref.get(), aDefault);
+  }
+
   if (prefName.isSome()) {
     return Preferences::GetInt(prefName->get(), aDefault);
   }
@@ -64,18 +95,34 @@ nsresult NimbusFeatures::OnUpdate(const nsACString& aFeatureId,
                                   const nsACString& aVariable,
                                   PrefChangedFunc aUserCallback,
                                   void* aUserData) {
-  nsAutoCString pref;
-  GetPrefName(aFeatureId, aVariable, pref);
-  return Preferences::RegisterCallback(aUserCallback, pref, aUserData);
+  nsAutoCString experimentPref;
+  nsAutoCString rolloutPref;
+  GetPrefName(kSyncDataPrefBranch, aFeatureId, aVariable, experimentPref);
+  GetPrefName(kSyncRolloutsPrefBranch, aFeatureId, aVariable, rolloutPref);
+  nsresult rv =
+      Preferences::RegisterCallback(aUserCallback, experimentPref, aUserData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = Preferences::RegisterCallback(aUserCallback, rolloutPref, aUserData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 nsresult NimbusFeatures::OffUpdate(const nsACString& aFeatureId,
                                    const nsACString& aVariable,
                                    PrefChangedFunc aUserCallback,
                                    void* aUserData) {
-  nsAutoCString pref;
-  GetPrefName(aFeatureId, aVariable, pref);
-  return Preferences::UnregisterCallback(aUserCallback, pref, aUserData);
+  nsAutoCString experimentPref;
+  nsAutoCString rolloutPref;
+  GetPrefName(kSyncDataPrefBranch, aFeatureId, aVariable, experimentPref);
+  GetPrefName(kSyncRolloutsPrefBranch, aFeatureId, aVariable, rolloutPref);
+  nsresult rv =
+      Preferences::UnregisterCallback(aUserCallback, experimentPref, aUserData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = Preferences::UnregisterCallback(aUserCallback, rolloutPref, aUserData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 /**
@@ -99,7 +146,7 @@ nsresult NimbusFeatures::GetExperimentSlug(const nsACString& aFeatureId,
   aExperimentSlug.Truncate();
   aBranchSlug.Truncate();
 
-  GetPrefName(aFeatureId, ""_ns, prefName);
+  GetPrefName(kSyncDataPrefBranch, aFeatureId, EmptyCString(), prefName);
   MOZ_TRY(Preferences::GetString(prefName.get(), prefValue));
   if (prefValue.IsEmpty()) {
     return NS_ERROR_UNEXPECTED;

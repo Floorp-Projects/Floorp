@@ -495,6 +495,10 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
 
   TextureFlags GetFlags() { return mFlags; }
 
+  wr::MaybeExternalImageId GetMaybeExternalImageId() const {
+    return mExternalImageId;
+  }
+
   /**
    * Allocate and deallocate a TextureParent actor.
    *
@@ -584,6 +588,8 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   AsAndroidHardwareBufferTextureHost() {
     return nullptr;
   }
+
+  virtual bool IsWrappingBufferTextureHost() { return false; }
 
   // Create the corresponding RenderTextureHost type of this texture, and
   // register the RenderTextureHost into render thread.
@@ -770,6 +776,8 @@ class BufferTextureHost : public TextureHost {
   }
 
   BufferTextureHost* AsBufferTextureHost() override { return this; }
+
+  bool IsWrappingBufferTextureHost() override { return true; }
 
   const BufferDescriptor& GetBufferDescriptor() const { return mDescriptor; }
 

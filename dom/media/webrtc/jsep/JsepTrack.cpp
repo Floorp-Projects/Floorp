@@ -64,7 +64,7 @@ void JsepTrack::PopulateCodecs(
     const std::vector<UniquePtr<JsepCodecDescription>>& prototype) {
   mPrototypeCodecs.clear();
   for (const auto& prototypeCodec : prototype) {
-    if (prototypeCodec->mType == mType) {
+    if (prototypeCodec->Type() == mType) {
       mPrototypeCodecs.emplace_back(prototypeCodec->Clone());
       mPrototypeCodecs.back()->mDirection = mDirection;
     }
@@ -94,7 +94,7 @@ void JsepTrack::AddToAnswer(const SdpMediaSection& offer,
   // We do not modify mPrototypeCodecs here, since we're only creating an
   // answer. Once offer/answer concludes, we will update mPrototypeCodecs.
   std::vector<UniquePtr<JsepCodecDescription>> codecs =
-      NegotiateCodecs(offer, true);
+      NegotiateCodecs(offer, true, Nothing());
   if (codecs.empty()) {
     return;
   }
@@ -209,7 +209,7 @@ void JsepTrack::PruneSsrcs(size_t aNumSsrcs) {
 bool JsepTrack::IsRtxEnabled(
     const std::vector<UniquePtr<JsepCodecDescription>>& codecs) const {
   for (const auto& codec : codecs) {
-    if (codec->mType == SdpMediaSection::kVideo &&
+    if (codec->Type() == SdpMediaSection::kVideo &&
         static_cast<const JsepVideoCodecDescription*>(codec.get())
             ->mRtxEnabled) {
       return true;
@@ -395,7 +395,8 @@ static bool CompareCodec(const UniquePtr<JsepCodecDescription>& lhs,
 }
 
 std::vector<UniquePtr<JsepCodecDescription>> JsepTrack::NegotiateCodecs(
-    const SdpMediaSection& remote, bool isOffer) {
+    const SdpMediaSection& remote, bool remoteIsOffer,
+    Maybe<const SdpMediaSection&> local) {
   std::vector<UniquePtr<JsepCodecDescription>> negotiatedCodecs;
   std::vector<UniquePtr<JsepCodecDescription>> newPrototypeCodecs;
 
@@ -408,13 +409,13 @@ std::vector<UniquePtr<JsepCodecDescription>> JsepTrack::NegotiateCodecs(
 
       // First codec of ours that matches. See if we can negotiate it.
       UniquePtr<JsepCodecDescription> clone(codec->Clone());
-      if (clone->Negotiate(fmt, remote, isOffer)) {
+      if (clone->Negotiate(fmt, remote, remoteIsOffer, local)) {
         // If negotiation succeeded, remember the payload type the other side
         // used for reoffers.
         codec->mDefaultPt = fmt;
 
         // Remember whether we negotiated rtx and the associated pt for later.
-        if (codec->mType == SdpMediaSection::kVideo) {
+        if (codec->Type() == SdpMediaSection::kVideo) {
           JsepVideoCodecDescription* videoCodec =
               static_cast<JsepVideoCodecDescription*>(codec.get());
           JsepVideoCodecDescription* cloneVideoCodec =
@@ -527,9 +528,10 @@ std::vector<UniquePtr<JsepCodecDescription>> JsepTrack::NegotiateCodecs(
 }
 
 void JsepTrack::Negotiate(const SdpMediaSection& answer,
-                          const SdpMediaSection& remote) {
+                          const SdpMediaSection& remote,
+                          const SdpMediaSection& local) {
   std::vector<UniquePtr<JsepCodecDescription>> negotiatedCodecs =
-      NegotiateCodecs(remote, &answer != &remote);
+      NegotiateCodecs(remote, &answer != &remote, SomeRef(local));
 
   UniquePtr<JsepTrackNegotiatedDetails> negotiatedDetails =
       MakeUnique<JsepTrackNegotiatedDetails>();

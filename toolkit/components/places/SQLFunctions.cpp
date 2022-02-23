@@ -495,6 +495,15 @@ MatchAutoCompleteFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
   const nsDependentCSubstring& trimmedTitle =
       Substring(title, 0, MAX_CHARS_TO_SEARCH_THROUGH);
 
+  // Caller may pass a fallback title, for example in case of bookmarks or
+  // snapshots, one may want to search both the user provided title and the
+  // history one.
+  nsDependentCString fallbackTitle =
+      getSharedUTF8String(aArguments, kArgIndexFallbackTitle);
+  // Limit the number of chars we search through.
+  const nsDependentCSubstring& trimmedFallbackTitle =
+      Substring(fallbackTitle, 0, MAX_CHARS_TO_SEARCH_THROUGH);
+
   // Determine if every token matches either the bookmark title, tags, page
   // title, or page URL.
   nsCWhitespaceTokenizer tokenizer(searchString);
@@ -503,15 +512,18 @@ MatchAutoCompleteFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 
     if (HAS_BEHAVIOR(TITLE) && HAS_BEHAVIOR(URL)) {
       matches = (searchFunction(token, trimmedTitle) ||
+                 searchFunction(token, trimmedFallbackTitle) ||
                  searchFunction(token, tags)) &&
                 searchFunction(token, trimmedUrl);
     } else if (HAS_BEHAVIOR(TITLE)) {
-      matches =
-          searchFunction(token, trimmedTitle) || searchFunction(token, tags);
+      matches = searchFunction(token, trimmedTitle) ||
+                searchFunction(token, trimmedFallbackTitle) ||
+                searchFunction(token, tags);
     } else if (HAS_BEHAVIOR(URL)) {
       matches = searchFunction(token, trimmedUrl);
     } else {
       matches = searchFunction(token, trimmedTitle) ||
+                searchFunction(token, trimmedFallbackTitle) ||
                 searchFunction(token, tags) ||
                 searchFunction(token, trimmedUrl);
     }

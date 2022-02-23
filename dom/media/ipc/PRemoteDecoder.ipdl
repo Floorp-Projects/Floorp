@@ -52,6 +52,7 @@ union DecodeResultIPDL
 // The child side runs in the content process, and the parent side runs
 // in the RDD process or the GPU process. We run a separate IPDL thread
 // for both sides.
+[ManualDealloc]
 async protocol PRemoteDecoder
 {
   manager PRemoteDecoderManager;

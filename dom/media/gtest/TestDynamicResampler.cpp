@@ -9,6 +9,8 @@
 
 #include "DynamicResampler.h"
 
+#include "nsContentUtils.h"
+
 using namespace mozilla;
 
 TEST(TestDynamicResampler, SameRates_Float1)
@@ -707,7 +709,9 @@ TEST(TestDynamicResampler, UpdateChannels_Short)
 
 TEST(TestAudioChunkList, Basic1)
 {
-  AudioChunkList list(256, 2);
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+  AudioChunkList list(256, 2, testPrincipal);
   list.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
   EXPECT_EQ(list.ChunkCapacity(), 128u);
   EXPECT_EQ(list.TotalCapacity(), 256u);
@@ -715,14 +719,17 @@ TEST(TestAudioChunkList, Basic1)
   AudioChunk& c1 = list.GetNext();
   float* c1_ch1 = c1.ChannelDataForWrite<float>(0);
   float* c1_ch2 = c1.ChannelDataForWrite<float>(1);
+  EXPECT_EQ(c1.mPrincipalHandle, testPrincipal);
   EXPECT_EQ(c1.mBufferFormat, AUDIO_FORMAT_FLOAT32);
   for (uint32_t i = 0; i < list.ChunkCapacity(); ++i) {
     c1_ch1[i] = c1_ch2[i] = 0.01f * static_cast<float>(i);
   }
   AudioChunk& c2 = list.GetNext();
+  EXPECT_EQ(c2.mPrincipalHandle, testPrincipal);
   EXPECT_EQ(c2.mBufferFormat, AUDIO_FORMAT_FLOAT32);
   EXPECT_NE(c1.mBuffer.get(), c2.mBuffer.get());
   AudioChunk& c3 = list.GetNext();
+  EXPECT_EQ(c3.mPrincipalHandle, testPrincipal);
   EXPECT_EQ(c3.mBufferFormat, AUDIO_FORMAT_FLOAT32);
   // Cycle
   EXPECT_EQ(c1.mBuffer.get(), c3.mBuffer.get());
@@ -736,12 +743,15 @@ TEST(TestAudioChunkList, Basic1)
 
 TEST(TestAudioChunkList, Basic2)
 {
-  AudioChunkList list(256, 2);
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+  AudioChunkList list(256, 2, testPrincipal);
   list.SetSampleFormat(AUDIO_FORMAT_S16);
   EXPECT_EQ(list.ChunkCapacity(), 256u);
   EXPECT_EQ(list.TotalCapacity(), 512u);
 
   AudioChunk& c1 = list.GetNext();
+  EXPECT_EQ(c1.mPrincipalHandle, testPrincipal);
   EXPECT_EQ(c1.mBufferFormat, AUDIO_FORMAT_S16);
   short* c1_ch1 = c1.ChannelDataForWrite<short>(0);
   short* c1_ch2 = c1.ChannelDataForWrite<short>(1);
@@ -749,14 +759,18 @@ TEST(TestAudioChunkList, Basic2)
     c1_ch1[i] = c1_ch2[i] = static_cast<short>(i);
   }
   AudioChunk& c2 = list.GetNext();
+  EXPECT_EQ(c2.mPrincipalHandle, testPrincipal);
   EXPECT_EQ(c2.mBufferFormat, AUDIO_FORMAT_S16);
   EXPECT_NE(c1.mBuffer.get(), c2.mBuffer.get());
   AudioChunk& c3 = list.GetNext();
+  EXPECT_EQ(c3.mPrincipalHandle, testPrincipal);
   EXPECT_EQ(c3.mBufferFormat, AUDIO_FORMAT_S16);
   AudioChunk& c4 = list.GetNext();
+  EXPECT_EQ(c4.mPrincipalHandle, testPrincipal);
   EXPECT_EQ(c4.mBufferFormat, AUDIO_FORMAT_S16);
   // Cycle
   AudioChunk& c5 = list.GetNext();
+  EXPECT_EQ(c5.mPrincipalHandle, testPrincipal);
   EXPECT_EQ(c5.mBufferFormat, AUDIO_FORMAT_S16);
   EXPECT_EQ(c1.mBuffer.get(), c5.mBuffer.get());
   short* c5_ch1 = c5.ChannelDataForWrite<short>(0);
@@ -769,7 +783,7 @@ TEST(TestAudioChunkList, Basic2)
 
 TEST(TestAudioChunkList, Basic3)
 {
-  AudioChunkList list(260, 2);
+  AudioChunkList list(260, 2, PRINCIPAL_HANDLE_NONE);
   list.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
   EXPECT_EQ(list.ChunkCapacity(), 128u);
   EXPECT_EQ(list.TotalCapacity(), 256u + 128u);
@@ -785,7 +799,7 @@ TEST(TestAudioChunkList, Basic3)
 
 TEST(TestAudioChunkList, Basic4)
 {
-  AudioChunkList list(260, 2);
+  AudioChunkList list(260, 2, PRINCIPAL_HANDLE_NONE);
   list.SetSampleFormat(AUDIO_FORMAT_S16);
   EXPECT_EQ(list.ChunkCapacity(), 256u);
   EXPECT_EQ(list.TotalCapacity(), 512u + 256u);
@@ -801,7 +815,7 @@ TEST(TestAudioChunkList, Basic4)
 
 TEST(TestAudioChunkList, UpdateChannels)
 {
-  AudioChunkList list(256, 2);
+  AudioChunkList list(256, 2, PRINCIPAL_HANDLE_NONE);
   list.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
 
   AudioChunk& c1 = list.GetNext();
@@ -820,7 +834,7 @@ TEST(TestAudioChunkList, UpdateChannels)
 
 TEST(TestAudioChunkList, UpdateBetweenMonoAndStereo)
 {
-  AudioChunkList list(256, 2);
+  AudioChunkList list(256, 2, PRINCIPAL_HANDLE_NONE);
   list.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
 
   AudioChunk& c1 = list.GetNext();
@@ -888,7 +902,7 @@ TEST(TestAudioChunkList, UpdateBetweenMonoAndStereo)
 TEST(TestAudioChunkList, ConsumeAndForget)
 {
   AudioSegment s;
-  AudioChunkList list(256, 2);
+  AudioChunkList list(256, 2, PRINCIPAL_HANDLE_NONE);
   list.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
 
   AudioChunk& c1 = list.GetNext();
@@ -951,6 +965,9 @@ AudioSegment CreateAudioSegment(uint32_t aFrames, uint32_t aChannels,
 
 TEST(TestAudioResampler, OutAudioSegment_Float)
 {
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
   uint32_t channels = 2;
@@ -959,7 +976,7 @@ TEST(TestAudioResampler, OutAudioSegment_Float)
 
   uint32_t pre_buffer = 21;
 
-  AudioResampler dr(in_rate, out_rate, pre_buffer);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioSegment inSegment =
       CreateAudioSegment<float>(in_frames, channels, AUDIO_FORMAT_FLOAT32);
@@ -973,6 +990,7 @@ TEST(TestAudioResampler, OutAudioSegment_Float)
 
   for (AudioSegment::ChunkIterator ci(s); !ci.IsEnded(); ci.Next()) {
     AudioChunk& c = *ci;
+    EXPECT_EQ(c.mPrincipalHandle, testPrincipal);
     EXPECT_EQ(c.ChannelCount(), 2u);
     for (uint32_t i = 0; i < out_frames; ++i) {
       // Only pre buffered data reach output
@@ -993,10 +1011,16 @@ TEST(TestAudioResampler, OutAudioSegment_Float)
   EXPECT_EQ(s1.GetType(), MediaSegment::AUDIO);
   EXPECT_TRUE(!s1.IsNull());
   EXPECT_TRUE(!s1.IsEmpty());
+  for (AudioSegment::ConstChunkIterator ci(s1); !ci.IsEnded(); ci.Next()) {
+    EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
+  }
 }
 
 TEST(TestAudioResampler, OutAudioSegment_Short)
 {
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
   uint32_t channels = 2;
@@ -1005,7 +1029,7 @@ TEST(TestAudioResampler, OutAudioSegment_Short)
 
   uint32_t pre_buffer = 21;
 
-  AudioResampler dr(in_rate, out_rate, pre_buffer);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioSegment inSegment =
       CreateAudioSegment<short>(in_frames, channels, AUDIO_FORMAT_S16);
@@ -1019,6 +1043,7 @@ TEST(TestAudioResampler, OutAudioSegment_Short)
 
   for (AudioSegment::ChunkIterator ci(s); !ci.IsEnded(); ci.Next()) {
     AudioChunk& c = *ci;
+    EXPECT_EQ(c.mPrincipalHandle, testPrincipal);
     EXPECT_EQ(c.ChannelCount(), 2u);
     for (uint32_t i = 0; i < out_frames; ++i) {
       // Only pre buffered data reach output
@@ -1039,6 +1064,9 @@ TEST(TestAudioResampler, OutAudioSegment_Short)
   EXPECT_EQ(s1.GetType(), MediaSegment::AUDIO);
   EXPECT_TRUE(!s1.IsNull());
   EXPECT_TRUE(!s1.IsEmpty());
+  for (AudioSegment::ConstChunkIterator ci(s1); !ci.IsEnded(); ci.Next()) {
+    EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
+  }
 }
 
 TEST(TestAudioResampler, OutAudioSegmentFail_Float)
@@ -1051,7 +1079,7 @@ TEST(TestAudioResampler, OutAudioSegmentFail_Float)
 
   uint32_t pre_buffer = 5;
 
-  AudioResampler dr(in_rate, out_rate, pre_buffer);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, PRINCIPAL_HANDLE_NONE);
   AudioSegment inSegment =
       CreateAudioSegment<float>(in_frames, channels, AUDIO_FORMAT_FLOAT32);
   dr.AppendInput(inSegment);
@@ -1065,6 +1093,9 @@ TEST(TestAudioResampler, OutAudioSegmentFail_Float)
 
 TEST(TestAudioResampler, InAudioSegment_Float)
 {
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
   uint32_t channels = 2;
@@ -1072,7 +1103,7 @@ TEST(TestAudioResampler, InAudioSegment_Float)
   uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 10;
-  AudioResampler dr(in_rate, out_rate, pre_buffer);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioSegment inSegment;
 
@@ -1115,10 +1146,17 @@ TEST(TestAudioResampler, InAudioSegment_Float)
   AudioSegment outSegment2 = dr.Resample(out_frames);
   EXPECT_EQ(outSegment2.GetDuration(), 40u);
   EXPECT_EQ(outSegment2.MaxChannelCount(), 2u);
+  for (AudioSegment::ConstChunkIterator ci(outSegment2); !ci.IsEnded();
+       ci.Next()) {
+    EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
+  }
 }
 
 TEST(TestAudioResampler, InAudioSegment_Short)
 {
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
   uint32_t channels = 2;
@@ -1126,7 +1164,7 @@ TEST(TestAudioResampler, InAudioSegment_Short)
   uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 10;
-  AudioResampler dr(in_rate, out_rate, pre_buffer);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioSegment inSegment;
 
@@ -1169,10 +1207,17 @@ TEST(TestAudioResampler, InAudioSegment_Short)
   AudioSegment outSegment2 = dr.Resample(out_frames);
   EXPECT_EQ(outSegment2.GetDuration(), 40u);
   EXPECT_EQ(outSegment2.MaxChannelCount(), 2u);
+  for (AudioSegment::ConstChunkIterator ci(outSegment2); !ci.IsEnded();
+       ci.Next()) {
+    EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
+  }
 }
 
 TEST(TestAudioResampler, ChannelChange_MonoToStereo)
 {
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
   // uint32_t channels = 2;
@@ -1181,7 +1226,7 @@ TEST(TestAudioResampler, ChannelChange_MonoToStereo)
 
   uint32_t pre_buffer = 0;
 
-  AudioResampler dr(in_rate, out_rate, pre_buffer);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioChunk monoChunk =
       CreateAudioChunk<float>(in_frames, 1, AUDIO_FORMAT_FLOAT32);
@@ -1199,10 +1244,16 @@ TEST(TestAudioResampler, ChannelChange_MonoToStereo)
   EXPECT_TRUE(!s.IsNull());
   EXPECT_TRUE(!s.IsEmpty());
   EXPECT_EQ(s.MaxChannelCount(), 2u);
+  for (AudioSegment::ConstChunkIterator ci(s); !ci.IsEnded(); ci.Next()) {
+    EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
+  }
 }
 
 TEST(TestAudioResampler, ChannelChange_StereoToMono)
 {
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
   // uint32_t channels = 2;
@@ -1211,7 +1262,7 @@ TEST(TestAudioResampler, ChannelChange_StereoToMono)
 
   uint32_t pre_buffer = 0;
 
-  AudioResampler dr(in_rate, out_rate, pre_buffer);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioChunk monoChunk =
       CreateAudioChunk<float>(in_frames, 1, AUDIO_FORMAT_FLOAT32);
@@ -1229,10 +1280,16 @@ TEST(TestAudioResampler, ChannelChange_StereoToMono)
   EXPECT_TRUE(!s.IsNull());
   EXPECT_TRUE(!s.IsEmpty());
   EXPECT_EQ(s.MaxChannelCount(), 1u);
+  for (AudioSegment::ConstChunkIterator ci(s); !ci.IsEnded(); ci.Next()) {
+    EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
+  }
 }
 
 TEST(TestAudioResampler, ChannelChange_StereoToQuad)
 {
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
   // uint32_t channels = 2;
@@ -1241,7 +1298,7 @@ TEST(TestAudioResampler, ChannelChange_StereoToQuad)
 
   uint32_t pre_buffer = 0;
 
-  AudioResampler dr(in_rate, out_rate, pre_buffer);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioChunk stereoChunk =
       CreateAudioChunk<float>(in_frames, 2, AUDIO_FORMAT_FLOAT32);
@@ -1264,17 +1321,23 @@ TEST(TestAudioResampler, ChannelChange_StereoToQuad)
   EXPECT_EQ(s2.GetType(), MediaSegment::AUDIO);
   EXPECT_TRUE(!s2.IsNull());
   EXPECT_TRUE(!s2.IsEmpty());
+  for (AudioSegment::ConstChunkIterator ci(s2); !ci.IsEnded(); ci.Next()) {
+    EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
+  }
 }
 
 TEST(TestAudioResampler, ChannelChange_QuadToStereo)
 {
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
   // uint32_t channels = 2;
   uint32_t in_rate = 24000;
   uint32_t out_rate = 48000;
 
-  AudioResampler dr(in_rate, out_rate);
+  AudioResampler dr(in_rate, out_rate, 0, testPrincipal);
 
   AudioChunk stereoChunk =
       CreateAudioChunk<float>(in_frames, 2, AUDIO_FORMAT_FLOAT32);
@@ -1297,12 +1360,18 @@ TEST(TestAudioResampler, ChannelChange_QuadToStereo)
   EXPECT_EQ(s2.GetType(), MediaSegment::AUDIO);
   EXPECT_TRUE(!s2.IsNull());
   EXPECT_TRUE(!s2.IsEmpty());
+  for (AudioSegment::ConstChunkIterator ci(s2); !ci.IsEnded(); ci.Next()) {
+    EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
+  }
 }
 
 void printAudioSegment(const AudioSegment& segment);
 
 TEST(TestAudioResampler, ChannelChange_Discontinuity)
 {
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
   uint32_t in_rate = 24000;
   uint32_t out_rate = 48000;
 
@@ -1314,7 +1383,7 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity)
 
   uint32_t in_frames = in_rate / 100;
   uint32_t out_frames = out_rate / 100;
-  AudioResampler dr(in_rate, out_rate);
+  AudioResampler dr(in_rate, out_rate, 0, testPrincipal);
 
   AudioChunk monoChunk =
       CreateAudioChunk<float>(in_frames, 1, AUDIO_FORMAT_FLOAT32);
@@ -1355,10 +1424,16 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity)
   EXPECT_TRUE(!s2.IsNull());
   EXPECT_TRUE(!s2.IsEmpty());
   EXPECT_EQ(s2.MaxChannelCount(), 1u);
+  for (AudioSegment::ConstChunkIterator ci(s2); !ci.IsEnded(); ci.Next()) {
+    EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
+  }
 }
 
 TEST(TestAudioResampler, ChannelChange_Discontinuity2)
 {
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
   uint32_t in_rate = 24000;
   uint32_t out_rate = 48000;
 
@@ -1370,7 +1445,7 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity2)
 
   uint32_t in_frames = in_rate / 100;
   uint32_t out_frames = out_rate / 100;
-  AudioResampler dr(in_rate, out_rate, 10);
+  AudioResampler dr(in_rate, out_rate, 10, testPrincipal);
 
   AudioChunk monoChunk =
       CreateAudioChunk<float>(in_frames / 2, 1, AUDIO_FORMAT_FLOAT32);
@@ -1404,6 +1479,9 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity2)
   EXPECT_TRUE(!s1.IsNull());
   EXPECT_TRUE(!s1.IsEmpty());
   EXPECT_EQ(s1.MaxChannelCount(), 2u);
+  for (AudioSegment::ConstChunkIterator ci(s1); !ci.IsEnded(); ci.Next()) {
+    EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
+  }
 
   // The resampler here is updated due to the channel change and that creates
   // discontinuity.
@@ -1416,10 +1494,16 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity2)
   EXPECT_TRUE(!s2.IsNull());
   EXPECT_TRUE(!s2.IsEmpty());
   EXPECT_EQ(s2.MaxChannelCount(), 2u);
+  for (AudioSegment::ConstChunkIterator ci(s2); !ci.IsEnded(); ci.Next()) {
+    EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
+  }
 }
 
 TEST(TestAudioResampler, ChannelChange_Discontinuity3)
 {
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
   uint32_t in_rate = 48000;
   uint32_t out_rate = 48000;
 
@@ -1431,7 +1515,7 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity3)
 
   uint32_t in_frames = in_rate / 100;
   uint32_t out_frames = out_rate / 100;
-  AudioResampler dr(in_rate, out_rate, 10);
+  AudioResampler dr(in_rate, out_rate, 10, testPrincipal);
 
   AudioChunk stereoChunk =
       CreateAudioChunk<float>(in_frames, 2, AUDIO_FORMAT_FLOAT32);
@@ -1466,4 +1550,7 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity3)
   EXPECT_TRUE(!s2.IsNull());
   EXPECT_TRUE(!s2.IsEmpty());
   EXPECT_EQ(s2.MaxChannelCount(), 2u);
+  for (AudioSegment::ConstChunkIterator ci(s2); !ci.IsEnded(); ci.Next()) {
+    EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
+  }
 }

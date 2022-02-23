@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from allDownloadsView.js */
-/* import-globals-from ../../../../toolkit/content/globalOverlay.js */
+/* import-globals-from /toolkit/content/globalOverlay.js */
 
 document.addEventListener("DOMContentLoaded", function() {
   let downloadCommands = document.getElementById("downloadCommands");

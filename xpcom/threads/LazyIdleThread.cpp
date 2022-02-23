@@ -474,6 +474,13 @@ LazyIdleThread::AsyncShutdown() {
 }
 
 NS_IMETHODIMP
+LazyIdleThread::BeginShutdown(nsIThreadShutdown** aShutdown) {
+  ASSERT_OWNING_THREAD();
+  *aShutdown = nullptr;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 LazyIdleThread::Shutdown() {
   ASSERT_OWNING_THREAD();
 

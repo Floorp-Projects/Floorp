@@ -63,6 +63,9 @@ SCOPE_WHITELIST = [
     re.compile(r"^docker-worker:feature:allowPtrace$"),
     # docker-worker capabilities include loopback devices
     re.compile(r"^docker-worker:capability:device:.*$"),
+    re.compile(r"^docker-worker:capability:privileged$"),
+    re.compile(r"^docker-worker:cache:gecko-level-1-checkouts.*$"),
+    re.compile(r"^docker-worker:cache:gecko-level-1-tooltool-cache.*$"),
 ]
 
 
@@ -148,6 +151,9 @@ def create_interactive_action(parameters, graph_config, input, task_group_id, ta
         # enable interactive mode
         payload.setdefault("features", {})["interactive"] = True
         payload.setdefault("env", {})["TASKCLUSTER_INTERACTIVE"] = "true"
+
+        for key in task_def["payload"]["env"].keys():
+            payload["env"][key] = task_def["payload"]["env"].get(key, "")
 
         return task
 

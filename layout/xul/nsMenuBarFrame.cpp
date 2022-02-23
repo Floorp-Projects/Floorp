@@ -190,8 +190,7 @@ nsMenuFrame* nsMenuBarFrame::FindMenuWithShortcut(KeyboardEvent* aKeyEvent,
     // behavior on Windows - this item is on the menu bar, beep and deactivate
     // the menu bar
     if (mIsActive) {
-      nsCOMPtr<nsISound> soundInterface =
-          do_CreateInstance("@mozilla.org/sound;1");
+      nsCOMPtr<nsISound> soundInterface = do_GetService("@mozilla.org/sound;1");
       if (soundInterface) soundInterface->Beep();
     }
 
@@ -260,7 +259,9 @@ class nsMenuBarSwitchMenu : public Runnable {
       if (mNewMenu && weakMenuBar.IsAlive()) menubar->SetStayActive(false);
     }
 
-    if (mNewMenu) pm->ShowMenu(mNewMenu, mSelectFirstItem, false);
+    if (mNewMenu) {
+      pm->ShowMenu(mNewMenu, mSelectFirstItem);
+    }
 
     return NS_OK;
   }

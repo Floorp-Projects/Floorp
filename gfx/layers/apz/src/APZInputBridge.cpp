@@ -116,7 +116,8 @@ Maybe<APZWheelAction> APZInputBridge::ActionForWheelEvent(
   return EventStateManager::APZWheelActionFor(aEvent);
 }
 
-APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
+APZEventResult APZInputBridge::ReceiveInputEvent(
+    WidgetInputEvent& aEvent, InputBlockCallback&& aCallback) {
   APZThreadUtils::AssertOnControllerThread();
 
   APZEventResult result;
@@ -130,7 +131,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
         input.mOrigin =
             ScreenPoint(mouseEvent.mRefPoint.x, mouseEvent.mRefPoint.y);
 
-        result = ReceiveInputEvent(input);
+        result = ReceiveInputEvent(input, std::move(aCallback));
 
         mouseEvent.mRefPoint.x = input.mOrigin.x;
         mouseEvent.mRefPoint.y = input.mOrigin.y;
@@ -175,7 +176,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
     case eTouchEventClass: {
       WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
       MultiTouchInput touchInput(touchEvent);
-      result = ReceiveInputEvent(touchInput);
+      result = ReceiveInputEvent(touchInput, std::move(aCallback));
       // touchInput was modified in-place to possibly remove some
       // touch points (if we are overscrolled), and the coordinates were
       // modified using the APZ untransform. We need to copy these changes
@@ -241,7 +242,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
               &wheelEvent, &input.mUserDeltaMultiplierX,
               &input.mUserDeltaMultiplierY);
 
-          result = ReceiveInputEvent(input);
+          result = ReceiveInputEvent(input, std::move(aCallback));
           wheelEvent.mRefPoint.x = input.mOrigin.x;
           wheelEvent.mRefPoint.y = input.mOrigin.y;
           wheelEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
@@ -263,7 +264,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
 
       KeyboardInput input(keyboardEvent);
 
-      result = ReceiveInputEvent(input);
+      result = ReceiveInputEvent(input, std::move(aCallback));
 
       keyboardEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
       keyboardEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;

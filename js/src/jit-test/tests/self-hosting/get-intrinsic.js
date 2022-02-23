@@ -1,7 +1,7 @@
 
 var intrinsic_names = [
     "IsConstructor",    // Implementation in C++
-    "ArrayIndexOf",     // Implementation in JS
+    "ArrayMap",         // Implementation in JS
     "localeCache",      // Self-hosting variable
 ];
 

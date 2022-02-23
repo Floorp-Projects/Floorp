@@ -138,7 +138,7 @@ nsresult DataStorage::Init() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (AppShutdown::IsShuttingDown()) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     // Reject new DataStorage instances if the browser is shutting down. There
     // is no guarantee that DataStorage writes will be able to be persisted if
     // we init during shutdown, so we return an error here to hopefully make

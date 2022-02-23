@@ -120,6 +120,8 @@ GlobalsForNode.prototype = {
 
       if (!path.isAbsolute(filePath)) {
         filePath = path.resolve(this.dirname, filePath);
+      } else {
+        filePath = path.join(helpers.rootDir, filePath);
       }
       globals = globals.concat(module.exports.getGlobalsForFile(filePath));
     }

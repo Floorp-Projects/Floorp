@@ -26,9 +26,8 @@ class HTMLLinkAccessible : public HyperTextAccessibleWrap {
   virtual uint64_t NativeInteractiveState() const override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() const override;
+  virtual bool HasPrimaryAction() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) const override;
 
   // HyperLinkAccessible
   virtual bool IsLink() const override;
@@ -42,6 +41,13 @@ class HTMLLinkAccessible : public HyperTextAccessibleWrap {
 
  protected:
   virtual ~HTMLLinkAccessible() {}
+
+  virtual bool AttributeChangesState(nsAtom* aAttribute) override;
+
+  virtual void DOMAttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                   int32_t aModType,
+                                   const nsAttrValue* aOldValue,
+                                   uint64_t aOldState) override;
 
   enum { eAction_Jump = 0 };
 };

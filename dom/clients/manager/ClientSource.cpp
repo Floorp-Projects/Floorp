@@ -20,7 +20,6 @@
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/Navigator.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/ServiceWorker.h"
@@ -674,6 +673,22 @@ void ClientSource::NoteCalledRegisterForServiceWorkerScope(
 bool ClientSource::CalledRegisterForServiceWorkerScope(
     const nsACString& aScope) {
   return mRegisteringScopeList.Contains(aScope);
+}
+
+nsIPrincipal* ClientSource::GetPrincipal() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // We only create the principal if necessary because creating a principal is
+  // expensive.
+  if (!mPrincipal) {
+    auto principalOrErr = Info().GetPrincipal();
+    nsCOMPtr<nsIPrincipal> prin =
+        principalOrErr.isOk() ? principalOrErr.unwrap() : nullptr;
+
+    mPrincipal.emplace(prin);
+  }
+
+  return mPrincipal.ref();
 }
 
 }  // namespace mozilla::dom

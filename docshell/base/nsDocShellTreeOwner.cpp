@@ -105,6 +105,83 @@ NS_INTERFACE_MAP_BEGIN(nsDocShellTreeOwner)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
+// The class that listens to the chrome events and tells the embedding chrome to
+// show tooltips, as appropriate. Handles registering itself with the DOM with
+// AddChromeListeners() and removing itself with RemoveChromeListeners().
+class ChromeTooltipListener final : public nsIDOMEventListener {
+ protected:
+  virtual ~ChromeTooltipListener();
+
+ public:
+  NS_DECL_ISUPPORTS
+
+  ChromeTooltipListener(nsWebBrowser* aInBrowser,
+                        nsIWebBrowserChrome* aInChrome);
+
+  NS_DECL_NSIDOMEVENTLISTENER
+  NS_IMETHOD MouseMove(mozilla::dom::Event* aMouseEvent);
+
+  // Add/remove the relevant listeners, based on what interfaces the embedding
+  // chrome implements.
+  NS_IMETHOD AddChromeListeners();
+  NS_IMETHOD RemoveChromeListeners();
+
+  NS_IMETHOD HideTooltip();
+
+  bool WebProgressShowedTooltip(nsIWebProgress* aWebProgress);
+
+ private:
+  // pixel tolerance for mousemove event
+  static constexpr CSSIntCoord kTooltipMouseMoveTolerance = 7;
+
+  NS_IMETHOD AddTooltipListener();
+  NS_IMETHOD RemoveTooltipListener();
+
+  NS_IMETHOD ShowTooltip(int32_t aInXCoords, int32_t aInYCoords,
+                         const nsAString& aInTipText,
+                         const nsAString& aDirText);
+  nsITooltipTextProvider* GetTooltipTextProvider();
+
+  nsWebBrowser* mWebBrowser;
+  nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
+  nsCOMPtr<nsITooltipTextProvider> mTooltipTextProvider;
+
+  // This must be a strong ref in order to make sure we can hide the tooltip if
+  // the window goes away while we're displaying one. If we don't hold a strong
+  // ref, the chrome might have been disposed of before we get a chance to tell
+  // it, and no one would ever tell us of that fact.
+  nsCOMPtr<nsIWebBrowserChrome> mWebBrowserChrome;
+
+  bool mTooltipListenerInstalled;
+
+  nsCOMPtr<nsITimer> mTooltipTimer;
+  static void sTooltipCallback(nsITimer* aTimer, void* aListener);
+
+  // Mouse coordinates for last mousemove event we saw
+  CSSIntPoint mMouseClientPoint;
+
+  // Mouse coordinates for tooltip event
+  LayoutDeviceIntPoint mMouseScreenPoint;
+
+  bool mShowingTooltip;
+
+  bool mTooltipShownOnce;
+
+  // The string of text that we last displayed.
+  nsString mLastShownTooltipText;
+
+  nsWeakPtr mLastDocshell;
+
+  // The node hovered over that fired the timer. This may turn into the node
+  // that triggered the tooltip, but only if the timer ever gets around to
+  // firing. This is a strong reference, because the tooltip content can be
+  // destroyed while we're waiting for the tooltip to pop up, and we need to
+  // detect that. It's set only when the tooltip timer is created and launched.
+  // The timer must either fire or be cancelled (or possibly released?), and we
+  // release this reference in each of those cases. So we don't leak.
+  nsCOMPtr<nsINode> mPossibleTooltipNode;
+};
+
 //*****************************************************************************
 // nsDocShellTreeOwner::nsIInterfaceRequestor
 //*****************************************************************************
@@ -948,10 +1025,6 @@ ChromeTooltipListener::ChromeTooltipListener(nsWebBrowser* aInBrowser,
     : mWebBrowser(aInBrowser),
       mWebBrowserChrome(aInChrome),
       mTooltipListenerInstalled(false),
-      mMouseClientX(0),
-      mMouseClientY(0),
-      mMouseScreenX(0),
-      mMouseScreenY(0),
       mShowingTooltip(false),
       mTooltipShownOnce(false) {}
 
@@ -1091,23 +1164,22 @@ nsresult ChromeTooltipListener::MouseMove(Event* aMouseEvent) {
   // within the timer callback. On win32, we'll get a MouseMove event even when
   // a popup goes away -- even when the mouse doesn't change position! To get
   // around this, we make sure the mouse has really moved before proceeding.
-  int32_t newMouseX = mouseEvent->ClientX();
-  int32_t newMouseY = mouseEvent->ClientY();
-  if (mMouseClientX == newMouseX && mMouseClientY == newMouseY) {
+  CSSIntPoint newMouseClientPoint = mouseEvent->ClientPoint();
+  if (mMouseClientPoint == newMouseClientPoint) {
     return NS_OK;
   }
 
   // Filter out minor mouse movements.
   if (mShowingTooltip &&
-      (abs(mMouseClientX - newMouseX) <= kTooltipMouseMoveTolerance) &&
-      (abs(mMouseClientY - newMouseY) <= kTooltipMouseMoveTolerance)) {
+      (abs(mMouseClientPoint.x - newMouseClientPoint.x) <=
+       kTooltipMouseMoveTolerance) &&
+      (abs(mMouseClientPoint.y - newMouseClientPoint.y) <=
+       kTooltipMouseMoveTolerance)) {
     return NS_OK;
   }
 
-  mMouseClientX = newMouseX;
-  mMouseClientY = newMouseY;
-  mMouseScreenX = mouseEvent->ScreenX(CallerType::System);
-  mMouseScreenY = mouseEvent->ScreenY(CallerType::System);
+  mMouseClientPoint = newMouseClientPoint;
+  mMouseScreenPoint = mouseEvent->ScreenPointLayoutDevicePix();
 
   if (mTooltipTimer) {
     mTooltipTimer->Cancel();
@@ -1228,14 +1300,17 @@ bool ChromeTooltipListener::WebProgressShowedTooltip(
 //   -- the dom node the user hovered over    (mPossibleTooltipNode)
 void ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
                                              void* aChromeTooltipListener) {
-  auto self = static_cast<ChromeTooltipListener*>(aChromeTooltipListener);
-  if (self && self->mPossibleTooltipNode) {
-    // release tooltip target once done, no matter what we do here.
-    auto cleanup = MakeScopeExit([&] { self->mPossibleTooltipNode = nullptr; });
-    if (!self->mPossibleTooltipNode->IsInComposedDoc()) {
-      return;
-    }
-    // Check that the document or its ancestors haven't been replaced.
+  auto* self = static_cast<ChromeTooltipListener*>(aChromeTooltipListener);
+  if (!self || !self->mPossibleTooltipNode) {
+    return;
+  }
+  // release tooltip target once done, no matter what we do here.
+  auto cleanup = MakeScopeExit([&] { self->mPossibleTooltipNode = nullptr; });
+  if (!self->mPossibleTooltipNode->IsInComposedDoc()) {
+    return;
+  }
+  // Check that the document or its ancestors haven't been replaced.
+  {
     Document* doc = self->mPossibleTooltipNode->OwnerDoc();
     while (doc) {
       if (!doc->IsCurrentActiveDocument()) {
@@ -1243,53 +1318,34 @@ void ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
       }
       doc = doc->GetInProcessParentDocument();
     }
+  }
 
-    // The actual coordinates we want to put the tooltip at are relative to the
-    // toplevel docshell of our mWebBrowser.  We know what the screen
-    // coordinates of the mouse event were, which means we just need the screen
-    // coordinates of the docshell.  Unfortunately, there is no good way to
-    // find those short of groveling for the presentation in that docshell and
-    // finding the screen coords of its toplevel widget...
-    nsCOMPtr<nsIDocShell> docShell =
-        do_GetInterface(static_cast<nsIWebBrowser*>(self->mWebBrowser));
-    RefPtr<PresShell> presShell = docShell ? docShell->GetPresShell() : nullptr;
+  nsCOMPtr<nsIDocShell> docShell =
+      do_GetInterface(static_cast<nsIWebBrowser*>(self->mWebBrowser));
+  if (!docShell || !docShell->GetBrowsingContext()->IsActive()) {
+    return;
+  }
 
-    nsIWidget* widget = nullptr;
-    if (presShell) {
-      nsViewManager* vm = presShell->GetViewManager();
-      if (vm) {
-        nsView* view = vm->GetRootView();
-        if (view) {
-          nsPoint offset;
-          widget = view->GetNearestWidget(&offset);
-        }
-      }
-    }
+  // if there is text associated with the node, show the tip and fire
+  // off a timer to auto-hide it.
+  nsITooltipTextProvider* tooltipProvider = self->GetTooltipTextProvider();
+  if (!tooltipProvider) {
+    return;
+  }
+  nsString tooltipText;
+  nsString directionText;
+  bool textFound = false;
+  tooltipProvider->GetNodeText(self->mPossibleTooltipNode,
+                               getter_Copies(tooltipText),
+                               getter_Copies(directionText), &textFound);
 
-    if (!widget || !docShell || !docShell->GetBrowsingContext()->IsActive()) {
-      return;
-    }
-
-    // if there is text associated with the node, show the tip and fire
-    // off a timer to auto-hide it.
-    nsITooltipTextProvider* tooltipProvider = self->GetTooltipTextProvider();
-    if (tooltipProvider) {
-      nsString tooltipText;
-      nsString directionText;
-      bool textFound = false;
-      tooltipProvider->GetNodeText(self->mPossibleTooltipNode,
-                                   getter_Copies(tooltipText),
-                                   getter_Copies(directionText), &textFound);
-
-      if (textFound && (!self->mTooltipShownOnce ||
-                        tooltipText != self->mLastShownTooltipText)) {
-        // ShowTooltip expects screen-relative position.
-        self->ShowTooltip(self->mMouseScreenX, self->mMouseScreenY, tooltipText,
-                          directionText);
-        self->mLastShownTooltipText = std::move(tooltipText);
-        self->mLastDocshell = do_GetWeakReference(
-            self->mPossibleTooltipNode->OwnerDoc()->GetDocShell());
-      }
-    }
+  if (textFound && (!self->mTooltipShownOnce ||
+                    tooltipText != self->mLastShownTooltipText)) {
+    // ShowTooltip expects screen-relative position.
+    self->ShowTooltip(self->mMouseScreenPoint.x, self->mMouseScreenPoint.y,
+                      tooltipText, directionText);
+    self->mLastShownTooltipText = std::move(tooltipText);
+    self->mLastDocshell = do_GetWeakReference(
+        self->mPossibleTooltipNode->OwnerDoc()->GetDocShell());
   }
 }

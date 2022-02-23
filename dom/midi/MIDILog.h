@@ -6,7 +6,6 @@
 #define mozilla_dom_MIDILog_h
 
 #include <mozilla/Logging.h>
-#include <nsTArray.h>
 #include <nsStringFwd.h>
 
 namespace mozilla::dom {
@@ -20,7 +19,7 @@ extern mozilla::LazyLogModule gWebMIDILog;
 #define LOGV(x, ...) \
   MOZ_LOG(gWebMIDILog, mozilla::LogLevel::Verbose, (__VA_ARGS__));
 
-void LogMIDIMessage(nsTArray<mozilla::dom::MIDIMessage>& aMessage,
+void LogMIDIMessage(const mozilla::dom::MIDIMessage& aMessage,
                     const nsAString& aPortId,
                     mozilla::dom::MIDIPortType aDirection);
 

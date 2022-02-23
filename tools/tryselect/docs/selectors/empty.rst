@@ -19,4 +19,3 @@ To do this:
     2. Select ``Add new jobs`` (it may take a couple seconds to load).
     3. Choose your desired tasks by clicking them one at a time.
     4. At the top of your commit, select ``Trigger New Jobs``.
-

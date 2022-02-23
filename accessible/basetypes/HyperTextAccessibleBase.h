@@ -106,13 +106,21 @@ class HyperTextAccessibleBase {
   TextLeafPoint ToTextLeafPoint(int32_t aOffset, bool aDescendToEnd = false);
 
   /**
-   * Return text at the given offset corresponding to
+   * Return text before/at/after the given offset corresponding to
    * the boundary type.
    */
+  virtual void TextBeforeOffset(int32_t aOffset,
+                                AccessibleTextBoundary aBoundaryType,
+                                int32_t* aStartOffset, int32_t* aEndOffset,
+                                nsAString& aText);
   virtual void TextAtOffset(int32_t aOffset,
                             AccessibleTextBoundary aBoundaryType,
                             int32_t* aStartOffset, int32_t* aEndOffset,
                             nsAString& aText);
+  virtual void TextAfterOffset(int32_t aOffset,
+                               AccessibleTextBoundary aBoundaryType,
+                               int32_t* aStartOffset, int32_t* aEndOffset,
+                               nsAString& aText);
 
   /**
    * Return true if the given offset/range is valid.
@@ -170,6 +178,17 @@ class HyperTextAccessibleBase {
   std::pair<bool, int32_t> TransformOffset(Accessible* aDescendant,
                                            int32_t aOffset,
                                            bool aIsEndOffset) const;
+
+  /**
+   * Helper method for TextBefore/At/AfterOffset.
+   * If BOUNDARY_LINE_END was requested and the origin is itself a line end
+   * boundary, we must use the line which ends at the origin. We must do
+   * similarly for BOUNDARY_WORD_END. This method adjusts the origin
+   * accordingly.
+   */
+  void AdjustOriginIfEndBoundary(TextLeafPoint& aOrigin,
+                                 AccessibleTextBoundary aBoundaryType,
+                                 bool aAtOffset = false) const;
 };
 
 }  // namespace mozilla::a11y

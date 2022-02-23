@@ -5,6 +5,7 @@
 include protocol PBackground;
 
 include "mozilla/dom/quota/SerializationHelpers.h";
+include "mozilla/dom/indexedDB/ActorsChild.h";
 
 using mozilla::dom::quota::PersistenceType
   from "mozilla/dom/quota/PersistenceType.h";
@@ -13,6 +14,7 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
+[ManualDealloc, ChildImpl="indexedDB::BackgroundUtilsChild", ParentImpl=virtual]
 sync protocol PBackgroundIndexedDBUtils
 {
   manager PBackground;

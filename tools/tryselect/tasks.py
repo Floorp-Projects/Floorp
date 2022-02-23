@@ -9,17 +9,15 @@ import re
 import sys
 from collections import defaultdict
 
+import mozpack.path as mozpath
 from mach.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozpack.files import FileFinder
 from moztest.resolve import TestResolver, TestManifestLoader, get_suite_definition
+from taskgraph.parameters import ParameterMismatch, parameters_loader
 
 import gecko_taskgraph
 from gecko_taskgraph.generator import TaskGraphGenerator
-from gecko_taskgraph.parameters import (
-    ParameterMismatch,
-    parameters_loader,
-)
 from gecko_taskgraph.taskgraph import TaskGraph
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -175,8 +173,11 @@ def resolve_tests_by_suite(paths):
         if test_path is None:
             continue
         found_path = None
+        manifest_relpath = None
+        if "manifest_relpath" in test:
+            manifest_relpath = mozpath.normpath(test["manifest_relpath"])
         for path in remaining_paths_by_suite[key]:
-            if test_path.startswith(path) or test.get("manifest_relpath") == path:
+            if test_path.startswith(path) or manifest_relpath == path:
                 found_path = path
                 break
         if found_path:

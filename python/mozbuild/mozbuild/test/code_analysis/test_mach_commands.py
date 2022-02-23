@@ -15,7 +15,7 @@ import mozpack.path as mozpath
 class TestStaticAnalysis(unittest.TestCase):
     def setUp(self):
         self.remove_cats = []
-        for cat in ("build", "post-build", "misc", "testing"):
+        for cat in ("build", "post-build", "misc", "testing", "devenv"):
             if cat in Registrar.categories:
                 continue
             Registrar.register_category(cat, cat, cat)

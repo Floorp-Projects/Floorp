@@ -14,7 +14,7 @@
   Originally written by Rudolf Marek.
 
  function:
-  last mod: $Id: x86cpu.c 17410 2010-09-21 21:53:48Z tterribe $
+  last mod: $Id$
 
  ********************************************************************/
 

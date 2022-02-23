@@ -61,8 +61,8 @@ struct MP3Resource {
   bool mIsVBR;
   HeaderType mHeaderType;
   int64_t mFileSize;
-  int32_t mMPEGLayer;
-  int32_t mMPEGVersion;
+  uint32_t mMPEGLayer;
+  uint32_t mMPEGVersion;
   uint8_t mID3MajorVersion;
   uint8_t mID3MinorVersion;
   uint8_t mID3Flags;
@@ -70,14 +70,14 @@ struct MP3Resource {
 
   Maybe<Duration> mDuration;
   float mSeekError;
-  int32_t mSampleRate;
-  int32_t mSamplesPerFrame;
+  uint32_t mSampleRate;
+  uint32_t mSamplesPerFrame;
   uint32_t mNumSamples;
   // TODO: temp solution, we could parse them instead or account for them
   // otherwise.
   int32_t mNumTrailingFrames;
-  int32_t mBitrate;
-  int32_t mSlotSize;
+  uint32_t mBitrate;
+  uint32_t mSlotSize;
   int32_t mPrivate;
 
   // The first n frame offsets.
@@ -418,9 +418,9 @@ TEST_F(MP3DemuxerTest, FrameParsing) {
     ASSERT_TRUE(id3.IsValid());
 
     int64_t parsedLength = id3.Size();
-    int64_t bitrateSum = 0;
-    int32_t numFrames = 0;
-    int32_t numSamples = 0;
+    uint64_t bitrateSum = 0;
+    uint32_t numFrames = 0;
+    uint32_t numSamples = 0;
 
     while (frameData) {
       if (static_cast<int64_t>(target.mSyncOffsets.size()) > numFrames) {
@@ -456,7 +456,7 @@ TEST_F(MP3DemuxerTest, FrameParsing) {
     // TODO: find reference number which accounts for trailing headers.
     // EXPECT_EQ(target.mNumSamples / target.mSamplesPerFrame, numFrames);
     // EXPECT_EQ(target.mNumSamples, numSamples);
-    EXPECT_GE(numSamples, 0);
+    EXPECT_GE(numSamples, 0u);
 
     // There may be trailing headers which we don't parse, so the stream length
     // is the upper bound.
@@ -466,7 +466,7 @@ TEST_F(MP3DemuxerTest, FrameParsing) {
 
     if (target.mIsVBR) {
       ASSERT_TRUE(numFrames);
-      EXPECT_EQ(target.mBitrate, static_cast<int32_t>(bitrateSum / numFrames));
+      EXPECT_EQ(target.mBitrate, bitrateSum / numFrames);
     }
   }
 }

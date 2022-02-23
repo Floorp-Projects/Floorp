@@ -834,27 +834,36 @@ var AddonTestUtils = {
   /**
    * Starts up the add-on manager as if it was started by the application.
    *
-   * @param {string} [newVersion]
+   * @param {Object} params
+   *        The new params are in an object and new code should use that.
+   * @param {boolean} params.earlyStartup
+   *        Notifies early startup phase. default is true
+   * @param {boolean} params.lateStartup
+   *        Notifies late startup phase which ensures addons are started or
+   *        listeners are primed. default is true
+   * @param {boolean} params.newVersion
    *        If provided, the application version is changed to this string
    *        before the AddonManager is started.
-   * @param {string} [newPlatformVersion]
-   *        If provided, the platform version is changed to this string
-   *        before the AddonManager is started.  It will default to the appVersion
-   *        as that is how Firefox currently builds (app === platform).
    */
-  async promiseStartupManager(newVersion, newPlatformVersion = newVersion) {
+  async promiseStartupManager(params) {
     if (this.addonIntegrationService) {
       throw new Error(
         "Attempting to startup manager that was already started."
       );
     }
+    // Support old arguments
+    if (typeof params != "object") {
+      params = {
+        newVersion: arguments[0],
+      };
+    }
+    let { earlyStartup = true, lateStartup = true, newVersion } = params;
+
+    lateStartup = earlyStartup && lateStartup;
 
     if (newVersion) {
       this.appInfo.version = newVersion;
-    }
-
-    if (newPlatformVersion) {
-      this.appInfo.platformVersion = newPlatformVersion;
+      this.appInfo.platformVersion = newVersion;
     }
 
     // AddonListeners are removed when the addonManager is shutdown,
@@ -907,6 +916,12 @@ var AddonTestUtils = {
         addon => addon.startupPromise
       )
     );
+    if (earlyStartup) {
+      ExtensionTestCommon.notifyEarlyStartup();
+    }
+    if (lateStartup) {
+      ExtensionTestCommon.notifyLateStartup();
+    }
   },
 
   async promiseShutdownManager({
@@ -986,6 +1001,8 @@ var AddonTestUtils = {
       "resource://gre/modules/addons/XPIProvider.jsm"
     );
 
+    ExtensionTestCommon.resetStartupPromises();
+
     if (shutdownError) {
       throw shutdownError;
     }
@@ -998,13 +1015,34 @@ var AddonTestUtils = {
    * simulate an application upgrade (or downgrade) where the version
    * is changed to newVersion when re-started.
    *
-   * @param {string} [newVersion]
-   *        If provided, the application version is changed to this string
-   *        after the AddonManager is shut down, before it is re-started.
+   * @param {Object} params
+   *        The new params are in an object and new code should use that.
+   *        See promiseStartupManager for param details.
    */
-  async promiseRestartManager(newVersion) {
+  async promiseRestartManager(params) {
     await this.promiseShutdownManager({ clearOverrides: false });
-    await this.promiseStartupManager(newVersion);
+    await this.promiseStartupManager(params);
+  },
+
+  /**
+   * If promiseStartupManager is called with earlyStartup: false, then
+   * use this to notify early startup.
+   *
+   * @returns {Promise} resolves when notification is complete
+   */
+  notifyEarlyStartup() {
+    return ExtensionTestCommon.notifyEarlyStartup();
+  },
+
+  /**
+   * If promiseStartupManager is called with lateStartup: false, then
+   * use this to notify late startup.  You should also call early startup
+   * if necessary.
+   *
+   * @returns {Promise} resolves when notification is complete
+   */
+  notifyLateStartup() {
+    return ExtensionTestCommon.notifyLateStartup();
   },
 
   async loadAddonsList(flush = false) {

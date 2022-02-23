@@ -92,7 +92,7 @@ const char* nsXPTMethodInfo::SymbolDescription() const {
 
 bool nsXPTMethodInfo::GetId(JSContext* aCx, jsid& aId) const {
   if (IsSymbol()) {
-    aId = SYMBOL_TO_JSID(GetSymbol(aCx));
+    aId = JS::PropertyKey::Symbol(GetSymbol(aCx));
     return true;
   }
 
@@ -100,6 +100,6 @@ bool nsXPTMethodInfo::GetId(JSContext* aCx, jsid& aId) const {
   if (!str) {
     return false;
   }
-  aId = JS::PropertyKey::fromNonIntAtom(str);
+  aId = JS::PropertyKey::NonIntAtom(str);
   return true;
 }

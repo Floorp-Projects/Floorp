@@ -322,7 +322,7 @@ MOZ_CAN_RUN_SCRIPT void ExtensionTest::AssertThrows(
   }
 
   if (NS_WARN_IF(!AssertMatchInternal(aCx, exn, aExpectedError,
-                                      u"Function did throw, expected error"_ns,
+                                      u"Function threw, expecting error"_ns,
                                       aMessage, nullptr, aRv))) {
     ThrowUnexpectedError(aCx, aRv);
   }
@@ -359,8 +359,9 @@ class AssertRejectsHandler final : public dom::PromiseNativeHandler {
     aPromise->AppendNativeHandler(handler);
   }
 
-  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) override {
     nsAutoJSString expectedErrorSource;
     JS::Rooted<JS::Value> rootedExpectedMatchValue(aCx, mExpectedMatchValue);
     JS::Rooted<JSString*> expectedErrorToSource(
@@ -402,8 +403,9 @@ class AssertRejectsHandler final : public dom::PromiseNativeHandler {
     mOutPromise->MaybeResolve(JS::UndefinedValue());
   }
 
-  MOZ_CAN_RUN_SCRIPT void RejectedCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  MOZ_CAN_RUN_SCRIPT void RejectedCallback(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) override {
     JS::Rooted<JS::Value> expectedMatchRooted(aCx, mExpectedMatchValue);
     ErrorResult erv;
 

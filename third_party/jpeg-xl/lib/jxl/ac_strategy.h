@@ -133,15 +133,8 @@ class AcStrategy {
   // Round-trip, for any given strategy s:
   //  X = NaturalCoeffOrder(s)[NaturalCoeffOrderLutN(s)[X]]
   //  X = NaturalCoeffOrderLut(s)[NaturalCoeffOrderN(s)[X]]
-  JXL_INLINE const coeff_order_t* NaturalCoeffOrder() const {
-    return CoeffOrder()->order +
-           CoeffOrderAndLut::kOffset[RawStrategy()] * kDCTBlockSize;
-  }
-
-  JXL_INLINE const coeff_order_t* NaturalCoeffOrderLut() const {
-    return CoeffOrder()->lut +
-           CoeffOrderAndLut::kOffset[RawStrategy()] * kDCTBlockSize;
-  }
+  void ComputeNaturalCoeffOrder(coeff_order_t* order) const;
+  void ComputeNaturalCoeffOrderLut(coeff_order_t* lut) const;
 
   // Number of 8x8 blocks that this strategy will cover. 0 for non-top-left
   // blocks inside a multi-block transform.
@@ -172,23 +165,6 @@ class AcStrategy {
     return kLut[size_t(strategy_)];
   }
 
-  struct CoeffOrderAndLut {
-    // Those offsets get multiplied by kDCTBlockSize.
-    // TODO(veluca): reduce this array by merging together the same order type.
-    static constexpr size_t kOffset[kNumValidStrategies + 1] = {
-        0,  1,  2,  3,  4,  8,   24,  26,  28,  32,  36,  44,   52,   53,
-        54, 55, 56, 57, 58, 122, 154, 186, 442, 570, 698, 1722, 2234, 2746,
-    };
-    static constexpr size_t kTotalTableSize =
-        kOffset[kNumValidStrategies] * kDCTBlockSize;
-    coeff_order_t order[kTotalTableSize];
-    coeff_order_t lut[kTotalTableSize];
-
-   private:
-    CoeffOrderAndLut();
-    friend class AcStrategy;
-  };
-
  private:
   friend class AcStrategyRow;
   JXL_INLINE AcStrategy(Type strategy, bool is_first)
@@ -198,8 +174,6 @@ class AcStrategy {
 
   Type strategy_;
   bool is_first_;
-
-  static const CoeffOrderAndLut* CoeffOrder();
 };
 
 // Class to use a certain row of the AC strategy.

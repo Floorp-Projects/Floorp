@@ -19,26 +19,18 @@ using namespace mozilla::a11y;
 extern "C" {
 
 static gboolean addSelectionCB(AtkSelection* aSelection, gint i) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-  if (accWrap && accWrap->IsSelect()) {
-    return accWrap->AddItemToSelection(i);
-  }
-
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
-    return proxy->AddItemToSelection(i);
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aSelection));
+  if (acc && acc->IsSelect()) {
+    return acc->AddItemToSelection(i);
   }
 
   return FALSE;
 }
 
 static gboolean clearSelectionCB(AtkSelection* aSelection) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-  if (accWrap && accWrap->IsSelect()) {
-    return accWrap->UnselectAll();
-  }
-
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
-    return proxy->UnselectAll();
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aSelection));
+  if (acc && acc->IsSelect()) {
+    return acc->UnselectAll();
   }
 
   return FALSE;
@@ -46,19 +38,10 @@ static gboolean clearSelectionCB(AtkSelection* aSelection) {
 
 static AtkObject* refSelectionCB(AtkSelection* aSelection, gint i) {
   AtkObject* atkObj = nullptr;
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-  if (accWrap && accWrap->IsSelect()) {
-    LocalAccessible* selectedItem = accWrap->GetSelectedItem(i);
-    if (!selectedItem) {
-      return nullptr;
-    }
-
-    atkObj = AccessibleWrap::GetAtkObject(selectedItem);
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
-    RemoteAccessible* selectedItem = proxy->GetSelectedItem(i);
-    if (selectedItem) {
-      atkObj = GetWrapperFor(selectedItem);
-    }
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aSelection));
+  Accessible* selectedItem = acc->GetSelectedItem(i);
+  if (selectedItem) {
+    atkObj = GetWrapperFor(selectedItem);
   }
 
   if (atkObj) {
@@ -69,52 +52,36 @@ static AtkObject* refSelectionCB(AtkSelection* aSelection, gint i) {
 }
 
 static gint getSelectionCountCB(AtkSelection* aSelection) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-  if (accWrap && accWrap->IsSelect()) {
-    return accWrap->SelectedItemCount();
-  }
-
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
-    return proxy->SelectedItemCount();
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aSelection));
+  if (acc && acc->IsSelect()) {
+    return acc->SelectedItemCount();
   }
 
   return -1;
 }
 
 static gboolean isChildSelectedCB(AtkSelection* aSelection, gint i) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-  if (accWrap && accWrap->IsSelect()) {
-    return accWrap->IsItemSelected(i);
-  }
-
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
-    return proxy->IsItemSelected(i);
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aSelection));
+  if (acc && acc->IsSelect()) {
+    return acc->IsItemSelected(i);
   }
 
   return FALSE;
 }
 
 static gboolean removeSelectionCB(AtkSelection* aSelection, gint i) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-  if (accWrap && accWrap->IsSelect()) {
-    return accWrap->RemoveItemFromSelection(i);
-  }
-
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
-    return proxy->RemoveItemFromSelection(i);
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aSelection));
+  if (acc && acc->IsSelect()) {
+    return acc->RemoveItemFromSelection(i);
   }
 
   return FALSE;
 }
 
 static gboolean selectAllSelectionCB(AtkSelection* aSelection) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aSelection));
-  if (accWrap && accWrap->IsSelect()) {
-    return accWrap->SelectAll();
-  }
-
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aSelection))) {
-    return proxy->SelectAll();
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aSelection));
+  if (acc && acc->IsSelect()) {
+    return acc->SelectAll();
   }
 
   return FALSE;

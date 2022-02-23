@@ -193,7 +193,7 @@
 
 .sources-list .img.blackBox {
   mask-size: 13px;
-  background-color: var(--theme-icon-checked-color);
+  background-color: var(--red-40);
 }
 
 /*

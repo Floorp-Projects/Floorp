@@ -8,6 +8,10 @@ const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
 
+const { EnterprisePolicyTesting } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
+);
+
 const TESTPATH = "webapi_checkavailable.html";
 const TESTPAGE = `${SECURE_TESTROOT}${TESTPATH}`;
 const XPI_URL = `${SECURE_TESTROOT}../xpinstall/amosigned.xpi`;
@@ -389,38 +393,39 @@ add_task(
   })
 );
 
-add_task(async function test_permissions() {
-  function testBadUrl(url, pattern, successMessage) {
-    return BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
-      let result = await SpecialPowers.spawn(
-        browser,
-        [{ url, pattern }],
-        function(opts) {
-          return new Promise(resolve => {
-            content.navigator.mozAddonManager
-              .createInstall({ url: opts.url })
-              .then(
-                () => {
-                  resolve({
-                    success: false,
-                    message: "createInstall should not have succeeded",
-                  });
-                },
-                err => {
-                  if (err.message.match(new RegExp(opts.pattern))) {
-                    resolve({ success: true });
-                  }
-                  resolve({
-                    success: false,
-                    message: `Wrong error message: ${err.message}`,
-                  });
+add_task(async function test_permissions_and_policy() {
+  async function testBadUrl(url, pattern, successMessage) {
+    gBrowser.selectedTab = await BrowserTestUtils.addTab(gBrowser, TESTPAGE);
+    let browser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
+    await BrowserTestUtils.browserLoaded(browser);
+    let result = await SpecialPowers.spawn(
+      browser,
+      [{ url, pattern }],
+      function(opts) {
+        return new Promise(resolve => {
+          content.navigator.mozAddonManager
+            .createInstall({ url: opts.url })
+            .then(
+              () => {
+                resolve({
+                  success: false,
+                  message: "createInstall should not have succeeded",
+                });
+              },
+              err => {
+                if (err.message.match(new RegExp(opts.pattern))) {
+                  resolve({ success: true });
                 }
-              );
-          });
-        }
-      );
-      is(result.success, true, result.message || successMessage);
-    });
+                resolve({
+                  success: false,
+                  message: `Wrong error message: ${err.message}`,
+                });
+              }
+            );
+        });
+      }
+    );
+    is(result.success, true, result.message || successMessage);
   }
 
   await testBadUrl(
@@ -428,12 +433,68 @@ add_task(async function test_permissions() {
     "NS_ERROR_MALFORMED_URI",
     "Installing from an unparseable URL fails"
   );
+  gBrowser.removeTab(gBrowser.selectedTab);
+
+  let popupPromise = promisePopupNotificationShown(
+    "addon-install-webapi-blocked"
+  );
+  await Promise.all([
+    testBadUrl(
+      "https://addons.not-really-mozilla.org/impostor.xpi",
+      "not permitted",
+      "Installing from non-approved URL fails"
+    ),
+    popupPromise,
+  ]);
+
+  gBrowser.removeTab(gBrowser.selectedTab);
+
+  const blocked_install_message = "Custom Policy Block Message";
+
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+    policies: {
+      ExtensionSettings: {
+        "*": {
+          install_sources: [],
+          blocked_install_message,
+        },
+      },
+    },
+  });
+
+  popupPromise = promisePopupNotificationShown(
+    "addon-install-webapi-blocked-policy"
+  );
 
   await testBadUrl(
-    "https://addons.not-really-mozilla.org/impostor.xpi",
-    "not permitted",
-    "Installing from non-approved URL fails"
+    XPI_URL,
+    "not permitted by policy",
+    "Installing from policy blocked origin fails"
   );
+
+  const panel = await popupPromise;
+  const description = panel.querySelector(".popup-notification-description")
+    .textContent;
+  ok(
+    description.startsWith("Your system administrator"),
+    "Policy specific error is shown."
+  );
+  ok(
+    description.endsWith(` ${blocked_install_message}`),
+    `Found the expected custom blocked message in "${description}"`
+  );
+
+  gBrowser.removeTab(gBrowser.selectedTab);
+
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+    policies: {
+      ExtensionSettings: {
+        "*": {
+          install_sources: ["<all_urls>"],
+        },
+      },
+    },
+  });
 });
 
 add_task(

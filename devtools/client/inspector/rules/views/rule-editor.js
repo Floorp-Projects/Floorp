@@ -135,6 +135,38 @@ RuleEditor.prototype = {
 
     this.updateSourceLink();
 
+    if (this.rule.domRule.ancestorData.length > 0) {
+      const parts = this.rule.domRule.ancestorData.map(ancestorData => {
+        if (ancestorData.type == "layer") {
+          return `@layer${ancestorData.value ? " " + ancestorData.value : ""}`;
+        }
+        if (ancestorData.type == "media") {
+          return `@media ${ancestorData.value}`;
+        }
+        // We shouldn't get here as `type` can only be set to "layer" or "media", but just
+        // in case, let's return an empty string.
+        console.warn("Unknown ancestor data type:", ancestorData.type);
+        return ``;
+      });
+
+      // We force the string to be LTR in CSS, but as @ is listed as having neutral
+      // directionality and starting a string with this char would default to RTL for that
+      // character (when in RTL locale), and then the next char (`m` of `media`, or `l` of `layer`)
+      // would start a new LTR visual run, since it is strongly LTR (through `direction` CSS property).
+      // To have the `@` properly displayed, we force LTR with \u202A
+      const title = `${parts.join("\n").replaceAll("@", "\u202A@")}`;
+
+      this.ancestorDataEl = createChild(this.element, "ul", {
+        class: "ruleview-rule-ancestor-data theme-link",
+        title,
+      });
+      for (const part of parts) {
+        createChild(this.ancestorDataEl, "li", {
+          textContent: part,
+        });
+      }
+    }
+
     const code = createChild(this.element, "div", {
       class: "ruleview-code",
     });
@@ -301,10 +333,6 @@ RuleEditor.prototype = {
     if (line > 0) {
       sourceTextContent += ":" + line;
       title += ":" + line;
-    }
-    if (this.rule.mediaText) {
-      sourceTextContent += " @" + this.rule.mediaText;
-      title += " @" + this.rule.mediaText;
     }
 
     const sourceLabel = this.element.querySelector(

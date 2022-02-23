@@ -31,9 +31,9 @@ interface DedicatedWorkerGlobalScope : WorkerGlobalScope {
   // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#animation-frames
   // Ideally we would just include AnimationFrameProvider to add the interface,
   // but we cannot make an include conditional.
-  [Pref="gfx.offscreencanvas.enabled", Throws]
+  [Pref="dom.workers.requestAnimationFrame", Throws]
   long requestAnimationFrame(FrameRequestCallback callback);
 
-  [Pref="gfx.offscreencanvas.enabled", Throws]
+  [Pref="dom.workers.requestAnimationFrame", Throws]
   void cancelAnimationFrame(long handle);
 };

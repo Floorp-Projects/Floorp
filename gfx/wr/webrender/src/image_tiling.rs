@@ -47,6 +47,12 @@ pub struct RepetitionIterator {
     stride: LayoutSize,
 }
 
+impl RepetitionIterator {
+    pub fn num_repetitions(&self) -> usize {
+        (self.y_count * self.x_count) as usize
+    }
+}
+
 impl Iterator for RepetitionIterator {
     type Item = Repetition;
 

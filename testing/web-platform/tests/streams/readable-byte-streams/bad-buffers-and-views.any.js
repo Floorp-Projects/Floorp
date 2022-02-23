@@ -1,4 +1,4 @@
-// META: global=window,worker,jsshell
+// META: global=window,worker
 'use strict';
 
 promise_test(() => {
@@ -202,6 +202,38 @@ async_test(t => {
   reader.read(new Uint8Array([4, 5, 6]));
 }, 'ReadableStream with byte source: respondWithNewView() throws if the supplied view is zero-length on a ' +
     'non-zero-length buffer (in the readable state)');
+
+async_test(t => {
+  const stream = new ReadableStream({
+    pull: t.step_func_done(c => {
+      const view = c.byobRequest.view.subarray(1, 2);
+
+      assert_throws_js(RangeError, () => c.byobRequest.respondWithNewView(view));
+    }),
+    type: 'bytes'
+  });
+  const reader = stream.getReader({ mode: 'byob' });
+
+  reader.read(new Uint8Array([4, 5, 6]));
+}, 'ReadableStream with byte source: respondWithNewView() throws if the supplied view has a different offset ' +
+   '(in the readable state)');
+
+async_test(t => {
+  const stream = new ReadableStream({
+    pull: t.step_func_done(c => {
+      c.close();
+
+      const view = c.byobRequest.view.subarray(1, 1);
+
+      assert_throws_js(RangeError, () => c.byobRequest.respondWithNewView(view));
+    }),
+    type: 'bytes'
+  });
+  const reader = stream.getReader({ mode: 'byob' });
+
+  reader.read(new Uint8Array([4, 5, 6]));
+}, 'ReadableStream with byte source: respondWithNewView() throws if the supplied view has a different offset ' +
+   '(in the closed state)');
 
 async_test(t => {
   const stream = new ReadableStream({

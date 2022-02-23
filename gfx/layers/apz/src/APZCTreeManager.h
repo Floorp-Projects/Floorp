@@ -200,7 +200,9 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * Refer to the documentation of APZInputBridge::ReceiveInputEvent() and
    * APZEventResult.
    */
-  APZEventResult ReceiveInputEvent(InputData& aEvent) override;
+  APZEventResult ReceiveInputEvent(
+      InputData& aEvent,
+      InputBlockCallback&& aCallback = InputBlockCallback()) override;
 
   /**
    * Set the keyboard shortcuts to use for translating keyboard events.
@@ -417,8 +419,19 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
   APZInputBridge* InputBridge() override { return this; }
 
+  /**
+   * Add a callback to be invoked when |aInputBlockId| is ready for handling.
+   *
+   * Should only be used for input blocks that are not yet ready for handling
+   * at the time this is called. If the input block was already handled,
+   * the callback will never be called.
+   *
+   * Only one callback can be registered for an input block at a time.
+   * Subsequent attempts to register a callback for an input block will be
+   * ignored until the existing callback is triggered.
+   */
   void AddInputBlockCallback(uint64_t aInputBlockId,
-                             InputBlockCallback&& aCallback) override;
+                             InputBlockCallback&& aCallback);
 
   // Methods to help process WidgetInputEvents (or manage conversion to/from
   // InputData)
@@ -549,6 +562,15 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
   ScreenMargin GetCompositorFixedLayerMargins() const;
 
+  APZScrollGeneration NewAPZScrollGeneration() {
+    // In the production code this function gets only called from the sampler
+    // thread but in tests using nsIDOMWindowUtils.setAsyncScrollOffset this
+    // function gets called from the controller thread so we need to lock the
+    // mutex for this counter.
+    MutexAutoLock lock(mScrollGenerationLock);
+    return mScrollGenerationCounter.NewAPZGeneration();
+  }
+
  private:
   using GuidComparator = ScrollableLayerGuid::Comparator;
   using ScrollNode = WebRenderScrollDataWrapper;
@@ -629,7 +651,10 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
     // Called at the end of ReceiveInputEvent() to perform any final
     // computations, and then return mResult.
-    APZEventResult Finish();
+    // If the event will have a delayed result then this takes care of adding
+    // the specified callback to the APZCTreeManager.
+    APZEventResult Finish(APZCTreeManager& aTreeManager,
+                          InputBlockCallback&& aCallback);
   };
 
   void ProcessTouchInput(InputHandlingState& aState, MultiTouchInput& aInput);
@@ -985,6 +1010,12 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
   friend class IAPZHitTester;
   UniquePtr<IAPZHitTester> mHitTester;
+
+  // NOTE: This ScrollGenerationCounter needs to be per APZCTreeManager since
+  // the generation is bumped up on the sampler theread which is per
+  // APZCTreeManager.
+  ScrollGenerationCounter mScrollGenerationCounter;
+  mozilla::Mutex mScrollGenerationLock;
 
 #if defined(MOZ_WIDGET_ANDROID)
  private:

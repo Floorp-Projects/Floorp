@@ -38,7 +38,7 @@ geckodriver to implement the `WebDriver (HTTP) specification`_. The documentatio
 for Marionette can be found under `testing/marionette`_.
 
 .. _WebDriver (HTTP) specification: https://w3c.github.io/webdriver/
-.. _testing/marionette: ../testing/marionette/index.html
+.. _testing/marionette: /testing/marionette
 
 
 .. _remote-protocol-cdp-header:
@@ -51,7 +51,7 @@ support third party automation tools such as `puppeteer`. The documentation for
 the remote protocol (CDP) implement can be found at `remote/cdp`_.
 
 .. _Chrome DevTools Protocol: https://chromedevtools.github.io/devtools-protocol/
-.. _remote/cdp: cdp/index.html
+.. _remote/cdp: cdp/
 
 
 .. _webdriver-bidi-header:

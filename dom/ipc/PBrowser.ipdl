@@ -92,7 +92,6 @@ using mozilla::EventMessage from "mozilla/EventForwards.h";
 using nsEventStatus from "mozilla/EventForwards.h";
 using mozilla::Modifiers from "mozilla/EventForwards.h";
 using struct mozilla::widget::CandidateWindowPosition from "ipc/nsGUIEventIPC.h";
-using class mozilla::NativeEventData from "ipc/nsGUIEventIPC.h";
 using struct mozilla::FontRange from "ipc/nsGUIEventIPC.h";
 using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
@@ -108,6 +107,7 @@ using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageTypes.h
 [RefCounted] using class nsDocShellLoadState from "nsDocShellLoadState.h";
 using mozilla::IntrinsicSize from "nsIFrame.h";
 using mozilla::AspectRatio from "mozilla/AspectRatio.h";
+using mozilla::NativeKeyBindingsType from "mozilla/NativeKeyBindingsType.h";
 
 namespace mozilla {
 namespace dom {
@@ -178,7 +178,7 @@ struct PrintPreviewResultInfo
  * See `dom/docs/Fission-IPC-Diagram.svg` for an overview of the DOM IPC
  * actors.
  */
-[NestedUpTo=inside_cpow, RefCounted] sync protocol PBrowser
+[NestedUpTo=inside_cpow] sync protocol PBrowser
 {
     manager PContent;
 
@@ -478,7 +478,7 @@ parent:
     /**
      * Retrieves edit commands for the key combination represented by aEvent.
      *
-     * @param aType       One of nsIWidget::NativeKeyBindingsType.
+     * @param aType       One of NativeKeyBindingsType.
      * @param aEvent      KeyboardEvent which represents a key combination.
      *                    Note that this must be a trusted event.
      * @return            Array of edit commands which should be executed in

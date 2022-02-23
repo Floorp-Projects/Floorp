@@ -11,6 +11,7 @@
 #include "nsThreadManager.h"
 #include "nsThread.h"
 #include "nsMemory.h"
+#include "nsThreadUtils.h"
 #include "prinrval.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ProfilerLabels.h"
@@ -80,6 +81,7 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
 
   bool spawnThread = false;
   uint32_t stackSize = 0;
+  nsCString name;
   {
     MutexAutoLock lock(mMutex);
 
@@ -104,6 +106,7 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
     mEvents.PutEvent(event.forget(), EventQueuePriority::Normal, lock);
     mEventsAvailable.Notify();
     stackSize = mStackSize;
+    name = mName;
   }
 
   auto delay = MakeScopeExit([&]() {
@@ -117,7 +120,7 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
   }
 
   nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_NewNamedThread(mThreadNaming.GetNextThreadName(mName),
+  nsresult rv = NS_NewNamedThread(mThreadNaming.GetNextThreadName(name),
                                   getter_AddRefs(thread), nullptr, stackSize);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_UNEXPECTED;
@@ -200,8 +203,6 @@ void nsThreadPool::ShutdownThread(nsIThread* aThread) {
 
 NS_IMETHODIMP
 nsThreadPool::Run() {
-  LOG(("THRD-P(%p) enter %s\n", this, mName.BeginReading()));
-
   nsCOMPtr<nsIThread> current;
   nsThreadManager::get().GetCurrentThread(getter_AddRefs(current));
 
@@ -218,6 +219,7 @@ nsThreadPool::Run() {
   {
     MutexAutoLock lock(mMutex);
     listener = mListener;
+    LOG(("THRD-P(%p) enter %s\n", this, mName.BeginReading()));
   }
 
   if (listener) {
@@ -289,8 +291,11 @@ nsThreadPool::Run() {
       }
     }
     if (event) {
-      LOG(("THRD-P(%p) %s running [%p]\n", this, mName.BeginReading(),
-           event.get()));
+      if (MOZ_LOG_TEST(sThreadPoolLog, mozilla::LogLevel::Debug)) {
+        MutexAutoLock lock(mMutex);
+        LOG(("THRD-P(%p) %s running [%p]\n", this, mName.BeginReading(),
+             event.get()));
+      }
 
       // Delay event processing to encourage whoever dispatched this event
       // to run.
@@ -381,61 +386,10 @@ nsThreadPool::IsOnCurrentThread(bool* aResult) {
 }
 
 NS_IMETHODIMP
-nsThreadPool::Shutdown() {
-  nsCOMArray<nsIThread> threads;
-  nsCOMPtr<nsIThreadPoolListener> listener;
-  {
-    MutexAutoLock lock(mMutex);
-    if (mShutdown) {
-      return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-    }
-    mShutdown = true;
-    mEventsAvailable.NotifyAll();
-
-    threads.AppendObjects(mThreads);
-    mThreads.Clear();
-
-    // Swap in a null listener so that we release the listener at the end of
-    // this method. The listener will be kept alive as long as the other threads
-    // that were created when it was set.
-    mListener.swap(listener);
-  }
-
-  // It's important that we shutdown the threads while outside the event queue
-  // monitor.  Otherwise, we could end up dead-locking.
-
-  for (int32_t i = 0; i < threads.Count(); ++i) {
-    threads[i]->Shutdown();
-  }
-
-  return NS_OK;
-}
-
-template <typename Pred>
-static void SpinMTEventLoopUntil(Pred&& aPredicate, nsIThread* aThread,
-                                 TimeDuration aTimeout) {
-  MOZ_ASSERT(NS_IsMainThread(), "Must be run on the main thread");
-
-  // From a latency perspective, spinning the event loop is like leaving script
-  // and returning to the event loop. Tell the watchdog we stopped running
-  // script (until we return).
-  mozilla::Maybe<xpc::AutoScriptActivity> asa;
-  asa.emplace(false);
-
-  TimeStamp deadline = TimeStamp::Now() + aTimeout;
-  while (!aPredicate() && TimeStamp::Now() < deadline) {
-    if (!NS_ProcessNextEvent(aThread, false)) {
-      PR_Sleep(PR_MillisecondsToInterval(1));
-    }
-  }
-}
+nsThreadPool::Shutdown() { return ShutdownWithTimeout(-1); }
 
 NS_IMETHODIMP
 nsThreadPool::ShutdownWithTimeout(int32_t aTimeoutMs) {
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsCOMArray<nsIThread> threads;
   nsCOMPtr<nsIThreadPoolListener> listener;
   {
@@ -455,61 +409,53 @@ nsThreadPool::ShutdownWithTimeout(int32_t aTimeoutMs) {
     mListener.swap(listener);
   }
 
-  // IMPORTANT! Never dereference these pointers, as the objects may go away at
-  // any time. We just use the pointers values for comparison, to check if the
-  // thread has been shut down or not.
-  nsTArray<nsThreadShutdownContext*> contexts;
-
-  // It's important that we shutdown the threads while outside the event queue
-  // monitor.  Otherwise, we could end up dead-locking.
+  nsTArray<nsCOMPtr<nsIThreadShutdown>> contexts;
   for (int32_t i = 0; i < threads.Count(); ++i) {
-    // Shutdown async
-    nsThreadShutdownContext* maybeContext =
-        static_cast<nsThread*>(threads[i])->ShutdownInternal(false);
-    contexts.AppendElement(maybeContext);
-  }
-
-  NotNull<nsThread*> currentThread =
-      WrapNotNull(nsThreadManager::get().GetCurrentThread());
-
-  // We spin the event loop until all of the threads in the thread pool
-  // have shut down, or the timeout expires.
-  SpinMTEventLoopUntil(
-      [&]() {
-        for (nsIThread* thread : threads) {
-          if (static_cast<nsThread*>(thread)->mThread) {
-            return false;
-          }
-        }
-        return true;
-      },
-      currentThread, TimeDuration::FromMilliseconds(aTimeoutMs));
-
-  // For any threads that have not shutdown yet, we need to remove them from
-  // mRequestedShutdownContexts so the thread manager does not wait for them
-  // at shutdown.
-  static const nsThread::ShutdownContextsComp comparator{};
-  for (int32_t i = 0; i < threads.Count(); ++i) {
-    nsThread* thread = static_cast<nsThread*>(threads[i]);
-    // If mThread is not null on the thread it means that it hasn't shutdown
-    // context[i] corresponds to thread[i]
-    if (thread->mThread && contexts[i]) {
-      auto index = currentThread->mRequestedShutdownContexts.IndexOf(
-          contexts[i], 0, comparator);
-      if (index != nsThread::ShutdownContexts::NoIndex) {
-        // We must leak the shutdown context just in case the leaked thread
-        // does get unstuck and completes before the main thread is done.
-        Unused << currentThread->mRequestedShutdownContexts[index].release();
-        currentThread->mRequestedShutdownContexts.RemoveElementAt(index);
-      }
+    nsCOMPtr<nsIThreadShutdown> context;
+    if (NS_SUCCEEDED(threads[i]->BeginShutdown(getter_AddRefs(context)))) {
+      contexts.AppendElement(std::move(context));
     }
   }
+
+  // Start a timer which will stop waiting & leak the thread, forcing
+  // onCompletion to be called when it expires.
+  nsCOMPtr<nsITimer> timer;
+  if (aTimeoutMs >= 0) {
+    NS_NewTimerWithCallback(
+        getter_AddRefs(timer),
+        [&](nsITimer*) {
+          for (auto& context : contexts) {
+            context->StopWaitingAndLeakThread();
+          }
+        },
+        aTimeoutMs, nsITimer::TYPE_ONE_SHOT,
+        "nsThreadPool::ShutdownWithTimeout");
+  }
+
+  // Start a counter and register a callback to decrement outstandingThreads
+  // when the threads finish exiting. We'll spin an event loop until
+  // outstandingThreads reaches 0.
+  uint32_t outstandingThreads = contexts.Length();
+  RefPtr onCompletion = NS_NewCancelableRunnableFunction(
+      "nsThreadPool thread completion", [&] { --outstandingThreads; });
+  for (auto& context : contexts) {
+    context->OnCompletion(onCompletion);
+  }
+
+  mozilla::SpinEventLoopUntil("nsThreadPool::ShutdownWithTimeout"_ns,
+                              [&] { return outstandingThreads == 0; });
+
+  if (timer) {
+    timer->Cancel();
+  }
+  onCompletion->Cancel();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThreadPool::GetThreadLimit(uint32_t* aValue) {
+  MutexAutoLock lock(mMutex);
   *aValue = mThreadLimit;
   return NS_OK;
 }
@@ -532,6 +478,7 @@ nsThreadPool::SetThreadLimit(uint32_t aValue) {
 
 NS_IMETHODIMP
 nsThreadPool::GetIdleThreadLimit(uint32_t* aValue) {
+  MutexAutoLock lock(mMutex);
   *aValue = mIdleThreadLimit;
   return NS_OK;
 }
@@ -555,6 +502,7 @@ nsThreadPool::SetIdleThreadLimit(uint32_t aValue) {
 
 NS_IMETHODIMP
 nsThreadPool::GetIdleThreadTimeout(uint32_t* aValue) {
+  MutexAutoLock lock(mMutex);
   *aValue = mIdleThreadTimeout;
   return NS_OK;
 }
@@ -575,6 +523,7 @@ nsThreadPool::SetIdleThreadTimeout(uint32_t aValue) {
 
 NS_IMETHODIMP
 nsThreadPool::GetIdleThreadTimeoutRegressive(bool* aValue) {
+  MutexAutoLock lock(mMutex);
   *aValue = mRegressiveMaxIdleTime;
   return NS_OK;
 }
@@ -626,13 +575,10 @@ nsThreadPool::SetListener(nsIThreadPoolListener* aListener) {
 
 NS_IMETHODIMP
 nsThreadPool::SetName(const nsACString& aName) {
-  {
-    MutexAutoLock lock(mMutex);
-    if (mThreads.Count()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
+  MutexAutoLock lock(mMutex);
+  if (mThreads.Count()) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
-
   mName = aName;
   return NS_OK;
 }

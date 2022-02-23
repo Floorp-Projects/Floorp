@@ -8,6 +8,7 @@
 
 #include "gfxTypes.h"
 #include "ipc/EnumSerializer.h"
+#include "ipc/IPCMessageUtils.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/ipc/Shmem.h"
@@ -158,7 +159,7 @@ struct IPDLParamTraits<mozilla::webgl::TexUnpackBlobDesc> final {
     WriteParam(msg, in.srcAlphaType);
     MOZ_RELEASE_ASSERT(!in.cpuData);
     MOZ_RELEASE_ASSERT(!in.pboOffset);
-    WriteParam(msg, in.imageSize);
+    WriteParam(msg, in.structuredSrcSize);
     MOZ_RELEASE_ASSERT(!in.image);
     WriteIPDLParam(msg, actor, std::move(in.sd));
     MOZ_RELEASE_ASSERT(!in.dataSurf);
@@ -171,7 +172,7 @@ struct IPDLParamTraits<mozilla::webgl::TexUnpackBlobDesc> final {
     return ReadParam(msg, itr, &out->imageTarget) &&
            ReadParam(msg, itr, &out->size) &&
            ReadParam(msg, itr, &out->srcAlphaType) &&
-           ReadParam(msg, itr, &out->imageSize) &&
+           ReadParam(msg, itr, &out->structuredSrcSize) &&
            ReadIPDLParam(msg, itr, actor, &out->sd) &&
            ReadParam(msg, itr, &out->unpacking) &&
            ReadParam(msg, itr, &out->applyUnpackTransforms);
@@ -300,8 +301,11 @@ struct ParamTraits<mozilla::webgl::Limits> final
     : public PlainOldDataSerializer<mozilla::webgl::Limits> {};
 
 template <>
-struct ParamTraits<mozilla::WebGLPixelStore> final
-    : public PlainOldDataSerializer<mozilla::WebGLPixelStore> {};
+struct ParamTraits<mozilla::webgl::PixelPackingState> final
+    : public PlainOldDataSerializer<mozilla::webgl::PixelPackingState> {};
+template <>
+struct ParamTraits<mozilla::webgl::PixelUnpackStateWebgl> final
+    : public PlainOldDataSerializer<mozilla::webgl::PixelUnpackStateWebgl> {};
 
 // -
 
@@ -321,28 +325,6 @@ struct ParamTraits<mozilla::webgl::ReadPixelsDesc> final {
     return ReadParam(msg, itr, &out->srcOffset) &&
            ReadParam(msg, itr, &out->size) && ReadParam(msg, itr, &out->pi) &&
            ReadParam(msg, itr, &out->packState);
-  }
-};
-
-// -
-
-template <>
-struct ParamTraits<mozilla::webgl::PixelPackState> final {
-  using T = mozilla::webgl::PixelPackState;
-
-  static void Write(Message* const msg, const T& in) {
-    WriteParam(msg, in.alignment);
-    WriteParam(msg, in.rowLength);
-    WriteParam(msg, in.skipRows);
-    WriteParam(msg, in.skipPixels);
-  }
-
-  static bool Read(const Message* const msg, PickleIterator* const itr,
-                   T* const out) {
-    return ReadParam(msg, itr, &out->alignment) &&
-           ReadParam(msg, itr, &out->rowLength) &&
-           ReadParam(msg, itr, &out->skipRows) &&
-           ReadParam(msg, itr, &out->skipPixels);
   }
 };
 

@@ -6,7 +6,6 @@
 
 #include "WorkerRunnable.h"
 
-#include "WorkerPrivate.h"
 #include "WorkerScope.h"
 #include "js/RootingAPI.h"
 #include "jsapi.h"
@@ -467,13 +466,14 @@ MainThreadStopSyncLoopRunnable::MainThreadStopSyncLoopRunnable(
 }
 
 nsresult MainThreadStopSyncLoopRunnable::Cancel() {
-  nsresult rv = Run();
+  // We need to check first if cancel is called twice
+  nsresult rv = WorkerSyncRunnable::Cancel();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = Run();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Run() failed");
 
-  nsresult rv2 = WorkerSyncRunnable::Cancel();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv2), "Cancel() failed");
-
-  return NS_FAILED(rv) ? rv : rv2;
+  return rv;
 }
 
 bool MainThreadStopSyncLoopRunnable::WorkerRun(JSContext* aCx,
@@ -511,11 +511,15 @@ WorkerControlRunnable::WorkerControlRunnable(WorkerPrivate* aWorkerPrivate,
 #endif
 
 nsresult WorkerControlRunnable::Cancel() {
+  // We need to check first if cancel is called twice
+  nsresult rv = WorkerRunnable::Cancel();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (NS_FAILED(Run())) {
     NS_WARNING("WorkerControlRunnable::Run() failed.");
   }
 
-  return WorkerRunnable::Cancel();
+  return NS_OK;
 }
 
 bool WorkerControlRunnable::DispatchInternal() {

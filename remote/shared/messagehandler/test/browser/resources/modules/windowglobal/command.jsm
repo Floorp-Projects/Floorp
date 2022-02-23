@@ -41,9 +41,9 @@ class Command extends Module {
     }
 
     if (params.category === "browser_session_data_browser_element") {
-      BrowsingContext.get(
-        this.messageHandler.contextId
-      ).window.hasSessionDataFlag = true;
+      this.emitEvent("received-session-data", {
+        contextId: this.messageHandler.contextId,
+      });
     }
 
     return {};

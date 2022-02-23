@@ -94,7 +94,7 @@ function localStorageClearAll(callback) {
 function localStorageClearDomain(domain, callback) {
   if (SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled) {
     let qms = SpecialPowers.Services.qms;
-    let principal = SpecialPowers.wrap(document).nodePrincipal;
+    let principal = SpecialPowers.wrap(document).effectiveStoragePrincipal;
     let request = qms.clearStoragesForPrincipal(principal, "default", "ls");
     let cb = SpecialPowers.wrapCallback(callback);
     request.callback = cb;

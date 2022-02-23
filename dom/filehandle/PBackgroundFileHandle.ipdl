@@ -11,6 +11,8 @@ include protocol PRemoteLazyInputStream; // FIXME: bug 792908
 
 include IPCBlob;
 
+include "mozilla/dom/indexedDB/ActorsChild.h";
+
 namespace mozilla {
 namespace dom {
 
@@ -67,6 +69,7 @@ union FileRequestParams
   FileRequestFlushParams;
 };
 
+[ManualDealloc, ChildImpl="indexedDB::BackgroundFileHandleChild", ParentImpl=virtual]
 protocol PBackgroundFileHandle
 {
   manager PBackgroundMutableFile;

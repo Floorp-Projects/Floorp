@@ -58,11 +58,13 @@ void TestGC::Run(int aNumSlices) {
   for (int slice = 0; slice < aNumSlices; slice++) {
     EXPECT_TRUE(mScheduler.InIncrementalGC());
     TimeStamp idleDeadline = Now() + kTenthSecond;
-    TimeDuration budget =
+    js::SliceBudget budget =
         mScheduler.ComputeInterSliceGCBudget(idleDeadline, Now());
-    EXPECT_NEAR(budget.ToSeconds(), 0.1, 1.e-6);
+    TimeDuration budgetDuration =
+        TimeDuration::FromMilliseconds(budget.timeBudget());
+    EXPECT_NEAR(budgetDuration.ToSeconds(), 0.1, 1.e-6);
     // Pretend the GC took exactly the budget.
-    AdvanceTime(budget);
+    AdvanceTime(budgetDuration);
 
     EXPECT_EQ(mScheduler.IsCCNeeded(Now(), SuspectedCCObjects()),
               neededCCAtStartOfGC);

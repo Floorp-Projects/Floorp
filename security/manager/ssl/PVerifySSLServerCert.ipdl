@@ -11,7 +11,7 @@ include PSMIPCTypes;
 namespace mozilla {
 namespace psm {
 
-[RefCounted] protocol PVerifySSLServerCert
+protocol PVerifySSLServerCert
 {
   manager PBackground;
 

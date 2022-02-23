@@ -70,6 +70,7 @@ def inplace_replace(replacements=[], filename=""):
                 for r in replacements:
                     line = r.replace(line)
                 tmp_file.write(line)
+        tmp_file.flush()
 
         shutil.copystat(filename, tmp_file.name)
         shutil.move(tmp_file.name, filename)

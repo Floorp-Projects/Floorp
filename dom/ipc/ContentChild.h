@@ -239,10 +239,6 @@ class ContentChild final : public PContentChild,
       PScriptCacheChild*, const FileDescOrError& cacheFile,
       const bool& wantCacheData) override;
 
-  PNeckoChild* AllocPNeckoChild();
-
-  bool DeallocPNeckoChild(PNeckoChild*);
-
   PPrintingChild* AllocPPrintingChild();
 
   bool DeallocPPrintingChild(PPrintingChild*);
@@ -431,6 +427,8 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvDomainSetChanged(const uint32_t& aSetType,
                                                const uint32_t& aChangeType,
                                                nsIURI* aDomain);
+
+  mozilla::ipc::IPCResult RecvShutdownConfirmedHP();
 
   mozilla::ipc::IPCResult RecvShutdown();
 
@@ -833,6 +831,8 @@ class ContentChild final : public PContentChild,
   static void DispatchBeforeUnloadToSubtree(
       BrowsingContext* aStartingAt,
       const DispatchBeforeUnloadToSubtreeResolver& aResolver);
+
+  hal::ProcessPriority GetProcessPriority() const { return mProcessPriority; }
 
  private:
   mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);

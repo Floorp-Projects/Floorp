@@ -27,6 +27,10 @@ add_task(async function() {
     "test_cert_storage_preexisting_crlite/crlite.filter"
   );
   crliteFile.copyTo(dbDirectory, "crlite.filter");
+  let coverageFile = do_get_file(
+    "test_cert_storage_preexisting_crlite/crlite.coverage"
+  );
+  coverageFile.copyTo(dbDirectory, "crlite.coverage");
 
   let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
     Ci.nsICertStorage

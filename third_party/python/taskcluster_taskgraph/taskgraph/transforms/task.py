@@ -1132,7 +1132,7 @@ def chain_of_trust(config, tasks):
 @transforms.add
 def check_task_identifiers(config, tasks):
     """Ensures that all tasks have well defined identifiers:
-    ^[a-zA-Z0-9_-]{1,38}$
+    ``^[a-zA-Z0-9_-]{1,38}$``
     """
     e = re.compile("^[a-zA-Z0-9_-]{1,38}$")
     for task in tasks:

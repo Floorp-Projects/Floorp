@@ -170,19 +170,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(XULContentSinkImpl)
 // nsIContentSink interface
 
 NS_IMETHODIMP
-XULContentSinkImpl::WillBuildModel(nsDTDMode aDTDMode) {
-#if FIXME
-  if (!mParentContentSink) {
-    // If we're _not_ an overlay, then notify the document that
-    // the load is beginning.
-    mDocument->BeginLoad();
-  }
-#endif
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 XULContentSinkImpl::DidBuildModel(bool aTerminated) {
   nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
   if (doc) {
@@ -202,10 +189,8 @@ XULContentSinkImpl::WillInterrupt(void) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-XULContentSinkImpl::WillResume(void) {
+void XULContentSinkImpl::WillResume() {
   // XXX Notify the docshell, if necessary
-  return NS_OK;
 }
 
 NS_IMETHODIMP

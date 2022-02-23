@@ -6,6 +6,7 @@
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/UniquePtr.h"
 
 #include <cstddef>
 #include <cstdlib>
@@ -237,6 +238,7 @@ void DesktopDeviceInfoImpl::CleanUpWindowList() {
   }
   desktop_window_list_.clear();
 }
+
 void DesktopDeviceInfoImpl::InitializeWindowList() {
   std::unique_ptr<DesktopCapturer> pWinCap =
       DesktopCapturer::CreateWindowCapturer(
@@ -267,6 +269,7 @@ void DesktopDeviceInfoImpl::InitializeWindowList() {
     }
   }
 }
+
 void DesktopDeviceInfoImpl::RefreshWindowList() {
   CleanUpWindowList();
   InitializeWindowList();
@@ -297,8 +300,48 @@ void DesktopDeviceInfoImpl::CleanUpScreenList() {
   desktop_display_list_.clear();
 }
 
+void DesktopDeviceInfoImpl::InitializeScreenList() {
+  std::unique_ptr<DesktopCapturer> screenCapturer =
+      DesktopCapturer::CreateScreenCapturer(
+          DesktopCaptureOptions::CreateDefault());
+  DesktopCapturer::SourceList list;
+  if (screenCapturer && screenCapturer->GetSourceList(&list)) {
+    DesktopCapturer::SourceList::iterator itr;
+    for (itr = list.begin(); itr != list.end(); itr++) {
+      DesktopDisplayDevice* screenDevice = new DesktopDisplayDevice;
+      screenDevice->setScreenId(itr->id);
+      if (list.size() == 1) {
+        screenDevice->setDeviceName("Primary Monitor");
+      } else {
+        screenDevice->setDeviceName(itr->title.c_str());
+      }
+      screenDevice->setPid(itr->pid);
+
+      char idStr[BUFSIZ];
+#if WEBRTC_WIN
+      _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%ld",
+                  static_cast<long>(screenDevice->getScreenId()));
+#else
+      SprintfLiteral(idStr, "%ld",
+                     static_cast<long>(screenDevice->getScreenId()));
+#endif
+      screenDevice->setUniqueIdName(idStr);
+      desktop_display_list_[screenDevice->getScreenId()] = screenDevice;
+    }
+  }
+}
+
 void DesktopDeviceInfoImpl::RefreshScreenList() {
   CleanUpScreenList();
   InitializeScreenList();
+}
+
+/* static */
+DesktopDeviceInfo* DesktopDeviceInfoImpl::Create() {
+  auto info = mozilla::MakeUnique<DesktopDeviceInfoImpl>();
+  if (info->Init() != 0) {
+    return nullptr;
+  }
+  return info.release();
 }
 }  // namespace webrtc

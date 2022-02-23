@@ -30,7 +30,7 @@ Stage 2 – Door-hanger
 
 * **title**: Title text at the top of the door hanger.
 * **body**: A longer paragraph of text.
-* **icon**: An image (please provide a URL or the image file up to 96x96px). 
+* **icon**: An image (please provide a URL or the image file up to 96x96px).
 * **primary_button_label**: The label of the button.
 * **primary_button_action**: The special action triggered by clicking on the button. Choose any of the available `button actions`__. Common examples include opening a section of about:preferences, or opening a URL.
 

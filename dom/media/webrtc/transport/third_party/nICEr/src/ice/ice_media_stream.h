@@ -39,6 +39,19 @@ using namespace std;
 extern "C" {
 #endif /* __cplusplus */
 
+#include "transport_addr.h"
+
+typedef struct nr_ice_stun_server_ {
+  nr_transport_addr addr;
+  int id;
+} nr_ice_stun_server;
+
+typedef struct nr_ice_turn_server_ {
+    nr_ice_stun_server    turn_server;
+    char                 *username;
+    Data                 *password;
+} nr_ice_turn_server;
+
 struct nr_ice_media_stream_ {
   char *label;
   struct nr_ice_ctx_ *ctx;
@@ -70,6 +83,15 @@ struct nr_ice_media_stream_ {
 
 #define NR_ICE_MEDIA_STREAM_CONNECTED    0
 #define NR_ICE_MEDIA_STREAM_DISCONNECTED 1
+
+  /* Copy of flags field from nr_ice_ctx */
+  int flags;
+
+  /* Copy of STUN/TURN servers from nr_ice_ctx */
+  nr_ice_stun_server *stun_servers;           /* The list of stun servers */
+  int stun_server_ct;
+  nr_ice_turn_server *turn_servers;           /* The list of turn servers */
+  int turn_server_ct;
 
   nr_ice_cand_pair_head check_list;
   nr_ice_cand_pair_head trigger_check_queue;

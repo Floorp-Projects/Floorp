@@ -6,7 +6,7 @@
 
 use crate::connection::Http3State;
 use crate::{
-    features::extended_connect::{ExtendedConnectEvents, ExtendedConnectType},
+    features::extended_connect::{ExtendedConnectEvents, ExtendedConnectType, SessionCloseReason},
     CloseType, Http3StreamInfo, HttpRecvStreamEvents, Priority, RecvStreamEvents, SendStreamEvents,
 };
 use neqo_common::Header;
@@ -52,7 +52,7 @@ pub(crate) enum Http3ServerConnEvent {
     ExtendedConnectClosed {
         connect_type: ExtendedConnectType,
         stream_id: StreamId,
-        error: Option<AppError>,
+        reason: SessionCloseReason,
     },
     ExtendedConnectNewStream(Http3StreamInfo),
 }
@@ -116,18 +116,24 @@ impl HttpRecvStreamEvents for Http3ServerConnEvents {
 }
 
 impl ExtendedConnectEvents for Http3ServerConnEvents {
-    fn session_start(&self, _connect_type: ExtendedConnectType, _stream_id: StreamId) {}
+    fn session_start(
+        &self,
+        _connect_type: ExtendedConnectType,
+        _stream_id: StreamId,
+        _status: u16,
+    ) {
+    }
 
     fn session_end(
         &self,
         connect_type: ExtendedConnectType,
         stream_id: StreamId,
-        error: Option<AppError>,
+        reason: SessionCloseReason,
     ) {
         self.insert(Http3ServerConnEvent::ExtendedConnectClosed {
             connect_type,
             stream_id,
-            error,
+            reason,
         });
     }
 

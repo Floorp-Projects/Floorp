@@ -55,7 +55,8 @@ Download Python from the `the official website <https://www.python.org/downloads
     version is 3.10.1, so a safe version to install would be the most recent 3.9 release.
 
 You'll want to download the "Windows installer (64-bit)" associated with the release you've chosen.
-During installation, ensure that you check the "Add Python 3.x to PATH" option.
+During installation, ensure that you check the "Add Python 3.x to PATH" option, otherwise you might
+`encounter issues running Mercurial <https://bz.mercurial-scm.org/show_bug.cgi?id=6635>`__.
 
 .. note::
 

@@ -108,10 +108,6 @@ add_task(async function startup() {
       min: 200,
       max: 350,
     },
-    "layout.css.dpi": {
-      min: 45,
-      max: 81,
-    },
     "network.loadinfo.skip_type_assertion": {
       // This is accessed in debug only.
     },
@@ -142,9 +138,6 @@ add_task(async function open_10_tabs() {
   const max = 4 * DEFAULT_PROCESS_COUNT;
 
   let knownProblematicPrefs = {
-    "layout.css.dpi": {
-      max: 60,
-    },
     "browser.zoom.full": {
       min: 10,
       max: 25,

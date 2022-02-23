@@ -9,6 +9,7 @@
 #include "js/PropertyAndElement.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
+#include "js/loader/ModuleMapKey.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -17,10 +18,10 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/AbortSignal.h"
 #include "mozilla/dom/BindingCallContext.h"
-#include "mozilla/dom/ModuleMapKey.h"
 #include "mozilla/dom/QueueWithSizes.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
 #include "mozilla/dom/ReadRequest.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/StreamUtils.h"
 #include "mozilla/dom/UnderlyingSinkBinding.h"
 #include "mozilla/dom/WritableStreamBinding.h"
@@ -101,7 +102,7 @@ void WritableStream::DealWithRejection(JSContext* aCx,
 }
 
 class AbortStepsNativePromiseHandler final : public PromiseNativeHandler {
-  ~AbortStepsNativePromiseHandler() = default;
+  ~AbortStepsNativePromiseHandler() override = default;
 
   RefPtr<WritableStream> mStream;
   RefPtr<Promise> mAbortRequestPromise;
@@ -116,7 +117,8 @@ class AbortStepsNativePromiseHandler final : public PromiseNativeHandler {
         mStream(aStream),
         mAbortRequestPromise(aAbortRequestPromise) {}
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#writable-stream-finish-erroring
 
     // Step 13. Upon fulfillment of promise,
@@ -128,7 +130,8 @@ class AbortStepsNativePromiseHandler final : public PromiseNativeHandler {
     mStream->RejectCloseAndClosedPromiseIfNeeded();
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#writable-stream-finish-erroring
 
     // Step 14. Upon rejection of promise with reason reason,
@@ -481,7 +484,7 @@ already_AddRefed<WritableStream> WritableStream::Constructor(
 
   // Step 2. Let underlyingSinkDict be underlyingSink, converted to
   //         an IDL value of type UnderlyingSink.
-  UnderlyingSink underlyingSinkDict;
+  RootedDictionary<UnderlyingSink> underlyingSinkDict(aGlobal.Context());
   if (underlyingSinkObj) {
     JS::Rooted<JS::Value> objValue(aGlobal.Context(),
                                    JS::ObjectValue(*underlyingSinkObj));

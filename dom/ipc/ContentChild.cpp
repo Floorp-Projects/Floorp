@@ -115,7 +115,6 @@
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/DocumentChannelChild.h"
 #include "mozilla/net/HttpChannelChild.h"
-#include "mozilla/net/NeckoChild.h"
 #include "mozilla/widget/RemoteLookAndFeel.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
@@ -168,7 +167,6 @@
 #include "SandboxHal.h"
 #include "mozInlineSpellChecker.h"
 #include "mozilla/GlobalStyleSheetCache.h"
-#include "mozilla/Unused.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsClipboardProxy.h"
 #include "nsContentPermissionHelper.h"
@@ -180,7 +178,6 @@
 #include "nsDocShellLoadState.h"
 #include "nsHashPropertyBag.h"
 #include "nsIConsoleListener.h"
-#include "nsIConsoleService.h"
 #include "nsIContentViewer.h"
 #include "nsICycleCollectorListener.h"
 #include "nsIDocShellTreeOwner.h"
@@ -212,7 +209,6 @@
 #include "mozilla/dom/PerformanceStorage.h"
 #include "nsChromeRegistryContent.h"
 #include "nsFrameMessageManager.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
 #include "nsWindowMemoryReporter.h"
 
@@ -266,7 +262,6 @@
 
 #include "ClearOnShutdown.h"
 #include "DomainPolicy.h"
-#include "GMPServiceChild.h"
 #include "GfxInfoBase.h"
 #include "MMPrinter.h"
 #include "mozilla/ipc/ProcessUtils.h"
@@ -902,11 +897,10 @@ void ContentChild::SetProcessName(const nsACString& aName,
 
 static nsresult GetCreateWindowParams(nsIOpenWindowInfo* aOpenWindowInfo,
                                       nsDocShellLoadState* aLoadState,
-                                      bool aForceNoReferrer, float* aFullZoom,
+                                      bool aForceNoReferrer,
                                       nsIReferrerInfo** aReferrerInfo,
                                       nsIPrincipal** aTriggeringPrincipal,
                                       nsIContentSecurityPolicy** aCsp) {
-  *aFullZoom = 1.0f;
   if (!aTriggeringPrincipal || !aCsp) {
     NS_ERROR("aTriggeringPrincipal || aCsp is null");
     return NS_ERROR_FAILURE;
@@ -959,8 +953,6 @@ static nsresult GetCreateWindowParams(nsIOpenWindowInfo* aOpenWindowInfo,
   }
 
   referrerInfo.swap(*aReferrerInfo);
-
-  *aFullZoom = parent->FullZoom();
   return NS_OK;
 }
 
@@ -1019,12 +1011,11 @@ nsresult ContentChild::ProvideWindowCommon(
     bool loadInDifferentProcess =
         aForceNoOpener && StaticPrefs::dom_noopener_newprocess_enabled();
     if (loadInDifferentProcess) {
-      float fullZoom;
       nsCOMPtr<nsIPrincipal> triggeringPrincipal;
       nsCOMPtr<nsIContentSecurityPolicy> csp;
       nsCOMPtr<nsIReferrerInfo> referrerInfo;
       rv = GetCreateWindowParams(aOpenWindowInfo, aLoadState, aForceNoReferrer,
-                                 &fullZoom, getter_AddRefs(referrerInfo),
+                                 getter_AddRefs(referrerInfo),
                                  getter_AddRefs(triggeringPrincipal),
                                  getter_AddRefs(csp));
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1038,8 +1029,8 @@ nsresult ContentChild::ProvideWindowCommon(
       MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(name));
 
       Unused << SendCreateWindowInDifferentProcess(
-          aTabOpener, parent, aChromeFlags, aCalledFromJS, aURI, features,
-          fullZoom, name, triggeringPrincipal, csp, referrerInfo,
+          aTabOpener, parent, aChromeFlags, aCalledFromJS, aURI, features, name,
+          triggeringPrincipal, csp, referrerInfo,
           aOpenWindowInfo->GetOriginAttributes());
 
       // We return NS_ERROR_ABORT, so that the caller knows that we've abandoned
@@ -1228,12 +1219,11 @@ nsresult ContentChild::ProvideWindowCommon(
   };
 
   // Send down the request to open the window.
-  float fullZoom;
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   nsCOMPtr<nsIReferrerInfo> referrerInfo;
   rv = GetCreateWindowParams(aOpenWindowInfo, aLoadState, aForceNoReferrer,
-                             &fullZoom, getter_AddRefs(referrerInfo),
+                             getter_AddRefs(referrerInfo),
                              getter_AddRefs(triggeringPrincipal),
                              getter_AddRefs(csp));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1243,7 +1233,7 @@ nsresult ContentChild::ProvideWindowCommon(
   SendCreateWindow(aTabOpener, parent, newChild, aChromeFlags, aCalledFromJS,
                    aOpenWindowInfo->GetIsForPrinting(),
                    aOpenWindowInfo->GetIsForWindowDotPrint(), aURI, features,
-                   fullZoom, Principal(triggeringPrincipal), csp, referrerInfo,
+                   Principal(triggeringPrincipal), csp, referrerInfo,
                    aOpenWindowInfo->GetOriginAttributes(), std::move(resolve),
                    std::move(reject));
 
@@ -2003,8 +1993,6 @@ mozilla::ipc::IPCResult ContentChild::RecvPScriptCacheConstructor(
   return IPC_OK();
 }
 
-PNeckoChild* ContentChild::AllocPNeckoChild() { return new NeckoChild(); }
-
 mozilla::ipc::IPCResult ContentChild::RecvNetworkLinkTypeChange(
     const uint32_t& aType) {
   mNetworkLinkType = aType;
@@ -2014,11 +2002,6 @@ mozilla::ipc::IPCResult ContentChild::RecvNetworkLinkTypeChange(
                          nullptr);
   }
   return IPC_OK();
-}
-
-bool ContentChild::DeallocPNeckoChild(PNeckoChild* necko) {
-  delete necko;
-  return true;
 }
 
 PPrintingChild* ContentChild::AllocPPrintingChild() {
@@ -2364,8 +2347,6 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyAlertsObserver(
   return IPC_OK();
 }
 
-// NOTE: This method is being run in the SystemGroup, and thus cannot directly
-// touch pages. See GetSpecificMessageEventTarget.
 mozilla::ipc::IPCResult ContentChild::RecvNotifyVisited(
     nsTArray<VisitedQueryResult>&& aURIs) {
   nsCOMPtr<IHistory> history = components::History::Service();
@@ -2841,6 +2822,12 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyProcessPriorityChanged(
                       ProcessPriorityToString(mProcessPriority)),
                   ProfilerString8View::WrapNullTerminatedString(
                       ProcessPriorityToString(aPriority)));
+
+  // Record FOG data before the priority change.
+  // Ignore the change if it's the first time we set the process priority.
+  if (mProcessPriority != hal::PROCESS_PRIORITY_UNKNOWN) {
+    glean::RecordPowerMetrics();
+  }
   mProcessPriority = aPriority;
 
   os->NotifyObservers(static_cast<nsIPropertyBag2*>(props),
@@ -3004,7 +2991,22 @@ void ContentChild::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure) {
   ProcessChild::QuickExit();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvShutdownConfirmedHP() {
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::IPCShutdownState,
+      "RecvShutdownConfirmedHP entry"_ns);
+
+  // Bug 1755376: If we see "RecvShutdownConfirmedHP entry" often in
+  // bug IPCError_ShutDownKill we might want to anticipate
+  // ShutdownPhase::AppShutdownConfirmed to start here.
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvShutdown() {
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::IPCShutdownState, "RecvShutdown entry"_ns);
+
   // Signal the ongoing shutdown to AppShutdown, this
   // will make abort nested SpinEventLoopUntilOrQuit loops
   AppShutdown::AdvanceShutdownPhaseWithoutNotify(
@@ -3012,6 +3014,10 @@ mozilla::ipc::IPCResult ContentChild::RecvShutdown() {
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::IPCShutdownState,
+        "content-child-will-shutdown started"_ns);
+
     os->NotifyObservers(ToSupports(this), "content-child-will-shutdown",
                         nullptr);
   }
@@ -3021,12 +3027,13 @@ mozilla::ipc::IPCResult ContentChild::RecvShutdown() {
 }
 
 void ContentChild::ShutdownInternal() {
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::IPCShutdownState, "ShutdownInternal entry"_ns);
+
   // If we receive the shutdown message from within a nested event loop, we want
   // to wait for that event loop to finish. Otherwise we could prematurely
   // terminate an "unload" or "pagehide" event handler (which might be doing a
   // sync XHR, for example).
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::IPCShutdownState, "RecvShutdown"_ns);
 
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<nsThread> mainThread = nsThreadManager::get().GetCurrentThread();
@@ -3059,6 +3066,9 @@ void ContentChild::ShutdownInternal() {
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::IPCShutdownState,
+        "content-child-shutdown started"_ns);
     os->NotifyObservers(ToSupports(this), "content-child-shutdown", nullptr);
   }
 
@@ -3100,6 +3110,8 @@ void ContentChild::ShutdownInternal() {
   // Start a timer that will insure we quickly exit after a reasonable
   // period of time. Prevents shutdown hangs after our connection to the
   // parent closes.
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::IPCShutdownState, "StartForceKillTimer"_ns);
   StartForceKillTimer();
 
   CrashReporter::AnnotateCrashReport(

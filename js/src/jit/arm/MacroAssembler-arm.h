@@ -1389,12 +1389,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
             cc);
   }
 
-  void loadWasmPinnedRegsFromTls() {
-    ScratchRegisterScope scratch(asMasm());
-    ma_ldr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg,
-           scratch);
-  }
-
   // Instrumentation for entering and leaving the profiler.
   void profilerEnterFrame(Register framePtr, Register scratch);
   void profilerExitFrame();

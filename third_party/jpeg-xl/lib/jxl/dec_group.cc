@@ -169,8 +169,9 @@ void DequantBlock(const AcStrategy& acs, float inv_global_scale, int quant,
 Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
                        GroupDecCache* JXL_RESTRICT group_dec_cache,
                        PassesDecoderState* JXL_RESTRICT dec_state,
-                       size_t thread, size_t group_idx, ImageBundle* decoded,
-                       DrawMode draw) {
+                       size_t thread, size_t group_idx,
+                       RenderPipelineInput* render_pipeline_input,
+                       ImageBundle* decoded, DrawMode draw) {
   // TODO(veluca): investigate cache usage in this function.
   PROFILER_FUNC;
   constexpr size_t kGroupDataXBorder = PassesDecoderState::kGroupDataXBorder;
@@ -191,9 +192,17 @@ Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
   const YCbCrChromaSubsampling& cs =
       dec_state->shared->frame_header.chroma_subsampling;
 
-  const size_t idct_stride = dec_state->EagerFinalizeImageRect()
-                                 ? dec_state->group_data[thread].PixelsPerRow()
-                                 : dec_state->decoded.PixelsPerRow();
+  size_t idct_stride[3];
+  for (size_t c = 0; c < 3; c++) {
+    if (render_pipeline_input) {
+      idct_stride[c] =
+          render_pipeline_input->GetBuffer(c).first->PixelsPerRow();
+    } else {
+      idct_stride[c] = dec_state->EagerFinalizeImageRect()
+                           ? dec_state->group_data[thread].PixelsPerRow()
+                           : dec_state->decoded.PixelsPerRow();
+    }
+  }
 
   HWY_ALIGN int32_t scaled_qtable[64 * 3];
 
@@ -250,6 +259,8 @@ Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
     r[i] =
         Rect(block_rect.x0() >> hshift[i], block_rect.y0() >> vshift[i],
              block_rect.xsize() >> hshift[i], block_rect.ysize() >> vshift[i]);
+    JXL_ASSERT(r[i].IsInside({0, 0, dec_state->shared->dc->Plane(i).xsize(),
+                              dec_state->shared->dc->Plane(i).ysize()}));
   }
 
   for (size_t by = 0; by < ysize_blocks; ++by) {
@@ -278,7 +289,10 @@ Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
     float* JXL_RESTRICT idct_row[3];
     int16_t* JXL_RESTRICT jpeg_row[3];
     for (size_t c = 0; c < 3; c++) {
-      if (dec_state->EagerFinalizeImageRect()) {
+      if (render_pipeline_input) {
+        idct_row[c] = render_pipeline_input->GetBuffer(c).second.Row(
+            render_pipeline_input->GetBuffer(c).first, sby[c] * kBlockDim);
+      } else if (dec_state->EagerFinalizeImageRect()) {
         idct_row[c] = dec_state->group_data[thread].PlaneRow(
                           c, sby[c] * kBlockDim + kGroupDataYBorder) +
                       kGroupDataXBorder;
@@ -427,7 +441,7 @@ Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
             // IDCT
             float* JXL_RESTRICT idct_pos = idct_row[c] + sbx[c] * kBlockDim;
             TransformToPixels(acs.Strategy(), block + c * size, idct_pos,
-                              idct_stride, group_dec_cache->scratch_space);
+                              idct_stride[c], group_dec_cache->scratch_space);
           }
         }
         bx += llf_x;
@@ -689,6 +703,7 @@ Status DecodeGroup(BitReader* JXL_RESTRICT* JXL_RESTRICT readers,
                    size_t num_passes, size_t group_idx,
                    PassesDecoderState* JXL_RESTRICT dec_state,
                    GroupDecCache* JXL_RESTRICT group_dec_cache, size_t thread,
+                   RenderPipelineInput* render_pipeline_input,
                    ImageBundle* JXL_RESTRICT decoded, size_t first_pass,
                    bool force_draw, bool dc_only) {
   PROFILER_FUNC;
@@ -727,6 +742,10 @@ Status DecodeGroup(BitReader* JXL_RESTRICT* JXL_RESTRICT readers,
                         PassesDecoderState::kGroupDataYBorder, dst_rect.xsize(),
                         dst_rect.ysize());
       }
+      if (render_pipeline_input) {
+        dst_rect = render_pipeline_input->GetBuffer(c).second;
+        upsampling_dst = render_pipeline_input->GetBuffer(c).first;
+      }
       JXL_ASSERT(dst_rect.IsInside(*upsampling_dst));
       dec_state->upsamplers[2].UpsampleRect(
           dec_state->filter_input_storage[thread].Plane(c), copy_rect,
@@ -754,8 +773,8 @@ Status DecodeGroup(BitReader* JXL_RESTRICT* JXL_RESTRICT readers,
                      group_dec_cache, dec_state, first_pass));
 
   JXL_RETURN_IF_ERROR(HWY_DYNAMIC_DISPATCH(DecodeGroupImpl)(
-      &get_block, group_dec_cache, dec_state, thread, group_idx, decoded,
-      draw));
+      &get_block, group_dec_cache, dec_state, thread, group_idx,
+      render_pipeline_input, decoded, draw));
 
   for (size_t pass = 0; pass < num_passes; pass++) {
     if (!get_block.decoders[pass].CheckANSFinalState()) {
@@ -781,7 +800,7 @@ Status DecodeGroupForRoundtrip(const std::vector<std::unique_ptr<ACImage>>& ac,
 
   return HWY_DYNAMIC_DISPATCH(DecodeGroupImpl)(&get_block, group_dec_cache,
                                                dec_state, thread, group_idx,
-                                               decoded, kDraw);
+                                               nullptr, decoded, kDraw);
 }
 
 }  // namespace jxl

@@ -444,8 +444,8 @@ bool do_transform(Image& image, const Transform& tr,
 Status ModularFrameEncoder::ComputeEncodingData(
     const FrameHeader& frame_header, const ImageMetadata& metadata,
     Image3F* JXL_RESTRICT color, const std::vector<ImageF>& extra_channels,
-    PassesEncoderState* JXL_RESTRICT enc_state, ThreadPool* pool,
-    AuxOut* aux_out, bool do_color) {
+    PassesEncoderState* JXL_RESTRICT enc_state, const JxlCmsInterface& cms,
+    ThreadPool* pool, AuxOut* aux_out, bool do_color) {
   const FrameDimensions& frame_dim = enc_state->shared.frame_dim;
 
   if (do_color && frame_header.loop_filter.gab) {
@@ -454,7 +454,7 @@ Status ModularFrameEncoder::ComputeEncodingData(
 
   if (do_color && metadata.bit_depth.bits_per_sample <= 16 &&
       cparams.speed_tier < SpeedTier::kCheetah) {
-    FindBestPatchDictionary(*color, enc_state, nullptr, aux_out,
+    FindBestPatchDictionary(*color, enc_state, cms, nullptr, aux_out,
                             cparams.color_transform == ColorTransform::kXYB);
     PatchDictionaryEncoder::SubtractFrom(
         enc_state->shared.image_features.patches, color);
@@ -529,11 +529,21 @@ Status ModularFrameEncoder::ComputeEncodingData(
         size_t xsize_shifted = DivCeil(xsize, 1 << gi.channel[c_out].hshift);
         size_t ysize_shifted = DivCeil(ysize, 1 << gi.channel[c_out].vshift);
         gi.channel[c_out].shrink(xsize_shifted, ysize_shifted);
-        for (size_t y = 0; y < ysize_shifted; ++y) {
-          const float* const JXL_RESTRICT row_in = color->PlaneRow(c, y);
-          pixel_type* const JXL_RESTRICT row_out = gi.channel[c_out].Row(y);
-          JXL_RETURN_IF_ERROR(float_to_int(row_in, row_out, xsize_shifted, bits,
-                                           exp_bits, fp, factor));
+        std::atomic<bool> has_error{false};
+        JXL_RETURN_IF_ERROR(RunOnPool(
+            pool, 0, ysize_shifted, ThreadPool::NoInit,
+            [&](const int task, const int thread) {
+              const size_t y = task;
+              const float* const JXL_RESTRICT row_in = color->PlaneRow(c, y);
+              pixel_type* const JXL_RESTRICT row_out = gi.channel[c_out].Row(y);
+              if (!float_to_int(row_in, row_out, xsize_shifted, bits, exp_bits,
+                                fp, factor)) {
+                has_error = true;
+              };
+            },
+            "float2int"));
+        if (has_error) {
+          return JXL_FAILURE("Error in float to integer conversion");
         }
       }
     }
@@ -554,13 +564,20 @@ Status ModularFrameEncoder::ComputeEncodingData(
     int exp_bits = eci.bit_depth.exponent_bits_per_sample;
     bool fp = eci.bit_depth.floating_point_sample;
     float factor = (fp ? 1 : ((1u << eci.bit_depth.bits_per_sample) - 1));
-    for (size_t y = 0; y < gi.channel[c].plane.ysize(); ++y) {
-      const float* const JXL_RESTRICT row_in = extra_channels[ec].Row(y);
-      pixel_type* const JXL_RESTRICT row_out = gi.channel[c].Row(y);
-      JXL_RETURN_IF_ERROR(float_to_int(row_in, row_out,
-                                       gi.channel[c].plane.xsize(), bits,
-                                       exp_bits, fp, factor));
-    }
+    std::atomic<bool> has_error{false};
+    JXL_RETURN_IF_ERROR(RunOnPool(
+        pool, 0, gi.channel[c].plane.ysize(), ThreadPool::NoInit,
+        [&](const int task, const int thread) {
+          const size_t y = task;
+          const float* const JXL_RESTRICT row_in = extra_channels[ec].Row(y);
+          pixel_type* const JXL_RESTRICT row_out = gi.channel[c].Row(y);
+          if (!float_to_int(row_in, row_out, gi.channel[c].plane.xsize(), bits,
+                            exp_bits, fp, factor)) {
+            has_error = true;
+          };
+        },
+        "float2int"));
+    if (has_error) return JXL_FAILURE("Error in float to integer conversion");
   }
   JXL_ASSERT(c == nb_chans);
 
@@ -803,15 +820,15 @@ Status ModularFrameEncoder::ComputeEncodingData(
   }
   gi_channel.resize(stream_images.size());
 
-  RunOnPool(
-      pool, 0, stream_params.size(), ThreadPool::SkipInit(),
-      [&](size_t i, size_t _) {
+  JXL_RETURN_IF_ERROR(RunOnPool(
+      pool, 0, stream_params.size(), ThreadPool::NoInit,
+      [&](const uint32_t i, size_t /* thread */) {
         stream_options[stream_params[i].id.ID(frame_dim)] = cparams.options;
         JXL_CHECK(PrepareStreamParams(
             stream_params[i].rect, cparams, stream_params[i].minShift,
             stream_params[i].maxShift, stream_params[i].id, do_color));
       },
-      "ChooseParams");
+      "ChooseParams"));
   {
     // Clear out channels that have been copied to groups.
     Image& full_image = stream_images[0];
@@ -926,9 +943,9 @@ Status ModularFrameEncoder::PrepareEncoding(ThreadPool* pool,
     std::atomic_flag invalid_force_wp = ATOMIC_FLAG_INIT;
 
     std::vector<Tree> trees(useful_splits.size() - 1);
-    RunOnPool(
-        pool, 0, useful_splits.size() - 1, ThreadPool::SkipInit(),
-        [&](size_t chunk, size_t _) {
+    JXL_RETURN_IF_ERROR(RunOnPool(
+        pool, 0, useful_splits.size() - 1, ThreadPool::NoInit,
+        [&](const uint32_t chunk, size_t /* thread */) {
           // TODO(veluca): parallelize more.
           size_t total_pixels = 0;
           uint32_t start = useful_splits[chunk];
@@ -987,7 +1004,7 @@ Status ModularFrameEncoder::PrepareEncoding(ThreadPool* pool,
               LearnTree(std::move(tree_samples), total_pixels,
                         stream_options[start], local_multiplier_info, range);
         },
-        "LearnTrees");
+        "LearnTrees"));
     if (invalid_force_wp.test_and_set(std::memory_order_acq_rel)) {
       return JXL_FAILURE("PrepareEncoding: force_no_wp with {Weighted}");
     }
@@ -1022,9 +1039,9 @@ Status ModularFrameEncoder::PrepareEncoding(ThreadPool* pool,
   }
 
   image_widths.resize(num_streams);
-  RunOnPool(
-      pool, 0, num_streams, ThreadPool::SkipInit(),
-      [&](size_t stream_id, size_t _) {
+  JXL_RETURN_IF_ERROR(RunOnPool(
+      pool, 0, num_streams, ThreadPool::NoInit,
+      [&](const uint32_t stream_id, size_t /* thread */) {
         AuxOut my_aux_out;
         if (aux_out) {
           my_aux_out.dump_image = aux_out->dump_image;
@@ -1040,7 +1057,7 @@ Status ModularFrameEncoder::PrepareEncoding(ThreadPool* pool,
             /*tokens=*/&tokens[stream_id],
             /*widths=*/&image_widths[stream_id]));
       },
-      "ComputeTokens");
+      "ComputeTokens"));
   return true;
 }
 
@@ -1231,11 +1248,8 @@ Status ModularFrameEncoder::PrepareStreamParams(const Rect& rect,
       gc.hshift = fc.hshift;
       gc.vshift = fc.vshift;
       for (size_t y = 0; y < r.ysize(); ++y) {
-        const pixel_type* const JXL_RESTRICT row_in = r.ConstRow(fc.plane, y);
-        pixel_type* const JXL_RESTRICT row_out = gc.Row(y);
-        for (size_t x = 0; x < r.xsize(); ++x) {
-          row_out[x] = row_in[x];
-        }
+        memcpy(gc.Row(y), r.ConstRow(fc.plane, y),
+               r.xsize() * sizeof(pixel_type));
       }
       gi.channel.emplace_back(std::move(gc));
     }

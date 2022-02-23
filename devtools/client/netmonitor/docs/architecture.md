@@ -1,6 +1,6 @@
 # Network Monitor
 
-The Network Monitor (netmonitor) shows you all the network requests Firefox makes (for example, when a page is loaded or when an XMLHttpRequest is performed) , how long each request takes, and details of each request. You can edit the method, query, header and resend the request as well. Read [MDN](https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor) to learn all the features and how to use the tool.
+The Network Monitor (netmonitor) shows you all the network requests Firefox makes (for example, when a page is loaded or when an XMLHttpRequest is performed) , how long each request takes, and details of each request. You can edit the method, query, header and resend the request as well. Read [more](https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/) to learn all the features and how to use the tool.
 
 ### UI
 

@@ -14,7 +14,6 @@ const {
 
 types.addDictType("console.startlisteners", {
   startedListeners: "array:string",
-  nativeConsoleAPI: "nullable:boolean",
 });
 
 types.addDictType("console.stoplisteners", {

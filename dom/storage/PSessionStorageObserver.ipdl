@@ -22,6 +22,7 @@ namespace dom {
  * main-thread contention for the processing of "parent:" messages in a very
  * performance-sensitive context!)
  */
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 async protocol PSessionStorageObserver
 {
   manager PContent;

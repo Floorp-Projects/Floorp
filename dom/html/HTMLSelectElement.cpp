@@ -122,6 +122,7 @@ HTMLSelectElement::HTMLSelectElement(
       mDefaultSelectionSet(false),
       mCanShowInvalidUI(true),
       mCanShowValidUI(true),
+      mIsOpenInParentProcess(false),
       mNonOptionChildren(0),
       mOptGroupCount(0),
       mSelectedIndex(-1) {
@@ -1423,20 +1424,9 @@ HTMLSelectElement::SubmitNamesValues(FormData* aFormData) {
 }
 
 void HTMLSelectElement::DispatchContentReset() {
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
-  if (formControlFrame) {
-    // Only dispatch content reset notification if this is a list control
-    // frame or combo box control frame.
-    if (IsCombobox()) {
-      nsComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
-      if (comboFrame) {
-        comboFrame->OnContentReset();
-      }
-    } else {
-      nsListControlFrame* listFrame = do_QueryFrame(formControlFrame);
-      if (listFrame) {
-        listFrame->OnContentReset();
-      }
+  if (nsIFormControlFrame* formControlFrame = GetFormControlFrame(false)) {
+    if (nsListControlFrame* listFrame = do_QueryFrame(formControlFrame)) {
+      listFrame->OnContentReset();
     }
   }
 }
@@ -1574,24 +1564,6 @@ void HTMLSelectElement::SetSelectionChanged(bool aValue, bool aNotify) {
 void HTMLSelectElement::UpdateSelectedOptions() {
   if (mSelectedOptions) {
     mSelectedOptions->SetDirty();
-  }
-}
-
-bool HTMLSelectElement::OpenInParentProcess() {
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
-  nsComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
-  if (comboFrame) {
-    return comboFrame->IsOpenInParentProcess();
-  }
-
-  return false;
-}
-
-void HTMLSelectElement::SetOpenInParentProcess(bool aVal) {
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
-  nsComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
-  if (comboFrame) {
-    comboFrame->SetOpenInParentProcess(aVal);
   }
 }
 

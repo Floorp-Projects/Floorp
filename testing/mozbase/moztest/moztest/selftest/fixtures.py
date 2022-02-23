@@ -53,6 +53,7 @@ def setup_test_harness(request, flavor="plain"):
 
     def inner(files_dir, *args, **kwargs):
         harness_root = _get_test_harness(*args, **kwargs)
+        test_root = None
         if harness_root:
             sys.path.insert(0, harness_root)
 
@@ -74,7 +75,6 @@ def setup_test_harness(request, flavor="plain"):
                         os.symlink(files_dir, test_root)
                     else:
                         shutil.copytree(files_dir, test_root)
-
         elif "TEST_HARNESS_ROOT" in os.environ:
             # The mochitest tests will run regardless of whether a build exists or not.
             # In a local environment, they should simply be skipped if setup fails. But
@@ -85,11 +85,11 @@ def setup_test_harness(request, flavor="plain"):
             # We are purposefully not failing here because running |mach python-test|
             # without a build is a perfectly valid use case.
             pass
+        return test_root
 
     return inner
 
 
-@pytest.fixture(scope="session")
 def binary():
     """Return a Firefox binary"""
     try:
@@ -107,3 +107,8 @@ def binary():
 
     if "GECKO_BINARY_PATH" in os.environ:
         return os.environ["GECKO_BINARY_PATH"]
+
+
+@pytest.fixture(name="binary", scope="session")
+def binary_fixture():
+    return binary()

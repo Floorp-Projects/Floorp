@@ -476,14 +476,9 @@ nsresult UDPSocket::InitRemote(const nsAString& aLocalAddress,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsISerialEventTarget> target;
-  if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
-    target = global->EventTargetFor(TaskCategory::Other);
-  }
-
   rv = sock->Bind(mListenerProxy, principal,
                   NS_ConvertUTF16toUTF8(aLocalAddress), aLocalPort,
-                  mAddressReuse, mLoopback, 0, 0, target);
+                  mAddressReuse, mLoopback, 0, 0);
 
   if (NS_FAILED(rv)) {
     return rv;

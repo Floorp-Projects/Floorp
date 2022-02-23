@@ -88,4 +88,3 @@ See also
 ********
 
 - `HTML5 Parser-Based View Source Syntax Highlighting <https://hsivonen.iki.fi/view-source/>`_ (Blog post)
-

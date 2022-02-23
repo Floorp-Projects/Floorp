@@ -684,6 +684,7 @@ nsWindow::nsWindow(bool aIsChildWindow)
   mCachedHitTestPoint.y = 0;
   mCachedHitTestTime = TimeStamp::Now();
   mCachedHitTestResult = 0;
+  mUseResizeMarginOverrides = false;
   mTransparencyMode = eTransparencyOpaque;
   memset(&mGlassMargins, 0, sizeof mGlassMargins);
   DWORD background = ::GetSysColor(COLOR_BTNFACE);
@@ -2294,13 +2295,44 @@ static UINT GetCurrentShowCmd(HWND aWnd) {
   return pl.showCmd;
 }
 
+void nsWindow::SetSizeModeInternal(nsSizeMode aMode) {
+  // save the requested state
+  mLastSizeMode = mSizeMode;
+  nsBaseWidget::SetSizeMode(aMode);
+  if (mIsVisible) {
+    switch (aMode) {
+      case nsSizeMode_Fullscreen:
+        ::ShowWindow(mWnd, SW_SHOW);
+        break;
+
+      case nsSizeMode_Maximized:
+        ::ShowWindow(mWnd, SW_MAXIMIZE);
+        break;
+
+      case nsSizeMode_Minimized:
+        ::ShowWindow(mWnd, SW_MINIMIZE);
+        break;
+
+      default:
+        // Don't call ::ShowWindow if we're trying to "restore" a window that is
+        // already in a normal state.  Prevents a bug where snapping to one side
+        // of the screen and then minimizing would cause Windows to forget our
+        // window's correct restored position/size.
+        if (GetCurrentShowCmd(mWnd) != SW_SHOWNORMAL) {
+          ::ShowWindow(mWnd, SW_RESTORE);
+        }
+    }
+  }
+
+  // we activate here to ensure that the right child window is focused
+  if (mIsVisible &&
+      (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen)) {
+    DispatchFocusToTopLevelWindow(true);
+  }
+}
+
 // Maximize, minimize or restore the window.
 void nsWindow::SetSizeMode(nsSizeMode aMode) {
-  // Let's not try and do anything if we're already in that state.
-  // (This is needed to prevent problems when calling window.minimize(), which
-  // calls us directly, and then the OS triggers another call to us.)
-  if (aMode == mSizeMode) return;
-
   // If we are still displaying a maximized pre-XUL skeleton UI, ignore the
   // noise of sizemode changes. Once we have "shown" the window for the first
   // time (called nsWindow::Show(true), even though the window is already
@@ -2309,39 +2341,22 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
     return;
   }
 
-  // save the requested state
-  mLastSizeMode = mSizeMode;
-  nsBaseWidget::SetSizeMode(aMode);
-  if (mIsVisible) {
-    int mode;
+  // Let's not try and do anything if we're already in that state.
+  // (This is needed to prevent problems when calling window.minimize(), which
+  // calls us directly, and then the OS triggers another call to us.)
+  if (aMode == mSizeMode) return;
 
-    switch (aMode) {
-      case nsSizeMode_Fullscreen:
-        mode = SW_SHOW;
-        break;
-
-      case nsSizeMode_Maximized:
-        mode = SW_MAXIMIZE;
-        break;
-
-      case nsSizeMode_Minimized:
-        mode = SW_MINIMIZE;
-        break;
-
-      default:
-        mode = SW_RESTORE;
-    }
-
-    // Don't call ::ShowWindow if we're trying to "restore" a window that is
-    // already in a normal state.  Prevents a bug where snapping to one side
-    // of the screen and then minimizing would cause Windows to forget our
-    // window's correct restored position/size.
-    if (!(GetCurrentShowCmd(mWnd) == SW_SHOWNORMAL && mode == SW_RESTORE)) {
-      ::ShowWindow(mWnd, mode);
-    }
-    // we activate here to ensure that the right child window is focused
-    if (mode == SW_MAXIMIZE || mode == SW_SHOW)
-      DispatchFocusToTopLevelWindow(true);
+  if (aMode == nsSizeMode_Fullscreen) {
+    MakeFullScreen(true);
+  } else if ((mSizeMode == nsSizeMode_Fullscreen) &&
+             (aMode == nsSizeMode_Normal)) {
+    // If we are in fullscreen mode, minimize should work like normal and
+    // return us to fullscreen mode when unminimized. Maximize isn't really
+    // available and won't do anything. "Restore" should do the same thing as
+    // requesting to end fullscreen.
+    MakeFullScreen(false);
+  } else {
+    SetSizeModeInternal(aMode);
   }
 }
 
@@ -2850,33 +2865,34 @@ bool nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow) {
       (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CYCAPTION, dpi) +
                         WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
                   : 0);
+  if (!mUseResizeMarginOverrides) {
+    // mHorResizeMargin is the size of the default NC areas on the
+    // left and right sides of our window.  It is calculated as
+    // the sum of:
+    //      SM_CXFRAME        - The thickness of the sizing border
+    //      SM_CXPADDEDBORDER - The amount of border padding
+    //                          for captioned windows
+    //
+    // If the window does not have a caption, mHorResizeMargin will be equal to
+    // `WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi)`
+    mHorResizeMargin =
+        WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi) +
+        (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
+                    : 0);
 
-  // mHorResizeMargin is the size of the default NC areas on the
-  // left and right sides of our window.  It is calculated as
-  // the sum of:
-  //      SM_CXFRAME        - The thickness of the sizing border
-  //      SM_CXPADDEDBORDER - The amount of border padding
-  //                          for captioned windows
-  //
-  // If the window does not have a caption, mHorResizeMargin will be equal to
-  // `WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi)`
-  mHorResizeMargin =
-      WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi) +
-      (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
-                  : 0);
-
-  // mVertResizeMargin is the size of the default NC area at the
-  // bottom of the window. It is calculated as the sum of:
-  //      SM_CYFRAME        - The thickness of the sizing border
-  //      SM_CXPADDEDBORDER - The amount of border padding
-  //                          for captioned windows.
-  //
-  // If the window does not have a caption, mVertResizeMargin will be equal to
-  // `WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi)`
-  mVertResizeMargin =
-      WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi) +
-      (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
-                  : 0);
+    // mVertResizeMargin is the size of the default NC area at the
+    // bottom of the window. It is calculated as the sum of:
+    //      SM_CYFRAME        - The thickness of the sizing border
+    //      SM_CXPADDEDBORDER - The amount of border padding
+    //                          for captioned windows.
+    //
+    // If the window does not have a caption, mVertResizeMargin will be equal to
+    // `WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi)`
+    mVertResizeMargin =
+        WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi) +
+        (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
+                    : 0);
+  }
 
   if (aSizeMode == nsSizeMode_Minimized) {
     // Use default frame size for minimized windows
@@ -3029,6 +3045,13 @@ nsresult nsWindow::SetNonClientMargins(LayoutDeviceIntMargin& margins) {
   }
 
   return NS_OK;
+}
+
+void nsWindow::SetResizeMargin(mozilla::LayoutDeviceIntCoord aResizeMargin) {
+  mUseResizeMarginOverrides = true;
+  mHorResizeMargin = aResizeMargin;
+  mVertResizeMargin = aResizeMargin;
+  UpdateNonClientMargins();
 }
 
 void nsWindow::InvalidateNonClientRegion() {
@@ -3666,9 +3689,10 @@ void nsWindow::CleanupFullscreenTransition() {
   mTransitionWnd = nullptr;
 }
 
-nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
-  // taskbarInfo will be nullptr pre Windows 7 until Bug 680227 is resolved.
-  nsCOMPtr<nsIWinTaskbar> taskbarInfo = do_GetService(NS_TASKBAR_CONTRACTID);
+nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
+  if (mFullscreenMode == aFullScreen) {
+    return NS_OK;
+  }
 
   if (mWidgetListener) {
     mWidgetListener->FullscreenWillChange(aFullScreen);
@@ -3676,16 +3700,22 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
 
   mFullscreenMode = aFullScreen;
   if (aFullScreen) {
-    if (mSizeMode == nsSizeMode_Fullscreen) return NS_OK;
     mOldSizeMode = mSizeMode;
-    SetSizeMode(nsSizeMode_Fullscreen);
-
-    // Notify the taskbar that we will be entering full screen mode.
-    if (taskbarInfo) {
-      taskbarInfo->PrepareFullScreenHWND(mWnd, TRUE);
-    }
+    SetSizeModeInternal(nsSizeMode_Fullscreen);
   } else {
-    SetSizeMode(mOldSizeMode);
+    if (mSizeMode != mOldSizeMode) {
+      SetSizeModeInternal(mOldSizeMode);
+    }
+
+    MOZ_ASSERT(mSizeMode == mOldSizeMode);
+  }
+
+  // taskbarInfo will be nullptr pre Windows 7 until Bug 680227 is resolved.
+  nsCOMPtr<nsIWinTaskbar> taskbarInfo = do_GetService(NS_TASKBAR_CONTRACTID);
+
+  // Notify the taskbar that we will be entering full screen mode.
+  if (aFullScreen && taskbarInfo) {
+    taskbarInfo->PrepareFullScreenHWND(mWnd, TRUE);
   }
 
   // If we are going fullscreen, the window size continues to change
@@ -3695,9 +3725,11 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
   // Will call hide chrome, reposition window. Note this will
   // also cache dimensions for restoration, so it should only
   // be called once per fullscreen request.
-  nsBaseWidget::InfallibleMakeFullScreen(aFullScreen, aTargetScreen);
+  nsBaseWidget::InfallibleMakeFullScreen(aFullScreen);
 
-  if (mIsVisible && !aFullScreen && mOldSizeMode == nsSizeMode_Normal) {
+  if (mIsVisible && !aFullScreen && mSizeMode == nsSizeMode_Normal) {
+    MOZ_ASSERT(mSizeMode == mOldSizeMode);
+
     // Ensure the window exiting fullscreen get activated. Window
     // activation might be bypassed in SetSizeMode.
     DispatchFocusToTopLevelWindow(true);
@@ -3867,6 +3899,18 @@ void nsWindow::SetIcon(const nsAString& aIconSpec) {
              ::GetLastError()));
   }
 #endif
+}
+
+void nsWindow::SetBigIconNoData() {
+  HICON bigIcon =
+      ::LoadIconW(::GetModuleHandleW(nullptr), gStockApplicationIcon);
+  SetBigIcon(bigIcon);
+}
+
+void nsWindow::SetSmallIconNoData() {
+  HICON smallIcon =
+      ::LoadIconW(::GetModuleHandleW(nullptr), gStockApplicationIcon);
+  SetSmallIcon(smallIcon);
 }
 
 /**************************************************************
@@ -6371,6 +6415,7 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
     right = true;
   }
 
+  bool inResizeRegion = false;
   if (isResizable) {
     if (top) {
       testResult = HTTOP;
@@ -6388,6 +6433,7 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
       if (left) testResult = HTLEFT;
       if (right) testResult = HTRIGHT;
     }
+    inResizeRegion = (testResult != HTCLIENT);
   } else {
     if (top)
       testResult = HTCAPTION;
@@ -6408,19 +6454,24 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
     mCachedHitTestPoint = {pt.x, pt.y};
     mCachedHitTestTime = TimeStamp::Now();
 
-    if (mDraggableRegion.Contains(pt.x, pt.y)) {
-      testResult = HTCAPTION;
-    } else if (mWindowBtnRect[WindowButtonType::Minimize].Contains(pt.x,
-                                                                   pt.y)) {
+    if (mWindowBtnRect[WindowButtonType::Minimize].Contains(pt.x, pt.y)) {
       testResult = HTMINBUTTON;
     } else if (mWindowBtnRect[WindowButtonType::Maximize].Contains(pt.x,
                                                                    pt.y)) {
       testResult = HTMAXBUTTON;
     } else if (mWindowBtnRect[WindowButtonType::Close].Contains(pt.x, pt.y)) {
       testResult = HTCLOSE;
-    } else {
-      testResult = HTCLIENT;
+    } else if (!inResizeRegion) {
+      // If we're in the resize region, avoid overriding that with either a
+      // drag or a client result; resize takes priority over either (but not
+      // over the window controls, which is why we check this after those).
+      if (mDraggableRegion.Contains(pt.x, pt.y)) {
+        testResult = HTCAPTION;
+      } else {
+        testResult = HTCLIENT;
+      }
     }
+
     mCachedHitTestResult = testResult;
   }
 

@@ -122,6 +122,31 @@ class WordBreakIteratorUtf16 final : public SegmentIteratorUtf16 {
 };
 
 /**
+ * Grapheme cluster break iterator for UTF-16 text.
+ */
+class GraphemeClusterBreakIteratorUtf16 final : public SegmentIteratorUtf16 {
+ public:
+  explicit GraphemeClusterBreakIteratorUtf16(Span<const char16_t> aText);
+
+  Maybe<uint32_t> Next() override;
+};
+
+/**
+ * Grapheme cluster break reverse iterator for UTF-16 text.
+ *
+ * Note: The reverse iterator doesn't handle conjoining Jamo and emoji. Use it
+ * at your own risk.
+ */
+class GraphemeClusterBreakReverseIteratorUtf16 final
+    : public SegmentIteratorUtf16 {
+ public:
+  explicit GraphemeClusterBreakReverseIteratorUtf16(Span<const char16_t> aText);
+
+  Maybe<uint32_t> Next() override;
+  Maybe<uint32_t> Seek(uint32_t aPos) override;
+};
+
+/**
  * This component is a Mozilla-focused API for working with segmenters in
  * internationalization code.
  *

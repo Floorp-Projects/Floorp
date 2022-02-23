@@ -31,6 +31,10 @@ const perfDescription = {
     "profiler-stopped": {
       type: "profiler-stopped",
     },
+    // @backward-compat { version 98 } These 2 events are not used anymore since
+    // Firefox 98. Instead we expose the information about private browsing in
+    // captured profile and show a warning in the profiler frontend UI. We can
+    // remove these 2 events once Firefox 98 hits release.
     "profile-locked-by-private-browsing": {
       type: "profile-locked-by-private-browsing",
     },
@@ -82,6 +86,8 @@ const perfDescription = {
       response: { value: RetVal("boolean") },
     },
 
+    // @backward-compat { version 98 } This method is not used since Firefox 98.
+    // We can remove it once Firefox 98 hits release.
     isLockedForPrivateBrowsing: {
       request: {},
       response: { value: RetVal("boolean") },

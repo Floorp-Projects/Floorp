@@ -1,4 +1,4 @@
-use crate::constants::MAX_PRECISION_U32;
+use crate::{constants::MAX_PRECISION_U32, Decimal};
 use alloc::string::String;
 use core::fmt;
 
@@ -19,6 +19,11 @@ where
     fn from(from: S) -> Self {
         Self::ErrorString(from.into())
     }
+}
+
+#[cold]
+pub(crate) fn tail_error(from: &'static str) -> Result<Decimal, Error> {
+    Err(from.into())
 }
 
 #[cfg(feature = "std")]

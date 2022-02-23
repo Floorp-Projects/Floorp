@@ -755,7 +755,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    * @param {HTMLFormElement} form - form to get login data for
    * @param {Object} options
    * @param {boolean} options.guid - guid of a login to retrieve
-   * @param {boolean} options.showMasterPassword - whether to show a master password prompt
+   * @param {boolean} options.showPrimaryPassword - whether to show a primary password prompt
    */
   _getLoginDataFromParent(form, options) {
     let actionOrigin = LoginHelper.getFormActionOrigin(form);
@@ -964,22 +964,22 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     if (!event.isTrusted) {
       return;
     }
-    let isMasterPasswordSet = Services.cpmm.sharedData.get(
-      "isMasterPasswordSet"
+    let isPrimaryPasswordSet = Services.cpmm.sharedData.get(
+      "isPrimaryPasswordSet"
     );
     let document = event.target.ownerDocument;
 
-    // don't attempt to defer handling when a master password is set
+    // don't attempt to defer handling when a primary password is set
     // Showing the MP modal as soon as possible minimizes its interference with tab interactions
     // See bug 1539091 and bug 1538460.
     log(
       "onDOMFormHasPassword, visibilityState:",
       document.visibilityState,
-      "isMasterPasswordSet:",
-      isMasterPasswordSet
+      "isPrimaryPasswordSet:",
+      isPrimaryPasswordSet
     );
 
-    if (document.visibilityState == "visible" || isMasterPasswordSet) {
+    if (document.visibilityState == "visible" || isPrimaryPasswordSet) {
       this._processDOMFormHasPasswordEvent(event);
     } else {
       // wait until the document becomes visible before handling this event
@@ -1000,16 +1000,16 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     if (!event.isTrusted) {
       return;
     }
-    let isMasterPasswordSet = Services.cpmm.sharedData.get(
-      "isMasterPasswordSet"
+    let isPrimaryPasswordSet = Services.cpmm.sharedData.get(
+      "isPrimaryPasswordSet"
     );
     let document = event.target.ownerDocument;
 
     log(
       "onDOMFormHasPossibleUsername, visibilityState:",
       document.visibilityState,
-      "isMasterPasswordSet:",
-      isMasterPasswordSet
+      "isPrimaryPasswordSet:",
+      isPrimaryPasswordSet
     );
 
     // For simplicity, the result of the telemetry is stacked. This means if a
@@ -1020,7 +1020,16 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       .getHistogramById("PWMGR_NUM_FORM_HAS_POSSIBLE_USERNAME_EVENT_PER_DOC")
       .add(++docState.numFormHasPossibleUsernameEvent);
 
-    if (document.visibilityState == "visible" || isMasterPasswordSet) {
+    // Infer whether a form is a username-only form is expensive, so we restrict the
+    // number of form looked up per document.
+    if (
+      docState.numFormHasPossibleUsernameEvent >
+      LoginHelper.usernameOnlyFormLookupThreshold
+    ) {
+      return;
+    }
+
+    if (document.visibilityState == "visible" || isPrimaryPasswordSet) {
       this._processDOMFormHasPossibleUsernameEvent(event);
     } else {
       // wait until the document becomes visible before handling this event
@@ -1071,20 +1080,20 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     let document = pwField.ownerDocument;
-    let isMasterPasswordSet = Services.cpmm.sharedData.get(
-      "isMasterPasswordSet"
+    let isPrimaryPasswordSet = Services.cpmm.sharedData.get(
+      "isPrimaryPasswordSet"
     );
     log(
       "onDOMInputPasswordAdded, visibilityState:",
       document.visibilityState,
-      "isMasterPasswordSet:",
-      isMasterPasswordSet
+      "isPrimaryPasswordSet:",
+      isPrimaryPasswordSet
     );
 
-    // don't attempt to defer handling when a master password is set
+    // don't attempt to defer handling when a primary password is set
     // Showing the MP modal as soon as possible minimizes its interference with tab interactions
     // See bug 1539091 and bug 1538460.
-    if (document.visibilityState == "visible" || isMasterPasswordSet) {
+    if (document.visibilityState == "visible" || isPrimaryPasswordSet) {
       this._processDOMInputPasswordAddedEvent(event);
     } else {
       // wait until the document becomes visible before handling this event
@@ -1184,7 +1193,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       mozSystemGroup: true,
     });
 
-    this._getLoginDataFromParent(form, { showMasterPassword: true })
+    this._getLoginDataFromParent(form, { showPrimaryPassword: true })
       .then(this.loginsFound.bind(this))
       .catch(Cu.reportError);
   }
@@ -1444,7 +1453,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       if (passwordField) {
         this._getLoginDataFromParent(acForm, {
           guid: loginGUID,
-          showMasterPassword: false,
+          showPrimaryPassword: false,
         })
           .then(({ form, loginsFound, recipes }) => {
             if (!loginGUID) {
@@ -2564,7 +2573,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
 
     // Heuristically determine what the user/pass fields are
     // We do this before checking to see if logins are stored,
-    // so that the user isn't prompted for a master password
+    // so that the user isn't prompted for a primary password
     // without need.
     let {
       usernameField,
@@ -3131,11 +3140,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
 
     let candidate = null;
     for (let element of formElement.elements) {
-      // Only care input fields in the form.
-      if (ChromeUtils.getClassName(element) !== "HTMLInputElement") {
-        continue;
-      }
-
       // We are looking for a username-only form, so if there is a password
       // field in the form, this is NOT a username-only form.
       if (element.hasBeenTypePassword) {

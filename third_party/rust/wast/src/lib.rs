@@ -45,10 +45,11 @@
 //! [`Parse`]: parser::Parse
 //! [`LexError`]: lexer::LexError
 
-#![deny(missing_docs, broken_intra_doc_links)]
+#![deny(missing_docs, rustdoc::broken_intra_doc_links)]
 
 use std::fmt;
 use std::path::{Path, PathBuf};
+use unicode_width::UnicodeWidthStr;
 
 #[cfg(feature = "wasm-module")]
 mod binary;
@@ -229,7 +230,26 @@ impl std::error::Error for Error {}
 impl Text {
     fn new(content: &str, span: Span) -> Text {
         let (line, col) = span.linecol_in(content);
-        let snippet = content.lines().nth(line).unwrap_or("").to_string();
+        let contents = content.lines().nth(line).unwrap_or("");
+        let mut snippet = String::new();
+        for ch in contents.chars() {
+            match ch {
+                // Replace tabs with spaces to render consistently
+                '\t' => {
+                    snippet.push_str("    ");
+                }
+                // these codepoints change how text is rendered so for clarity
+                // in error messages they're dropped.
+                '\u{202a}' | '\u{202b}' | '\u{202d}' | '\u{202e}' | '\u{2066}' | '\u{2067}'
+                | '\u{2068}' | '\u{206c}' | '\u{2069}' => {}
+
+                c => snippet.push(c),
+            }
+        }
+        // Use the `unicode-width` crate to figure out how wide the snippet, up
+        // to our "column", actually is. That'll tell us how many spaces to
+        // place before the `^` character that points at the problem
+        let col = snippet.get(..col).map(|s| s.width()).unwrap_or(col);
         Text { line, col, snippet }
     }
 }

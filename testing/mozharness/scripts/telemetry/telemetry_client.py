@@ -192,6 +192,10 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             "-vv",
         ]
 
+        # Symbols for crash reports
+        if self.symbols_path:
+            cmd.extend(["--symbols-path", self.symbols_path])
+
         cmd.extend(["--setpref={}".format(p) for p in self.config["extra_prefs"]])
 
         if not self.config["e10s"]:
@@ -215,6 +219,9 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             env.update({"MINIDUMP_STACKWALK": self.minidump_stackwalk_path})
         env["RUST_BACKTRACE"] = "1"
         env["MOZ_IGNORE_NSS_SHUTDOWN_LEAKS"] = "1"
+
+        # Causes Firefox to crash when using non-local connections.
+        env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
 
         # If code coverage is enabled, set GCOV_PREFIX env variable
         if self.config.get("code_coverage"):

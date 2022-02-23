@@ -62,17 +62,17 @@ class TestCommand(MessageTestCase):
     def test_to_msg(self):
         cmd = self.create()
         msg = json.loads(cmd.to_msg())
-        self.assertEquals(msg[0], Command.TYPE)
-        self.assertEquals(msg[1], "msgid")
-        self.assertEquals(msg[2], "name")
-        self.assertEquals(msg[3], "params")
+        self.assertEqual(msg[0], Command.TYPE)
+        self.assertEqual(msg[1], "msgid")
+        self.assertEqual(msg[2], "name")
+        self.assertEqual(msg[3], "params")
 
     def test_from_msg(self):
         msg = [Command.TYPE, "msgid", "name", "params"]
         cmd = Command.from_msg(msg)
-        self.assertEquals(msg[1], cmd.id)
-        self.assertEquals(msg[2], cmd.name)
-        self.assertEquals(msg[3], cmd.params)
+        self.assertEqual(msg[1], cmd.id)
+        self.assertEqual(msg[2], cmd.name)
+        self.assertEqual(msg[3], cmd.params)
 
 
 class TestResponse(MessageTestCase):
@@ -99,14 +99,14 @@ class TestResponse(MessageTestCase):
     def test_to_msg(self):
         resp = self.create()
         msg = json.loads(resp.to_msg())
-        self.assertEquals(msg[0], Response.TYPE)
-        self.assertEquals(msg[1], "msgid")
-        self.assertEquals(msg[2], "error")
-        self.assertEquals(msg[3], "result")
+        self.assertEqual(msg[0], Response.TYPE)
+        self.assertEqual(msg[1], "msgid")
+        self.assertEqual(msg[2], "error")
+        self.assertEqual(msg[3], "result")
 
     def test_from_msg(self):
         msg = [Response.TYPE, "msgid", "error", "result"]
         resp = Response.from_msg(msg)
-        self.assertEquals(msg[1], resp.id)
-        self.assertEquals(msg[2], resp.error)
-        self.assertEquals(msg[3], resp.result)
+        self.assertEqual(msg[1], resp.id)
+        self.assertEqual(msg[2], resp.error)
+        self.assertEqual(msg[3], resp.result)

@@ -202,20 +202,6 @@ PreviewController.prototype = {
     this.canvasPreview.height = aRequestedHeight;
   },
 
-  get zoom() {
-    // Note that winutils.fullZoom accounts for "quantization" of the zoom factor
-    // from nsIContentViewer due to conversion through appUnits.
-    // We do -not- want screenPixelsPerCSSPixel here, because that would -also-
-    // incorporate any scaling that is applied due to hi-dpi resolution options.
-    return this.tab.linkedBrowser.fullZoom;
-  },
-
-  get screenPixelsPerCSSPixel() {
-    let chromeWin = this.tab.ownerGlobal;
-    let windowUtils = chromeWin.windowUtils;
-    return windowUtils.screenPixelsPerCSSPixel;
-  },
-
   get browserDims() {
     return this.tab.linkedBrowser.getBoundingClientRect();
   },
@@ -295,7 +281,7 @@ PreviewController.prototype = {
       composite.mozOpaque = false;
 
       let ctx = composite.getContext("2d");
-      let scale = this.screenPixelsPerCSSPixel / this.zoom;
+      let scale = this.win.devicePixelRatio;
 
       composite.width = winWidth * scale;
       composite.height = winHeight * scale;

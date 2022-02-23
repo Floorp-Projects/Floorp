@@ -30,13 +30,13 @@ class TestSwitchFrame(MarionetteTestCase):
         self.marionette.switch_to_frame(frame)
 
         element = self.marionette.find_element(By.ID, "email")
-        self.assertEquals(element.get_attribute("type"), "email")
+        self.assertEqual(element.get_attribute("type"), "email")
 
     def test_by_index(self):
         self.marionette.switch_to_frame(2)
 
         element = self.marionette.find_element(By.ID, "email")
-        self.assertEquals(element.get_attribute("type"), "email")
+        self.assertEqual(element.get_attribute("type"), "email")
 
     def test_back_to_top_frame(self):
         frame1 = self.marionette.find_element(By.ID, "sixth")
@@ -47,7 +47,7 @@ class TestSwitchFrame(MarionetteTestCase):
 
         self.marionette.switch_to_frame()
         frame = self.marionette.find_element(By.ID, "sixth")
-        self.assertEquals(frame, frame1)
+        self.assertEqual(frame, frame1)
 
 
 class TestSwitchParentFrame(MarionetteTestCase):

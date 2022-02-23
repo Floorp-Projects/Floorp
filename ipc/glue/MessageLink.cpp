@@ -189,19 +189,11 @@ void PortLink::OnPortStatusChanged() {
   }
 }
 
-bool PortLink::Unsound_IsClosed() const {
+bool PortLink::IsClosed() const {
   if (Maybe<PortStatus> status = mNode->GetStatus(mPort)) {
     return !(status->has_messages || status->receiving_messages);
   }
   return true;
-}
-
-uint32_t PortLink::Unsound_NumQueuedMessages() const {
-  // There is no easy way to see the number of messages which have been sent to
-  // a port but haven't been delivered yet.
-  //
-  // FIXME: If this is important, we'll need to add a mechanism for this.
-  return 0;
 }
 
 }  // namespace ipc

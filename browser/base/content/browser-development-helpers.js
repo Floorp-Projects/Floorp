@@ -30,7 +30,6 @@ var DevelopmentHelpers = {
     let command = document.createXULElement("command");
     command.setAttribute("id", "cmd_quickRestart");
     command.addEventListener("command", this.quickRestart, true);
-    command.setAttribute("oncommand", "void 0;"); // Needed - bug 371900
     document.getElementById("mainCommandSet").prepend(command);
 
     let key = document.createXULElement("key");
@@ -38,7 +37,6 @@ var DevelopmentHelpers = {
     key.setAttribute("key", "r");
     key.setAttribute("modifiers", "accel,alt");
     key.setAttribute("command", "cmd_quickRestart");
-    key.setAttribute("oncommand", "void 0;"); // Needed - bug 371900
     document.getElementById("mainKeyset").prepend(key);
 
     let menuitem = document.createXULElement("menuitem");

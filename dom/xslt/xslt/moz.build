@@ -55,6 +55,7 @@ LOCAL_INCLUDES += [
     "../xpath",
     "/dom/base",
     "/js/xpconnect/src",
+    "/parser/htmlparser",
 ]
 
 FINAL_LIBRARY = "xul"

@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1697539</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+"use strict";
+
+var worker = new Worker("worker_bug1697539.js");
+worker.onmessage = function(e) {
+  is(e.data, "InvalidStateError", "Should get InvalidStateError");
+  SimpleTest.finish();
+};
+
+function runTests() {
+  worker.postMessage("http://localhost:8888");
+}
+
+SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+<body onload="runTests()">
+</body>
+</html>

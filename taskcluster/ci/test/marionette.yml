@@ -21,23 +21,41 @@ job-defaults:
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier:
         by-variant:
-            fission: 2
-            default: default
+            fission: default
+            headless: 2
+            default: 2
     variants:
         - fission
-        - webrender-sw
+        - no-fission
+        - webrender-sw+no-fission
+        - webrender-sw+fission
+        - headless+no-fission
+        - headless+fission
+    run-without-variant: false
     run-on-projects:
         by-variant:
-            fission:
+            fission: built-projects
+            headless+no-fission:
                 by-test-platform:
-                    (linux.*64|windows10-64)(-shippable)?(-qr)?/.*: ['trunk']
-                    linux.*64-asan-qr/opt: ['trunk']
+                    linux.*(tsan|ccov).*: []
+                    linux.*64(-shippable)?-qr/opt: ['trunk']
                     default: []
-            webrender-sw:
+            headless+fission:
+                by-test-platform:
+                    (linux.*64)(-shippable)?-qr/opt: built-projects
+                    default: []
+            webrender-sw+no-fission:
+                by-test-platform:
+                    linux.*/debug: ['trunk']
+                    default: []
+            webrender-sw+fission:
                 by-test-platform:
                     .*/debug: built-projects
                     default: []
-            default: built-projects
+            no-fission:
+                by-test-platform:
+                    linux.*: ['trunk']
+                    default: []
     virtualization:
         by-test-platform:
             windows10-64.*: hardware
@@ -49,13 +67,3 @@ marionette:
     max-run-time: 5400
     instance-size: default
     chunks: 1
-
-marionette-headless:
-    description: "Marionette headless unittest run"
-    treeherder-symbol: MnH
-    max-run-time: 5400
-    instance-size: default
-    tier: 2
-    mozharness:
-        extra-options:
-            - --headless

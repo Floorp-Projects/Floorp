@@ -64,7 +64,7 @@ class ProcTestOutput(proctest.ProcTest):
             stream.write(str(i).encode("utf8") + "\n".encode("utf8"))
 
         buf.flush()
-        self.assertEquals(stream.getvalue().strip().decode("utf8"), expected)
+        self.assertEqual(stream.getvalue().strip().decode("utf8"), expected)
 
         # make sure mozprocess doesn't close the stream
         # since mozprocess didn't create it

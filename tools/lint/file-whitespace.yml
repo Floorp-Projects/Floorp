@@ -131,6 +131,7 @@ file-whitespace:
         - testing/mozharness/configs/raptor/linux64_config_taskcluster.py
         - testing/mozharness/configs/talos/linux64_config_taskcluster.py
         - testing/mozharness/configs/web_platform_tests/test_config_windows.py
+        - testing/perfdocs/generated/
         - testing/talos/talos/cmanager_base.py
         - testing/talos/talos/pageloader/chrome/pageloader.xhtml
         - testing/talos/talos/tests
@@ -158,7 +159,6 @@ file-whitespace:
         - testing/web-platform/tests/html
         - testing/web-platform/tests/tools/webdriver/webdriver/transport.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/browsers/edgechromium.py
-        - testing/web-platform/tests/tools/wptrunner/wptrunner/executors/executoredgechromium.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/manifestupdate.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/metadata.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/tests/test_update.py
@@ -186,6 +186,10 @@ file-whitespace:
         - devtools/client/styleeditor/test/sourcemap-css/test-stylus.css
         - dom/bindings/test/file_barewordGetsWindow_frame1.html
         - dom/bindings/test/file_barewordGetsWindow_frame2.html
+        - devtools/perfdocs/index.rst
+        - python/mozperftest/perfdocs/running.rst
+        - python/mozperftest/perfdocs/vision.rst
+        - python/mozperftest/perfdocs/writing.rst
     extensions:
         - .c
         - .cc
@@ -198,6 +202,7 @@ file-whitespace:
         - .py
         - .properties
         - .rs
+        - .rst
         - .xhtml
     support-files:
         - 'tools/lint/file-whitespace/**'

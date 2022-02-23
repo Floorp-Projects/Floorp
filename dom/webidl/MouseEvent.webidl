@@ -11,6 +11,8 @@
  * liability, trademark and document use rules apply.
  */
 
+interface nsIScreen;
+
 [Exposed=Window]
 interface MouseEvent : UIEvent {
   constructor(DOMString typeArg,
@@ -20,6 +22,10 @@ interface MouseEvent : UIEvent {
   readonly attribute long           screenX;
   [NeedsCallerType]
   readonly attribute long           screenY;
+
+  [ChromeOnly]
+  readonly attribute nsIScreen?     screen;
+
   readonly attribute long           pageX;
   readonly attribute long           pageY;
   readonly attribute long           clientX;

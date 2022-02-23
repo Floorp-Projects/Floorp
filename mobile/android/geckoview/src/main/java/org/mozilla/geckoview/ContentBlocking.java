@@ -6,6 +6,7 @@
 
 package org.mozilla.geckoview;
 
+import android.annotation.SuppressLint;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
@@ -518,7 +519,7 @@ public class ContentBlocking {
      *
      * @return The categories of resources to be blocked.
      */
-    public @CBAntiTracking int getSafeBrowsingCategories() {
+    public @CBSafeBrowsing int getSafeBrowsingCategories() {
       return ContentBlocking.sbMalwareToSbCat(mSbMalware.get())
           | ContentBlocking.sbPhishingToSbCat(mSbPhishing.get());
     }
@@ -528,6 +529,7 @@ public class ContentBlocking {
      *
      * @return The assigned behavior, as one of {@link CookieBehavior} flags.
      */
+    @SuppressLint("WrongConstant")
     public @CBCookieBehavior int getCookieBehavior() {
       return mCookieBehavior.get();
     }
@@ -549,6 +551,7 @@ public class ContentBlocking {
      *
      * @return The assigned behavior, as one of {@link CookieBehavior} flags.
      */
+    @SuppressLint("WrongConstant")
     public @CBCookieBehavior int getCookieBehaviorPrivateMode() {
       return mCookieBehaviorPrivateMode.get();
     }
@@ -570,6 +573,7 @@ public class ContentBlocking {
      *
      * @return The assigned lifetime, as one of {@link CookieLifetime} flags.
      */
+    @SuppressLint("WrongConstant")
     public @CBCookieLifetime int getCookieLifetime() {
       return mCookieLifetime.get();
     }
@@ -1164,7 +1168,7 @@ public class ContentBlocking {
         AntiTracking.STP,
         AntiTracking.NONE
       })
-  /* package */ @interface CBAntiTracking {}
+  public @interface CBAntiTracking {}
 
   public static class SafeBrowsing {
     public static final int NONE = 0;
@@ -1195,7 +1199,7 @@ public class ContentBlocking {
         SafeBrowsing.HARMFUL, SafeBrowsing.PHISHING,
         SafeBrowsing.DEFAULT, SafeBrowsing.NONE
       })
-  /* package */ @interface CBSafeBrowsing {}
+  public @interface CBSafeBrowsing {}
 
   // Sync values with nsICookieService.idl.
   public static class CookieBehavior {
@@ -1238,7 +1242,7 @@ public class ContentBlocking {
     CookieBehavior.ACCEPT_NONE, CookieBehavior.ACCEPT_VISITED,
     CookieBehavior.ACCEPT_NON_TRACKERS
   })
-  /* package */ @interface CBCookieBehavior {}
+  public @interface CBCookieBehavior {}
 
   // Sync values with nsICookieService.idl.
   public static class CookieLifetime {
@@ -1256,11 +1260,11 @@ public class ContentBlocking {
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({CookieLifetime.NORMAL, CookieLifetime.RUNTIME, CookieLifetime.DAYS})
-  /* package */ @interface CBCookieLifetime {}
+  public @interface CBCookieLifetime {}
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({EtpLevel.NONE, EtpLevel.DEFAULT, EtpLevel.STRICT})
-  /* package */ @interface CBEtpLevel {}
+  public @interface CBEtpLevel {}
 
   /** Possible settings for ETP. */
   public static class EtpLevel {

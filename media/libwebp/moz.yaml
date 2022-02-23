@@ -1,0 +1,60 @@
+schema: 1
+
+bugzilla:
+  product: "Core"
+  component: "ImageLib"
+
+origin:
+  name: "libwebp"
+  description: "WebP codec library"
+
+  url: "https://chromium.googlesource.com/webm/libwebp"
+  license: BSD-3-Clause
+
+  release: commit b0a860891dcd4c0c2d7c6149e5cccb6eb881cc21 (2022-01-19T23:35:26.000Z).
+
+  revision: "v1.2.2"
+
+  license-file: COPYING
+
+updatebot:
+  maintainer-phab: aosmond
+  maintainer-bz: aosmond@mozilla.com
+  tasks:
+    - type: vendoring
+      enabled: True
+
+vendoring:
+  url: https://github.com/webmproject/libwebp
+  source-hosting: github
+  tracking: tag
+
+  exclude:
+    - "**"
+    - ".*"
+
+  include:
+    - AUTHORS
+    - COPYING
+    - NEWS
+    - PATENTS
+    - README
+    - README.mux
+    - src/webp/*.h
+    - src/dec/*.h
+    - src/dec/*.c
+    - src/demux/demux.c
+    - src/dsp/*.h
+    - src/dsp/*.c
+    - src/enc/*.h
+    - src/enc/*.c
+    - src/utils/*.h
+    - src/utils/*.c
+
+  keep:
+    - MOZCHANGES
+    - src/moz
+
+  update-actions:
+    - action: delete-path
+      path: src/dsp/cpu.c

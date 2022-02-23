@@ -149,7 +149,7 @@ void AdaptiveDCSmoothing(const float* dc_factors, Image3F* dc,
              xsize * sizeof(float));
     }
   }
-  auto process_row = [&](int y, int /*thread*/) {
+  auto process_row = [&](const uint32_t y, size_t /*thread*/) {
     const float* JXL_RESTRICT rows_top[3]{
         dc->ConstPlaneRow(0, y - 1),
         dc->ConstPlaneRow(1, y - 1),
@@ -193,8 +193,8 @@ void AdaptiveDCSmoothing(const float* dc_factors, Image3F* dc,
                             x);
     }
   };
-  RunOnPool(pool, 1, ysize - 1, ThreadPool::SkipInit(), process_row,
-            "DCSmoothingRow");
+  JXL_CHECK(RunOnPool(pool, 1, ysize - 1, ThreadPool::NoInit, process_row,
+                      "DCSmoothingRow"));
   dc->Swap(smoothed);
 }
 

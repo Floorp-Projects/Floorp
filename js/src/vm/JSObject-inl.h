@@ -291,8 +291,8 @@ static MOZ_ALWAYS_INLINE bool HasNoToPrimitiveMethodPure(JSObject* obj,
 #ifdef DEBUG
     NativeObject* pobj;
     PropertyResult prop;
-    MOZ_ASSERT(
-        LookupPropertyPure(cx, obj, SYMBOL_TO_JSID(toPrimitive), &pobj, &prop));
+    MOZ_ASSERT(LookupPropertyPure(cx, obj, PropertyKey::Symbol(toPrimitive),
+                                  &pobj, &prop));
     MOZ_ASSERT(prop.isNotFound());
 #endif
     return true;
@@ -300,7 +300,7 @@ static MOZ_ALWAYS_INLINE bool HasNoToPrimitiveMethodPure(JSObject* obj,
 
   NativeObject* pobj;
   PropertyResult prop;
-  if (!LookupPropertyPure(cx, holder, SYMBOL_TO_JSID(toPrimitive), &pobj,
+  if (!LookupPropertyPure(cx, holder, PropertyKey::Symbol(toPrimitive), &pobj,
                           &prop)) {
     return false;
   }

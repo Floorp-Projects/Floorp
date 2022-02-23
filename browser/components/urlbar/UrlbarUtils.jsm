@@ -12,6 +12,7 @@
 var EXPORTED_SYMBOLS = [
   "L10nCache",
   "SkippableTimer",
+  "TaskQueue",
   "UrlbarMuxer",
   "UrlbarProvider",
   "UrlbarQueryContext",
@@ -1017,7 +1018,10 @@ var UrlbarUtils = {
       // This is not an early return because it is necessary to invoke getLogger
       // at least once before getLoggerWithMessagePrefix; it replaces a
       // method of the original logger, rather than using an actual Proxy.
-      return Log.repository.getLoggerWithMessagePrefix("urlbar", prefix + "::");
+      return Log.repository.getLoggerWithMessagePrefix(
+        "urlbar",
+        prefix + " :: "
+      );
     }
     return this._logger;
   },
@@ -1310,6 +1314,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       },
       isSponsored: {
         type: "boolean",
+      },
+      originalUrl: {
+        type: "string",
       },
       qsSuggestion: {
         type: "string",
@@ -1832,6 +1839,22 @@ class UrlbarProvider {
   pickResult(result, element) {}
 
   /**
+   * Called when the result's block button is picked. If the provider can block
+   * the result, it should do so and return true. If the provider cannot block
+   * the result, it should return false. The meaning of "blocked" depends on the
+   * provider and the type of result.
+   *
+   * @param {UrlbarResult} result
+   *   The result that was picked.
+   * @returns {boolean}
+   *   Whether the result was blocked.
+   * @abstract
+   */
+  blockResult(result) {
+    return false;
+  }
+
+  /**
    * Called when the user starts and ends an engagement with the urlbar.
    *
    * @param {boolean} isPrivate
@@ -2240,4 +2263,73 @@ class L10nCache {
     let parts = [id].concat(argValues);
     return JSON.stringify(parts);
   }
+}
+
+/**
+ * This class provides a way of serializing access to a resource. It's a queue
+ * of callbacks (or "tasks") where each callback is called and awaited in order,
+ * one at a time.
+ */
+class TaskQueue {
+  /**
+   * @returns {Promise}
+   *   Resolves when the queue becomes empty. If the queue is already empty,
+   *   then a resolved promise is returned.
+   */
+  get emptyPromise() {
+    if (!this._queue.length) {
+      return Promise.resolve();
+    }
+    return new Promise(resolve => this._emptyCallbacks.push(resolve));
+  }
+
+  /**
+   * Adds a callback function to the task queue. The callback will be called
+   * after all other callbacks before it in the queue. This method returns a
+   * promise that will be resolved after awaiting the callback. The promise will
+   * be resolved with the value returned by the callback.
+   *
+   * @param {function} callback
+   *   The function to queue.
+   * @returns {Promise}
+   *   Resolved after the task queue calls and awaits `callback`. It will be
+   *   resolved with the value returned by `callback`. If `callback` throws an
+   *   error, then it will be rejected with the error.
+   */
+  queue(callback) {
+    return new Promise((resolve, reject) => {
+      this._queue.push({ callback, resolve, reject });
+      if (this._queue.length == 1) {
+        this._doNextTask();
+      }
+    });
+  }
+
+  /**
+   * Calls the next function in the task queue and recurses until the queue is
+   * empty. Once empty, all empty callback functions are called.
+   */
+  async _doNextTask() {
+    if (!this._queue.length) {
+      while (this._emptyCallbacks.length) {
+        let callback = this._emptyCallbacks.shift();
+        callback();
+      }
+      return;
+    }
+
+    let { callback, resolve, reject } = this._queue[0];
+    try {
+      let value = await callback();
+      resolve(value);
+    } catch (error) {
+      Cu.reportError(error);
+      reject(error);
+    }
+    this._queue.shift();
+    this._doNextTask();
+  }
+
+  _queue = [];
+  _emptyCallbacks = [];
 }

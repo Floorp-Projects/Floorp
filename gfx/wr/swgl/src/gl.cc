@@ -82,7 +82,7 @@ WINBASEAPI BOOL WINAPI QueryPerformanceFrequency(LARGE_INTEGER* lpFrequency);
 
 #define FALLTHROUGH [[fallthrough]]
 
-#ifdef MOZILLA_CLIENT
+#if defined(MOZILLA_CLIENT) && defined(MOZ_CLANG_PLUGIN)
 #  define IMPLICIT __attribute__((annotate("moz_implicit")))
 #else
 #  define IMPLICIT

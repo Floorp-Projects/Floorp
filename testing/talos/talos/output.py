@@ -218,8 +218,16 @@ class Output(object):
 
         # This is the output that treeherder expects to find when parsing the
         # log file
-        if "gecko-profile" not in self.results.extra_options:
-            LOG.info("PERFHERDER_DATA: %s" % json.dumps(results, ignore_nan=True))
+        if "gecko-profile" in self.results.extra_options:
+            LOG.info("gecko-profile enabled")
+
+            for suite in results["suites"]:
+                suite["shouldAlert"] = False
+                for subtest in suite["subtests"]:
+                    subtest["shouldAlert"] = False
+
+        LOG.info("PERFHERDER_DATA: %s" % json.dumps(results, ignore_nan=True))
+
         if results_scheme in ("file"):
             json.dump(
                 results,

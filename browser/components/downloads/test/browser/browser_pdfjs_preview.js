@@ -217,7 +217,7 @@ const TestCases = [
   {
     name: "about:downloads, default click behavior",
     whichUI: "aboutDownloads",
-    itemSelector: "#downloadsRichListBox richlistitem .downloadContainer",
+    itemSelector: "#downloadsListBox richlistitem .downloadContainer",
     async userEvents(itemSelector, win) {
       let browser = win.gBrowser.selectedBrowser;
       is(browser.currentURI.spec, "about:downloads");
@@ -233,7 +233,7 @@ const TestCases = [
   {
     name: "about:downloads, system viewer menu items prefd off",
     whichUI: "aboutDownloads",
-    itemSelector: "#downloadsRichListBox richlistitem .downloadContainer",
+    itemSelector: "#downloadsListBox richlistitem .downloadContainer",
     async userEvents(itemSelector, win) {
       let browser = win.gBrowser.selectedBrowser;
       is(browser.currentURI.spec, "about:downloads");
@@ -255,7 +255,7 @@ const TestCases = [
   {
     name: "about:downloads, open in new window",
     whichUI: "aboutDownloads",
-    itemSelector: "#downloadsRichListBox richlistitem .downloadContainer",
+    itemSelector: "#downloadsListBox richlistitem .downloadContainer",
     async userEvents(itemSelector, win) {
       let browser = win.gBrowser.selectedBrowser;
       is(browser.currentURI.spec, "about:downloads");
@@ -271,7 +271,7 @@ const TestCases = [
   {
     name: "about:downloads, open in foreground tab",
     whichUI: "aboutDownloads",
-    itemSelector: "#downloadsRichListBox richlistitem .downloadContainer",
+    itemSelector: "#downloadsListBox richlistitem .downloadContainer",
     async userEvents(itemSelector, win) {
       let browser = win.gBrowser.selectedBrowser;
       is(browser.currentURI.spec, "about:downloads");
@@ -291,7 +291,7 @@ const TestCases = [
   {
     name: "about:downloads, open in background tab",
     whichUI: "aboutDownloads",
-    itemSelector: "#downloadsRichListBox richlistitem .downloadContainer",
+    itemSelector: "#downloadsListBox richlistitem .downloadContainer",
     async userEvents(itemSelector, win) {
       let browser = win.gBrowser.selectedBrowser;
       is(browser.currentURI.spec, "about:downloads");
@@ -312,7 +312,7 @@ const TestCases = [
     name: "Private download in about:downloads, opens in new private window",
     skip: true, // Bug 1641770
     whichUI: "aboutDownloads",
-    itemSelector: "#downloadsRichListBox richlistitem .downloadContainer",
+    itemSelector: "#downloadsListBox richlistitem .downloadContainer",
     async userEvents(itemSelector, win) {
       let browser = win.gBrowser.selectedBrowser;
       is(browser.currentURI.spec, "about:downloads");
@@ -583,7 +583,7 @@ async function testOpenPDFPreview({
         // we'll be interacting with the library dialog
         uiWindow = await openLibrary("Downloads");
 
-        let listbox = uiWindow.document.getElementById("downloadsRichListBox");
+        let listbox = uiWindow.document.getElementById("downloadsListBox");
         ok(listbox, "download list box present");
         // wait for the expected number of items in the view,
         // and for the first item to be visible && clickable
@@ -652,7 +652,7 @@ async function testOpenPDFPreview({
           async function awaitListItems(expectedCount) {
             await ContentTaskUtils.waitForCondition(
               () =>
-                content.document.getElementById("downloadsRichListBox")
+                content.document.getElementById("downloadsListBox")
                   .childElementCount == expectedCount,
               `Await ${expectedCount} download list items`
             );

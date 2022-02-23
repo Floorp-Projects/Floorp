@@ -82,6 +82,9 @@ NS_IMETHODIMP SandboxReportWrapper::GetProcType(nsACString& aProcType) {
     case SandboxReport::ProcType::SOCKET_PROCESS:
       aProcType.AssignLiteral("socketProcess");
       return NS_OK;
+    case SandboxReport::ProcType::UTILITY:
+      aProcType.AssignLiteral("utility");
+      return NS_OK;
     default:
       MOZ_ASSERT(false);
       return NS_ERROR_UNEXPECTED;

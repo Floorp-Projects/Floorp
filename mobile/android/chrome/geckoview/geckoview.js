@@ -13,6 +13,7 @@ var { XPCOMUtils } = ChromeUtils.import(
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Blocklist: "resource://gre/modules/Blocklist.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   GeckoViewActorManager: "resource://gre/modules/GeckoViewActorManager.jsm",
@@ -492,7 +493,10 @@ class ModuleInfo {
 function createBrowser() {
   const browser = (window.browser = document.createXULElement("browser"));
   // Identify this `<browser>` element uniquely to Marionette, devtools, etc.
-  browser.permanentKey = {};
+  // Use the JSM global to create the permanentKey, so that if the
+  // permanentKey is held by something after this window closes, it
+  // doesn't keep the window alive. See also Bug 1501789.
+  browser.permanentKey = new (Cu.getGlobalForObject(Services).Object)();
 
   browser.setAttribute("nodefaultsrc", "true");
   browser.setAttribute("type", "content");
@@ -532,6 +536,7 @@ function startup() {
               },
             },
             allFrames: true,
+            messageManagerGroups: ["browsers"],
           },
         },
       },
@@ -556,6 +561,7 @@ function startup() {
               },
             },
             allFrames: true,
+            messageManagerGroups: ["browsers"],
           },
         },
       },
@@ -589,6 +595,7 @@ function startup() {
                 pageshow: { capture: false, mozSystemGroup: true },
               },
             },
+            messageManagerGroups: ["browsers"],
           },
         },
       },
@@ -604,6 +611,7 @@ function startup() {
                 mozvisualscroll: { mozSystemGroup: true },
               },
             },
+            messageManagerGroups: ["browsers"],
           },
         },
       },
@@ -622,6 +630,7 @@ function startup() {
               },
             },
             allFrames: true,
+            messageManagerGroups: ["browsers"],
           },
         },
       },
@@ -693,6 +702,7 @@ function startup() {
               },
             },
             allFrames: true,
+            messageManagerGroups: ["browsers"],
           },
         },
       },
@@ -711,6 +721,7 @@ function startup() {
               },
             },
             allFrames: true,
+            messageManagerGroups: ["browsers"],
           },
         },
       },
@@ -731,6 +742,7 @@ function startup() {
               },
             },
             allFrames: true,
+            messageManagerGroups: ["browsers"],
           },
         },
       },
@@ -789,6 +801,12 @@ function startup() {
       // It's enough to run this once to set up FOG.
       // (See also bug 1730026.)
       Services.fog.registerCustomPings();
+    });
+
+    InitLater(() => {
+      // Initialize the blocklist module.
+      // TODO bug 1730026: this runs too often. It should run once.
+      Blocklist.loadBlocklistAsync();
     });
 
     // This should always go last, since the idle tasks (except for the ones with

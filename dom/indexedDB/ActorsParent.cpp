@@ -727,7 +727,8 @@ Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult> OpenDatabase(
   QM_TRY_UNWRAP(auto connection,
                 MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
                     nsCOMPtr<mozIStorageConnection>, aStorageService,
-                    OpenDatabaseWithFileURL, &aFileURL, telemetryFilename));
+                    OpenDatabaseWithFileURL, &aFileURL, telemetryFilename,
+                    mozIStorageService::CONNECTION_DEFAULT));
 
   return WrapMovingNotNull(std::move(connection));
 }

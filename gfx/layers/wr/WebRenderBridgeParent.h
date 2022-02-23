@@ -368,7 +368,8 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
       const ImageIntRect& aDirtyRect, wr::TransactionBuilder& aResources,
       UniquePtr<ScheduleSharedSurfaceRelease>& aScheduleRelease);
   void ObserveSharedSurfaceRelease(
-      const nsTArray<wr::ExternalImageKeyPair>& aPairs);
+      const nsTArray<wr::ExternalImageKeyPair>& aPairs,
+      const bool& aFromCheckpoint);
 
   bool PushExternalImageForTexture(wr::ExternalImageId aExtId,
                                    wr::ImageKey aKey, TextureHost* aTexture,
@@ -377,7 +378,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
 
   void AddPipelineIdForCompositable(const wr::PipelineId& aPipelineIds,
                                     const CompositableHandle& aHandle,
-                                    const bool& aAsync,
+                                    const CompositableHandleOwner& aOwner,
                                     wr::TransactionBuilder& aTxn,
                                     wr::TransactionBuilder& aTxnForImageBridge);
   void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId,

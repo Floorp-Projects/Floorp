@@ -176,12 +176,15 @@ volatile uint32_t armHwCapFlags = HWCAP_UNINITIALIZED;
 
 bool CPUFlagsHaveBeenComputed() { return armHwCapFlags != HWCAP_UNINITIALIZED; }
 
-bool ParseARMHwCapFlags(const char* armHwCap) {
-  uint32_t flags = 0;
+static const char* gArmHwCapString = nullptr;
 
-  if (!armHwCap) {
-    return false;
-  }
+void SetARMHwCapFlagsString(const char* armHwCap) {
+  MOZ_ASSERT(!CPUFlagsHaveBeenComputed());
+  gArmHwCapString = armHwCap;
+}
+
+static void ParseARMHwCapFlags(const char* armHwCap) {
+  MOZ_ASSERT(armHwCap);
 
   if (strstr(armHwCap, "help")) {
     fflush(NULL);
@@ -208,7 +211,7 @@ bool ParseARMHwCapFlags(const char* armHwCap) {
     /*NOTREACHED*/
   }
 
-  flags = ParseARMCpuFeatures(armHwCap, /* override = */ true);
+  uint32_t flags = ParseARMCpuFeatures(armHwCap, /* override = */ true);
 
 #ifdef JS_CODEGEN_ARM_HARDFP
   flags |= HWCAP_USE_HARDFP_ABI;
@@ -216,21 +219,22 @@ bool ParseARMHwCapFlags(const char* armHwCap) {
 
   armHwCapFlags = CanonicalizeARMHwCapFlags(flags);
   JitSpew(JitSpew_Codegen, "ARM HWCAP: 0x%x\n", armHwCapFlags);
-  return true;
 }
 
 void InitARMFlags() {
+  MOZ_RELEASE_ASSERT(armHwCapFlags == HWCAP_UNINITIALIZED);
+
+  if (const char* env = getenv("ARMHWCAP")) {
+    ParseARMHwCapFlags(env);
+    return;
+  }
+
+  if (gArmHwCapString) {
+    ParseARMHwCapFlags(gArmHwCapString);
+    return;
+  }
+
   uint32_t flags = 0;
-
-  if (armHwCapFlags != HWCAP_UNINITIALIZED) {
-    return;
-  }
-
-  const char* env = getenv("ARMHWCAP");
-  if (ParseARMHwCapFlags(env)) {
-    return;
-  }
-
 #ifdef JS_SIMULATOR_ARM
   // HWCAP_FIXUP_FAULT is on by default even if HWCAP_ALIGNMENT_FAULT is
   // not on by default, because some memory access instructions always fault.

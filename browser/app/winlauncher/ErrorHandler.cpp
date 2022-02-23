@@ -59,6 +59,14 @@ static const wchar_t kUrl[] = TELEMETRY_BASE_URL TELEMETRY_NAMESPACE
 static const uint32_t kGuidCharLenWithNul = 39;
 static const uint32_t kGuidCharLenNoBracesNoNul = 36;
 static const mozilla::StaticXREAppData* gAppData;
+
+// Ordinarily, errors are only reported to the Windows Event Log when they are
+// not reported upstream via telemetry (usually due either to telemetry being
+// disabled or to network failure).
+//
+// If `--log-launcher-error` is given at the command line, launcher errors will
+// always be reported to the Windows Event Log, regardless of whether or not
+// they're sent upstream.
 static bool gForceEventLog = false;
 
 namespace {
@@ -765,11 +773,10 @@ void HandleLauncherError(const LauncherError& aError,
   Unused << regInfo.DisableDueToFailure();
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 
-  if (SendPing(aError, aProcessType) && !gForceEventLog) {
-    return;
+  if (!SendPing(aError, aProcessType)) {
+    // couldn't (or shouldn't) send telemetry; fall back to event log
+    PostErrorToLog(aError);
   }
-
-  PostErrorToLog(aError);
 }
 
 void SetLauncherErrorAppData(const StaticXREAppData& aAppData) {

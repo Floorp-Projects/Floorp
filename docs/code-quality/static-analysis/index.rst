@@ -20,7 +20,7 @@ integrating this process with Phabricator and mach. A list of some
 checkers that are used during automated scan can be found
 `here <https://searchfox.org/mozilla-central/source/tools/clang-tidy/config.yaml>`__.
 
-This documentation is split into two parts: 
+This documentation is split into two parts:
 
 .. toctree::
   :maxdepth: 1

@@ -7,6 +7,5 @@ license = "MPL-2.0"
 [lib]
 path = "lib.rs"
 
-[features]
-nightly = []
-diagnostic = []
+[dependencies]
+mozbuild = "0.1"

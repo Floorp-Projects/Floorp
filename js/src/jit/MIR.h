@@ -6163,42 +6163,9 @@ class MStringReplace : public MTernaryInstruction,
   bool possiblyCalls() const override { return true; }
 };
 
-struct LambdaFunctionInfo {
-  // The functions used in lambdas are the canonical original function in
-  // the script, and are immutable except for delazification. Record this
-  // information while still on the main thread to avoid races.
- private:
-  CompilerFunction fun_;
-
- public:
-  js::BaseScript* baseScript;
-  js::FunctionFlags flags;
-  uint16_t nargs;
-
-  LambdaFunctionInfo(JSFunction* fun, BaseScript* baseScript,
-                     FunctionFlags flags, uint16_t nargs)
-      : fun_(fun), baseScript(baseScript), flags(flags), nargs(nargs) {}
-
-  LambdaFunctionInfo(const LambdaFunctionInfo& other)
-      : fun_(static_cast<JSFunction*>(other.fun_)),
-        baseScript(other.baseScript),
-        flags(other.flags),
-        nargs(other.nargs) {}
-
-  // Be careful when calling this off-thread. Don't call any JSFunction*
-  // methods that depend on script/lazyScript - this can race with
-  // delazification on the main thread.
-  JSFunction* funUnsafe() const { return fun_; }
-
- private:
-  void operator=(const LambdaFunctionInfo&) = delete;
-};
-
 class MLambda : public MBinaryInstruction, public SingleObjectPolicy::Data {
-  const LambdaFunctionInfo info_;
-
-  MLambda(MDefinition* envChain, MConstant* cst, const LambdaFunctionInfo& info)
-      : MBinaryInstruction(classOpcode, envChain, cst), info_(info) {
+  MLambda(MDefinition* envChain, MConstant* cst)
+      : MBinaryInstruction(classOpcode, envChain, cst) {
     setResultType(MIRType::Object);
   }
 
@@ -6208,7 +6175,10 @@ class MLambda : public MBinaryInstruction, public SingleObjectPolicy::Data {
   NAMED_OPERANDS((0, environmentChain))
 
   MConstant* functionOperand() const { return getOperand(1)->toConstant(); }
-  const LambdaFunctionInfo& info() const { return info_; }
+  JSFunction* templateFunction() const {
+    return &functionOperand()->toObject().as<JSFunction>();
+  }
+
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
@@ -6217,12 +6187,8 @@ class MLambda : public MBinaryInstruction, public SingleObjectPolicy::Data {
 class MLambdaArrow
     : public MTernaryInstruction,
       public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2>>::Data {
-  const LambdaFunctionInfo info_;
-
-  MLambdaArrow(MDefinition* envChain, MDefinition* newTarget, MConstant* cst,
-               const LambdaFunctionInfo& info)
-      : MTernaryInstruction(classOpcode, envChain, newTarget, cst),
-        info_(info) {
+  MLambdaArrow(MDefinition* envChain, MDefinition* newTarget, MConstant* cst)
+      : MTernaryInstruction(classOpcode, envChain, newTarget, cst) {
     setResultType(MIRType::Object);
   }
 
@@ -6232,7 +6198,10 @@ class MLambdaArrow
   NAMED_OPERANDS((0, environmentChain), (1, newTargetDef))
 
   MConstant* functionOperand() const { return getOperand(2)->toConstant(); }
-  const LambdaFunctionInfo& info() const { return info_; }
+  JSFunction* templateFunction() const {
+    return &functionOperand()->toObject().as<JSFunction>();
+  }
+
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
@@ -6540,7 +6509,6 @@ class MLoadElementAndUnbox : public MBinaryInstruction,
     if (mode_ == MUnbox::Fallible) {
       setGuard();
     }
-    setBailoutKind(BailoutKind::UnboxFolding);
   }
 
  public:
@@ -7171,7 +7139,6 @@ class MLoadFixedSlotAndUnbox : public MUnaryInstruction,
     if (mode_ == MUnbox::Fallible) {
       setGuard();
     }
-    setBailoutKind(BailoutKind::UnboxFolding);
   }
 
  public:
@@ -7215,7 +7182,6 @@ class MLoadDynamicSlotAndUnbox : public MUnaryInstruction,
     if (mode_ == MUnbox::Fallible) {
       setGuard();
     }
-    setBailoutKind(BailoutKind::UnboxFolding);
   }
 
  public:
@@ -10083,6 +10049,10 @@ class MWasmTernarySimd128 : public MTernaryInstruction,
   // as a shuffle and it is profitable to specialize it on this platform, return
   // true and the appropriate shuffle mask.
   bool specializeBitselectConstantMaskAsShuffle(int8_t shuffle[16]);
+  // Checks if more relaxed version of lane select can be used. It returns true
+  // if a bit mask input expected to be all 0s or 1s for entire 8-bit lanes,
+  // false otherwise.
+  bool canRelaxBitselect();
 #endif
 
   wasm::SimdOp simdOp() const { return simdOp_; }

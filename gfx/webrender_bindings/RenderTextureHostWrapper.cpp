@@ -16,6 +16,7 @@ RenderTextureHostWrapper::RenderTextureHostWrapper(
     ExternalImageId aExternalImageId)
     : mExternalImageId(aExternalImageId) {
   MOZ_COUNT_CTOR_INHERITED(RenderTextureHostWrapper, RenderTextureHost);
+  EnsureTextureHost();
 }
 
 RenderTextureHostWrapper::~RenderTextureHostWrapper() {
@@ -35,7 +36,6 @@ void RenderTextureHostWrapper::EnsureTextureHost() const {
 
 wr::WrExternalImage RenderTextureHostWrapper::Lock(
     uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
-  EnsureTextureHost();
   if (!mTextureHost) {
     return InvalidToWrExternalImage();
   }
@@ -55,9 +55,36 @@ void RenderTextureHostWrapper::ClearCachedResources() {
   }
 }
 
+void RenderTextureHostWrapper::PrepareForUse() {
+  if (!mTextureHost) {
+    return;
+  }
+  mTextureHost->PrepareForUse();
+}
+
+void RenderTextureHostWrapper::NotifyForUse() {
+  if (!mTextureHost) {
+    return;
+  }
+  mTextureHost->NotifyForUse();
+}
+
+void RenderTextureHostWrapper::NotifyNotUsed() {
+  if (!mTextureHost) {
+    return;
+  }
+  mTextureHost->NotifyNotUsed();
+}
+
+bool RenderTextureHostWrapper::SyncObjectNeeded() {
+  if (!mTextureHost) {
+    return false;
+  }
+  return mTextureHost->SyncObjectNeeded();
+}
+
 RenderMacIOSurfaceTextureHost*
 RenderTextureHostWrapper::AsRenderMacIOSurfaceTextureHost() {
-  EnsureTextureHost();
   if (!mTextureHost) {
     return nullptr;
   }
@@ -65,7 +92,6 @@ RenderTextureHostWrapper::AsRenderMacIOSurfaceTextureHost() {
 }
 
 RenderDXGITextureHost* RenderTextureHostWrapper::AsRenderDXGITextureHost() {
-  EnsureTextureHost();
   if (!mTextureHost) {
     return nullptr;
   }
@@ -74,7 +100,6 @@ RenderDXGITextureHost* RenderTextureHostWrapper::AsRenderDXGITextureHost() {
 
 RenderDXGIYCbCrTextureHost*
 RenderTextureHostWrapper::AsRenderDXGIYCbCrTextureHost() {
-  EnsureTextureHost();
   if (!mTextureHost) {
     return nullptr;
   }
@@ -83,7 +108,6 @@ RenderTextureHostWrapper::AsRenderDXGIYCbCrTextureHost() {
 
 RenderTextureHostSWGL* RenderTextureHostWrapper::EnsureRenderTextureHostSWGL()
     const {
-  EnsureTextureHost();
   if (!mTextureHost) {
     return nullptr;
   }

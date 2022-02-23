@@ -134,6 +134,7 @@ struct WebAuthnGetAssertionResult {
   uint8_t[] UserHandle;
 };
 
+[ManualDealloc]
 async protocol PWebAuthnTransaction {
   manager PBackground;
 

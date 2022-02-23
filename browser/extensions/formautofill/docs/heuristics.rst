@@ -34,4 +34,3 @@ The parsers are for detecting the field type more accurately based on the near c
 * _parseCreditCardExpirationDateFields
 
   * related type: ``cc-exp``, ``cc-exp-month``, ``cc-exp-year``
-

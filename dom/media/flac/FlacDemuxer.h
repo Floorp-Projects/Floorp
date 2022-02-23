@@ -86,7 +86,7 @@ class FlacTrackDemuxer : public MediaTrackDemuxer,
 
   // Reads aSize bytes into aBuffer from the source starting at aOffset.
   // Returns the actual size read.
-  int32_t Read(uint8_t* aBuffer, int64_t aOffset, int32_t aSize);
+  uint32_t Read(uint8_t* aBuffer, int64_t aOffset, int32_t aSize);
 
   // Returns the average frame length derived from the previously parsed frames.
   double AverageFrameLength() const;

@@ -201,12 +201,7 @@ void nsDOMCSSAttributeDeclaration::SetPropertyValue(
       aPropID == eCSSProperty_scale || aPropID == eCSSProperty_offset_path ||
       aPropID == eCSSProperty_offset_distance ||
       aPropID == eCSSProperty_offset_rotate ||
-      aPropID == eCSSProperty_offset_anchor || aPropID == eCSSProperty_left ||
-      aPropID == eCSSProperty_top || aPropID == eCSSProperty_right ||
-      aPropID == eCSSProperty_bottom ||
-      aPropID == eCSSProperty_background_position_x ||
-      aPropID == eCSSProperty_background_position_y ||
-      aPropID == eCSSProperty_background_position) {
+      aPropID == eCSSProperty_offset_anchor) {
     nsIFrame* frame = mElement->GetPrimaryFrame();
     if (frame) {
       ActiveLayerTracker::NotifyInlineStyleRuleModified(frame, aPropID, aValue,

@@ -71,8 +71,8 @@ the proposed change.
 
 If module ownership is not clear, ask on the newsgroups or `on
 Matrix <https://chat.mozilla.org>`__. The revision log for the relevant
-file might also be helpful. For example, see the change log for {{
-Source("browser/base/content/browser.js") }}, by clicking the "Hg Log"
+file might also be helpful. For example, see the change log for
+``browser/base/content/browser.js``, by clicking the "Hg Log"
 link at the top of `Searchfox <https://searchfox.org/mozilla-central/source/>`__, or
 by running ``hg log browser/base/content/browser.js``. The corresponding
 checkin message will contain something like "r=nickname", identifying
@@ -105,7 +105,7 @@ simple commit message should look like this:
 
    Bug 123456 - Change this thing to work better by doing something. r=reviewers
 
-The ``r=reviewers`` part is optional; if you are using Phabricator, 
+The ``r=reviewers`` part is optional; if you are using Phabricator,
 Lando will add it automatically based on who actually granted review,
 and in any case the person who does the final check-in of the patch will
 make sure it's added.
@@ -113,7 +113,7 @@ make sure it's added.
 The text of the message should be what you did to fix the bug, not a
 description of what the bug was. If it is not obvious why this change is
 appropriate, then `explain why in the commit
-message <https://mozilla-version-control-tools.readthedocs.io/en/latest/mozreview/commits.html#write-detailed-commit-messages>`__. 
+message <https://mozilla-version-control-tools.readthedocs.io/en/latest/mozreview/commits.html#write-detailed-commit-messages>`__.
 If this does not fit on one line, then leave a blank line and add
 further lines for more detail and/or reasoning.
 
@@ -162,32 +162,10 @@ to comment, and offer suggestions, when a question is accompanied by
 some code.
 
 
-Getting reviews
----------------
+Getting reviews for my patch
+----------------------------
 
-Thorough code reviews are one of Mozilla's ways of ensuring code
-quality. Every patch must be reviewed by the module owner of the code,
-or one of their designated peers.
-
-For more information about the review process, see the :ref:`Code Review FAQ`.
-
-To request a review, you will need to specify one or more usernames
-either when you submit the patch, or afterward in the UI. See the
-`Mozilla Phabricator User
-Guide <https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html>`__
-for details.
-
-*Getting attention:* If a reviewer doesn't respond within a week, or so,
-of the review request:
-
--  Join #developers on Mozilla's `Matrix
-   server <https://chat.mozilla.org>`__, and ask if anyone knows why a
-   review may be delayed. Please link to the bug too.
--  If the review is still not addressed, mail the reviewer directly,
-   asking if/when they'll have time to review the patch, or might
-   otherwise be able to review it.
--  As a last resort, ask in the appropriate newsgroup on
-   ``news.mozilla.org``.
+See the dedicated page :ref:`Getting reviews`
 
 
 Addressing review comments

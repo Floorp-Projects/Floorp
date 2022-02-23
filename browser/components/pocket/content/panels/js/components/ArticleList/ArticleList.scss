@@ -1,0 +1,40 @@
+.stp_article_list {
+  padding: 0;
+  list-style: none;
+
+  .stp_article_list_link {
+    display: flex;
+    border-radius: 4px;
+    padding: 8px;
+
+    &:hover {
+      text-decoration: none;
+      background-color: #ECECEE;
+    }
+  }
+
+  .stp_article_list_thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    margin-inline-end: 8px;
+  }
+
+  .stp_article_list_header {
+    font-style: normal;
+    font-weight: 600;
+    font-size: 0.85em;
+    line-height: 1.27em;
+    color: #15141A;
+    margin: 4px 0px;
+  }
+
+  .stp_article_list_publisher {
+    font-style: normal;
+    font-weight: normal;
+    font-size: 0.85em;
+    line-height: 1.27em;
+    color: #52525E;
+    margin: 4px 0px;
+  }
+}

@@ -13,6 +13,7 @@
 
 #include "jit/CacheIRSpewer.h"
 #include "jit/CompileWrappers.h"
+#include "jit/Ion.h"
 #include "jit/JitCode.h"
 #include "jit/JitOptions.h"
 #include "jit/JitSpewer.h"
@@ -20,6 +21,10 @@
 #include "jit/PerfSpewer.h"
 #include "js/HeapAPI.h"
 #include "vm/JSContext.h"
+
+#ifdef JS_CODEGEN_ARM64
+#  include "jit/arm64/vixl/Cpu-vixl.h"
+#endif
 
 #if defined(ANDROID)
 #  include <sys/system_properties.h>
@@ -97,21 +102,47 @@ bool jit::InitializeJit() {
   }
 #endif
 
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  // Compute flags.
+  js::jit::CPUInfo::ComputeFlags();
+#endif
+
 #if defined(JS_CODEGEN_ARM)
   InitARMFlags();
 #endif
 
+#ifdef JS_CODEGEN_ARM64
+  // Initialize instruction cache flushing.
+  vixl::CPU::SetUp();
+#endif
+
+#ifndef JS_CODEGEN_NONE
+  MOZ_ASSERT(js::jit::CPUFlagsHaveBeenComputed());
+#endif
+
   // Note: jit flags need to be initialized after the InitARMFlags call above.
-  ComputeJitSupportFlags();
+  // This is the final point where we can set disableJitBackend = true, before
+  // we use this flag below with the HasJitBackend call.
+  if (!MacroAssembler::SupportsFloatingPoint()) {
+    JitOptions.disableJitBackend = true;
+  }
+  JitOptions.supportsUnalignedAccesses =
+      MacroAssembler::SupportsUnalignedAccesses();
+
+  if (HasJitBackend()) {
+    if (!InitProcessExecutableMemory()) {
+      return false;
+    }
+  }
 
   CheckPerf();
   return true;
 }
 
-void jit::ComputeJitSupportFlags() {
-  JitOptions.supportsFloatingPoint = MacroAssembler::SupportsFloatingPoint();
-  JitOptions.supportsUnalignedAccesses =
-      MacroAssembler::SupportsUnalignedAccesses();
+void jit::ShutdownJit() {
+  if (HasJitBackend() && !JSRuntime::hasLiveRuntimes()) {
+    ReleaseProcessExecutableMemory();
+  }
 }
 
 bool jit::JitSupportsWasmSimd() {

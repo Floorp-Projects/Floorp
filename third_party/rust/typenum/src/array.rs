@@ -8,6 +8,7 @@ use super::*;
 
 /// The terminating type for type arrays.
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash, Debug)]
+#[cfg_attr(feature = "scale_info", derive(scale_info::TypeInfo))]
 pub struct ATerm;
 
 impl TypeArray for ATerm {}
@@ -19,6 +20,7 @@ impl TypeArray for ATerm {}
 /// This array is only really designed to contain `Integer` types. If you use it with others, you
 /// may find it lacking functionality.
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash, Debug)]
+#[cfg_attr(feature = "scale_info", derive(scale_info::TypeInfo))]
 pub struct TArr<V, A> {
     first: V,
     rest: A,

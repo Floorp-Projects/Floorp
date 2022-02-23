@@ -938,10 +938,8 @@ nsresult nsNSSComponent::CheckForSmartCardChanges() {
     sLastCheckedForSmartCardChanges = now;
   }
 
-  // SECMOD_UpdateSlotList attempts to acquire the list lock as well,
-  // so we have to do this in two steps. The lock protects the list itself, so
-  // if we get our own owned references to the modules we're interested in,
-  // there's no thread safety concern here.
+  // SECMOD_UpdateSlotList attempts to acquire the list lock as well, so we
+  // have to do this in three steps.
   Vector<UniqueSECMODModule> modulesWithRemovableSlots;
   {
     AutoSECMODListReadLock secmodLock;
@@ -959,6 +957,9 @@ nsresult nsNSSComponent::CheckForSmartCardChanges() {
   for (auto& module : modulesWithRemovableSlots) {
     // Best-effort.
     Unused << SECMOD_UpdateSlotList(module.get());
+  }
+  AutoSECMODListReadLock secmodLock;
+  for (auto& module : modulesWithRemovableSlots) {
     for (int i = 0; i < module->slotCount; i++) {
       // We actually don't care about the return value here - we just need to
       // call this to get NSS to update its view of this slot.
@@ -1540,20 +1541,11 @@ void nsNSSComponent::setValidationOptions(
     case CRLiteMode::Disabled:
     case CRLiteMode::TelemetryOnly:
     case CRLiteMode::Enforce:
+    case CRLiteMode::ConfirmRevocations:
       break;
     default:
       crliteMode = defaultCRLiteMode;
       break;
-  }
-
-  uint32_t defaultCRLiteCTMergeDelaySeconds =
-      60 * 60 * 28;  // 28 hours in seconds
-  uint64_t maxCRLiteCTMergeDelaySeconds = 60 * 60 * 24 * 365;
-  uint64_t crliteCTMergeDelaySeconds =
-      Preferences::GetUint("security.pki.crlite_ct_merge_delay_seconds",
-                           defaultCRLiteCTMergeDelaySeconds);
-  if (crliteCTMergeDelaySeconds > maxCRLiteCTMergeDelaySeconds) {
-    crliteCTMergeDelaySeconds = maxCRLiteCTMergeDelaySeconds;
   }
 
   CertVerifier::OcspDownloadConfig odc;
@@ -1568,7 +1560,7 @@ void nsNSSComponent::setValidationOptions(
   mDefaultCertVerifier = new SharedCertVerifier(
       odc, osc, softTimeout, hardTimeout, certShortLifetimeInDays, sha1Mode,
       PublicSSLState()->NameMatchingMode(), netscapeStepUpPolicy, ctMode,
-      crliteMode, crliteCTMergeDelaySeconds, mEnterpriseCerts);
+      crliteMode, mEnterpriseCerts);
 }
 
 void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
@@ -1587,8 +1579,7 @@ void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
       oldCertVerifier->mCertShortLifetimeInDays, oldCertVerifier->mSHA1Mode,
       oldCertVerifier->mNameMatchingMode,
       oldCertVerifier->mNetscapeStepUpPolicy, oldCertVerifier->mCTMode,
-      oldCertVerifier->mCRLiteMode, oldCertVerifier->mCRLiteCTMergeDelaySeconds,
-      mEnterpriseCerts);
+      oldCertVerifier->mCRLiteMode, mEnterpriseCerts);
 }
 
 // Enable the TLS versions given in the prefs, defaulting to TLS 1.0 (min) and
@@ -1699,7 +1690,7 @@ static nsresult GetNSSProfilePath(nsAutoCString& aProfilePath) {
     return NS_ERROR_FAILURE;
   }
   nsAutoString u16ProfilePath;
-  rv = profileFileWin->GetCanonicalPath(u16ProfilePath);
+  rv = profileFileWin->GetPath(u16ProfilePath);
   CopyUTF16toUTF8(u16ProfilePath, aProfilePath);
 #else
   rv = profileFile->GetNativePath(aProfilePath);
@@ -2174,7 +2165,7 @@ void IntermediatePreloadingHealerCallback(nsITimer*, void*) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("IntermediatePreloadingHealerCallback"));
 
-  if (AppShutdown::IsShuttingDown()) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("Exiting healer due to app shutdown"));
     return;
@@ -2203,7 +2194,7 @@ void IntermediatePreloadingHealerCallback(nsITimer*, void*) {
   // is a preloaded intermediate.
   for (CERTCertListNode* n = CERT_LIST_HEAD(softokenCertificates);
        !CERT_LIST_END(n, softokenCertificates); n = CERT_LIST_NEXT(n)) {
-    if (AppShutdown::IsShuttingDown()) {
+    if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
               ("Exiting healer due to app shutdown"));
       return;
@@ -2255,7 +2246,7 @@ void IntermediatePreloadingHealerCallback(nsITimer*, void*) {
     }
   }
   for (const auto& certToDelete : certsToDelete) {
-    if (AppShutdown::IsShuttingDown()) {
+    if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
               ("Exiting healer due to app shutdown"));
       return;
@@ -2400,9 +2391,7 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                    "security.OCSP.timeoutMilliseconds.soft") ||
                prefName.EqualsLiteral(
                    "security.OCSP.timeoutMilliseconds.hard") ||
-               prefName.EqualsLiteral("security.pki.crlite_mode") ||
-               prefName.EqualsLiteral(
-                   "security.pki.crlite_ct_merge_delay_seconds")) {
+               prefName.EqualsLiteral("security.pki.crlite_mode")) {
       MutexAutoLock lock(mMutex);
       setValidationOptions(false, lock);
 #ifdef DEBUG
@@ -2518,12 +2507,9 @@ nsNSSComponent::IsCertTestBuiltInRoot(CERTCertificate* cert, bool* result) {
   *result = false;
 
 #ifdef DEBUG
-  RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert);
-  if (!nsc) {
-    return NS_ERROR_FAILURE;
-  }
+  nsCOMPtr<nsIX509Cert> x509Cert(new nsNSSCertificate(cert));
   nsAutoString certHash;
-  nsresult rv = nsc->GetSha256Fingerprint(certHash);
+  nsresult rv = x509Cert->GetSha256Fingerprint(certHash);
   if (NS_FAILED(rv)) {
     return rv;
   }

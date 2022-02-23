@@ -123,8 +123,9 @@ http://creativecommons.org/licenses/publicdomain/
     }).then(SimpleTest.finish);
   }
 
-  setupPrefsAndMockSocket(new MockWebSocket()).then(_ => runTest());
-  SpecialPowers.addPermission("desktop-notification", true, document);
+  setupPrefsAndMockSocket(new MockWebSocket())
+    .then(_ => setPushPermission(true))
+    .then(_ => runTest());
   SimpleTest.waitForExplicitFinish();
 </script>
 </body>

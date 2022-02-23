@@ -99,7 +99,7 @@ async function test() {
   // on both the browser chrome window and the content window.
   // This makes sure we catch the case where the overscroll transform causes
   // the event to incorrectly target the browser chrome.
-  let deviceScale = utils.screenPixelsPerCSSPixel;
+  let deviceScale = window.devicePixelRatio;
   let midGutter = 4 / deviceScale;  // gutter is 8 *screen* pixels
   startListeningForContextmenuEventsInChrome();
   let contentReceivedContextmenu = false;

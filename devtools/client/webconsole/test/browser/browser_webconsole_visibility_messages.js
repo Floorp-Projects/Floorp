@@ -43,7 +43,7 @@ add_task(async function() {
   const onAllMessagesInStore = new Promise(done => {
     const store = hud.ui.wrapper.getStore();
     store.subscribe(() => {
-      const messages = store.getState().messages.messagesById.size;
+      const messages = store.getState().messages.mutableMessagesById.size;
       // Also consider the "in-console log" message
       if (messages == MESSAGES_COUNT + 1) {
         done();

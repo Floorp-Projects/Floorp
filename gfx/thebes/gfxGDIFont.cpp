@@ -366,9 +366,17 @@ void gfxGDIFont::Initialize() {
     mFUnitsConvFactor = 0.0;  // zero-sized font: all values scale to zero
   }
 
-  if (IsSyntheticBold()) {
-    mMetrics->aveCharWidth += GetSyntheticBoldOffset();
-    mMetrics->maxAdvance += GetSyntheticBoldOffset();
+  if (ApplySyntheticBold()) {
+    auto delta = GetSyntheticBoldOffset();
+    mMetrics->spaceWidth += delta;
+    mMetrics->aveCharWidth += delta;
+    mMetrics->maxAdvance += delta;
+    if (mMetrics->zeroWidth > 0) {
+      mMetrics->zeroWidth += delta;
+    }
+    if (mMetrics->ideographicWidth > 0) {
+      mMetrics->ideographicWidth += delta;
+    }
   }
 
 #if 0

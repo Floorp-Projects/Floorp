@@ -37,8 +37,16 @@ class ProfilerParent final : public PProfilerParent {
       base::ProcessId aOtherPid);
 
 #ifdef MOZ_GECKO_PROFILER
-  typedef MozPromise<Shmem, ResponseRejectReason, true>
-      SingleProcessProfilePromise;
+  using SingleProcessProfilePromise =
+      MozPromise<Shmem, ResponseRejectReason, true>;
+
+  struct SingleProcessProfilePromiseAndChildPid {
+    RefPtr<SingleProcessProfilePromise> profilePromise;
+    base::ProcessId childPid;
+  };
+
+  using SingleProcessProgressPromise =
+      MozPromise<GatherProfileProgress, ResponseRejectReason, true>;
 
   // The following static methods can be called on any thread, but they are
   // no-ops on anything other than the main thread.
@@ -51,10 +59,17 @@ class ProfilerParent final : public PProfilerParent {
   // the ProfilerChild background thread, but those processes don't need to
   // forward these calls any further.
 
-  // Returns the number of profiles to expect. The gathered profiles will be
-  // provided asynchronously with a call to
-  // ProfileGatherer::ReceiveGatheredProfile.
-  static nsTArray<RefPtr<SingleProcessProfilePromise>> GatherProfiles();
+  // Returns the profiles to expect, as promises and child pids.
+  static nsTArray<SingleProcessProfilePromiseAndChildPid> GatherProfiles();
+
+  // Send a request to get the GatherProfiles() progress update from one child
+  // process, returns a promise to be resolved with that progress.
+  // The promise RefPtr may be null if the child process is unknown.
+  // Progress may be invalid, if the request arrived after the child process
+  // had already responded to the main GatherProfile() IPC, or something went
+  // very wrong in that process.
+  static RefPtr<SingleProcessProgressPromise> RequestGatherProfileProgress(
+      base::ProcessId aChildPid);
 
   static void ProfilerStarted(nsIProfilerStartParams* aParams);
   static void ProfilerWillStopIfStarted();

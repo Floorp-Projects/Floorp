@@ -55,7 +55,7 @@ NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<RemoteAccessible*>& aArray) {
 NSString* LocalizedString(const nsString& aString) {
   nsString text;
 
-  LocalAccessible::TranslateString(aString, text);
+  Accessible::TranslateString(aString, text);
 
   return text.IsEmpty() ? nil : nsCocoaUtils::ToNSString(text);
 }
@@ -64,6 +64,10 @@ NSString* GetAccAttr(mozAccessible* aNativeAccessible, nsAtom* aAttrName) {
   nsAutoString result;
   Accessible* acc = [aNativeAccessible geckoAccessible];
   RefPtr<AccAttributes> attributes = acc->Attributes();
+
+  if (!attributes) {
+    return nil;
+  }
 
   attributes->GetAttribute(aAttrName, result);
 

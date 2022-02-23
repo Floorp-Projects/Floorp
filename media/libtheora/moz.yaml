@@ -1,21 +1,90 @@
-# Version of this schema
 schema: 1
 
 bugzilla:
-  # Bugzilla product and component for this directory and subdirectories
-  product: "Core"
+  product: Core
   component: "Audio/Video: Playback"
 
-# The source from this directory was copied from the theora git master using
-# the update.sh script. The changes made were those applied by update.sh, the
-# addition/update of Makefile.in files for the Mozilla build system.
-
 origin:
-  name: "libtheora"
-  description: "Video compression format from Xiph"
+  name: theora
+  description: Video compression format from Xiph
+  url: https://www.theora.org/
 
-  url: "https://www.theora.org/"
-  license: "BSD-3-Clause-Clear"
+  release: commit 7180717276af1ebc7da15c83162d6c5d6203aabf (2020-10-27T09:17:42.000-07:00).
+  revision: 7180717276af1ebc7da15c83162d6c5d6203aabf
 
-  # update.sh will update this value
-  release: "74b57560775804bf248e3e5b4e57964112ccd7af (2010-10-29 04:21:26 +0000)"
+  license: BSD-3-Clause-Clear
+  license-file: COPYING
+
+updatebot:
+  maintainer-phab: bryce
+  maintainer-bz: bryce
+  tasks:
+    - type: vendoring
+      enabled: true
+      frequency: every
+
+vendoring:
+  url: https://gitlab.xiph.org/xiph/theora
+  source-hosting: gitlab
+
+  exclude:
+    - doc
+    - examples
+    - lib/c64x
+    - m4
+    - macosx
+    - symbian
+    - tests
+    - tools
+    - win32
+    - autogen.sh
+    - .gitignore
+    - .gitlab-ci.yml
+    - .travis.yml
+    - configure.ac
+    - SConstruct
+    - Makefile.*
+    - "*.in"
+    - include/theora/theoraenc.h
+    - lib/analyze.c
+    - lib/apiwrapper.c
+    - lib/apiwrapper.h
+    - lib/arm/armenc.c
+    - lib/arm/armenc.h
+    - lib/arm/armencfrag.s
+    - lib/arm/armenquant.s
+    - lib/collect.c
+    - lib/collect.h
+    - lib/decapiwrapper.c
+    - lib/encapiwrapper.c
+    - lib/encfrag.c
+    - lib/encinfo.c
+    - lib/encint.h
+    - lib/encode.c
+    - lib/encoder_disabled.c
+    - lib/enquant.c
+    - lib/enquant.h
+    - lib/fdct.c
+    - lib/huffenc.c
+    - lib/huffenc.h
+    - lib/mathops.c
+    - lib/mcenc.c
+    - lib/modedec.h
+    - lib/rate.c
+    - lib/tokenize.c
+    - lib/x86/mmxencfrag.c
+    - lib/x86/mmxfdct.c
+    - lib/x86/sse2encfrag.c
+    - lib/x86/sse2fdct.c
+    - lib/x86/x86enc.c
+    - lib/x86/x86enc.h
+    - lib/x86/x86enquant.c
+    - lib/x86/x86zigzag.h
+    - lib/x86_vc/mmxencfrag.c
+    - lib/x86_vc/mmxfdct.c
+    - lib/x86_vc/x86enc.c
+    - lib/x86_vc/x86enc.h
+    - lib/x86_vc/x86zigzag.h
+
+  keep:
+    - lib/config.h

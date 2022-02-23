@@ -50,9 +50,6 @@
 #include "mozilla/dom/WindowFeatures.h"  // WindowFeatures
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#if defined(MOZ_WIDGET_ANDROID)
-#  include "mozilla/dom/WindowOrientationObserver.h"
-#endif
 #include "nsBaseCommandController.h"
 #include "nsError.h"
 #include "nsICookieService.h"
@@ -228,7 +225,6 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "prrng.h"
 #include "nsSandboxFlags.h"
-#include "nsBaseCommandController.h"
 #include "nsXULControllers.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/BrowserElementDictionariesBinding.h"
@@ -245,7 +241,6 @@
 #include "mozilla/dom/WindowBinding.h"
 #include "nsIBrowserChild.h"
 #include "mozilla/dom/MediaQueryList.h"
-#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
@@ -691,9 +686,9 @@ bool nsOuterWindowProxy::getOwnPropertyDescriptor(
   }
 
   // Step 6 -- check for named subframes.
-  if (JSID_IS_STRING(id)) {
+  if (id.isString()) {
     nsAutoJSString name;
-    if (!name.init(cx, JSID_TO_STRING(id))) {
+    if (!name.init(cx, id.toString())) {
       return false;
     }
     nsGlobalWindowOuter* win = GetOuterWindow(proxy);
@@ -1083,7 +1078,7 @@ bool nsOuterWindowProxy::AppendIndexedPropertyNames(
     return false;
   }
   for (int32_t i = 0; i < int32_t(length); ++i) {
-    if (!props.append(INT_TO_JSID(i))) {
+    if (!props.append(JS::PropertyKey::Int(i))) {
       return false;
     }
   }
@@ -3733,34 +3728,19 @@ CSSIntPoint nsGlobalWindowOuter::GetScreenXY(CallerType aCallerType,
     return CSSIntPoint(0, 0);
   }
 
-  int32_t x = 0, y = 0;
-  aError = treeOwnerAsWin->GetPosition(&x, &y);  // LayoutDevice px values
+  LayoutDeviceIntPoint windowPos;
+  aError = treeOwnerAsWin->GetPosition(&windowPos.x, &windowPos.y);
 
   RefPtr<nsPresContext> presContext = mDocShell->GetPresContext();
   if (!presContext) {
-    return CSSIntPoint(x, y);
+    // XXX Fishy LayoutDevice to CSS conversion?
+    return CSSIntPoint(windowPos.x, windowPos.y);
   }
 
-  // Find the global desktop coordinate of the top-left of the screen.
-  // We'll use this as a "fake origin" when converting to CSS px units,
-  // to avoid overlapping coordinates in cases such as a hi-dpi screen
-  // placed to the right of a lo-dpi screen on Windows. (Instead, there
-  // may be "gaps" in the resulting CSS px coordinates in some cases.)
-  nsDeviceContext* dc = presContext->DeviceContext();
-  nsRect screenRect;
-  dc->GetRect(screenRect);
-  LayoutDeviceRect screenRectDev =
-      LayoutDevicePixel::FromAppUnits(screenRect, dc->AppUnitsPerDevPixel());
-
-  DesktopToLayoutDeviceScale scale = dc->GetDesktopToDeviceScale();
-  DesktopRect screenRectDesk = screenRectDev / scale;
-
-  CSSPoint cssPt = LayoutDevicePoint(x - screenRectDev.x, y - screenRectDev.y) /
-                   presContext->CSSToDevPixelScale();
-  cssPt.x += screenRectDesk.x;
-  cssPt.y += screenRectDesk.y;
-
-  return CSSIntPoint(NSToIntRound(cssPt.x), NSToIntRound(cssPt.y));
+  nsDeviceContext* context = presContext->DeviceContext();
+  auto windowPosAppUnits = LayoutDeviceIntPoint::ToAppUnits(
+      windowPos, context->AppUnitsPerDevPixel());
+  return CSSIntPoint::FromAppUnitsRounded(windowPosAppUnits);
 }
 
 int32_t nsGlobalWindowOuter::GetScreenXOuter(CallerType aCallerType,
@@ -3847,60 +3827,6 @@ float nsGlobalWindowOuter::GetMozInnerScreenYOuter(CallerType aCallerType) {
 
   nsRect r = GetInnerScreenRect();
   return nsPresContext::AppUnitsToFloatCSSPixels(r.y);
-}
-
-double nsGlobalWindowOuter::GetDevicePixelRatioOuter(CallerType aCallerType) {
-  if (NS_WARN_IF(!mDoc)) {
-    return 1.0;
-  }
-
-  RefPtr<nsPresContext> presContext = mDoc->GetPresContext();
-  if (NS_WARN_IF(!presContext)) {
-    // We're in an undisplayed subdocument... There's not really an awesome way
-    // to tell what the right DPI is from here, so we try to walk up our parent
-    // document chain to the extent that the docs can observe each other.
-    Document* doc = mDoc;
-    while (doc->StyleOrLayoutObservablyDependsOnParentDocumentLayout()) {
-      doc = doc->GetInProcessParentDocument();
-      presContext = doc->GetPresContext();
-      if (presContext) {
-        break;
-      }
-    }
-
-    if (!presContext) {
-      // Still nothing, oh well.
-      return 1.0;
-    }
-  }
-
-  if (nsContentUtils::ResistFingerprinting(aCallerType)) {
-    // Spoofing the DevicePixelRatio causes blurriness in some situations
-    // on HiDPI displays. pdf.js is a non-system caller; but it can't
-    // expose the fingerprintable information, so we can safely disable
-    // spoofing in this situation. It doesn't address the issue for
-    // web-rendered content (including pdf.js instances on the web.)
-    // In the future we hope to have a better solution to fix all HiDPI
-    // blurriness...
-    nsAutoCString origin;
-    nsresult rv = this->GetPrincipal()->GetOrigin(origin);
-    if (NS_FAILED(rv) || origin != "resource://pdf.js"_ns) {
-      return 1.0;
-    }
-  }
-
-  float overrideDPPX = presContext->GetOverrideDPPX();
-
-  if (overrideDPPX > 0) {
-    return overrideDPPX;
-  }
-
-  return double(AppUnitsPerCSSPixel()) /
-         double(presContext->AppUnitsPerDevPixel());
-}
-
-float nsPIDOMWindowOuter::GetDevicePixelRatio(CallerType aCallerType) {
-  return nsGlobalWindowOuter::Cast(this)->GetDevicePixelRatioOuter(aCallerType);
 }
 
 uint64_t nsGlobalWindowOuter::GetMozPaintCountOuter() {
@@ -4286,12 +4212,10 @@ class FullscreenTransitionTask : public Runnable {
  public:
   FullscreenTransitionTask(const FullscreenTransitionDuration& aDuration,
                            nsGlobalWindowOuter* aWindow, bool aFullscreen,
-                           nsIWidget* aWidget, nsIScreen* aScreen,
-                           nsISupports* aTransitionData)
+                           nsIWidget* aWidget, nsISupports* aTransitionData)
       : mozilla::Runnable("FullscreenTransitionTask"),
         mWindow(aWindow),
         mWidget(aWidget),
-        mScreen(aScreen),
         mTransitionData(aTransitionData),
         mDuration(aDuration),
         mStage(eBeforeToggle),
@@ -4357,7 +4281,6 @@ class FullscreenTransitionTask : public Runnable {
 
   RefPtr<nsGlobalWindowOuter> mWindow;
   nsCOMPtr<nsIWidget> mWidget;
-  nsCOMPtr<nsIScreen> mScreen;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsISupports> mTransitionData;
 
@@ -4399,7 +4322,7 @@ FullscreenTransitionTask::Run() {
     }
     // Toggle the fullscreen state on the widget
     if (!mWindow->SetWidgetFullscreen(FullscreenReason::ForFullscreenAPI,
-                                      mFullscreen, mWidget, mScreen)) {
+                                      mFullscreen, mWidget)) {
       // Fail to setup the widget, call FinishFullscreenChange to
       // complete fullscreen change directly.
       mWindow->FinishFullscreenChange(mFullscreen);
@@ -4496,15 +4419,13 @@ static bool MakeWidgetFullscreen(nsGlobalWindowOuter* aWindow,
           getter_AddRefs(transitionData));
     }
   }
-  // We pass nullptr as the screen to SetWidgetFullscreen
-  // and FullscreenTransitionTask, as we do not wish to override
-  // the default screen selection behavior.  The screen containing
-  // most of the widget will be selected.
+
   if (!performTransition) {
-    return aWindow->SetWidgetFullscreen(aReason, aFullscreen, widget, nullptr);
+    return aWindow->SetWidgetFullscreen(aReason, aFullscreen, widget);
   }
+
   nsCOMPtr<nsIRunnable> task = new FullscreenTransitionTask(
-      duration, aWindow, aFullscreen, widget, nullptr, transitionData);
+      duration, aWindow, aFullscreen, widget, transitionData);
   task->Run();
   return true;
 }
@@ -4621,8 +4542,7 @@ void nsGlobalWindowOuter::ForceFullScreenInWidget() {
 
 bool nsGlobalWindowOuter::SetWidgetFullscreen(FullscreenReason aReason,
                                               bool aIsFullscreen,
-                                              nsIWidget* aWidget,
-                                              nsIScreen* aScreen) {
+                                              nsIWidget* aWidget) {
   MOZ_ASSERT(this == GetInProcessTopInternal(),
              "Only topmost window should call this");
   MOZ_ASSERT(!GetFrameElementInternal(), "Content window should not call this");
@@ -4640,13 +4560,12 @@ bool nsGlobalWindowOuter::SetWidgetFullscreen(FullscreenReason aReason,
       }
     }
   }
-  nsresult rv =
-      aReason == FullscreenReason::ForFullscreenMode
-          ?
-          // If we enter fullscreen for fullscreen mode, we want
-          // the native system behavior.
-          aWidget->MakeFullScreenWithNativeTransition(aIsFullscreen, aScreen)
-          : aWidget->MakeFullScreen(aIsFullscreen, aScreen);
+  nsresult rv = aReason == FullscreenReason::ForFullscreenMode
+                    ?
+                    // If we enter fullscreen for fullscreen mode, we want
+                    // the native system behavior.
+                    aWidget->MakeFullScreenWithNativeTransition(aIsFullscreen)
+                    : aWidget->MakeFullScreen(aIsFullscreen);
   return NS_SUCCEEDED(rv);
 }
 
@@ -5201,12 +5120,6 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     return;
   }
 
-  bool print_tab_modal_enabled = true;
-  if (!print_tab_modal_enabled && ShouldPromptToBlockDialogs() &&
-      !ConfirmDialogIfNeeded()) {
-    return aError.ThrowNotAllowedError("Prompt was canceled by the user");
-  }
-
   // If we're loading, queue the print for later. This is a special-case that
   // only applies to the window.print() call, for compat with other engines and
   // pre-existing behavior.
@@ -5233,9 +5146,8 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     }
   });
 
-  const bool isPreview =
-      print_tab_modal_enabled && !StaticPrefs::print_always_print_silent();
-  Print(nullptr, nullptr, nullptr, IsPreview(isPreview),
+  const bool forPreview = !StaticPrefs::print_always_print_silent();
+  Print(nullptr, nullptr, nullptr, IsPreview(forPreview),
         IsForWindowDotPrint::Yes, nullptr, aError);
 #endif
 }
@@ -5293,9 +5205,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   nsCOMPtr<nsIContentViewer> cv;
   RefPtr<BrowsingContext> bc;
   bool hasPrintCallbacks = false;
-  bool print_tab_modal_enabled = true;
-  if (docToPrint->IsStaticDocument() &&
-      (aIsPreview == IsPreview::Yes || print_tab_modal_enabled)) {
+  if (docToPrint->IsStaticDocument()) {
     if (aForWindowDotPrint == IsForWindowDotPrint::Yes) {
       aError.ThrowNotSupportedError(
           "Calling print() from a print preview is unsupported, did you intend "
@@ -5466,42 +5376,21 @@ void nsGlobalWindowOuter::MoveToOuter(int32_t aXPos, int32_t aYPos,
     return;
   }
 
-  nsCOMPtr<nsIScreenManager> screenMgr =
-      do_GetService("@mozilla.org/gfx/screenmanager;1");
-  nsCOMPtr<nsIScreen> screen;
-  if (screenMgr) {
-    CSSSize size;
-    GetInnerSize(size);
-    screenMgr->ScreenForRect(aXPos, aYPos, std::round(size.width),
-                             std::round(size.height), getter_AddRefs(screen));
+  // We need to do the same transformation GetScreenXY does.
+  RefPtr<nsPresContext> presContext = mDocShell->GetPresContext();
+  if (!presContext) {
+    return;
   }
 
-  if (screen) {
-    // On secondary displays, the "CSS px" coordinates are offset so that they
-    // share their origin with global desktop pixels, to avoid ambiguities in
-    // the coordinate space when there are displays with different DPIs.
-    // (See the corresponding code in GetScreenXY() above.)
-    int32_t screenLeftDeskPx, screenTopDeskPx, w, h;
-    screen->GetRectDisplayPix(&screenLeftDeskPx, &screenTopDeskPx, &w, &h);
-    CSSIntPoint cssPos(aXPos - screenLeftDeskPx, aYPos - screenTopDeskPx);
-    CheckSecurityLeftAndTop(&cssPos.x, &cssPos.y, aCallerType);
+  CSSIntPoint cssPos(aXPos, aYPos);
+  CheckSecurityLeftAndTop(&cssPos.x, &cssPos.y, aCallerType);
 
-    double scale;
-    screen->GetDefaultCSSScaleFactor(&scale);
-    LayoutDevicePoint devPos = cssPos * CSSToLayoutDeviceScale(scale);
+  nsDeviceContext* context = presContext->DeviceContext();
 
-    screen->GetContentsScaleFactor(&scale);
-    DesktopPoint deskPos = devPos / DesktopToLayoutDeviceScale(scale);
-    aError = treeOwnerAsWin->SetPositionDesktopPix(screenLeftDeskPx + deskPos.x,
-                                                   screenTopDeskPx + deskPos.y);
-  } else {
-    // We couldn't find a screen? Just assume a 1:1 mapping.
-    CSSIntPoint cssPos(aXPos, aXPos);
-    CheckSecurityLeftAndTop(&cssPos.x, &cssPos.y, aCallerType);
-    LayoutDevicePoint devPos = cssPos * CSSToLayoutDeviceScale(1.0);
-    aError = treeOwnerAsWin->SetPosition(devPos.x, devPos.y);
-  }
+  auto devPos = LayoutDeviceIntPoint::FromAppUnitsRounded(
+      CSSIntPoint::ToAppUnits(cssPos), context->AppUnitsPerDevPixel());
 
+  aError = treeOwnerAsWin->SetPosition(devPos.x, devPos.y);
   CheckForDPIChange();
 }
 
@@ -7546,14 +7435,6 @@ ChromeMessageBroadcaster* nsGlobalWindowOuter::GetGroupMessageManager(
 }
 
 void nsGlobalWindowOuter::InitWasOffline() { mWasOffline = NS_IsOffline(); }
-
-#if defined(MOZ_WIDGET_ANDROID)
-int16_t nsGlobalWindowOuter::Orientation(CallerType aCallerType) const {
-  return nsContentUtils::ResistFingerprinting(aCallerType)
-             ? 0
-             : WindowOrientationObserver::OrientationAngle();
-}
-#endif
 
 #if defined(_WINDOWS_) && !defined(MOZ_WRAPPED_WINDOWS_H)
 #  pragma message( \

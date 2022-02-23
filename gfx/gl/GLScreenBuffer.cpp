@@ -30,7 +30,8 @@ UniquePtr<SwapChainPresenter> SwapChain::Acquire(const gfx::IntSize& size) {
   MOZ_ASSERT(mFactory);
 
   std::shared_ptr<SharedSurface> surf;
-  if (!mPool.empty() && mPool.front()->mDesc.size != size) {
+  if (!mPool.empty() &&
+      (mPool.front()->mDesc.size != size || !mPool.front()->IsValid())) {
     mPool = {};
   }
   if (kPoolSize && mPool.size() == kPoolSize) {

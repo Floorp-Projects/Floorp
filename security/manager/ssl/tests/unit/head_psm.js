@@ -129,6 +129,7 @@ const NO_FLAGS = 0;
 const CRLiteModeDisabledPrefValue = 0;
 const CRLiteModeTelemetryOnlyPrefValue = 1;
 const CRLiteModeEnforcePrefValue = 2;
+const CRLiteModeConfirmRevocationsValue = 3;
 
 // Convert a string to an array of bytes consisting of the char code at each
 // index.
@@ -176,6 +177,20 @@ function build_cert_chain(certNames, testDirectory = "bad_certs") {
   return certList;
 }
 
+function areCertsEqual(certA, certB) {
+  let derA = certA.getRawDER();
+  let derB = certB.getRawDER();
+  if (derA.length != derB.length) {
+    return false;
+  }
+  for (let i = 0; i < derA.length; i++) {
+    if (derA[i] != derB[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function areCertArraysEqual(certArrayA, certArrayB) {
   if (certArrayA.length != certArrayB.length) {
     return false;
@@ -184,7 +199,7 @@ function areCertArraysEqual(certArrayA, certArrayB) {
   for (let i = 0; i < certArrayA.length; i++) {
     const certA = certArrayA[i];
     const certB = certArrayB[i];
-    if (!certA.equals(certB)) {
+    if (!areCertsEqual(certA, certB)) {
       return false;
     }
   }
@@ -928,12 +943,7 @@ function add_cert_override(aHost, aExpectedBits, aSecurityInfo) {
 // expected error code, tests that an initial connection to the host fails
 // with the expected errors and that adding an override results in a subsequent
 // connection succeeding.
-function add_cert_override_test(
-  aHost,
-  aExpectedBits,
-  aExpectedError,
-  aExpectedSecInfo = undefined
-) {
+function add_cert_override_test(aHost, aExpectedBits, aExpectedError) {
   add_connection_test(
     aHost,
     aExpectedError,
@@ -946,13 +956,6 @@ function add_cert_override_test(
         Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN,
       "Cert override flag should be set on the security state"
     );
-    if (aExpectedSecInfo) {
-      if (aExpectedSecInfo.failedCertChain) {
-        ok(
-          aExpectedSecInfo.failedCertChain.equals(aSecurityInfo.failedCertChain)
-        );
-      }
-    }
   });
 }
 

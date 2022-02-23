@@ -122,6 +122,39 @@ add_task(async function test_current_setting_engine_properties() {
   await checkLoadSettingProperties("data/search.json", true, false);
 });
 
+add_task(async function test_settings_metadata_properties() {
+  info("init search service");
+  await loadSettingsFile("data/search.json");
+
+  const settingsFileWritten = promiseAfterSettings();
+  let ss = new SearchService();
+  let result = await ss.init();
+
+  info("init'd search service");
+  Assert.ok(Components.isSuccessCode(result));
+
+  await settingsFileWritten;
+
+  let metaDataProperties = [
+    "locale",
+    "region",
+    "channel",
+    "experiment",
+    "distroID",
+  ];
+
+  for (let name of metaDataProperties) {
+    Assert.notEqual(
+      ss._settings.getAttribute(`${name}`),
+      undefined,
+      `Search settings should have ${name} property defined.`
+    );
+  }
+
+  removeSettingsFile();
+  ss._removeObservers();
+});
+
 /**
  * Test that the JSON settings written in the profile is correct.
  */

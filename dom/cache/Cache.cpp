@@ -114,8 +114,8 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
     MOZ_DIAGNOSTIC_ASSERT(mPromise);
   }
 
-  virtual void ResolvedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override {
+  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override {
     NS_ASSERT_OWNINGTHREAD(FetchHandler);
 
     // Stop holding the worker alive when we leave this method.
@@ -190,8 +190,8 @@ class Cache::FetchHandler final : public PromiseNativeHandler {
     mPromise->MaybeResolve(put);
   }
 
-  virtual void RejectedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override {
+  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override {
     NS_ASSERT_OWNINGTHREAD(FetchHandler);
     Fail();
   }
@@ -388,6 +388,17 @@ already_AddRefed<Promise> Cache::Put(JSContext* aCx,
   }
 
   if (!IsValidPutResponseStatus(aResponse, PutStatusPolicy::Default, aRv)) {
+    return nullptr;
+  }
+
+  if (NS_WARN_IF(aResponse.GetPrincipalInfo() &&
+                 aResponse.GetPrincipalInfo()->type() ==
+                     mozilla::ipc::PrincipalInfo::TExpandedPrincipalInfo)) {
+    // WebExtensions Content Scripts can currently run fetch from their global
+    // which will end up to have an expanded principal, but we require that the
+    // contents of Cache storage for the content origin to be same-origin, and
+    // never an expanded principal (See Bug 1753810).
+    aRv.ThrowSecurityError("Disallowed on WebExtension ContentScript Request");
     return nullptr;
   }
 

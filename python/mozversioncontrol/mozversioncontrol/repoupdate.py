@@ -4,17 +4,26 @@
 
 from __future__ import absolute_import, unicode_literals
 
-import os
+from pathlib import Path
+from typing import Union
+
 import subprocess
 
 # The logic here is far from robust. Improvements are welcome.
 
 
 def update_mercurial_repo(
-    hg, repo, path, revision="default", hostfingerprints=None, global_args=None
+    hg: str,
+    repo,
+    path: Union[str, Path],
+    revision="default",
+    hostfingerprints=None,
+    global_args=None,
 ):
     """Ensure a HG repository exists at a path and is up to date."""
     hostfingerprints = hostfingerprints or {}
+
+    path = Path(path)
 
     args = [hg]
     if global_args:
@@ -23,19 +32,9 @@ def update_mercurial_repo(
     for host, fingerprint in sorted(hostfingerprints.items()):
         args.extend(["--config", "hostfingerprints.%s=%s" % (host, fingerprint)])
 
-    if os.path.exists(path):
-        subprocess.check_call(args + ["pull", repo], cwd=path)
+    if path.exists():
+        subprocess.check_call(args + ["pull", repo], cwd=str(path))
     else:
-        subprocess.check_call(args + ["clone", repo, path])
+        subprocess.check_call(args + ["clone", repo, str(path)])
 
-    subprocess.check_call([hg, "update", "-r", revision], cwd=path)
-
-
-def update_git_repo(git, repo, path, revision="origin/master"):
-    """Ensure a Git repository exists at a path and is up to date."""
-    if os.path.exists(path):
-        subprocess.check_call([git, "fetch", "--all"], cwd=path)
-    else:
-        subprocess.check_call([git, "clone", repo, path])
-
-    subprocess.check_call([git, "checkout", revision], cwd=path)
+    subprocess.check_call([hg, "update", "-r", revision], cwd=str(path))

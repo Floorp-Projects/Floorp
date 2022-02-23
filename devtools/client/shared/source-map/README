@@ -1,12 +1,10 @@
-devtools-source-map is maintained on GitHub at:
+THIS FOLDER ONLY CONTAINS GENERATED FILES, NEVER UPDATE MANUALLY!
 
-https://github.com/firefox-devtools/debugger.html/tree/master/packages/devtools-source-map
+The source files for the source-map shared helpers can be found under
 
-All the files in this folder are copied from the above repository and
-should not be modified here.
+  devtools/client/debugger/packages/devtools-source-map
 
-For any issue or feature request on devtools-source-map, please log an issue at:
+After modifying the sources in debugger/packages/devtools-source-map, regenerate
+the files in this folder by running:
 
-https://github.com/firefox-devtools/debugger.html/issues
-
-and label it with "devtools-source-map".
+  `yarn && node devtools/client/debugger/bin/bundle.js`

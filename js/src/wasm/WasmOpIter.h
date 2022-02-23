@@ -721,6 +721,9 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   // end of the function body.
   bool controlStackEmpty() const { return controlStack_.empty(); }
 
+  // Return the depth of the control stack.
+  size_t controlStackDepth() const { return controlStack_.length(); }
+
   // Find the innermost control item of a specific kind, starting to search from
   // a certain relative depth, and returning true if such innermost control item
   // is found. The relative depth of the found item is returned via a parameter.

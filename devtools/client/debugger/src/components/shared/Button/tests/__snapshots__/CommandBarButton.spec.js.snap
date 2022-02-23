@@ -7,4 +7,12 @@ exports[`CommandBarButton renders 1`] = `
 />
 `;
 
-exports[`debugBtn renders 1`] = `<debugBtn />`;
+exports[`debugBtn renders 1`] = `
+<button
+  aria-pressed={false}
+  className="command-bar-button"
+  disabled={false}
+>
+  <AccessibleImage />
+</button>
+`;

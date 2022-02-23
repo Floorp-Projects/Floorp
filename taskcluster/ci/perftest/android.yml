@@ -339,3 +339,35 @@ hw-p2-perfstats-fenix:
             --browsertime-iterations 10
             --hooks testing/performance/hooks_perfstats.py
             testing/performance/perftest_perfstats.js
+
+hw-p2-record-websites:
+    worker-type: t-bitbar-gw-perf-p2
+    description: Run perftest to record desktop websites
+    treeherder:
+        symbol: perftest(rec)
+    platform: android-hw-p2-8-0-android-aarch64-shippable/opt
+    require-build:
+        android-hw-p2-8-0-android-aarch64-shippable/opt: build-android-aarch64-shippable/opt
+    attributes:
+        cron: false
+    run-on-projects: []
+    scopes:
+        - secrets:get:project/releng/gecko/build/level-{level}/conditioned-profiles
+        - secrets:get:project/perftest/gecko/level-{level}/perftest-login
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $GECKO_PATH &&
+            python3 python/mozperftest/mozperftest/runner.py
+            --flavor mobile-browser
+            --android
+            --android-app-name org.mozilla.geckoview_example
+            --android-activity org.mozilla.geckoview_example.GeckoViewActivity
+            --android-clear-logcat
+            --android-capture-logcat logcat
+            --android-install-apk gve_nightly_aarch64
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
+            --proxy
+            --output $MOZ_FETCHES_DIR/../artifacts
+            --hooks testing/performance/hooks_recording.py
+            testing/performance/perftest_record.js

@@ -131,24 +131,24 @@ class nsAccUtils {
   /**
    * Converts the given coordinates to coordinates relative screen.
    *
-   * @param aX               [in] the given x coord
-   * @param aY               [in] the given y coord
+   * @param aX               [in] the given x coord in dev pixels
+   * @param aY               [in] the given y coord in dev pixels
    * @param aCoordinateType  [in] specifies coordinates origin (refer to
    *                         nsIAccessibleCoordinateType)
    * @param aAccessible      [in] the accessible if coordinates are given
    *                         relative it.
    * @return converted coordinates
    */
-  static nsIntPoint ConvertToScreenCoords(int32_t aX, int32_t aY,
-                                          uint32_t aCoordinateType,
-                                          LocalAccessible* aAccessible);
+  static LayoutDeviceIntPoint ConvertToScreenCoords(
+      int32_t aX, int32_t aY, uint32_t aCoordinateType,
+      LocalAccessible* aAccessible);
 
   /**
    * Converts the given coordinates relative screen to another coordinate
    * system.
    *
-   * @param aX               [in, out] the given x coord
-   * @param aY               [in, out] the given y coord
+   * @param aX               [in, out] the given x coord in dev pixels
+   * @param aY               [in, out] the given y coord in dev pixels
    * @param aCoordinateType  [in] specifies coordinates origin (refer to
    *                         nsIAccessibleCoordinateType)
    * @param aAccessible      [in] the accessible if coordinates are given
@@ -159,11 +159,13 @@ class nsAccUtils {
                                     LocalAccessible* aAccessible);
 
   /**
-   * Returns coordinates relative screen for the parent of the given accessible.
+   * Returns screen-relative coordinates (in dev pixels) for the parent of the
+   * given accessible.
    *
    * @param [in] aAccessible  the accessible
    */
-  static nsIntPoint GetScreenCoordsForParent(LocalAccessible* aAccessible);
+  static LayoutDeviceIntPoint GetScreenCoordsForParent(
+      LocalAccessible* aAccessible);
 
   /**
    * Get the 'live' or 'container-live' object attribute value from the given

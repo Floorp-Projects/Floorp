@@ -5,6 +5,8 @@
 #include "js/GlobalObject.h"
 #include "jsapi-tests/tests.h"
 
+using namespace js;
+
 static const unsigned BufSize = 20;
 static unsigned FinalizeCalls = 0;
 static JSFinalizeStatus StatusBuffer[BufSize];
@@ -23,10 +25,13 @@ BEGIN_TEST(testGCFinalizeCallback) {
   /* Full GC, incremental. */
   FinalizeCalls = 0;
   JS::PrepareForFullGC(cx);
-  JS::StartIncrementalGC(cx, JS::GCOptions::Normal, JS::GCReason::API, 1000000);
+  SliceBudget startBudget(TimeBudget(1000000));
+  JS::StartIncrementalGC(cx, JS::GCOptions::Normal, JS::GCReason::API,
+                         startBudget);
   while (cx->runtime()->gc.isIncrementalGCInProgress()) {
     JS::PrepareForFullGC(cx);
-    JS::IncrementalGCSlice(cx, JS::GCReason::API, 1000000);
+    SliceBudget budget(TimeBudget(1000000));
+    JS::IncrementalGCSlice(cx, JS::GCReason::API, budget);
   }
   CHECK(!cx->runtime()->gc.isIncrementalGCInProgress());
   CHECK(cx->runtime()->gc.isFullGc());
@@ -67,10 +72,12 @@ BEGIN_TEST(testGCFinalizeCallback) {
   /* Zone GC, incremental, single zone. */
   FinalizeCalls = 0;
   JS::PrepareZoneForGC(cx, global1->zone());
-  JS::StartIncrementalGC(cx, JS::GCOptions::Normal, JS::GCReason::API, 1000000);
+  SliceBudget budget(TimeBudget(1000000));
+  JS::StartIncrementalGC(cx, JS::GCOptions::Normal, JS::GCReason::API, budget);
   while (cx->runtime()->gc.isIncrementalGCInProgress()) {
     JS::PrepareZoneForGC(cx, global1->zone());
-    JS::IncrementalGCSlice(cx, JS::GCReason::API, 1000000);
+    budget = SliceBudget(TimeBudget(1000000));
+    JS::IncrementalGCSlice(cx, JS::GCReason::API, budget);
   }
   CHECK(!cx->runtime()->gc.isIncrementalGCInProgress());
   CHECK(!cx->runtime()->gc.isFullGc());
@@ -82,12 +89,14 @@ BEGIN_TEST(testGCFinalizeCallback) {
   JS::PrepareZoneForGC(cx, global1->zone());
   JS::PrepareZoneForGC(cx, global2->zone());
   JS::PrepareZoneForGC(cx, global3->zone());
-  JS::StartIncrementalGC(cx, JS::GCOptions::Normal, JS::GCReason::API, 1000000);
+  budget = SliceBudget(TimeBudget(1000000));
+  JS::StartIncrementalGC(cx, JS::GCOptions::Normal, JS::GCReason::API, budget);
   while (cx->runtime()->gc.isIncrementalGCInProgress()) {
     JS::PrepareZoneForGC(cx, global1->zone());
     JS::PrepareZoneForGC(cx, global2->zone());
     JS::PrepareZoneForGC(cx, global3->zone());
-    JS::IncrementalGCSlice(cx, JS::GCReason::API, 1000000);
+    budget = SliceBudget(TimeBudget(1000000));
+    JS::IncrementalGCSlice(cx, JS::GCReason::API, budget);
   }
   CHECK(!cx->runtime()->gc.isIncrementalGCInProgress());
   CHECK(!cx->runtime()->gc.isFullGc());
@@ -101,13 +110,13 @@ BEGIN_TEST(testGCFinalizeCallback) {
   FinalizeCalls = 0;
   JS_SetGCZeal(cx, 9, 1000000);
   JS::PrepareForFullGC(cx);
-  js::SliceBudget budget(js::WorkBudget(1));
+  budget = SliceBudget(WorkBudget(1));
   cx->runtime()->gc.startDebugGC(JS::GCOptions::Normal, budget);
-  CHECK(cx->runtime()->gc.state() == js::gc::State::Mark);
+  CHECK(cx->runtime()->gc.state() == gc::State::Mark);
   CHECK(cx->runtime()->gc.isFullGc());
 
   JS::RootedObject global4(cx, createTestGlobal());
-  budget = js::SliceBudget(js::WorkBudget(1));
+  budget = SliceBudget(WorkBudget(1));
   cx->runtime()->gc.debugGCSlice(budget);
   while (cx->runtime()->gc.isIncrementalGCInProgress()) {
     cx->runtime()->gc.debugGCSlice(budget);

@@ -2224,10 +2224,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
 #endif
   }
 
-  void loadWasmPinnedRegsFromTls() {
-    loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
-  }
-
   // Overwrites the payload bits of a dest register containing a Value.
   void movePayload(Register src, Register dest) {
     // Bfxil cannot be used with the zero register as a source.

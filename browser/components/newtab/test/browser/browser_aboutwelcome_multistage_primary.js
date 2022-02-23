@@ -9,6 +9,7 @@ const TEST_PROTON_CONTENT = [
     id: "AW_PIN_FIREFOX_STEP1",
     order: 0,
     content: {
+      position: "corner",
       title: "Step 1",
       primary_button: {
         label: "Pin Firefox",
@@ -16,6 +17,7 @@ const TEST_PROTON_CONTENT = [
           navigate: true,
         },
       },
+      has_noodles: true,
     },
   },
   {
@@ -35,6 +37,7 @@ const TEST_PROTON_CONTENT = [
           navigate: true,
         },
       },
+      has_noodles: true,
     },
   },
 ];

@@ -22,7 +22,7 @@ add_task(async function() {
   await selectNode("div", inspector);
   const prop = getTextProperty(ruleView, 1, { color: "red" });
 
-  let onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  let onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   info("Disable the first declaration");
   await togglePropStatus(ruleView, prop);
   info("Wait for change to be tracked");
@@ -35,7 +35,7 @@ add_task(async function() {
     "Only one declaration was tracked as removed"
   );
 
-  onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   info("Re-enable the first declaration");
   await togglePropStatus(ruleView, prop);
   info("Wait for change to be tracked");

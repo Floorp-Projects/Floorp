@@ -15,6 +15,9 @@ const { BrowserWindowTracker } = ChromeUtils.import(
 const { SpecialMessageActions } = ChromeUtils.import(
   "resource://messaging-system/lib/SpecialMessageActions.jsm"
 );
+const { RemoteImagesTestUtils } = ChromeUtils.import(
+  "resource://testing-common/RemoteImagesTestUtils.jsm"
+);
 
 function waitForDialog(callback = win => win.close()) {
   return BrowserTestUtils.promiseAlertDialog(
@@ -208,6 +211,43 @@ add_task(async function test_remoteL10n_content() {
     );
 
     // Dismiss
+    win.document.getElementById("secondary").click();
+  });
+});
+
+add_task(async function test_remote_images_logo() {
+  const imageInfo = RemoteImagesTestUtils.images.AboutRobots;
+  const cleanup = await RemoteImagesTestUtils.serveRemoteImages(imageInfo);
+
+  registerCleanupFunction(cleanup);
+
+  let message = await PanelTestProvider.getMessages().then(msgs =>
+    msgs.find(m => m.id === "SPOTLIGHT_MESSAGE_93")
+  );
+
+  message = {
+    ...message,
+    content: {
+      ...message.content,
+      logo: {
+        imageId: imageInfo.imageId,
+      },
+    },
+  };
+
+  const dispatchStub = sinon.stub();
+  const browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+
+  await showAndWaitForDialog({ message, browser, dispatchStub }, async win => {
+    await win.document.mozSubdialogReady;
+
+    const logo = win.document.querySelector(".logo");
+
+    ok(
+      logo.src.startsWith("blob:"),
+      "RemoteImages loaded a blob: URL in Spotlight"
+    );
+
     win.document.getElementById("secondary").click();
   });
 });

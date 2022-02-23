@@ -36,6 +36,7 @@ const rootSpecPrototype = {
 
     getTab: {
       request: {
+        browserId: Option(0, "number"),
         outerWindowID: Option(0, "number"),
         tabId: Option(0, "number"),
       },

@@ -1167,13 +1167,10 @@ var PanelMultiView = class extends AssociatedToNode {
     // incorrect value when the window spans multiple screens.
     let anchor = this._panel.anchorNode;
     let anchorRect = anchor.getBoundingClientRect();
+    let screen = anchor.screen;
 
-    let screen = this._screenManager.screenForRect(
-      anchor.screenX,
-      anchor.screenY,
-      anchorRect.width,
-      anchorRect.height
-    );
+    // GetAvailRect returns screen-device pixels, which we can convert to CSS
+    // pixels here.
     let availTop = {},
       availHeight = {};
     screen.GetAvailRect({}, availTop, {}, availHeight);
@@ -1614,7 +1611,6 @@ var PanelView = class extends AssociatedToNode {
         node.tagName == "toolbarbutton" ||
         node.tagName == "checkbox" ||
         node.classList.contains("text-link") ||
-        node.classList.contains("navigable") ||
         (!arrowKey && this._isNavigableWithTabOnly(node))
       ) {
         // Set the tabindex attribute to make sure the node is focusable.

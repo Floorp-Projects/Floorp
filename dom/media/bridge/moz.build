@@ -15,6 +15,7 @@ SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
+    "!/ipc/ipdl/_ipdlheaders",
     "/dom/media/webrtc/",
     "/dom/media/webrtc/common/time_profiling",
     "/dom/media/webrtc/jsapi",

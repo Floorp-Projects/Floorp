@@ -11,9 +11,9 @@
 #include "base/platform_thread.h"
 #include "nsTArray.h"
 #include "mozilla/hal_sandbox/PHal.h"
+#include "mozilla/HalScreenConfiguration.h"
 #include "mozilla/HalBatteryInformation.h"
 #include "mozilla/HalNetworkInformation.h"
-#include "mozilla/HalScreenConfiguration.h"
 #include "mozilla/HalWakeLockInformation.h"
 #include "mozilla/HalTypes.h"
 #include "mozilla/Types.h"
@@ -215,21 +215,6 @@ void GetWakeLockInfo(const nsAString& aTopic,
  * @param aWakeLockInfo The new wake lock information.
  */
 void NotifyWakeLockChange(const hal::WakeLockInformation& aWakeLockInfo);
-
-MOZ_DEFINE_HAL_OBSERVER(ScreenConfiguration);
-
-/**
- * Returns the current screen configuration.
- */
-void GetCurrentScreenConfiguration(
-    hal::ScreenConfiguration* aScreenConfiguration);
-
-/**
- * Notify of a change in the screen configuration.
- * @param aScreenConfiguration The new screen orientation.
- */
-void NotifyScreenConfigurationChange(
-    const hal::ScreenConfiguration& aScreenConfiguration);
 
 /**
  * Lock the screen orientation to the specific orientation.

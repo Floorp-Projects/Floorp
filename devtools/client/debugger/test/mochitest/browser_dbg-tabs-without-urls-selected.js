@@ -5,7 +5,7 @@
 // Test that URL-less sources have tabs and selecting that location does not
 // create a new tab for the same URL-less source
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "simple1", "simple2");
+  const dbg = await initDebugger("doc-scripts.html", "simple1.js", "simple2.js");
 
   // Create a URL-less source 
   invokeInTab("doEval");

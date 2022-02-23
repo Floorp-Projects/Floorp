@@ -118,12 +118,12 @@ exports.A11Y_SERVICE_DURATION =
 
 // URL constants
 exports.A11Y_LEARN_MORE_LINK =
-  "https://developer.mozilla.org/docs/Tools/Accessibility_inspector";
+  "https://firefox-source-docs.mozilla.org/devtools-user/accessibility_inspector/";
 exports.A11Y_CONTRAST_LEARN_MORE_LINK =
   "https://developer.mozilla.org/docs/Web/Accessibility/Understanding_WCAG/Perceivable/" +
   "Color_contrast?utm_source=devtools&utm_medium=a11y-panel-checks-color-contrast";
 exports.A11Y_SIMULATION_DOCUMENTATION_LINK =
-  "https://developer.mozilla.org/docs/Tools/Accessibility_inspector/Simulation";
+  "https://firefox-source-docs.mozilla.org/devtools-user/accessibility_inspector/simulation/";
 
 const A11Y_TEXT_LABEL_LINK_BASE =
   "https://developer.mozilla.org/docs/Web/Accessibility/Understanding_WCAG/Text_labels_and_names" +

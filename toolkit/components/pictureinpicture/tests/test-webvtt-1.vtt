@@ -1,0 +1,10 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:01.000
+track 1 - cue 1
+
+2
+00:00:02.000 --> 00:00:05.000
+- <b>track 1 - cue 2 bold</b>
+- <i>track 1 - cue 2 italicized<i>

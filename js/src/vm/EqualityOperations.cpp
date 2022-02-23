@@ -78,12 +78,11 @@ static bool EqualGivenSameType(JSContext* cx, JS::Handle<JS::Value> lval,
   }
 #endif
 
-  if (lval.isGCThing()) {  // objects or symbols
-    *equal = (lval.toGCThing() == rval.toGCThing());
-    return true;
-  }
+  // Note: we can do a bitwise comparison even for Int32Value because both
+  // Values have the same type.
+  MOZ_ASSERT(CanUseBitwiseCompareForStrictlyEqual(lval) || lval.isInt32());
 
-  *equal = lval.get().payloadAsRawUint32() == rval.get().payloadAsRawUint32();
+  *equal = (lval.asRawBits() == rval.asRawBits());
   MOZ_ASSERT_IF(lval.isUndefined() || lval.isNull(), *equal);
   return true;
 }
@@ -335,11 +334,8 @@ bool js::SameValueZeroLinear(const JS::Value& lval, const JS::Value& rval) {
     }
 
     default:
-      if (lval.isGCThing()) {  // objects or symbols
-        return lval.toGCThing() == rval.toGCThing();
-      }
-
-      return lval.payloadAsRawUint32() == rval.payloadAsRawUint32();
+      MOZ_ASSERT(CanUseBitwiseCompareForStrictlyEqual(lval));
+      return lval.asRawBits() == rval.asRawBits();
   }
 }
 #endif

@@ -205,6 +205,11 @@ ssl_FindServerCert(const sslSocket *ss, SSLAuthType authType,
 {
     PRCList *cursor;
 
+    /* Bug 1749475: avoid UB while fuzzing session tickets */
+    if ((unsigned)authType >= ssl_auth_size) {
+        return NULL;
+    }
+
     for (cursor = PR_NEXT_LINK(&ss->serverCerts);
          cursor != &ss->serverCerts;
          cursor = PR_NEXT_LINK(cursor)) {

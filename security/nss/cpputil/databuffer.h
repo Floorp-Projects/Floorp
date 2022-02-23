@@ -32,6 +32,15 @@ class DataBuffer {
     }
     return *this;
   }
+  DataBuffer& operator=(DataBuffer&& other) {
+    if (this == &other) {
+      data_ = other.data_;
+      len_ = other.len_;
+      other.data_ = nullptr;
+      other.len_ = 0;
+    }
+    return *this;
+  }
 
   void Allocate(size_t l) {
     delete[] data_;

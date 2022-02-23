@@ -40,7 +40,10 @@ else:
 
 _in_msys = False
 
-if os.environ.get("MSYSTEM", None) in ("MINGW32", "MINGW64"):
+if (
+    os.environ.get("MSYSTEM", None) in ("MINGW32", "MINGW64")
+    or "MOZILLABUILD" in os.environ
+):
     _in_msys = True
 
     if not _current_shell.lower().endswith(".exe"):

@@ -12,6 +12,7 @@ using class mozilla::net::WebSocketFrameData from "mozilla/net/WebSocketFrame.h"
 namespace mozilla {
 namespace net {
 
+[ManualDealloc]
 async protocol PWebSocketEventListener
 {
   manager PNecko;

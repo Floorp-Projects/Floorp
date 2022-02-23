@@ -57,8 +57,8 @@ static int mc_h_next(const int h) {
 
 static void check_mc(Dav1dMCDSPContext *const c) {
     ALIGN_STK_64(pixel, src_buf, 135 * 135,);
-    ALIGN_STK_64(pixel, c_dst,   128 * 128,);
-    ALIGN_STK_64(pixel, a_dst,   128 * 128,);
+    PIXEL_RECT(c_dst, 128, 128);
+    PIXEL_RECT(a_dst, 128, 128);
     const pixel *src = src_buf + 135 * 3 + 3;
     const ptrdiff_t src_stride = 135 * sizeof(pixel);
 
@@ -68,7 +68,6 @@ static void check_mc(Dav1dMCDSPContext *const c) {
 
     for (int filter = 0; filter < N_2D_FILTERS; filter++)
         for (int w = 2; w <= 128; w <<= 1) {
-            const ptrdiff_t dst_stride = w * sizeof(pixel);
             for (int mxy = 0; mxy < 4; mxy++)
                 if (check_func(c->mc[filter], "mc_%s_w%d_%s_%dbpc",
                     filter_names[filter], w, mxy_names[mxy], BITDEPTH))
@@ -87,18 +86,21 @@ static void check_mc(Dav1dMCDSPContext *const c) {
                         for (int i = 0; i < 135 * 135; i++)
                             src_buf[i] = rnd() & bitdepth_max;
 
-                        call_ref(c_dst, dst_stride, src, src_stride, w, h,
+                        CLEAR_PIXEL_RECT(c_dst);
+                        CLEAR_PIXEL_RECT(a_dst);
+
+                        call_ref(c_dst, c_dst_stride, src, src_stride, w, h,
                                  mx, my HIGHBD_TAIL_SUFFIX);
-                        call_new(a_dst, dst_stride, src, src_stride, w, h,
+                        call_new(a_dst, a_dst_stride, src, src_stride, w, h,
                                  mx, my HIGHBD_TAIL_SUFFIX);
-                        checkasm_check_pixel(c_dst, dst_stride,
-                                             a_dst, dst_stride,
-                                             w, h, "dst");
+                        checkasm_check_pixel_padded(c_dst, c_dst_stride,
+                                                    a_dst, a_dst_stride,
+                                                    w, h, "dst");
 
                         if (filter == FILTER_2D_8TAP_REGULAR ||
                             filter == FILTER_2D_BILINEAR)
                         {
-                            bench_new(a_dst, dst_stride, src, src_stride, w, h,
+                            bench_new(a_dst, a_dst_stride, src, src_stride, w, h,
                                       mx, my HIGHBD_TAIL_SUFFIX);
                         }
                     }
@@ -164,8 +166,8 @@ static void check_mct(Dav1dMCDSPContext *const c) {
 
 static void check_mc_scaled(Dav1dMCDSPContext *const c) {
     ALIGN_STK_64(pixel, src_buf, 263 * 263,);
-    ALIGN_STK_64(pixel, c_dst,   128 * 128,);
-    ALIGN_STK_64(pixel, a_dst,   128 * 128,);
+    PIXEL_RECT(c_dst, 128, 128);
+    PIXEL_RECT(a_dst, 128, 128);
     const pixel *src = src_buf + 263 * 3 + 3;
     const ptrdiff_t src_stride = 263 * sizeof(pixel);
 #if BITDEPTH == 16
@@ -180,7 +182,6 @@ static void check_mc_scaled(Dav1dMCDSPContext *const c) {
 
     for (int filter = 0; filter < N_2D_FILTERS; filter++)
         for (int w = 2; w <= 128; w <<= 1) {
-            const ptrdiff_t dst_stride = w * sizeof(pixel);
             for (int p = 0; p < 3; ++p) {
                 if (check_func(c->mc_scaled[filter], "mc_scaled_%s_w%d%s_%dbpc",
                                filter_names[filter], w, scaled_paths[p], BITDEPTH))
@@ -198,16 +199,20 @@ static void check_mc_scaled(Dav1dMCDSPContext *const c) {
                         for (int k = 0; k < 263 * 263; k++)
                             src_buf[k] = rnd() & bitdepth_max;
 
-                        call_ref(c_dst, dst_stride, src, src_stride,
+                        CLEAR_PIXEL_RECT(c_dst);
+                        CLEAR_PIXEL_RECT(a_dst);
+
+                        call_ref(c_dst, c_dst_stride, src, src_stride,
                                  w, h, mx, my, dx, dy HIGHBD_TAIL_SUFFIX);
-                        call_new(a_dst, dst_stride, src, src_stride,
+                        call_new(a_dst, a_dst_stride, src, src_stride,
                                  w, h, mx, my, dx, dy HIGHBD_TAIL_SUFFIX);
-                        checkasm_check_pixel(c_dst, dst_stride,
-                                             a_dst, dst_stride, w, h, "dst");
+                        checkasm_check_pixel_padded(c_dst, c_dst_stride,
+                                                    a_dst, a_dst_stride,
+                                                    w, h, "dst");
 
                         if (filter == FILTER_2D_8TAP_REGULAR ||
                             filter == FILTER_2D_BILINEAR)
-                            bench_new(a_dst, dst_stride, src, src_stride,
+                            bench_new(a_dst, a_dst_stride, src, src_stride,
                                       w, h, mx, my, dx, dy HIGHBD_TAIL_SUFFIX);
                     }
                 }
@@ -281,15 +286,14 @@ static void init_tmp(Dav1dMCDSPContext *const c, pixel *const buf,
 
 static void check_avg(Dav1dMCDSPContext *const c) {
     ALIGN_STK_64(int16_t, tmp, 2, [128 * 128]);
-    ALIGN_STK_64(pixel, c_dst, 135 * 135,);
-    ALIGN_STK_64(pixel, a_dst, 128 * 128,);
+    PIXEL_RECT(c_dst, 135, 135);
+    PIXEL_RECT(a_dst, 128, 128);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const int16_t *tmp1,
                  const int16_t *tmp2, int w, int h HIGHBD_DECL_SUFFIX);
 
     for (int w = 4; w <= 128; w <<= 1)
         if (check_func(c->avg, "avg_w%d_%dbpc", w, BITDEPTH)) {
-            ptrdiff_t dst_stride = w * sizeof(pixel);
             for (int h = imax(w / 4, 4); h <= imin(w * 4, 128); h <<= 1)
             {
 #if BITDEPTH == 16
@@ -299,12 +303,16 @@ static void check_avg(Dav1dMCDSPContext *const c) {
 #endif
 
                 init_tmp(c, c_dst, tmp, bitdepth_max);
-                call_ref(c_dst, dst_stride, tmp[0], tmp[1], w, h HIGHBD_TAIL_SUFFIX);
-                call_new(a_dst, dst_stride, tmp[0], tmp[1], w, h HIGHBD_TAIL_SUFFIX);
-                checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
-                                     w, h, "dst");
 
-                bench_new(a_dst, dst_stride, tmp[0], tmp[1], w, h HIGHBD_TAIL_SUFFIX);
+                CLEAR_PIXEL_RECT(c_dst);
+                CLEAR_PIXEL_RECT(a_dst);
+
+                call_ref(c_dst, c_dst_stride, tmp[0], tmp[1], w, h HIGHBD_TAIL_SUFFIX);
+                call_new(a_dst, a_dst_stride, tmp[0], tmp[1], w, h HIGHBD_TAIL_SUFFIX);
+                checkasm_check_pixel_padded(c_dst, c_dst_stride, a_dst, a_dst_stride,
+                                            w, h, "dst");
+
+                bench_new(a_dst, a_dst_stride, tmp[0], tmp[1], w, h HIGHBD_TAIL_SUFFIX);
             }
         }
     report("avg");
@@ -312,15 +320,14 @@ static void check_avg(Dav1dMCDSPContext *const c) {
 
 static void check_w_avg(Dav1dMCDSPContext *const c) {
     ALIGN_STK_64(int16_t, tmp, 2, [128 * 128]);
-    ALIGN_STK_64(pixel, c_dst, 135 * 135,);
-    ALIGN_STK_64(pixel, a_dst, 128 * 128,);
+    PIXEL_RECT(c_dst, 135, 135);
+    PIXEL_RECT(a_dst, 128, 128);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const int16_t *tmp1,
                  const int16_t *tmp2, int w, int h, int weight HIGHBD_DECL_SUFFIX);
 
     for (int w = 4; w <= 128; w <<= 1)
         if (check_func(c->w_avg, "w_avg_w%d_%dbpc", w, BITDEPTH)) {
-            ptrdiff_t dst_stride = w * sizeof(pixel);
             for (int h = imax(w / 4, 4); h <= imin(w * 4, 128); h <<= 1)
             {
                 int weight = rnd() % 15 + 1;
@@ -331,12 +338,15 @@ static void check_w_avg(Dav1dMCDSPContext *const c) {
 #endif
                 init_tmp(c, c_dst, tmp, bitdepth_max);
 
-                call_ref(c_dst, dst_stride, tmp[0], tmp[1], w, h, weight HIGHBD_TAIL_SUFFIX);
-                call_new(a_dst, dst_stride, tmp[0], tmp[1], w, h, weight HIGHBD_TAIL_SUFFIX);
-                checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
-                                     w, h, "dst");
+                CLEAR_PIXEL_RECT(c_dst);
+                CLEAR_PIXEL_RECT(a_dst);
 
-                bench_new(a_dst, dst_stride, tmp[0], tmp[1], w, h, weight HIGHBD_TAIL_SUFFIX);
+                call_ref(c_dst, c_dst_stride, tmp[0], tmp[1], w, h, weight HIGHBD_TAIL_SUFFIX);
+                call_new(a_dst, a_dst_stride, tmp[0], tmp[1], w, h, weight HIGHBD_TAIL_SUFFIX);
+                checkasm_check_pixel_padded(c_dst, c_dst_stride,a_dst, a_dst_stride,
+                                            w, h, "dst");
+
+                bench_new(a_dst, a_dst_stride, tmp[0], tmp[1], w, h, weight HIGHBD_TAIL_SUFFIX);
             }
         }
     report("w_avg");
@@ -344,8 +354,8 @@ static void check_w_avg(Dav1dMCDSPContext *const c) {
 
 static void check_mask(Dav1dMCDSPContext *const c) {
     ALIGN_STK_64(int16_t, tmp, 2, [128 * 128]);
-    ALIGN_STK_64(pixel,   c_dst, 135 * 135,);
-    ALIGN_STK_64(pixel,   a_dst, 128 * 128,);
+    PIXEL_RECT(c_dst, 135, 135);
+    PIXEL_RECT(a_dst, 128, 128);
     ALIGN_STK_64(uint8_t, mask,  128 * 128,);
 
     for (int i = 0; i < 128 * 128; i++)
@@ -357,7 +367,6 @@ static void check_mask(Dav1dMCDSPContext *const c) {
 
     for (int w = 4; w <= 128; w <<= 1)
         if (check_func(c->mask, "mask_w%d_%dbpc", w, BITDEPTH)) {
-            ptrdiff_t dst_stride = w * sizeof(pixel);
             for (int h = imax(w / 4, 4); h <= imin(w * 4, 128); h <<= 1)
             {
 #if BITDEPTH == 16
@@ -366,12 +375,16 @@ static void check_mask(Dav1dMCDSPContext *const c) {
                 const int bitdepth_max = 0xff;
 #endif
                 init_tmp(c, c_dst, tmp, bitdepth_max);
-                call_ref(c_dst, dst_stride, tmp[0], tmp[1], w, h, mask HIGHBD_TAIL_SUFFIX);
-                call_new(a_dst, dst_stride, tmp[0], tmp[1], w, h, mask HIGHBD_TAIL_SUFFIX);
-                checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
-                                     w, h, "dst");
 
-                bench_new(a_dst, dst_stride, tmp[0], tmp[1], w, h, mask HIGHBD_TAIL_SUFFIX);
+                CLEAR_PIXEL_RECT(c_dst);
+                CLEAR_PIXEL_RECT(a_dst);
+
+                call_ref(c_dst, c_dst_stride, tmp[0], tmp[1], w, h, mask HIGHBD_TAIL_SUFFIX);
+                call_new(a_dst, a_dst_stride, tmp[0], tmp[1], w, h, mask HIGHBD_TAIL_SUFFIX);
+                checkasm_check_pixel_padded(c_dst, c_dst_stride, a_dst, a_dst_stride,
+                                            w, h, "dst");
+
+                bench_new(a_dst, a_dst_stride, tmp[0], tmp[1], w, h, mask HIGHBD_TAIL_SUFFIX);
             }
         }
     report("mask");
@@ -379,8 +392,8 @@ static void check_mask(Dav1dMCDSPContext *const c) {
 
 static void check_w_mask(Dav1dMCDSPContext *const c) {
     ALIGN_STK_64(int16_t, tmp, 2, [128 * 128]);
-    ALIGN_STK_64(pixel,   c_dst,  135 * 135,);
-    ALIGN_STK_64(pixel,   a_dst,  128 * 128,);
+    PIXEL_RECT(c_dst, 135, 135);
+    PIXEL_RECT(a_dst, 128, 128);
     ALIGN_STK_64(uint8_t, c_mask, 128 * 128,);
     ALIGN_STK_64(uint8_t, a_mask, 128 * 128,);
 
@@ -397,7 +410,6 @@ static void check_w_mask(Dav1dMCDSPContext *const c) {
             if (check_func(c->w_mask[i], "w_mask_%d_w%d_%dbpc", ss[i], w,
                            BITDEPTH))
             {
-                ptrdiff_t dst_stride = w * sizeof(pixel);
                 for (int h = imax(w / 4, 4); h <= imin(w * 4, 128); h <<= 1)
                 {
                     int sign = rnd() & 1;
@@ -408,19 +420,22 @@ static void check_w_mask(Dav1dMCDSPContext *const c) {
 #endif
                     init_tmp(c, c_dst, tmp, bitdepth_max);
 
-                    call_ref(c_dst, dst_stride, tmp[0], tmp[1], w, h,
+                    CLEAR_PIXEL_RECT(c_dst);
+                    CLEAR_PIXEL_RECT(a_dst);
+
+                    call_ref(c_dst, c_dst_stride, tmp[0], tmp[1], w, h,
                              c_mask, sign HIGHBD_TAIL_SUFFIX);
-                    call_new(a_dst, dst_stride, tmp[0], tmp[1], w, h,
+                    call_new(a_dst, a_dst_stride, tmp[0], tmp[1], w, h,
                              a_mask, sign HIGHBD_TAIL_SUFFIX);
-                    checkasm_check_pixel(c_dst, dst_stride,
-                                         a_dst, dst_stride,
-                                         w, h, "dst");
+                    checkasm_check_pixel_padded(c_dst, c_dst_stride,
+                                                a_dst, a_dst_stride,
+                                                w, h, "dst");
                     checkasm_check(uint8_t, c_mask, w >> ss_hor[i],
                                             a_mask, w >> ss_hor[i],
                                             w >> ss_hor[i], h >> ss_ver[i],
                                             "mask");
 
-                    bench_new(a_dst, dst_stride, tmp[0], tmp[1], w, h,
+                    bench_new(a_dst, a_dst_stride, tmp[0], tmp[1], w, h,
                               a_mask, sign HIGHBD_TAIL_SUFFIX);
                 }
             }
@@ -429,15 +444,14 @@ static void check_w_mask(Dav1dMCDSPContext *const c) {
 
 static void check_blend(Dav1dMCDSPContext *const c) {
     ALIGN_STK_64(pixel, tmp, 32 * 32,);
-    ALIGN_STK_64(pixel, c_dst, 32 * 32,);
-    ALIGN_STK_64(pixel, a_dst, 32 * 32,);
+    PIXEL_RECT(c_dst, 32, 32);
+    PIXEL_RECT(a_dst, 32, 32);
     ALIGN_STK_64(uint8_t, mask, 32 * 32,);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const pixel *tmp,
                  int w, int h, const uint8_t *mask);
 
     for (int w = 4; w <= 32; w <<= 1) {
-        const ptrdiff_t dst_stride = w * sizeof(pixel);
         if (check_func(c->blend, "blend_w%d_%dbpc", w, BITDEPTH))
             for (int h = imax(w / 2, 4); h <= imin(w * 2, 32); h <<= 1) {
 #if BITDEPTH == 16
@@ -449,15 +463,21 @@ static void check_blend(Dav1dMCDSPContext *const c) {
                     tmp[i] = rnd() & bitdepth_max;
                     mask[i] = rnd() % 65;
                 }
-                for (int i = 0; i < w * h; i++)
-                    c_dst[i] = a_dst[i] = rnd() & bitdepth_max;
 
-                call_ref(c_dst, dst_stride, tmp, w, h, mask);
-                call_new(a_dst, dst_stride, tmp, w, h, mask);
-                checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
-                                     w, h, "dst");
+                CLEAR_PIXEL_RECT(c_dst);
+                CLEAR_PIXEL_RECT(a_dst);
 
-                bench_new(a_dst, dst_stride, tmp, w, h, mask);
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                        c_dst[y*PXSTRIDE(c_dst_stride) + x] =
+                        a_dst[y*PXSTRIDE(a_dst_stride) + x] = rnd() & bitdepth_max;
+
+                call_ref(c_dst, c_dst_stride, tmp, w, h, mask);
+                call_new(a_dst, a_dst_stride, tmp, w, h, mask);
+                checkasm_check_pixel_padded(c_dst, c_dst_stride, a_dst, a_dst_stride,
+                                            w, h, "dst");
+
+                bench_new(a_dst, a_dst_stride, tmp, w, h, mask);
             }
     }
     report("blend");
@@ -465,14 +485,13 @@ static void check_blend(Dav1dMCDSPContext *const c) {
 
 static void check_blend_v(Dav1dMCDSPContext *const c) {
     ALIGN_STK_64(pixel, tmp,   32 * 128,);
-    ALIGN_STK_64(pixel, c_dst, 32 * 128,);
-    ALIGN_STK_64(pixel, a_dst, 32 * 128,);
+    PIXEL_RECT(c_dst, 32, 128);
+    PIXEL_RECT(a_dst, 32, 128);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const pixel *tmp,
                  int w, int h);
 
     for (int w = 2; w <= 32; w <<= 1) {
-        const ptrdiff_t dst_stride = w * sizeof(pixel);
         if (check_func(c->blend_v, "blend_v_w%d_%dbpc", w, BITDEPTH))
             for (int h = 2; h <= (w == 2 ? 64 : 128); h <<= 1) {
 #if BITDEPTH == 16
@@ -481,17 +500,23 @@ static void check_blend_v(Dav1dMCDSPContext *const c) {
                 const int bitdepth_max = 0xff;
 #endif
 
-                for (int i = 0; i < w * h; i++)
-                    c_dst[i] = a_dst[i] = rnd() & bitdepth_max;
+                CLEAR_PIXEL_RECT(c_dst);
+                CLEAR_PIXEL_RECT(a_dst);
+
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                        c_dst[y*PXSTRIDE(c_dst_stride) + x] =
+                        a_dst[y*PXSTRIDE(a_dst_stride) + x] = rnd() & bitdepth_max;
+
                 for (int i = 0; i < 32 * 128; i++)
                     tmp[i] = rnd() & bitdepth_max;
 
-                call_ref(c_dst, dst_stride, tmp, w, h);
-                call_new(a_dst, dst_stride, tmp, w, h);
-                checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
-                                     w, h, "dst");
+                call_ref(c_dst, c_dst_stride, tmp, w, h);
+                call_new(a_dst, a_dst_stride, tmp, w, h);
+                checkasm_check_pixel_padded(c_dst, c_dst_stride, a_dst, a_dst_stride,
+                                            w, h, "dst");
 
-                bench_new(a_dst, dst_stride, tmp, w, h);
+                bench_new(a_dst, a_dst_stride, tmp, w, h);
             }
     }
     report("blend_v");
@@ -499,14 +524,13 @@ static void check_blend_v(Dav1dMCDSPContext *const c) {
 
 static void check_blend_h(Dav1dMCDSPContext *const c) {
     ALIGN_STK_64(pixel, tmp,   128 * 32,);
-    ALIGN_STK_64(pixel, c_dst, 128 * 32,);
-    ALIGN_STK_64(pixel, a_dst, 128 * 32,);
+    PIXEL_RECT(c_dst, 128, 32);
+    PIXEL_RECT(a_dst, 128, 32);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const pixel *tmp,
                  int w, int h);
 
     for (int w = 2; w <= 128; w <<= 1) {
-        const ptrdiff_t dst_stride = w * sizeof(pixel);
         if (check_func(c->blend_h, "blend_h_w%d_%dbpc", w, BITDEPTH))
             for (int h = (w == 128 ? 4 : 2); h <= 32; h <<= 1) {
 #if BITDEPTH == 16
@@ -514,17 +538,23 @@ static void check_blend_h(Dav1dMCDSPContext *const c) {
 #else
                 const int bitdepth_max = 0xff;
 #endif
-                for (int i = 0; i < w * h; i++)
-                    c_dst[i] = a_dst[i] = rnd() & bitdepth_max;
+                CLEAR_PIXEL_RECT(c_dst);
+                CLEAR_PIXEL_RECT(a_dst);
+
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                        c_dst[y*PXSTRIDE(c_dst_stride) + x] =
+                        a_dst[y*PXSTRIDE(a_dst_stride) + x] = rnd() & bitdepth_max;
+
                 for (int i = 0; i < 128 * 32; i++)
                     tmp[i] = rnd() & bitdepth_max;
 
-                call_ref(c_dst, dst_stride, tmp, w, h);
-                call_new(a_dst, dst_stride, tmp, w, h);
-                checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
-                                     w, h, "dst");
+                call_ref(c_dst, c_dst_stride, tmp, w, h);
+                call_new(a_dst, a_dst_stride, tmp, w, h);
+                checkasm_check_pixel_padded(c_dst, c_dst_stride, a_dst, a_dst_stride,
+                                            w, h, "dst");
 
-                bench_new(a_dst, dst_stride, tmp, w, h);
+                bench_new(a_dst, a_dst_stride, tmp, w, h);
             }
     }
     report("blend_h");
@@ -532,11 +562,10 @@ static void check_blend_h(Dav1dMCDSPContext *const c) {
 
 static void check_warp8x8(Dav1dMCDSPContext *const c) {
     ALIGN_STK_64(pixel, src_buf, 15 * 15,);
-    ALIGN_STK_64(pixel, c_dst,    8 *  8,);
-    ALIGN_STK_64(pixel, a_dst,    8 *  8,);
+    PIXEL_RECT(c_dst, 8, 8);
+    PIXEL_RECT(a_dst, 8, 8);
     int16_t abcd[4];
     const pixel *src = src_buf + 15 * 3 + 3;
-    const ptrdiff_t dst_stride =  8 * sizeof(pixel);
     const ptrdiff_t src_stride = 15 * sizeof(pixel);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const pixel *src,
@@ -558,12 +587,15 @@ static void check_warp8x8(Dav1dMCDSPContext *const c) {
         for (int i = 0; i < 15 * 15; i++)
             src_buf[i] = rnd() & bitdepth_max;
 
-        call_ref(c_dst, dst_stride, src, src_stride, abcd, mx, my HIGHBD_TAIL_SUFFIX);
-        call_new(a_dst, dst_stride, src, src_stride, abcd, mx, my HIGHBD_TAIL_SUFFIX);
-        checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
-                             8, 8, "dst");
+        CLEAR_PIXEL_RECT(c_dst);
+        CLEAR_PIXEL_RECT(a_dst);
 
-        bench_new(a_dst, dst_stride, src, src_stride, abcd, mx, my HIGHBD_TAIL_SUFFIX);
+        call_ref(c_dst, c_dst_stride, src, src_stride, abcd, mx, my HIGHBD_TAIL_SUFFIX);
+        call_new(a_dst, a_dst_stride, src, src_stride, abcd, mx, my HIGHBD_TAIL_SUFFIX);
+        checkasm_check_pixel_padded(c_dst, c_dst_stride, a_dst, a_dst_stride,
+                                    8, 8, "dst");
+
+        bench_new(a_dst, a_dst_stride, src, src_stride, abcd, mx, my HIGHBD_TAIL_SUFFIX);
     }
     report("warp8x8");
 }
@@ -687,13 +719,12 @@ static int get_upscale_x0(const int in_w, const int out_w, const int step) {
 }
 
 static void check_resize(Dav1dMCDSPContext *const c) {
-    ALIGN_STK_64(pixel, c_dst, 1024 * 64,);
-    ALIGN_STK_64(pixel, a_dst, 1024 * 64,);
-    ALIGN_STK_64(pixel, src,   512 * 64,);
+    PIXEL_RECT(c_dst, 1024, 64);
+    PIXEL_RECT(a_dst, 1024, 64);
+    ALIGN_STK_64(pixel, src, 512 * 64,);
 
     const int height = 64;
     const int max_src_width = 512;
-    const ptrdiff_t dst_stride = 1024 * sizeof(pixel);
     const ptrdiff_t src_stride = 512 * sizeof(pixel);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride,
@@ -720,14 +751,17 @@ static void check_resize(Dav1dMCDSPContext *const c) {
 #undef scale_fac
         const int mx0 = get_upscale_x0(src_w, dst_w, dx);
 
-        call_ref(c_dst, dst_stride, src, src_stride,
-                 dst_w, height, src_w, dx, mx0 HIGHBD_TAIL_SUFFIX);
-        call_new(a_dst, dst_stride, src, src_stride,
-                 dst_w, height, src_w, dx, mx0 HIGHBD_TAIL_SUFFIX);
-        checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
-                             dst_w, height, "dst");
+        CLEAR_PIXEL_RECT(c_dst);
+        CLEAR_PIXEL_RECT(a_dst);
 
-        bench_new(a_dst, dst_stride, src, src_stride,
+        call_ref(c_dst, c_dst_stride, src, src_stride,
+                 dst_w, height, src_w, dx, mx0 HIGHBD_TAIL_SUFFIX);
+        call_new(a_dst, a_dst_stride, src, src_stride,
+                 dst_w, height, src_w, dx, mx0 HIGHBD_TAIL_SUFFIX);
+        checkasm_check_pixel_padded_align(c_dst, c_dst_stride, a_dst, a_dst_stride,
+                                          dst_w, height, "dst", 16, 1);
+
+        bench_new(a_dst, a_dst_stride, src, src_stride,
                   512, height, 512 * 8 / w_den, dx, mx0 HIGHBD_TAIL_SUFFIX);
     }
 

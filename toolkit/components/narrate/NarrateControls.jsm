@@ -35,7 +35,7 @@ function NarrateControls(win, languagePromise) {
 
   let elemL10nMap = {
     ".narrate-skip-previous": "back",
-    ".narrate-start-stop": "start",
+    ".narrate-start-stop": "start-label",
     ".narrate-skip-next": "forward",
     ".narrate-rate-input": "speed",
   };
@@ -86,6 +86,12 @@ function NarrateControls(win, languagePromise) {
   narrateStartStop.className = "narrate-start-stop";
   narrateControl.appendChild(narrateStartStop);
 
+  win.document.addEventListener("keydown", function(event) {
+    if (win.document.hasFocus() && event.key === "n") {
+      narrateStartStop.click();
+    }
+  });
+
   let narrateSkipNext = win.document.createElement("button");
   narrateSkipNext.className = "narrate-skip-next";
   narrateSkipNext.disabled = true;
@@ -101,9 +107,16 @@ function NarrateControls(win, languagePromise) {
   narrateRate.appendChild(narrateRateInput);
 
   for (let [selector, stringID] of Object.entries(elemL10nMap)) {
-    dropdown
-      .querySelector(selector)
-      .setAttribute("title", gStrings.GetStringFromName(stringID));
+    if (selector === ".narrate-start-stop") {
+      let shortcut = gStrings.GetStringFromName("narrate-key-shortcut");
+      let label = gStrings.formatStringFromName(stringID, [shortcut]);
+
+      dropdown.querySelector(selector).setAttribute("title", label);
+    } else {
+      dropdown
+        .querySelector(selector)
+        .setAttribute("title", gStrings.GetStringFromName(stringID));
+    }
   }
 
   this.narrator = new Narrator(win, languagePromise);
@@ -195,6 +208,11 @@ NarrateControls.prototype = {
       let initial = !this._voicesInitialized;
       this._voicesInitialized = true;
 
+      // if language is null, re-assign it to "unknown-language"
+      if (language == null) {
+        language = "unknown-language";
+      }
+
       if (initial) {
         histogram.add(language, 0);
       }
@@ -272,8 +290,11 @@ NarrateControls.prototype = {
     dropdown.classList.toggle("speaking", speaking);
 
     let startStopButton = this._doc.querySelector(".narrate-start-stop");
-    startStopButton.title = gStrings.GetStringFromName(
-      speaking ? "stop" : "start"
+    let shortcutId = gStrings.GetStringFromName("narrate-key-shortcut");
+
+    startStopButton.title = gStrings.formatStringFromName(
+      speaking ? "stop-label" : "start-label",
+      [shortcutId]
     );
 
     this._doc.querySelector(".narrate-skip-previous").disabled = !speaking;

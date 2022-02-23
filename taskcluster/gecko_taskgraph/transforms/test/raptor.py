@@ -17,6 +17,7 @@ from gecko_taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, S
 from gecko_taskgraph.util.treeherder import split_symbol, join_symbol
 
 transforms = TransformSequence()
+task_transforms = TransformSequence()
 
 raptor_description_schema = Schema(
     {
@@ -297,3 +298,13 @@ def add_extra_options(config, tests):
         extra_options.append("--project={}".format(config.params.get("project")))
 
         yield test
+
+
+@task_transforms.add
+def add_scopes_and_proxy(config, tasks):
+    for task in tasks:
+        task.setdefault("worker", {})["taskcluster-proxy"] = True
+        task.setdefault("scopes", []).append(
+            "secrets:get:project/perftest/gecko/level-{level}/perftest-login"
+        )
+        yield task

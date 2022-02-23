@@ -320,6 +320,10 @@ nsObserverService::UnmarkGrayStrongObservers() {
   return NS_OK;
 }
 
+bool nsObserverService::HasObservers(const char* aTopic) {
+  return mObserverTopicTable.Contains(aTopic);
+}
+
 namespace {
 
 class NotifyWhenScriptSafeRunnable : public mozilla::Runnable {
@@ -337,7 +341,7 @@ class NotifyWhenScriptSafeRunnable : public mozilla::Runnable {
     }
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     const char16_t* data = mData.IsVoid() ? nullptr : mData.get();
     return mObs->NotifyObservers(mSubject, mTopic.get(), data);
   }

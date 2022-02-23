@@ -341,7 +341,7 @@ void gecko_profiler_add_marker(
     markerOptions.Set(mozilla::MarkerThreadId::CurrentThread());
   }
 
-  auto& buffer = profiler_markers_detail::CachedCoreBuffer();
+  auto& buffer = profiler_get_core_buffer();
   mozilla::Span payload(aPayload, aPayloadSize);
 
   mozilla::StackCaptureOptions captureOptions =

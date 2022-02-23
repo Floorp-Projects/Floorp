@@ -71,7 +71,7 @@ impl RttEstimate {
 
     pub fn update(
         &mut self,
-        mut qlog: &mut NeqoQlog,
+        qlog: &mut NeqoQlog,
         mut rtt_sample: Duration,
         ack_delay: Duration,
         confirmed: bool,
@@ -114,7 +114,7 @@ impl RttEstimate {
             self.rttvar
         );
         qlog::metrics_updated(
-            &mut qlog,
+            qlog,
             &[
                 QlogMetric::LatestRtt(self.latest_rtt),
                 QlogMetric::MinRtt(self.min_rtt),

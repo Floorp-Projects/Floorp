@@ -144,8 +144,8 @@ popupnotification {
 }
 
 .panel-footer > button:focus-visible {
-  outline: var(--focus-outline, 1px dotted);
-  outline-offset: var(--focus-outline-offset, -2px);
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
 }
 
 .panel-footer > button:not([disabled]):hover {
@@ -159,7 +159,6 @@ popupnotification {
 .panel-footer > button:not([disabled])[default] {
   color: var(--button-primary-color);
   background-color: var(--button-primary-bgcolor);
-  --focus-outline-color: var(--button-primary-bgcolor);
 }
 
 .panel-footer > button:not([disabled])[default]:hover {

@@ -112,12 +112,10 @@ const PUBLIC_KEY_PINS_LEARN_MORE =
   "https://developer.mozilla.org/docs/Web/HTTP/Public_Key_Pinning";
 const STRICT_TRANSPORT_SECURITY_LEARN_MORE =
   "https://developer.mozilla.org/docs/Web/HTTP/Headers/Strict-Transport-Security";
-const WEAK_SIGNATURE_ALGORITHM_LEARN_MORE =
-  "https://developer.mozilla.org/docs/Web/Security/Weak_Signature_Algorithm";
 const MIME_TYPE_MISMATCH_LEARN_MORE =
   "https://developer.mozilla.org/docs/Web/HTTP/Headers/X-Content-Type-Options";
 const SOURCE_MAP_LEARN_MORE =
-  "https://developer.mozilla.org/en-US/docs/Tools/Debugger/Source_map_errors";
+  "https://firefox-source-docs.mozilla.org/devtools-user/debugger/source_map_errors/";
 const TLS_LEARN_MORE =
   "https://blog.mozilla.org/security/2018/10/15/removing-old-versions-of-tls/";
 const X_FRAME_OPTIONS_LEARN_MORE =
@@ -134,7 +132,6 @@ const ErrorCategories = {
   "Mixed Content Blocker": MIXED_CONTENT_LEARN_MORE,
   "Invalid HPKP Headers": PUBLIC_KEY_PINS_LEARN_MORE,
   "Invalid HSTS Headers": STRICT_TRANSPORT_SECURITY_LEARN_MORE,
-  "SHA-1 Signature": WEAK_SIGNATURE_ALGORITHM_LEARN_MORE,
   "Tracking Protection": TRACKING_PROTECTION_LEARN_MORE,
   MIMEMISMATCH: MIME_TYPE_MISMATCH_LEARN_MORE,
   "source map": SOURCE_MAP_LEARN_MORE,

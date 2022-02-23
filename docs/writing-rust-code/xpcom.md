@@ -21,7 +21,7 @@ xpcom = { path = "../../../xpcom/rust/xpcom" }
 file hierarchy.)
 
 Next hook it into the build system according to the [build
-documentation](../build/buildsystem/rust.html).
+documentation](/build/buildsystem/rust.rst).
 
 The Rust code will need to import some basic types. `xpcom::interfaces`
 contains all the usual `nsI` interfaces.
@@ -33,7 +33,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use xpcom::{interfaces::nsISupports, RefPtr};
 ```
 
-The next part declares the implementation. 
+The next part declares the implementation.
 
 ```rust
 #[derive(xpcom)]
@@ -110,11 +110,11 @@ The following XPCOM components are written in Rust.
 - [bookmark_sync](https://searchfox.org/mozilla-central/source/toolkit/components/places/bookmark_sync),
   which [merges](https://mozilla.github.io/dogear) bookmarks from Firefox Sync
   with bookmarks in the Places database.
-  [There's also some docs on how Rust interacts with Sync](../services/sync/rust-engines.html)
+  [There's also some docs on how Rust interacts with Sync](/services/sync/rust-engines.rst)
 - [webext_storage_bridge](https://searchfox.org/mozilla-central/source/toolkit/components/extensions/storage/webext_storage_bridge),
   which powers the WebExtension storage.sync API. It's a self-contained example
   that pulls in a crate from application-services for the heavy lifting, wraps
   that up in a Rust XPCOM component, and then wraps the component in a JS
   interface. There's also some boilerplate there around adding a
   `components.conf` file, and a dummy C++ header that declares the component
-  constructor. [It has some in-depth documentation on how it hangs together](../toolkit/components/extensions/webextensions/webext-storage.html).
+  constructor. [It has some in-depth documentation on how it hangs together](../toolkit/components/extensions/webextensions/webext-storage.rst).

@@ -88,7 +88,7 @@ LoginManagerCrypto_SDR.prototype = {
       if (e.result == Cr.NS_ERROR_FAILURE) {
         canceledMP = true;
         throw Components.Exception(
-          "User canceled master password entry",
+          "User canceled primary password entry",
           Cr.NS_ERROR_ABORT
         );
       } else {
@@ -99,7 +99,7 @@ LoginManagerCrypto_SDR.prototype = {
       }
     } finally {
       this._uiBusy = false;
-      // If we triggered a master password prompt, notify observers.
+      // If we triggered a primary password prompt, notify observers.
       if (!wasLoggedIn && this.isLoggedIn) {
         this._notifyObservers("passwordmgr-crypto-login");
       } else if (canceledMP) {
@@ -140,7 +140,7 @@ LoginManagerCrypto_SDR.prototype = {
       if (e.result == Cr.NS_ERROR_FAILURE) {
         canceledMP = true;
         throw Components.Exception(
-          "User canceled master password entry",
+          "User canceled primary password entry",
           Cr.NS_ERROR_ABORT
         );
       } else {
@@ -151,7 +151,7 @@ LoginManagerCrypto_SDR.prototype = {
       }
     } finally {
       this._uiBusy = false;
-      // If we triggered a master password prompt, notify observers.
+      // If we triggered a primary password prompt, notify observers.
       if (!wasLoggedIn && this.isLoggedIn) {
         this._notifyObservers("passwordmgr-crypto-login");
       } else if (canceledMP) {
@@ -193,7 +193,7 @@ LoginManagerCrypto_SDR.prototype = {
       if (e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
         canceledMP = true;
         throw Components.Exception(
-          "User canceled master password entry",
+          "User canceled primary password entry",
           Cr.NS_ERROR_ABORT
         );
       } else {
@@ -204,7 +204,7 @@ LoginManagerCrypto_SDR.prototype = {
       }
     } finally {
       this._uiBusy = false;
-      // If we triggered a master password prompt, notify observers.
+      // If we triggered a primary password prompt, notify observers.
       if (!wasLoggedIn && this.isLoggedIn) {
         this._notifyObservers("passwordmgr-crypto-login");
       } else if (canceledMP) {
@@ -249,7 +249,7 @@ LoginManagerCrypto_SDR.prototype = {
       if (e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
         canceledMP = true;
         throw Components.Exception(
-          "User canceled master password entry",
+          "User canceled primary password entry",
           Cr.NS_ERROR_ABORT
         );
       } else {
@@ -260,7 +260,7 @@ LoginManagerCrypto_SDR.prototype = {
       }
     } finally {
       this._uiBusy = false;
-      // If we triggered a master password prompt, notify observers.
+      // If we triggered a primary password prompt, notify observers.
       if (!wasLoggedIn && this.isLoggedIn) {
         this._notifyObservers("passwordmgr-crypto-login");
       } else if (canceledMP) {
@@ -299,7 +299,7 @@ LoginManagerCrypto_SDR.prototype = {
    * _notifyObservers
    */
   _notifyObservers(topic) {
-    this.log("Prompted for a master password, notifying for " + topic);
+    this.log("Prompted for a primary password, notifying for " + topic);
     Services.obs.notifyObservers(null, topic);
   },
 }; // end of nsLoginManagerCrypto_SDR implementation

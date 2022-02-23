@@ -92,7 +92,6 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite, bool inbound,
       const_cast<unsigned char*>(static_cast<const unsigned char*>(key));
   policy.ssrc.type = inbound ? ssrc_any_inbound : ssrc_any_outbound;
   policy.ssrc.value = 0;
-  policy.ekt = nullptr;
   policy.window_size =
       1024;  // Use the Chrome value.  Needs to be revisited.  Default is 128
   policy.allow_repeat_tx = 1;  // Use Chrome value; needed for NACK mode to work

@@ -21,16 +21,17 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   [
+    "getShadowRootMode",
     "isAfterPseudoElement",
     "isAnonymous",
     "isBeforePseudoElement",
     "isDirectShadowHostChild",
+    "isFrameBlockedByCSP",
+    "isFrameWithChildTarget",
     "isMarkerPseudoElement",
     "isNativeAnonymous",
     "isShadowHost",
     "isShadowRoot",
-    "getShadowRootMode",
-    "isFrameWithChildTarget",
   ],
   "devtools/shared/layout/utils",
   true
@@ -95,6 +96,9 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     this.walker = walker;
     this.rawNode = node;
     this._eventCollector = new EventCollector(this.walker.targetActor);
+    // Map<id -> nsIEventListenerInfo> that we maintain to be able to disable/re-enable event listeners
+    // The id is generated from getEventListenerInfo
+    this._nsIEventListenersInfo = new Map();
 
     // Store the original display type and scrollable state and whether or not the node is
     // displayed to track changes when reflows occur.
@@ -159,6 +163,22 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       this._waitForFrameLoadIntervalId = null;
     }
 
+    if (this._nsIEventListenersInfo) {
+      // Re-enable all event listeners that we might have disabled
+      for (const nsIEventListenerInfo of this._nsIEventListenersInfo.values()) {
+        // If event listeners/node don't exist anymore, accessing nsIEventListenerInfo.enabled
+        // will throw.
+        try {
+          if (!nsIEventListenerInfo.enabled) {
+            nsIEventListenerInfo.enabled = true;
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      this._nsIEventListenersInfo = null;
+    }
+
     this._eventCollector.destroy();
     this._eventCollector = null;
     this.rawNode = null;
@@ -220,6 +240,10 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
     if (this.isDocumentElement()) {
       form.isDocumentElement = true;
+    }
+
+    if (isFrameBlockedByCSP(this.rawNode)) {
+      form.numChildren = 0;
     }
 
     // Flag the node if a different walker is needed to retrieve its children (i.e. if
@@ -560,7 +584,56 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * Get all event listeners that are listening on this node.
    */
   getEventListenerInfo: function() {
-    return this._eventCollector.getEventListeners(this.rawNode);
+    this._nsIEventListenersInfo.clear();
+
+    const eventListenersData = this._eventCollector.getEventListeners(
+      this.rawNode
+    );
+    let counter = 0;
+    for (const eventListenerData of eventListenersData) {
+      if (eventListenerData.nsIEventListenerInfo) {
+        const id = `event-listener-info-${++counter}`;
+        this._nsIEventListenersInfo.set(
+          id,
+          eventListenerData.nsIEventListenerInfo
+        );
+
+        eventListenerData.eventListenerInfoId = id;
+        // remove the nsIEventListenerInfo since we don't want to send it to the client.
+        delete eventListenerData.nsIEventListenerInfo;
+      }
+    }
+    return eventListenersData;
+  },
+
+  /**
+   * Disable a specific event listener given its associated id
+   *
+   * @param {String} eventListenerInfoId
+   */
+  disableEventListener: function(eventListenerInfoId) {
+    const nsEventListenerInfo = this._nsIEventListenersInfo.get(
+      eventListenerInfoId
+    );
+    if (!nsEventListenerInfo) {
+      throw new Error("Unkown nsEventListenerInfo");
+    }
+    nsEventListenerInfo.enabled = false;
+  },
+
+  /**
+   * (Re-)enable a specific event listener given its associated id
+   *
+   * @param {String} eventListenerInfoId
+   */
+  enableEventListener: function(eventListenerInfoId) {
+    const nsEventListenerInfo = this._nsIEventListenersInfo.get(
+      eventListenerInfoId
+    );
+    if (!nsEventListenerInfo) {
+      throw new Error("Unkown nsEventListenerInfo");
+    }
+    nsEventListenerInfo.enabled = true;
   },
 
   /**

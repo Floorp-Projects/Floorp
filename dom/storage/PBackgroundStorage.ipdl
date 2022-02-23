@@ -17,6 +17,7 @@ namespace dom {
 /* This protocol bridges async access to the database thread running on the
  * parent process and caches running on the child process.
  */
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PBackgroundStorage
 {
   manager PBackground;

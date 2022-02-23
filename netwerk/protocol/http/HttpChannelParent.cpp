@@ -1036,6 +1036,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   MOZ_ASSERT(NS_IsMainThread());
 
   Maybe<uint32_t> multiPartID;
+  bool isFirstPartOfMultiPart = false;
   bool isLastPartOfMultiPart = false;
   DebugOnly<bool> isMultiPart = false;
 
@@ -1051,6 +1052,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
       uint32_t partID = 0;
       multiPartChannel->GetPartID(&partID);
       multiPartID = Some(partID);
+      multiPartChannel->GetIsFirstPart(&isFirstPartOfMultiPart);
       multiPartChannel->GetIsLastPart(&isLastPartOfMultiPart);
     } else if (nsCOMPtr<nsIViewSourceChannel> viewSourceChannel =
                    do_QueryInterface(aRequest)) {
@@ -1088,6 +1090,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   }
 
   args.multiPartID() = multiPartID;
+  args.isFirstPartOfMultiPart() = isFirstPartOfMultiPart;
   args.isLastPartOfMultiPart() = isLastPartOfMultiPart;
 
   args.cacheExpirationTime() = nsICacheEntry::NO_EXPIRATION_TIME;

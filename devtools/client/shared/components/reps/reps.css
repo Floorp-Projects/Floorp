@@ -37,6 +37,10 @@
   white-space: pre-wrap;
 }
 
+.objectBox * {
+  unicode-bidi: isolate;
+}
+
 .objectBox-number,
 .objectBox-styleRule,
 .objectBox-element,

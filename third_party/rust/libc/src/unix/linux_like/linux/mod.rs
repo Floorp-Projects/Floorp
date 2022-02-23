@@ -2583,6 +2583,7 @@ pub const MAP_SHARED_VALIDATE: ::c_int = 0x3;
 
 // include/uapi/asm-generic/mman-common.h
 pub const MAP_FIXED_NOREPLACE: ::c_int = 0x100000;
+pub const MLOCK_ONFAULT: ::c_uint = 0x01;
 
 // uapi/linux/vm_sockets.h
 pub const VMADDR_CID_ANY: ::c_uint = 0xFFFFFFFF;
@@ -3533,6 +3534,7 @@ extern "C" {
     pub fn seekdir(dirp: *mut ::DIR, loc: ::c_long);
 
     pub fn telldir(dirp: *mut ::DIR) -> ::c_long;
+    pub fn mlock2(addr: *const ::c_void, len: ::size_t, flags: ::c_uint) -> ::c_int;
     pub fn madvise(addr: *mut ::c_void, len: ::size_t, advice: ::c_int) -> ::c_int;
 
     pub fn msync(addr: *mut ::c_void, len: ::size_t, flags: ::c_int) -> ::c_int;

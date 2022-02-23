@@ -1040,24 +1040,6 @@ class Assembler : public AssemblerX86Shared {
   CodeOffset loadRipRelativeFloat32x4(FloatRegister dest) {
     return CodeOffset(masm.vmovaps_ripr(dest.encoding()).offset());
   }
-  CodeOffset storeRipRelativeInt32(Register dest) {
-    return CodeOffset(masm.movl_rrip(dest.encoding()).offset());
-  }
-  CodeOffset storeRipRelativeInt64(Register dest) {
-    return CodeOffset(masm.movq_rrip(dest.encoding()).offset());
-  }
-  CodeOffset storeRipRelativeDouble(FloatRegister dest) {
-    return CodeOffset(masm.vmovsd_rrip(dest.encoding()).offset());
-  }
-  CodeOffset storeRipRelativeFloat32(FloatRegister dest) {
-    return CodeOffset(masm.vmovss_rrip(dest.encoding()).offset());
-  }
-  CodeOffset storeRipRelativeInt32x4(FloatRegister dest) {
-    return CodeOffset(masm.vmovdqa_rrip(dest.encoding()).offset());
-  }
-  CodeOffset storeRipRelativeFloat32x4(FloatRegister dest) {
-    return CodeOffset(masm.vmovaps_rrip(dest.encoding()).offset());
-  }
   CodeOffset leaRipRelative(Register dest) {
     return CodeOffset(masm.leaq_rip(dest.encoding()).offset());
   }

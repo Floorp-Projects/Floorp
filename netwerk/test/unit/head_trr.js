@@ -81,7 +81,7 @@ function trr_clear_prefs() {
   Services.prefs.clearUserPref("network.trr.useGET");
   Services.prefs.clearUserPref("network.trr.confirmationNS");
   Services.prefs.clearUserPref("network.trr.bootstrapAddr");
-  Services.prefs.clearUserPref("network.trr.blacklist-duration");
+  Services.prefs.clearUserPref("network.trr.temp_blocklist_duration_sec");
   Services.prefs.clearUserPref("network.trr.request_timeout_ms");
   Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
   Services.prefs.clearUserPref("network.trr.disable-ECS");

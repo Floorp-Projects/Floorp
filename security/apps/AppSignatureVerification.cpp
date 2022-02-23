@@ -1322,28 +1322,18 @@ nsresult OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   if (aSignerCert) {
     // The COSE certificate is authoritative.
     if (aPolicy.COSERequired() || !coseCertDER.IsEmpty()) {
-      if (coseCertDER.IsEmpty() ||
-          coseCertDER.Length() > std::numeric_limits<int>::max()) {
+      if (coseCertDER.IsEmpty()) {
         return NS_ERROR_FAILURE;
       }
-      nsCOMPtr<nsIX509Cert> signerCert(nsNSSCertificate::ConstructFromDER(
-          reinterpret_cast<char*>(coseCertDER.Elements()),
-          coseCertDER.Length()));
-      if (!signerCert) {
-        return NS_ERROR_FAILURE;
-      }
+      nsCOMPtr<nsIX509Cert> signerCert(
+          new nsNSSCertificate(std::move(coseCertDER)));
       signerCert.forget(aSignerCert);
     } else {
-      if (pkcs7CertDER.IsEmpty() ||
-          pkcs7CertDER.Length() > std::numeric_limits<int>::max()) {
+      if (pkcs7CertDER.IsEmpty()) {
         return NS_ERROR_FAILURE;
       }
-      nsCOMPtr<nsIX509Cert> signerCert(nsNSSCertificate::ConstructFromDER(
-          reinterpret_cast<char*>(pkcs7CertDER.Elements()),
-          pkcs7CertDER.Length()));
-      if (!signerCert) {
-        return NS_ERROR_FAILURE;
-      }
+      nsCOMPtr<nsIX509Cert> signerCert(
+          new nsNSSCertificate(std::move(pkcs7CertDER)));
       signerCert.forget(aSignerCert);
     }
   }

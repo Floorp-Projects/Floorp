@@ -106,7 +106,10 @@ static BOOL sNeedToUnwindForMenuClosing = NO;
     mPendingOpening = nil;
 
     @try {
-      [self _openMenu:info.menu atScreenPosition:info.position forView:info.view withAppearance:info.appearance];
+      [self _openMenu:info.menu
+          atScreenPosition:info.position
+                   forView:info.view
+            withAppearance:info.appearance];
     } @catch (NSException* exception) {
       nsObjCExceptionLog(exception);
     }
@@ -142,7 +145,10 @@ static BOOL sNeedToUnwindForMenuClosing = NO;
   }
 }
 
-- (void)_openMenu:(NSMenu*)aMenu atScreenPosition:(NSPoint)aPosition forView:(NSView*)aView withAppearance:(NSAppearance*)aAppearance {
+- (void)_openMenu:(NSMenu*)aMenu
+    atScreenPosition:(NSPoint)aPosition
+             forView:(NSView*)aView
+      withAppearance:(NSAppearance*)aAppearance {
   // There are multiple ways to display an NSMenu as a context menu.
   //
   //  1. We can return the NSMenu from -[ChildView menuForEvent:] and the NSView will open it for

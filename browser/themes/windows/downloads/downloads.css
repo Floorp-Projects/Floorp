@@ -14,7 +14,7 @@
   outline-offset: -5px;
 }
 
-@notKeyfocus@ #downloadsSummary:focus-visible {
+#downloadsPanel:not([keyfocus]) #downloadsSummary:focus-visible {
   outline: none;
 }
 
@@ -27,13 +27,13 @@
   --downloads-item-disabled-opacity: 0.6;
 }
 
-@notKeyfocus@ .downloadButton:-moz-focusring {
+#downloadsPanel:not([keyfocus]) .downloadButton:focus-visible {
   outline: none;
 }
 
 /*** Highlighted list items ***/
 
-@keyfocus@ @itemFocused@ {
+#downloadsPanel[keyfocus] #downloadsListBox:focus > richlistitem[selected] {
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
 }

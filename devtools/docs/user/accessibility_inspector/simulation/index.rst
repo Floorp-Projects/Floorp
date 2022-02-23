@@ -87,4 +87,3 @@ See also
 - `Color universal design <https://jfly.uni-koeln.de/color/>`_
 - `WCAG success criterion 1.4.1: Use of color <https://www.w3.org/TR/WCAG21/#use-of-color>`_
 - `WCAG success criterion 1.4.11: Non-text contrast <https://www.w3.org/TR/WCAG21/#non-text-contrast>`_
-

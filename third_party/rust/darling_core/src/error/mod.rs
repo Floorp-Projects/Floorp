@@ -26,6 +26,34 @@ pub type Result<T> = ::std::result::Result<T, Error>;
 ///
 /// Given that most errors darling encounters represent code bugs in dependent crates,
 /// the internal structure of the error is deliberately opaque.
+///
+/// # Usage
+/// Proc-macro expansion happens very infrequently compared to runtime tasks such as
+/// deserialization, and it happens in the context of an expensive compilation taks.
+/// For that reason, darling prefers not to fail on the first error it encounters, instead
+/// doing as much work as it can, accumulating errors into a single report.
+///
+/// As a result, `darling::Error` is more of guaranteed-non-empty error collection
+/// than a single problem. These errors also have some notion of hierarchy, stemming from
+/// the hierarchical nature of darling's input.
+///
+/// These characteristics make for great experiences when using darling-powered crates,
+/// provided crates using darling adhere to some best practices:
+///
+/// 1. Do not attempt to simplify a `darling::Error` into some other error type, such as
+///    `syn::Error`. To surface compile errors, instead use `darling::Error::write_errors`.
+///    This preserves all span information, suggestions, etc. Wrapping a `darling::Error` in
+///    a custom error enum works as-expected and does not force any loss of fidelity.
+/// 2. Do not use early return (e.g. the `?` operator) for custom validations. Instead,
+///    create a local `Vec` to collect errors as they are encountered and then use
+///    `darling::Error::multiple` to create an error containing all those issues if the list
+///    is non-empty after validation. This can create very complex custom validation functions;
+///    in those cases, split independent "validation chains" out into their own functions to
+///    keep the main validator manageable.
+/// 3. Use `darling::Error::custom` to create additional errors as-needed, then call `with_span`
+///    to ensure those errors appear in the right place. Use `darling::util::SpannedValue` to keep
+///    span information around on parsed fields so that custom diagnostics can point to the correct
+///    parts of the input AST.
 #[derive(Debug)]
 #[cfg_attr(test, derive(Clone))]
 pub struct Error {
@@ -37,12 +65,16 @@ pub struct Error {
 
 /// Transform a syn::Path to a readable String
 fn path_to_string(path: &syn::Path) -> String {
-    path.segments.iter().map(|s| s.ident.to_string()).collect::<Vec<String>>().join("::")
+    path.segments
+        .iter()
+        .map(|s| s.ident.to_string())
+        .collect::<Vec<String>>()
+        .join("::")
 }
 
 /// Error creation functions
 impl Error {
-    pub(in error) fn new(kind: ErrorKind) -> Self {
+    pub(in crate::error) fn new(kind: ErrorKind) -> Self {
         Error {
             kind,
             locations: Vec::new(),
@@ -172,14 +204,12 @@ impl Error {
     /// # Panics
     /// This function will panic if `errors.is_empty() == true`.
     pub fn multiple(mut errors: Vec<Error>) -> Self {
-        if errors.len() > 1 {
-            Error::new(ErrorKind::Multiple(errors))
-        } else if errors.len() == 1 {
-            errors
+        match errors.len() {
+            1 => errors
                 .pop()
-                .expect("Error array of length 1 has a first item")
-        } else {
-            panic!("Can't deal with 0 errors")
+                .expect("Error array of length 1 has a first item"),
+            0 => panic!("Can't deal with 0 errors"),
+            _ => Error::new(ErrorKind::Multiple(errors)),
         }
     }
 }
@@ -194,6 +224,7 @@ impl Error {
 }
 
 /// Error instance methods
+#[allow(clippy::len_without_is_empty)] // Error can never be empty
 impl Error {
     /// Check if this error is associated with a span in the token stream.
     pub fn has_span(&self) -> bool {
@@ -327,7 +358,7 @@ impl Error {
         // If span information is available, don't include the error property path
         // since it's redundant and not consistent with native compiler diagnostics.
         match self.kind {
-            ErrorKind::UnknownField(euf) => euf.to_diagnostic(self.span),
+            ErrorKind::UnknownField(euf) => euf.into_diagnostic(self.span),
             _ => match self.span {
                 Some(span) => span.unwrap().error(self.kind.to_string()),
                 None => Diagnostic::new(Level::Error, self.to_string()),
@@ -376,10 +407,10 @@ impl Error {
 
 impl StdError for Error {
     fn description(&self) -> &str {
-        &self.kind.description()
+        self.kind.description()
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         None
     }
 }
@@ -392,6 +423,19 @@ impl fmt::Display for Error {
         }
 
         Ok(())
+    }
+}
+
+impl From<syn::Error> for Error {
+    fn from(e: syn::Error) -> Self {
+        // This impl assumes there is nothing but the message and span that needs to be preserved
+        // from the passed-in error. If this changes at some point, a new ErrorKind should be made
+        // to hold the syn::Error, and this impl should preserve it unmodified while setting its own
+        // span to be a copy of the passed-in error.
+        Self {
+            span: Some(e.span()),
+            ..Self::custom(e)
+        }
     }
 }
 

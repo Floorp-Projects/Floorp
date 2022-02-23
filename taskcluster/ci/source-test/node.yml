@@ -33,6 +33,37 @@ newtab-unit-tests:
         files-changed:
             - "browser/components/newtab/**"
 
+newtab-unit-tests-ccov:
+    description: newtab unit tests code coverage
+    platform: linux1804-64/opt
+    treeherder:
+        symbol: node(newtab-ccov)
+        kind: test
+        tier: 1
+    worker-type: t-linux-xlarge-source
+    worker:
+        docker-image: {in-tree: "ubuntu1804-test"}
+        max-run-time: 1800
+        artifacts:
+            - name: public/code-coverage-grcov.zip
+              path: /builds/worker/checkouts/gecko/browser/components/newtab/logs/coverage/code-coverage-grcov.zip
+              type: file
+    require-build:
+        by-project:
+            try:
+                linux1804-64/opt: build-linux64/opt
+            default:
+                linux1804-64/opt: build-linux64-shippable/opt
+    run:
+        using: run-task
+        cache-dotcache: true
+        cwd: '{checkout}'
+        command: >
+            cd /builds/worker/checkouts/gecko/browser/components/newtab &&
+            npm install &&
+            node bin/try-runner.js
+    run-on-projects: ["mozilla-central"]
+
 debugger-tests:
     description: devtools debugger unit tests and flow type checks
     platform: linux1804-64/opt

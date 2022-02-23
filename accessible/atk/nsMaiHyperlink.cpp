@@ -184,13 +184,7 @@ gint getEndIndexCB(AtkHyperlink* aLink) {
   MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
   if (!maiLink) return false;
 
-  if (LocalAccessible* hyperlink = maiLink->GetAccHyperlink()) {
-    return static_cast<gint>(hyperlink->EndOffset());
-  }
-
-  bool valid = false;
-  uint32_t endIdx = maiLink->Proxy()->EndOffset(&valid);
-  return valid ? static_cast<gint>(endIdx) : -1;
+  return static_cast<gint>(maiLink->Acc()->EndOffset());
 }
 
 gint getStartIndexCB(AtkHyperlink* aLink) {

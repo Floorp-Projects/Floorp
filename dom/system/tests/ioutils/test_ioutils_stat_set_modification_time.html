@@ -19,9 +19,7 @@
     add_task(async function test_stat() {
       info("Test attempt to stat a regular empty file");
 
-      const tmpDir = await PathUtils.getTempDir();
-
-      const emptyFileName = PathUtils.join(tmpDir, "test_stat_empty.tmp");
+      const emptyFileName = PathUtils.join(PathUtils.tempDir, "test_stat_empty.tmp");
       await createFile(emptyFileName);
 
       const emptyFileInfo = await IOUtils.stat(emptyFileName);
@@ -35,7 +33,7 @@
       );
 
       info("Test attempt to stat a regular binary file");
-      const tempFileName = PathUtils.join(tmpDir, "test_stat_binary.tmp");
+      const tempFileName = PathUtils.join(PathUtils.tempDir, "test_stat_binary.tmp");
       const bytes = Uint8Array.of(...new Array(50).keys());
       await createFile(tempFileName, bytes);
 
@@ -50,7 +48,7 @@
       );
 
       info("Test attempt to stat a directory");
-      const tempDirName = PathUtils.join(tmpDir, "test_stat_dir.tmp.d");
+      const tempDirName = PathUtils.join(PathUtils.tempDir, "test_stat_dir.tmp.d");
       await IOUtils.makeDirectory(tempDirName);
 
       const dirInfo = await IOUtils.stat(tempDirName);
@@ -69,9 +67,7 @@
     add_task(async function test_stat_failures() {
       info("Test attempt to stat a non-existing file");
 
-      const tmpDir = await PathUtils.getTempDir();
-
-      const notExistsFile = PathUtils.join(tmpDir, "test_stat_not_exists.tmp");
+      const notExistsFile = PathUtils.join(PathUtils.tempDir, "test_stat_not_exists.tmp");
 
       await Assert.rejects(
         IOUtils.stat(notExistsFile),
@@ -81,41 +77,56 @@
     });
 
     add_task(async function test_setModificationTime_and_stat() {
-      info("Test attempt to setModificationTime a file");
+      const tmpFileName = PathUtils.join(PathUtils.tempDir, "test_setModificationTime_and_stat.tmp");
+      {
+        info("Test attempt to setModificationTime a file");
+        await createFile(tmpFileName);
 
-      const tmpDir = await PathUtils.getTempDir();
+        const oldFileInfo = await IOUtils.stat(tmpFileName);
+        await sleep(500);
 
-      const tmpFileName = PathUtils.join(tmpDir, "test_setModificationTime_and_stat.tmp");
-      await createFile(tmpFileName);
+        // Now update the time stamp.
+        const stamp = await IOUtils.setModificationTime(tmpFileName);
+        const newFileInfo = await IOUtils.stat(tmpFileName);
 
-      const oldFileInfo = await IOUtils.stat(tmpFileName);
-      await sleep(500);
+        ok(
+          newFileInfo.lastModified > oldFileInfo.lastModified,
+          "IOUtils::setModificationTime can update the lastModified time stamp on the file system"
+        );
+        is(
+          stamp,
+          newFileInfo.lastModified,
+          "IOUtils::setModificationTime returns the updated time stamp."
+        );
+      }
 
-      // Now update the time stamp.
-      const stamp = await IOUtils.setModificationTime(tmpFileName);
-      const newFileInfo = await IOUtils.stat(tmpFileName);
+      const tmpDirName = PathUtils.join(PathUtils.tempDir, "test_setModificationTime_and_stat.tmp.d");
+      {
+        info("Test attempt to setModificationTime a directory");
+        await createDir(tmpDirName);
 
-      ok(
-        newFileInfo.lastModified > oldFileInfo.lastModified,
-        "IOUtils::setModificationTime can update the lastModified time stamp on the file system"
-      );
-      is(
-        stamp,
-        newFileInfo.lastModified,
-        "IOUtils::setModificationTime returns the updated time stamp."
-      );
+        const oldFileInfo = await IOUtils.stat(tmpDirName);
+        await sleep(500);
 
-      info("Test attempt to setModificationTime a directory");
-      const tmpDirName = PathUtils.join(tmpDir, "test_setModificationTime_and_stat.tmp.d");
-      await createDir(tmpDirName);
+        const stamp = await IOUtils.setModificationTime(tmpDirName);
+        const newFileInfo = await IOUtils.stat(tmpDirName);
+
+        ok(
+          newFileInfo.lastModified > oldFileInfo.lastModified,
+          "IOUtils::setModificationTime can update the lastModified time stamp on a directory"
+        );
+        is(
+          stamp,
+          newFileInfo.lastModified,
+          "IOUtils::setModificationTime returns the updated time stamp on a directory"
+        );
+      }
 
       await cleanup(tmpFileName, tmpDirName);
     });
 
     add_task(async function test_setModificationTime_custom_mod_time() {
-      const tmpDir = await PathUtils.getTempDir();
-
-      const tempFileName = PathUtils.join(tmpDir, "test_setModificationTime_custom_mod_time.tmp");
+      const tempFileName = PathUtils.join(PathUtils.tempDir, "test_setModificationTime_custom_mod_time.tmp");
       await createFile(tempFileName);
       const originalInfo = await IOUtils.stat(tempFileName);
       const now = originalInfo.lastModified;
@@ -145,9 +156,7 @@
 
     add_task(async function test_stat_btime() {
       if (["Darwin", "WINNT"].includes(Services.appinfo.OS)) {
-        const tmpDir = await PathUtils.getTempDir();
-
-        const tempFileName = PathUtils.join(tmpDir, "test_stat_btime.tmp");
+        const tempFileName = PathUtils.join(PathUtils.tempDir, "test_stat_btime.tmp");
         await createFile(tempFileName);
         const originalInfo = await IOUtils.stat(tempFileName);
 
@@ -171,8 +180,7 @@
 
     add_task(async function test_setModificationTime_failures() {
       info("Test attempt to setModificationTime a non-existing file");
-      const tmpDir = await PathUtils.getTempDir();
-      const notExistsFile = PathUtils.join(tmpDir, "test_setModificationTime_not_exists.tmp");
+      const notExistsFile = PathUtils.join(PathUtils.tempDir, "test_setModificationTime_not_exists.tmp");
 
       await Assert.rejects(
         IOUtils.setModificationTime(notExistsFile),
@@ -181,7 +189,7 @@
       );
 
       info("Test attempt to set modification time to Epoch");
-      const tempFileName = PathUtils.join(tmpDir, "test_setModificationTime_epoch.tmp");
+      const tempFileName = PathUtils.join(PathUtils.tempDir, "test_setModificationTime_epoch.tmp");
       await createFile(tempFileName);
 
       await Assert.rejects(

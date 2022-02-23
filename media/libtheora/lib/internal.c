@@ -11,7 +11,7 @@
  ********************************************************************
 
   function:
-    last mod: $Id: internal.c 17506 2010-10-13 02:52:41Z tterribe $
+    last mod: $Id$
 
  ********************************************************************/
 
@@ -131,7 +131,6 @@ void **oc_malloc_2d(size_t _height,size_t _width,size_t _sz){
   datsz=rowsz*_height;
   /*Alloc array and row pointers.*/
   ret=(char *)_ogg_malloc(datsz+colsz);
-  if(ret==NULL)return NULL;
   /*Initialize the array.*/
   if(ret!=NULL){
     size_t   i;
@@ -154,7 +153,6 @@ void **oc_calloc_2d(size_t _height,size_t _width,size_t _sz){
   datsz=rowsz*_height;
   /*Alloc array and row pointers.*/
   ret=(char *)_ogg_calloc(datsz+colsz,1);
-  if(ret==NULL)return NULL;
   /*Initialize the array.*/
   if(ret!=NULL){
     size_t   i;

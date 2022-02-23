@@ -1135,18 +1135,6 @@ module.exports = ResourceCommand;
 // Each section added here should eventually be removed once the equivalent server
 // code is implement in Firefox, in its release channel.
 const LegacyListeners = {
-  [ResourceCommand.TYPES
-    .CONSOLE_MESSAGE]: require("devtools/shared/commands/resource/legacy-listeners/console-messages"),
-  [ResourceCommand.TYPES
-    .CSS_CHANGE]: require("devtools/shared/commands/resource/legacy-listeners/css-changes"),
-  [ResourceCommand.TYPES
-    .CSS_MESSAGE]: require("devtools/shared/commands/resource/legacy-listeners/css-messages"),
-  [ResourceCommand.TYPES
-    .ERROR_MESSAGE]: require("devtools/shared/commands/resource/legacy-listeners/error-messages"),
-  [ResourceCommand.TYPES
-    .PLATFORM_MESSAGE]: require("devtools/shared/commands/resource/legacy-listeners/platform-messages"),
-  [ResourceCommand.TYPES
-    .CLONED_CONTENT_PROCESS_MESSAGE]: require("devtools/shared/commands/resource/legacy-listeners/cloned-content-process-messages"),
   async [ResourceCommand.TYPES.DOCUMENT_EVENT]({
     targetCommand,
     targetFront,
@@ -1164,59 +1152,160 @@ const LegacyListeners = {
     });
     await webConsoleFront.startListeners(["DocumentEvents"]);
   },
-  [ResourceCommand.TYPES
-    .ROOT_NODE]: require("devtools/shared/commands/resource/legacy-listeners/root-node"),
-  [ResourceCommand.TYPES
-    .STYLESHEET]: require("devtools/shared/commands/resource/legacy-listeners/stylesheet"),
-  [ResourceCommand.TYPES
-    .NETWORK_EVENT]: require("devtools/shared/commands/resource/legacy-listeners/network-events"),
-  [ResourceCommand.TYPES
-    .WEBSOCKET]: require("devtools/shared/commands/resource/legacy-listeners/websocket"),
-  [ResourceCommand.TYPES
-    .COOKIE]: require("devtools/shared/commands/resource/legacy-listeners/cookie"),
-  [ResourceCommand.TYPES
-    .CACHE_STORAGE]: require("devtools/shared/commands/resource/legacy-listeners/cache-storage"),
-  [ResourceCommand.TYPES
-    .LOCAL_STORAGE]: require("devtools/shared/commands/resource/legacy-listeners/local-storage"),
-  [ResourceCommand.TYPES
-    .SESSION_STORAGE]: require("devtools/shared/commands/resource/legacy-listeners/session-storage"),
-  [ResourceCommand.TYPES
-    .EXTENSION_STORAGE]: require("devtools/shared/commands/resource/legacy-listeners/extension-storage"),
-  [ResourceCommand.TYPES
-    .INDEXED_DB]: require("devtools/shared/commands/resource/legacy-listeners/indexed-db"),
-  [ResourceCommand.TYPES
-    .NETWORK_EVENT_STACKTRACE]: require("devtools/shared/commands/resource/legacy-listeners/network-event-stacktraces"),
-  [ResourceCommand.TYPES
-    .SOURCE]: require("devtools/shared/commands/resource/legacy-listeners/source"),
-  [ResourceCommand.TYPES
-    .THREAD_STATE]: require("devtools/shared/commands/resource/legacy-listeners/thread-states"),
-  [ResourceCommand.TYPES
-    .SERVER_SENT_EVENT]: require("devtools/shared/commands/resource/legacy-listeners/server-sent-events"),
-  [ResourceCommand.TYPES
-    .REFLOW]: require("devtools/shared/commands/resource/legacy-listeners/reflow"),
 };
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.CONSOLE_MESSAGE,
+  "devtools/shared/commands/resource/legacy-listeners/console-messages"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.CSS_CHANGE,
+  "devtools/shared/commands/resource/legacy-listeners/css-changes"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.CSS_MESSAGE,
+  "devtools/shared/commands/resource/legacy-listeners/css-messages"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.ERROR_MESSAGE,
+  "devtools/shared/commands/resource/legacy-listeners/error-messages"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.PLATFORM_MESSAGE,
+  "devtools/shared/commands/resource/legacy-listeners/platform-messages"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.CLONED_CONTENT_PROCESS_MESSAGE,
+  "devtools/shared/commands/resource/legacy-listeners/cloned-content-process-messages"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.ROOT_NODE,
+  "devtools/shared/commands/resource/legacy-listeners/root-node"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.STYLESHEET,
+  "devtools/shared/commands/resource/legacy-listeners/stylesheet"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.NETWORK_EVENT,
+  "devtools/shared/commands/resource/legacy-listeners/network-events"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.WEBSOCKET,
+  "devtools/shared/commands/resource/legacy-listeners/websocket"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.COOKIE,
+  "devtools/shared/commands/resource/legacy-listeners/cookie"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.CACHE_STORAGE,
+  "devtools/shared/commands/resource/legacy-listeners/cache-storage"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.LOCAL_STORAGE,
+  "devtools/shared/commands/resource/legacy-listeners/local-storage"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.SESSION_STORAGE,
+  "devtools/shared/commands/resource/legacy-listeners/session-storage"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.EXTENSION_STORAGE,
+  "devtools/shared/commands/resource/legacy-listeners/extension-storage"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.INDEXED_DB,
+  "devtools/shared/commands/resource/legacy-listeners/indexed-db"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+  "devtools/shared/commands/resource/legacy-listeners/network-event-stacktraces"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.SOURCE,
+  "devtools/shared/commands/resource/legacy-listeners/source"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.THREAD_STATE,
+  "devtools/shared/commands/resource/legacy-listeners/thread-states"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.SERVER_SENT_EVENT,
+  "devtools/shared/commands/resource/legacy-listeners/server-sent-events"
+);
+loader.lazyRequireGetter(
+  LegacyListeners,
+  ResourceCommand.TYPES.REFLOW,
+  "devtools/shared/commands/resource/legacy-listeners/reflow"
+);
 
 // Optional transformers for each type of resource.
 // Each module added here should be a function that will receive the resource, the target, …
 // and perform some transformation on the resource before it will be emitted.
 // This is a good place to handle backward compatibility and manual resource marshalling.
-const ResourceTransformers = {
-  [ResourceCommand.TYPES
-    .CONSOLE_MESSAGE]: require("devtools/shared/commands/resource/transformers/console-messages"),
-  [ResourceCommand.TYPES
-    .ERROR_MESSAGE]: require("devtools/shared/commands/resource/transformers/error-messages"),
-  [ResourceCommand.TYPES
-    .CACHE_STORAGE]: require("devtools/shared/commands/resource/transformers/storage-cache.js"),
-  [ResourceCommand.TYPES
-    .COOKIE]: require("devtools/shared/commands/resource/transformers/storage-cookie.js"),
-  [ResourceCommand.TYPES
-    .INDEXED_DB]: require("devtools/shared/commands/resource/transformers/storage-indexed-db.js"),
-  [ResourceCommand.TYPES
-    .LOCAL_STORAGE]: require("devtools/shared/commands/resource/transformers/storage-local-storage.js"),
-  [ResourceCommand.TYPES
-    .SESSION_STORAGE]: require("devtools/shared/commands/resource/transformers/storage-session-storage.js"),
-  [ResourceCommand.TYPES
-    .NETWORK_EVENT]: require("devtools/shared/commands/resource/transformers/network-events"),
-  [ResourceCommand.TYPES
-    .THREAD_STATE]: require("devtools/shared/commands/resource/transformers/thread-states"),
-};
+const ResourceTransformers = {};
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.CONSOLE_MESSAGE,
+  "devtools/shared/commands/resource/transformers/console-messages"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.ERROR_MESSAGE,
+  "devtools/shared/commands/resource/transformers/error-messages"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.CACHE_STORAGE,
+  "devtools/shared/commands/resource/transformers/storage-cache.js"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.COOKIE,
+  "devtools/shared/commands/resource/transformers/storage-cookie.js"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.INDEXED_DB,
+  "devtools/shared/commands/resource/transformers/storage-indexed-db.js"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.LOCAL_STORAGE,
+  "devtools/shared/commands/resource/transformers/storage-local-storage.js"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.SESSION_STORAGE,
+  "devtools/shared/commands/resource/transformers/storage-session-storage.js"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.NETWORK_EVENT,
+  "devtools/shared/commands/resource/transformers/network-events"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.THREAD_STATE,
+  "devtools/shared/commands/resource/transformers/thread-states"
+);

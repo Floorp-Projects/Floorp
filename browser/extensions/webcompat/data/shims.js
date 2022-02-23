@@ -585,6 +585,29 @@ const AVAILABLE_SHIMS = [
     ],
     onlyIfDFPIActive: true,
   },
+  {
+    id: "Crave.ca",
+    platform: "all",
+    name: "Crave.ca",
+    bug: "1746439",
+    contentScripts: [
+      {
+        js: "crave-ca.js",
+        matches: ["*://account.bellmedia.ca/login*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
+    id: "MaxMindGeoIP",
+    platform: "all",
+    name: "MaxMind GeoIP",
+    bug: "1754389",
+    file: "maxmind-geoip.js",
+    matches: ["*://js.maxmind.com/js/apis/geoip2/*/geoip2.js"],
+    onlyIfBlockedByETP: true,
+  },
 ];
 
 module.exports = AVAILABLE_SHIMS;

@@ -5,9 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISerialEventTarget.idl"
+#include "nsIThreadShutdown.idl"
 
 %{C++
 #include "mozilla/AlreadyAddRefed.h"
+
 namespace mozilla {
 class TimeStamp;
 class TimeDurationValueCalculator;
@@ -130,10 +132,16 @@ interface nsIThread : nsISerialEventTarget
    * @throws NS_ERROR_UNEXPECTED
    *   Indicates that this method was erroneously called when this thread was
    *   the current thread, that this thread was not created with a call to
-   *   nsIThreadManager::NewThread, or if this method was called more than once
-   *   on the thread object.
+   *   nsIThreadManager::NewNamedThread, or that this method was called more
+   *   than once on the thread object.
    */
   void asyncShutdown();
+
+  /**
+   * Like `asyncShutdown`, but also returns a nsIThreadShutdown instance to
+   * allow observing and controlling the thread's async shutdown progress.
+   */
+  nsIThreadShutdown beginShutdown();
 
   /**
    * Dispatch an event to a specified queue for the thread.  This function

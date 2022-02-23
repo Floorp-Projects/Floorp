@@ -337,6 +337,14 @@ class LintRoller(object):
                 print(e.output)
 
         if not (paths or vcs_paths) and (workdir or outgoing):
+            if os.environ.get("MOZ_AUTOMATION") and not os.environ.get(
+                "PYTEST_CURRENT_TEST"
+            ):
+                raise Exception(
+                    "Despite being a CI lint job, no files were linted. Is the task "
+                    "missing explicit paths?"
+                )
+
             print("warning: no files linted")
             return self.result
 

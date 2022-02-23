@@ -17,8 +17,16 @@ async function test() {
   // Kill the GPU process
   await SpecialPowers.spawnChrome([], async () => {
     const gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
-    gfxInfo.killGPUProcessForTests();
-    await gfxInfo.ensureGPUProcessReadyForTests();
+
+    if (gfxInfo.usingGPUProcess) {
+      const { TestUtils } = ChromeUtils.import(
+        "resource://testing-common/TestUtils.jsm"
+      );
+      let promise = TestUtils.topicObserved("compositor-reinitialized");
+
+      gfxInfo.killGPUProcessForTests();
+      await promise;
+    }
   });
 
   // Ensure resolution is unchanged by GPU process restart

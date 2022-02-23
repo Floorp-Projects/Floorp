@@ -91,8 +91,9 @@ class ModularFrameDecoder {
                           bool allow_truncated_group);
   Status DecodeGroup(const Rect& rect, BitReader* reader, int minShift,
                      int maxShift, const ModularStreamId& stream, bool zerofill,
-                     PassesDecoderState* dec_state, ImageBundle* output,
-                     bool allow_truncated);
+                     PassesDecoderState* dec_state,
+                     RenderPipelineInput* render_pipeline_input,
+                     ImageBundle* output, bool allow_truncated);
   // Decodes a VarDCT DC group (`group_id`) from the given `reader`.
   Status DecodeVarDCTDC(size_t group_id, BitReader* reader,
                         PassesDecoderState* dec_state);
@@ -113,11 +114,14 @@ class ModularFrameDecoder {
                           ImageBundle* output, bool inplace);
   bool have_dc() const { return have_something; }
   void MaybeDropFullImage();
+  bool UsesFullImage() const { return use_full_image; }
 
  private:
   Status ModularImageToDecodedRect(Image& gi, PassesDecoderState* dec_state,
-                                   jxl::ThreadPool* pool, ImageBundle* output,
-                                   Rect rect);
+                                   jxl::ThreadPool* pool,
+                                   RenderPipelineInput* render_pipeline_input,
+                                   ImageBundle* output, Rect rect,
+                                   Rect modular_rect);
 
   Image full_image;
   std::vector<Transform> global_transform;

@@ -18,6 +18,10 @@ LOCAL_INCLUDES += [
     "/xpcom/tests/gtest",
 ]
 
+EXPORTS.mozilla.fuzzing += [
+    "FuzzingStreamListener.h",
+]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul-gtest"

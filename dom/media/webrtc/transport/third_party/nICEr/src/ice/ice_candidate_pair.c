@@ -269,7 +269,7 @@ static void nr_ice_candidate_pair_stun_cb(NR_SOCKET s, int how, void *cb_arg)
 
           if(!cand) {
             /* OK, nothing found, must be a new peer reflexive */
-            if (pair->pctx->ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) {
+            if (pair->local->stream->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) {
               /* Any STUN response with a reflexive address in it is unwanted
                  when we'll send on relay only. Bail since cand is used below. */
               goto done;

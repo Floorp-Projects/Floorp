@@ -733,6 +733,7 @@ enum class StyleBlend : uint8_t {
   Saturation,
   Color,
   Luminosity,
+  PlusLighter,
 };
 
 // composite

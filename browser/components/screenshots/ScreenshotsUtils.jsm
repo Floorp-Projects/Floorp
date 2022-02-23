@@ -4,13 +4,31 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ScreenshotsUtils"];
+var EXPORTED_SYMBOLS = ["ScreenshotsUtils", "ScreenshotsComponentParent"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const PanelPosition = "bottomright topright";
 const PanelOffsetX = -33;
 const PanelOffsetY = -8;
+
+class ScreenshotsComponentParent extends JSWindowActorParent {
+  receiveMessage(message) {
+    switch (message.name) {
+      case "Screenshots:CancelScreenshot":
+        let browser = message.target.browsingContext.topFrameElement;
+        ScreenshotsUtils.closePanel(browser);
+    }
+  }
+
+  didDestroy() {
+    // When restoring a crashed tab the browser is null
+    let browser = this.browsingContext.topFrameElement;
+    if (browser) {
+      ScreenshotsUtils.closePanel(browser, false);
+    }
+  }
+}
 
 var ScreenshotsUtils = {
   initialized: false,
@@ -57,9 +75,8 @@ var ScreenshotsUtils = {
         }
         break;
       case "screenshots-take-screenshot":
-        // need to toggle because panel button was clicked
-        // and we need to hide the buttons
-        this.togglePreview(browser);
+        // need to close the preview because screenshot was taken
+        this.closePanel(browser);
 
         // init UI as a tab dialog box
         let dialogBox = gBrowser.getTabDialogBox(browser);
@@ -103,8 +120,36 @@ var ScreenshotsUtils = {
     return actor;
   },
   /**
-   * If the buttons panel exists and the panel is open we will hipe the panel
-   * popup and hide the screenshot overlay.
+   * Open the panel buttons and call child actor to open the overlay
+   * @param browser The current browser
+   */
+  openPanel(browser) {
+    let actor = this.getActor(browser);
+    actor.sendQuery("Screenshots:ShowOverlay");
+    this.createOrDisplayButtons(browser);
+  },
+  /**
+   * Close the panel and call child actor to close the overlay
+   * @param browser The current browser
+   * @param {bool} closeOverlay Whether or not to
+   * send a message to the child to close the overly.
+   * Defaults to true. Will be false when called from didDestroy.
+   */
+  closePanel(browser, closeOverlay = true) {
+    let buttonsPanel = browser.ownerDocument.querySelector(
+      "#screenshotsPagePanel"
+    );
+    if (buttonsPanel && buttonsPanel.state !== "closed") {
+      buttonsPanel.hidePopup();
+    }
+    if (closeOverlay) {
+      let actor = this.getActor(browser);
+      actor.sendQuery("Screenshots:HideOverlay");
+    }
+  },
+  /**
+   * If the buttons panel exists and is open we will hide both the panel
+   * popup and the overlay.
    * Otherwise create or display the buttons.
    * @param browser The current browser.
    */
@@ -117,6 +162,8 @@ var ScreenshotsUtils = {
       let actor = this.getActor(browser);
       return actor.sendQuery("Screenshots:HideOverlay");
     }
+    let actor = this.getActor(browser);
+    actor.sendQuery("Screenshots:ShowOverlay");
     return this.createOrDisplayButtons(browser);
   },
   /**
@@ -173,10 +220,9 @@ var ScreenshotsUtils = {
       template.replaceWith(clone);
       buttonsPanel = doc.querySelector("#screenshotsPagePanel");
     }
+
     let anchor = doc.querySelector("#navigator-toolbox");
     buttonsPanel.openPopup(anchor, PanelPosition, PanelOffsetX, PanelOffsetY);
-    let actor = this.getActor(browser);
-    return actor.sendQuery("Screenshots:ShowOverlay");
   },
   /**
    * Gets the full page bounds from the screenshots child actor.

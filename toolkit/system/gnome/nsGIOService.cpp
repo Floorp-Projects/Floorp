@@ -12,7 +12,11 @@
 #include "nsComponentManagerUtils.h"
 #include "nsArray.h"
 #include "nsPrintfCString.h"
+#include "mozilla/GRefPtr.h"
+#include "mozilla/GUniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WidgetUtilsGtk.h"
+#include "mozilla/StaticPrefs_widget.h"
 
 #include <gio/gio.h>
 #include <gtk/gtk.h>
@@ -560,51 +564,41 @@ nsGIOService::OrgFreedesktopFileManager1ShowItems(const nsACString& aPath) {
 #ifndef MOZ_ENABLE_DBUS
   return NS_ERROR_FAILURE;
 #else
-  GError* error = nullptr;
-  static bool org_freedesktop_FileManager1_exists = true;
-
-  if (!org_freedesktop_FileManager1_exists) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  DBusGConnection* dbusGConnection = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
-
-  if (!dbusGConnection) {
-    if (error) {
-      g_printerr("Failed to open connection to session bus: %s\n",
-                 error->message);
-      g_error_free(error);
-    }
+  GUniquePtr<GError> error;
+  RefPtr<GDBusProxy> proxy = dont_AddRef(g_dbus_proxy_new_for_bus_sync(
+      G_BUS_TYPE_SESSION,
+      GDBusProxyFlags(G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS |
+                      G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES),
+      nullptr, "org.freedesktop.FileManager1", "/org/freedesktop/FileManager1",
+      "org.freedesktop.FileManager1", nullptr, getter_Transfers(error)));
+  if (!proxy) {
+    g_printerr("Failed to create DBUS proxy for FileManager1: %s\n",
+               error->message);
     return NS_ERROR_FAILURE;
   }
 
-  char* uri =
-      g_filename_to_uri(PromiseFlatCString(aPath).get(), nullptr, nullptr);
-  if (uri == nullptr) {
+  GUniquePtr<gchar> uri(
+      g_filename_to_uri(PromiseFlatCString(aPath).get(), nullptr, nullptr));
+  if (!uri) {
     return NS_ERROR_FAILURE;
   }
 
-  DBusConnection* dbusConnection =
-      dbus_g_connection_get_connection(dbusGConnection);
-  // Make sure we do not exit the entire program if DBus connection get lost.
-  dbus_connection_set_exit_on_disconnect(dbusConnection, false);
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
+  g_variant_builder_add(&builder, "s", uri.get());
 
-  DBusGProxy* dbusGProxy = dbus_g_proxy_new_for_name(
-      dbusGConnection, "org.freedesktop.FileManager1",
-      "/org/freedesktop/FileManager1", "org.freedesktop.FileManager1");
+  const int32_t timeout =
+      StaticPrefs::widget_gtk_file_manager_show_items_timeout_ms();
+  ;
+  const char* startupId = "";
+  RefPtr<GVariant> result = dont_AddRef(g_dbus_proxy_call_sync(
+      proxy, "ShowItems", g_variant_new("(ass)", &builder, startupId),
+      G_DBUS_CALL_FLAGS_NONE, timeout, nullptr, getter_Transfers(error)));
 
-  const char* uris[2] = {uri, nullptr};
-  gboolean rv_dbus_call =
-      dbus_g_proxy_call(dbusGProxy, "ShowItems", nullptr, G_TYPE_STRV, uris,
-                        G_TYPE_STRING, "", G_TYPE_INVALID, G_TYPE_INVALID);
-
-  g_object_unref(dbusGProxy);
-  dbus_g_connection_unref(dbusGConnection);
-  g_free(uri);
-
-  if (!rv_dbus_call) {
-    org_freedesktop_FileManager1_exists = false;
-    return NS_ERROR_NOT_AVAILABLE;
+  g_variant_builder_clear(&builder);
+  if (!result) {
+    g_printerr("Failed to query file manager: %s\n", error->message);
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;

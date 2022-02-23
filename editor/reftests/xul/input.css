@@ -20,7 +20,7 @@ html|input.empty {
   color: graytext;
 }
 
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
+@media (-moz-windows-default-theme) and (-moz-platform: windows-win7) {
   :root:not(.winxp) html|input.empty {
     font-style: italic;
   }

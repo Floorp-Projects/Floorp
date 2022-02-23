@@ -1176,15 +1176,29 @@ CGRGBPixel* Offscreen::getCG(const SkScalerContext_Mac& context, const SkGlyph& 
 
         CGContextSetTextDrawingMode(fCG.get(), kCGTextFill);
 
-        // Draw black on white to create mask. (Special path exists to speed this up in CG.)
-        // If light-on-dark is requested, draw white on black.
-        CGContextSetGrayFillColor(fCG.get(), lightOnDark ? 1.0f : 0.0f, 1.0f);
-
         // force our checks below to happen
         fDoAA = !doAA;
         fDoLCD = !doLCD;
 
         CGContextSetTextMatrix(fCG.get(), context.fTransform);
+    }
+
+    if (glyph.isColor()) {
+        // Set the current color for layers with palette index 0xffff, or non-colored
+        // glyphs that may be present in a color font.
+        //
+        // Per comment in the Windows code at https://searchfox.org/mozilla-central/source/gfx/skia/skia/src/ports/SkScalerContext_win_dw.cpp#1069-1074:
+        // > "getLuminanceColor() is kinda sorta what is wanted here, but not really,
+        // > it will often be the wrong value because it wan't designed for this.
+        //
+        // Empirically, in simple testcases it looks like a decent approximation of what
+        // we need.
+        SkColor4f color = SkColor4f::FromColor(context.getRec().getLuminanceColor());
+        CGContextSetRGBFillColor(fCG.get(), color.fR, color.fG, color.fB, 1.0f);
+    } else {
+        // Draw black on white to create mask. (Special path exists to speed this up in CG.)
+        // If light-on-dark is requested, draw white on black.
+        CGContextSetGrayFillColor(fCG.get(), lightOnDark ? 1.0f : 0.0f, 1.0f);
     }
 
     if (fDoAA != doAA) {

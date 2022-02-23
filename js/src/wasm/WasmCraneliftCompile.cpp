@@ -249,7 +249,7 @@ static bool GenerateCraneliftCode(
         break;
       }
       case CraneliftMetadataEntry::Which::IndirectCall: {
-        CallSiteDesc desc(bytecodeOffset, CallSiteDesc::Dynamic);
+        CallSiteDesc desc(bytecodeOffset, CallSiteDesc::Indirect);
         masm.append(desc, CodeOffset(offset.value()));
         break;
       }

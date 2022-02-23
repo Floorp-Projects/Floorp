@@ -40,9 +40,6 @@ function goUpdatePasteMenuItems() {
 window.addEventListener(
   "DOMContentLoaded",
   () => {
-    // Bug 371900: Remove useless oncommand attribute once bug 371900 is fixed
-    // If you remove/update the oncommand attribute for any of the cmd_*, please
-    // also remove/update the sha512 hash in the CSP within about:downloads
     let container =
       document.querySelector("commandset") || document.documentElement;
     let fragment = MozXULElement.parseXULToFragment(`
@@ -50,14 +47,14 @@ window.addEventListener(
         <commandset id="editMenuCommandSetAll" commandupdater="true" events="focus,select" />
         <commandset id="editMenuCommandSetUndo" commandupdater="true" events="undo" />
         <commandset id="editMenuCommandSetPaste" commandupdater="true" events="clipboard" />
-        <command id="cmd_undo" oncommand=";" />
-        <command id="cmd_redo" oncommand=";" />
-        <command id="cmd_cut" oncommand=";" />
-        <command id="cmd_copy" oncommand=";" />
-        <command id="cmd_paste" oncommand=";" />
-        <command id="cmd_delete" oncommand=";" />
-        <command id="cmd_selectAll" oncommand=";" />
-        <command id="cmd_switchTextDirection" oncommand=";" />
+        <command id="cmd_undo" internal="true"/>
+        <command id="cmd_redo" internal="true" />
+        <command id="cmd_cut" internal="true" />
+        <command id="cmd_copy" internal="true" />
+        <command id="cmd_paste" internal="true" />
+        <command id="cmd_delete" />
+        <command id="cmd_selectAll" internal="true" />
+        <command id="cmd_switchTextDirection" />
       </commandset>
     `);
 

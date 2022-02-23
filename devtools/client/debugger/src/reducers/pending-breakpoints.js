@@ -70,24 +70,4 @@ function removeBreakpoint(state, { breakpoint }) {
   return state;
 }
 
-// Selectors
-// TODO: these functions should be moved out of the reducer
-
-export function getPendingBreakpoints(state) {
-  return state.pendingBreakpoints;
-}
-
-export function getPendingBreakpointList(state) {
-  return Object.values(getPendingBreakpoints(state));
-}
-
-export function getPendingBreakpointsForSource(state, source) {
-  return getPendingBreakpointList(state).filter(pendingBreakpoint => {
-    return (
-      pendingBreakpoint.location.sourceUrl === source.url ||
-      pendingBreakpoint.generatedLocation.sourceUrl == source.url
-    );
-  });
-}
-
 export default update;

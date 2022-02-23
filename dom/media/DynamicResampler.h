@@ -273,7 +273,8 @@ class AudioChunkList {
    * Constructor, the final total duration might be different from the requested
    * `aTotalDuration`. Memory allocation takes place.
    */
-  AudioChunkList(uint32_t aTotalDuration, uint32_t aChannels);
+  AudioChunkList(uint32_t aTotalDuration, uint32_t aChannels,
+                 const PrincipalHandle& aPrincipalHandle);
   AudioChunkList(const AudioChunkList&) = delete;
   AudioChunkList(AudioChunkList&&) = delete;
   ~AudioChunkList() = default;
@@ -330,9 +331,10 @@ class AudioChunkList {
   void UpdateToMonoOrStereo(uint32_t aChannels);
 
  private:
+  const PrincipalHandle mPrincipalHandle;
   nsTArray<AudioChunk> mChunks;
   uint32_t mIndex = 0;
-  uint32_t mChunkCapacity = 128;
+  uint32_t mChunkCapacity = WEBAUDIO_BLOCK_SIZE;
   AudioSampleFormat mSampleFormat = AUDIO_FORMAT_SILENCE;
 };
 
@@ -356,8 +358,8 @@ class AudioChunkList {
  */
 class AudioResampler final {
  public:
-  AudioResampler(uint32_t aInRate, uint32_t aOutRate,
-                 uint32_t aPreBufferFrames = 0);
+  AudioResampler(uint32_t aInRate, uint32_t aOutRate, uint32_t aPreBufferFrames,
+                 const PrincipalHandle& aPrincipalHandle);
 
   /**
    * Append input data into the resampler internal buffer. Copy/move of the

@@ -181,16 +181,11 @@ void WebRenderBridgeChild::ProcessWebRenderParentCommands() {
   }
 }
 
-void WebRenderBridgeChild::AddPipelineIdForAsyncCompositable(
-    const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle) {
-  AddWebRenderParentCommand(
-      OpAddPipelineIdForCompositable(aPipelineId, aHandle, /* isAsync */ true));
-}
-
 void WebRenderBridgeChild::AddPipelineIdForCompositable(
-    const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle) {
-  AddWebRenderParentCommand(OpAddPipelineIdForCompositable(
-      aPipelineId, aHandle, /* isAsync */ false));
+    const wr::PipelineId& aPipelineId, const CompositableHandle& aHandle,
+    CompositableHandleOwner aOwner) {
+  AddWebRenderParentCommand(
+      OpAddPipelineIdForCompositable(aPipelineId, aHandle, aOwner));
 }
 
 void WebRenderBridgeChild::RemovePipelineIdForCompositable(

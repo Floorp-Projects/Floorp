@@ -322,10 +322,17 @@ DrawTargetSkia::~DrawTargetSkia() {
 #endif
 }
 
-already_AddRefed<SourceSurface> DrawTargetSkia::Snapshot() {
+already_AddRefed<SourceSurface> DrawTargetSkia::Snapshot(
+    SurfaceFormat aFormat) {
   // Without this lock, this could cause us to get out a snapshot and race with
   // Snapshot::~Snapshot() actually destroying itself.
   MutexAutoLock lock(mSnapshotLock);
+  if (mSnapshot && aFormat != mSnapshot->GetFormat()) {
+    if (!mSnapshot->hasOneRef()) {
+      mSnapshot->DrawTargetWillChange();
+    }
+    mSnapshot = nullptr;
+  }
   RefPtr<SourceSurfaceSkia> snapshot = mSnapshot;
   if (mSurface && !snapshot) {
     snapshot = new SourceSurfaceSkia();
@@ -339,7 +346,7 @@ already_AddRefed<SourceSurface> DrawTargetSkia::Snapshot() {
     } else {
       image = mSurface->makeImageSnapshot();
     }
-    if (!snapshot->InitFromImage(image, mFormat, this)) {
+    if (!snapshot->InitFromImage(image, aFormat, this)) {
       return nullptr;
     }
     mSnapshot = snapshot;
@@ -1627,9 +1634,10 @@ DrawTargetSkia::CreateSourceSurfaceFromNativeSurface(
   return nullptr;
 }
 
-void DrawTargetSkia::CopySurface(SourceSurface* aSurface,
-                                 const IntRect& aSourceRect,
-                                 const IntPoint& aDestination) {
+void DrawTargetSkia::BlendSurface(SourceSurface* aSurface,
+                                  const IntRect& aSourceRect,
+                                  const IntPoint& aDestination,
+                                  CompositionOp aOperator) {
   MarkChanged();
 
   Maybe<MutexAutoLock> lock;
@@ -1645,16 +1653,21 @@ void DrawTargetSkia::CopySurface(SourceSurface* aSurface,
                     SkClipOp::kReplace_deprecated);
 
   SkPaint paint;
-  if (!image->isOpaque()) {
-    // Keep the xfermode as SOURCE_OVER for opaque bitmaps
-    // http://code.google.com/p/skia/issues/detail?id=628
-    paint.setBlendMode(SkBlendMode::kSrc);
+  if (aOperator == CompositionOp::OP_SOURCE) {
+    if (!image->isOpaque()) {
+      // Keep the xfermode as SOURCE_OVER for opaque bitmaps
+      // http://code.google.com/p/skia/issues/detail?id=628
+      paint.setBlendMode(SkBlendMode::kSrc);
+    }
+    // drawImage with A8 images ends up doing a mask operation
+    // so we need to clear before
+    if (image->isAlphaOnly()) {
+      mCanvas->clear(SK_ColorTRANSPARENT);
+    }
+  } else {
+    paint.setBlendMode(GfxOpToSkiaOp(aOperator));
   }
-  // drawImage with A8 images ends up doing a mask operation
-  // so we need to clear before
-  if (image->isAlphaOnly()) {
-    mCanvas->clear(SK_ColorTRANSPARENT);
-  }
+
   mCanvas->drawImage(image, -SkIntToScalar(aSourceRect.X()),
                      -SkIntToScalar(aSourceRect.Y()), &paint);
   mCanvas->restore();
@@ -1791,10 +1804,18 @@ already_AddRefed<PathBuilder> DrawTargetSkia::CreatePathBuilder(
   return MakeAndAddRef<PathBuilderSkia>(aFillRule);
 }
 
-void DrawTargetSkia::ClearRect(const Rect& aRect) {
+void DrawTargetSkia::Clear(const Rect* aRect) {
   MarkChanged();
   mCanvas->save();
-  mCanvas->clipRect(RectToSkRect(aRect), SkClipOp::kIntersect, true);
+  if (aRect) {
+    // If a local-space clip rect is supplied, then restrict clearing to that.
+    mCanvas->clipRect(RectToSkRect(*aRect), SkClipOp::kIntersect, true);
+  } else {
+    // Otherwise, clear the entire surface.
+    mCanvas->resetMatrix();
+    mCanvas->clipRect(IntRectToSkRect(GetRect()),
+                      SkClipOp::kReplace_deprecated);
+  }
   SkColor clearColor = (mFormat == SurfaceFormat::B8G8R8X8)
                            ? SK_ColorBLACK
                            : SK_ColorTRANSPARENT;

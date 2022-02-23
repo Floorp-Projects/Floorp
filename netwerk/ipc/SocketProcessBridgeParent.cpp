@@ -37,9 +37,9 @@ mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvTest() {
 }
 
 mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvInitBackground(
-    Endpoint<PBackgroundParent>&& aEndpoint) {
+    Endpoint<PBackgroundStarterParent>&& aEndpoint) {
   LOG(("SocketProcessBridgeParent::RecvInitBackground mId=%d\n", mId));
-  if (!ipc::BackgroundParent::Alloc(nullptr, std::move(aEndpoint))) {
+  if (!ipc::BackgroundParent::AllocStarter(nullptr, std::move(aEndpoint))) {
     return IPC_FAIL(this, "BackgroundParent::Alloc failed");
   }
 

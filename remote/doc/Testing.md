@@ -3,8 +3,9 @@ Testing
 
 The Remote Protocol has unit- and functional tests located under different folders:
 
-  - Shared Modules: `remote/shared/`
-  - CDP: `remote/cdp`.
+	- CDP: `remote/cdp`
+	- Marionette: `remote/marionette`.
+	- Shared Modules: `remote/shared/`
   - WebDriver BiDi: `remote/webdriver-bidi`
 
 You may want to run all the tests under a particular subfolder locally like this:
@@ -23,36 +24,38 @@ chatty, it can sometimes be useful to run the tests in sequence:
 The unit tests will appear as part of the `X` (for _xpcshell_) jobs
 on Treeherder.
 
-[xpcshell]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Writing_xpcshell-based_unit_tests
+[xpcshell]: /testing/xpcshell/index.rst
 
 
-Browser chrome tests
---------------------
+Browser Chrome Mochitests
+-------------------------
 
-We also have a set of functional [browser chrome] tests for CDP located
-under _remote/cdp/test/browser_:
+We also have a set of functional browser-chrome mochitests located
+under several components, ie. _remote/shared/messagehandler/test/browser_:
 
-	% ./mach mochitest remote/cdp/test/browser/browser_cdp.js
+	% ./mach mochitest remote/shared/messagehandler/test/browser/browser_*
 
 The functional tests will appear under the `M` (for _mochitest_)
 category in the `remote` jobs on Treeherder.
 
 As the functional tests will sporadically pop up new Firefox
-application windows, a helpful tip is to run them in [headless
-mode]:
+application windows, a helpful tip is to run them in headless
+mode:
 
-	% ./mach mochitest --headless remote/cdp/test/browser
+	% ./mach mochitest --headless remote/shared/messagehandler/test/browser
 
 The `--headless` flag is equivalent to setting the `MOZ_HEADLESS`
 environment variable.  You can additionally use `MOZ_HEADLESS_WIDTH`
 and `MOZ_HEADLESS_HEIGHT` to control the dimensions of the virtual
 display.
 
-The `add_task()` function used for writing [asynchronous tests] is
+The `add_task()` function used for writing asynchronous tests is
 replaced to provide some additional test setup and teardown useful
 for writing tests against the Remote Agent and the targets.
 
-Before the task is run, the `nsIRemoteAgent` listener is started
+There are also specific browser-chrome tests for CDP.
+
+Before such a task is run, the `nsIRemoteAgent` listener is started
 and a [CDP client] is connected.  You will use this CDP client for
 interacting with the agent just as any other CDP client would.
 
@@ -101,9 +104,6 @@ If you want to write an asynchronous test _without_ this implicit
 setup you may instead use `add_plain_task()`, which works exactly like the
 original `add_task()`.
 
-[browser chrome]: https://developer.mozilla.org/en-US/docs/Mozilla/Browser_chrome_tests
-[headless mode]: https://developer.mozilla.org/en-US/Firefox/Headless_mode
-[asynchronous tests]: https://developer.mozilla.org/en-US/docs/Mozilla/Browser_chrome_tests#Test_functions
 [CDP client]: https://github.com/cyrus-and/chrome-remote-interface
 
 
@@ -147,8 +147,8 @@ But you can also schedule tests by selecting relevant jobs yourself:
 
 	mach try fuzzy
 
-[Puppeteer test suite]: https://github.com/puppeteer/puppeteer/blob/master/test/README.md
-[track progress]: https://puppeteer.github.io/ispuppeteerfirefoxready/
 [Puppeteer support]: https://bugzilla.mozilla.org/show_bug.cgi?id=puppeteer
 [Mocha]: https://mochajs.org/
-[try preset]: https://firefox-source-docs.mozilla.org/tools/try/presets.html
+[Puppeteer test suite]: https://github.com/puppeteer/puppeteer/blob/master/test/README.md
+[track progress]: https://puppeteer.github.io/ispuppeteerfirefoxready/
+[try preset]: /tools/try/presets

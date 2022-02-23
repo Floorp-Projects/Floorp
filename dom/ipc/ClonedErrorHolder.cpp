@@ -290,12 +290,18 @@ bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
       mFilename.Assign(""_ns);
     }
 
+    // When fuzzing, we can also end up with the message to be null,
+    // so we should handle that case as well.
+    if (mMessage.IsVoid()) {
+      mMessage.Assign(""_ns);
+    }
+
     if (!ToJSString(aCx, mFilename, &filename) ||
         !ToJSString(aCx, mMessage, &message)) {
       return false;
     }
     if (!JS::CreateError(aCx, mExnType, stack, filename, mLineNumber, mColumn,
-                         nullptr, message, aResult)) {
+                         nullptr, message, JS::NothingHandleValue, aResult)) {
       return false;
     }
 
@@ -311,7 +317,7 @@ bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
         if (mTokenOffset >= sourceLine.Length()) {
           // Corrupt data, leave linebuf unset.
         } else if (JS::UniqueTwoByteChars buffer =
-                ToNullTerminatedJSStringBuffer(aCx, sourceLine)) {
+                       ToNullTerminatedJSStringBuffer(aCx, sourceLine)) {
           err->initOwnedLinebuf(buffer.release(), sourceLine.Length(),
                                 mTokenOffset);
         } else {

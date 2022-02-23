@@ -992,7 +992,8 @@ imgCacheEntry::imgCacheEntry(imgLoader* loader, imgRequest* request,
       // PutIntoCache will set this to false.
       mEvicted(true),
       mHasNoProxies(true),
-      mForcePrincipalCheck(forcePrincipalCheck) {}
+      mForcePrincipalCheck(forcePrincipalCheck),
+      mHasNotified(false) {}
 
 imgCacheEntry::~imgCacheEntry() {
   LOG_FUNC(gImgLog, "imgCacheEntry::~imgCacheEntry()");
@@ -1901,6 +1902,18 @@ void imgLoader::NotifyObserversForCachedImage(
     imgCacheEntry* aEntry, imgRequest* request, nsIURI* aURI,
     nsIReferrerInfo* aReferrerInfo, Document* aLoadingDocument,
     nsIPrincipal* aTriggeringPrincipal, CORSMode aCORSMode) {
+  if (aEntry->HasNotified()) {
+    return;
+  }
+
+  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+
+  if (!obsService->HasObservers("http-on-image-cache-response")) {
+    return;
+  }
+
+  aEntry->SetHasNotified();
+
   nsCOMPtr<nsIChannel> newChannel;
   bool forcePrincipalCheck;
   nsresult rv =
@@ -1920,7 +1933,6 @@ void imgLoader::NotifyObserversForCachedImage(
     if (image) {
       newChannel->SetContentLength(aEntry->GetDataSize());
     }
-    nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
     obsService->NotifyObservers(newChannel, "http-on-image-cache-response",
                                 nullptr);
   }

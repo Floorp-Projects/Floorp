@@ -34,6 +34,8 @@ So when an object becomes unreachable (for example, because it is only reference
 Conversely, this means that objects are kept alive as long as some other reachable object is holding a reference to them.
 
 
+.. _shallow-and-retained-size:
+
 Shallow and retained size
 *************************
 

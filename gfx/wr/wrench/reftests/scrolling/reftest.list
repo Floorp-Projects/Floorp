@@ -19,3 +19,7 @@
 == ext-scroll-offset-1.yaml ext-scroll-offset-1-ref.yaml
 == scroll-frame-order.yaml scroll-frame-order-ref.yaml
 != ancestor-scroll-frames.yaml blank.yaml
+== scroll-generation-1.yaml scroll-generation-ref.yaml
+== scroll-generation-2.yaml scroll-generation-ref.yaml
+== scroll-generation-3.yaml scroll-generation-ref.yaml
+== scroll-generation-4.yaml scroll-generation-ref.yaml

@@ -27,11 +27,16 @@ function testSelectableSelection(aIdentifier, aSelectedChildren, aMsg) {
   );
 
   for (let idx = 0; idx < len; idx++) {
-    let expectedAcc = getAccessible(aSelectedChildren[idx]);
-    var actualAcc = selectedChildren.queryElementAt(idx, nsIAccessible);
+    let expectedAcc = aSelectedChildren[idx];
+    let expectedAccId =
+      expectedAcc instanceof nsIAccessible
+        ? getAccessibleDOMNodeID(expectedAcc)
+        : expectedAcc;
+    let actualAcc = selectedChildren.queryElementAt(idx, nsIAccessible);
+    let actualAccId = getAccessibleDOMNodeID(actualAcc);
     is(
-      actualAcc,
-      expectedAcc,
+      actualAccId,
+      expectedAccId,
       msg +
         "getSelectedChildren: wrong selected child at index " +
         idx +
@@ -55,10 +60,14 @@ function testSelectableSelection(aIdentifier, aSelectedChildren, aMsg) {
 
   // getSelectedItemAt
   for (let idx = 0; idx < len; idx++) {
-    let expectedAcc = getAccessible(aSelectedChildren[idx]);
+    let expectedAcc = aSelectedChildren[idx];
+    let expectedAccId =
+      expectedAcc instanceof nsIAccessible
+        ? getAccessibleDOMNodeID(expectedAcc)
+        : expectedAcc;
     is(
-      acc.getSelectedItemAt(idx),
-      expectedAcc,
+      getAccessibleDOMNodeID(acc.getSelectedItemAt(idx)),
+      expectedAccId,
       msg +
         "getSelectedItemAt: wrong selected child at index " +
         idx +
@@ -89,7 +98,13 @@ function testIsItemSelected(
       var isSelected = false;
       var len = aSelectedChildren.length;
       for (var jdx = 0; jdx < len; jdx++) {
-        if (child == getAccessible(aSelectedChildren[jdx])) {
+        let expectedAcc = aSelectedChildren[jdx];
+        let matches =
+          expectedAcc instanceof nsIAccessible
+            ? child == expectedAcc
+            : getAccessibleDOMNodeID(child) == expectedAcc;
+
+        if (matches) {
           isSelected = true;
           break;
         }

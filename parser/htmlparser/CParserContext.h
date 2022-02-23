@@ -20,6 +20,8 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
+class nsITokenizer;
+
 /**
  * Note that the parser is given FULL access to all
  * data in a parsercontext. Hey, that what it's for!
@@ -27,26 +29,20 @@
 
 class CParserContext {
  public:
-  enum eContextType { eCTNone, eCTURL, eCTString, eCTStream };
+  enum eContextType { eCTURL, eCTString };
 
-  CParserContext(CParserContext* aPrevContext, nsScanner* aScanner,
-                 void* aKey = 0, eParserCommands aCommand = eViewNormal,
-                 eAutoDetectResult aStatus = eUnknownDetect,
-                 bool aCopyUnused = false);
+  CParserContext(nsIURI* aURI, eParserCommands aCommand);
+  CParserContext(const nsAString& aBuffer, eParserCommands aCommand,
+                 bool aLastBuffer);
 
   ~CParserContext();
 
-  nsresult GetTokenizer(nsIDTD* aDTD, nsIContentSink* aSink,
-                        nsITokenizer*& aTokenizer);
   void SetMimeType(const nsACString& aMimeType);
 
   nsCOMPtr<nsIRequest>
       mRequest;  // provided by necko to differnciate different input streams
                  // why is mRequest strongly referenced? see bug 102376.
-  void* const mKey;
-  nsCOMPtr<nsITokenizer> mTokenizer;
-  CParserContext* const mPrevContext;
-  mozilla::UniquePtr<nsScanner> mScanner;
+  nsScanner mScanner;
 
   nsCString mMimeType;
   nsDTDMode mDTDMode;
@@ -54,7 +50,7 @@ class CParserContext {
   eParserDocType mDocType;
   eStreamState mStreamListenerState;
   eContextType mContextType;
-  eAutoDetectResult mAutoDetectStatus;
+  eAutoDetectResult mAutoDetectStatus = eUnknownDetect;
   eParserCommands mParserCommand;
 
   bool mMultipart;

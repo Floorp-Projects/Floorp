@@ -64,6 +64,12 @@ loader.lazyRequireGetter(
   "devtools/client/responsive/manager"
 );
 
+loader.lazyRequireGetter(
+  this,
+  "FluentReact",
+  "devtools/client/shared/vendor/fluent-react"
+);
+
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 const CHROME_URL_ROOT = TEST_DIR + "/";
 const URL_ROOT = CHROME_URL_ROOT.replace(
@@ -1899,3 +1905,69 @@ const waitForPresShell = function(context) {
     }, "Waiting for a valid presShell");
   });
 };
+
+/**
+ * In tests using Fluent localization, it is preferable to match DOM elements using
+ * a message ID rather than the raw string as:
+ *
+ *  1. It allows testing infrastructure to be multilingual if needed.
+ *  2. It isolates the tests from localization changes.
+ *
+ * @param {Array<string>} resourceIds A list of .ftl files to load.
+ * @returns {(id: string, args?: Record<string, FluentVariable>) => string}
+ */
+async function getFluentStringHelper(resourceIds) {
+  const locales = Services.locale.appLocalesAsBCP47;
+  const generator = L10nRegistry.getInstance().generateBundles(
+    locales,
+    resourceIds
+  );
+
+  const bundles = [];
+  for await (const bundle of generator) {
+    bundles.push(bundle);
+  }
+
+  const reactLocalization = new FluentReact.ReactLocalization(bundles);
+
+  /**
+   * Get the string from a message id. It throws when the message is not found.
+   *
+   * @param {string} id
+   * @param {string} attributeName: attribute name if you need to access a specific attribute
+   *                 defined in the fluent string, e.g. setting "title" for this param
+   *                 will retrieve the `title` string in
+   *                    compatibility-issue-browsers-list =
+   *                      .title = This is the title
+   * @param {Record<string, FluentVariable>} [args] optional
+   * @returns {string}
+   */
+  return (id, attributeName, args) => {
+    let string;
+
+    if (!attributeName) {
+      string = reactLocalization.getString(id, args);
+    } else {
+      for (const bundle of reactLocalization.bundles) {
+        const msg = bundle.getMessage(id);
+        if (msg?.attributes[attributeName]) {
+          string = bundle.formatPattern(
+            msg.attributes[attributeName],
+            args,
+            []
+          );
+          break;
+        }
+      }
+    }
+
+    if (!string) {
+      throw new Error(
+        `Could not find a string for "${id}"${
+          attributeName ? ` and attribute "${attributeName}")` : ""
+        }. Was the correct resource bundle loaded?`
+      );
+    }
+    return string;
+  };
+}

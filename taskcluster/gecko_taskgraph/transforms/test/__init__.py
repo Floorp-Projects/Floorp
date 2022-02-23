@@ -121,8 +121,6 @@ test_description_schema = Schema(
         Optional("variants"): [str],
         # Whether to run this task without any variants applied.
         Required("run-without-variant"): optionally_keyed_by("test-platform", bool),
-        # Whether the task should run with WebRender enabled or not.
-        Optional("webrender"): bool,
         # The EC2 instance size to run these tests on.
         Required("instance-size"): optionally_keyed_by(
             "test-platform", Any("default", "large", "xlarge")
@@ -326,15 +324,6 @@ def set_defaults(config, tasks):
             task.setdefault("allow-software-gl-layers", True)
         else:
             task["allow-software-gl-layers"] = False
-
-        # Enable WebRender by default on the QuantumRender test platforms, since
-        # the whole point of QuantumRender is to run with WebRender enabled.
-        # This currently matches linux64-qr and windows10-64-qr; both of these
-        # have /opt and /debug variants.
-        if "-qr/" in task["test-platform"]:
-            task["webrender"] = True
-        else:
-            task.setdefault("webrender", False)
 
         task.setdefault("try-name", task["test-name"])
         task.setdefault("os-groups", [])

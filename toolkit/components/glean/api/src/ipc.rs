@@ -116,6 +116,9 @@ fn register_process_shutdown(process_type: u32) {
                 FOG_RegisterContentChildShutdown();
             };
         }
+        nsIXULRuntime::PROCESS_TYPE_GMPLUGIN => {
+            // GMP process shutdown is handled in GMPChild::ActorDestroy.
+        }
         nsIXULRuntime::PROCESS_TYPE_GPU => {
             // GPU process shutdown is handled in GPUParent::ActorDestroy.
         }
@@ -124,6 +127,9 @@ fn register_process_shutdown(process_type: u32) {
         }
         nsIXULRuntime::PROCESS_TYPE_SOCKET => {
             // Socket process shutdown is handled in SocketProcessChild::ActorDestroy.
+        }
+        nsIXULRuntime::PROCESS_TYPE_UTILITY => {
+            // Utility process shutdown is handled in UtilityProcessChild::ActorDestroy.
         }
         _ => {
             // We don't yet support other process types.

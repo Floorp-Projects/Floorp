@@ -1461,14 +1461,6 @@ void gfxWindowsPlatform::InitGPUProcessSupport() {
     return;
   }
 
-  nsCString message;
-  nsCString failureId;
-  if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_GPU_PROCESS,
-                                        &message, failureId)) {
-    gpuProc.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
-    return;
-  }
-
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     // Don't use the GPU process if not using D3D11, unless software
     // compositor is allowed
@@ -1694,7 +1686,10 @@ class D3DVsyncSource final : public VsyncSource {
           UpdateVBlankOutput();
           if (mWaitVBlankOutput) {
             const TimeStamp vblank_begin_wait = TimeStamp::Now();
-            hr = mWaitVBlankOutput->WaitForVBlank();
+            {
+              AUTO_PROFILER_THREAD_SLEEP;
+              hr = mWaitVBlankOutput->WaitForVBlank();
+            }
             if (SUCCEEDED(hr)) {
               // vblank might return instantly when running headless,
               // monitor powering off, etc.  Since we're on a dedicated

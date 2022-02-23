@@ -2,14 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%filter substitution
-
-%define item #downloadsRichListBox > richlistitem
-%define itemFocused @item@[selected]
-
 /*** View and outer controls ***/
 
-#downloadsRichListBox {
+#downloadsListBox {
   /** The default listbox appearance comes with an unwanted margin. **/
   appearance: none;
   margin: 0;
@@ -17,7 +12,7 @@
 
 /*** List items ***/
 
-@item@ {
+#downloadsListBox > richlistitem {
   height: var(--downloads-item-height);
 }
 
@@ -91,7 +86,7 @@
 %ifdef XP_MACOSX
   list-style-image: url("chrome://global/skin/icons/search-glass.svg");
 %else
-  list-style-image: url("chrome://browser/skin/folder.png");
+  list-style-image: url("chrome://global/skin/icons/folder.svg");
 %endif
 }
 

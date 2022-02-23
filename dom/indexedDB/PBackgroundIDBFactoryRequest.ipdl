@@ -7,6 +7,8 @@ include protocol PBackgroundIDBDatabase;
 
 include PBackgroundSharedTypes;
 
+include "mozilla/dom/indexedDB/ActorsChild.h";
+
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
@@ -28,6 +30,7 @@ union FactoryRequestResponse
   DeleteDatabaseRequestResponse;
 };
 
+[ManualDealloc, ChildImpl="indexedDB::BackgroundFactoryRequestChild", ParentImpl=virtual]
 protocol PBackgroundIDBFactoryRequest
 {
   manager PBackgroundIDBFactory;

@@ -11,14 +11,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-
   CONTEXT_DESCRIPTOR_TYPES:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   isBrowsingContextCompatible:
     "chrome://remote/content/shared/messagehandler/transports/FrameContextUtils.jsm",
   MessageHandlerFrameActor:
     "chrome://remote/content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm",
+  TabManager: "chrome://remote/content/shared/TabManager.jsm",
 });
 
 /**
@@ -113,12 +112,14 @@ class FrameTransport {
 
   _getBrowsingContextsForDescriptor(contextDescriptor) {
     const { id, type } = contextDescriptor;
+
     if (type === CONTEXT_DESCRIPTOR_TYPES.ALL) {
       return this._getBrowsingContexts();
     }
 
     if (type === CONTEXT_DESCRIPTOR_TYPES.TOP_BROWSING_CONTEXT) {
-      return this._getBrowsingContexts({ browserId: id });
+      const { browserId } = TabManager.getBrowserById(id);
+      return this._getBrowsingContexts({ browserId });
     }
 
     // TODO: Handle other types of context descriptors.
@@ -141,20 +142,13 @@ class FrameTransport {
     // extract browserId from options
     const { browserId } = options;
     let browsingContexts = [];
-    // Fetch all top level window's browsing contexts
-    // Note that getWindowEnumerator works from all processes, including the content process.
-    // Looping on windows this way limits to desktop Firefox. See Bug 1723919.
-    for (const win of Services.ww.getWindowEnumerator("navigator:browser")) {
-      if (!win.gBrowser) {
-        continue;
-      }
 
-      for (const { browsingContext } of win.gBrowser.browsers) {
-        if (isBrowsingContextCompatible(browsingContext, { browserId })) {
-          browsingContexts = browsingContexts.concat(
-            browsingContext.getAllBrowsingContextsInSubtree()
-          );
-        }
+    // Fetch all tab related browsing contexts for top-level windows.
+    for (const { browsingContext } of TabManager.browsers()) {
+      if (isBrowsingContextCompatible(browsingContext, { browserId })) {
+        browsingContexts = browsingContexts.concat(
+          browsingContext.getAllBrowsingContextsInSubtree()
+        );
       }
     }
 

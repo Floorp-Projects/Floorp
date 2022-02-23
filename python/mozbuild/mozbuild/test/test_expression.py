@@ -26,8 +26,8 @@ class TestContext(unittest.TestCase):
 
     def test_in(self):
         """test 'var in context' to not fall for fallback"""
-        self.assert_("FAIL" in self.c)
-        self.assert_("PASS" not in self.c)
+        self.assertTrue("FAIL" in self.c)
+        self.assertTrue("PASS" not in self.c)
 
 
 class TestExpression(unittest.TestCase):
@@ -50,16 +50,16 @@ class TestExpression(unittest.TestCase):
 
     def test_not(self):
         """Test for the ! operator"""
-        self.assert_(Expression("!0").evaluate(self.c))
-        self.assert_(not Expression("!1").evaluate(self.c))
+        self.assertTrue(Expression("!0").evaluate(self.c))
+        self.assertTrue(not Expression("!1").evaluate(self.c))
 
     def test_equals(self):
         """Test for the == operator"""
-        self.assert_(Expression("FAIL == PASS").evaluate(self.c))
+        self.assertTrue(Expression("FAIL == PASS").evaluate(self.c))
 
     def test_notequals(self):
         """Test for the != operator"""
-        self.assert_(Expression("FAIL != 1").evaluate(self.c))
+        self.assertTrue(Expression("FAIL != 1").evaluate(self.c))
 
     def test_logical_and(self):
         """Test for the && operator"""

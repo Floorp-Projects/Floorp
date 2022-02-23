@@ -246,6 +246,10 @@ bool SharedSurface_SurfaceTexture::IsBufferAvailable() const {
   return mSurface->GetAvailable();
 }
 
+bool SharedSurface_SurfaceTexture::IsValid() const {
+  return !mSurface->IsReleased();
+}
+
 Maybe<layers::SurfaceDescriptor>
 SharedSurface_SurfaceTexture::ToSurfaceDescriptor() {
   return Some(layers::SurfaceTextureDescriptor(

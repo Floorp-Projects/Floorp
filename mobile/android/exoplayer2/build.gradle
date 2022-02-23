@@ -1,0 +1,108 @@
+buildDir "${topobjdir}/gradle/build/mobile/android/exoplayer2"
+
+apply plugin: 'com.android.library'
+
+dependencies {
+    // For exoplayer.
+    compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+    compileOnly "org.checkerframework:checker-compat-qual:2.5.0"
+    compileOnly "org.checkerframework:checker-qual:2.5.0"
+    compileOnly "org.jetbrains.kotlin:kotlin-annotations-jvm:1.3.70"
+
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    implementation "androidx.annotation:annotation:1.1.0"
+}
+
+android {
+    buildToolsVersion project.ext.buildToolsVersion
+    compileSdkVersion project.ext.compileSdkVersion
+
+    defaultConfig {
+        targetSdkVersion project.ext.targetSdkVersion
+        minSdkVersion project.ext.minSdkVersion
+
+        versionCode project.ext.versionCode
+        versionName project.ext.versionName
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDir "${topsrcdir}/mobile/android/exoplayer2/src/main/java"
+            }
+        }
+    }
+}
+
+apply plugin: 'maven-publish'
+
+version = getVersionNumber()
+group = 'org.mozilla.geckoview'
+
+android.libraryVariants.all { variant ->
+    def javadoc = task "javadoc${name.capitalize()}"(type: Javadoc) {
+    }
+    task("javadocJar${name.capitalize()}", type: Jar, dependsOn: javadoc) {
+        archiveClassifier = 'javadoc'
+        destinationDirectory = javadoc.destinationDir
+    }
+    task("sourcesJar${name.capitalize()}", type: Jar) {
+        classifier 'sources'
+        description = "Generate Javadoc for build variant $name"
+        destinationDirectory =
+                file("${topobjdir}/mobile/android/geckoview-exoplayer2/sources/${variant.baseName}")
+        from files(variant.sourceSets.collect({ it.java.srcDirs }).flatten())
+    }
+}
+
+publishing {
+    publications {
+        android.libraryVariants.all { variant ->
+            "${variant.name}"(MavenPublication) {
+                from components.findByName(variant.name)
+
+                pom {
+                    afterEvaluate {
+                        artifactId = "geckoview-exoplayer2" + project.ext.artifactSuffix
+                    }
+
+                    url = 'https://geckoview.dev'
+
+                    licenses {
+                        license {
+                            name = 'The Mozilla Public License, v. 2.0'
+                            url = 'http://mozilla.org/MPL/2.0/'
+                            distribution = 'repo'
+                        }
+                    }
+
+                    scm {
+                        if (mozconfig.substs.MOZ_INCLUDE_SOURCE_INFO) {
+                            // URL is like "https://hg.mozilla.org/mozilla-central/rev/1e64b8a0c546a49459d404aaf930d5b1f621246a".
+                            connection = "scm::hg::${mozconfig.substs.MOZ_SOURCE_REPO}"
+                            url = mozconfig.substs.MOZ_SOURCE_URL
+                            tag = mozconfig.substs.MOZ_SOURCE_CHANGESET
+                        } else {
+                            // Default to mozilla-central.
+                            connection = 'scm::hg::https://hg.mozilla.org/mozilla-central/'
+                            url = 'https://hg.mozilla.org/mozilla-central/'
+                        }
+                    }
+                }
+
+                // Javadoc and sources for developer ergononomics.
+                artifact tasks["javadocJar${variant.name.capitalize()}"]
+                artifact tasks["sourcesJar${variant.name.capitalize()}"]
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = "${topobjdir}/gradle/maven"
+        }
+    }
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8

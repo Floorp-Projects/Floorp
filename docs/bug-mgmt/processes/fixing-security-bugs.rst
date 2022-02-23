@@ -71,7 +71,7 @@ In addition to commits, you’ll need to be mindful of not disclosing
 sensitive information about the bug in public places, such as Bugzilla:
 
 -  **Do not add public bugs in the “duplicate”, “depends on”, “blocks”,
-   “regression”, “regressed by”, or “see also” section if these bugs 
+   “regression”, “regressed by”, or “see also” section if these bugs
    could give hints about the nature of the security issue.**
 
    -  Mention the bugs in comment of the private bug instead.

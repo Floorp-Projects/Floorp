@@ -170,7 +170,8 @@ JSString* js::ValueToSource(JSContext* cx, HandleValue v) {
     case ValueType::ExtendedPrimitive: {
       RootedObject obj(cx, &v.toExtendedPrimitive());
       if (obj->is<TupleType>()) {
-        return TupleToSource(cx, &obj->as<TupleType>());
+        Rooted<TupleType*> tup(cx, &obj->as<TupleType>());
+        return TupleToSource(cx, tup);
       }
       if (obj->is<RecordType>()) {
         return RecordToSource(cx, obj.as<RecordType>());

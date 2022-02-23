@@ -79,7 +79,7 @@ CKA_LABEL UTF8 "Mozilla Builtin Roots"
 # Subject: CN=GlobalSign Root CA,OU=Root CA,O=GlobalSign nv-sa,C=BE
 # Not Valid Before: Tue Sep 01 12:00:00 1998
 # Not Valid After : Fri Jan 28 12:00:00 2028
-# Fingerprint (MD5): 3E:45:52:15:09:51:92:E1:B7:5D:37:9F:B1:87:29:8A
+# Fingerprint (SHA-256): EB:D4:10:40:E4:BB:3E:C7:42:C9:E3:81:D3:1E:F2:A4:1A:48:B6:68:5C:96:E7:CE:F3:C1:DF:6C:D4:33:1C:99
 # Fingerprint (SHA1): B1:BC:96:8B:D4:F4:9D:62:2A:A8:9A:81:F2:15:01:52:A4:1D:82:9C
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -169,13 +169,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "GlobalSign Root CA"
+# Trust for "GlobalSign Root CA"
 # Issuer: CN=GlobalSign Root CA,OU=Root CA,O=GlobalSign nv-sa,C=BE
 # Serial Number:04:00:00:00:00:01:15:4b:5a:c3:94
 # Subject: CN=GlobalSign Root CA,OU=Root CA,O=GlobalSign nv-sa,C=BE
 # Not Valid Before: Tue Sep 01 12:00:00 1998
 # Not Valid After : Fri Jan 28 12:00:00 2028
-# Fingerprint (MD5): 3E:45:52:15:09:51:92:E1:B7:5D:37:9F:B1:87:29:8A
+# Fingerprint (SHA-256): EB:D4:10:40:E4:BB:3E:C7:42:C9:E3:81:D3:1E:F2:A4:1A:48:B6:68:5C:96:E7:CE:F3:C1:DF:6C:D4:33:1C:99
 # Fingerprint (SHA1): B1:BC:96:8B:D4:F4:9D:62:2A:A8:9A:81:F2:15:01:52:A4:1D:82:9C
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -213,7 +213,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=VeriSign Class 1 Public Primary Certification Authority - G3,OU="(c) 1999 VeriSign, Inc. - For authorized use only",OU=VeriSign Trust Network,O="VeriSign, Inc.",C=US
 # Not Valid Before: Fri Oct 01 00:00:00 1999
 # Not Valid After : Wed Jul 16 23:59:59 2036
-# Fingerprint (MD5): B1:47:BC:18:57:D1:18:A0:78:2D:EC:71:E8:2A:95:73
+# Fingerprint (SHA-256): CB:B5:AF:18:5E:94:2A:24:02:F9:EA:CB:C0:ED:5B:B8:76:EE:A3:C1:22:36:23:D0:04:47:E4:F3:BA:55:4B:65
 # Fingerprint (SHA1): 20:42:85:DC:F7:EB:76:41:95:57:8E:13:6B:D4:B7:D1:E9:8E:46:A5
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -331,13 +331,13 @@ CKA_NSS_EMAIL_DISTRUST_AFTER MULTILINE_OCTAL
 \062\062\060\070\063\061\060\060\060\060\060\060\132
 END
 
-# Trust for Certificate "Verisign Class 1 Public Primary Certification Authority - G3"
+# Trust for "Verisign Class 1 Public Primary Certification Authority - G3"
 # Issuer: CN=VeriSign Class 1 Public Primary Certification Authority - G3,OU="(c) 1999 VeriSign, Inc. - For authorized use only",OU=VeriSign Trust Network,O="VeriSign, Inc.",C=US
 # Serial Number:00:8b:5b:75:56:84:54:85:0b:00:cf:af:38:48:ce:b1:a4
 # Subject: CN=VeriSign Class 1 Public Primary Certification Authority - G3,OU="(c) 1999 VeriSign, Inc. - For authorized use only",OU=VeriSign Trust Network,O="VeriSign, Inc.",C=US
 # Not Valid Before: Fri Oct 01 00:00:00 1999
 # Not Valid After : Wed Jul 16 23:59:59 2036
-# Fingerprint (MD5): B1:47:BC:18:57:D1:18:A0:78:2D:EC:71:E8:2A:95:73
+# Fingerprint (SHA-256): CB:B5:AF:18:5E:94:2A:24:02:F9:EA:CB:C0:ED:5B:B8:76:EE:A3:C1:22:36:23:D0:04:47:E4:F3:BA:55:4B:65
 # Fingerprint (SHA1): 20:42:85:DC:F7:EB:76:41:95:57:8E:13:6B:D4:B7:D1:E9:8E:46:A5
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -383,7 +383,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=VeriSign Class 2 Public Primary Certification Authority - G3,OU="(c) 1999 VeriSign, Inc. - For authorized use only",OU=VeriSign Trust Network,O="VeriSign, Inc.",C=US
 # Not Valid Before: Fri Oct 01 00:00:00 1999
 # Not Valid After : Wed Jul 16 23:59:59 2036
-# Fingerprint (MD5): F8:BE:C4:63:22:C9:A8:46:74:8B:B8:1D:1E:4A:2B:F6
+# Fingerprint (SHA-256): 92:A9:D9:83:3F:E1:94:4D:B3:66:E8:BF:AE:7A:95:B6:48:0C:2D:6C:6C:2A:1B:E6:5D:42:36:B6:08:FC:A1:BB
 # Fingerprint (SHA1): 61:EF:43:D7:7F:CA:D4:61:51:BC:98:E0:C3:59:12:AF:9F:EB:63:11
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -501,13 +501,13 @@ CKA_NSS_EMAIL_DISTRUST_AFTER MULTILINE_OCTAL
 \062\062\060\070\063\061\060\060\060\060\060\060\132
 END
 
-# Trust for Certificate "Verisign Class 2 Public Primary Certification Authority - G3"
+# Trust for "Verisign Class 2 Public Primary Certification Authority - G3"
 # Issuer: CN=VeriSign Class 2 Public Primary Certification Authority - G3,OU="(c) 1999 VeriSign, Inc. - For authorized use only",OU=VeriSign Trust Network,O="VeriSign, Inc.",C=US
 # Serial Number:61:70:cb:49:8c:5f:98:45:29:e7:b0:a6:d9:50:5b:7a
 # Subject: CN=VeriSign Class 2 Public Primary Certification Authority - G3,OU="(c) 1999 VeriSign, Inc. - For authorized use only",OU=VeriSign Trust Network,O="VeriSign, Inc.",C=US
 # Not Valid Before: Fri Oct 01 00:00:00 1999
 # Not Valid After : Wed Jul 16 23:59:59 2036
-# Fingerprint (MD5): F8:BE:C4:63:22:C9:A8:46:74:8B:B8:1D:1E:4A:2B:F6
+# Fingerprint (SHA-256): 92:A9:D9:83:3F:E1:94:4D:B3:66:E8:BF:AE:7A:95:B6:48:0C:2D:6C:6C:2A:1B:E6:5D:42:36:B6:08:FC:A1:BB
 # Fingerprint (SHA1): 61:EF:43:D7:7F:CA:D4:61:51:BC:98:E0:C3:59:12:AF:9F:EB:63:11
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -553,7 +553,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Entrust.net Certification Authority (2048),OU=(c) 1999 Entrust.net Limited,OU=www.entrust.net/CPS_2048 incorp. by ref. (limits liab.),O=Entrust.net
 # Not Valid Before: Fri Dec 24 17:50:51 1999
 # Not Valid After : Tue Jul 24 14:15:12 2029
-# Fingerprint (MD5): EE:29:31:BC:32:7E:9A:E6:E8:B5:F7:51:B4:34:71:90
+# Fingerprint (SHA-256): 6D:C4:71:72:E0:1C:BC:B0:BF:62:58:0D:89:5F:E2:B8:AC:9A:D4:F8:73:80:1E:0C:10:B9:C8:37:D2:1E:B1:77
 # Fingerprint (SHA1): 50:30:06:09:1D:97:D4:F5:AE:39:F7:CB:E7:92:7D:7D:65:2D:34:31
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -672,7 +672,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: CN=Entrust.net Certification Authority (2048),OU=(c) 1999 Entrust.net Limited,OU=www.entrust.net/CPS_2048 incorp. by ref. (limits liab.),O=Entrust.net
 # Not Valid Before: Fri Dec 24 17:50:51 1999
 # Not Valid After : Tue Jul 24 14:15:12 2029
-# Fingerprint (MD5): EE:29:31:BC:32:7E:9A:E6:E8:B5:F7:51:B4:34:71:90
+# Fingerprint (SHA-256): 6D:C4:71:72:E0:1C:BC:B0:BF:62:58:0D:89:5F:E2:B8:AC:9A:D4:F8:73:80:1E:0C:10:B9:C8:37:D2:1E:B1:77
 # Fingerprint (SHA1): 50:30:06:09:1D:97:D4:F5:AE:39:F7:CB:E7:92:7D:7D:65:2D:34:31
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -716,7 +716,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Baltimore CyberTrust Root,OU=CyberTrust,O=Baltimore,C=IE
 # Not Valid Before: Fri May 12 18:46:00 2000
 # Not Valid After : Mon May 12 23:59:00 2025
-# Fingerprint (MD5): AC:B6:94:A5:9C:17:E0:D7:91:52:9B:B1:97:06:A6:E4
+# Fingerprint (SHA-256): 16:AF:57:A9:F6:76:B0:AB:12:60:95:AA:5E:BA:DE:F2:2A:B3:11:19:D6:44:AC:95:CD:4B:93:DB:F3:F2:6A:EB
 # Fingerprint (SHA1): D4:DE:20:D0:5E:66:FC:53:FE:1A:50:88:2C:78:DB:28:52:CA:E4:74
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -806,13 +806,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Baltimore CyberTrust Root"
+# Trust for "Baltimore CyberTrust Root"
 # Issuer: CN=Baltimore CyberTrust Root,OU=CyberTrust,O=Baltimore,C=IE
 # Serial Number: 33554617 (0x20000b9)
 # Subject: CN=Baltimore CyberTrust Root,OU=CyberTrust,O=Baltimore,C=IE
 # Not Valid Before: Fri May 12 18:46:00 2000
 # Not Valid After : Mon May 12 23:59:00 2025
-# Fingerprint (MD5): AC:B6:94:A5:9C:17:E0:D7:91:52:9B:B1:97:06:A6:E4
+# Fingerprint (SHA-256): 16:AF:57:A9:F6:76:B0:AB:12:60:95:AA:5E:BA:DE:F2:2A:B3:11:19:D6:44:AC:95:CD:4B:93:DB:F3:F2:6A:EB
 # Fingerprint (SHA1): D4:DE:20:D0:5E:66:FC:53:FE:1A:50:88:2C:78:DB:28:52:CA:E4:74
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -850,7 +850,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Entrust Root Certification Authority,OU="(c) 2006 Entrust, Inc.",OU=www.entrust.net/CPS is incorporated by reference,O="Entrust, Inc.",C=US
 # Not Valid Before: Mon Nov 27 20:23:42 2006
 # Not Valid After : Fri Nov 27 20:53:42 2026
-# Fingerprint (MD5): D6:A5:C3:ED:5D:DD:3E:00:C1:3D:87:92:1F:1D:3F:E4
+# Fingerprint (SHA-256): 73:C1:76:43:4F:1B:C6:D5:AD:F4:5B:0E:76:E7:27:28:7C:8D:E5:76:16:C1:E6:E6:14:1A:2B:2C:BC:7D:8E:4C
 # Fingerprint (SHA1): B3:1E:B1:B7:40:E3:6C:84:02:DA:DC:37:D4:4D:F5:D4:67:49:52:F9
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -970,13 +970,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Entrust Root Certification Authority"
+# Trust for "Entrust Root Certification Authority"
 # Issuer: CN=Entrust Root Certification Authority,OU="(c) 2006 Entrust, Inc.",OU=www.entrust.net/CPS is incorporated by reference,O="Entrust, Inc.",C=US
 # Serial Number: 1164660820 (0x456b5054)
 # Subject: CN=Entrust Root Certification Authority,OU="(c) 2006 Entrust, Inc.",OU=www.entrust.net/CPS is incorporated by reference,O="Entrust, Inc.",C=US
 # Not Valid Before: Mon Nov 27 20:23:42 2006
 # Not Valid After : Fri Nov 27 20:53:42 2026
-# Fingerprint (MD5): D6:A5:C3:ED:5D:DD:3E:00:C1:3D:87:92:1F:1D:3F:E4
+# Fingerprint (SHA-256): 73:C1:76:43:4F:1B:C6:D5:AD:F4:5B:0E:76:E7:27:28:7C:8D:E5:76:16:C1:E6:E6:14:1A:2B:2C:BC:7D:8E:4C
 # Fingerprint (SHA1): B3:1E:B1:B7:40:E3:6C:84:02:DA:DC:37:D4:4D:F5:D4:67:49:52:F9
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -1020,7 +1020,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Certum CA,O=Unizeto Sp. z o.o.,C=PL
 # Not Valid Before: Tue Jun 11 10:46:39 2002
 # Not Valid After : Fri Jun 11 10:46:39 2027
-# Fingerprint (MD5): 2C:8F:9F:66:1D:18:90:B1:47:26:9D:8E:86:82:8C:A9
+# Fingerprint (SHA-256): D8:E0:FE:BC:1D:B2:E3:8D:00:94:0F:37:D2:7D:41:34:4D:99:3E:73:4B:99:D5:65:6D:97:78:D4:D8:14:36:24
 # Fingerprint (SHA1): 62:52:DC:40:F7:11:43:A2:2F:DE:9E:F7:34:8E:06:42:51:B1:81:18
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -1099,13 +1099,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Certum Root CA"
+# Trust for "Certum Root CA"
 # Issuer: CN=Certum CA,O=Unizeto Sp. z o.o.,C=PL
 # Serial Number: 65568 (0x10020)
 # Subject: CN=Certum CA,O=Unizeto Sp. z o.o.,C=PL
 # Not Valid Before: Tue Jun 11 10:46:39 2002
 # Not Valid After : Fri Jun 11 10:46:39 2027
-# Fingerprint (MD5): 2C:8F:9F:66:1D:18:90:B1:47:26:9D:8E:86:82:8C:A9
+# Fingerprint (SHA-256): D8:E0:FE:BC:1D:B2:E3:8D:00:94:0F:37:D2:7D:41:34:4D:99:3E:73:4B:99:D5:65:6D:97:78:D4:D8:14:36:24
 # Fingerprint (SHA1): 62:52:DC:40:F7:11:43:A2:2F:DE:9E:F7:34:8E:06:42:51:B1:81:18
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -1141,7 +1141,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=AAA Certificate Services,O=Comodo CA Limited,L=Salford,ST=Greater Manchester,C=GB
 # Not Valid Before: Thu Jan 01 00:00:00 2004
 # Not Valid After : Sun Dec 31 23:59:59 2028
-# Fingerprint (MD5): 49:79:04:B0:EB:87:19:AC:47:B0:BC:11:51:9B:74:D0
+# Fingerprint (SHA-256): D7:A7:A0:FB:5D:7E:27:31:D7:71:E9:48:4E:BC:DE:F7:1D:5F:0C:3E:0A:29:48:78:2B:C8:3E:E0:EA:69:9E:F4
 # Fingerprint (SHA1): D1:EB:23:A4:6D:17:D6:8F:D9:25:64:C2:F1:F1:60:17:64:D8:E3:49
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -1247,13 +1247,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Comodo AAA Services root"
+# Trust for "Comodo AAA Services root"
 # Issuer: CN=AAA Certificate Services,O=Comodo CA Limited,L=Salford,ST=Greater Manchester,C=GB
 # Serial Number: 1 (0x1)
 # Subject: CN=AAA Certificate Services,O=Comodo CA Limited,L=Salford,ST=Greater Manchester,C=GB
 # Not Valid Before: Thu Jan 01 00:00:00 2004
 # Not Valid After : Sun Dec 31 23:59:59 2028
-# Fingerprint (MD5): 49:79:04:B0:EB:87:19:AC:47:B0:BC:11:51:9B:74:D0
+# Fingerprint (SHA-256): D7:A7:A0:FB:5D:7E:27:31:D7:71:E9:48:4E:BC:DE:F7:1D:5F:0C:3E:0A:29:48:78:2B:C8:3E:E0:EA:69:9E:F4
 # Fingerprint (SHA1): D1:EB:23:A4:6D:17:D6:8F:D9:25:64:C2:F1:F1:60:17:64:D8:E3:49
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -1293,7 +1293,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=QuoVadis Root CA 2,O=QuoVadis Limited,C=BM
 # Not Valid Before: Fri Nov 24 18:27:00 2006
 # Not Valid After : Mon Nov 24 18:23:33 2031
-# Fingerprint (MD5): 5E:39:7B:DD:F8:BA:EC:82:E9:AC:62:BA:0C:54:00:2B
+# Fingerprint (SHA-256): 85:A0:DD:7D:D7:20:AD:B7:FF:05:F8:3D:54:2B:20:9D:C7:FF:45:28:F7:D6:77:B1:83:89:FE:A5:E5:C4:9E:86
 # Fingerprint (SHA1): CA:3A:FB:CF:12:40:36:4B:44:B2:16:20:88:80:48:39:19:93:7C:F7
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -1417,13 +1417,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "QuoVadis Root CA 2"
+# Trust for "QuoVadis Root CA 2"
 # Issuer: CN=QuoVadis Root CA 2,O=QuoVadis Limited,C=BM
 # Serial Number: 1289 (0x509)
 # Subject: CN=QuoVadis Root CA 2,O=QuoVadis Limited,C=BM
 # Not Valid Before: Fri Nov 24 18:27:00 2006
 # Not Valid After : Mon Nov 24 18:23:33 2031
-# Fingerprint (MD5): 5E:39:7B:DD:F8:BA:EC:82:E9:AC:62:BA:0C:54:00:2B
+# Fingerprint (SHA-256): 85:A0:DD:7D:D7:20:AD:B7:FF:05:F8:3D:54:2B:20:9D:C7:FF:45:28:F7:D6:77:B1:83:89:FE:A5:E5:C4:9E:86
 # Fingerprint (SHA1): CA:3A:FB:CF:12:40:36:4B:44:B2:16:20:88:80:48:39:19:93:7C:F7
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -1460,7 +1460,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=QuoVadis Root CA 3,O=QuoVadis Limited,C=BM
 # Not Valid Before: Fri Nov 24 19:11:23 2006
 # Not Valid After : Mon Nov 24 19:06:44 2031
-# Fingerprint (MD5): 31:85:3C:62:94:97:63:B9:AA:FD:89:4E:AF:6F:E0:CF
+# Fingerprint (SHA-256): 18:F1:FC:7F:20:5D:F8:AD:DD:EB:7F:E0:07:DD:57:E3:AF:37:5A:9C:4D:8D:73:54:6B:F4:F1:FE:D1:E1:8D:35
 # Fingerprint (SHA1): 1F:49:14:F7:D8:74:95:1D:DD:AE:02:C0:BE:FD:3A:2D:82:75:51:85
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -1599,13 +1599,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "QuoVadis Root CA 3"
+# Trust for "QuoVadis Root CA 3"
 # Issuer: CN=QuoVadis Root CA 3,O=QuoVadis Limited,C=BM
 # Serial Number: 1478 (0x5c6)
 # Subject: CN=QuoVadis Root CA 3,O=QuoVadis Limited,C=BM
 # Not Valid Before: Fri Nov 24 19:11:23 2006
 # Not Valid After : Mon Nov 24 19:06:44 2031
-# Fingerprint (MD5): 31:85:3C:62:94:97:63:B9:AA:FD:89:4E:AF:6F:E0:CF
+# Fingerprint (SHA-256): 18:F1:FC:7F:20:5D:F8:AD:DD:EB:7F:E0:07:DD:57:E3:AF:37:5A:9C:4D:8D:73:54:6B:F4:F1:FE:D1:E1:8D:35
 # Fingerprint (SHA1): 1F:49:14:F7:D8:74:95:1D:DD:AE:02:C0:BE:FD:3A:2D:82:75:51:85
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -1642,7 +1642,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: OU=Security Communication RootCA1,O=SECOM Trust.net,C=JP
 # Not Valid Before: Tue Sep 30 04:20:49 2003
 # Not Valid After : Sat Sep 30 04:20:49 2023
-# Fingerprint (MD5): F1:BC:63:6A:54:E0:B5:27:F5:CD:E7:1A:E3:4D:6E:4A
+# Fingerprint (SHA-256): E7:5E:72:ED:9F:56:0E:EC:6E:B4:80:00:73:A4:3F:C3:AD:19:19:5A:39:22:82:01:78:95:97:4A:99:02:6B:6C
 # Fingerprint (SHA1): 36:B1:2B:49:F9:81:9E:D7:4C:9E:BC:38:0F:C6:56:8F:5D:AC:B2:F7
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -1730,13 +1730,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Security Communication Root CA"
+# Trust for "Security Communication Root CA"
 # Issuer: OU=Security Communication RootCA1,O=SECOM Trust.net,C=JP
 # Serial Number: 0 (0x0)
 # Subject: OU=Security Communication RootCA1,O=SECOM Trust.net,C=JP
 # Not Valid Before: Tue Sep 30 04:20:49 2003
 # Not Valid After : Sat Sep 30 04:20:49 2023
-# Fingerprint (MD5): F1:BC:63:6A:54:E0:B5:27:F5:CD:E7:1A:E3:4D:6E:4A
+# Fingerprint (SHA-256): E7:5E:72:ED:9F:56:0E:EC:6E:B4:80:00:73:A4:3F:C3:AD:19:19:5A:39:22:82:01:78:95:97:4A:99:02:6B:6C
 # Fingerprint (SHA1): 36:B1:2B:49:F9:81:9E:D7:4C:9E:BC:38:0F:C6:56:8F:5D:AC:B2:F7
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -1774,7 +1774,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Chambers of Commerce Root,OU=http://www.chambersign.org,O=AC Camerfirma SA CIF A82743287,C=EU
 # Not Valid Before: Tue Sep 30 16:13:43 2003
 # Not Valid After : Wed Sep 30 16:13:44 2037
-# Fingerprint (MD5): B0:01:EE:14:D9:AF:29:18:94:76:8E:F1:69:33:2A:84
+# Fingerprint (SHA-256): 0C:25:8A:12:A5:67:4A:EF:25:F2:8B:A7:DC:FA:EC:EE:A3:48:E5:41:E6:F5:CC:4E:E6:3B:71:B3:61:60:6A:C3
 # Fingerprint (SHA1): 6E:3A:55:A4:19:0C:19:5C:93:84:3C:C0:DB:72:2E:31:30:61:F0:B1
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -1894,13 +1894,13 @@ CKA_NSS_EMAIL_DISTRUST_AFTER MULTILINE_OCTAL
 \062\061\060\063\060\061\060\060\060\060\060\060\132
 END
 
-# Trust for Certificate "Camerfirma Chambers of Commerce Root"
+# Trust for "Camerfirma Chambers of Commerce Root"
 # Issuer: CN=Chambers of Commerce Root,OU=http://www.chambersign.org,O=AC Camerfirma SA CIF A82743287,C=EU
 # Serial Number: 0 (0x0)
 # Subject: CN=Chambers of Commerce Root,OU=http://www.chambersign.org,O=AC Camerfirma SA CIF A82743287,C=EU
 # Not Valid Before: Tue Sep 30 16:13:43 2003
 # Not Valid After : Wed Sep 30 16:13:44 2037
-# Fingerprint (MD5): B0:01:EE:14:D9:AF:29:18:94:76:8E:F1:69:33:2A:84
+# Fingerprint (SHA-256): 0C:25:8A:12:A5:67:4A:EF:25:F2:8B:A7:DC:FA:EC:EE:A3:48:E5:41:E6:F5:CC:4E:E6:3B:71:B3:61:60:6A:C3
 # Fingerprint (SHA1): 6E:3A:55:A4:19:0C:19:5C:93:84:3C:C0:DB:72:2E:31:30:61:F0:B1
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -1941,7 +1941,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Global Chambersign Root,OU=http://www.chambersign.org,O=AC Camerfirma SA CIF A82743287,C=EU
 # Not Valid Before: Tue Sep 30 16:14:18 2003
 # Not Valid After : Wed Sep 30 16:14:18 2037
-# Fingerprint (MD5): C5:E6:7B:BF:06:D0:4F:43:ED:C4:7A:65:8A:FB:6B:19
+# Fingerprint (SHA-256): EF:3C:B4:17:FC:8E:BF:6F:97:87:6C:9E:4E:CE:39:DE:1E:A5:FE:64:91:41:D1:02:8B:7D:11:C0:B2:29:8C:ED
 # Fingerprint (SHA1): 33:9B:6B:14:50:24:9B:55:7A:01:87:72:84:D9:E0:2F:C3:D2:D8:E9
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2059,13 +2059,13 @@ CKA_NSS_EMAIL_DISTRUST_AFTER MULTILINE_OCTAL
 \062\061\060\063\060\061\060\060\060\060\060\060\132
 END
 
-# Trust for Certificate "Camerfirma Global Chambersign Root"
+# Trust for "Camerfirma Global Chambersign Root"
 # Issuer: CN=Global Chambersign Root,OU=http://www.chambersign.org,O=AC Camerfirma SA CIF A82743287,C=EU
 # Serial Number: 0 (0x0)
 # Subject: CN=Global Chambersign Root,OU=http://www.chambersign.org,O=AC Camerfirma SA CIF A82743287,C=EU
 # Not Valid Before: Tue Sep 30 16:14:18 2003
 # Not Valid After : Wed Sep 30 16:14:18 2037
-# Fingerprint (MD5): C5:E6:7B:BF:06:D0:4F:43:ED:C4:7A:65:8A:FB:6B:19
+# Fingerprint (SHA-256): EF:3C:B4:17:FC:8E:BF:6F:97:87:6C:9E:4E:CE:39:DE:1E:A5:FE:64:91:41:D1:02:8B:7D:11:C0:B2:29:8C:ED
 # Fingerprint (SHA1): 33:9B:6B:14:50:24:9B:55:7A:01:87:72:84:D9:E0:2F:C3:D2:D8:E9
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2105,7 +2105,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=XRamp Global Certification Authority,O=XRamp Security Services Inc,OU=www.xrampsecurity.com,C=US
 # Not Valid Before: Mon Nov 01 17:14:04 2004
 # Not Valid After : Mon Jan 01 05:37:19 2035
-# Fingerprint (MD5): A1:0B:44:B3:CA:10:D8:00:6E:9D:0F:D8:0F:92:0A:D1
+# Fingerprint (SHA-256): CE:CD:DC:90:50:99:D8:DA:DF:C5:B1:D2:09:B7:37:CB:E2:C1:8C:FB:2C:10:C0:FF:0B:CF:0D:32:86:FC:1A:A2
 # Fingerprint (SHA1): B8:01:86:D1:EB:9C:86:A5:41:04:CF:30:54:F3:4C:52:B7:E5:58:C6
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2214,13 +2214,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "XRamp Global CA Root"
+# Trust for "XRamp Global CA Root"
 # Issuer: CN=XRamp Global Certification Authority,O=XRamp Security Services Inc,OU=www.xrampsecurity.com,C=US
 # Serial Number:50:94:6c:ec:18:ea:d5:9c:4d:d5:97:ef:75:8f:a0:ad
 # Subject: CN=XRamp Global Certification Authority,O=XRamp Security Services Inc,OU=www.xrampsecurity.com,C=US
 # Not Valid Before: Mon Nov 01 17:14:04 2004
 # Not Valid After : Mon Jan 01 05:37:19 2035
-# Fingerprint (MD5): A1:0B:44:B3:CA:10:D8:00:6E:9D:0F:D8:0F:92:0A:D1
+# Fingerprint (SHA-256): CE:CD:DC:90:50:99:D8:DA:DF:C5:B1:D2:09:B7:37:CB:E2:C1:8C:FB:2C:10:C0:FF:0B:CF:0D:32:86:FC:1A:A2
 # Fingerprint (SHA1): B8:01:86:D1:EB:9C:86:A5:41:04:CF:30:54:F3:4C:52:B7:E5:58:C6
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2262,7 +2262,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: OU=Go Daddy Class 2 Certification Authority,O="The Go Daddy Group, Inc.",C=US
 # Not Valid Before: Tue Jun 29 17:06:20 2004
 # Not Valid After : Thu Jun 29 17:06:20 2034
-# Fingerprint (MD5): 91:DE:06:25:AB:DA:FD:32:17:0C:BB:25:17:2A:84:67
+# Fingerprint (SHA-256): C3:84:6B:F2:4B:9E:93:CA:64:27:4C:0E:C6:7C:1E:CC:5E:02:4F:FC:AC:D2:D7:40:19:35:0E:81:FE:54:6A:E4
 # Fingerprint (SHA1): 27:96:BA:E6:3F:18:01:E2:77:26:1B:A0:D7:77:70:02:8F:20:EE:E4
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2363,13 +2363,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Go Daddy Class 2 CA"
+# Trust for "Go Daddy Class 2 CA"
 # Issuer: OU=Go Daddy Class 2 Certification Authority,O="The Go Daddy Group, Inc.",C=US
 # Serial Number: 0 (0x0)
 # Subject: OU=Go Daddy Class 2 Certification Authority,O="The Go Daddy Group, Inc.",C=US
 # Not Valid Before: Tue Jun 29 17:06:20 2004
 # Not Valid After : Thu Jun 29 17:06:20 2034
-# Fingerprint (MD5): 91:DE:06:25:AB:DA:FD:32:17:0C:BB:25:17:2A:84:67
+# Fingerprint (SHA-256): C3:84:6B:F2:4B:9E:93:CA:64:27:4C:0E:C6:7C:1E:CC:5E:02:4F:FC:AC:D2:D7:40:19:35:0E:81:FE:54:6A:E4
 # Fingerprint (SHA1): 27:96:BA:E6:3F:18:01:E2:77:26:1B:A0:D7:77:70:02:8F:20:EE:E4
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2408,7 +2408,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: OU=Starfield Class 2 Certification Authority,O="Starfield Technologies, Inc.",C=US
 # Not Valid Before: Tue Jun 29 17:39:16 2004
 # Not Valid After : Thu Jun 29 17:39:16 2034
-# Fingerprint (MD5): 32:4A:4B:BB:C8:63:69:9B:BE:74:9A:C6:DD:1D:46:24
+# Fingerprint (SHA-256): 14:65:FA:20:53:97:B8:76:FA:A6:F0:A9:95:8E:55:90:E4:0F:CC:7F:AA:4F:B7:C2:C8:67:75:21:FB:5F:B6:58
 # Fingerprint (SHA1): AD:7E:1C:28:B0:64:EF:8F:60:03:40:20:14:C3:D0:E3:37:0E:B5:8A
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2510,13 +2510,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Starfield Class 2 CA"
+# Trust for "Starfield Class 2 CA"
 # Issuer: OU=Starfield Class 2 Certification Authority,O="Starfield Technologies, Inc.",C=US
 # Serial Number: 0 (0x0)
 # Subject: OU=Starfield Class 2 Certification Authority,O="Starfield Technologies, Inc.",C=US
 # Not Valid Before: Tue Jun 29 17:39:16 2004
 # Not Valid After : Thu Jun 29 17:39:16 2034
-# Fingerprint (MD5): 32:4A:4B:BB:C8:63:69:9B:BE:74:9A:C6:DD:1D:46:24
+# Fingerprint (SHA-256): 14:65:FA:20:53:97:B8:76:FA:A6:F0:A9:95:8E:55:90:E4:0F:CC:7F:AA:4F:B7:C2:C8:67:75:21:FB:5F:B6:58
 # Fingerprint (SHA1): AD:7E:1C:28:B0:64:EF:8F:60:03:40:20:14:C3:D0:E3:37:0E:B5:8A
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2555,7 +2555,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=DigiCert Assured ID Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US
 # Not Valid Before: Fri Nov 10 00:00:00 2006
 # Not Valid After : Mon Nov 10 00:00:00 2031
-# Fingerprint (MD5): 87:CE:0B:7B:2A:0E:49:00:E1:58:71:9B:37:A8:93:72
+# Fingerprint (SHA-256): 3E:90:99:B5:01:5E:8F:48:6C:00:BC:EA:9D:11:1E:E7:21:FA:BA:35:5A:89:BC:F1:DF:69:56:1E:3D:C6:32:5C
 # Fingerprint (SHA1): 05:63:B8:63:0D:62:D7:5A:BB:C8:AB:1E:4B:DF:B5:A8:99:B2:4D:43
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2652,13 +2652,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "DigiCert Assured ID Root CA"
+# Trust for "DigiCert Assured ID Root CA"
 # Issuer: CN=DigiCert Assured ID Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US
 # Serial Number:0c:e7:e0:e5:17:d8:46:fe:8f:e5:60:fc:1b:f0:30:39
 # Subject: CN=DigiCert Assured ID Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US
 # Not Valid Before: Fri Nov 10 00:00:00 2006
 # Not Valid After : Mon Nov 10 00:00:00 2031
-# Fingerprint (MD5): 87:CE:0B:7B:2A:0E:49:00:E1:58:71:9B:37:A8:93:72
+# Fingerprint (SHA-256): 3E:90:99:B5:01:5E:8F:48:6C:00:BC:EA:9D:11:1E:E7:21:FA:BA:35:5A:89:BC:F1:DF:69:56:1E:3D:C6:32:5C
 # Fingerprint (SHA1): 05:63:B8:63:0D:62:D7:5A:BB:C8:AB:1E:4B:DF:B5:A8:99:B2:4D:43
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2698,7 +2698,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=DigiCert Global Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US
 # Not Valid Before: Fri Nov 10 00:00:00 2006
 # Not Valid After : Mon Nov 10 00:00:00 2031
-# Fingerprint (MD5): 79:E4:A9:84:0D:7D:3A:96:D7:C0:4F:E2:43:4C:89:2E
+# Fingerprint (SHA-256): 43:48:A0:E9:44:4C:78:CB:26:5E:05:8D:5E:89:44:B4:D8:4F:96:62:BD:26:DB:25:7F:89:34:A4:43:C7:01:61
 # Fingerprint (SHA1): A8:98:5D:3A:65:E5:E5:C4:B2:D7:D6:6D:40:C6:DD:2F:B1:9C:54:36
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2795,13 +2795,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "DigiCert Global Root CA"
+# Trust for "DigiCert Global Root CA"
 # Issuer: CN=DigiCert Global Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US
 # Serial Number:08:3b:e0:56:90:42:46:b1:a1:75:6a:c9:59:91:c7:4a
 # Subject: CN=DigiCert Global Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US
 # Not Valid Before: Fri Nov 10 00:00:00 2006
 # Not Valid After : Mon Nov 10 00:00:00 2031
-# Fingerprint (MD5): 79:E4:A9:84:0D:7D:3A:96:D7:C0:4F:E2:43:4C:89:2E
+# Fingerprint (SHA-256): 43:48:A0:E9:44:4C:78:CB:26:5E:05:8D:5E:89:44:B4:D8:4F:96:62:BD:26:DB:25:7F:89:34:A4:43:C7:01:61
 # Fingerprint (SHA1): A8:98:5D:3A:65:E5:E5:C4:B2:D7:D6:6D:40:C6:DD:2F:B1:9C:54:36
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2841,7 +2841,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=DigiCert High Assurance EV Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US
 # Not Valid Before: Fri Nov 10 00:00:00 2006
 # Not Valid After : Mon Nov 10 00:00:00 2031
-# Fingerprint (MD5): D4:74:DE:57:5C:39:B2:D3:9C:85:83:C5:C0:65:49:8A
+# Fingerprint (SHA-256): 74:31:E5:F4:C3:C1:CE:46:90:77:4F:0B:61:E0:54:40:88:3B:A9:A0:1E:D0:0B:A6:AB:D7:80:6E:D3:B1:18:CF
 # Fingerprint (SHA1): 5F:B7:EE:06:33:E2:59:DB:AD:0C:4C:9A:E6:D3:8F:1A:61:C7:DC:25
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2939,13 +2939,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "DigiCert High Assurance EV Root CA"
+# Trust for "DigiCert High Assurance EV Root CA"
 # Issuer: CN=DigiCert High Assurance EV Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US
 # Serial Number:02:ac:5c:26:6a:0b:40:9b:8f:0b:79:f2:ae:46:25:77
 # Subject: CN=DigiCert High Assurance EV Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US
 # Not Valid Before: Fri Nov 10 00:00:00 2006
 # Not Valid After : Mon Nov 10 00:00:00 2031
-# Fingerprint (MD5): D4:74:DE:57:5C:39:B2:D3:9C:85:83:C5:C0:65:49:8A
+# Fingerprint (SHA-256): 74:31:E5:F4:C3:C1:CE:46:90:77:4F:0B:61:E0:54:40:88:3B:A9:A0:1E:D0:0B:A6:AB:D7:80:6E:D3:B1:18:CF
 # Fingerprint (SHA1): 5F:B7:EE:06:33:E2:59:DB:AD:0C:4C:9A:E6:D3:8F:1A:61:C7:DC:25
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -2985,7 +2985,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=SwissSign Platinum CA - G2,O=SwissSign AG,C=CH
 # Not Valid Before: Wed Oct 25 08:36:00 2006
 # Not Valid After : Sat Oct 25 08:36:00 2036
-# Fingerprint (MD5): C9:98:27:77:28:1E:3D:0E:15:3C:84:00:B8:85:03:E6
+# Fingerprint (SHA-256): 3B:22:2E:56:67:11:E9:92:30:0D:C0:B1:5A:B9:47:3D:AF:DE:F8:C8:4D:0C:EF:7D:33:17:B4:C1:82:1D:14:36
 # Fingerprint (SHA1): 56:E0:FA:C0:3B:8F:18:23:55:18:E5:D3:11:CA:E8:C2:43:31:AB:66
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -3110,13 +3110,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "SwissSign Platinum CA - G2"
+# Trust for "SwissSign Platinum CA - G2"
 # Issuer: CN=SwissSign Platinum CA - G2,O=SwissSign AG,C=CH
 # Serial Number:4e:b2:00:67:0c:03:5d:4f
 # Subject: CN=SwissSign Platinum CA - G2,O=SwissSign AG,C=CH
 # Not Valid Before: Wed Oct 25 08:36:00 2006
 # Not Valid After : Sat Oct 25 08:36:00 2036
-# Fingerprint (MD5): C9:98:27:77:28:1E:3D:0E:15:3C:84:00:B8:85:03:E6
+# Fingerprint (SHA-256): 3B:22:2E:56:67:11:E9:92:30:0D:C0:B1:5A:B9:47:3D:AF:DE:F8:C8:4D:0C:EF:7D:33:17:B4:C1:82:1D:14:36
 # Fingerprint (SHA1): 56:E0:FA:C0:3B:8F:18:23:55:18:E5:D3:11:CA:E8:C2:43:31:AB:66
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -3153,7 +3153,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=SwissSign Gold CA - G2,O=SwissSign AG,C=CH
 # Not Valid Before: Wed Oct 25 08:30:35 2006
 # Not Valid After : Sat Oct 25 08:30:35 2036
-# Fingerprint (MD5): 24:77:D9:A8:91:D1:3B:FA:88:2D:C2:FF:F8:CD:33:93
+# Fingerprint (SHA-256): 62:DD:0B:E9:B9:F5:0A:16:3E:A0:F8:E7:5C:05:3B:1E:CA:57:EA:55:C8:68:8F:64:7C:68:81:F2:C8:35:7B:95
 # Fingerprint (SHA1): D8:C5:38:8A:B7:30:1B:1B:6E:D4:7A:E6:45:25:3A:6F:9F:1A:27:61
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -3277,13 +3277,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "SwissSign Gold CA - G2"
+# Trust for "SwissSign Gold CA - G2"
 # Issuer: CN=SwissSign Gold CA - G2,O=SwissSign AG,C=CH
 # Serial Number:00:bb:40:1c:43:f5:5e:4f:b0
 # Subject: CN=SwissSign Gold CA - G2,O=SwissSign AG,C=CH
 # Not Valid Before: Wed Oct 25 08:30:35 2006
 # Not Valid After : Sat Oct 25 08:30:35 2036
-# Fingerprint (MD5): 24:77:D9:A8:91:D1:3B:FA:88:2D:C2:FF:F8:CD:33:93
+# Fingerprint (SHA-256): 62:DD:0B:E9:B9:F5:0A:16:3E:A0:F8:E7:5C:05:3B:1E:CA:57:EA:55:C8:68:8F:64:7C:68:81:F2:C8:35:7B:95
 # Fingerprint (SHA1): D8:C5:38:8A:B7:30:1B:1B:6E:D4:7A:E6:45:25:3A:6F:9F:1A:27:61
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -3320,7 +3320,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=SwissSign Silver CA - G2,O=SwissSign AG,C=CH
 # Not Valid Before: Wed Oct 25 08:32:46 2006
 # Not Valid After : Sat Oct 25 08:32:46 2036
-# Fingerprint (MD5): E0:06:A1:C9:7D:CF:C9:FC:0D:C0:56:75:96:D8:62:13
+# Fingerprint (SHA-256): BE:6C:4D:A2:BB:B9:BA:59:B6:F3:93:97:68:37:42:46:C3:C0:05:99:3F:A9:8F:02:0D:1D:ED:BE:D4:8A:81:D5
 # Fingerprint (SHA1): 9B:AA:E5:9F:56:EE:21:CB:43:5A:BE:25:93:DF:A7:F0:40:D1:1D:CB
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -3445,13 +3445,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "SwissSign Silver CA - G2"
+# Trust for "SwissSign Silver CA - G2"
 # Issuer: CN=SwissSign Silver CA - G2,O=SwissSign AG,C=CH
 # Serial Number:4f:1b:d4:2f:54:bb:2f:4b
 # Subject: CN=SwissSign Silver CA - G2,O=SwissSign AG,C=CH
 # Not Valid Before: Wed Oct 25 08:32:46 2006
 # Not Valid After : Sat Oct 25 08:32:46 2036
-# Fingerprint (MD5): E0:06:A1:C9:7D:CF:C9:FC:0D:C0:56:75:96:D8:62:13
+# Fingerprint (SHA-256): BE:6C:4D:A2:BB:B9:BA:59:B6:F3:93:97:68:37:42:46:C3:C0:05:99:3F:A9:8F:02:0D:1D:ED:BE:D4:8A:81:D5
 # Fingerprint (SHA1): 9B:AA:E5:9F:56:EE:21:CB:43:5A:BE:25:93:DF:A7:F0:40:D1:1D:CB
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -3488,7 +3488,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=SecureTrust CA,O=SecureTrust Corporation,C=US
 # Not Valid Before: Tue Nov 07 19:31:18 2006
 # Not Valid After : Mon Dec 31 19:40:55 2029
-# Fingerprint (MD5): DC:32:C3:A7:6D:25:57:C7:68:09:9D:EA:2D:A9:A2:D1
+# Fingerprint (SHA-256): F1:C1:B5:0A:E5:A2:0D:D8:03:0E:C9:F6:BC:24:82:3D:D3:67:B5:25:57:59:B4:E7:1B:61:FC:E9:F7:37:5D:73
 # Fingerprint (SHA1): 87:82:C6:C3:04:35:3B:CF:D2:96:92:D2:59:3E:7D:44:D9:34:FF:11
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -3581,13 +3581,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "SecureTrust CA"
+# Trust for "SecureTrust CA"
 # Issuer: CN=SecureTrust CA,O=SecureTrust Corporation,C=US
 # Serial Number:0c:f0:8e:5c:08:16:a5:ad:42:7f:f0:eb:27:18:59:d0
 # Subject: CN=SecureTrust CA,O=SecureTrust Corporation,C=US
 # Not Valid Before: Tue Nov 07 19:31:18 2006
 # Not Valid After : Mon Dec 31 19:40:55 2029
-# Fingerprint (MD5): DC:32:C3:A7:6D:25:57:C7:68:09:9D:EA:2D:A9:A2:D1
+# Fingerprint (SHA-256): F1:C1:B5:0A:E5:A2:0D:D8:03:0E:C9:F6:BC:24:82:3D:D3:67:B5:25:57:59:B4:E7:1B:61:FC:E9:F7:37:5D:73
 # Fingerprint (SHA1): 87:82:C6:C3:04:35:3B:CF:D2:96:92:D2:59:3E:7D:44:D9:34:FF:11
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -3625,7 +3625,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Secure Global CA,O=SecureTrust Corporation,C=US
 # Not Valid Before: Tue Nov 07 19:42:28 2006
 # Not Valid After : Mon Dec 31 19:52:06 2029
-# Fingerprint (MD5): CF:F4:27:0D:D4:ED:DC:65:16:49:6D:3D:DA:BF:6E:DE
+# Fingerprint (SHA-256): 42:00:F5:04:3A:C8:59:0E:BB:52:7D:20:9E:D1:50:30:29:FB:CB:D4:1C:A1:B5:06:EC:27:F1:5A:DE:7D:AC:69
 # Fingerprint (SHA1): 3A:44:73:5A:E5:81:90:1F:24:86:61:46:1E:3B:9C:C4:5F:F5:3A:1B
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -3718,13 +3718,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Secure Global CA"
+# Trust for "Secure Global CA"
 # Issuer: CN=Secure Global CA,O=SecureTrust Corporation,C=US
 # Serial Number:07:56:22:a4:e8:d4:8a:89:4d:f4:13:c8:f0:f8:ea:a5
 # Subject: CN=Secure Global CA,O=SecureTrust Corporation,C=US
 # Not Valid Before: Tue Nov 07 19:42:28 2006
 # Not Valid After : Mon Dec 31 19:52:06 2029
-# Fingerprint (MD5): CF:F4:27:0D:D4:ED:DC:65:16:49:6D:3D:DA:BF:6E:DE
+# Fingerprint (SHA-256): 42:00:F5:04:3A:C8:59:0E:BB:52:7D:20:9E:D1:50:30:29:FB:CB:D4:1C:A1:B5:06:EC:27:F1:5A:DE:7D:AC:69
 # Fingerprint (SHA1): 3A:44:73:5A:E5:81:90:1F:24:86:61:46:1E:3B:9C:C4:5F:F5:3A:1B
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -3762,7 +3762,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=COMODO Certification Authority,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB
 # Not Valid Before: Fri Dec 01 00:00:00 2006
 # Not Valid After : Mon Dec 31 23:59:59 2029
-# Fingerprint (MD5): 5C:48:DC:F7:42:72:EC:56:94:6D:1C:CC:71:35:80:75
+# Fingerprint (SHA-256): 0C:2C:D6:3D:F7:80:6F:A3:99:ED:E8:09:11:6B:57:5B:F8:79:89:F0:65:18:F9:80:8C:86:05:03:17:8B:AF:66
 # Fingerprint (SHA1): 66:31:BF:9E:F7:4F:9E:B6:C9:D5:A6:0C:BA:6A:BE:D1:F7:BD:EF:7B
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -3870,13 +3870,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "COMODO Certification Authority"
+# Trust for "COMODO Certification Authority"
 # Issuer: CN=COMODO Certification Authority,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB
 # Serial Number:4e:81:2d:8a:82:65:e0:0b:02:ee:3e:35:02:46:e5:3d
 # Subject: CN=COMODO Certification Authority,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB
 # Not Valid Before: Fri Dec 01 00:00:00 2006
 # Not Valid After : Mon Dec 31 23:59:59 2029
-# Fingerprint (MD5): 5C:48:DC:F7:42:72:EC:56:94:6D:1C:CC:71:35:80:75
+# Fingerprint (SHA-256): 0C:2C:D6:3D:F7:80:6F:A3:99:ED:E8:09:11:6B:57:5B:F8:79:89:F0:65:18:F9:80:8C:86:05:03:17:8B:AF:66
 # Fingerprint (SHA1): 66:31:BF:9E:F7:4F:9E:B6:C9:D5:A6:0C:BA:6A:BE:D1:F7:BD:EF:7B
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -3918,7 +3918,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Network Solutions Certificate Authority,O=Network Solutions L.L.C.,C=US
 # Not Valid Before: Fri Dec 01 00:00:00 2006
 # Not Valid After : Mon Dec 31 23:59:59 2029
-# Fingerprint (MD5): D3:F3:A6:16:C0:FA:6B:1D:59:B1:2D:96:4D:0E:11:2E
+# Fingerprint (SHA-256): 15:F0:BA:00:A3:AC:7A:F3:AC:88:4C:07:2B:10:11:A0:77:BD:77:C0:97:F4:01:64:B2:F8:59:8A:BD:83:86:0C
 # Fingerprint (SHA1): 74:F8:A3:C3:EF:E7:B3:90:06:4B:83:90:3C:21:64:60:20:E5:DF:CE
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4018,13 +4018,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Network Solutions Certificate Authority"
+# Trust for "Network Solutions Certificate Authority"
 # Issuer: CN=Network Solutions Certificate Authority,O=Network Solutions L.L.C.,C=US
 # Serial Number:57:cb:33:6f:c2:5c:16:e6:47:16:17:e3:90:31:68:e0
 # Subject: CN=Network Solutions Certificate Authority,O=Network Solutions L.L.C.,C=US
 # Not Valid Before: Fri Dec 01 00:00:00 2006
 # Not Valid After : Mon Dec 31 23:59:59 2029
-# Fingerprint (MD5): D3:F3:A6:16:C0:FA:6B:1D:59:B1:2D:96:4D:0E:11:2E
+# Fingerprint (SHA-256): 15:F0:BA:00:A3:AC:7A:F3:AC:88:4C:07:2B:10:11:A0:77:BD:77:C0:97:F4:01:64:B2:F8:59:8A:BD:83:86:0C
 # Fingerprint (SHA1): 74:F8:A3:C3:EF:E7:B3:90:06:4B:83:90:3C:21:64:60:20:E5:DF:CE
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4064,7 +4064,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=COMODO ECC Certification Authority,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB
 # Not Valid Before: Thu Mar 06 00:00:00 2008
 # Not Valid After : Mon Jan 18 23:59:59 2038
-# Fingerprint (MD5): 7C:62:FF:74:9D:31:53:5E:68:4A:D5:78:AA:1E:BF:23
+# Fingerprint (SHA-256): 17:93:92:7A:06:14:54:97:89:AD:CE:2F:8F:34:F7:F0:B6:6D:0F:3A:E3:A3:B8:4D:21:EC:15:DB:BA:4F:AD:C7
 # Fingerprint (SHA1): 9F:74:4E:9F:2B:4D:BA:EC:0F:31:2C:50:B6:56:3B:8E:2D:93:C3:11
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4146,13 +4146,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "COMODO ECC Certification Authority"
+# Trust for "COMODO ECC Certification Authority"
 # Issuer: CN=COMODO ECC Certification Authority,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB
 # Serial Number:1f:47:af:aa:62:00:70:50:54:4c:01:9e:9b:63:99:2a
 # Subject: CN=COMODO ECC Certification Authority,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB
 # Not Valid Before: Thu Mar 06 00:00:00 2008
 # Not Valid After : Mon Jan 18 23:59:59 2038
-# Fingerprint (MD5): 7C:62:FF:74:9D:31:53:5E:68:4A:D5:78:AA:1E:BF:23
+# Fingerprint (SHA-256): 17:93:92:7A:06:14:54:97:89:AD:CE:2F:8F:34:F7:F0:B6:6D:0F:3A:E3:A3:B8:4D:21:EC:15:DB:BA:4F:AD:C7
 # Fingerprint (SHA1): 9F:74:4E:9F:2B:4D:BA:EC:0F:31:2C:50:B6:56:3B:8E:2D:93:C3:11
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4194,7 +4194,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=OISTE WISeKey Global Root GA CA,OU=OISTE Foundation Endorsed,OU=Copyright (c) 2005,O=WISeKey,C=CH
 # Not Valid Before: Sun Dec 11 16:03:44 2005
 # Not Valid After : Fri Dec 11 16:09:51 2037
-# Fingerprint (MD5): BC:6C:51:33:A7:E9:D3:66:63:54:15:72:1B:21:92:93
+# Fingerprint (SHA-256): 41:C9:23:86:6A:B4:CA:D6:B7:AD:57:80:81:58:2E:02:07:97:A6:CB:DF:4F:FF:78:CE:83:96:B3:89:37:D7:F5
 # Fingerprint (SHA1): 59:22:A1:E1:5A:EA:16:35:21:F8:98:39:6A:46:46:B0:44:1B:0F:A9
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4299,13 +4299,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "OISTE WISeKey Global Root GA CA"
+# Trust for "OISTE WISeKey Global Root GA CA"
 # Issuer: CN=OISTE WISeKey Global Root GA CA,OU=OISTE Foundation Endorsed,OU=Copyright (c) 2005,O=WISeKey,C=CH
 # Serial Number:41:3d:72:c7:f4:6b:1f:81:43:7d:f1:d2:28:54:df:9a
 # Subject: CN=OISTE WISeKey Global Root GA CA,OU=OISTE Foundation Endorsed,OU=Copyright (c) 2005,O=WISeKey,C=CH
 # Not Valid Before: Sun Dec 11 16:03:44 2005
 # Not Valid After : Fri Dec 11 16:09:51 2037
-# Fingerprint (MD5): BC:6C:51:33:A7:E9:D3:66:63:54:15:72:1B:21:92:93
+# Fingerprint (SHA-256): 41:C9:23:86:6A:B4:CA:D6:B7:AD:57:80:81:58:2E:02:07:97:A6:CB:DF:4F:FF:78:CE:83:96:B3:89:37:D7:F5
 # Fingerprint (SHA1): 59:22:A1:E1:5A:EA:16:35:21:F8:98:39:6A:46:46:B0:44:1B:0F:A9
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4347,7 +4347,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Certigna,O=Dhimyotis,C=FR
 # Not Valid Before: Fri Jun 29 15:13:05 2007
 # Not Valid After : Tue Jun 29 15:13:05 2027
-# Fingerprint (MD5): AB:57:A6:5B:7D:42:82:19:B5:D8:58:26:28:5E:FD:FF
+# Fingerprint (SHA-256): E3:B6:A2:DB:2E:D7:CE:48:84:2F:7A:C5:32:41:C7:B7:1D:54:14:4B:FB:40:C1:1F:3F:1D:0B:42:F5:EE:A1:2D
 # Fingerprint (SHA1): B1:2E:13:63:45:86:A4:6F:1A:B2:60:68:37:58:2D:C4:AC:FD:94:97
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4436,13 +4436,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Certigna"
+# Trust for "Certigna"
 # Issuer: CN=Certigna,O=Dhimyotis,C=FR
 # Serial Number:00:fe:dc:e3:01:0f:c9:48:ff
 # Subject: CN=Certigna,O=Dhimyotis,C=FR
 # Not Valid Before: Fri Jun 29 15:13:05 2007
 # Not Valid After : Tue Jun 29 15:13:05 2027
-# Fingerprint (MD5): AB:57:A6:5B:7D:42:82:19:B5:D8:58:26:28:5E:FD:FF
+# Fingerprint (SHA-256): E3:B6:A2:DB:2E:D7:CE:48:84:2F:7A:C5:32:41:C7:B7:1D:54:14:4B:FB:40:C1:1F:3F:1D:0B:42:F5:EE:A1:2D
 # Fingerprint (SHA1): B1:2E:13:63:45:86:A4:6F:1A:B2:60:68:37:58:2D:C4:AC:FD:94:97
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4478,7 +4478,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: OU=ePKI Root Certification Authority,O="Chunghwa Telecom Co., Ltd.",C=TW
 # Not Valid Before: Mon Dec 20 02:31:27 2004
 # Not Valid After : Wed Dec 20 02:31:27 2034
-# Fingerprint (MD5): 1B:2E:00:CA:26:06:90:3D:AD:FE:6F:15:68:D3:6B:B3
+# Fingerprint (SHA-256): C0:A6:F4:DC:63:A2:4B:FD:CF:54:EF:2A:6A:08:2A:0A:72:DE:35:80:3E:2F:F5:FF:52:7A:E5:D8:72:06:DF:D5
 # Fingerprint (SHA1): 67:65:0D:F1:7E:8E:7E:5B:82:40:A4:F4:56:4B:CF:E2:3D:69:C6:F0
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4605,13 +4605,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "ePKI Root Certification Authority"
+# Trust for "ePKI Root Certification Authority"
 # Issuer: OU=ePKI Root Certification Authority,O="Chunghwa Telecom Co., Ltd.",C=TW
 # Serial Number:15:c8:bd:65:47:5c:af:b8:97:00:5e:e4:06:d2:bc:9d
 # Subject: OU=ePKI Root Certification Authority,O="Chunghwa Telecom Co., Ltd.",C=TW
 # Not Valid Before: Mon Dec 20 02:31:27 2004
 # Not Valid After : Wed Dec 20 02:31:27 2034
-# Fingerprint (MD5): 1B:2E:00:CA:26:06:90:3D:AD:FE:6F:15:68:D3:6B:B3
+# Fingerprint (SHA-256): C0:A6:F4:DC:63:A2:4B:FD:CF:54:EF:2A:6A:08:2A:0A:72:DE:35:80:3E:2F:F5:FF:52:7A:E5:D8:72:06:DF:D5
 # Fingerprint (SHA1): 67:65:0D:F1:7E:8E:7E:5B:82:40:A4:F4:56:4B:CF:E2:3D:69:C6:F0
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4650,7 +4650,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: OU=certSIGN ROOT CA,O=certSIGN,C=RO
 # Not Valid Before: Tue Jul 04 17:20:04 2006
 # Not Valid After : Fri Jul 04 17:20:04 2031
-# Fingerprint (MD5): 18:98:C0:D6:E9:3A:FC:F9:B0:F5:0C:F7:4B:01:44:17
+# Fingerprint (SHA-256): EA:A9:62:C4:FA:4A:6B:AF:EB:E4:15:19:6D:35:1C:CD:88:8D:4F:53:F3:FA:8A:E6:D7:C4:66:A9:4E:60:42:BB
 # Fingerprint (SHA1): FA:B7:EE:36:97:26:62:FB:2D:B0:2A:F6:BF:03:FD:E8:7C:4B:2F:9B
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4732,13 +4732,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "certSIGN ROOT CA"
+# Trust for "certSIGN ROOT CA"
 # Issuer: OU=certSIGN ROOT CA,O=certSIGN,C=RO
 # Serial Number:20:06:05:16:70:02
 # Subject: OU=certSIGN ROOT CA,O=certSIGN,C=RO
 # Not Valid Before: Tue Jul 04 17:20:04 2006
 # Not Valid After : Fri Jul 04 17:20:04 2031
-# Fingerprint (MD5): 18:98:C0:D6:E9:3A:FC:F9:B0:F5:0C:F7:4B:01:44:17
+# Fingerprint (SHA-256): EA:A9:62:C4:FA:4A:6B:AF:EB:E4:15:19:6D:35:1C:CD:88:8D:4F:53:F3:FA:8A:E6:D7:C4:66:A9:4E:60:42:BB
 # Fingerprint (SHA1): FA:B7:EE:36:97:26:62:FB:2D:B0:2A:F6:BF:03:FD:E8:7C:4B:2F:9B
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4774,7 +4774,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=NetLock Arany (Class Gold) F..tan..s..tv..ny,OU=Tan..s..tv..nykiad..k (Certification Services),O=NetLock Kft.,L=Budapest,C=HU
 # Not Valid Before: Thu Dec 11 15:08:21 2008
 # Not Valid After : Wed Dec 06 15:08:21 2028
-# Fingerprint (MD5): C5:A1:B7:FF:73:DD:D6:D7:34:32:18:DF:FC:3C:AD:88
+# Fingerprint (SHA-256): 6C:61:DA:C3:A2:DE:F0:31:50:6B:E0:36:D2:A6:FE:40:19:94:FB:D1:3D:F9:C8:D4:66:59:92:74:C4:46:EC:98
 # Fingerprint (SHA1): 06:08:3F:59:3F:15:A1:04:A0:69:A4:6B:A9:03:D0:06:B7:97:09:91
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4884,13 +4884,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "NetLock Arany (Class Gold) Főtanúsítvány"
+# Trust for "NetLock Arany (Class Gold) Főtanúsítvány"
 # Issuer: CN=NetLock Arany (Class Gold) F..tan..s..tv..ny,OU=Tan..s..tv..nykiad..k (Certification Services),O=NetLock Kft.,L=Budapest,C=HU
 # Serial Number:49:41:2c:e4:00:10
 # Subject: CN=NetLock Arany (Class Gold) F..tan..s..tv..ny,OU=Tan..s..tv..nykiad..k (Certification Services),O=NetLock Kft.,L=Budapest,C=HU
 # Not Valid Before: Thu Dec 11 15:08:21 2008
 # Not Valid After : Wed Dec 06 15:08:21 2028
-# Fingerprint (MD5): C5:A1:B7:FF:73:DD:D6:D7:34:32:18:DF:FC:3C:AD:88
+# Fingerprint (SHA-256): 6C:61:DA:C3:A2:DE:F0:31:50:6B:E0:36:D2:A6:FE:40:19:94:FB:D1:3D:F9:C8:D4:66:59:92:74:C4:46:EC:98
 # Fingerprint (SHA1): 06:08:3F:59:3F:15:A1:04:A0:69:A4:6B:A9:03:D0:06:B7:97:09:91
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -4933,7 +4933,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Hongkong Post Root CA 1,O=Hongkong Post,C=HK
 # Not Valid Before: Thu May 15 05:13:14 2003
 # Not Valid After : Mon May 15 04:52:29 2023
-# Fingerprint (MD5): A8:0D:6F:39:78:B9:43:6D:77:42:6D:98:5A:CC:23:CA
+# Fingerprint (SHA-256): F9:E6:7D:33:6C:51:00:2A:C0:54:C6:32:02:2D:66:DD:A2:E7:E3:FF:F1:0A:D0:61:ED:31:D8:BB:B4:10:CF:B2
 # Fingerprint (SHA1): D6:DA:A8:20:8D:09:D2:15:4D:24:B5:2F:CB:34:6E:B2:58:B2:8A:58
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -5017,13 +5017,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Hongkong Post Root CA 1"
+# Trust for "Hongkong Post Root CA 1"
 # Issuer: CN=Hongkong Post Root CA 1,O=Hongkong Post,C=HK
 # Serial Number: 1000 (0x3e8)
 # Subject: CN=Hongkong Post Root CA 1,O=Hongkong Post,C=HK
 # Not Valid Before: Thu May 15 05:13:14 2003
 # Not Valid After : Mon May 15 04:52:29 2023
-# Fingerprint (MD5): A8:0D:6F:39:78:B9:43:6D:77:42:6D:98:5A:CC:23:CA
+# Fingerprint (SHA-256): F9:E6:7D:33:6C:51:00:2A:C0:54:C6:32:02:2D:66:DD:A2:E7:E3:FF:F1:0A:D0:61:ED:31:D8:BB:B4:10:CF:B2
 # Fingerprint (SHA1): D6:DA:A8:20:8D:09:D2:15:4D:24:B5:2F:CB:34:6E:B2:58:B2:8A:58
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -5060,7 +5060,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=SecureSign RootCA11,O="Japan Certification Services, Inc.",C=JP
 # Not Valid Before: Wed Apr 08 04:56:47 2009
 # Not Valid After : Sun Apr 08 04:56:47 2029
-# Fingerprint (MD5): B7:52:74:E2:92:B4:80:93:F2:75:E4:CC:D7:F2:EA:26
+# Fingerprint (SHA-256): BF:0F:EE:FB:9E:3A:58:1A:D5:F9:E9:DB:75:89:98:57:43:D2:61:08:5C:4D:31:4F:6F:5D:72:59:AA:42:16:12
 # Fingerprint (SHA1): 3B:C4:9F:48:F8:F3:73:A0:9C:1E:BD:F8:5B:B1:C3:65:C7:D8:11:B3
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -5150,13 +5150,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "SecureSign RootCA11"
+# Trust for "SecureSign RootCA11"
 # Issuer: CN=SecureSign RootCA11,O="Japan Certification Services, Inc.",C=JP
 # Serial Number: 1 (0x1)
 # Subject: CN=SecureSign RootCA11,O="Japan Certification Services, Inc.",C=JP
 # Not Valid Before: Wed Apr 08 04:56:47 2009
 # Not Valid After : Sun Apr 08 04:56:47 2029
-# Fingerprint (MD5): B7:52:74:E2:92:B4:80:93:F2:75:E4:CC:D7:F2:EA:26
+# Fingerprint (SHA-256): BF:0F:EE:FB:9E:3A:58:1A:D5:F9:E9:DB:75:89:98:57:43:D2:61:08:5C:4D:31:4F:6F:5D:72:59:AA:42:16:12
 # Fingerprint (SHA1): 3B:C4:9F:48:F8:F3:73:A0:9C:1E:BD:F8:5B:B1:C3:65:C7:D8:11:B3
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -5194,7 +5194,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: E=info@e-szigno.hu,CN=Microsec e-Szigno Root CA 2009,O=Microsec Ltd.,L=Budapest,C=HU
 # Not Valid Before: Tue Jun 16 11:30:18 2009
 # Not Valid After : Sun Dec 30 11:30:18 2029
-# Fingerprint (MD5): F8:49:F4:03:BC:44:2D:83:BE:48:69:7D:29:64:FC:B1
+# Fingerprint (SHA-256): 3C:5F:81:FE:A5:FA:B8:2C:64:BF:A2:EA:EC:AF:CD:E8:E0:77:FC:86:20:A7:CA:E5:37:16:3D:F3:6E:DB:F3:78
 # Fingerprint (SHA1): 89:DF:74:FE:5C:F4:0F:4A:80:F9:E3:37:7D:54:DA:91:E1:01:31:8E
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -5299,13 +5299,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Microsec e-Szigno Root CA 2009"
+# Trust for "Microsec e-Szigno Root CA 2009"
 # Issuer: E=info@e-szigno.hu,CN=Microsec e-Szigno Root CA 2009,O=Microsec Ltd.,L=Budapest,C=HU
 # Serial Number:00:c2:7e:43:04:4e:47:3f:19
 # Subject: E=info@e-szigno.hu,CN=Microsec e-Szigno Root CA 2009,O=Microsec Ltd.,L=Budapest,C=HU
 # Not Valid Before: Tue Jun 16 11:30:18 2009
 # Not Valid After : Sun Dec 30 11:30:18 2029
-# Fingerprint (MD5): F8:49:F4:03:BC:44:2D:83:BE:48:69:7D:29:64:FC:B1
+# Fingerprint (SHA-256): 3C:5F:81:FE:A5:FA:B8:2C:64:BF:A2:EA:EC:AF:CD:E8:E0:77:FC:86:20:A7:CA:E5:37:16:3D:F3:6E:DB:F3:78
 # Fingerprint (SHA1): 89:DF:74:FE:5C:F4:0F:4A:80:F9:E3:37:7D:54:DA:91:E1:01:31:8E
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -5346,7 +5346,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=GlobalSign,O=GlobalSign,OU=GlobalSign Root CA - R3
 # Not Valid Before: Wed Mar 18 10:00:00 2009
 # Not Valid After : Sun Mar 18 10:00:00 2029
-# Fingerprint (MD5): C5:DF:B8:49:CA:05:13:55:EE:2D:BA:1A:C3:3E:B0:28
+# Fingerprint (SHA-256): CB:B5:22:D7:B7:F1:27:AD:6A:01:13:86:5B:DF:1C:D4:10:2E:7D:07:59:AF:63:5A:7C:F4:72:0D:C9:63:C5:3B
 # Fingerprint (SHA1): D6:9B:56:11:48:F0:1C:77:C5:45:78:C1:09:26:DF:5B:85:69:76:AD
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -5433,13 +5433,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "GlobalSign Root CA - R3"
+# Trust for "GlobalSign Root CA - R3"
 # Issuer: CN=GlobalSign,O=GlobalSign,OU=GlobalSign Root CA - R3
 # Serial Number:04:00:00:00:00:01:21:58:53:08:a2
 # Subject: CN=GlobalSign,O=GlobalSign,OU=GlobalSign Root CA - R3
 # Not Valid Before: Wed Mar 18 10:00:00 2009
 # Not Valid After : Sun Mar 18 10:00:00 2029
-# Fingerprint (MD5): C5:DF:B8:49:CA:05:13:55:EE:2D:BA:1A:C3:3E:B0:28
+# Fingerprint (SHA-256): CB:B5:22:D7:B7:F1:27:AD:6A:01:13:86:5B:DF:1C:D4:10:2E:7D:07:59:AF:63:5A:7C:F4:72:0D:C9:63:C5:3B
 # Fingerprint (SHA1): D6:9B:56:11:48:F0:1C:77:C5:45:78:C1:09:26:DF:5B:85:69:76:AD
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -5476,7 +5476,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Autoridad de Certificacion Firmaprofesional CIF A62634068,C=ES
 # Not Valid Before: Wed May 20 08:38:15 2009
 # Not Valid After : Tue Dec 31 08:38:15 2030
-# Fingerprint (MD5): 73:3A:74:7A:EC:BB:A3:96:A6:C2:E4:E2:C8:9B:C0:C3
+# Fingerprint (SHA-256): 04:04:80:28:BF:1F:28:64:D4:8F:9A:D4:D8:32:94:36:6A:82:88:56:55:3F:3B:14:30:3F:90:14:7F:5D:40:EF
 # Fingerprint (SHA1): AE:C5:FB:3F:C8:E1:BF:C4:E5:4F:03:07:5A:9A:E8:00:B7:F7:B6:FA
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -5608,13 +5608,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Autoridad de Certificacion Firmaprofesional CIF A62634068"
+# Trust for "Autoridad de Certificacion Firmaprofesional CIF A62634068"
 # Issuer: CN=Autoridad de Certificacion Firmaprofesional CIF A62634068,C=ES
 # Serial Number:53:ec:3b:ee:fb:b2:48:5f
 # Subject: CN=Autoridad de Certificacion Firmaprofesional CIF A62634068,C=ES
 # Not Valid Before: Wed May 20 08:38:15 2009
 # Not Valid After : Tue Dec 31 08:38:15 2030
-# Fingerprint (MD5): 73:3A:74:7A:EC:BB:A3:96:A6:C2:E4:E2:C8:9B:C0:C3
+# Fingerprint (SHA-256): 04:04:80:28:BF:1F:28:64:D4:8F:9A:D4:D8:32:94:36:6A:82:88:56:55:3F:3B:14:30:3F:90:14:7F:5D:40:EF
 # Fingerprint (SHA1): AE:C5:FB:3F:C8:E1:BF:C4:E5:4F:03:07:5A:9A:E8:00:B7:F7:B6:FA
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -5652,7 +5652,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Izenpe.com,O=IZENPE S.A.,C=ES
 # Not Valid Before: Thu Dec 13 13:08:28 2007
 # Not Valid After : Sun Dec 13 08:27:25 2037
-# Fingerprint (MD5): A6:B0:CD:85:80:DA:5C:50:34:A3:39:90:2F:55:67:73
+# Fingerprint (SHA-256): 25:30:CC:8E:98:32:15:02:BA:D9:6F:9B:1F:BA:1B:09:9E:2D:29:9E:0F:45:48:BB:91:4F:36:3B:C0:D4:53:1F
 # Fingerprint (SHA1): 2F:78:3D:25:52:18:A7:4A:65:39:71:B5:2C:A2:9C:45:15:6F:E9:19
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -5779,13 +5779,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Izenpe.com"
+# Trust for "Izenpe.com"
 # Issuer: CN=Izenpe.com,O=IZENPE S.A.,C=ES
 # Serial Number:00:b0:b7:5a:16:48:5f:bf:e1:cb:f5:8b:d7:19:e6:7d
 # Subject: CN=Izenpe.com,O=IZENPE S.A.,C=ES
 # Not Valid Before: Thu Dec 13 13:08:28 2007
 # Not Valid After : Sun Dec 13 08:27:25 2037
-# Fingerprint (MD5): A6:B0:CD:85:80:DA:5C:50:34:A3:39:90:2F:55:67:73
+# Fingerprint (SHA-256): 25:30:CC:8E:98:32:15:02:BA:D9:6F:9B:1F:BA:1B:09:9E:2D:29:9E:0F:45:48:BB:91:4F:36:3B:C0:D4:53:1F
 # Fingerprint (SHA1): 2F:78:3D:25:52:18:A7:4A:65:39:71:B5:2C:A2:9C:45:15:6F:E9:19
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -5822,7 +5822,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Chambers of Commerce Root - 2008,O=AC Camerfirma S.A.,serialNumber=A82743287,L=Madrid (see current address at www.camerfirma.com/address),C=EU
 # Not Valid Before: Fri Aug 01 12:29:50 2008
 # Not Valid After : Sat Jul 31 12:29:50 2038
-# Fingerprint (MD5): 5E:80:9E:84:5A:0E:65:0B:17:02:F3:55:18:2A:3E:D7
+# Fingerprint (SHA-256): 06:3E:4A:FA:C4:91:DF:D3:32:F3:08:9B:85:42:E9:46:17:D8:93:D7:FE:94:4E:10:A7:93:7E:E2:9D:96:93:C0
 # Fingerprint (SHA1): 78:6A:74:AC:76:AB:14:7F:9C:6A:30:50:BA:9E:A8:7E:FE:9A:CE:3C
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -5986,13 +5986,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Chambers of Commerce Root - 2008"
+# Trust for "Chambers of Commerce Root - 2008"
 # Issuer: CN=Chambers of Commerce Root - 2008,O=AC Camerfirma S.A.,serialNumber=A82743287,L=Madrid (see current address at www.camerfirma.com/address),C=EU
 # Serial Number:00:a3:da:42:7e:a4:b1:ae:da
 # Subject: CN=Chambers of Commerce Root - 2008,O=AC Camerfirma S.A.,serialNumber=A82743287,L=Madrid (see current address at www.camerfirma.com/address),C=EU
 # Not Valid Before: Fri Aug 01 12:29:50 2008
 # Not Valid After : Sat Jul 31 12:29:50 2038
-# Fingerprint (MD5): 5E:80:9E:84:5A:0E:65:0B:17:02:F3:55:18:2A:3E:D7
+# Fingerprint (SHA-256): 06:3E:4A:FA:C4:91:DF:D3:32:F3:08:9B:85:42:E9:46:17:D8:93:D7:FE:94:4E:10:A7:93:7E:E2:9D:96:93:C0
 # Fingerprint (SHA1): 78:6A:74:AC:76:AB:14:7F:9C:6A:30:50:BA:9E:A8:7E:FE:9A:CE:3C
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -6036,7 +6036,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Global Chambersign Root - 2008,O=AC Camerfirma S.A.,serialNumber=A82743287,L=Madrid (see current address at www.camerfirma.com/address),C=EU
 # Not Valid Before: Fri Aug 01 12:31:40 2008
 # Not Valid After : Sat Jul 31 12:31:40 2038
-# Fingerprint (MD5): 9E:80:FF:78:01:0C:2E:C1:36:BD:FE:96:90:6E:08:F3
+# Fingerprint (SHA-256): 13:63:35:43:93:34:A7:69:80:16:A0:D3:24:DE:72:28:4E:07:9D:7B:52:20:BB:8F:BD:74:78:16:EE:BE:BA:CA
 # Fingerprint (SHA1): 4A:BD:EE:EC:95:0D:35:9C:89:AE:C7:52:A1:2C:5B:29:F6:D6:AA:0C
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -6197,13 +6197,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Global Chambersign Root - 2008"
+# Trust for "Global Chambersign Root - 2008"
 # Issuer: CN=Global Chambersign Root - 2008,O=AC Camerfirma S.A.,serialNumber=A82743287,L=Madrid (see current address at www.camerfirma.com/address),C=EU
 # Serial Number:00:c9:cd:d3:e9:d5:7d:23:ce
 # Subject: CN=Global Chambersign Root - 2008,O=AC Camerfirma S.A.,serialNumber=A82743287,L=Madrid (see current address at www.camerfirma.com/address),C=EU
 # Not Valid Before: Fri Aug 01 12:31:40 2008
 # Not Valid After : Sat Jul 31 12:31:40 2038
-# Fingerprint (MD5): 9E:80:FF:78:01:0C:2E:C1:36:BD:FE:96:90:6E:08:F3
+# Fingerprint (SHA-256): 13:63:35:43:93:34:A7:69:80:16:A0:D3:24:DE:72:28:4E:07:9D:7B:52:20:BB:8F:BD:74:78:16:EE:BE:BA:CA
 # Fingerprint (SHA1): 4A:BD:EE:EC:95:0D:35:9C:89:AE:C7:52:A1:2C:5B:29:F6:D6:AA:0C
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -6246,7 +6246,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Go Daddy Root Certificate Authority - G2,O="GoDaddy.com, Inc.",L=Scottsdale,ST=Arizona,C=US
 # Not Valid Before: Tue Sep 01 00:00:00 2009
 # Not Valid After : Thu Dec 31 23:59:59 2037
-# Fingerprint (MD5): 80:3A:BC:22:C1:E6:FB:8D:9B:3B:27:4A:32:1B:9A:01
+# Fingerprint (SHA-256): 45:14:0B:32:47:EB:9C:C8:C5:B4:F0:D7:B5:30:91:F7:32:92:08:9E:6E:5A:63:E2:74:9D:D3:AC:A9:19:8E:DA
 # Fingerprint (SHA1): 47:BE:AB:C9:22:EA:E8:0E:78:78:34:62:A7:9F:45:C2:54:FD:E6:8B
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -6347,13 +6347,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Go Daddy Root Certificate Authority - G2"
+# Trust for "Go Daddy Root Certificate Authority - G2"
 # Issuer: CN=Go Daddy Root Certificate Authority - G2,O="GoDaddy.com, Inc.",L=Scottsdale,ST=Arizona,C=US
 # Serial Number: 0 (0x0)
 # Subject: CN=Go Daddy Root Certificate Authority - G2,O="GoDaddy.com, Inc.",L=Scottsdale,ST=Arizona,C=US
 # Not Valid Before: Tue Sep 01 00:00:00 2009
 # Not Valid After : Thu Dec 31 23:59:59 2037
-# Fingerprint (MD5): 80:3A:BC:22:C1:E6:FB:8D:9B:3B:27:4A:32:1B:9A:01
+# Fingerprint (SHA-256): 45:14:0B:32:47:EB:9C:C8:C5:B4:F0:D7:B5:30:91:F7:32:92:08:9E:6E:5A:63:E2:74:9D:D3:AC:A9:19:8E:DA
 # Fingerprint (SHA1): 47:BE:AB:C9:22:EA:E8:0E:78:78:34:62:A7:9F:45:C2:54:FD:E6:8B
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -6394,7 +6394,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Starfield Root Certificate Authority - G2,O="Starfield Technologies, Inc.",L=Scottsdale,ST=Arizona,C=US
 # Not Valid Before: Tue Sep 01 00:00:00 2009
 # Not Valid After : Thu Dec 31 23:59:59 2037
-# Fingerprint (MD5): D6:39:81:C6:52:7E:96:69:FC:FC:CA:66:ED:05:F2:96
+# Fingerprint (SHA-256): 2C:E1:CB:0B:F9:D2:F9:E1:02:99:3F:BE:21:51:52:C3:B2:DD:0C:AB:DE:1C:68:E5:31:9B:83:91:54:DB:B7:F5
 # Fingerprint (SHA1): B5:1C:06:7C:EE:2B:0C:3D:F8:55:AB:2D:92:F4:FE:39:D4:E7:0F:0E
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -6499,13 +6499,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Starfield Root Certificate Authority - G2"
+# Trust for "Starfield Root Certificate Authority - G2"
 # Issuer: CN=Starfield Root Certificate Authority - G2,O="Starfield Technologies, Inc.",L=Scottsdale,ST=Arizona,C=US
 # Serial Number: 0 (0x0)
 # Subject: CN=Starfield Root Certificate Authority - G2,O="Starfield Technologies, Inc.",L=Scottsdale,ST=Arizona,C=US
 # Not Valid Before: Tue Sep 01 00:00:00 2009
 # Not Valid After : Thu Dec 31 23:59:59 2037
-# Fingerprint (MD5): D6:39:81:C6:52:7E:96:69:FC:FC:CA:66:ED:05:F2:96
+# Fingerprint (SHA-256): 2C:E1:CB:0B:F9:D2:F9:E1:02:99:3F:BE:21:51:52:C3:B2:DD:0C:AB:DE:1C:68:E5:31:9B:83:91:54:DB:B7:F5
 # Fingerprint (SHA1): B5:1C:06:7C:EE:2B:0C:3D:F8:55:AB:2D:92:F4:FE:39:D4:E7:0F:0E
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -6547,7 +6547,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Starfield Services Root Certificate Authority - G2,O="Starfield Technologies, Inc.",L=Scottsdale,ST=Arizona,C=US
 # Not Valid Before: Tue Sep 01 00:00:00 2009
 # Not Valid After : Thu Dec 31 23:59:59 2037
-# Fingerprint (MD5): 17:35:74:AF:7B:61:1C:EB:F4:F9:3C:E2:EE:40:F9:A2
+# Fingerprint (SHA-256): 56:8D:69:05:A2:C8:87:08:A4:B3:02:51:90:ED:CF:ED:B1:97:4A:60:6A:13:C6:E5:29:0F:CB:2A:E6:3E:DA:B5
 # Fingerprint (SHA1): 92:5A:8F:8D:2C:6D:04:E0:66:5F:59:6A:FF:22:D8:63:E8:25:6F:3F
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -6653,13 +6653,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Starfield Services Root Certificate Authority - G2"
+# Trust for "Starfield Services Root Certificate Authority - G2"
 # Issuer: CN=Starfield Services Root Certificate Authority - G2,O="Starfield Technologies, Inc.",L=Scottsdale,ST=Arizona,C=US
 # Serial Number: 0 (0x0)
 # Subject: CN=Starfield Services Root Certificate Authority - G2,O="Starfield Technologies, Inc.",L=Scottsdale,ST=Arizona,C=US
 # Not Valid Before: Tue Sep 01 00:00:00 2009
 # Not Valid After : Thu Dec 31 23:59:59 2037
-# Fingerprint (MD5): 17:35:74:AF:7B:61:1C:EB:F4:F9:3C:E2:EE:40:F9:A2
+# Fingerprint (SHA-256): 56:8D:69:05:A2:C8:87:08:A4:B3:02:51:90:ED:CF:ED:B1:97:4A:60:6A:13:C6:E5:29:0F:CB:2A:E6:3E:DA:B5
 # Fingerprint (SHA1): 92:5A:8F:8D:2C:6D:04:E0:66:5F:59:6A:FF:22:D8:63:E8:25:6F:3F
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -6701,7 +6701,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=AffirmTrust Commercial,O=AffirmTrust,C=US
 # Not Valid Before: Fri Jan 29 14:06:06 2010
 # Not Valid After : Tue Dec 31 14:06:06 2030
-# Fingerprint (MD5): 82:92:BA:5B:EF:CD:8A:6F:A6:3D:55:F9:84:F6:D6:B7
+# Fingerprint (SHA-256): 03:76:AB:1D:54:C5:F9:80:3C:E4:B2:E2:01:A0:EE:7E:EF:7B:57:B6:36:E8:A9:3C:9B:8D:48:60:C9:6F:5F:A7
 # Fingerprint (SHA1): F9:B5:B6:32:45:5F:9C:BE:EC:57:5F:80:DC:E9:6E:2C:C7:B2:78:B7
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -6786,13 +6786,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "AffirmTrust Commercial"
+# Trust for "AffirmTrust Commercial"
 # Issuer: CN=AffirmTrust Commercial,O=AffirmTrust,C=US
 # Serial Number:77:77:06:27:26:a9:b1:7c
 # Subject: CN=AffirmTrust Commercial,O=AffirmTrust,C=US
 # Not Valid Before: Fri Jan 29 14:06:06 2010
 # Not Valid After : Tue Dec 31 14:06:06 2030
-# Fingerprint (MD5): 82:92:BA:5B:EF:CD:8A:6F:A6:3D:55:F9:84:F6:D6:B7
+# Fingerprint (SHA-256): 03:76:AB:1D:54:C5:F9:80:3C:E4:B2:E2:01:A0:EE:7E:EF:7B:57:B6:36:E8:A9:3C:9B:8D:48:60:C9:6F:5F:A7
 # Fingerprint (SHA1): F9:B5:B6:32:45:5F:9C:BE:EC:57:5F:80:DC:E9:6E:2C:C7:B2:78:B7
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -6829,7 +6829,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=AffirmTrust Networking,O=AffirmTrust,C=US
 # Not Valid Before: Fri Jan 29 14:08:24 2010
 # Not Valid After : Tue Dec 31 14:08:24 2030
-# Fingerprint (MD5): 42:65:CA:BE:01:9A:9A:4C:A9:8C:41:49:CD:C0:D5:7F
+# Fingerprint (SHA-256): 0A:81:EC:5A:92:97:77:F1:45:90:4A:F3:8D:5D:50:9F:66:B5:E2:C5:8F:CD:B5:31:05:8B:0E:17:F3:F0:B4:1B
 # Fingerprint (SHA1): 29:36:21:02:8B:20:ED:02:F5:66:C5:32:D1:D6:ED:90:9F:45:00:2F
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -6914,13 +6914,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "AffirmTrust Networking"
+# Trust for "AffirmTrust Networking"
 # Issuer: CN=AffirmTrust Networking,O=AffirmTrust,C=US
 # Serial Number:7c:4f:04:39:1c:d4:99:2d
 # Subject: CN=AffirmTrust Networking,O=AffirmTrust,C=US
 # Not Valid Before: Fri Jan 29 14:08:24 2010
 # Not Valid After : Tue Dec 31 14:08:24 2030
-# Fingerprint (MD5): 42:65:CA:BE:01:9A:9A:4C:A9:8C:41:49:CD:C0:D5:7F
+# Fingerprint (SHA-256): 0A:81:EC:5A:92:97:77:F1:45:90:4A:F3:8D:5D:50:9F:66:B5:E2:C5:8F:CD:B5:31:05:8B:0E:17:F3:F0:B4:1B
 # Fingerprint (SHA1): 29:36:21:02:8B:20:ED:02:F5:66:C5:32:D1:D6:ED:90:9F:45:00:2F
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -6957,7 +6957,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=AffirmTrust Premium,O=AffirmTrust,C=US
 # Not Valid Before: Fri Jan 29 14:10:36 2010
 # Not Valid After : Mon Dec 31 14:10:36 2040
-# Fingerprint (MD5): C4:5D:0E:48:B6:AC:28:30:4E:0A:BC:F9:38:16:87:57
+# Fingerprint (SHA-256): 70:A7:3F:7F:37:6B:60:07:42:48:90:45:34:B1:14:82:D5:BF:0E:69:8E:CC:49:8D:F5:25:77:EB:F2:E9:3B:9A
 # Fingerprint (SHA1): D8:A6:33:2C:E0:03:6F:B1:85:F6:63:4F:7D:6A:06:65:26:32:28:27
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -7074,13 +7074,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "AffirmTrust Premium"
+# Trust for "AffirmTrust Premium"
 # Issuer: CN=AffirmTrust Premium,O=AffirmTrust,C=US
 # Serial Number:6d:8c:14:46:b1:a6:0a:ee
 # Subject: CN=AffirmTrust Premium,O=AffirmTrust,C=US
 # Not Valid Before: Fri Jan 29 14:10:36 2010
 # Not Valid After : Mon Dec 31 14:10:36 2040
-# Fingerprint (MD5): C4:5D:0E:48:B6:AC:28:30:4E:0A:BC:F9:38:16:87:57
+# Fingerprint (SHA-256): 70:A7:3F:7F:37:6B:60:07:42:48:90:45:34:B1:14:82:D5:BF:0E:69:8E:CC:49:8D:F5:25:77:EB:F2:E9:3B:9A
 # Fingerprint (SHA1): D8:A6:33:2C:E0:03:6F:B1:85:F6:63:4F:7D:6A:06:65:26:32:28:27
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -7117,7 +7117,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=AffirmTrust Premium ECC,O=AffirmTrust,C=US
 # Not Valid Before: Fri Jan 29 14:20:24 2010
 # Not Valid After : Mon Dec 31 14:20:24 2040
-# Fingerprint (MD5): 64:B0:09:55:CF:B1:D5:99:E2:BE:13:AB:A6:5D:EA:4D
+# Fingerprint (SHA-256): BD:71:FD:F6:DA:97:E4:CF:62:D1:64:7A:DD:25:81:B0:7D:79:AD:F8:39:7E:B4:EC:BA:9C:5E:84:88:82:14:23
 # Fingerprint (SHA1): B8:23:6B:00:2F:1D:16:86:53:01:55:6C:11:A4:37:CA:EB:FF:C3:BB
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -7182,13 +7182,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "AffirmTrust Premium ECC"
+# Trust for "AffirmTrust Premium ECC"
 # Issuer: CN=AffirmTrust Premium ECC,O=AffirmTrust,C=US
 # Serial Number:74:97:25:8a:c7:3f:7a:54
 # Subject: CN=AffirmTrust Premium ECC,O=AffirmTrust,C=US
 # Not Valid Before: Fri Jan 29 14:20:24 2010
 # Not Valid After : Mon Dec 31 14:20:24 2040
-# Fingerprint (MD5): 64:B0:09:55:CF:B1:D5:99:E2:BE:13:AB:A6:5D:EA:4D
+# Fingerprint (SHA-256): BD:71:FD:F6:DA:97:E4:CF:62:D1:64:7A:DD:25:81:B0:7D:79:AD:F8:39:7E:B4:EC:BA:9C:5E:84:88:82:14:23
 # Fingerprint (SHA1): B8:23:6B:00:2F:1D:16:86:53:01:55:6C:11:A4:37:CA:EB:FF:C3:BB
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -7225,7 +7225,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Certum Trusted Network CA,OU=Certum Certification Authority,O=Unizeto Technologies S.A.,C=PL
 # Not Valid Before: Wed Oct 22 12:07:37 2008
 # Not Valid After : Mon Dec 31 12:07:37 2029
-# Fingerprint (MD5): D5:E9:81:40:C5:18:69:FC:46:2C:89:75:62:0F:AA:78
+# Fingerprint (SHA-256): 5C:58:46:8D:55:F5:8E:49:7E:74:39:82:D2:B5:00:10:B6:D1:65:37:4A:CF:83:A7:D4:A3:2D:B7:68:C4:40:8E
 # Fingerprint (SHA1): 07:E0:32:E0:20:B7:2C:3F:19:2F:06:28:A2:59:3A:19:A7:0F:06:9E
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -7323,13 +7323,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Certum Trusted Network CA"
+# Trust for "Certum Trusted Network CA"
 # Issuer: CN=Certum Trusted Network CA,OU=Certum Certification Authority,O=Unizeto Technologies S.A.,C=PL
 # Serial Number: 279744 (0x444c0)
 # Subject: CN=Certum Trusted Network CA,OU=Certum Certification Authority,O=Unizeto Technologies S.A.,C=PL
 # Not Valid Before: Wed Oct 22 12:07:37 2008
 # Not Valid After : Mon Dec 31 12:07:37 2029
-# Fingerprint (MD5): D5:E9:81:40:C5:18:69:FC:46:2C:89:75:62:0F:AA:78
+# Fingerprint (SHA-256): 5C:58:46:8D:55:F5:8E:49:7E:74:39:82:D2:B5:00:10:B6:D1:65:37:4A:CF:83:A7:D4:A3:2D:B7:68:C4:40:8E
 # Fingerprint (SHA1): 07:E0:32:E0:20:B7:2C:3F:19:2F:06:28:A2:59:3A:19:A7:0F:06:9E
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -7369,7 +7369,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=TWCA Root Certification Authority,OU=Root CA,O=TAIWAN-CA,C=TW
 # Not Valid Before: Thu Aug 28 07:24:33 2008
 # Not Valid After : Tue Dec 31 15:59:59 2030
-# Fingerprint (MD5): AA:08:8F:F6:F9:7B:B7:F2:B1:A7:1E:9B:EA:EA:BD:79
+# Fingerprint (SHA-256): BF:D8:8F:E1:10:1C:41:AE:3E:80:1B:F8:BE:56:35:0E:E9:BA:D1:A6:B9:BD:51:5E:DC:5C:6D:5B:87:11:AC:44
 # Fingerprint (SHA1): CF:9E:87:6D:D3:EB:FC:42:26:97:A3:B5:A3:7A:A0:76:A9:06:23:48
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -7461,13 +7461,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "TWCA Root Certification Authority"
+# Trust for "TWCA Root Certification Authority"
 # Issuer: CN=TWCA Root Certification Authority,OU=Root CA,O=TAIWAN-CA,C=TW
 # Serial Number: 1 (0x1)
 # Subject: CN=TWCA Root Certification Authority,OU=Root CA,O=TAIWAN-CA,C=TW
 # Not Valid Before: Thu Aug 28 07:24:33 2008
 # Not Valid After : Tue Dec 31 15:59:59 2030
-# Fingerprint (MD5): AA:08:8F:F6:F9:7B:B7:F2:B1:A7:1E:9B:EA:EA:BD:79
+# Fingerprint (SHA-256): BF:D8:8F:E1:10:1C:41:AE:3E:80:1B:F8:BE:56:35:0E:E9:BA:D1:A6:B9:BD:51:5E:DC:5C:6D:5B:87:11:AC:44
 # Fingerprint (SHA1): CF:9E:87:6D:D3:EB:FC:42:26:97:A3:B5:A3:7A:A0:76:A9:06:23:48
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -7856,7 +7856,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: OU=Security Communication RootCA2,O="SECOM Trust Systems CO.,LTD.",C=JP
 # Not Valid Before: Fri May 29 05:00:39 2009
 # Not Valid After : Tue May 29 05:00:39 2029
-# Fingerprint (MD5): 6C:39:7D:A4:0E:55:59:B2:3F:D6:41:B1:12:50:DE:43
+# Fingerprint (SHA-256): 51:3B:2C:EC:B8:10:D4:CD:E5:DD:85:39:1A:DF:C6:C2:DD:60:D8:7B:B7:36:D2:B5:21:48:4A:A4:7A:0E:BE:F6
 # Fingerprint (SHA1): 5F:3B:8C:F2:F8:10:B3:7D:78:B4:CE:EC:19:19:C3:73:34:B9:C7:74
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -7946,13 +7946,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Security Communication RootCA2"
+# Trust for "Security Communication RootCA2"
 # Issuer: OU=Security Communication RootCA2,O="SECOM Trust Systems CO.,LTD.",C=JP
 # Serial Number: 0 (0x0)
 # Subject: OU=Security Communication RootCA2,O="SECOM Trust Systems CO.,LTD.",C=JP
 # Not Valid Before: Fri May 29 05:00:39 2009
 # Not Valid After : Tue May 29 05:00:39 2029
-# Fingerprint (MD5): 6C:39:7D:A4:0E:55:59:B2:3F:D6:41:B1:12:50:DE:43
+# Fingerprint (SHA-256): 51:3B:2C:EC:B8:10:D4:CD:E5:DD:85:39:1A:DF:C6:C2:DD:60:D8:7B:B7:36:D2:B5:21:48:4A:A4:7A:0E:BE:F6
 # Fingerprint (SHA1): 5F:3B:8C:F2:F8:10:B3:7D:78:B4:CE:EC:19:19:C3:73:34:B9:C7:74
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -7990,7 +7990,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=EC-ACC,OU=Jerarquia Entitats de Certificacio Catalanes,OU=Vegeu https://www.catcert.net/verarrel (c)03,OU=Serveis Publics de Certificacio,O=Agencia Catalana de Certificacio (NIF Q-0801176-I),C=ES
 # Not Valid Before: Tue Jan 07 23:00:00 2003
 # Not Valid After : Tue Jan 07 22:59:59 2031
-# Fingerprint (MD5): EB:F5:9D:29:0D:61:F9:42:1F:7C:C2:BA:6D:E3:15:09
+# Fingerprint (SHA-256): 88:49:7F:01:60:2F:31:54:24:6A:E2:8C:4D:5A:EF:10:F1:D8:7E:BB:76:62:6F:4A:E0:B7:F9:5B:A7:96:87:99
 # Fingerprint (SHA1): 28:90:3A:63:5B:52:80:FA:E6:77:4C:0B:6D:A7:D6:BA:A6:4A:F2:E8
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -8137,13 +8137,13 @@ CKA_NSS_EMAIL_DISTRUST_AFTER MULTILINE_OCTAL
 \062\062\060\070\063\061\060\060\060\060\060\060\132
 END
 
-# Trust for Certificate "EC-ACC"
+# Trust for "EC-ACC"
 # Issuer: CN=EC-ACC,OU=Jerarquia Entitats de Certificacio Catalanes,OU=Vegeu https://www.catcert.net/verarrel (c)03,OU=Serveis Publics de Certificacio,O=Agencia Catalana de Certificacio (NIF Q-0801176-I),C=ES
 # Serial Number:ee:2b:3d:eb:d4:21:de:14:a8:62:ac:04:f3:dd:c4:01
 # Subject: CN=EC-ACC,OU=Jerarquia Entitats de Certificacio Catalanes,OU=Vegeu https://www.catcert.net/verarrel (c)03,OU=Serveis Publics de Certificacio,O=Agencia Catalana de Certificacio (NIF Q-0801176-I),C=ES
 # Not Valid Before: Tue Jan 07 23:00:00 2003
 # Not Valid After : Tue Jan 07 22:59:59 2031
-# Fingerprint (MD5): EB:F5:9D:29:0D:61:F9:42:1F:7C:C2:BA:6D:E3:15:09
+# Fingerprint (SHA-256): 88:49:7F:01:60:2F:31:54:24:6A:E2:8C:4D:5A:EF:10:F1:D8:7E:BB:76:62:6F:4A:E0:B7:F9:5B:A7:96:87:99
 # Fingerprint (SHA1): 28:90:3A:63:5B:52:80:FA:E6:77:4C:0B:6D:A7:D6:BA:A6:4A:F2:E8
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -8192,7 +8192,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Hellenic Academic and Research Institutions RootCA 2011,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR
 # Not Valid Before: Tue Dec 06 13:49:52 2011
 # Not Valid After : Mon Dec 01 13:49:52 2031
-# Fingerprint (MD5): 73:9F:4C:4B:73:5B:79:E9:FA:BA:1C:EF:6E:CB:D5:C9
+# Fingerprint (SHA-256): BC:10:4F:15:A4:8B:E7:09:DC:A5:42:A7:E1:D4:B9:DF:6F:05:45:27:E8:02:EA:A9:2D:59:54:44:25:8A:FE:71
 # Fingerprint (SHA1): FE:45:65:9B:79:03:5B:98:A1:61:B5:51:2E:AC:DA:58:09:48:22:4D
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -8302,13 +8302,13 @@ CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE
 CKA_NSS_SERVER_DISTRUST_AFTER CK_BBOOL CK_FALSE
 CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 
-# Trust for Certificate "Hellenic Academic and Research Institutions RootCA 2011"
+# Trust for "Hellenic Academic and Research Institutions RootCA 2011"
 # Issuer: CN=Hellenic Academic and Research Institutions RootCA 2011,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR
 # Serial Number: 0 (0x0)
 # Subject: CN=Hellenic Academic and Research Institutions RootCA 2011,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR
 # Not Valid Before: Tue Dec 06 13:49:52 2011
 # Not Valid After : Mon Dec 01 13:49:52 2031
-# Fingerprint (MD5): 73:9F:4C:4B:73:5B:79:E9:FA:BA:1C:EF:6E:CB:D5:C9
+# Fingerprint (SHA-256): BC:10:4F:15:A4:8B:E7:09:DC:A5:42:A7:E1:D4:B9:DF:6F:05:45:27:E8:02:EA:A9:2D:59:54:44:25:8A:FE:71
 # Fingerprint (SHA1): FE:45:65:9B:79:03:5B:98:A1:61:B5:51:2E:AC:DA:58:09:48:22:4D
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -8412,7 +8412,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Actalis Authentication Root CA,O=Actalis S.p.A./03358520967,L=Milan,C=IT
 # Not Valid Before: Thu Sep 22 11:22:02 2011
 # Not Valid After : Sun Sep 22 11:22:02 2030
-# Fingerprint (MD5): 69:C1:0D:4F:07:A3:1B:C3:FE:56:3D:04:BC:11:F6:A6
+# Fingerprint (SHA-256): 55:92:60:84:EC:96:3A:64:B9:6E:2A:BE:01:CE:0B:A8:6A:64:FB:FE:BC:C7:AA:B5:AF:C1:55:B3:7F:D7:60:66
 # Fingerprint (SHA1): F3:73:B3:87:06:5A:28:84:8A:F2:F3:4A:CE:19:2B:DD:C7:8E:9C:AC
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -8546,7 +8546,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: CN=Actalis Authentication Root CA,O=Actalis S.p.A./03358520967,L=Milan,C=IT
 # Not Valid Before: Thu Sep 22 11:22:02 2011
 # Not Valid After : Sun Sep 22 11:22:02 2030
-# Fingerprint (MD5): 69:C1:0D:4F:07:A3:1B:C3:FE:56:3D:04:BC:11:F6:A6
+# Fingerprint (SHA-256): 55:92:60:84:EC:96:3A:64:B9:6E:2A:BE:01:CE:0B:A8:6A:64:FB:FE:BC:C7:AA:B5:AF:C1:55:B3:7F:D7:60:66
 # Fingerprint (SHA1): F3:73:B3:87:06:5A:28:84:8A:F2:F3:4A:CE:19:2B:DD:C7:8E:9C:AC
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -8585,7 +8585,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Buypass Class 2 Root CA,O=Buypass AS-983163327,C=NO
 # Not Valid Before: Tue Oct 26 08:38:03 2010
 # Not Valid After : Fri Oct 26 08:38:03 2040
-# Fingerprint (MD5): 46:A7:D2:FE:45:FB:64:5A:A8:59:90:9B:78:44:9B:29
+# Fingerprint (SHA-256): 9A:11:40:25:19:7C:5B:B9:5D:94:E6:3D:55:CD:43:79:08:47:B6:46:B2:3C:DF:11:AD:A4:A0:0E:FF:15:FB:48
 # Fingerprint (SHA1): 49:0A:75:74:DE:87:0A:47:FE:58:EE:F6:C7:6B:EB:C6:0B:12:40:99
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -8709,7 +8709,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: CN=Buypass Class 2 Root CA,O=Buypass AS-983163327,C=NO
 # Not Valid Before: Tue Oct 26 08:38:03 2010
 # Not Valid After : Fri Oct 26 08:38:03 2040
-# Fingerprint (MD5): 46:A7:D2:FE:45:FB:64:5A:A8:59:90:9B:78:44:9B:29
+# Fingerprint (SHA-256): 9A:11:40:25:19:7C:5B:B9:5D:94:E6:3D:55:CD:43:79:08:47:B6:46:B2:3C:DF:11:AD:A4:A0:0E:FF:15:FB:48
 # Fingerprint (SHA1): 49:0A:75:74:DE:87:0A:47:FE:58:EE:F6:C7:6B:EB:C6:0B:12:40:99
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -8746,7 +8746,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=Buypass Class 3 Root CA,O=Buypass AS-983163327,C=NO
 # Not Valid Before: Tue Oct 26 08:28:58 2010
 # Not Valid After : Fri Oct 26 08:28:58 2040
-# Fingerprint (MD5): 3D:3B:18:9E:2C:64:5A:E8:D5:88:CE:0E:F9:37:C2:EC
+# Fingerprint (SHA-256): ED:F7:EB:BC:A2:7A:2A:38:4D:38:7B:7D:40:10:C6:66:E2:ED:B4:84:3E:4C:29:B4:AE:1D:5B:93:32:E6:B2:4D
 # Fingerprint (SHA1): DA:FA:F7:FA:66:84:EC:06:8F:14:50:BD:C7:C2:81:A5:BC:A9:64:57
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -8870,7 +8870,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: CN=Buypass Class 3 Root CA,O=Buypass AS-983163327,C=NO
 # Not Valid Before: Tue Oct 26 08:28:58 2010
 # Not Valid After : Fri Oct 26 08:28:58 2040
-# Fingerprint (MD5): 3D:3B:18:9E:2C:64:5A:E8:D5:88:CE:0E:F9:37:C2:EC
+# Fingerprint (SHA-256): ED:F7:EB:BC:A2:7A:2A:38:4D:38:7B:7D:40:10:C6:66:E2:ED:B4:84:3E:4C:29:B4:AE:1D:5B:93:32:E6:B2:4D
 # Fingerprint (SHA1): DA:FA:F7:FA:66:84:EC:06:8F:14:50:BD:C7:C2:81:A5:BC:A9:64:57
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -8907,7 +8907,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=T-TeleSec GlobalRoot Class 3,OU=T-Systems Trust Center,O=T-Systems Enterprise Services GmbH,C=DE
 # Not Valid Before: Wed Oct 01 10:29:56 2008
 # Not Valid After : Sat Oct 01 23:59:59 2033
-# Fingerprint (MD5): CA:FB:40:A8:4E:39:92:8A:1D:FE:8E:2F:C4:27:EA:EF
+# Fingerprint (SHA-256): FD:73:DA:D3:1C:64:4F:F1:B4:3B:EF:0C:CD:DA:96:71:0B:9C:D9:87:5E:CA:7E:31:70:7A:F3:E9:6D:52:2B:BD
 # Fingerprint (SHA1): 55:A6:72:3E:CB:F2:EC:CD:C3:23:74:70:19:9D:2A:BE:11:E3:81:D1
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -9014,7 +9014,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: CN=T-TeleSec GlobalRoot Class 3,OU=T-Systems Trust Center,O=T-Systems Enterprise Services GmbH,C=DE
 # Not Valid Before: Wed Oct 01 10:29:56 2008
 # Not Valid After : Sat Oct 01 23:59:59 2033
-# Fingerprint (MD5): CA:FB:40:A8:4E:39:92:8A:1D:FE:8E:2F:C4:27:EA:EF
+# Fingerprint (SHA-256): FD:73:DA:D3:1C:64:4F:F1:B4:3B:EF:0C:CD:DA:96:71:0B:9C:D9:87:5E:CA:7E:31:70:7A:F3:E9:6D:52:2B:BD
 # Fingerprint (SHA1): 55:A6:72:3E:CB:F2:EC:CD:C3:23:74:70:19:9D:2A:BE:11:E3:81:D1
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -9123,7 +9123,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=D-TRUST Root Class 3 CA 2 2009,O=D-Trust GmbH,C=DE
 # Not Valid Before: Thu Nov 05 08:35:58 2009
 # Not Valid After : Mon Nov 05 08:35:58 2029
-# Fingerprint (MD5): CD:E0:25:69:8D:47:AC:9C:89:35:90:F7:FD:51:3D:2F
+# Fingerprint (SHA-256): 49:E7:A4:42:AC:F0:EA:62:87:05:00:54:B5:25:64:B6:50:E4:F4:9E:42:E3:48:D6:AA:38:E0:39:E9:57:B1:C1
 # Fingerprint (SHA1): 58:E8:AB:B0:36:15:33:FB:80:F7:9B:1B:6D:29:D3:FF:8D:5F:00:F0
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -9229,7 +9229,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: CN=D-TRUST Root Class 3 CA 2 2009,O=D-Trust GmbH,C=DE
 # Not Valid Before: Thu Nov 05 08:35:58 2009
 # Not Valid After : Mon Nov 05 08:35:58 2029
-# Fingerprint (MD5): CD:E0:25:69:8D:47:AC:9C:89:35:90:F7:FD:51:3D:2F
+# Fingerprint (SHA-256): 49:E7:A4:42:AC:F0:EA:62:87:05:00:54:B5:25:64:B6:50:E4:F4:9E:42:E3:48:D6:AA:38:E0:39:E9:57:B1:C1
 # Fingerprint (SHA1): 58:E8:AB:B0:36:15:33:FB:80:F7:9B:1B:6D:29:D3:FF:8D:5F:00:F0
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -9266,7 +9266,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=D-TRUST Root Class 3 CA 2 EV 2009,O=D-Trust GmbH,C=DE
 # Not Valid Before: Thu Nov 05 08:50:46 2009
 # Not Valid After : Mon Nov 05 08:50:46 2029
-# Fingerprint (MD5): AA:C6:43:2C:5E:2D:CD:C4:34:C0:50:4F:11:02:4F:B6
+# Fingerprint (SHA-256): EE:C5:49:6B:98:8C:E9:86:25:B9:34:09:2E:EC:29:08:BE:D0:B0:F3:16:C2:D4:73:0C:84:EA:F1:F3:D3:48:81
 # Fingerprint (SHA1): 96:C9:1B:0B:95:B4:10:98:42:FA:D0:D8:22:79:FE:60:FA:B9:16:83
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -9375,7 +9375,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: CN=D-TRUST Root Class 3 CA 2 EV 2009,O=D-Trust GmbH,C=DE
 # Not Valid Before: Thu Nov 05 08:50:46 2009
 # Not Valid After : Mon Nov 05 08:50:46 2029
-# Fingerprint (MD5): AA:C6:43:2C:5E:2D:CD:C4:34:C0:50:4F:11:02:4F:B6
+# Fingerprint (SHA-256): EE:C5:49:6B:98:8C:E9:86:25:B9:34:09:2E:EC:29:08:BE:D0:B0:F3:16:C2:D4:73:0C:84:EA:F1:F3:D3:48:81
 # Fingerprint (SHA1): 96:C9:1B:0B:95:B4:10:98:42:FA:D0:D8:22:79:FE:60:FA:B9:16:83
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -9413,7 +9413,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=CA Disig Root R2,O=Disig a.s.,L=Bratislava,C=SK
 # Not Valid Before: Thu Jul 19 09:15:30 2012
 # Not Valid After : Sat Jul 19 09:15:30 2042
-# Fingerprint (MD5): 26:01:FB:D8:27:A7:17:9A:45:54:38:1A:43:01:3B:03
+# Fingerprint (SHA-256): E2:3D:4A:03:6D:7B:70:E9:F5:95:B1:42:20:79:D2:B9:1E:DF:BB:1F:B6:51:A0:63:3E:AA:8A:9D:C5:F8:07:03
 # Fingerprint (SHA1): B5:61:EB:EA:A4:DE:E4:25:4B:69:1A:98:A5:57:47:C2:34:C7:D9:71
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -9540,7 +9540,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: CN=CA Disig Root R2,O=Disig a.s.,L=Bratislava,C=SK
 # Not Valid Before: Thu Jul 19 09:15:30 2012
 # Not Valid After : Sat Jul 19 09:15:30 2042
-# Fingerprint (MD5): 26:01:FB:D8:27:A7:17:9A:45:54:38:1A:43:01:3B:03
+# Fingerprint (SHA-256): E2:3D:4A:03:6D:7B:70:E9:F5:95:B1:42:20:79:D2:B9:1E:DF:BB:1F:B6:51:A0:63:3E:AA:8A:9D:C5:F8:07:03
 # Fingerprint (SHA1): B5:61:EB:EA:A4:DE:E4:25:4B:69:1A:98:A5:57:47:C2:34:C7:D9:71
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -9578,7 +9578,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: C=ES,O=ACCV,OU=PKIACCV,CN=ACCVRAIZ1
 # Not Valid Before: Thu May 05 09:37:37 2011
 # Not Valid After : Tue Dec 31 09:37:37 2030
-# Fingerprint (MD5): D0:A0:5A:EE:05:B6:09:94:21:A1:7D:F1:B2:29:82:02
+# Fingerprint (SHA-256): 9A:6E:C0:12:E1:A7:DA:9D:BE:34:19:4D:47:8A:D7:C0:DB:18:22:FB:07:1D:F1:29:81:49:6E:D1:04:38:41:13
 # Fingerprint (SHA1): 93:05:7A:88:15:C6:4F:CE:88:2F:FA:91:16:52:28:78:BC:53:64:17
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -9742,7 +9742,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: C=ES,O=ACCV,OU=PKIACCV,CN=ACCVRAIZ1
 # Not Valid Before: Thu May 05 09:37:37 2011
 # Not Valid After : Tue Dec 31 09:37:37 2030
-# Fingerprint (MD5): D0:A0:5A:EE:05:B6:09:94:21:A1:7D:F1:B2:29:82:02
+# Fingerprint (SHA-256): 9A:6E:C0:12:E1:A7:DA:9D:BE:34:19:4D:47:8A:D7:C0:DB:18:22:FB:07:1D:F1:29:81:49:6E:D1:04:38:41:13
 # Fingerprint (SHA1): 93:05:7A:88:15:C6:4F:CE:88:2F:FA:91:16:52:28:78:BC:53:64:17
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -9779,7 +9779,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=TWCA Global Root CA,OU=Root CA,O=TAIWAN-CA,C=TW
 # Not Valid Before: Wed Jun 27 06:28:33 2012
 # Not Valid After : Tue Dec 31 15:59:59 2030
-# Fingerprint (MD5): F9:03:7E:CF:E6:9E:3C:73:7A:2A:90:07:69:FF:2B:96
+# Fingerprint (SHA-256): 59:76:90:07:F7:68:5D:0F:CD:50:87:2F:9F:95:D5:75:5A:5B:2B:45:7D:81:F3:69:2B:61:0A:98:67:2F:0E:1B
 # Fingerprint (SHA1): 9C:BB:48:53:F6:A4:F6:D3:52:A4:E8:32:52:55:60:13:F5:AD:AF:65
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -9904,7 +9904,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: CN=TWCA Global Root CA,OU=Root CA,O=TAIWAN-CA,C=TW
 # Not Valid Before: Wed Jun 27 06:28:33 2012
 # Not Valid After : Tue Dec 31 15:59:59 2030
-# Fingerprint (MD5): F9:03:7E:CF:E6:9E:3C:73:7A:2A:90:07:69:FF:2B:96
+# Fingerprint (SHA-256): 59:76:90:07:F7:68:5D:0F:CD:50:87:2F:9F:95:D5:75:5A:5B:2B:45:7D:81:F3:69:2B:61:0A:98:67:2F:0E:1B
 # Fingerprint (SHA1): 9C:BB:48:53:F6:A4:F6:D3:52:A4:E8:32:52:55:60:13:F5:AD:AF:65
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -9942,7 +9942,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=TeliaSonera Root CA v1,O=TeliaSonera
 # Not Valid Before: Thu Oct 18 12:00:50 2007
 # Not Valid After : Mon Oct 18 12:00:50 2032
-# Fingerprint (MD5): 37:41:49:1B:18:56:9A:26:F5:AD:C2:66:FB:40:A5:4C
+# Fingerprint (SHA-256): DD:69:36:FE:21:F8:F0:77:C1:23:A1:A5:21:C1:22:24:F7:22:55:B7:3E:03:A7:26:06:93:E8:A2:4B:0F:A3:89
 # Fingerprint (SHA1): 43:13:BB:96:F1:D5:86:9B:C1:4E:6A:92:F6:CF:F6:34:69:87:82:37
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -10063,7 +10063,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: CN=TeliaSonera Root CA v1,O=TeliaSonera
 # Not Valid Before: Thu Oct 18 12:00:50 2007
 # Not Valid After : Mon Oct 18 12:00:50 2032
-# Fingerprint (MD5): 37:41:49:1B:18:56:9A:26:F5:AD:C2:66:FB:40:A5:4C
+# Fingerprint (SHA-256): DD:69:36:FE:21:F8:F0:77:C1:23:A1:A5:21:C1:22:24:F7:22:55:B7:3E:03:A7:26:06:93:E8:A2:4B:0F:A3:89
 # Fingerprint (SHA1): 43:13:BB:96:F1:D5:86:9B:C1:4E:6A:92:F6:CF:F6:34:69:87:82:37
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -10100,7 +10100,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=E-Tugra Certification Authority,OU=E-Tugra Sertifikasyon Merkezi,O=E-Tu..ra EBG Bili..im Teknolojileri ve Hizmetleri A....,L=Ankara,C=TR
 # Not Valid Before: Tue Mar 05 12:09:48 2013
 # Not Valid After : Fri Mar 03 12:09:48 2023
-# Fingerprint (MD5): B8:A1:03:63:B0:BD:21:71:70:8A:6F:13:3A:BB:79:49
+# Fingerprint (SHA-256): B0:BF:D5:2B:B0:D7:D9:BD:92:BF:5D:4D:C1:3D:A2:55:C0:2C:54:2F:37:83:65:EA:89:39:11:F5:5E:55:F2:3C
 # Fingerprint (SHA1): 51:C6:E7:08:49:06:6E:F3:92:D4:5C:A0:0D:6D:A3:62:8F:C3:52:39
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -10253,7 +10253,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: CN=E-Tugra Certification Authority,OU=E-Tugra Sertifikasyon Merkezi,O=E-Tu..ra EBG Bili..im Teknolojileri ve Hizmetleri A....,L=Ankara,C=TR
 # Not Valid Before: Tue Mar 05 12:09:48 2013
 # Not Valid After : Fri Mar 03 12:09:48 2023
-# Fingerprint (MD5): B8:A1:03:63:B0:BD:21:71:70:8A:6F:13:3A:BB:79:49
+# Fingerprint (SHA-256): B0:BF:D5:2B:B0:D7:D9:BD:92:BF:5D:4D:C1:3D:A2:55:C0:2C:54:2F:37:83:65:EA:89:39:11:F5:5E:55:F2:3C
 # Fingerprint (SHA1): 51:C6:E7:08:49:06:6E:F3:92:D4:5C:A0:0D:6D:A3:62:8F:C3:52:39
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -10297,7 +10297,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: CN=T-TeleSec GlobalRoot Class 2,OU=T-Systems Trust Center,O=T-Systems Enterprise Services GmbH,C=DE
 # Not Valid Before: Wed Oct 01 10:40:14 2008
 # Not Valid After : Sat Oct 01 23:59:59 2033
-# Fingerprint (MD5): 2B:9B:9E:E4:7B:6C:1F:00:72:1A:CC:C1:77:79:DF:6A
+# Fingerprint (SHA-256): 91:E2:F5:78:8D:58:10:EB:A7:BA:58:73:7D:E1:54:8A:8E:CA:CD:01:45:98:BC:0B:14:3E:04:1B:17:05:25:52
 # Fingerprint (SHA1): 59:0D:2D:7D:88:4F:40:2E:61:7E:A5:62:32:17:65:CF:17:D8:94:E9
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -10404,7 +10404,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: CN=T-TeleSec GlobalRoot Class 2,OU=T-Systems Trust Center,O=T-Systems Enterprise Services GmbH,C=DE
 # Not Valid Before: Wed Oct 01 10:40:14 2008
 # Not Valid After : Sat Oct 01 23:59:59 2033
-# Fingerprint (MD5): 2B:9B:9E:E4:7B:6C:1F:00:72:1A:CC:C1:77:79:DF:6A
+# Fingerprint (SHA-256): 91:E2:F5:78:8D:58:10:EB:A7:BA:58:73:7D:E1:54:8A:8E:CA:CD:01:45:98:BC:0B:14:3E:04:1B:17:05:25:52
 # Fingerprint (SHA1): 59:0D:2D:7D:88:4F:40:2E:61:7E:A5:62:32:17:65:CF:17:D8:94:E9
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -10445,7 +10445,7 @@ CKA_TRUST_STEP_UP_APPROVED CK_BBOOL CK_FALSE
 # Subject: C=DE,O=Atos,CN=Atos TrustedRoot 2011
 # Not Valid Before: Thu Jul 07 14:58:30 2011
 # Not Valid After : Tue Dec 31 23:59:59 2030
-# Fingerprint (MD5): AE:B9:C4:32:4B:AC:7F:5D:66:CC:77:94:BB:2A:77:56
+# Fingerprint (SHA-256): F3:56:BE:A2:44:B7:A9:1E:B3:5D:53:CA:9A:D7:86:4A:CE:01:8E:2D:35:D5:F8:F9:6D:DF:68:A6:F4:1A:A4:74
 # Fingerprint (SHA1): 2B:B1:F5:3E:55:0C:1D:C5:F1:D4:E6:B7:6A:46:4B:55:06:02:AC:21
 CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE
 CKA_TOKEN CK_BBOOL CK_TRUE
@@ -10537,7 +10537,7 @@ CKA_NSS_EMAIL_DISTRUST_AFTER CK_BBOOL CK_FALSE
 # Subject: C=DE,O=Atos,CN=Atos TrustedRoot 2011
 # Not Valid Before: Thu Jul 07 14:58:30 2011
 # Not Valid After : Tue Dec 31 23:59:59 2030
-# Fingerprint (MD5): AE:B9:C4:32:4B:AC:7F:5D:66:CC:77:94:BB:2A:77:56
+# Fingerprint (SHA-256): F3:56:BE:A2:44:B7:A9:1E:B3:5D:53:CA:9A:D7:86:4A:CE:01:8E:2D:35:D5:F8:F9:6D:DF:68:A6:F4:1A:A4:74
 # Fingerprint (SHA1): 2B:B1:F5:3E:55:0C:1D:C5:F1:D4:E6:B7:6A:46:4B:55:06:02:AC:21
 CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST
 CKA_TOKEN CK_BBOOL CK_TRUE

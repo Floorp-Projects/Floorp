@@ -3,12 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include "VRGPUParent.h";
+include "VRGPUChild.h";
+
 namespace mozilla {
 namespace gfx {
 
 // The parent process is the VR process.
 // The child process is the GPU process.
-[NeedsOtherPid]
+[ManualDealloc, NeedsOtherPid, ChildImpl="VRGPUChild", ParentImpl="VRGPUParent"]
 async protocol PVRGPU
 {
 parent:

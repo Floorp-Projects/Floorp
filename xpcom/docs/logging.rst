@@ -199,4 +199,3 @@ The `log` crate lists the available `log levels <https://docs.rs/log/0.3.8/log/e
 It is common for debug and trace to be disabled at compile time in release builds, so you may need a debug build if you want logs from those levels.
 
 Check the `env_logger <https://docs.rs/env_logger>`_ docs for more details on logging options.
-

@@ -90,7 +90,7 @@ class SocketProcessParent final
       const uint64_t& aExtraSizeData, const nsCString& aExtraStringData);
 
   mozilla::ipc::IPCResult RecvInitBackground(
-      Endpoint<PBackgroundParent>&& aEndpoint);
+      Endpoint<PBackgroundStarterParent>&& aEndpoint);
 
   already_AddRefed<PAltServiceParent> AllocPAltServiceParent();
 
@@ -120,10 +120,6 @@ class SocketProcessParent final
 
   already_AddRefed<PRemoteLazyInputStreamParent>
   AllocPRemoteLazyInputStreamParent(const nsID& aID, const uint64_t& aSize);
-
-  mozilla::ipc::IPCResult RecvPRemoteLazyInputStreamConstructor(
-      PRemoteLazyInputStreamParent* aActor, const nsID& aID,
-      const uint64_t& aSize);
 
   mozilla::ipc::IPCResult RecvODoHServiceActivated(const bool& aActivated);
 

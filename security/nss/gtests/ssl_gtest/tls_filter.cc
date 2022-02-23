@@ -1224,6 +1224,17 @@ PacketFilter::Action SelectedCipherSuiteReplacer::FilterHandshake(
   return CHANGE;
 }
 
+PacketFilter::Action ServerHelloRandomChanger::FilterHandshake(
+    const HandshakeHeader& header, const DataBuffer& input,
+    DataBuffer* output) {
+  *output = input;
+  uint32_t temp = 0;
+  size_t pos = 30;
+  EXPECT_TRUE(input.Read(pos, 2, &temp));
+  output->Write(pos, (temp ^ 0xffff), 2);
+  return CHANGE;
+}
+
 PacketFilter::Action ClientHelloPreambleCapture::FilterHandshake(
     const HandshakeHeader& header, const DataBuffer& input,
     DataBuffer* output) {
@@ -1245,7 +1256,7 @@ PacketFilter::Action ClientHelloPreambleCapture::FilterHandshake(
   EXPECT_TRUE(parser.ReadVariable(&temp, 1));  // Compression
 
   // Copy the preamble into a new buffer
-  data_ = DataBuffer(input);
+  data_ = input;
   data_.Truncate(parser.consumed());
 
   return KEEP;

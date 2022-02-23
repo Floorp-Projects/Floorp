@@ -81,14 +81,16 @@ using ZeroOnOverflow = bool;
 
 class BaseStackFrame;
 
-// Two flags, useABI and interModule, control how calls are made.
+// Two flags, useABI and restoreRegisterStateAndRealm, control how calls are
+// made.
 //
 // UseABI::Wasm implies that the Tls/Heap/Global registers are nonvolatile,
-// except when InterModule::True is also set, when they are volatile.
+// except when RestoreRegisterStateAndRealm::True is also set, when they are
+// volatile.
 //
 // UseABI::Builtin implies that the Tls/Heap/Global registers are volatile.
-// In this case, we require InterModule::False.  The calling convention
-// is otherwise like UseABI::Wasm.
+// In this case, we require RestoreRegisterStateAndRealm::False.  The calling
+// convention is otherwise like UseABI::Wasm.
 //
 // UseABI::System implies that the Tls/Heap/Global registers are volatile.
 // Additionally, the parameter passing mechanism may be slightly different from
@@ -103,7 +105,7 @@ class BaseStackFrame;
 // the other two from the Tls data).
 
 enum class UseABI { Wasm, Builtin, System };
-enum class InterModule { False = false, True = true };
+enum class RestoreRegisterStateAndRealm { False = false, True = true };
 enum class RhsDestOp { True = true };
 
 // Compiler configuration.

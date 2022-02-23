@@ -58,23 +58,23 @@ class TestMakeAbsolute(unittest.TestCase):
 
         def test_absolute_path(self):
             m = get_mercurial_vcs_obj()
-            self.assertEquals(m._make_absolute("/foo/bar"), "/foo/bar")
+            self.assertEqual(m._make_absolute("/foo/bar"), "/foo/bar")
 
         def test_relative_path(self):
             m = get_mercurial_vcs_obj()
-            self.assertEquals(m._make_absolute("foo/bar"), os.path.abspath("foo/bar"))
+            self.assertEqual(m._make_absolute("foo/bar"), os.path.abspath("foo/bar"))
 
         def test_HTTP_paths(self):
             m = get_mercurial_vcs_obj()
-            self.assertEquals(m._make_absolute("http://foo/bar"), "http://foo/bar")
+            self.assertEqual(m._make_absolute("http://foo/bar"), "http://foo/bar")
 
         def test_absolute_file_path(self):
             m = get_mercurial_vcs_obj()
-            self.assertEquals(m._make_absolute("file:///foo/bar"), "file:///foo/bar")
+            self.assertEqual(m._make_absolute("file:///foo/bar"), "file:///foo/bar")
 
         def test_relative_file_path(self):
             m = get_mercurial_vcs_obj()
-            self.assertEquals(
+            self.assertEqual(
                 m._make_absolute("file://foo/bar"), "file://%s/foo/bar" % os.getcwd()
             )
 
@@ -108,41 +108,41 @@ class TestHg(unittest.TestCase):
         m = get_mercurial_vcs_obj()
         m.clone(self.repodir, self.wc)
         b = m.get_branch_from_path(self.wc)
-        self.assertEquals(b, "default")
+        self.assertEqual(b, "default")
 
     def test_get_branches(self):
         m = get_mercurial_vcs_obj()
         m.clone(self.repodir, self.wc)
         branches = m.get_branches_from_path(self.wc)
-        self.assertEquals(sorted(branches), sorted(["branch2", "default"]))
+        self.assertEqual(sorted(branches), sorted(["branch2", "default"]))
 
     def test_clone(self):
         m = get_mercurial_vcs_obj()
         rev = m.clone(self.repodir, self.wc, update_dest=False)
-        self.assertEquals(rev, None)
-        self.assertEquals(self.revisions, get_revisions(self.wc))
-        self.assertEquals(sorted(os.listdir(self.wc)), [".hg"])
+        self.assertEqual(rev, None)
+        self.assertEqual(self.revisions, get_revisions(self.wc))
+        self.assertEqual(sorted(os.listdir(self.wc)), [".hg"])
 
     def test_clone_into_non_empty_dir(self):
         m = get_mercurial_vcs_obj()
         m.mkdir_p(self.wc)
         open(os.path.join(self.wc, "test.txt"), "w").write("hello")
         m.clone(self.repodir, self.wc, update_dest=False)
-        self.failUnless(not os.path.exists(os.path.join(self.wc, "test.txt")))
+        self.assertTrue(not os.path.exists(os.path.join(self.wc, "test.txt")))
 
     def test_clone_update(self):
         m = get_mercurial_vcs_obj()
         rev = m.clone(self.repodir, self.wc, update_dest=True)
-        self.assertEquals(rev, self.revisions[0])
+        self.assertEqual(rev, self.revisions[0])
 
     def test_clone_branch(self):
         m = get_mercurial_vcs_obj()
         m.clone(self.repodir, self.wc, branch="branch2", update_dest=False)
         # On hg 1.6, we should only have a subset of the revisions
         if m.hg_ver() >= (1, 6, 0):
-            self.assertEquals(self.revisions[1:], get_revisions(self.wc))
+            self.assertEqual(self.revisions[1:], get_revisions(self.wc))
         else:
-            self.assertEquals(self.revisions, get_revisions(self.wc))
+            self.assertEqual(self.revisions, get_revisions(self.wc))
 
     def test_clone_update_branch(self):
         m = get_mercurial_vcs_obj()
@@ -152,49 +152,49 @@ class TestHg(unittest.TestCase):
             branch="branch2",
             update_dest=True,
         )
-        self.assertEquals(rev, self.revisions[1], self.revisions)
+        self.assertEqual(rev, self.revisions[1], self.revisions)
 
     def test_clone_revision(self):
         m = get_mercurial_vcs_obj()
         m.clone(self.repodir, self.wc, revision=self.revisions[0], update_dest=False)
         # We'll only get a subset of the revisions
-        self.assertEquals(
+        self.assertEqual(
             self.revisions[:1] + self.revisions[2:], get_revisions(self.wc)
         )
 
     def test_update_revision(self):
         m = get_mercurial_vcs_obj()
         rev = m.clone(self.repodir, self.wc, update_dest=False)
-        self.assertEquals(rev, None)
+        self.assertEqual(rev, None)
 
         rev = m.update(self.wc, revision=self.revisions[1])
-        self.assertEquals(rev, self.revisions[1])
+        self.assertEqual(rev, self.revisions[1])
 
     def test_pull(self):
         m = get_mercurial_vcs_obj()
         # Clone just the first rev
         m.clone(self.repodir, self.wc, revision=self.revisions[-1], update_dest=False)
-        self.assertEquals(get_revisions(self.wc), self.revisions[-1:])
+        self.assertEqual(get_revisions(self.wc), self.revisions[-1:])
 
         # Now pull in new changes
         rev = m.pull(self.repodir, self.wc, update_dest=False)
-        self.assertEquals(rev, None)
-        self.assertEquals(get_revisions(self.wc), self.revisions)
+        self.assertEqual(rev, None)
+        self.assertEqual(get_revisions(self.wc), self.revisions)
 
     def test_pull_revision(self):
         m = get_mercurial_vcs_obj()
         # Clone just the first rev
         m.clone(self.repodir, self.wc, revision=self.revisions[-1], update_dest=False)
-        self.assertEquals(get_revisions(self.wc), self.revisions[-1:])
+        self.assertEqual(get_revisions(self.wc), self.revisions[-1:])
 
         # Now pull in just the last revision
         rev = m.pull(
             self.repodir, self.wc, revision=self.revisions[0], update_dest=False
         )
-        self.assertEquals(rev, None)
+        self.assertEqual(rev, None)
 
         # We'll be missing the middle revision (on another branch)
-        self.assertEquals(
+        self.assertEqual(
             get_revisions(self.wc), self.revisions[:1] + self.revisions[2:]
         )
 
@@ -202,17 +202,17 @@ class TestHg(unittest.TestCase):
         m = get_mercurial_vcs_obj()
         # Clone just the first rev
         m.clone(self.repodir, self.wc, revision=self.revisions[-1], update_dest=False)
-        self.assertEquals(get_revisions(self.wc), self.revisions[-1:])
+        self.assertEqual(get_revisions(self.wc), self.revisions[-1:])
 
         # Now pull in the other branch
         rev = m.pull(self.repodir, self.wc, branch="branch2", update_dest=False)
-        self.assertEquals(rev, None)
+        self.assertEqual(rev, None)
 
         # On hg 1.6, we'll be missing the last revision (on another branch)
         if m.hg_ver() >= (1, 6, 0):
-            self.assertEquals(get_revisions(self.wc), self.revisions[1:])
+            self.assertEqual(get_revisions(self.wc), self.revisions[1:])
         else:
-            self.assertEquals(get_revisions(self.wc), self.revisions)
+            self.assertEqual(get_revisions(self.wc), self.revisions)
 
     def test_pull_unrelated(self):
         m = get_mercurial_vcs_obj()
@@ -235,7 +235,7 @@ class TestHg(unittest.TestCase):
         m = get_mercurial_vcs_obj()
         m.clone(self.repodir, self.wc, revision=self.revisions[-2])
         m.push(src=self.repodir, remote=self.wc)
-        self.assertEquals(get_revisions(self.wc), self.revisions)
+        self.assertEqual(get_revisions(self.wc), self.revisions)
 
     def test_push_with_branch(self):
         m = get_mercurial_vcs_obj()
@@ -243,13 +243,13 @@ class TestHg(unittest.TestCase):
             m.clone(self.repodir, self.wc, revision=self.revisions[-1])
             m.push(src=self.repodir, remote=self.wc, branch="branch2")
             m.push(src=self.repodir, remote=self.wc, branch="default")
-            self.assertEquals(get_revisions(self.wc), self.revisions)
+            self.assertEqual(get_revisions(self.wc), self.revisions)
 
     def test_push_with_revision(self):
         m = get_mercurial_vcs_obj()
         m.clone(self.repodir, self.wc, revision=self.revisions[-2])
         m.push(src=self.repodir, remote=self.wc, revision=self.revisions[-1])
-        self.assertEquals(get_revisions(self.wc), self.revisions[-2:])
+        self.assertEqual(get_revisions(self.wc), self.revisions[-2:])
 
     def test_mercurial(self):
         m = get_mercurial_vcs_obj()
@@ -260,7 +260,7 @@ class TestHg(unittest.TestCase):
         }
         m.ensure_repo_and_revision()
         rev = m.ensure_repo_and_revision()
-        self.assertEquals(rev, self.revisions[0])
+        self.assertEqual(rev, self.revisions[0])
 
     def test_push_new_branches_not_allowed(self):
         m = get_mercurial_vcs_obj()
@@ -284,7 +284,7 @@ class TestHg(unittest.TestCase):
         m.chdir(os.path.dirname(self.repodir))
         try:
             rev = m.ensure_repo_and_revision()
-            self.assertEquals(rev, self.revisions[-1])
+            self.assertEqual(rev, self.revisions[-1])
             m.info("Creating test.txt")
             open(os.path.join(self.wc, "test.txt"), "w").write("hello!")
 
@@ -296,9 +296,9 @@ class TestHg(unittest.TestCase):
                 "vcs_share_base": os.path.join(self.tmpdir, "share"),
             }
             rev = m.ensure_repo_and_revision()
-            self.assertEquals(rev, self.revisions[0])
+            self.assertEqual(rev, self.revisions[0])
             # Make sure our local file didn't go away
-            self.failUnless(os.path.exists(os.path.join(self.wc, "test.txt")))
+            self.assertTrue(os.path.exists(os.path.join(self.wc, "test.txt")))
         finally:
             m.chdir(self.pwd)
 
@@ -311,7 +311,7 @@ class TestHg(unittest.TestCase):
             "vcs_share_base": os.path.join(self.tmpdir, "share"),
         }
         rev = m.ensure_repo_and_revision()
-        self.assertEquals(rev, self.revisions[-1])
+        self.assertEqual(rev, self.revisions[-1])
         open(os.path.join(self.wc, "test.txt"), "w").write("hello!")
 
         m = get_mercurial_vcs_obj()
@@ -321,9 +321,9 @@ class TestHg(unittest.TestCase):
             "vcs_share_base": os.path.join(self.tmpdir, "share"),
         }
         rev = m.ensure_repo_and_revision()
-        self.assertEquals(rev, self.revisions[0])
+        self.assertEqual(rev, self.revisions[0])
         # Make sure our local file didn't go away
-        self.failUnless(os.path.exists(os.path.join(self.wc, "test.txt")))
+        self.assertTrue(os.path.exists(os.path.join(self.wc, "test.txt")))
 
     def test_mercurial_update_rev(self):
         m = get_mercurial_vcs_obj()
@@ -334,7 +334,7 @@ class TestHg(unittest.TestCase):
             "vcs_share_base": os.path.join(self.tmpdir, "share"),
         }
         rev = m.ensure_repo_and_revision()
-        self.assertEquals(rev, self.revisions[-1])
+        self.assertEqual(rev, self.revisions[-1])
         open(os.path.join(self.wc, "test.txt"), "w").write("hello!")
 
         m = get_mercurial_vcs_obj()
@@ -345,9 +345,9 @@ class TestHg(unittest.TestCase):
             "vcs_share_base": os.path.join(self.tmpdir, "share"),
         }
         rev = m.ensure_repo_and_revision()
-        self.assertEquals(rev, self.revisions[0])
+        self.assertEqual(rev, self.revisions[0])
         # Make sure our local file didn't go away
-        self.failUnless(os.path.exists(os.path.join(self.wc, "test.txt")))
+        self.assertTrue(os.path.exists(os.path.join(self.wc, "test.txt")))
 
     def test_make_hg_url(self):
         # construct an hg url specific to revision, branch and filename and try to pull it down
@@ -362,7 +362,7 @@ class TestHg(unittest.TestCase):
             "https://hg.mozilla.org/build/tools/raw-file/"
             "FIREFOX_3_6_12_RELEASE/lib/python/util/hg.py"
         )
-        self.assertEquals(file_url, expected_url)
+        self.assertEqual(file_url, expected_url)
 
     def test_make_hg_url_no_filename(self):
         file_url = mercurial.make_hg_url(
@@ -372,7 +372,7 @@ class TestHg(unittest.TestCase):
             protocol="https",
         )
         expected_url = "https://hg.mozilla.org/build/tools/rev/default"
-        self.assertEquals(file_url, expected_url)
+        self.assertEqual(file_url, expected_url)
 
     def test_make_hg_url_no_revision_no_filename(self):
         repo_url = mercurial.make_hg_url(
@@ -381,7 +381,7 @@ class TestHg(unittest.TestCase):
             protocol="https",
         )
         expected_url = "https://hg.mozilla.org/build/tools"
-        self.assertEquals(repo_url, expected_url)
+        self.assertEqual(repo_url, expected_url)
 
     def test_make_hg_url_different_protocol(self):
         repo_url = mercurial.make_hg_url(
@@ -390,7 +390,7 @@ class TestHg(unittest.TestCase):
             protocol="ssh",
         )
         expected_url = "ssh://hg.mozilla.org/build/tools"
-        self.assertEquals(repo_url, expected_url)
+        self.assertEqual(repo_url, expected_url)
 
 
 if __name__ == "__main__":

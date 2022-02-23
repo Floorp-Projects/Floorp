@@ -201,8 +201,10 @@ class PaymentRequest final : public DOMEventTargetHelper,
   nsresult UpdatePaymentMethod(const nsAString& aMethodName,
                                const ChangeDetails& aMethodDetails);
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
 
   bool InFullyActiveDocument();
 

@@ -18,6 +18,7 @@
 #include "NullHttpTransaction.h"
 #include "mozilla/Components.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/net/DNS.h"
@@ -1315,7 +1316,8 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
 
   RefPtr<HttpConnectionBase> conn = GetH2orH3ActiveConn(
       ent, (!gHttpHandler->IsSpdyEnabled() || (caps & NS_HTTP_DISALLOW_SPDY)),
-      (!gHttpHandler->IsHttp3Enabled() || (caps & NS_HTTP_DISALLOW_HTTP3)));
+      (!StaticPrefs::network_http_http3_enable() ||
+       (caps & NS_HTTP_DISALLOW_HTTP3)));
   if (conn) {
     if (trans->IsWebsocketUpgrade() && !conn->CanAcceptWebsocket()) {
       // This is a websocket transaction and we already have a h2 connection
@@ -1408,8 +1410,9 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
   // h1 pipelining has been removed
 
   // Don't dispatch if this transaction is waiting for HTTPS RR.
-  // Note that this is only used in test currently.
-  if (caps & NS_HTTP_FORCE_WAIT_HTTP_RR) {
+  // This usually happens when the pref "network.dns.force_waiting_https_rr" is
+  // true or when echConfig is enabled.
+  if (trans->WaitingForHTTPSRR()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -2456,6 +2459,7 @@ void nsHttpConnectionMgr::OnMsgCompleteUpgrade(int32_t, ARefBase* param) {
 }
 
 void nsHttpConnectionMgr::OnMsgUpdateParam(int32_t inParam, ARefBase*) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   uint32_t param = static_cast<uint32_t>(inParam);
   uint16_t name = ((param)&0xFFFF0000) >> 16;
   uint16_t value = param & 0x0000FFFF;
@@ -2533,9 +2537,19 @@ void nsHttpConnectionMgr::ActivateTimeoutTick() {
       NS_WARNING("failed to create timer for http timeout management");
       return;
     }
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    if (!mSocketThreadTarget) {
+      NS_WARNING("cannot activate timout if not initialized or shutdown");
+      return;
+    }
     mTimeoutTick->SetTarget(mSocketThreadTarget);
   }
 
+  if (mIsShuttingDown) {  // Atomic
+    // don't set a timer to generate an event if we're shutting down
+    // (and mSocketThreadTarget might be null or garbage if we're shutting down)
+    return;
+  }
   MOZ_ASSERT(!mTimeoutTickArmed, "timer tick armed");
   mTimeoutTickArmed = true;
   mTimeoutTick->Init(this, 1000, nsITimer::TYPE_REPEATING_SLACK);
@@ -2561,6 +2575,7 @@ nsresult nsHttpConnectionMgr::UpdateCurrentTopBrowsingContextId(uint64_t aId) {
 
 void nsHttpConnectionMgr::SetThrottlingEnabled(bool aEnable) {
   LOG(("nsHttpConnectionMgr::SetThrottlingEnabled enable=%d", aEnable));
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   mThrottleEnabled = aEnable;
 
@@ -2947,6 +2962,7 @@ void nsHttpConnectionMgr::EnsureThrottleTickerIfNeeded() {
   LogActiveTransactions('^');
 }
 
+// Can be called with or without the monitor held
 void nsHttpConnectionMgr::DestroyThrottleTicker() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -3299,6 +3315,14 @@ void nsHttpConnectionMgr::DoSpeculativeConnection(
   ConnectionEntry* ent = GetOrCreateConnectionEntry(
       aTrans->ConnectionInfo(), false, aTrans->Caps() & NS_HTTP_DISALLOW_SPDY,
       aTrans->Caps() & NS_HTTP_DISALLOW_HTTP3);
+  if (!aFetchHTTPSRR &&
+      gHttpHandler->EchConfigEnabled(aTrans->ConnectionInfo()->IsHttp3())) {
+    // This happens when this is called from
+    // SpeculativeTransaction::OnHTTPSRRAvailable. We have to update this
+    // entry's echConfig so that the newly created connection can use the latest
+    // echConfig.
+    ent->MaybeUpdateEchConfig(aTrans->ConnectionInfo());
+  }
   DoSpeculativeConnectionInternal(ent, aTrans, aFetchHTTPSRR);
 }
 
@@ -3307,6 +3331,12 @@ void nsHttpConnectionMgr::DoSpeculativeConnectionInternal(
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(aTrans);
   MOZ_ASSERT(aEnt);
+  if (aFetchHTTPSRR) {
+    Unused << aTrans->FetchHTTPSRR();
+    // nsHttpConnectionMgr::DoSpeculativeConnection will be called again when
+    // HTTPS RR is available.
+    return;
+  }
 
   uint32_t parallelSpeculativeConnectLimit =
       aTrans->ParallelSpeculativeConnectLimit()
@@ -3324,9 +3354,6 @@ void nsHttpConnectionMgr::DoSpeculativeConnectionInternal(
        !aEnt->IdleConnectionsLength()) &&
       !(keepAlive && aEnt->RestrictConnections()) &&
       !AtActiveConnectionLimit(aEnt, aTrans->Caps())) {
-    if (aFetchHTTPSRR) {
-      Unused << aTrans->FetchHTTPSRR();
-    }
     DebugOnly<nsresult> rv = aEnt->CreateDnsAndConnectSocket(
         aTrans, aTrans->Caps(), true, isFromPredictor, false, allow1918,
         nullptr);
@@ -3376,6 +3403,7 @@ void nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, ARefBase* param) {
 }
 
 bool nsHttpConnectionMgr::BeConservativeIfProxied(nsIProxyInfo* proxy) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (mBeConservativeForProxy) {
     // The pref says to be conservative for proxies.
     return true;

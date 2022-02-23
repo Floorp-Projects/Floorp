@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+
+<head>
+  <meta charset="UTF-8">
+</head>
+
+<body>
+  <div style="will-change: transform;" class="reftest-no-display-list">
+    Foo
+    <div style="will-change: transform;">
+      Baz
+    </div>
+  </div>
+  <div style="color: red;" id="changed">
+    Bar
+  </div>
+  <script>
+    function doTest() {
+      const e = document.getElementById('changed');
+      e.style.color = 'green';
+      document.documentElement.removeAttribute('class');
+    }
+    document.addEventListener("MozReftestInvalidate", doTest);
+  </script>
+</body>
+
+</html>

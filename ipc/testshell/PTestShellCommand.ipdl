@@ -5,9 +5,12 @@
 
 include protocol PTestShell;
 
+include "mozilla/ipc/TestShellParent.h";
+
 namespace mozilla {
 namespace ipc {
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl="TestShellCommandParent"]
 protocol PTestShellCommand
 {
   manager PTestShell;

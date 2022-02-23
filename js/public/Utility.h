@@ -66,6 +66,8 @@ enum ThreadType {
   THREAD_TYPE_ION_FREE,              // 9
   THREAD_TYPE_WASM_GENERATOR_TIER2,  // 10
   THREAD_TYPE_WORKER,                // 11
+  THREAD_TYPE_DELAZIFY,              // 12
+  THREAD_TYPE_DELAZIFY_FREE,         // 13
   THREAD_TYPE_MAX                    // Used to check shell function arguments
 };
 

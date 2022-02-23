@@ -2,8 +2,8 @@
 
 This page explains how to test and debug Rust code in Firefox.
 
-The [build documentation](../build/buildsystem/rust.html) explains how to add
-new Rust code to Firefox. The [code documentation](../writing-rust-code)
+The [build documentation](/build/buildsystem/rust.rst) explains how to add
+new Rust code to Firefox. The [code documentation](/writing-rust-code/index.md)
 explains how to write and work with Rust code in Firefox.
 
 ## Testing Mozilla crates
@@ -31,7 +31,7 @@ It's also possible to use `RUST_TESTS` in a different `moz.build` file. See
 `testing/geckodriver/moz.build` and the [geckodriver testing docs] for an
 example.
 
-[geckodriver testing docs]: ../testing/geckodriver/Testing.html
+[geckodriver testing docs]: /testing/geckodriver/Testing.md
 
 ### GTests
 
@@ -102,7 +102,7 @@ To restrict logging to child processes, use `RUST_LOG_CHILD` instead of
 Rust logging can also be forwarded to the [Gecko logger] for capture via
 `MOZ_LOG` and `MOZ_LOG_FILE`.
 
-[Gecko logger]: /xpcom/logging.html
+[Gecko logger]: /xpcom/logging.rst
 
 - When parsing modules from `MOZ_LOG`, modules containing `::` are considered
   to be Rust modules. To log everything in a top-level module like

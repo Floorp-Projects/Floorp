@@ -5,6 +5,7 @@
 
 #include "HTMLElementAccessibles.h"
 
+#include "CacheConstants.h"
 #include "DocAccessible.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
@@ -56,21 +57,29 @@ Relation HTMLLabelAccessible::RelationByType(RelationType aType) const {
   return rel;
 }
 
-uint8_t HTMLLabelAccessible::ActionCount() const {
-  return nsCoreUtils::IsLabelWithControl(mContent) ? 1 : 0;
+void HTMLLabelAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
+                                              nsAtom* aAttribute,
+                                              int32_t aModType,
+                                              const nsAttrValue* aOldValue,
+                                              uint64_t aOldState) {
+  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
+                                               aModType, aOldValue, aOldState);
+
+  if (aAttribute == nsGkAtoms::_for) {
+    SendCache(CacheDomain::Actions, CacheUpdateType::Update);
+  }
+}
+
+bool HTMLLabelAccessible::HasPrimaryAction() const {
+  return nsCoreUtils::IsLabelWithControl(mContent);
 }
 
 void HTMLLabelAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex == 0) {
-    if (nsCoreUtils::IsLabelWithControl(mContent)) aName.AssignLiteral("click");
+    if (HasPrimaryAction()) {
+      aName.AssignLiteral("click");
+    }
   }
-}
-
-bool HTMLLabelAccessible::DoAction(uint8_t aIndex) const {
-  if (aIndex != 0) return false;
-
-  DoCommand();
-  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +105,7 @@ HTMLSummaryAccessible::HTMLSummaryAccessible(nsIContent* aContent,
   mGenericTypes |= eButton;
 }
 
-uint8_t HTMLSummaryAccessible::ActionCount() const { return 1; }
+bool HTMLSummaryAccessible::HasPrimaryAction() const { return true; }
 
 void HTMLSummaryAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex != eAction_Click) {
@@ -119,13 +128,6 @@ void HTMLSummaryAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   } else {
     aName.AssignLiteral("expand");
   }
-}
-
-bool HTMLSummaryAccessible::DoAction(uint8_t aIndex) const {
-  if (aIndex != eAction_Click) return false;
-
-  DoCommand();
-  return true;
 }
 
 uint64_t HTMLSummaryAccessible::NativeState() const {
@@ -206,23 +208,6 @@ role HTMLHeaderOrFooterAccessible::NativeRole() const {
   return roles::SECTION;
 }
 
-nsAtom* HTMLHeaderOrFooterAccessible::LandmarkRole() const {
-  if (!HasOwnContent()) return nullptr;
-
-  a11y::role r = const_cast<HTMLHeaderOrFooterAccessible*>(this)->Role();
-  if (r == roles::LANDMARK) {
-    if (mContent->IsHTMLElement(nsGkAtoms::header)) {
-      return nsGkAtoms::banner;
-    }
-
-    if (mContent->IsHTMLElement(nsGkAtoms::footer)) {
-      return nsGkAtoms::contentinfo;
-    }
-  }
-
-  return HyperTextAccessibleWrap::LandmarkRole();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLSectionAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -231,16 +216,4 @@ role HTMLSectionAccessible::NativeRole() const {
   nsAutoString name;
   const_cast<HTMLSectionAccessible*>(this)->Name(name);
   return name.IsEmpty() ? roles::SECTION : roles::REGION;
-}
-
-nsAtom* HTMLSectionAccessible::LandmarkRole() const {
-  if (!HasOwnContent()) {
-    return nullptr;
-  }
-
-  // Only return xml-roles "region" if the section has an accessible name.
-  nsAutoString name;
-  const_cast<HTMLSectionAccessible*>(this)->Name(name);
-  return name.IsEmpty() ? HyperTextAccessibleWrap::LandmarkRole()
-                        : nsGkAtoms::region;
 }

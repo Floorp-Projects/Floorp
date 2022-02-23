@@ -5,15 +5,15 @@ use std::mem;
 
 #[derive(Clone)]
 pub struct MeshShader {
-    mesh_shader_fn: vk::NvMeshShaderFn,
+    fp: vk::NvMeshShaderFn,
 }
 
 impl MeshShader {
     pub fn new(instance: &Instance, device: &Device) -> Self {
-        let mesh_shader_fn = vk::NvMeshShaderFn::load(|name| unsafe {
+        let fp = vk::NvMeshShaderFn::load(|name| unsafe {
             mem::transmute(instance.get_device_proc_addr(device.handle(), name.as_ptr()))
         });
-        Self { mesh_shader_fn }
+        Self { fp }
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMeshTasksNV.html>"]
@@ -23,7 +23,7 @@ impl MeshShader {
         task_count: u32,
         first_task: u32,
     ) {
-        self.mesh_shader_fn
+        self.fp
             .cmd_draw_mesh_tasks_nv(command_buffer, task_count, first_task);
     }
 
@@ -36,13 +36,8 @@ impl MeshShader {
         draw_count: u32,
         stride: u32,
     ) {
-        self.mesh_shader_fn.cmd_draw_mesh_tasks_indirect_nv(
-            command_buffer,
-            buffer,
-            offset,
-            draw_count,
-            stride,
-        );
+        self.fp
+            .cmd_draw_mesh_tasks_indirect_nv(command_buffer, buffer, offset, draw_count, stride);
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMeshTasksIndirectCountNV.html>"]
@@ -56,7 +51,7 @@ impl MeshShader {
         max_draw_count: u32,
         stride: u32,
     ) {
-        self.mesh_shader_fn.cmd_draw_mesh_tasks_indirect_count_nv(
+        self.fp.cmd_draw_mesh_tasks_indirect_count_nv(
             command_buffer,
             buffer,
             offset,
@@ -72,6 +67,6 @@ impl MeshShader {
     }
 
     pub fn fp(&self) -> &vk::NvMeshShaderFn {
-        &self.mesh_shader_fn
+        &self.fp
     }
 }

@@ -14,6 +14,7 @@ namespace mozilla {
 // It is a top-level protocol so that its child endpoint can be on a
 // background thread, so that profiles can be gathered even if the main thread
 // is unresponsive.
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 async protocol PProfiler
 {
 child:
@@ -29,6 +30,7 @@ child:
   async DestroyReleasedChunksAtOrBefore(TimeStamp timeStamp);
 
   async GatherProfile() returns (Shmem profile);
+  async GetGatherProfileProgress() returns (GatherProfileProgress progress);
 
   async ClearAllPages();
 };

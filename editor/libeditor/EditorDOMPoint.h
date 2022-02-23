@@ -220,6 +220,14 @@ class EditorDOMPointBase final {
     return dom::Element::FromNodeOrNull(GetContainerParent());
   }
 
+  dom::Element* GetContainerOrContainerParentElement() const {
+    if (MOZ_UNLIKELY(!mParent)) {
+      return nullptr;
+    }
+    return mParent->IsElement() ? ContainerAsElement()
+                                : GetContainerParentAsElement();
+  }
+
   /**
    * CanContainerHaveChildren() returns true if the container node can have
    * child nodes.  Otherwise, e.g., when the container is a text node, returns
@@ -480,9 +488,9 @@ class EditorDOMPointBase final {
       MOZ_ASSERT(mOffset.isSome());
       return mOffset.value();
     }
-    if (!mParent) {
+    if (MOZ_UNLIKELY(!mParent)) {
       MOZ_ASSERT(!mChild);
-      return 0;
+      return 0u;
     }
     MOZ_ASSERT(mParent->IsContainerNode(),
                "If the container cannot have children, mOffset.isSome() should "
@@ -495,11 +503,12 @@ class EditorDOMPointBase final {
     MOZ_ASSERT(mChild->GetParentNode() == mParent);
     // Fix offset now.
     if (mChild == mParent->GetFirstChild()) {
-      const_cast<SelfType*>(this)->mOffset = mozilla::Some(0);
-    } else {
-      const_cast<SelfType*>(this)->mOffset = mParent->ComputeIndexOf(mChild);
+      const_cast<SelfType*>(this)->mOffset = mozilla::Some(0u);
+      return 0u;
     }
-    return mOffset.value();
+    const_cast<SelfType*>(this)->mOffset = mParent->ComputeIndexOf(mChild);
+    MOZ_DIAGNOSTIC_ASSERT(mOffset.isSome());
+    return mOffset.valueOr(0u);  // Avoid crash in Release/Beta
   }
 
   /**
@@ -764,7 +773,8 @@ class EditorDOMPointBase final {
       return false;
     }
 
-    if (mChild && mChild->GetParentNode() != mParent) {
+    if (mChild &&
+        (mChild->GetParentNode() != mParent || mChild->IsBeingRemoved())) {
       return false;
     }
     if (mOffset.isSome() && mOffset.value() > mParent->Length()) {
@@ -1211,6 +1221,34 @@ class EditorDOMRangeBase final {
   MOZ_NEVER_INLINE_DEBUG EditorDOMRangeInTexts AsInTexts() const {
     MOZ_ASSERT(IsInTextNodes());
     return EditorDOMRangeInTexts(mStart.AsInText(), mEnd.AsInText());
+  }
+
+  bool EnsureNotInNativeAnonymousSubtree() {
+    if (mStart.IsInNativeAnonymousSubtree()) {
+      nsIContent* parent = nullptr;
+      for (parent = mStart.ContainerAsContent()
+                        ->GetClosestNativeAnonymousSubtreeRootParent();
+           parent && parent->IsInNativeAnonymousSubtree();
+           parent = parent->GetClosestNativeAnonymousSubtreeRootParent()) {
+      }
+      if (MOZ_UNLIKELY(!parent)) {
+        return false;
+      }
+      mStart.Set(parent);
+    }
+    if (mEnd.IsInNativeAnonymousSubtree()) {
+      nsIContent* parent = nullptr;
+      for (parent = mEnd.ContainerAsContent()
+                        ->GetClosestNativeAnonymousSubtreeRootParent();
+           parent && parent->IsInNativeAnonymousSubtree();
+           parent = parent->GetClosestNativeAnonymousSubtreeRootParent()) {
+      }
+      if (MOZ_UNLIKELY(!parent)) {
+        return false;
+      }
+      mEnd.SetAfter(parent);
+    }
+    return true;
   }
 
  private:

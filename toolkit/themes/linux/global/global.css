@@ -108,12 +108,6 @@ xul|separator.groove[orient="vertical"] {
   margin-inline: 0.4em;
 }
 
-/* Link focus outline */
-
-.text-link:-moz-focusring {
-  outline: var(--default-focusring);
-}
-
 /* Other margins */
 
 html|input {

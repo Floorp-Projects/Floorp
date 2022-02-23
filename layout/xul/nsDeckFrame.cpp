@@ -14,6 +14,7 @@
 #include "nsDeckFrame.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
+#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
@@ -48,7 +49,7 @@ NS_QUERYFRAME_HEAD(nsDeckFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 nsDeckFrame::nsDeckFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-    : nsBoxFrame(aStyle, aPresContext, kClassID), mIndex(0) {
+    : nsBoxFrame(aStyle, aPresContext, kClassID) {
   nsCOMPtr<nsBoxLayout> layout;
   NS_NewStackLayout(layout);
   SetXULLayoutManager(layout);
@@ -95,6 +96,8 @@ void nsDeckFrame::IndexChanged() {
   if (currentBox)  // only hide if it exists
     HideBox(currentBox);
 
+  mSelectedBoxCache = nullptr;
+
   mIndex = index;
 
   ShowBox(GetSelectedBox());
@@ -133,7 +136,10 @@ int32_t nsDeckFrame::GetSelectedIndex() {
 }
 
 nsIFrame* nsDeckFrame::GetSelectedBox() {
-  return (mIndex >= 0) ? mFrames.FrameAt(mIndex) : nullptr;
+  if (!mSelectedBoxCache && mIndex >= 0) {
+    mSelectedBoxCache = (mIndex >= 0) ? mFrames.FrameAt(mIndex) : nullptr;
+  }
+  return mSelectedBoxCache;
 }
 
 void nsDeckFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
@@ -147,6 +153,10 @@ void nsDeckFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 void nsDeckFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   nsIFrame* currentFrame = GetSelectedBox();
+  if (aOldFrame == currentFrame) {
+    mSelectedBoxCache = nullptr;
+  }
+
   if (currentFrame && aOldFrame && currentFrame != aOldFrame) {
     // If the frame we're removing is at an index that's less
     // than mIndex, that means we're going to be shifting indexes
@@ -158,6 +168,10 @@ void nsDeckFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
     MOZ_ASSERT(removedIndex >= 0,
                "A deck child was removed that was not in mFrames.");
     if (removedIndex < mIndex) {
+      // This shouldn't invalidate our cache, but be really paranoid, it's not
+      // that important to keep our cache here.
+      mSelectedBoxCache = nullptr;
+
       mIndex--;
       // This is going to cause us to handle the index change in IndexedChanged,
       // but since the new index will match mIndex, it's essentially a noop.

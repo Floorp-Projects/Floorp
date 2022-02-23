@@ -351,8 +351,6 @@ unsafe impl UnsafeNotify01 for NotifyWaker {
 #[cfg_attr(docsrs, doc(cfg(feature = "io-compat")))]
 mod io {
     use super::*;
-    #[cfg(feature = "read-initializer")]
-    use futures_io::Initializer;
     use futures_io::{AsyncRead as AsyncRead03, AsyncWrite as AsyncWrite03};
     use std::io::Error;
     use tokio_io::{AsyncRead as AsyncRead01, AsyncWrite as AsyncWrite01};
@@ -416,16 +414,6 @@ mod io {
     impl<W: AsyncWrite01> AsyncWrite01CompatExt for W {}
 
     impl<R: AsyncRead01> AsyncRead03 for Compat01As03<R> {
-        #[cfg(feature = "read-initializer")]
-        unsafe fn initializer(&self) -> Initializer {
-            // check if `prepare_uninitialized_buffer` needs zeroing
-            if self.inner.get_ref().prepare_uninitialized_buffer(&mut [1]) {
-                Initializer::zeroing()
-            } else {
-                Initializer::nop()
-            }
-        }
-
         fn poll_read(
             mut self: Pin<&mut Self>,
             cx: &mut Context<'_>,

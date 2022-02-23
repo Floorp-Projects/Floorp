@@ -4,10 +4,10 @@ use proc_macro2::TokenStream;
 use quote::{ToTokens, TokenStreamExt};
 use syn::Ident;
 
-use ast::Fields;
-use codegen::error::{ErrorCheck, ErrorDeclaration};
-use codegen::{Field, FieldsGen};
-use usage::{self, IdentRefSet, IdentSet, UsesTypeParams};
+use crate::ast::Fields;
+use crate::codegen::error::{ErrorCheck, ErrorDeclaration};
+use crate::codegen::{Field, FieldsGen};
+use crate::usage::{self, IdentRefSet, IdentSet, UsesTypeParams};
 
 /// A variant of the enum which is deriving `FromMeta`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -112,7 +112,7 @@ impl<'a> ToTokens for DataMatchArm<'a> {
 
         if val.data.is_struct() {
             let declare_errors = ErrorDeclaration::default();
-            let check_errors = ErrorCheck::with_location(&name_in_attr);
+            let check_errors = ErrorCheck::with_location(name_in_attr);
             let require_fields = vdg.require_fields();
             let decls = vdg.declarations();
             let core_loop = vdg.core_loop();

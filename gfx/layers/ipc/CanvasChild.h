@@ -141,6 +141,7 @@ class CanvasChild final : public PCanvasChild {
   uint32_t mLastWriteLockCheckpoint = 0;
   uint32_t mTransactionsSinceGetDataSurface = kCacheDataSurfaceThreshold;
   TimeStamp mLastNonEmptyTransaction = TimeStamp::NowLoRes();
+  std::vector<RefPtr<gfx::SourceSurface>> mLastTransactionExternalSurfaces;
   bool mIsInTransaction = false;
   bool mHasOutstandingWriteLock = false;
 };

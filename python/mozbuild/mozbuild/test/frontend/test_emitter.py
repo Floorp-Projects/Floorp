@@ -623,7 +623,7 @@ class TestEmitterBasic(unittest.TestCase):
         o = objs[0]
         self.assertIsInstance(o, GeneratedFile)
         self.assertEqual(o.outputs, ("bar.c",))
-        self.assertRegexpMatches(o.script, "script.py$")
+        self.assertRegex(o.script, "script.py$")
         self.assertEqual(o.method, "make_bar")
         self.assertEqual(o.inputs, [])
 
@@ -1305,7 +1305,7 @@ class TestEmitterBasic(unittest.TestCase):
         for obj in self.read_topsrcdir(reader):
             if isinstance(obj, SharedLibrary):
                 if obj.basename == "cxx_shared":
-                    self.assertEquals(
+                    self.assertEqual(
                         obj.name,
                         "%scxx_shared%s"
                         % (reader.config.dll_prefix, reader.config.dll_suffix),
@@ -1313,7 +1313,7 @@ class TestEmitterBasic(unittest.TestCase):
                     self.assertTrue(obj.cxx_link)
                     got_results += 1
                 elif obj.basename == "just_c_shared":
-                    self.assertEquals(
+                    self.assertEqual(
                         obj.name,
                         "%sjust_c_shared%s"
                         % (reader.config.dll_prefix, reader.config.dll_suffix),
@@ -1677,9 +1677,9 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIsInstance(ldflags, ComputedFlags)
         self.assertIsInstance(cflags, ComputedFlags)
         self.assertIsInstance(lib, RustLibrary)
-        self.assertRegexpMatches(lib.lib_name, "random_crate")
-        self.assertRegexpMatches(lib.import_name, "random_crate")
-        self.assertRegexpMatches(lib.basename, "random-crate")
+        self.assertRegex(lib.lib_name, "random_crate")
+        self.assertRegex(lib.import_name, "random_crate")
+        self.assertRegex(lib.basename, "random-crate")
 
     def test_multiple_rust_libraries(self):
         """Test that linking multiple Rust libraries throws an error"""
@@ -1800,8 +1800,8 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIsInstance(ldflags, ComputedFlags)
         self.assertIsInstance(cflags, ComputedFlags)
         self.assertIsInstance(lib, HostRustLibrary)
-        self.assertRegexpMatches(lib.lib_name, "host_lib")
-        self.assertRegexpMatches(lib.import_name, "host_lib")
+        self.assertRegex(lib.lib_name, "host_lib")
+        self.assertRegex(lib.import_name, "host_lib")
 
     def test_crate_dependency_path_resolution(self):
         """Test recursive dependencies resolve with the correct paths."""

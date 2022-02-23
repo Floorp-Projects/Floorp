@@ -95,8 +95,15 @@ class ShmemTextureData : public BufferTextureData {
 
   virtual size_t GetBufferSize() override { return mShmem.Size<uint8_t>(); }
 
+  bool CropYCbCrPlanes(const gfx::IntSize& aYSize,
+                       const gfx::IntSize& aCbCrSize) override;
+
+  // Restore original descriptor that might be changed by CropYCbCrPlanes();
+  void RestoreOriginalDescriptor() override;
+
  protected:
   mozilla::ipc::Shmem mShmem;
+  Maybe<BufferDescriptor> mOrigDescriptor;
 };
 
 BufferTextureData* BufferTextureData::Create(
@@ -188,6 +195,10 @@ gfx::IntSize BufferTextureData::GetSize() const {
 
 gfx::IntRect BufferTextureData::GetPictureRect() const {
   return ImageDataSerializer::RectFromBufferDescriptor(mDescriptor);
+}
+
+Maybe<gfx::IntSize> BufferTextureData::GetYSize() const {
+  return ImageDataSerializer::YSizeFromBufferDescriptor(mDescriptor);
 }
 
 Maybe<gfx::IntSize> BufferTextureData::GetCbCrSize() const {
@@ -504,6 +515,39 @@ TextureData* ShmemTextureData::CreateSimilar(
 
 void ShmemTextureData::Deallocate(LayersIPCChannel* aAllocator) {
   aAllocator->DeallocShmem(mShmem);
+}
+
+bool ShmemTextureData::CropYCbCrPlanes(const gfx::IntSize& aYSize,
+                                       const gfx::IntSize& aCbCrSize) {
+  if (mDescriptor.type() != BufferDescriptor::TYCbCrDescriptor) {
+    return false;
+  }
+
+  const auto& current = mDescriptor.get_YCbCrDescriptor();
+  if (current.ySize() < aYSize || current.cbCrSize() < aCbCrSize) {
+    NS_WARNING("Cropped size should not exceed the original size!");
+    return false;
+  }
+
+  MOZ_ASSERT(mOrigDescriptor.isNothing());
+  // Store original descriptor.
+  mOrigDescriptor = Some(current);
+
+  auto newDescritor = YCbCrDescriptor(
+      current.display(), aYSize, current.yStride(), aCbCrSize,
+      current.cbCrStride(), current.yOffset(), current.cbOffset(),
+      current.crOffset(), current.stereoMode(), current.colorDepth(),
+      current.yUVColorSpace(), current.colorRange());
+  mDescriptor = BufferDescriptor(newDescritor);
+  return true;
+}
+
+void ShmemTextureData::RestoreOriginalDescriptor() {
+  if (mOrigDescriptor.isNothing()) {
+    return;
+  }
+  mDescriptor = mOrigDescriptor.ref();
+  mOrigDescriptor = Nothing();
 }
 
 }  // namespace layers

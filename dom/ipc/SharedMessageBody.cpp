@@ -257,6 +257,9 @@ already_AddRefed<SharedMessageBody>
 SharedMessageBody::FromMessageToSharedParent(
     MessageData& aMessage,
     StructuredCloneHolder::TransferringSupport aSupportsTransferring) {
+  // TODO: This alloc is not fallible and there is no codepath that returns
+  // nullptr. But the caller checks for nullptr and handles array allocations
+  // for these items as fallible. See bug 1750497.
   RefPtr<SharedMessageBody> data =
       new SharedMessageBody(aSupportsTransferring, aMessage.agentClusterId());
 

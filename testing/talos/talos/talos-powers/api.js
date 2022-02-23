@@ -8,9 +8,13 @@ const { ComponentUtils } = ChromeUtils.import(
   "resource://gre/modules/ComponentUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutHomeStartupCache: "resource:///modules/BrowserGlue.jsm",
+  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PerTestCoverageUtils: "resource://testing-common/PerTestCoverageUtils.jsm",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -264,7 +268,10 @@ TalosPowersService.prototype = {
   },
 
   async forceQuit(messageData) {
-    if (messageData && messageData.waitForSafeBrowsing) {
+    if (messageData && messageData.waitForStartupFinished) {
+      // We can wait for various startup items here to complete during
+      // the getInfo.html step for Talos so that subsequent runs don't
+      // have to do things like re-request the SafeBrowsing list.
       let SafeBrowsing = ChromeUtils.import(
         "resource://gre/modules/SafeBrowsing.jsm",
         {}
@@ -278,7 +285,35 @@ TalosPowersService.prototype = {
       } catch (e) {
         // We don't care if things go wrong here - let's just shut down.
       }
+
+      // We wait for the AboutNewTab's TopSitesFeed (and its "Contile"
+      // integration, which shows the sponsored Top Sites) to finish
+      // being enabled here. This is because it's possible for getInfo.html
+      // to run so quickly that the feed will still be initializing, and
+      // that would cause us to write a mostly empty cache to the
+      // about:home startup cache on shutdown, which causes that test
+      // to break periodically.
+      AboutNewTab.onBrowserReady();
+      // There aren't currently any easily observable notifications or
+      // events to let us know when the feed is ready, so we'll just poll
+      // for now.
+      let pollForFeed = async function() {
+        let foundFeed = AboutNewTab.activityStream.store.feeds.get(
+          "feeds.system.topsites"
+        );
+        if (!foundFeed) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return pollForFeed();
+        }
+        return foundFeed;
+      };
+      let feed = await pollForFeed();
+      await feed._contile.refresh();
+      await feed.refresh({ broadcast: true });
+      await AboutHomeStartupCache.cacheNow();
     }
+
+    await SessionStore.promiseAllWindowsRestored;
 
     // Check to see if the top-most browser window still needs to fire its
     // idle tasks notification. If so, we'll wait for it before shutting

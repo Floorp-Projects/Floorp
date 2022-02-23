@@ -7,38 +7,35 @@
 #ifndef mozilla_dom_ScriptTrace_h
 #define mozilla_dom_ScriptTrace_h
 
-#include "ScriptLoader.h"
-
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/StaticPrefs_dom.h"
-
-namespace mozilla {
-namespace dom {
-namespace script {
 
 // This macro is used to wrap a tracing mechanism which is scheduling events
 // which are then used by the JavaScript code of test cases to track the code
 // path to verify the optimizations are working as expected.
-#define TRACE_FOR_TEST(elem, str)                                              \
-  PR_BEGIN_MACRO                                                               \
-  nsresult rv = NS_OK;                                                         \
-  rv =                                                                         \
-      script::TestingDispatchEvent(elem, NS_LITERAL_STRING_FROM_CSTRING(str)); \
-  NS_ENSURE_SUCCESS(rv, rv);                                                   \
+#define TRACE_FOR_TEST(elem, str)                  \
+  PR_BEGIN_MACRO                                   \
+  nsresult rv = NS_OK;                             \
+  rv = mozilla::dom::script::TestingDispatchEvent( \
+      elem, NS_LITERAL_STRING_FROM_CSTRING(str));  \
+  NS_ENSURE_SUCCESS(rv, rv);                       \
   PR_END_MACRO
 
-#define TRACE_FOR_TEST_BOOL(elem, str)                                         \
-  PR_BEGIN_MACRO                                                               \
-  nsresult rv = NS_OK;                                                         \
-  rv =                                                                         \
-      script::TestingDispatchEvent(elem, NS_LITERAL_STRING_FROM_CSTRING(str)); \
-  NS_ENSURE_SUCCESS(rv, false);                                                \
+#define TRACE_FOR_TEST_BOOL(elem, str)             \
+  PR_BEGIN_MACRO                                   \
+  nsresult rv = NS_OK;                             \
+  rv = mozilla::dom::script::TestingDispatchEvent( \
+      elem, NS_LITERAL_STRING_FROM_CSTRING(str));  \
+  NS_ENSURE_SUCCESS(rv, false);                    \
   PR_END_MACRO
 
-#define TRACE_FOR_TEST_NONE(elem, str)                                     \
-  PR_BEGIN_MACRO                                                           \
-  script::TestingDispatchEvent(elem, NS_LITERAL_STRING_FROM_CSTRING(str)); \
+#define TRACE_FOR_TEST_NONE(elem, str)            \
+  PR_BEGIN_MACRO                                  \
+  mozilla::dom::script::TestingDispatchEvent(     \
+      elem, NS_LITERAL_STRING_FROM_CSTRING(str)); \
   PR_END_MACRO
+
+namespace mozilla::dom::script {
 
 static nsresult TestingDispatchEvent(nsIScriptElement* aScriptElement,
                                      const nsAString& aEventType) {
@@ -55,8 +52,6 @@ static nsresult TestingDispatchEvent(nsIScriptElement* aScriptElement,
       target, aEventType, CanBubble::eYes, ChromeOnlyDispatch::eNo);
   return dispatcher->PostDOMEvent();
 }
-}  // namespace script
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::script
 
 #endif  // mozilla_dom_ScriptTrace_h

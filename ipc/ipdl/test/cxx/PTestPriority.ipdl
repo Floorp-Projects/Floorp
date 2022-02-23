@@ -1,6 +1,7 @@
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PTestPriority {
 parent:
     [Priority=input] async PMsg1();

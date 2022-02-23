@@ -22,6 +22,7 @@
 #include "lib/jxl/image.h"
 #include "lib/jxl/passes_state.h"
 #include "lib/jxl/quant_weights.h"
+#include "lib/jxl/render_pipeline/render_pipeline.h"
 #include "lib/jxl/sanitizers.h"
 
 namespace jxl {
@@ -105,6 +106,13 @@ struct PassesDecoderState {
 
   // Manages the status of borders.
   GroupBorderAssigner group_border_assigner;
+
+  // Rendering pipeline. TODO(veluca): eventually, this pipeline will replace
+  // most of the state in this struct.
+  std::unique_ptr<RenderPipeline> render_pipeline;
+
+  // Storage for the current frame if it can be referenced by future frames.
+  ImageBundle frame_storage_for_referencing;
 
   // TODO(veluca): this should eventually become "iff no global modular
   // transform was applied".
@@ -279,7 +287,7 @@ struct PassesDecoderState {
   }
 
   // Initialize the decoder state after all of DC is decoded.
-  void InitForAC(ThreadPool* pool) {
+  Status InitForAC(ThreadPool* pool) {
     shared_storage.coeff_order_size = 0;
     for (uint8_t o = 0; o < AcStrategy::kNumValidStrategies; ++o) {
       if (((1 << o) & used_acs) == 0) continue;
@@ -293,21 +301,23 @@ struct PassesDecoderState {
     if (sz > shared_storage.coeff_orders.size()) {
       shared_storage.coeff_orders.resize(sz);
     }
-    if (shared->frame_header.flags & FrameHeader::kNoise) {
+    if (shared->frame_header.flags & FrameHeader::kNoise && !render_pipeline) {
       noise = Image3F(shared->frame_dim.xsize_upsampled_padded,
                       shared->frame_dim.ysize_upsampled_padded);
       size_t num_x_groups = DivCeil(noise.xsize(), kGroupDim);
       size_t num_y_groups = DivCeil(noise.ysize(), kGroupDim);
       PROFILER_ZONE("GenerateNoise");
-      auto generate_noise = [&](int group_index, int _) {
+      auto generate_noise = [&](const uint32_t group_index,
+                                size_t /* thread */) {
         size_t gx = group_index % num_x_groups;
         size_t gy = group_index / num_x_groups;
         Rect rect(gx * kGroupDim, gy * kGroupDim, kGroupDim, kGroupDim,
                   noise.xsize(), noise.ysize());
         RandomImage3(noise_seed + group_index, rect, &noise);
       };
-      RunOnPool(pool, 0, num_x_groups * num_y_groups, ThreadPool::SkipInit(),
-                generate_noise, "Generate noise");
+      JXL_RETURN_IF_ERROR(RunOnPool(pool, 0, num_x_groups * num_y_groups,
+                                    ThreadPool::NoInit, generate_noise,
+                                    "Generate noise"));
       {
         PROFILER_ZONE("High pass noise");
         // 4 * (1 - box kernel)
@@ -336,6 +346,7 @@ struct PassesDecoderState {
     // Avoid errors due to loading vectors on the outermost padding.
     FillImage(msan::kSanitizerSentinel, &decoded);
 #endif
+    return true;
   }
 
   void EnsureBordersStorage();

@@ -23,6 +23,7 @@ struct RemoteBackbufferHandles {
   FileDescriptor responseReadyEvent;
 };
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PCompositorWidget
 {
   manager PCompositorBridge;

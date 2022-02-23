@@ -6,10 +6,13 @@
 //!
 //! This module does not require `std` feature.
 
-use core::{
-    num::NonZeroUsize,
-    sync::atomic::{AtomicUsize, Ordering},
-};
+#[cfg(feature = "atomic-polyfill")]
+use atomic_polyfill as atomic;
+#[cfg(not(feature = "atomic-polyfill"))]
+use core::sync::atomic;
+
+use atomic::{AtomicUsize, Ordering};
+use core::num::NonZeroUsize;
 
 /// A thread-safe cell which can be written to only once.
 #[derive(Default, Debug)]
@@ -160,19 +163,21 @@ pub use self::once_box::OnceBox;
 
 #[cfg(feature = "alloc")]
 mod once_box {
-    use core::{
-        marker::PhantomData,
-        ptr,
-        sync::atomic::{AtomicPtr, Ordering},
-    };
+    use super::atomic::{AtomicPtr, Ordering};
+    use core::{marker::PhantomData, ptr};
 
     use alloc::boxed::Box;
 
     /// A thread-safe cell which can be written to only once.
-    #[derive(Debug)]
     pub struct OnceBox<T> {
         inner: AtomicPtr<T>,
         ghost: PhantomData<Option<Box<T>>>,
+    }
+
+    impl<T> core::fmt::Debug for OnceBox<T> {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            write!(f, "OnceBox({:?})", self.inner.load(Ordering::Relaxed))
+        }
     }
 
     impl<T> Default for OnceBox<T> {

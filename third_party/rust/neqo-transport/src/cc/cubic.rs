@@ -52,7 +52,6 @@ pub struct Cubic {
     k: f64,
     w_max: f64,
     ca_epoch_start: Option<Instant>,
-    last_phase_was_tcp: bool,
     tcp_acked_bytes: f64,
 }
 
@@ -64,7 +63,6 @@ impl Default for Cubic {
             k: 0.0,
             w_max: 0.0,
             ca_epoch_start: None,
-            last_phase_was_tcp: false,
             tcp_acked_bytes: 0.0,
         }
     }

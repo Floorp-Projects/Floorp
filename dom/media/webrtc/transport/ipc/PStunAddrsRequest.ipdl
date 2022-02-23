@@ -12,6 +12,7 @@ include "mozilla/net/NrIceStunAddrMessageUtils.h";
 namespace mozilla {
 namespace net {
 
+[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
 async protocol PStunAddrsRequest
 {
   manager PNecko;

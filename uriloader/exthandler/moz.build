@@ -112,6 +112,10 @@ EXTRA_JS_MODULES += [
     "WebHandlerApp.jsm",
 ]
 
+EXTRA_JS_MODULES.handlers += [
+    "HandlerList.jsm",
+]
+
 XPCOM_MANIFESTS += [
     "components.conf",
 ]

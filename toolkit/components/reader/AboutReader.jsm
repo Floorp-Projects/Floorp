@@ -47,7 +47,7 @@ const zoomOnMeta =
   Services.prefs.getIntPref("mousewheel.with_meta.action", 1) == 3;
 const isAppLocaleRTL = Services.locale.isAppLocaleRTL;
 
-var AboutReader = function(actor, articlePromise) {
+var AboutReader = function(actor, articlePromise, docContentType = "document") {
   let win = actor.contentWindow;
   let url = this._getOriginalUrl(win);
   if (
@@ -218,7 +218,7 @@ var AboutReader = function(actor, articlePromise) {
     new NarrateControls(win, this._languagePromise);
   }
 
-  this._loadArticle();
+  this._loadArticle(docContentType);
 
   let dropdown = this._toolbarElement;
 
@@ -250,6 +250,8 @@ AboutReader.prototype = {
     ".content p > a:only-child > img:only-child, " +
     ".content .wp-caption img, " +
     ".content figure img",
+
+  _TABLES_SELECTOR: ".content table",
 
   FONT_SIZE_MIN: 1,
 
@@ -780,7 +782,7 @@ AboutReader.prototype = {
     AsyncPrefs.set("reader.font_type", this._fontType);
   },
 
-  async _loadArticle() {
+  async _loadArticle(docContentType = "document") {
     let url = this._getOriginalUrl();
     this._showProgressDelayed();
 
@@ -791,7 +793,10 @@ AboutReader.prototype = {
 
     if (!article) {
       try {
-        article = await ReaderMode.downloadAndParseDocument(url);
+        article = await ReaderMode.downloadAndParseDocument(
+          url,
+          docContentType
+        );
       } catch (e) {
         if (e && e.newURL) {
           let readerURL = "about:reader?url=" + encodeURIComponent(e.newURL);
@@ -881,6 +886,8 @@ AboutReader.prototype = {
     let bodyWidth = this._doc.body.clientWidth;
 
     let setImageMargins = function(img) {
+      img.classList.add("moz-reader-block-img");
+
       // If the image is at least as wide as the window, make it fill edge-to-edge on mobile.
       if (img.naturalWidth >= windowWidth) {
         img.setAttribute("moz-reader-full-width", true);
@@ -906,6 +913,23 @@ AboutReader.prototype = {
         img.onload = function() {
           setImageMargins(img);
         };
+      }
+    }
+  },
+
+  _updateWideTables() {
+    let windowWidth = this._win.innerWidth;
+
+    // Avoid horizontal overflow in the document by making tables that are wider than half browser window's size
+    // by making it scrollable.
+    let tables = this._doc.querySelectorAll(this._TABLES_SELECTOR);
+    for (let i = tables.length; --i >= 0; ) {
+      let table = tables[i];
+      let rect = table.getBoundingClientRect();
+      let tableWidth = rect.width;
+
+      if (windowWidth / 2 <= tableWidth) {
+        table.classList.add("moz-reader-wide-table");
       }
     }
   },
@@ -988,7 +1012,17 @@ AboutReader.prototype = {
 
     this._domainElement.href = article.url;
     let articleUri = Services.io.newURI(article.url);
-    this._domainElement.textContent = this._stripHost(articleUri.host);
+
+    try {
+      this._domainElement.textContent = this._stripHost(articleUri.host);
+    } catch (ex) {
+      let url = this._actor.document.URL;
+      url = url.substring(url.indexOf("%2F") + 6);
+      url = url.substring(0, url.indexOf("%2F"));
+
+      this._domainElement.textContent = url;
+    }
+
     this._creditsElement.textContent = article.byline;
 
     this._titleElement.textContent = article.title;
@@ -1018,6 +1052,7 @@ AboutReader.prototype = {
 
     this._contentElement.classList.add("reader-show-element");
     this._updateImageMargins();
+    this._updateWideTables();
 
     this._requestFavicon();
     this._doc.body.classList.add("loaded");
@@ -1289,7 +1324,17 @@ AboutReader.prototype = {
    */
   _goToReference(ref) {
     if (ref) {
-      this._win.location.hash = ref;
+      if (this._doc.readyState == "complete") {
+        this._win.location.hash = ref;
+      } else {
+        this._win.addEventListener(
+          "load",
+          () => {
+            this._win.location.hash = ref;
+          },
+          { once: true }
+        );
+      }
     }
   },
 

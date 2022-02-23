@@ -28,9 +28,9 @@ Schematic flow of messages:
 	                 |  response  |
 	                 |            |
 
-The protocol consists of a [command] message and the corresponding
-[response] message.  A [response] message must always be sent in
-reply to a [command] message.
+The protocol consists of a `command` message and the corresponding
+`response` message.  A `response` message must always be sent in
+reply to a `command` message.
 
 This means that the server implementation does not need to send
 the reply precisely in the order of the received commands: if it
@@ -49,18 +49,18 @@ its execution is already completed.
 Command
 -------
 
-The request, or command message, is a four element JSON Array as shown
+The request, or `command` message, is a four element JSON Array as shown
 below, that may originate from either the client- or server remote ends:
 
 	[type, message ID, command, parameters]
 
   * _type_ must be 0 (integer).  This indicates that the message
-    is a [command].
+    is a `command`.
 
   * _message ID_ is a 32-bit unsigned integer.  This number is
     used as a sequencing number that uniquely identifies a pair of
-    [command] and [response] messages.  The other remote part will
-    reply with a corresponding [response] with the same message ID.
+    `command` and `response` messages.  The other remote part will
+    reply with a corresponding `response` with the same message ID.
 
   * _command_ is a string identifying the RPC method or command
     to execute.
@@ -72,20 +72,20 @@ Response
 --------
 
 The response message is also a four element array as shown below,
-and must always be sent after receiving a [command]:
+and must always be sent after receiving a `command`:
 
 	[type, message ID, error, result]
 
   * _type_ must be 1 (integer).  This indicates that the message is a
-    [response].
+    `response`.
 
   * _message ID_ is a 32-bit unsigned integer.  This corresponds
-    to the [command]’s message ID.
+    to the `command`’s message ID.
 
   * _error_ is null if the command executed correctly.  If the
     error occurred on the server-side, then this is an [error] object.
 
-  * _result_ is the result object from executing the [command], iff
+  * _result_ is the result object from executing the `command`, if
     it executed correctly.  If an error occurred on the server-side,
     this field is null.
 
@@ -119,4 +119,5 @@ Clients may be implemented both synchronously and asynchronously,
 although the latter is impossible in protocol levels 2 and earlier
 due to the lack of message sequencing.
 
+[WebDriver standard]: https://w3c.github.io/webdriver/#dfn-error-code
 [reference client]: https://searchfox.org/mozilla-central/source/testing/marionette/client/

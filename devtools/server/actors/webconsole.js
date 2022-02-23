@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global clearConsoleEvents */
+
 "use strict";
 
-/* global XPCNativeWrapper */
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
 
@@ -375,28 +376,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
   grip: function() {
     return { actor: this.actorID };
-  },
-
-  hasNativeConsoleAPI: function(window) {
-    if (isWorker || !(window instanceof Ci.nsIDOMWindow)) {
-      // We can only use XPCNativeWrapper on non-worker nsIDOMWindow.
-      return true;
-    }
-
-    let isNative = false;
-    try {
-      // We are very explicitly examining the "console" property of
-      // the non-Xrayed object here.
-      const console = window.wrappedJSObject.console;
-      // In xpcshell tests, console ends up being undefined and XPCNativeWrapper
-      // crashes in debug builds.
-      if (console) {
-        isNative = new XPCNativeWrapper(console).IS_NATIVE_CONSOLE;
-      }
-    } catch (ex) {
-      // ignored
-    }
-    return isNative;
   },
 
   _findProtoChain: ThreadActor.prototype._findProtoChain,
@@ -777,7 +756,17 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             this.documentEventsListener = new DocumentEventsListener(
               this.parentActor
             );
-            this.documentEventsListener.on("*", this.onDocumentEvent);
+
+            this.documentEventsListener.on("dom-loading", data =>
+              this.onDocumentEvent("dom-loading", data)
+            );
+            this.documentEventsListener.on("dom-interactive", data =>
+              this.onDocumentEvent("dom-interactive", data)
+            );
+            this.documentEventsListener.on("dom-complete", data =>
+              this.onDocumentEvent("dom-complete", data)
+            );
+
             this.documentEventsListener.listen();
           }
           startedListeners.push(event);
@@ -789,8 +778,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     startedListeners.forEach(this._listeners.add, this._listeners);
 
     return {
-      startedListeners: startedListeners,
-      nativeConsoleAPI: this.hasNativeConsoleAPI(this.global),
+      startedListeners,
     };
   },
 
@@ -1486,11 +1474,8 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    */
   clearMessagesCache: function() {
     if (isWorker) {
-      // At the moment there is no mechanism available to clear the Console API cache for
-      // a given worker target (See https://bugzilla.mozilla.org/show_bug.cgi?id=1674336).
-      // Worker messages from the console service (e.g. error) are emitted from the main
-      // thread, so this cache will be cleared when the associated document target cache
-      // is cleared.
+      // Defined on WorkerScope
+      clearConsoleEvents();
       return;
     }
 
@@ -1823,12 +1808,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *        Only passed when `name` is "dom-complete" (see devtools/server/actors/webconsole/listeners/document-events.js).
    */
   onDocumentEvent: function(name, { time, hasNativeConsoleAPI }) {
-    // will-navigate event has been added in Fx91 and is only expected to be used
-    // by DOCUMENT_EVENT watcher. For toolbox still not using watcher actor and DOCUMENT_EVENT watcher
-    // will-navigate will be emitted based on target actor's will-navigate events.
-    if (name == "will-navigate") {
-      return;
-    }
     this.emit("documentEvent", {
       name,
       time,

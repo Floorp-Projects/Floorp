@@ -2193,7 +2193,7 @@ class SpecialPowersChild extends JSWindowActorChild {
    * chrome-privileged and allowed to run inside SystemGroup
    */
 
-  doUrlClassify(principal, eventTarget, callback) {
+  doUrlClassify(principal, callback) {
     let classifierService = Cc[
       "@mozilla.org/url-classifier/dbservice;1"
     ].getService(Ci.nsIURIClassifier);
@@ -2210,7 +2210,6 @@ class SpecialPowersChild extends JSWindowActorChild {
 
     return classifierService.classify(
       WrapPrivileged.unwrap(principal),
-      eventTarget,
       wrapCallback
     );
   }

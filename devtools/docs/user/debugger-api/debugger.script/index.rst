@@ -270,4 +270,3 @@ Watermark:
 
 Changeset:
   `5572465c08a9+ <https://hg.mozilla.org/mozilla-central/rev/5572465c08a9>`_
-

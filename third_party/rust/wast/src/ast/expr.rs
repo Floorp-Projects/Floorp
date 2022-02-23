@@ -15,7 +15,11 @@ pub struct Expression<'a> {
 
 impl<'a> Parse<'a> for Expression<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        ExpressionParser::default().parse(parser)
+        let mut exprs = ExpressionParser::default();
+        exprs.parse(parser)?;
+        Ok(Expression {
+            instrs: exprs.instrs.into(),
+        })
     }
 }
 
@@ -96,7 +100,7 @@ enum Try<'a> {
 }
 
 impl<'a> ExpressionParser<'a> {
-    fn parse(mut self, parser: Parser<'a>) -> Result<Expression<'a>> {
+    fn parse(&mut self, parser: Parser<'a>) -> Result<()> {
         // Here we parse instructions in a loop, and we do not recursively
         // invoke this parse function to avoid blowing the stack on
         // deeply-recursive parses.
@@ -207,9 +211,7 @@ impl<'a> ExpressionParser<'a> {
             }
         }
 
-        Ok(Expression {
-            instrs: self.instrs.into(),
-        })
+        Ok(())
     }
 
     /// Parses either `(`, `)`, or nothing.
@@ -300,7 +302,7 @@ impl<'a> ExpressionParser<'a> {
         // If we made it this far then we're at `If::End` which means that there
         // were too many s-expressions inside the `(if)` and we don't want to
         // parse anything else.
-        Err(parser.error("too many payloads inside of `(if)`"))
+        Err(parser.error("unexpected token: too many payloads inside of `(if)`"))
     }
 
     /// Handles parsing of a `try` statement. A `try` statement is simpler
@@ -387,7 +389,7 @@ impl<'a> ExpressionParser<'a> {
             return Err(parser.error("unexpected items after `catch`"));
         }
 
-        Err(parser.error("too many payloads inside of `(try)`"))
+        Err(parser.error("unexpected token: too many payloads inside of `(try)`"))
     }
 }
 
@@ -579,6 +581,7 @@ instructions! {
         // function-references proposal
         RefAsNonNull : [0xd3] : "ref.as_non_null",
         BrOnNull(ast::Index<'a>) : [0xd4] : "br_on_null",
+        BrOnNonNull(ast::Index<'a>) : [0xd6] : "br_on_non_null",
 
         // gc proposal: eqref
         RefEq : [0xd5] : "ref.eq",
@@ -1122,6 +1125,25 @@ instructions! {
         Rethrow(ast::Index<'a>) : [0x09] : "rethrow",
         Delegate(ast::Index<'a>) : [0x18] : "delegate",
         CatchAll : [0x19] : "catch_all",
+
+        // Relaxed SIMD proposal
+        I8x16SwizzleRelaxed : [0xfd, 0xa2]: "i8x16.swizzle_relaxed",
+        I32x4TruncSatF32x4SRelaxed : [0xfd, 0xa5]: "i32x4.trunc_f32x4_s_relaxed",
+        I32x4TruncSatF32x4URelaxed : [0xfd, 0xa6]: "i32x4.trunc_f32x4_u_relaxed",
+        I32x4TruncSatF64x2SZeroRelaxed : [0xfd, 0xc5]: "i32x4.trunc_f64x2_s_zero_relaxed",
+        I32x4TruncSatF64x2UZeroRelaxed : [0xfd, 0xc6]: "i32x4.trunc_f64x2_u_zero_relaxed",
+        F32x4FmaRelaxed : [0xfd, 0xaf]: "f32x4.fma_relaxed",
+        F32x4FmsRelaxed : [0xfd, 0xb0]: "f32x4.fms_relaxed",
+        F64x4FmaRelaxed : [0xfd, 0xcf]: "f64x2.fma_relaxed",
+        F64x4FmsRelaxed : [0xfd, 0xd0]: "f64x2.fms_relaxed",
+        I8x16LaneSelect : [0xfd, 0xb2]: "i8x16.laneselect",
+        I16x8LaneSelect : [0xfd, 0xb3]: "i16x8.laneselect",
+        I32x4LaneSelect : [0xfd, 0xd2]: "i32x4.laneselect",
+        I64x2LaneSelect : [0xfd, 0xd3]: "i64x2.laneselect",
+        F32x4MinRelaxed : [0xfd, 0xb4]: "f32x4.min_relaxed",
+        F32x4MaxRelaxed : [0xfd, 0xe2]: "f32x4.max_relaxed",
+        F64x2MinRelaxed : [0xfd, 0xd4]: "f64x2.min_relaxed",
+        F64x2MaxRelaxed : [0xfd, 0xee]: "f64x2.max_relaxed",
     }
 }
 
@@ -1288,7 +1310,8 @@ impl<'a> MemArg<'a> {
         }
 
         let memory = parser
-            .parse::<Option<ast::ItemRef<'a, kw::memory>>>()?
+            .parse::<Option<ast::IndexOrRef<'a, kw::memory>>>()?
+            .map(|i| i.0)
             .unwrap_or(idx_zero(parser.prev_span(), kw::memory));
         let offset = parse_u64("offset", parser)?.unwrap_or(0);
         let align = match parse_u32("align", parser)? {
@@ -1327,8 +1350,44 @@ pub struct LoadOrStoreLane<'a> {
 
 impl<'a> LoadOrStoreLane<'a> {
     fn parse(parser: Parser<'a>, default_align: u32) -> Result<Self> {
+        // This is sort of funky. The first integer we see could be the lane
+        // index, but it could also be the memory index. To determine what it is
+        // then if we see a second integer we need to look further.
+        let has_memarg = parser.step(|c| match c.integer() {
+            Some((_, after_int)) => {
+                // Two integers in a row? That means that the first one is the
+                // memory index and the second must be the lane index.
+                if after_int.integer().is_some() {
+                    return Ok((true, c));
+                }
+
+                // If the first integer is trailed by `offset=...` or
+                // `align=...` then this is definitely a memarg.
+                if let Some((kw, _)) = after_int.keyword() {
+                    if kw.starts_with("offset=") || kw.starts_with("align=") {
+                        return Ok((true, c));
+                    }
+                }
+
+                // Otherwise the first integer was trailed by something that
+                // didn't look like a memarg, so this must be the lane index.
+                Ok((false, c))
+            }
+
+            // Not an integer here? That must mean that this must be the memarg
+            // first followed by the trailing index.
+            None => Ok((true, c)),
+        })?;
         Ok(LoadOrStoreLane {
-            memarg: MemArg::parse(parser, default_align)?,
+            memarg: if has_memarg {
+                MemArg::parse(parser, default_align)?
+            } else {
+                MemArg {
+                    align: default_align,
+                    offset: 0,
+                    memory: idx_zero(parser.prev_span(), kw::memory),
+                }
+            },
             lane: LaneArg::parse(parser)?,
         })
     }
@@ -1453,11 +1512,14 @@ pub struct MemoryInit<'a> {
 
 impl<'a> Parse<'a> for MemoryInit<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        let data = parser.parse()?;
-        let mem = parser
-            .parse::<Option<ast::IndexOrRef<_>>>()?
-            .map(|i| i.0)
-            .unwrap_or(idx_zero(parser.prev_span(), kw::memory));
+        let prev_span = parser.prev_span();
+        let (data, mem) =
+            if parser.peek::<ast::ItemRef<kw::memory>>() || parser.peek2::<ast::Index>() {
+                let memory = parser.parse::<ast::IndexOrRef<_>>()?.0;
+                (parser.parse()?, memory)
+            } else {
+                (parser.parse()?, idx_zero(prev_span, kw::memory))
+            };
         Ok(MemoryInit { data, mem })
     }
 }

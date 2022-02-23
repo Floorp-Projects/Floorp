@@ -19,15 +19,7 @@
 #ifndef AVUTIL_HWCONTEXT_VAAPI_H
 #define AVUTIL_HWCONTEXT_VAAPI_H
 
-//#include <va/va.h>
-
-// We can't use <va/va.h> in Mozilla build roots so forward-declare needed
-// structures here.
-struct VASurfaceAttrib;
-typedef unsigned int VAGenericID;
-typedef VAGenericID VAConfigID;
-typedef VAGenericID VASurfaceID;
-typedef void* VADisplay;
+#include "va/va.h"
 
 /**
  * @file

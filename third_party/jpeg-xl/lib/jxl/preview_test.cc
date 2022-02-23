@@ -56,7 +56,7 @@ TEST(PreviewTest, RoundtripGivenPreview) {
 
   CodecInOut io2;
   Roundtrip(&io, cparams, dparams, pool, &io2);
-  EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
+  EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params, GetJxlCms(),
                                 /*distmap=*/nullptr, pool),
             2.5);
   EXPECT_EQ(0u, io2.preview_frame.xsize());
@@ -71,12 +71,13 @@ TEST(PreviewTest, RoundtripGivenPreview) {
   EXPECT_EQ(preview_ysize, io3.preview_frame.ysize());
 
   EXPECT_LE(ButteraugliDistance(io.preview_frame, io3.preview_frame,
-                                cparams.ba_params,
+                                cparams.ba_params, GetJxlCms(),
                                 /*distmap=*/nullptr, pool),
             2.5);
-  EXPECT_LE(ButteraugliDistance(io.Main(), io3.Main(), cparams.ba_params,
-                                /*distmap=*/nullptr, pool),
-            2.5);
+  EXPECT_LE(
+      ButteraugliDistance(io.Main(), io3.Main(), cparams.ba_params, GetJxlCms(),
+                          /*distmap=*/nullptr, pool),
+      2.5);
 }
 
 }  // namespace

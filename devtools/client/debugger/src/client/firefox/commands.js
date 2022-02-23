@@ -319,15 +319,37 @@ async function pauseOnExceptions(
 }
 
 async function blackBox(sourceActor, shouldBlackBox, ranges) {
-  const sourceFront = currentThreadFront().source({ actor: sourceActor.actor });
-  // If there are no ranges, the whole source is being blackboxed
-  if (!ranges.length) {
-    await toggleBlackBoxSourceFront(sourceFront, shouldBlackBox);
-    return;
-  }
-  // Blackbox the specific ranges
-  for (const range of ranges) {
-    await toggleBlackBoxSourceFront(sourceFront, shouldBlackBox, range);
+  // @backward-compat { version 98 } Introduced the Blackboxing actor
+  //                  The trait can be removed, but as for other code of this module,
+  //                  we still have to support cases where we don't support the Watcher actor at all.
+  //                  For example in the regular non-multiprocess browser toolbox.
+  //                  There, we still have to communicate with each individual source front.
+  //  Once we drop 97 support, we can do:
+  //  const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
+  //  (Like other method of this module)
+  const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport(
+    "blackboxing"
+  );
+  if (hasWatcherSupport) {
+    const blackboxingFront = await commands.targetCommand.watcherFront.getBlackboxingActor();
+    if (shouldBlackBox) {
+      await blackboxingFront.blackbox(sourceActor.url, ranges);
+    } else {
+      await blackboxingFront.unblackbox(sourceActor.url, ranges);
+    }
+  } else {
+    const sourceFront = currentThreadFront().source({
+      actor: sourceActor.actor,
+    });
+    // If there are no ranges, the whole source is being blackboxed
+    if (!ranges.length) {
+      await toggleBlackBoxSourceFront(sourceFront, shouldBlackBox);
+      return;
+    }
+    // Blackbox the specific ranges
+    for (const range of ranges) {
+      await toggleBlackBoxSourceFront(sourceFront, shouldBlackBox, range);
+    }
   }
 }
 

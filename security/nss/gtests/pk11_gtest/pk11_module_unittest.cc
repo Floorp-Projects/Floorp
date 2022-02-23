@@ -43,10 +43,10 @@ TEST_F(Pkcs11ModuleTest, LoadUnload) {
 TEST_F(Pkcs11ModuleTest, ListSlots) {
   ScopedPK11SlotList slots(
       PK11_GetAllTokens(CKM_INVALID_MECHANISM, PR_FALSE, PR_FALSE, nullptr));
-  EXPECT_NE(nullptr, slots);
+  ASSERT_NE(nullptr, slots);
 
   PK11SlotListElement* element = PK11_GetFirstSafe(slots.get());
-  EXPECT_NE(nullptr, element);
+  ASSERT_NE(nullptr, element);
 
   // These tokens are always present.
   const std::vector<std::string> kSlotsWithToken = {
@@ -72,12 +72,12 @@ TEST_F(Pkcs11ModuleTest, PublicCertificatesToken) {
   const std::string kPublicCertificatesToken = "Test PKCS11 Public Certs Token";
 
   ScopedPK11SlotInfo slot1(PK11_FindSlotByName(kRegularToken.c_str()));
-  EXPECT_NE(nullptr, slot1);
+  ASSERT_NE(nullptr, slot1);
   EXPECT_FALSE(PK11_IsFriendly(slot1.get()));
 
   ScopedPK11SlotInfo slot2(
       PK11_FindSlotByName(kPublicCertificatesToken.c_str()));
-  EXPECT_NE(nullptr, slot2);
+  ASSERT_NE(nullptr, slot2);
   EXPECT_TRUE(PK11_IsFriendly(slot2.get()));
 }
 

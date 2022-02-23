@@ -167,7 +167,7 @@ var tests = [
     [ 'input-minlength-ui-valid-change.html', 'input-valid-ref.html'] ,
     [ 'input-minlength-ui-invalid-change.html', 'input-invalid-ref.html'] ,
 
-    function() {SpecialPowers.pushPrefEnv({'set': [['layout.forms.input-type-show-password-button.enabled', false]]}, nextTest);} ,
+    function() {SpecialPowers.pushPrefEnv({'set': [['layout.forms.reveal-password-button.enabled', false]]}, nextTest);} ,
     [ 'input-password-remask.html', 'input-password-remask-ref.html' ],
 
     // The following hash means language.
@@ -195,7 +195,7 @@ var tests = [
     [ 'input-password-unmask-around-emoji.html#2-3-3-3', 'input-password-unmask-around-emoji-ref.html#2-3-3-3'],
     [ 'input-password-unmask-around-emoji.html#3-4-4-4', 'input-password-unmask-around-emoji-ref.html#3-4-4-4'],
     [ 'input-password-unmask-around-emoji.html#1-4-4-4', 'input-password-unmask-around-emoji-ref.html#1-4-4-4'],
-    function() {SpecialPowers.pushPrefEnv({'clear': [['layout.forms.input-type-show-password-button.enabled']]}, nextTest);} ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['layout.forms.reveal-password-button.enabled']]}, nextTest);} ,
 
     // The following tests something in editable elements so that we need to disable zoom to focused editor.
     function() {SpecialPowers.pushPrefEnv({'set': [['apz.zoom-to-focused-input.enabled', false]]}, nextTest);} ,

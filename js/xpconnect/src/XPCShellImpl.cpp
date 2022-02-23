@@ -1503,6 +1503,13 @@ XPCShellDirProvider::GetFile(const char* prop, bool* persistent,
     file.forget(result);
     return NS_OK;
   }
+#ifdef MOZ_SANDBOX
+  if (!strcmp(prop, NS_APP_CONTENT_PROCESS_TEMP_DIR)) {
+    // Forward to the OS Temp directory
+    *persistent = true;
+    return NS_GetSpecialDirectory(NS_OS_TEMP_DIR, result);
+  }
+#endif
 
   return NS_ERROR_FAILURE;
 }

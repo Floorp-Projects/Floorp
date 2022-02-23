@@ -9,13 +9,13 @@ DIRS += [
 
 DevToolsModules(
     "context-menu-utils.js",
+    "doc-utils.js",
     "filter-autocomplete-provider.js",
     "filter-predicates.js",
     "filter-text-utils.js",
     "format-utils.js",
     "headers-provider.js",
     "l10n.js",
-    "mdn-utils.js",
     "open-request-in-tab.js",
     "prefs.js",
     "request-blocking.js",

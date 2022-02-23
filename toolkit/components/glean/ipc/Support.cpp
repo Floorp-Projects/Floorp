@@ -7,9 +7,11 @@
 // Some information just isn't available to Rust and must be made available over
 // FFI.
 #include "FOGIPC.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "nsThreadUtils.h"
 
+using mozilla::AppShutdown;
 using mozilla::RunOnShutdown;
 using mozilla::ShutdownPhase;
 using mozilla::glean::FlushFOGData;
@@ -18,6 +20,10 @@ using mozilla::ipc::ByteBuf;
 
 extern "C" {
 void FOG_RegisterContentChildShutdown() {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    return;
+  }
+
   RunOnShutdown(
       [] {
         FlushFOGData([](ByteBuf&& aBuf) { SendFOGData(std::move(aBuf)); });

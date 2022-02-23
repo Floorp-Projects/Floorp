@@ -116,7 +116,7 @@ richlistbox.theme-listbox > richlistitem > label {
     outline: none;
   }
 
-  @media (-moz-os-version: windows-win7) {
+  @media (-moz-platform: windows-win7) {
     richlistbox.theme-listbox > richlistitem {
       --listitem-selectedBottomBorder: var(--listitem-selectedColor);
       --listitem-selectedBackground: rgba(190,190,190,.15);
@@ -133,7 +133,7 @@ richlistbox.theme-listbox > richlistitem > label {
     }
   }
 
-  @media (-moz-os-version: windows-win8) {
+  @media (-moz-platform: windows-win8) {
     richlistbox.theme-listbox > richlistitem {
       --listitem-selectedBottomBorder: var(--listitem-selectedColor);
       --listitem-selectedBackground: rgba(190,190,190,.15);

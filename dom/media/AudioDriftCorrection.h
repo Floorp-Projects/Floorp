@@ -153,12 +153,14 @@ class AudioDriftCorrection final {
 
  public:
   AudioDriftCorrection(uint32_t aSourceRate, uint32_t aTargetRate,
-                       uint32_t aBufferMs)
+                       uint32_t aBufferMs,
+                       const PrincipalHandle& aPrincipalHandle)
       : mDesiredBuffering(std::max(kMinBufferMs, aBufferMs) * aSourceRate /
                           1000),
         mTargetRate(aTargetRate),
         mClockDrift(aSourceRate, aTargetRate, mDesiredBuffering),
-        mResampler(aSourceRate, aTargetRate, mDesiredBuffering) {}
+        mResampler(aSourceRate, aTargetRate, mDesiredBuffering,
+                   aPrincipalHandle) {}
 
   /**
    * The source audio frames and request the number of target audio frames must

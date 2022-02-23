@@ -11,7 +11,7 @@ Outputter to generate C++ code for metrics.
 import jinja2
 import json
 
-from util import generate_metric_ids, generate_ping_ids
+from util import generate_metric_ids, generate_ping_ids, get_metrics
 from glean_parser import util
 
 
@@ -111,10 +111,13 @@ def output_cpp(objs, output_fd, options={}):
     get_metric_id = generate_metric_ids(objs)
     get_ping_id = generate_ping_ids(objs)
 
-    if len(objs) == 1 and "pings" in objs:
+    if "pings" in objs:
         template_filename = "cpp_pings.jinja2"
+        if objs.get("tags"):
+            del objs["tags"]
     else:
         template_filename = "cpp.jinja2"
+        objs = get_metrics(objs)
 
     template = util.get_jinja2_template(
         template_filename,

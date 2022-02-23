@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <h1>Toggle Event Listeners</h1>
+    <button id="target" onclick="handleEvent(event)">Target</button>
+    <script>
+      "use strict";
+
+      function handleEvent(e) {
+        const data = JSON.parse(e.target.dataset.handledEvents || "{}");
+        data[e.type] = (data[e.type] || 0) + 1;
+        e.target.dataset.handledEvents = JSON.stringify(data);
+      }
+
+      const domEventsElement = document.getElementById("target");
+      // adding regular event listener
+      domEventsElement.addEventListener("mousedown", handleEvent);
+      // and a "native" event listener
+      domEventsElement.addEventListener("mouseup", console.info)
+    </script>
+  </body>
+</html>

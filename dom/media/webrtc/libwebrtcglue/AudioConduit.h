@@ -29,6 +29,9 @@ struct DtmfEvent;
 class WebrtcAudioConduit : public AudioSessionConduit,
                            public webrtc::RtcpEventObserver {
  public:
+  Maybe<int> ActiveSendPayloadType() const override;
+  Maybe<int> ActiveRecvPayloadType() const override;
+
   void OnRtpReceived(MediaPacket&& aPacket, webrtc::RTPHeader&& aHeader);
   void OnRtcpReceived(MediaPacket&& aPacket);
 
@@ -150,6 +153,11 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   Ssrcs GetLocalSSRCs() const override;
   Maybe<Ssrc> GetRemoteSSRC() const override;
 
+  void DisableSsrcChanges() override {
+    MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+    mAllowSsrcChange = false;
+  }
+
  private:
   /**
    * Override the remote ssrc configured on mRecvStreamConfig.
@@ -200,6 +208,10 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   void DeleteSendStream();
   void CreateRecvStream();
   void DeleteRecvStream();
+
+  // Are SSRC changes without signaling allowed or not.
+  // Call thread only.
+  bool mAllowSsrcChange = true;
 
   // Const so can be accessed on any thread. Most methods are called on the Call
   // thread.

@@ -86,6 +86,12 @@ bool wasm::Realm::registerInstance(JSContext* cx,
     InstanceComparator cmp(instance);
     size_t index;
 
+    // The following section is not unsafe, but simulated OOM do not consider
+    // the fact that these insert calls are guarded by the previous reserve
+    // calls.
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    (void)oomUnsafe;
+
     MOZ_ALWAYS_FALSE(
         BinarySearchIf(instances_, 0, instances_.length(), cmp, &index));
     MOZ_ALWAYS_TRUE(instances_.insert(instances_.begin() + index, &instance));

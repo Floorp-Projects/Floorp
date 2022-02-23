@@ -10,6 +10,9 @@ const TAB_ENTRIES_LIMIT = 5; // How many URLs to include in tab history.
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { TabStateFlusher } = ChromeUtils.import(
+  "resource:///modules/sessionstore/TabStateFlusher.jsm"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Store, SyncEngine, Tracker } = ChromeUtils.import(
@@ -37,6 +40,27 @@ ChromeUtils.defineModuleGetter(
 XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExperimentAPI",
+  "resource://nimbus/ExperimentAPI.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+});
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "TABS_FILTERED_SCHEMES",
+  "services.sync.engine.tabs.filteredSchemes",
+  "",
+  null,
+  val => {
+    return new Set(val.split("|"));
+  }
+);
 
 function TabSetRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
@@ -139,11 +163,6 @@ TabStore.prototype = {
   },
 
   async getAllTabs(filter) {
-    let filteredUrls = new RegExp(
-      Svc.Prefs.get("engine.tabs.filteredUrls"),
-      "i"
-    );
-
     let allTabs = [];
 
     for (let win of this.getWindowEnumerator()) {
@@ -156,12 +175,22 @@ TabStore.prototype = {
 
         // Make sure there are history entries to look at.
         if (!tabState || !tabState.entries.length) {
-          continue;
+          // If we detected a tab but no entries we should
+          // flush the window so SessionState properly updates
+          await TabStateFlusher.flushWindow(win);
+          tabState = this.getTabState(tab);
+
+          // We failed to get entries even after a flush
+          // safe to skip this tab
+          if (!tabState || !tabState.entries.length) {
+            continue;
+          }
         }
 
         let acceptable = !filter
           ? url => url
-          : url => url && !filteredUrls.test(url);
+          : url =>
+              url && !TABS_FILTERED_SCHEMES.has(Services.io.extractScheme(url));
 
         let entries = tabState.entries;
         let index = tabState.index;
@@ -300,7 +329,7 @@ TabTracker.prototype = {
     this.modified = false;
   },
 
-  _topics: ["pageshow", "TabOpen", "TabClose", "TabSelect"],
+  _topics: ["TabOpen", "TabClose", "TabSelect"],
 
   _registerListenersForWindow(window) {
     this._log.trace("Registering tab listeners in window");
@@ -371,25 +400,49 @@ TabTracker.prototype = {
     }
 
     this._log.trace("onTab event: " + event.type);
-    this.modified = true;
-
-    // For page shows, bump the score 10% of the time, emulating a partial
-    // score. We don't want to sync too frequently. For all other page
-    // events, always bump the score.
-    if (event.type != "pageshow" || Math.random() < 0.1) {
-      this.score += SCORE_INCREMENT_SMALL;
-    }
+    this.callScheduleSync(SCORE_INCREMENT_SMALL);
   },
 
   // web progress listeners.
-  onLocationChange(webProgress, request, location, flags) {
+  onLocationChange(webProgress, request, locationURI, flags) {
     // We only care about top-level location changes which are not in the same
     // document.
     if (
-      webProgress.isTopLevel &&
-      (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) == 0
+      flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT ||
+      !webProgress.isTopLevel ||
+      !locationURI
     ) {
-      this.modified = true;
+      return;
+    }
+
+    // Synced tabs do not sync certain urls, we should ignore scheduling a sync
+    // if we have navigate to one of those urls
+    if (TABS_FILTERED_SCHEMES.has(locationURI.scheme)) {
+      return;
+    }
+
+    this.callScheduleSync();
+  },
+
+  callScheduleSync(scoreIncrement) {
+    this.modified = true;
+
+    const delayInMs = NimbusFeatures.syncAfterTabChange.getVariable(
+      "syncDelayAfterTabChange"
+    );
+
+    // If we are part of the experiment don't use score here
+    // and instead schedule a sync once we detect a tab change
+    //  to ensure the server always has the most up to date tabs
+    if (delayInMs > 0) {
+      this._log.debug(
+        "Detected a tab change: scheduling a sync in " + delayInMs + "ms"
+      );
+      this.engine.service.scheduler.scheduleNextSync(delayInMs, {
+        why: "tabschanged",
+      });
+    } else if (scoreIncrement) {
+      this.score += scoreIncrement;
     }
   },
 };

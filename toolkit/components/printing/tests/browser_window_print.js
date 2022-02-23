@@ -274,3 +274,32 @@ add_task(async function test_print_with_oop_iframe() {
     }
   );
 });
+
+add_task(async function test_base_uri_srcdoc() {
+  is(
+    document.querySelector(".printPreviewBrowser"),
+    null,
+    "There shouldn't be any print preview browser"
+  );
+
+  const PARENT_URI = `${TEST_PATH}file_window_print_srcdoc_base_uri.html`;
+  await BrowserTestUtils.withNewTab(PARENT_URI, async function(browser) {
+    info(
+      "Waiting for window.print() to run and ensure we're showing the preview..."
+    );
+
+    let helper = new PrintHelper(browser);
+    await helper.waitForDialog();
+
+    let previewBrowser = document.querySelector(".printPreviewBrowser");
+    isnot(previewBrowser, null, "Should open the print preview correctly");
+
+    let baseURI = await SpecialPowers.spawn(previewBrowser, [], () => {
+      return content.document.baseURI;
+    });
+
+    is(baseURI, PARENT_URI, "srcdoc print document base uri should be right");
+
+    gBrowser.getTabDialogBox(browser).abortAllDialogs();
+  });
+});

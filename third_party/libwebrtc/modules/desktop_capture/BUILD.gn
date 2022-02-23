@@ -280,7 +280,6 @@ rtc_library("desktop_capture_generic") {
   defines = []
   include_dirs = []
   if (build_with_mozilla) {
-    defines += [ "MULTI_MONITOR_SCREENSHARE" ]
     include_dirs += [ "/media/libyuv/libyuv/include" ]
   }
   public_configs = [ ":x11_config" ]

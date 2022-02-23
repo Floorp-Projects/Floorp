@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from collections import OrderedDict
 from mozpack.files import (
     BaseFinder,
     ExecutableFile,
@@ -126,10 +127,20 @@ class UnifiedFinder(BaseFinder):
         """
         UnifiedFinder.find() implementation.
         """
-        files1 = {p: f for p, f in self._finder1.find(path)}
-        files2 = {p: f for p, f in self._finder2.find(path)}
-        all_paths = set(files1) | set(files2)
-        for p in sorted(all_paths):
+        # There is no `OrderedSet`.  Operator `|` was added only in
+        # Python 3.9, so we merge by hand.
+        all_paths = OrderedDict()
+
+        files1 = OrderedDict()
+        for p, f in self._finder1.find(path):
+            files1[p] = f
+            all_paths[p] = True
+        files2 = OrderedDict()
+        for p, f in self._finder2.find(path):
+            files2[p] = f
+            all_paths[p] = True
+
+        for p in all_paths:
             err = errors.count
             unified = self.unify_file(p, files1.get(p), files2.get(p))
             if unified:

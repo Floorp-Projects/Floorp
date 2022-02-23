@@ -48,9 +48,14 @@ const TRACKER_SJS = "https://" + TRACKER_DOMAIN + TEST_PATH + TRACKER_SERVER;
 
 // This function ask the server to set the cookie
 async function setupAndRun(hasCookie, topLevelSite = TEST_TOP_SITE) {
-  await fetch(TRACKER_SJS + "?init=" + trackersAll.length, {
+  // In order to apply the correct cookieBehavior, we need to first open a new
+  // window to setup cookies. So, the new window will use the correct
+  // cookieBehavior. Otherwise, it will use the default cookieBehavior.
+  let setup_win = window.open();
+  await setup_win.fetch(TRACKER_SJS + "?init=" + trackersAll.length, {
     credentials: "include",
   });
+  setup_win.close();
 
   return new Promise(resolve => {
     let win;

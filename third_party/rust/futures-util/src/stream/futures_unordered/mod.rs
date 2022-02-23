@@ -6,6 +6,7 @@
 use crate::task::AtomicWaker;
 use alloc::sync::{Arc, Weak};
 use core::cell::UnsafeCell;
+use core::cmp;
 use core::fmt::{self, Debug};
 use core::iter::FromIterator;
 use core::marker::PhantomData;
@@ -29,6 +30,33 @@ use self::task::Task;
 
 mod ready_to_run_queue;
 use self::ready_to_run_queue::{Dequeue, ReadyToRunQueue};
+
+/// Constant used for a `FuturesUnordered` to determine how many times it is
+/// allowed to poll underlying futures without yielding.
+///
+/// A single call to `poll_next` may potentially do a lot of work before
+/// yielding. This happens in particular if the underlying futures are awoken
+/// frequently but continue to return `Pending`. This is problematic if other
+/// tasks are waiting on the executor, since they do not get to run. This value
+/// caps the number of calls to `poll` on underlying futures a single call to
+/// `poll_next` is allowed to make.
+///
+/// The value itself is chosen somewhat arbitrarily. It needs to be high enough
+/// that amortize wakeup and scheduling costs, but low enough that we do not
+/// starve other tasks for long.
+///
+/// See also https://github.com/rust-lang/futures-rs/issues/2047.
+///
+/// Note that using the length of the `FuturesUnordered` instead of this value
+/// may cause problems if the number of futures is large.
+/// See also https://github.com/rust-lang/futures-rs/pull/2527.
+///
+/// Additionally, polling the same future twice per iteration may cause another
+/// problem. So, when using this value, it is necessary to limit the max value
+/// based on the length of the `FuturesUnordered`.
+/// (e.g., `cmp::min(self.len(), YIELD_EVERY)`)
+/// See also https://github.com/rust-lang/futures-rs/pull/2333.
+const YIELD_EVERY: usize = 32;
 
 /// A set of futures which may complete in any order.
 ///
@@ -383,21 +411,8 @@ impl<Fut: Future> Stream for FuturesUnordered<Fut> {
     type Item = Fut::Output;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        // Variable to determine how many times it is allowed to poll underlying
-        // futures without yielding.
-        //
-        // A single call to `poll_next` may potentially do a lot of work before
-        // yielding. This happens in particular if the underlying futures are awoken
-        // frequently but continue to return `Pending`. This is problematic if other
-        // tasks are waiting on the executor, since they do not get to run. This value
-        // caps the number of calls to `poll` on underlying futures a single call to
-        // `poll_next` is allowed to make.
-        //
-        // The value is the length of FuturesUnordered. This ensures that each
-        // future is polled only once at most per iteration.
-        //
-        // See also https://github.com/rust-lang/futures-rs/issues/2047.
-        let yield_every = self.len();
+        // See YIELD_EVERY docs　for more.
+        let yield_every = cmp::min(self.len(), YIELD_EVERY);
 
         // Keep track of how many child futures we have polled,
         // in case we want to forcibly yield.
@@ -558,7 +573,7 @@ impl<Fut> FuturesUnordered<Fut> {
     pub fn clear(&mut self) {
         self.clear_head_all();
 
-        // SAFETY: we just cleared all the tasks and we have &mut self
+        // we just cleared all the tasks, and we have &mut self, so this is safe.
         unsafe { self.ready_to_run_queue.clear() };
 
         self.is_terminated.store(false, Relaxed);
@@ -575,9 +590,24 @@ impl<Fut> FuturesUnordered<Fut> {
 
 impl<Fut> Drop for FuturesUnordered<Fut> {
     fn drop(&mut self) {
+        // When a `FuturesUnordered` is dropped we want to drop all futures
+        // associated with it. At the same time though there may be tons of
+        // wakers flying around which contain `Task<Fut>` references
+        // inside them. We'll let those naturally get deallocated.
         self.clear_head_all();
-        // SAFETY: we just cleared all the tasks and we have &mut self
-        unsafe { self.ready_to_run_queue.clear() };
+
+        // Note that at this point we could still have a bunch of tasks in the
+        // ready to run queue. None of those tasks, however, have futures
+        // associated with them so they're safe to destroy on any thread. At
+        // this point the `FuturesUnordered` struct, the owner of the one strong
+        // reference to the ready to run queue will drop the strong reference.
+        // At that point whichever thread releases the strong refcount last (be
+        // it this thread or some other thread as part of an `upgrade`) will
+        // clear out the ready to run queue and free all remaining tasks.
+        //
+        // While that freeing operation isn't guaranteed to happen here, it's
+        // guaranteed to happen "promptly" as no more "blocking work" will
+        // happen while there's a strong refcount held.
     }
 }
 

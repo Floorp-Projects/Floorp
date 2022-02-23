@@ -26,7 +26,7 @@ struct NoiseParams {
   float lut[kNumNoisePoints];
 
   void Clear() {
-    for (float& i : lut) i = 0;
+    for (float& i : lut) i = 0.f;
   }
   bool HasAny() const {
     for (float i : lut) {
@@ -44,10 +44,10 @@ static inline std::pair<int, float> IndexAndFrac(float x) {
   float floor_x;
   float frac_x = std::modf(scaled_x, &floor_x);
   if (JXL_UNLIKELY(scaled_x >= kScaleNumerator)) {
-    floor_x = kScaleNumerator - 1;
-    frac_x = 1;
+    floor_x = kScaleNumerator - 1.f;
+    frac_x = 1.f;
   }
-  return std::make_pair(static_cast<size_t>(static_cast<int>(floor_x)), frac_x);
+  return std::make_pair(static_cast<int>(floor_x), frac_x);
 }
 
 struct NoiseLevel {

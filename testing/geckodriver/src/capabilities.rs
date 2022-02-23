@@ -178,10 +178,8 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         Ok(true)
     }
 
-    fn web_socket_url(&mut self, caps: &Capabilities) -> WebDriverResult<bool> {
-        self.browser_version(caps)?
-            .map(|v| self.compare_browser_version(&v, ">=90"))
-            .unwrap_or(Ok(false))
+    fn web_socket_url(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
+        Ok(true)
     }
 
     fn validate_custom(&mut self, name: &str, value: &Value) -> WebDriverResult<()> {
@@ -408,6 +406,13 @@ impl FirefoxOptions {
                  capability is not an object",
                 )
             })?;
+
+            if options.get("androidPackage").is_some() && options.get("binary").is_some() {
+                return Err(WebDriverError::new(
+                    ErrorStatus::InvalidArgument,
+                    "androidPackage and binary are mutual exclusive",
+                ));
+            }
 
             rv.android = FirefoxOptions::load_android(settings.android_storage, options)?;
             rv.args = FirefoxOptions::load_args(options)?;
@@ -905,9 +910,7 @@ mod tests {
 
         if let Some(args) = opts.args {
             let mut iter = args.iter();
-            assert!(iter
-                .find(|&arg| arg == &"--remote-debugging-port".to_owned())
-                .is_some());
+            assert!(iter.any(|arg| arg == &"--remote-debugging-port".to_owned()));
             assert_eq!(iter.next(), Some(&"1234".to_owned()));
         } else {
             assert!(false, "CLI arguments for Firefox not found");
@@ -951,9 +954,7 @@ mod tests {
 
         if let Some(args) = opts.args {
             let mut iter = args.iter();
-            assert!(iter
-                .find(|&arg| arg == &"--remote-debugging-port".to_owned())
-                .is_some());
+            assert!(iter.any(|arg| arg == &"--remote-debugging-port".to_owned()));
             assert_eq!(iter.next(), Some(&"1234".to_owned()));
         } else {
             assert!(false, "CLI arguments for Firefox not found");
@@ -973,6 +974,16 @@ mod tests {
         let marionette_settings = Default::default();
         FirefoxOptions::from_capabilities(None, &marionette_settings, &mut caps)
             .expect_err("Firefox options need to be of type object");
+    }
+
+    #[test]
+    fn fx_options_android_package_and_binary() {
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert("androidPackage".into(), json!("foo"));
+        firefox_opts.insert("binary".into(), json!("bar"));
+
+        make_options(firefox_opts, None)
+            .expect_err("androidPackage and binary are mutual exclusive");
     }
 
     #[test]
@@ -1199,7 +1210,7 @@ mod tests {
         let env = Value::Number(1.into());
 
         let mut firefox_opts = Capabilities::new();
-        firefox_opts.insert("env".into(), env.into());
+        firefox_opts.insert("env".into(), env);
 
         make_options(firefox_opts, None).expect_err("invalid firefox options");
     }

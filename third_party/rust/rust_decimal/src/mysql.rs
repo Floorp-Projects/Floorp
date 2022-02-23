@@ -26,7 +26,7 @@ mod diesel_mysql {
             // internal types.
             let bytes = numeric.ok_or("Invalid decimal")?;
             let s = std::str::from_utf8(bytes)?;
-            Decimal::from_str(&s).map_err(|e| e.into())
+            Decimal::from_str(s).map_err(|e| e.into())
         }
     }
 

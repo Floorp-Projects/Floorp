@@ -2,10 +2,12 @@ include protocol PTestDataStructuresSub;
 include PTestDataStructuresCommon;
 
 include "mozilla/GfxMessageUtils.h";
+include "mozilla/_ipdltest/TestDataStructures.h";
 
 namespace mozilla {
 namespace _ipdltest {
 
+[ManualDealloc, ChildImpl="TestDataStructuresChild", ParentImpl="TestDataStructuresParent"]
 sync protocol PTestDataStructures {
     manages PTestDataStructuresSub;
 

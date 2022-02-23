@@ -26,12 +26,10 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/BrowserParent.h"
-#include "mozilla/gfx/2D.h"         // for DrawTarget
-#include "mozilla/gfx/Point.h"      // for IntSize
-#include "mozilla/gfx/Rect.h"       // for IntSize
-#include "mozilla/gfx/gfxVars.h"    // for gfxVars
-#include "mozilla/ipc/Transport.h"  // for Transport
-#include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/2D.h"       // for DrawTarget
+#include "mozilla/gfx/Point.h"    // for IntSize
+#include "mozilla/gfx/Rect.h"     // for IntSize
+#include "mozilla/gfx/gfxVars.h"  // for gfxVars
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZSampler.h"             // for APZSampler
@@ -57,7 +55,6 @@
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "mozilla/webgpu/WebGPUParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/media/MediaSystemResourceService.h"  // for MediaSystemResourceService
 #include "mozilla/mozalloc.h"                          // for operator new, etc
@@ -517,6 +514,11 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvFlushRendering(
     CancelCurrentCompositeTask();
     ForceComposeToTarget(aReasons, nullptr, nullptr);
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult CompositorBridgeParent::RecvNotifyMemoryPressure() {
+  NotifyMemoryPressure();
   return IPC_OK();
 }
 
@@ -1281,28 +1283,6 @@ bool CompositorBridgeParent::DeallocPWebRenderBridgeParent(
     }
   }
   parent->Release();  // IPDL reference
-  return true;
-}
-
-webgpu::PWebGPUParent* CompositorBridgeParent::AllocPWebGPUParent() {
-  // This should only ever get called in the GPU process.
-  MOZ_ASSERT(XRE_IsGPUProcess());
-  // Shouldn't re-initialize
-  MOZ_ASSERT(!mWebGPUBridge);
-  // We should only ever get this if WebGPU is enabled in this compositor.
-  MOZ_RELEASE_ASSERT(mOptions.UseWebGPU());
-
-  mWebGPUBridge = new webgpu::WebGPUParent();
-  mWebGPUBridge.get()->AddRef();  // IPDL reference
-  return mWebGPUBridge;
-}
-
-bool CompositorBridgeParent::DeallocPWebGPUParent(
-    webgpu::PWebGPUParent* aActor) {
-  webgpu::WebGPUParent* parent = static_cast<webgpu::WebGPUParent*>(aActor);
-  MOZ_ASSERT(mWebGPUBridge == parent);
-  parent->Release();  // IPDL reference
-  mWebGPUBridge = nullptr;
   return true;
 }
 

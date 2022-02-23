@@ -76,6 +76,14 @@ impl Context {
 
         context
     }
+
+    /// Creates a texture from an external GL name.
+    ///
+    /// This can be useful when a texture is created outside of glow (e.g. OpenXR surface) but glow
+    /// still needs access to it for rendering.
+    pub unsafe fn create_texture_from_gl_name(gl_name: native_gl::GLuint) -> NativeTexture {
+        NativeTexture(non_zero_gl_name(gl_name))
+    }
 }
 
 impl std::fmt::Debug for Context {

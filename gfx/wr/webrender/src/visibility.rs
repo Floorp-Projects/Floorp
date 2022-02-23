@@ -332,7 +332,7 @@ pub fn update_primitive_visibility(
             } else {
                 if prim_local_rect.width() <= 0.0 || prim_local_rect.height() <= 0.0 {
                     if prim_instance.is_chased() {
-                        println!("\tculled for zero local rectangle");
+                        info!("\tculled for zero local rectangle");
                     }
                     continue;
                 }
@@ -349,7 +349,7 @@ pub fn update_primitive_visibility(
                     Some(local_rect) => local_rect,
                     None => {
                         if prim_instance.is_chased() {
-                            println!("\tculled for being out of the local clip rectangle: {:?}",
+                            info!("\tculled for being out of the local clip rectangle: {:?}",
                                      prim_instance.clip_set.local_clip_rect);
                         }
                         continue;
@@ -394,19 +394,19 @@ pub fn update_primitive_visibility(
                     Some(clip_chain) => clip_chain,
                     None => {
                         if prim_instance.is_chased() {
-                            println!("\tunable to build the clip chain, skipping");
+                            info!("\tunable to build the clip chain, skipping");
                         }
                         continue;
                     }
                 };
 
                 if prim_instance.is_chased() {
-                    println!("\teffective clip chain from {:?} {}",
+                    info!("\teffective clip chain from {:?} {}",
                              prim_instance.vis.clip_chain.clips_range,
                              if apply_local_clip_rect { "(applied)" } else { "" },
                     );
-                    println!("\tpicture rect {:?} @{:?}",
-                             prim_instance.vis.clip_chain.pic_clip_rect,
+                    info!("\tpicture rect {:?} @{:?}",
+                             prim_instance.vis.clip_chain.pic_coverage_rect,
                              prim_instance.vis.clip_chain.pic_spatial_node_index,
                     );
                 }
@@ -419,7 +419,7 @@ pub fn update_primitive_visibility(
 
                 if prim_instance.vis.combined_local_clip_rect.is_empty() {
                     if prim_instance.is_chased() {
-                        println!("\tculled for zero local clip rectangle");
+                        info!("\tculled for zero local clip rectangle");
                     }
                     continue;
                 }
@@ -434,7 +434,7 @@ pub fn update_primitive_visibility(
                     }
                     None => {
                         if prim_instance.is_chased() {
-                            println!("\tculled for zero visible rectangle");
+                            info!("\tculled for zero visible rectangle");
                         }
                         continue;
                     }
@@ -484,7 +484,7 @@ pub fn update_primitive_visibility(
                     };
                     if debug_color.a != 0.0 {
                         if let Some(rect) = calculate_prim_clipped_world_rect(
-                            &prim_instance.vis.clip_chain.pic_clip_rect,
+                            &prim_instance.vis.clip_chain.pic_coverage_rect,
                             &world_culling_rect,
                             &map_surface_to_world,
                         ) {
@@ -500,7 +500,7 @@ pub fn update_primitive_visibility(
                     if is_image {
                         // We allow "small" images, since they're generally UI elements.
                         if let Some(rect) = calculate_prim_clipped_world_rect(
-                            &prim_instance.vis.clip_chain.pic_clip_rect,
+                            &prim_instance.vis.clip_chain.pic_coverage_rect,
                             &world_culling_rect,
                             &map_surface_to_world,
                         ) {
@@ -513,7 +513,7 @@ pub fn update_primitive_visibility(
                 }
 
                 if prim_instance.is_chased() {
-                    println!("\tvisible with {:?}", prim_instance.vis.combined_local_clip_rect);
+                    info!("\tvisible with {:?}", prim_instance.vis.combined_local_clip_rect);
                 }
 
                 // TODO(gw): This should probably be an instance method on PrimitiveInstance?
@@ -611,7 +611,7 @@ fn update_prim_post_visibility(
             // minimize the size of the render target that is required.
             if let Some(ref mut raster_config) = pic.raster_config {
                 raster_config.clipped_bounding_rect = map_surface_to_world
-                    .map(&prim_instance.vis.clip_chain.pic_clip_rect)
+                    .map(&prim_instance.vis.clip_chain.pic_coverage_rect)
                     .and_then(|rect| {
                         rect.intersection(world_culling_rect)
                     })
@@ -664,7 +664,7 @@ pub fn compute_conservative_visible_rect(
     // is in picture space (the clip-chain already takes into account the bounds of the
     // primitive local_rect and local_clip_rect). If there is no intersection here, the
     // primitive is not visible at all.
-    let pic_culling_rect = match pic_culling_rect.intersection(&clip_chain.pic_clip_rect) {
+    let pic_culling_rect = match pic_culling_rect.intersection(&clip_chain.pic_coverage_rect) {
         Some(rect) => rect,
         None => return LayoutRect::zero(),
     };

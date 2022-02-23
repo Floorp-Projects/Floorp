@@ -58,12 +58,6 @@ class PrototypeDocumentParser final : public nsIParser,
                                   int32_t aSource,
                                   bool aForceAutoDetection) override {}
 
-  NS_IMETHOD GetChannel(nsIChannel** aChannel) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  NS_IMETHOD GetDTD(nsIDTD** aDTD) override { return NS_ERROR_NOT_IMPLEMENTED; }
-
   virtual nsIStreamListener* GetStreamListener() override;
 
   NS_IMETHOD ContinueInterruptedParsing() override {
@@ -80,20 +74,9 @@ class PrototypeDocumentParser final : public nsIParser,
 
   NS_IMETHOD_(bool) IsComplete() override;
 
-  NS_IMETHOD Parse(nsIURI* aURL, void* aKey = nullptr) override;
+  NS_IMETHOD Parse(nsIURI* aURL) override;
 
   NS_IMETHOD Terminate() override { return NS_ERROR_NOT_IMPLEMENTED; }
-
-  NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
-                           nsTArray<nsString>& aTagStack) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  NS_IMETHOD BuildModel() override { return NS_ERROR_NOT_IMPLEMENTED; }
-
-  NS_IMETHOD CancelParsingEvents() override { return NS_ERROR_NOT_IMPLEMENTED; }
-
-  virtual void Reset() override {}
 
   virtual bool IsInsertionPointDefined() override { return false; }
 
@@ -102,8 +85,6 @@ class PrototypeDocumentParser final : public nsIParser,
   void DecrementScriptNestingLevel() final {}
 
   bool HasNonzeroScriptNestingLevel() const final { return false; }
-
-  virtual void MarkAsNotScriptCreated(const char* aCommand) override {}
 
   virtual bool IsScriptCreated() override { return false; }
 

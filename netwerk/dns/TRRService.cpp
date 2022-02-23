@@ -35,8 +35,7 @@ static const char kDisableIpv6Pref[] = "network.dns.disableIPv6";
 #define TRR_PREF_PREFIX "network.trr."
 #define TRR_PREF(x) TRR_PREF_PREFIX x
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 StaticRefPtr<nsIThread> sTRRBackgroundThread;
 static Atomic<TRRService*> sTRRServicePtr;
@@ -304,7 +303,8 @@ bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
     // The URI has changed. We should trigger a new confirmation immediately.
     // We must do this here because the URI could also change because of
     // steering.
-    mConfirmation.HandleEvent(ConfirmationEvent::URIChange, lock);
+    mConfirmationTriggered =
+        mConfirmation.HandleEvent(ConfirmationEvent::URIChange, lock);
   }
 
   // Clear the cache because we changed the URI
@@ -356,14 +356,6 @@ nsresult TRRService::ReadPrefs(const char* name) {
     MutexAutoLock lock(mLock);
     Preferences::GetCString(TRR_PREF("bootstrapAddr"), mBootstrapAddr);
     clearEntireCache = true;
-  }
-  if (!name || !strcmp(name, TRR_PREF("blacklist-duration"))) {
-    // prefs is given in number of seconds
-    uint32_t secs;
-    if (NS_SUCCEEDED(
-            Preferences::GetUint(TRR_PREF("blacklist-duration"), &secs))) {
-      mBlocklistDurationSeconds = secs;
-    }
   }
   if (!name || !strcmp(name, kDisableIpv6Pref)) {
     bool tmp;
@@ -457,6 +449,10 @@ uint32_t TRRService::GetRequestTimeout() {
     return StaticPrefs::network_trr_request_timeout_mode_trronly_ms();
   }
 
+  if (StaticPrefs::network_trr_strict_native_fallback()) {
+    return StaticPrefs::network_trr_strict_fallback_request_timeout_ms();
+  }
+
   return StaticPrefs::network_trr_request_timeout_ms();
 }
 
@@ -529,14 +525,15 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   LOG(("TRR::Observe() topic=%s\n", aTopic));
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    auto prevConf = mConfirmation.TaskAddr();
-
+    // Reset the state of whether a confirmation is triggered, so we can check
+    // if we create a new one after ReadPrefs().
+    mConfirmationTriggered = false;
     ReadPrefs(NS_ConvertUTF16toUTF8(aData).get());
     mConfirmation.RecordEvent("pref-change");
 
     // We should only trigger a new confirmation if reading the prefs didn't
     // already trigger one.
-    if (prevConf == mConfirmation.TaskAddr()) {
+    if (!mConfirmationTriggered) {
       mConfirmation.HandleEvent(ConfirmationEvent::PrefChange);
     }
   } else if (!strcmp(aTopic, kOpenCaptivePortalLoginEvent)) {
@@ -646,13 +643,14 @@ void TRRService::ConfirmationContext::SetState(
   }
 }
 
-void TRRService::ConfirmationContext::HandleEvent(ConfirmationEvent aEvent) {
+bool TRRService::ConfirmationContext::HandleEvent(ConfirmationEvent aEvent) {
   MutexAutoLock lock(OwningObject()->mLock);
-  HandleEvent(aEvent, lock);
+  return HandleEvent(aEvent, lock);
 }
 
-void TRRService::ConfirmationContext::HandleEvent(ConfirmationEvent aEvent,
+bool TRRService::ConfirmationContext::HandleEvent(ConfirmationEvent aEvent,
                                                   const MutexAutoLock&) {
+  auto prevAddr = TaskAddr();
   TRRService* service = OwningObject();
   service->mLock.AssertCurrentThreadOwns();
   nsIDNSService::ResolverMode mode = service->Mode();
@@ -810,6 +808,8 @@ void TRRService::ConfirmationContext::HandleEvent(ConfirmationEvent aEvent,
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected ConfirmationEvent");
   }
+
+  return prevAddr != TaskAddr();
 }
 
 bool TRRService::MaybeBootstrap(const nsACString& aPossible,
@@ -852,7 +852,8 @@ bool TRRService::IsDomainBlocked(const nsACString& aHost,
   // use a unified casing for the hashkey
   nsAutoCString hashkey(aHost + aOriginSuffix);
   if (auto val = bl->Lookup(hashkey)) {
-    int32_t until = *val + mBlocklistDurationSeconds;
+    int32_t until =
+        *val + int32_t(StaticPrefs::network_trr_temp_blocklist_duration_sec());
     int32_t expire = NowInSeconds();
     if (until > expire) {
       LOG(("Host [%s] is TRR blocklisted\n", nsCString(aHost).get()));
@@ -1315,5 +1316,4 @@ void TRRService::InitTRRConnectionInfo() {
   }
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

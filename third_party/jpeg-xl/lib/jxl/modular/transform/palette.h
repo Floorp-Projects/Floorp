@@ -146,9 +146,9 @@ static Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
     // Avoid touching "empty" channels with non-zero height.
   } else if (nb_deltas == 0 && predictor == Predictor::Zero) {
     if (nb == 1) {
-      RunOnPool(
-          pool, 0, h, ThreadPool::SkipInit(),
-          [&](const int task, const int thread) {
+      JXL_RETURN_IF_ERROR(RunOnPool(
+          pool, 0, h, ThreadPool::NoInit,
+          [&](const uint32_t task, size_t /* thread */) {
             const size_t y = task;
             pixel_type *p = input.channel[c0].Row(y);
             for (size_t x = 0; x < w; x++) {
@@ -159,11 +159,11 @@ static Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
                   /*onerow=*/onerow, /*bit_depth=*/bit_depth);
             }
           },
-          "UndoChannelPalette");
+          "UndoChannelPalette"));
     } else {
-      RunOnPool(
-          pool, 0, h, ThreadPool::SkipInit(),
-          [&](const int task, const int thread) {
+      JXL_RETURN_IF_ERROR(RunOnPool(
+          pool, 0, h, ThreadPool::NoInit,
+          [&](const uint32_t task, size_t /* thread */) {
             const size_t y = task;
             std::vector<pixel_type *> p_out(nb);
             const pixel_type *p_index = input.channel[c0].Row(y);
@@ -179,15 +179,15 @@ static Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
               }
             }
           },
-          "UndoPalette");
+          "UndoPalette"));
     }
   } else {
     // Parallelized per channel.
     ImageI indices = CopyImage(input.channel[c0].plane);
     if (predictor == Predictor::Weighted) {
-      RunOnPool(
-          pool, 0, nb, ThreadPool::SkipInit(),
-          [&](size_t c, size_t _) {
+      JXL_RETURN_IF_ERROR(RunOnPool(
+          pool, 0, nb, ThreadPool::NoInit,
+          [&](const uint32_t c, size_t /* thread */) {
             Channel &channel = input.channel[c0 + c];
             weighted::State wp_state(wp_header, channel.w, channel.h);
             for (size_t y = 0; y < channel.h; y++) {
@@ -214,11 +214,11 @@ static Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
               }
             }
           },
-          "UndoDeltaPaletteWP");
+          "UndoDeltaPaletteWP"));
     } else {
-      RunOnPool(
-          pool, 0, nb, ThreadPool::SkipInit(),
-          [&](size_t c, size_t _) {
+      JXL_RETURN_IF_ERROR(RunOnPool(
+          pool, 0, nb, ThreadPool::NoInit,
+          [&](const uint32_t c, size_t /* thread */) {
             Channel &channel = input.channel[c0 + c];
             for (size_t y = 0; y < channel.h; y++) {
               pixel_type *JXL_RESTRICT p = channel.Row(y);
@@ -242,7 +242,7 @@ static Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
               }
             }
           },
-          "UndoDeltaPaletteNoWP");
+          "UndoDeltaPaletteNoWP"));
     }
   }
   if (c0 >= input.nb_meta_channels) {

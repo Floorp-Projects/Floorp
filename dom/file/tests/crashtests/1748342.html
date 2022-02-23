@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script id="worker1" type="javascript/worker">
+    self.onmessage = async function (e) {
+      self.close()
+      const reader = new FileReader()
+      for (let i = 0; i < 25; i++) {
+        try { reader.readAsBinaryString(e.data[0]) } catch (e) {}
+      }
+      reader.addEventListener("progress", () => {}, {})
+    }
+  </script>
+  <script>
+    window.addEventListener("load", () => {
+      const script = new Blob([document.querySelector("#worker1").textContent], { type: "text/javascript" })
+      const worker = new Worker(window.URL.createObjectURL(script))
+      const data = new Blob(["70𯸟\nℽ㮼٠𛪇\0𛃧كe۰҅妽󠶖󠙻𝅧𡴶𝌋쮁偵9󠰾󠋼7\r𐇽0🥂.\b፟+⍳፟D󠢪3𣚽󠜎🐾�c_߰a<<=𝅦9𝆭𛰅9󠵼ௌ󠌌𖓄ΐ0�⡖‑뢈/-᭰*٠٪᷁e �𯯐𯬓𯕏‫‑걢V*=­￿**󠛐\u2028שּׁ&‭0󠄯𒡯e\n𛰵󠥿⁤𫍰,󠶒𝅥t\nl𧶈a𦜠09k𯔆䴋�|󠄷🦻𛝫󠁥𖭄", "*𒗬۰0\u2029‌/\n\r+󠎔𖼣k*=🿹𯀊\r٪\r󠳐𝲍慑B�\r󠮱\r\n\"\r\\𯉆۹c卑4󠣰󠻬鴗ꛌ\0⌕:\r\n𝚨9ꛅ٠󠃭𯋾\nJ󠯲9\rﾞ鈷P\u2029҉󠷒۹e \b緁︡𤆥^𯏂゚੿|٫󠕉揅ᷛ𩊜s𯑳2凅9c8H𦰤-\f%٠𨮫󠚵‑2𫈮P𝋄窥57\n-゙҄H󠭗𯪞𣃂-ᷢשּׁ貌솽|𝉃‬c㙡𯐉᭯mL\r"], {
+        "type": "image/png",
+        "endings": "transparent"
+      })
+      worker.postMessage([data], [])
+    })
+  </script>
+</head>
+</html>

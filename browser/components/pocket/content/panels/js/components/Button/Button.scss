@@ -1,0 +1,57 @@
+.stp_button {
+  cursor: pointer;
+  display: inline-block;
+  margin: 0;
+
+  &.stp_button_text {
+    color: #0060DF;
+    font-size: 0.85em;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1.27em;
+  }
+
+  &.stp_button_primary {
+    align-items: center;
+    background: #0060DF;
+    border-radius: 4px;
+    color: #FBFBFE;
+    font-size: 0.85em;
+    font-style: normal;
+    font-weight: 600;
+    justify-content: center;
+    line-height: 1.27em;
+    padding: 6px 12px;
+  }
+
+  &.stp_button_secondary {
+    align-items: center;
+    background: #F0F0F4;
+    border-radius: 4px;
+    color: #15141A;
+    font-size: 0.85em;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1.27em;
+    padding: 6px 12px;
+  }
+}
+
+.stp_button_wide {
+  .stp_button {
+    display: block;
+    margin: 12px 0;
+    text-align: center;
+    padding: 8px 12px;
+
+    &.stp_button_primary {
+      font-size: 1em;
+      line-height: 1.22em;
+    }
+
+    &.stp_button_secondary {
+      font-size: 0.85em;
+      line-height: 1.07em;
+    }
+  }
+}

@@ -917,7 +917,7 @@ verify_cert()
     done
 
     VFY_OPTS_TNAME="${DB_OPT} ${ENGINE} ${TRUST_AND_DB_OPT} ${REV_OPTS} ${FETCH_OPT} ${USAGE_OPT} ${POLICY_OPT} ${TRUST_OPT}"
-    VFY_OPTS_ALL="${DB_OPT} ${ENGINE} -vv ${TRUST_AND_DB_OPT} ${REV_OPTS} ${FETCH_OPT} ${USAGE_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT}"
+    VFY_OPTS_ALL="${DB_OPT} ${ENGINE} -vv ${VFY_TIME_OPT} ${TRUST_AND_DB_OPT} ${REV_OPTS} ${FETCH_OPT} ${USAGE_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT}"
 
     TESTNAME="Verifying certificate(s) ${VFY_LIST} with flags ${VFY_OPTS_TNAME}"
     echo "${SCRIPTNAME}: ${TESTNAME}"
@@ -1118,6 +1118,7 @@ parse_config()
             ;;
         "verify")
             VERIFY="${VALUE}"
+            VFY_TIME_OPT=
             TRUST=
             TRUST_AND_DB=
             POLICY=
@@ -1125,6 +1126,9 @@ parse_config()
             EXP_RESULT=
             REV_OPTS=
             USAGE_OPT=
+            ;;
+        "at_time")
+            VFY_TIME_OPT="-b ${VALUE}"
             ;;
         "cert")
             VERIFY="${VERIFY} ${VALUE}"

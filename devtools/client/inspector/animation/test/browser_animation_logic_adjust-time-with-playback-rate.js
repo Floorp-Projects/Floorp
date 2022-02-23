@@ -30,7 +30,7 @@ add_task(async function() {
   info("Change the playback rate to x10 after selecting '.div2'");
   await selectNode(".div2", inspector);
   await waitUntil(() => panel.querySelectorAll(".animation-item").length === 1);
-  clickOnPlaybackRateSelector(animationInspector, panel, 10);
+  await changePlaybackRateSelector(animationInspector, panel, 10);
 
   info("Check each adjusted result of animations after selecting 'body' again");
   await selectNode("body", inspector);

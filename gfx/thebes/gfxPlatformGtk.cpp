@@ -788,6 +788,7 @@ class GtkVsyncSource final : public VsyncSource {
           double remaining =
               (1000.f / 60.f) - (TimeStamp::Now() - lastVsync).ToMilliseconds();
           if (remaining > 0) {
+            AUTO_PROFILER_THREAD_SLEEP;
             PlatformThread::Sleep((int)remaining);
           }
         }

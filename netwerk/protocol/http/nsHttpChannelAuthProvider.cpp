@@ -1085,9 +1085,7 @@ bool nsHttpChannelAuthProvider::BlockPrompt(bool proxyAuth) {
     } else {
       nsIPrincipal* loadingPrinc = loadInfo->GetLoadingPrincipal();
       MOZ_ASSERT(loadingPrinc);
-      bool sameOrigin = false;
-      loadingPrinc->IsSameOrigin(mURI, false, &sameOrigin);
-      mCrossOrigin = !sameOrigin;
+      mCrossOrigin = !loadingPrinc->IsSameOrigin(mURI);
     }
   }
 

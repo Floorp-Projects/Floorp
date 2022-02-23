@@ -84,33 +84,16 @@ struct ParamTraits<mozilla::WidgetEvent> {
 };
 
 template <>
-struct ParamTraits<mozilla::NativeEventData> {
-  typedef mozilla::NativeEventData paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mBuffer);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mBuffer);
-  }
-};
-
-template <>
 struct ParamTraits<mozilla::WidgetGUIEvent> {
   typedef mozilla::WidgetGUIEvent paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, static_cast<const mozilla::WidgetEvent&>(aParam));
-    WriteParam(aMsg, aParam.mPluginEvent);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    return ReadParam(aMsg, aIter,
-                     static_cast<mozilla::WidgetEvent*>(aResult)) &&
-           ReadParam(aMsg, aIter, &aResult->mPluginEvent);
+    return ReadParam(aMsg, aIter, static_cast<mozilla::WidgetEvent*>(aResult));
   }
 };
 
@@ -702,7 +685,9 @@ struct ParamTraits<mozilla::widget::IMENotification::SelectionChangeDataBase> {
     MOZ_RELEASE_ASSERT(aParam.mString);
     WriteParam(aMsg, aParam.mOffset);
     WriteParam(aMsg, *aParam.mString);
-    WriteParam(aMsg, aParam.mWritingMode);
+    WriteParam(aMsg, aParam.mWritingModeBits);
+    WriteParam(aMsg, aParam.mIsInitialized);
+    WriteParam(aMsg, aParam.mHasRange);
     WriteParam(aMsg, aParam.mReversed);
     WriteParam(aMsg, aParam.mCausedByComposition);
     WriteParam(aMsg, aParam.mCausedBySelectionEvent);
@@ -714,7 +699,9 @@ struct ParamTraits<mozilla::widget::IMENotification::SelectionChangeDataBase> {
     aResult->mString = new nsString();
     return ReadParam(aMsg, aIter, &aResult->mOffset) &&
            ReadParam(aMsg, aIter, aResult->mString) &&
-           ReadParam(aMsg, aIter, &aResult->mWritingMode) &&
+           ReadParam(aMsg, aIter, &aResult->mWritingModeBits) &&
+           ReadParam(aMsg, aIter, &aResult->mIsInitialized) &&
+           ReadParam(aMsg, aIter, &aResult->mHasRange) &&
            ReadParam(aMsg, aIter, &aResult->mReversed) &&
            ReadParam(aMsg, aIter, &aResult->mCausedByComposition) &&
            ReadParam(aMsg, aIter, &aResult->mCausedBySelectionEvent) &&
@@ -935,6 +922,7 @@ struct ParamTraits<mozilla::ContentCache::Selection> {
     WriteParam(aMsg, aParam.mAnchor);
     WriteParam(aMsg, aParam.mFocus);
     WriteParam(aMsg, aParam.mWritingMode);
+    WriteParam(aMsg, aParam.mHasRange);
     WriteParam(aMsg, aParam.mAnchorCharRects[0]);
     WriteParam(aMsg, aParam.mAnchorCharRects[1]);
     WriteParam(aMsg, aParam.mFocusCharRects[0]);
@@ -947,6 +935,7 @@ struct ParamTraits<mozilla::ContentCache::Selection> {
     return ReadParam(aMsg, aIter, &aResult->mAnchor) &&
            ReadParam(aMsg, aIter, &aResult->mFocus) &&
            ReadParam(aMsg, aIter, &aResult->mWritingMode) &&
+           ReadParam(aMsg, aIter, &aResult->mHasRange) &&
            ReadParam(aMsg, aIter, &aResult->mAnchorCharRects[0]) &&
            ReadParam(aMsg, aIter, &aResult->mAnchorCharRects[1]) &&
            ReadParam(aMsg, aIter, &aResult->mFocusCharRects[0]) &&

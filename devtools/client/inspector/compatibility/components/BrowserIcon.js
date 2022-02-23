@@ -39,18 +39,23 @@ const ICONS = {
     src: "chrome://devtools/skin/images/browsers/edge.svg",
     isMobileIconNeeded: false,
   },
+  ie: {
+    src: "chrome://devtools/skin/images/browsers/ie.svg",
+    isMobileIconNeeded: false,
+  },
 };
 
 class BrowserIcon extends PureComponent {
   static get propTypes() {
     return {
       id: Types.browser.id,
-      title: PropTypes.string.isRequired,
+      title: PropTypes.string,
+      name: PropTypes.string,
     };
   }
 
   render() {
-    const { id, title } = this.props;
+    const { id, name, title } = this.props;
 
     const icon = ICONS[id];
 
@@ -64,7 +69,7 @@ class BrowserIcon extends PureComponent {
       },
       dom.img({
         className: "compatibility-browser-icon__image",
-        alt: title,
+        alt: name || title,
         title,
         src: icon.src,
       })

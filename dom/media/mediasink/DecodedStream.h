@@ -46,8 +46,13 @@ class DecodedStream : public MediaSink {
   media::TimeUnit GetEndTime(TrackType aType) const override;
   media::TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
   bool HasUnplayedFrames(TrackType aType) const override {
-    // TODO: implement this.
+    // TODO: bug 1755026
     return false;
+  }
+
+  media::TimeUnit UnplayedDuration(TrackType aType) const override {
+    // TODO: bug 1755026
+    return media::TimeUnit::Zero();
   }
 
   void SetVolume(double aVolume) override;

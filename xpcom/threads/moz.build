@@ -18,6 +18,7 @@ XPIDL_SOURCES += [
     "nsIThreadInternal.idl",
     "nsIThreadManager.idl",
     "nsIThreadPool.idl",
+    "nsIThreadShutdown.idl",
     "nsITimer.idl",
 ]
 

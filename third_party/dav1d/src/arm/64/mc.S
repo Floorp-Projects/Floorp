@@ -1163,6 +1163,26 @@ endfunc
 // Interleaving the mul/mla chains actually hurts performance
 // significantly on Cortex A53, thus keeping mul/mla tightly
 // chained like this.
+.macro mul_mla_8_0_4h d0, s0, s1, s2, s3, s4, s5, s6, s7
+        mul             \d0\().4h, \s0\().4h, v0.h[0]
+        mla             \d0\().4h, \s1\().4h, v0.h[1]
+        mla             \d0\().4h, \s2\().4h, v0.h[2]
+        mla             \d0\().4h, \s3\().4h, v0.h[3]
+        mla             \d0\().4h, \s4\().4h, v0.h[4]
+        mla             \d0\().4h, \s5\().4h, v0.h[5]
+        mla             \d0\().4h, \s6\().4h, v0.h[6]
+        mla             \d0\().4h, \s7\().4h, v0.h[7]
+.endm
+.macro mul_mla_8_0 d0, s0, s1, s2, s3, s4, s5, s6, s7
+        mul             \d0\().8h, \s0\().8h, v0.h[0]
+        mla             \d0\().8h, \s1\().8h, v0.h[1]
+        mla             \d0\().8h, \s2\().8h, v0.h[2]
+        mla             \d0\().8h, \s3\().8h, v0.h[3]
+        mla             \d0\().8h, \s4\().8h, v0.h[4]
+        mla             \d0\().8h, \s5\().8h, v0.h[5]
+        mla             \d0\().8h, \s6\().8h, v0.h[6]
+        mla             \d0\().8h, \s7\().8h, v0.h[7]
+.endm
 .macro mul_mla_8_1 d0, d1, s0, s1, s2, s3, s4, s5, s6, s7, s8
         mul             \d0\().8h, \s0\().8h, v0.h[0]
         mla             \d0\().8h, \s1\().8h, v0.h[1]
@@ -1198,24 +1218,6 @@ endfunc
         mla             \d1\().8h, \s7\().8h, v0.h[5]
         mla             \d1\().8h, \s8\().8h, v0.h[6]
         mla             \d1\().8h, \s9\().8h, v0.h[7]
-.endm
-.macro mul_mla_8_4 d0, d1, s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11
-        mul             \d0\().8h, \s0\().8h,  v0.h[0]
-        mla             \d0\().8h, \s1\().8h,  v0.h[1]
-        mla             \d0\().8h, \s2\().8h,  v0.h[2]
-        mla             \d0\().8h, \s3\().8h,  v0.h[3]
-        mla             \d0\().8h, \s4\().8h,  v0.h[4]
-        mla             \d0\().8h, \s5\().8h,  v0.h[5]
-        mla             \d0\().8h, \s6\().8h,  v0.h[6]
-        mla             \d0\().8h, \s7\().8h,  v0.h[7]
-        mul             \d1\().8h, \s4\().8h,  v0.h[0]
-        mla             \d1\().8h, \s5\().8h,  v0.h[1]
-        mla             \d1\().8h, \s6\().8h,  v0.h[2]
-        mla             \d1\().8h, \s7\().8h,  v0.h[3]
-        mla             \d1\().8h, \s8\().8h,  v0.h[4]
-        mla             \d1\().8h, \s9\().8h,  v0.h[5]
-        mla             \d1\().8h, \s10\().8h, v0.h[6]
-        mla             \d1\().8h, \s11\().8h, v0.h[7]
 .endm
 .macro sqrshrun_b shift, r0, r1, r2, r3
         sqrshrun        \r0\().8b, \r0\().8h,  #\shift
@@ -1633,7 +1635,7 @@ L(\type\()_8tap_v):
         st_h            \d_strd, v6, 4
         ret
 
-28:     // 2x8, 2x16 v
+28:     // 2x6, 2x8, 2x12, 2x16 v
         ld1             {v0.8b}, [\xmy]
         sub             \sr2,  \src,  \s_strd, lsl #1
         add             \ds2,  \dst,  \d_strd
@@ -1648,28 +1650,32 @@ L(\type\()_8tap_v):
         interleave_2_s  v1,  v2,  v3,  v4,  v5,  v6
         uxtl_b          v1,  v2,  v3,  v4
 216:
-        subs            \h,  \h,  #8
+        subs            \h,  \h,  #4
         load_h          \sr2, \src, \s_strd, v16, v17, v18, v19
-        load_h          \sr2, \src, \s_strd, v20, v21, v22, v23
         interleave_1_h  v7,  v16, v17, v18, v19
-        interleave_1_h  v19, v20, v21, v22, v23
         interleave_2_s  v5,  v6,  v7,  v16, v17, v18
-        interleave_2_s  v17, v18, v19, v20, v21, v22
         uxtl_b          v5,  v6,  v7,  v16
-        uxtl_b          v17, v18, v19, v20
-        mul_mla_8_4     v30, v31, v1,  v2,  v3,  v4,  v5,  v6,  v7,  v16, v17, v18, v19, v20
-        sqrshrun_b      6,   v30, v31
+        mul_mla_8_0     v30, v1,  v2,  v3,  v4,  v5,  v6,  v7,  v16
+        sqrshrun_b      6,   v30
         st_h            \d_strd, v30, 4
-        st_h            \d_strd, v31, 4
         b.le            0f
-        mov             v1.16b,  v17.16b
-        mov             v2.16b,  v18.16b
-        mov             v3.16b,  v19.16b
-        mov             v4.16b,  v20.16b
-        mov             v5.16b,  v21.16b
-        mov             v6.16b,  v22.16b
-        mov             v7.16b,  v23.16b
+        cmp             \h,  #2
+        mov             v1.16b,  v5.16b
+        mov             v2.16b,  v6.16b
+        mov             v3.16b,  v7.16b
+        mov             v4.16b,  v16.16b
+        mov             v5.16b,  v17.16b
+        mov             v6.16b,  v18.16b
+        mov             v7.16b,  v19.16b
+        b.eq            26f
         b               216b
+26:
+        load_h          \sr2, \src, \s_strd, v16, v17
+        interleave_1_h  v7,  v16, v17
+        uxtl_b          v5,  v6,  v7,  v16
+        mul_mla_8_0_4h  v30, v1,  v2,  v3,  v4,  v5,  v6,  v7,  v16
+        sqrshrun_b      6,   v30
+        st_h            \d_strd, v30, 2
 0:
         ret
 .endif
@@ -1703,7 +1709,7 @@ L(\type\()_8tap_v):
 0:
         ret
 
-480:    // 4x8, 4x16 v
+480:    // 4x6, 4x8, 4x12, 4x16 v
         ld1             {v0.8b}, [\xmy]
         sub             \sr2, \src, \s_strd, lsl #1
         add             \ds2, \dst, \d_strd
@@ -1726,12 +1732,19 @@ L(\type\()_8tap_v):
         mul_mla_8_2     v1,  v2,  v16, v17, v18, v19, v20, v21, v22, v23, v24, v25
         shift_store_4   \type, \d_strd, v1, v2
         b.le            0f
-        subs            \h,  \h,  #4
-        load_s          \sr2,  \src, \s_strd, v27, v16, v17, v18
-        interleave_1_s  v26, v27, v16, v17, v18
-        uxtl_b          v26, v27, v16, v17
-        mul_mla_8_2     v1,  v2,  v20, v21, v22, v23, v24, v25, v26, v27, v16, v17
-        shift_store_4   \type, \d_strd, v1, v2
+        load_s          \sr2,  \src, \s_strd, v27, v16
+        subs            \h,  \h,  #2
+        interleave_1_s  v26, v27, v16
+        uxtl_b          v26, v27
+        mul_mla_8_0     v1,  v20, v21, v22, v23, v24, v25, v26, v27
+        shift_store_4   \type, \d_strd, v1
+        b.le            0f
+        load_s          \sr2,  \src, \s_strd, v17, v18
+        subs            \h,  \h,  #2
+        interleave_1_s  v16, v17, v18
+        uxtl_b          v16, v17
+        mul_mla_8_0     v2,  v22, v23, v24, v25, v26, v27, v16, v17
+        shift_store_4   \type, \d_strd, v2
         b.le            0f
         subs            \h,  \h,  #4
         load_s          \sr2, \src, \s_strd, v19, v20, v21, v22
@@ -2641,6 +2654,7 @@ L(\type\()_bilin_v):
         // 2x2 v
         ld1             {v16.h}[0], [\src], \s_strd
         b.gt            24f
+22:
         ld1             {v17.h}[0], [\sr2], \s_strd
         ld1             {v18.h}[0], [\src], \s_strd
         trn1            v16.4h, v16.4h, v17.4h
@@ -2651,11 +2665,12 @@ L(\type\()_bilin_v):
         st1             {v4.h}[0], [\dst]
         st1             {v4.h}[1], [\ds2]
         ret
-24:     // 2x4, 2x8, ... v
+24:     // 2x4, 2x6, 2x8, ... v
         ld1             {v17.h}[0], [\sr2], \s_strd
         ld1             {v18.h}[0], [\src], \s_strd
         ld1             {v19.h}[0], [\sr2], \s_strd
         ld1             {v20.h}[0], [\src], \s_strd
+        sub             \h,  \h,  #4
         trn1            v16.4h, v16.4h, v17.4h
         trn1            v17.4h, v17.4h, v18.4h
         trn1            v18.4h, v18.4h, v19.4h
@@ -2664,14 +2679,15 @@ L(\type\()_bilin_v):
         trn1            v17.2s, v17.2s, v19.2s
         umull           v4.8h,  v16.8b,  v2.8b
         umlal           v4.8h,  v17.8b,  v3.8b
-        subs            \h,  \h,  #4
+        cmp             \h,  #2
         uqrshrn         v4.8b,  v4.8h,  #4
         st1             {v4.h}[0], [\dst], \d_strd
         st1             {v4.h}[1], [\ds2], \d_strd
         st1             {v4.h}[2], [\dst], \d_strd
         st1             {v4.h}[3], [\ds2], \d_strd
-        b.le            0f
+        b.lt            0f
         mov             v16.8b, v20.8b
+        b.eq            22b
         b               24b
 0:
         ret

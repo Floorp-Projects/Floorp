@@ -11,7 +11,6 @@
  */
 [scriptable, uuid(e701dfd8-1dd1-11b2-a172-ffa6cc6156ad)]
 interface nsIX509CertValidity : nsISupports {
-
   /**
    *  The earliest point in time where
    *  a certificate is valid.
@@ -19,54 +18,8 @@ interface nsIX509CertValidity : nsISupports {
   readonly attribute PRTime notBefore;
 
   /**
-   *  "notBefore" attribute formatted as a time string
-   *  according to the environment locale,
-   *  according to the environment time zone.
-   */
-  [must_use]
-  readonly attribute AString notBeforeLocalTime;
-
-  /**
-   *  The day portion of "notBefore" formatted as a time string
-   *  according to the environment locale,
-   *  according to the environment time zone.
-   */
-  readonly attribute AString notBeforeLocalDay;
-
-  /**
-   *  "notBefore" attribute formatted as a string
-   *  according to the environment locale,
-   *  displayed as GMT / UTC.
-   */
-  [must_use]
-  readonly attribute AString notBeforeGMT;
-
-  /**
    *  The latest point in time where
    *  a certificate is valid.
    */
   readonly attribute PRTime notAfter;
-
-  /**
-   *  "notAfter" attribute formatted as a time string
-   *  according to the environment locale,
-   *  according to the environment time zone.
-   */
-  [must_use]
-  readonly attribute AString notAfterLocalTime;
-
-  /**
-   *  The day portion of "notAfter" formatted as a time string
-   *  according to the environment locale,
-   *  according to the environment time zone.
-   */
-  readonly attribute AString notAfterLocalDay;
-
-  /**
-   *  "notAfter" attribute formatted as a time string
-   *  according to the environment locale,
-   *  displayed as GMT / UTC.
-   */
-  [must_use]
-  readonly attribute AString notAfterGMT;
 };

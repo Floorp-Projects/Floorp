@@ -21,6 +21,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/ShapeZone.h"
+#include "vm/Watchtower.h"
 
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
@@ -124,96 +125,6 @@ class MOZ_RAII AutoCheckShapeConsistency {
 
 }  // namespace js
 
-static bool ReshapeForShadowedPropSlow(JSContext* cx, HandleNativeObject obj,
-                                       HandleId id) {
-  MOZ_ASSERT(obj->isUsedAsPrototype());
-
-  // Lookups on integer ids cannot be cached through prototypes.
-  if (JSID_IS_INT(id)) {
-    return true;
-  }
-
-  RootedObject proto(cx, obj->staticPrototype());
-  while (proto) {
-    // Lookups will not be cached through non-native protos.
-    if (!proto->is<NativeObject>()) {
-      break;
-    }
-
-    if (proto->as<NativeObject>().contains(cx, id)) {
-      return JSObject::setInvalidatedTeleporting(cx, proto);
-    }
-
-    proto = proto->staticPrototype();
-  }
-
-  return true;
-}
-
-static MOZ_ALWAYS_INLINE bool ReshapeForShadowedProp(JSContext* cx,
-                                                     HandleNativeObject obj,
-                                                     HandleId id) {
-  // If |obj| is a prototype of another object, check if we're shadowing a
-  // property on its proto chain. In this case we need to reshape that object
-  // for shape teleporting to work correctly.
-  //
-  // See also the 'Shape Teleporting Optimization' comment in jit/CacheIR.cpp.
-
-  // Inlined fast path for non-prototype objects.
-  if (!obj->isUsedAsPrototype()) {
-    return true;
-  }
-
-  return ReshapeForShadowedPropSlow(cx, obj, id);
-}
-
-static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
-  // To avoid the JIT guarding on each prototype in chain to detect prototype
-  // mutation, we can instead reshape the rest of the proto chain such that a
-  // guard on any of them is sufficient. To avoid excessive reshaping and
-  // invalidation, we apply heuristics to decide when to apply this and when
-  // to require a guard.
-  //
-  // There are two cases:
-  //
-  // (1) The object is not marked IsUsedAsPrototype. This is the common case.
-  //     Because shape implies proto, we rely on the caller changing the
-  //     object's shape. The JIT guards on this object's shape or prototype so
-  //     there's nothing we have to do here for objects on the proto chain.
-  //
-  // (2) The object is marked IsUsedAsPrototype. This implies the object may be
-  //     participating in shape teleporting. To invalidate JIT ICs depending on
-  //     the proto chain being unchanged, set the InvalidatedTeleporting shape
-  //     flag for this object and objects on its proto chain.
-  //
-  //     This flag disables future shape teleporting attempts, so next time this
-  //     happens the loop below will be a no-op.
-  //
-  // NOTE: We only handle NativeObjects and don't propagate reshapes through
-  //       any non-native objects on the chain.
-  //
-  // See Also:
-  //  - GeneratePrototypeGuards
-  //  - GeneratePrototypeHoleGuards
-
-  if (!obj->isUsedAsPrototype()) {
-    return true;
-  }
-
-  RootedObject pobj(cx, obj);
-
-  while (pobj && pobj->is<NativeObject>()) {
-    if (!pobj->hasInvalidatedTeleporting()) {
-      if (!JSObject::setInvalidatedTeleporting(cx, pobj)) {
-        return false;
-      }
-    }
-    pobj = pobj->staticPrototype();
-  }
-
-  return true;
-}
-
 /* static */ MOZ_ALWAYS_INLINE bool
 NativeObject::maybeConvertToDictionaryForAdd(JSContext* cx,
                                              HandleNativeObject obj) {
@@ -241,14 +152,14 @@ static void AssertValidCustomDataProp(NativeObject* obj, PropertyFlags flags) {
 /* static */
 bool NativeObject::addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
                                          HandleId id, PropertyFlags flags) {
-  MOZ_ASSERT(!JSID_IS_VOID(id));
+  MOZ_ASSERT(!id.isVoid());
   MOZ_ASSERT(!id.isPrivateName());
   MOZ_ASSERT(!obj->containsPure(id));
 
   AutoCheckShapeConsistency check(obj);
   AssertValidCustomDataProp(obj, flags);
 
-  if (!ReshapeForShadowedProp(cx, obj, id)) {
+  if (!Watchtower::watchPropertyAdd(cx, obj, id)) {
     return false;
   }
 
@@ -364,18 +275,17 @@ bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
 
   // The object must not contain a property named |id|. The object must be
   // extensible, but allow private fields and sparsifying dense elements.
-  MOZ_ASSERT(!JSID_IS_VOID(id));
+  MOZ_ASSERT(!id.isVoid());
   MOZ_ASSERT(!obj->containsPure(id));
-  MOZ_ASSERT_IF(
-      !id.isPrivateName(),
-      obj->isExtensible() ||
-          (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) ||
-          // R&T wrappers are non-extensible, but we still want to be able to
-          // lazily resolve their properties. We can special-case them to
-          // allow doing so.
-          IF_RECORD_TUPLE(IsExtendedPrimitiveWrapper(*obj), false));
+  MOZ_ASSERT_IF(!id.isPrivateName(),
+                obj->isExtensible() ||
+                    (id.isInt() && obj->containsDenseElement(id.toInt())) ||
+                    // R&T wrappers are non-extensible, but we still want to be
+                    // able to lazily resolve their properties. We can
+                    // special-case them to allow doing so.
+                    IF_RECORD_TUPLE(IsExtendedPrimitiveWrapper(*obj), false));
 
-  if (!ReshapeForShadowedProp(cx, obj, id)) {
+  if (!Watchtower::watchPropertyAdd(cx, obj, id)) {
     return false;
   }
 
@@ -480,7 +390,7 @@ bool NativeObject::addPropertyInReservedSlot(JSContext* cx,
   MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(obj->getClass()));
 
   // The object must not contain a property named |id| and must be extensible.
-  MOZ_ASSERT(!JSID_IS_VOID(id));
+  MOZ_ASSERT(!id.isVoid());
   MOZ_ASSERT(!obj->containsPure(id));
   MOZ_ASSERT(!id.isPrivateName());
   MOZ_ASSERT(obj->isExtensible());
@@ -488,9 +398,9 @@ bool NativeObject::addPropertyInReservedSlot(JSContext* cx,
   // The object must not be in dictionary mode. This simplifies the code below.
   MOZ_ASSERT(!obj->inDictionaryMode());
 
-  // We don't need to call ReshapeForShadowedProp here because this is only used
-  // for non-prototype objects.
-  MOZ_ASSERT(!obj->isUsedAsPrototype());
+  // We don't need to call Watchtower::watchPropertyAdd here because this isn't
+  // used for any watched objects.
+  MOZ_ASSERT(!Watchtower::watchesPropertyAdd(obj));
 
   ObjectFlags objectFlags = obj->shape()->objectFlags();
   const JSClass* clasp = obj->shape()->getObjectClass();
@@ -553,12 +463,16 @@ static void AssertValidArrayIndex(NativeObject* obj, jsid id) {
 bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
                                   HandleId id, PropertyFlags flags,
                                   uint32_t* slotOut) {
-  MOZ_ASSERT(!JSID_IS_VOID(id));
+  MOZ_ASSERT(!id.isVoid());
 
   AutoCheckShapeConsistency check(obj);
   AssertValidArrayIndex(obj, id);
   MOZ_ASSERT(!flags.isCustomDataProperty(),
              "Use changeCustomDataPropAttributes for custom data properties");
+
+  if (!Watchtower::watchPropertyChange(cx, obj, id)) {
+    return false;
+  }
 
   Rooted<PropMap*> map(cx, obj->shape()->propMap());
   uint32_t mapLength = obj->shape()->propMapLength();
@@ -669,11 +583,15 @@ bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
                                                   HandleNativeObject obj,
                                                   HandleId id,
                                                   PropertyFlags flags) {
-  MOZ_ASSERT(!JSID_IS_VOID(id));
+  MOZ_ASSERT(!id.isVoid());
 
   AutoCheckShapeConsistency check(obj);
   AssertValidArrayIndex(obj, id);
   AssertValidCustomDataProp(obj, flags);
+
+  if (!Watchtower::watchPropertyChange(cx, obj, id)) {
+    return false;
+  }
 
   Rooted<PropMap*> map(cx, obj->shape()->propMap());
   uint32_t mapLength = obj->shape()->propMapLength();
@@ -766,6 +684,10 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
 
   if (!propMap) {
     return true;
+  }
+
+  if (!Watchtower::watchPropertyRemove(cx, obj, id)) {
+    return false;
   }
 
   PropertyInfo prop = propMap->getPropertyInfo(propIndex);
@@ -881,6 +803,12 @@ bool NativeObject::densifySparseElements(JSContext* cx,
 // static
 bool NativeObject::freezeOrSealProperties(JSContext* cx, HandleNativeObject obj,
                                           IntegrityLevel level) {
+  AutoCheckShapeConsistency check(obj);
+
+  if (!Watchtower::watchFreezeOrSeal(cx, obj)) {
+    return false;
+  }
+
   uint32_t mapLength = obj->shape()->propMapLength();
   MOZ_ASSERT(mapLength > 0);
 
@@ -972,9 +900,9 @@ bool JSObject::setProtoUnchecked(JSContext* cx, HandleObject obj,
   MOZ_ASSERT_IF(!obj->is<ProxyObject>(), obj->nonProxyIsExtensible());
   MOZ_ASSERT(obj->shape()->proto() != proto);
 
-  // Update prototype shapes if needed to invalidate JIT code that is affected
-  // by a prototype mutation.
-  if (!ReshapeForProtoMutation(cx, obj)) {
+  // Notify Watchtower of this proto change, so it can properly invalidate shape
+  // teleporting and other optimizations.
+  if (!Watchtower::watchProtoChange(cx, obj)) {
     return false;
   }
 

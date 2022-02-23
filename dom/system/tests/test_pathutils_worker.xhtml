@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<window title="Testing PathUtils on a chrome worker thread"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/WorkerHandler.js"></script>
+
+  <script type="application/javascript">
+  <![CDATA[
+    function test() {
+      SimpleTest.waitForExplicitFinish();
+
+      info("test_pathtuils_worker.xhtml: Starting test");
+
+      const worker = new ChromeWorker("pathutils_worker.js");
+      info("test_pathtuils_worker.xhtml: ChromeWorker created");
+
+      listenForTests(worker, { verbose: false });
+      worker.postMessage({
+        profileDir: PathUtils.profileDir,
+        localProfileDir: PathUtils.localProfileDir,
+        tempDir: PathUtils.tempDir,
+      });
+
+      info("test_pathtuils_worker.xhtml: Test running...");
+    }
+  ]]>
+  </script>
+  <body xmlns="https://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result" />
+</window>

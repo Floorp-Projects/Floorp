@@ -50,7 +50,7 @@ into a multithreaded variant which looks something like this:
            send a copy of input to thread 2
            adjust rendered content based on input
            display adjusted rendered content
-       
+
        Thread 2 (main thread)
        while true:
            receive input from thread 1
@@ -381,7 +381,7 @@ e.g. steps 6 and 8 involve IPC, not just "stack unwinding").
     hit-test to see which APZC it hits. If no APZC is hit, the events are
     discarded and we jump to step 6. Otherwise, the input block is tagged
     with the hit APZC as a tentative target and put into a global APZ
-    input queue. In addition the target APZC, the result of the hit test 
+    input queue. In addition the target APZC, the result of the hit test
     also includes whether the input event landed on a "dispatch-to-content"
     region. These are regions of the page where there is something going
     on that requires dispatching the event to content and waiting for
@@ -442,12 +442,12 @@ e.g. steps 6 and 8 involve IPC, not just "stack unwinding").
     events may trigger behaviours like scrolling or tap gestures.
 
 If the CSS touch-action property is enabled, the above steps are
-modified as follows: 
+modified as follows:
 
 * In step 4, the APZC also requires the allowed touch-action behaviours
   for the input event. This might have been determined as part of the
   hit-test in APZCTreeManager; if not, the events are queued.
-* In step 6, the widget code determines the content element at the point 
+* In step 6, the widget code determines the content element at the point
   under the input element, and notifies the APZ code of the allowed
   touch-action behaviours. This notification is sent via a call to
   APZCTreeManager::SetAllowedTouchBehavior on the input thread.

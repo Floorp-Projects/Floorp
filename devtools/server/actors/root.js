@@ -130,6 +130,11 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       // @backward-compat { version 86 } ThreadActor.attach no longer pauses the thread,
       //                                 so that we no longer have to resume.
       noPauseOnThreadActorAttach: true,
+      // @backward-compat { version 98 }
+      // Starting version 98, we stopped disabling the profiler if the user has
+      // a window with private browsing enabled. This trait helps to detect this
+      // so that different code paths can be called.
+      noDisablingOnPrivateBrowsing: true,
     };
   },
 
@@ -267,7 +272,13 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return tabDescriptorActors;
   },
 
-  getTab: async function({ outerWindowID, tabId }) {
+  /**
+   * Return the tab descriptor actor for the tab identified by one of the IDs
+   * passed as argument.
+   *
+   * See BrowserTabList.prototype.getTab for the definition of these IDs.
+   */
+  getTab: async function({ browserId, outerWindowID, tabId }) {
     const tabList = this._parameters.tabList;
     if (!tabList) {
       throw {
@@ -284,7 +295,11 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
     let descriptorActor;
     try {
-      descriptorActor = await tabList.getTab({ outerWindowID, tabId });
+      descriptorActor = await tabList.getTab({
+        browserId,
+        outerWindowID,
+        tabId,
+      });
     } catch (error) {
       if (error.error) {
         // Pipe expected errors as-is to the client

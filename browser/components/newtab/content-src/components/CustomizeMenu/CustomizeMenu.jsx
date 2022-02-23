@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { ThemesSection } from "content-src/components/CustomizeMenu/ThemesSection/ThemesSection";
 import { BackgroundsSection } from "content-src/components/CustomizeMenu/BackgroundsSection/BackgroundsSection";
 import { ContentSection } from "content-src/components/CustomizeMenu/ContentSection/ContentSection";
 import { connect } from "react-redux";
 import React from "react";
 import { CSSTransition } from "react-transition-group";
+import { ColorwayCloset } from "content-src/components/CustomizeMenu/ColorwayCloset/ColorwayCloset";
 
 export class _CustomizeMenu extends React.PureComponent {
   constructor(props) {
@@ -63,7 +63,11 @@ export class _CustomizeMenu extends React.PureComponent {
               data-l10n-id="newtab-custom-close-button"
               ref={c => (this.closeButton = c)}
             />
-            <ThemesSection />
+            {this.props.showColorwayCloset ? (
+              <ColorwayCloset dispatch={this.props.dispatch} />
+            ) : (
+              <React.Fragment />
+            )}
             <BackgroundsSection />
             <ContentSection
               openPreferences={this.props.openPreferences}

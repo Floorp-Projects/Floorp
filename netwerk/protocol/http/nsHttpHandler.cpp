@@ -27,8 +27,10 @@
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Components.h"
 #include "mozilla/Printf.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticPrefs_general.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StoragePrincipalHelper.h"
@@ -46,6 +48,7 @@
 #include "nsCRT.h"
 #include "nsIParentalControlsService.h"
 #include "nsPIDOMWindow.h"
+#include "nsIHttpActivityObserver.h"
 #include "nsHttpChannelAuthProvider.h"
 #include "nsINetworkLinkService.h"
 #include "nsNetUtil.h"
@@ -138,15 +141,32 @@ namespace mozilla::net {
 
 LazyLogModule gHttpLog("nsHttp");
 
-static void ExperimentUserAgentUpdated(const char* /* aNimbusPref */,
-                                       void* aUserData) {
-  MOZ_ASSERT(aUserData != nullptr);
-  nsACString* aExperimentUserAgent = static_cast<nsACString*>(aUserData);
+static void HandleVersionExperimentEnrollment(const char* /* aNimbusPref */,
+                                              void* /* aUserData */) {
+  MOZ_ASSERT(XRE_IsParentProcess());
 
-  // Is this user enrolled in the Firefox 100 experiment?
-  int firefoxVersion =
-      NimbusFeatures::GetInt(UA_EXPERIMENT_NAME, UA_EXPERIMENT_VAR, 0);
-  if (firefoxVersion <= 0) {
+  int experimentBranch =
+      NimbusFeatures::GetInt(UA_EXPERIMENT_NAME, UA_EXPERIMENT_VAR, -1);
+
+  // Only set the forceVersion100 pref if the user was enrolled in the
+  // treatment (100) branch and the pref is not already set. If the user
+  // already set the forceVersion100 pref manually (by checking the
+  // "Firefox 100 User-Agent String" option in about:preferences), we don't
+  // want subsequent enrollment in the control branch to clear the pref and
+  // surprise the user by resetting their UA from version 100 UA to the
+  // default version.
+
+  if (experimentBranch == 100 &&
+      !mozilla::StaticPrefs::general_useragent_forceVersion100()) {
+    Preferences::SetBool("general.useragent.forceVersion100", true);
+  }
+
+  Preferences::SetBool("general.useragent.handledVersionExperimentEnrollment",
+                       true);
+}
+
+static void GetExperimentUserAgent(nsACString* aExperimentUserAgent) {
+  if (!mozilla::StaticPrefs::general_useragent_forceVersion100()) {
     aExperimentUserAgent->SetIsVoid(true);
     return;
   }
@@ -154,22 +174,23 @@ static void ExperimentUserAgentUpdated(const char* /* aNimbusPref */,
   const char uaFormat[] =
 #ifdef XP_WIN
 #  ifdef HAVE_64BIT_BUILD
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:%d.0) Gecko/20100101 "
-      "Firefox/%d.0"
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 "
+      "Firefox/100.0"
 #  else
-      "Mozilla/5.0 (Windows NT 10.0; rv:%d.0) Gecko/20100101 Firefox/%d.0"
+      "Mozilla/5.0 (Windows NT 10.0; rv:100.0) Gecko/20100101 Firefox/100.0"
 #  endif
 #elif defined(XP_MACOSX)
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:%d.0) Gecko/20100101 "
-      "Firefox/%d.0"
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:100.0) Gecko/20100101 "
+      "Firefox/100.0"
+#elif defined(ANDROID)
+      "Mozilla/5.0 (Android 10; Mobile; rv:100.0) Gecko/100.0 Firefox/100.0"
 #else
-      // Linux, Android, FreeBSD, etc
-      "Mozilla/5.0 (X11; Linux x86_64; rv:%d.0) Gecko/20100101 Firefox/%d.0"
+      // Linux, FreeBSD, etc
+      "Mozilla/5.0 (X11; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0"
 #endif
       ;
 
-  aExperimentUserAgent->Truncate();
-  aExperimentUserAgent->AppendPrintf(uaFormat, firefoxVersion, firefoxVersion);
+  aExperimentUserAgent->Assign(uaFormat);
 }
 
 #ifdef ANDROID
@@ -322,6 +343,25 @@ static const char* gCallbackPrefs[] = {
     nullptr,
 };
 
+static void GetFirefoxVersionForUserAgent(nsACString& aVersion) {
+  // If the "network.http.useragent.forceVersion" pref has a non-zero value,
+  // then override the User-Agent string's Firefox version. The value 0 means
+  // use the default Firefox version. If enterprise users rely on sites that
+  // aren't compatible with Firefox version 100's three-digit version number,
+  // enterprise admins can set this pref to a known-good version (like 99) in an
+  // enterprise policy file.
+  uint32_t forceVersion =
+      mozilla::StaticPrefs::network_http_useragent_forceVersion();
+  if (forceVersion == 0) {
+    // Use the default Firefox version.
+    aVersion.AssignLiteral(MOZILLA_UAVERSION);
+  } else {
+    // Use the pref's version.
+    aVersion.AppendInt(forceVersion);
+    aVersion.AppendLiteral(".0");
+  }
+}
+
 nsresult nsHttpHandler::Init() {
   nsresult rv;
 
@@ -355,6 +395,7 @@ nsresult nsHttpHandler::Init() {
     usageOfHTTPSRRPrefs[2] = StaticPrefs::network_dns_echconfig_enabled();
     Telemetry::ScalarSet(Telemetry::ScalarID::NETWORKING_HTTPS_RR_PREFS_USAGE,
                          static_cast<uint32_t>(usageOfHTTPSRRPrefs.to_ulong()));
+    mActivityDistributor = components::HttpActivityDistributor::Service();
   }
 
   auto initQLogDir = [&]() {
@@ -376,24 +417,42 @@ nsresult nsHttpHandler::Init() {
   };
   mHttp3QlogDir = initQLogDir();
 
+  // monitor Firefox Version Experiment enrollment
+  if (XRE_IsParentProcess()) {
+    int experimentBranch =
+        NimbusFeatures::GetInt(UA_EXPERIMENT_NAME, UA_EXPERIMENT_VAR, -1);
+
+    if (experimentBranch == -1) {
+      // The user has not been enrolled in the experiment yet, so listen for
+      // a Nimbus enrollment event.
+      NimbusFeatures::OnUpdate(UA_EXPERIMENT_NAME, UA_EXPERIMENT_VAR,
+                               HandleVersionExperimentEnrollment, nullptr);
+    } else if (!mozilla::StaticPrefs::
+                   general_useragent_handledVersionExperimentEnrollment()) {
+      // The user was enrolled in the experiment before the forceVersion100
+      // pref was created, so call the Nimbus enrollment callback now to
+      // update the forceVersion100 and handledVersionExperimentEnrollment
+      // prefs.
+      HandleVersionExperimentEnrollment(nullptr, nullptr);
+    }
+  }
+
   // monitor some preference changes
   Preferences::RegisterPrefixCallbacks(nsHttpHandler::PrefsChanged,
                                        gCallbackPrefs, this);
   PrefsChanged(nullptr);
 
-  // monitor Firefox Version Experiment enrollment
-  NimbusFeatures::OnUpdate(UA_EXPERIMENT_NAME, UA_EXPERIMENT_VAR,
-                           ExperimentUserAgentUpdated, &mExperimentUserAgent);
-
-  // Load the experiment state once for startup
-  ExperimentUserAgentUpdated("", &mExperimentUserAgent);
-
   Telemetry::ScalarSet(Telemetry::ScalarID::NETWORKING_HTTP3_ENABLED,
-                       mHttp3Enabled);
+                       StaticPrefs::network_http_http3_enable());
 
-  mMisc.AssignLiteral("rv:" MOZILLA_UAVERSION);
+  nsAutoCString uaVersion;
+  GetFirefoxVersionForUserAgent(uaVersion);
 
-  mCompatFirefox.AssignLiteral("Firefox/" MOZILLA_UAVERSION);
+  mMisc.AssignLiteral("rv:");
+  mMisc.Append(uaVersion);
+
+  mCompatFirefox.AssignLiteral("Firefox/");
+  mCompatFirefox.Append(uaVersion);
 
   nsCOMPtr<nsIXULAppInfo> appInfo =
       do_GetService("@mozilla.org/xre/app-info;1");
@@ -425,7 +484,7 @@ nsresult nsHttpHandler::Init() {
   mRequestContextService = RequestContextService::GetOrCreate();
 
 #if defined(ANDROID)
-  mProductSub.AssignLiteral(MOZILLA_UAVERSION);
+  mProductSub.Assign(uaVersion);
 #else
   mProductSub.AssignLiteral(LEGACY_UA_GECKO_TRAIL);
 #endif
@@ -1033,6 +1092,14 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     rv = Preferences::GetBool(UA_PREF("compatMode.firefox"), &cVar);
     mCompatFirefoxEnabled = (NS_SUCCEEDED(rv) && cVar);
     mUserAgentIsDirty = true;
+  }
+
+  // general.useragent.forceVersion100
+  if (PREF_CHANGED(UA_PREF("forceVersion100"))) {
+    // mExperimentUserAgent (if it's not void) will override the constructed
+    // UA. We don't need to set mUserAgentIsDirty because we don't need to
+    // reconstruct the UA.
+    GetExperimentUserAgent(&mExperimentUserAgent);
   }
 
   // general.useragent.override
@@ -1768,13 +1835,6 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
   }
 
-  if (PREF_CHANGED(HTTP_PREF("http3.enabled"))) {
-    rv = Preferences::GetBool(HTTP_PREF("http3.enabled"), &cVar);
-    if (NS_SUCCEEDED(rv)) {
-      mHttp3Enabled = cVar;
-    }
-  }
-
   if (PREF_CHANGED(HTTP_PREF("http3.default-qpack-table-size"))) {
     rv = Preferences::GetInt(HTTP_PREF("http3.default-qpack-table-size"), &val);
     if (NS_SUCCEEDED(rv)) {
@@ -2165,6 +2225,8 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
         Telemetry::Accumulate(Telemetry::DNT_USAGE, 1);
       }
     }
+
+    mActivityDistributor = nullptr;
   } else if (!strcmp(topic, "profile-change-net-restore")) {
     // initialize connection manager
     rv = InitConnectionMgr();
@@ -2853,7 +2915,8 @@ void nsHttpHandler::MaybeAddAltSvcForTesting(
     nsIURI* aUri, const nsACString& aUsername, bool aPrivateBrowsing,
     nsIInterfaceRequestor* aCallbacks,
     const OriginAttributes& aOriginAttributes) {
-  if (!IsHttp3Enabled() || mAltSvcMappingTemptativeMap.IsEmpty()) {
+  if (!StaticPrefs::network_http_http3_enable() ||
+      mAltSvcMappingTemptativeMap.IsEmpty()) {
     return;
   }
 
@@ -2898,10 +2961,6 @@ bool nsHttpHandler::FallbackToOriginIfConfigsAreECHAndAllFailed() const {
       network_dns_echconfig_fallback_to_origin_when_all_failed();
 }
 
-bool nsHttpHandler::UseHTTPSRRForSpeculativeConnection() const {
-  return StaticPrefs::network_dns_use_https_rr_for_speculative_connection();
-}
-
 void nsHttpHandler::ExcludeHTTPSRRHost(const nsACString& aHost) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2938,6 +2997,37 @@ bool nsHttpHandler::Is0RttTcpExcluded(const nsHttpConnectionInfo* ci) {
   }
 
   return mExcluded0RttTcpOrigins.Contains(ci->GetOrigin());
+}
+
+bool nsHttpHandler::HttpActivityDistributorActivated() {
+  if (!mActivityDistributor) {
+    return false;
+  }
+
+  return mActivityDistributor->Activated();
+}
+
+void nsHttpHandler::ObserveHttpActivityWithArgs(
+    const HttpActivityArgs& aArgs, uint32_t aActivityType,
+    uint32_t aActivitySubtype, PRTime aTimestamp, uint64_t aExtraSizeData,
+    const nsACString& aExtraStringData) {
+  if (!HttpActivityDistributorActivated()) {
+    return;
+  }
+
+  if (aActivitySubtype == NS_HTTP_ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER &&
+      !mActivityDistributor->ObserveProxyResponseEnabled()) {
+    return;
+  }
+
+  if (aActivityType == NS_ACTIVITY_TYPE_HTTP_CONNECTION &&
+      !mActivityDistributor->ObserveConnectionEnabled()) {
+    return;
+  }
+
+  Unused << mActivityDistributor->ObserveActivityWithArgs(
+      aArgs, aActivityType, aActivitySubtype, aTimestamp, aExtraSizeData,
+      aExtraStringData);
 }
 
 }  // namespace mozilla::net

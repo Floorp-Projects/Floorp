@@ -10,7 +10,7 @@ using mozilla::dom::GamepadHandle from "mozilla/dom/GamepadHandle.h";
 namespace mozilla {
 namespace dom {
 
-[RefCounted] protocol PGamepadTestChannel {
+protocol PGamepadTestChannel {
   manager PBackground;
   parent:
     async GamepadTestEvent(uint32_t aID, GamepadChangeEvent aGamepadEvent);

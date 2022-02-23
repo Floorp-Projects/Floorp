@@ -21,7 +21,7 @@ var LayoutUtils = {
 
     // We need to compensate for ancestor iframes in the same process
     // that might shift things over.
-    let parentFrame = win.frameElement;
+    let parentFrame = win.browsingContext?.embedderElement;
     while (parentFrame) {
       win = parentFrame.ownerGlobal;
       let cstyle = win.getComputedStyle(parentFrame);
@@ -36,7 +36,7 @@ var LayoutUtils = {
         parseFloat(cstyle.borderTopWidth) +
         parseFloat(cstyle.paddingTop);
 
-      parentFrame = win.frameElement;
+      parentFrame = win.browsingContext?.embedderElement;
     }
 
     return aElement.ownerGlobal.windowUtils.toScreenRectInCSSUnits(

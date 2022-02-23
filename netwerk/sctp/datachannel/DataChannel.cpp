@@ -101,22 +101,33 @@ class DataChannelRegistry : public nsIObserver {
 
   static uintptr_t Register(DataChannelConnection* aConnection) {
     StaticMutexAutoLock lock(sInstanceMutex);
-    if (NS_WARN_IF(!Instance())) {
-      return 0;
-    }
-    uintptr_t result = Instance()->RegisterImpl(aConnection);
+    uintptr_t result = EnsureInstance()->RegisterImpl(aConnection);
     DC_DEBUG(
         ("Registering connection %p as ulp %p", aConnection, (void*)result));
     return result;
   }
 
   static void Deregister(uintptr_t aId) {
-    StaticMutexAutoLock lock(sInstanceMutex);
-    DC_DEBUG(("Deregistering connection ulp = %p", (void*)aId));
-    if (NS_WARN_IF(!Instance())) {
-      return;
+    RefPtr<DataChannelRegistry> maybeTrash;
+
+    {
+      StaticMutexAutoLock lock(sInstanceMutex);
+      DC_DEBUG(("Deregistering connection ulp = %p", (void*)aId));
+      if (NS_WARN_IF(!Instance())) {
+        return;
+      }
+      Instance()->DeregisterImpl(aId);
+      if (Instance()->Empty()) {
+        // Unset singleton inside mutex lock, but don't call Shutdown until we
+        // unlock, since that involves calling into libusrsctp, which invites
+        // deadlock.
+        maybeTrash = Instance().forget();
+      }
     }
-    Instance()->DeregisterImpl(aId);
+
+    if (maybeTrash) {
+      maybeTrash->Shutdown();
+    }
   }
 
   static RefPtr<DataChannelConnection> Lookup(uintptr_t aId) {
@@ -139,14 +150,33 @@ class DataChannelRegistry : public nsIObserver {
         observerService->AddObserver(this, "xpcom-will-shutdown", false);
     MOZ_ASSERT(rv == NS_OK);
     (void)rv;
-    // TODO(bug 1646716): usrsctp_finish is racy, so we init in the c'tor.
     InitUsrSctp();
   }
 
+  nsresult Shutdown() {
+    DeinitUsrSctp();
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    if (NS_WARN_IF(!observerService)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsresult rv = observerService->RemoveObserver(this, "xpcom-will-shutdown");
+    MOZ_ASSERT(rv == NS_OK);
+    return rv;
+  }
+
   static RefPtr<DataChannelRegistry>& Instance() {
-    // Lazy-create static registry.
-    static RefPtr<DataChannelRegistry> sRegistry = new DataChannelRegistry;
+    static RefPtr<DataChannelRegistry> sRegistry;
     return sRegistry;
+  }
+
+  static RefPtr<DataChannelRegistry>& EnsureInstance() {
+    ASSERT_WEBRTC(NS_IsMainThread());
+    if (!Instance()) {
+      Instance() = new DataChannelRegistry();
+    }
+    return Instance();
   }
 
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
@@ -159,26 +189,15 @@ class DataChannelRegistry : public nsIObserver {
         Instance() = nullptr;
       }
 
-      // |self| is the only reference now
+      // |self| and the reference being held onto by the observer service are
+      // the only ones left now.
 
       if (NS_WARN_IF(!mConnections.empty())) {
         MOZ_ASSERT(false);
         mConnections.clear();
       }
 
-      // TODO(bug 1646716): usrsctp_finish is racy, so we wait until xpcom
-      // shutdown for this.
-      DeinitUsrSctp();
-      nsCOMPtr<nsIObserverService> observerService =
-          mozilla::services::GetObserverService();
-      if (NS_WARN_IF(!observerService)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      nsresult rv =
-          observerService->RemoveObserver(this, "xpcom-will-shutdown");
-      MOZ_ASSERT(rv == NS_OK);
-      (void)rv;
+      return Shutdown();
     }
 
     return NS_OK;
@@ -186,10 +205,6 @@ class DataChannelRegistry : public nsIObserver {
 
   uintptr_t RegisterImpl(DataChannelConnection* aConnection) {
     ASSERT_WEBRTC(NS_IsMainThread());
-    // TODO(bug 1646716): usrsctp_finish is racy, so we init in the c'tor.
-    // if (mConnections.empty()) {
-    //  InitUsrSctp();
-    //}
     mConnections.emplace(mNextId, aConnection);
     return mNextId++;
   }
@@ -197,12 +212,9 @@ class DataChannelRegistry : public nsIObserver {
   void DeregisterImpl(uintptr_t aId) {
     ASSERT_WEBRTC(NS_IsMainThread());
     mConnections.erase(aId);
-    // TODO(bug 1646716): usrsctp_finish is racy, so we wait until xpcom
-    // shutdown for this.
-    // if (mConnections.empty()) {
-    //  DeinitUsrSctp();
-    //}
   }
+
+  bool Empty() const { return mConnections.empty(); }
 
   RefPtr<DataChannelConnection> LookupImpl(uintptr_t aId) {
     auto it = mConnections.find(aId);
@@ -228,12 +240,13 @@ class DataChannelRegistry : public nsIObserver {
 #endif
 
   void InitUsrSctp() {
-    DC_DEBUG(("sctp_init"));
-#ifdef MOZ_PEERCONNECTION
-    usrsctp_init(0, DataChannelRegistry::SctpDtlsOutput, debug_printf);
-#else
+#ifndef MOZ_PEERCONNECTION
     MOZ_CRASH("Trying to use SCTP/DTLS without dom/media/webrtc/transport");
 #endif
+
+    DC_DEBUG(("Calling usrsctp_init %p", this));
+
+    usrsctp_init(0, DataChannelRegistry::SctpDtlsOutput, debug_printf);
 
     // Set logging to SCTP:LogLevel::Debug to get SCTP debugs
     if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
@@ -260,7 +273,7 @@ class DataChannelRegistry : public nsIObserver {
   }
 
   void DeinitUsrSctp() {
-    DC_DEBUG(("Shutting down SCTP"));
+    DC_DEBUG(("Calling usrsctp_finish %p", this));
     usrsctp_finish();
   }
 

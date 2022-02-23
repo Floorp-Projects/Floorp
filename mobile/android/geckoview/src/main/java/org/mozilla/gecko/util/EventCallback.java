@@ -4,7 +4,7 @@
 
 package org.mozilla.gecko.util;
 
-import javax.annotation.Nullable;
+import androidx.annotation.Nullable;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.geckoview.GeckoResult;

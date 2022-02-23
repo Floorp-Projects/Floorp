@@ -70,9 +70,9 @@ checkbox:not([disabled="true"]):hover:active > .checkbox-check[checked] {
   background-color: var(--checkbox-checked-active-bgcolor, color-mix(in srgb, currentColor 25%, -moz-accent-color));
 }
 
-checkbox:not([native]):-moz-focusring > .checkbox-check {
-  outline: 2px solid var(--focus-outline-color, -moz-accent-color);
-  outline-offset: var(--focus-outline-offset, 2px);
+checkbox:not([native]):focus-visible > .checkbox-check {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
 }
 
 @media (prefers-contrast) {

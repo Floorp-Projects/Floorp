@@ -10,19 +10,34 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
 
 var ContentAreaDownloadsView = {
   init() {
-    let box = document.getElementById("downloadsRichListBox");
+    let box = document.getElementById("downloadsListBox");
+    let suppressionFlag = DownloadsCommon.SUPPRESS_CONTENT_AREA_DOWNLOADS_OPEN;
     box.addEventListener(
       "InitialDownloadsLoaded",
       () => {
         // Set focus to Downloads list once it is created
         // And prevent it from showing the focus ring around the richlistbox (Bug 1702694)
         document
-          .getElementById("downloadsRichListBox")
+          .getElementById("downloadsListBox")
           .focus({ preventFocusRing: true });
+        // Pause the indicator if the browser is active.
+        if (document.visibilityState === "visible") {
+          DownloadsCommon.getIndicatorData(
+            window
+          ).attentionSuppressed |= suppressionFlag;
+        }
       },
       { once: true }
     );
-    let view = new DownloadsPlacesView(box);
+    let view = new DownloadsPlacesView(box, true, suppressionFlag);
+    document.addEventListener("visibilitychange", aEvent => {
+      let indicator = DownloadsCommon.getIndicatorData(window);
+      if (document.visibilityState === "visible") {
+        indicator.attentionSuppressed |= suppressionFlag;
+      } else {
+        indicator.attentionSuppressed &= ~suppressionFlag;
+      }
+    });
     // Do not display the Places downloads in private windows
     if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
       view.place = "place:transition=7&sort=4";

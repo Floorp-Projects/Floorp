@@ -125,10 +125,6 @@ nsresult HeadlessLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::MenuBarDrag:
       aResult = 0;
       break;
-    case IntID::OperatingSystemVersionIdentifier:
-      aResult = 0;
-      res = NS_ERROR_NOT_IMPLEMENTED;
-      break;
     case IntID::ScrollbarButtonAutoRepeatBehavior:
       aResult = 0;
       break;

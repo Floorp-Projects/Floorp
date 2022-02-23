@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, ReferenceFrameKind, ScrollLocation};
+use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, ReferenceFrameKind};
+use api::{APZScrollGeneration, HasScrollLinkedEffect, SampledScrollOffset};
 use api::{TransformStyle, StickyOffsetBounds, SpatialTreeItemKey};
 use api::units::*;
 use crate::internal_types::PipelineInstanceId;
@@ -194,6 +195,8 @@ impl SceneSpatialNode {
         content_size: &LayoutSize,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
+        offset_generation: APZScrollGeneration,
+        has_scroll_linked_effect: HasScrollLinkedEffect,
         is_root_coord_system: bool,
     ) -> Self {
         let node_type = SpatialNodeType::ScrollFrame(ScrollFrameInfo::new(
@@ -205,6 +208,8 @@ impl SceneSpatialNode {
                 external_id,
                 frame_kind,
                 external_scroll_offset,
+                offset_generation,
+                has_scroll_linked_effect,
             )
         );
 
@@ -320,7 +325,9 @@ impl SpatialNode {
         self.children.push(child);
     }
 
-    pub fn set_scroll_offset(&mut self, offset: &LayoutVector2D) -> bool {
+    pub fn set_scroll_offsets(&mut self, mut offsets: Vec<SampledScrollOffset>) -> bool {
+        debug_assert!(offsets.len() > 0);
+
         let scrolling = match self.node_type {
             SpatialNodeType::ScrollFrame(ref mut scrolling) => scrolling,
             _ => {
@@ -329,13 +336,15 @@ impl SpatialNode {
             }
         };
 
-        let new_offset = -*offset - scrolling.external_scroll_offset;
+        for element in offsets.iter_mut() {
+            element.offset = -element.offset - scrolling.external_scroll_offset;
+        }
 
-        if new_offset == scrolling.offset {
+        if scrolling.offsets == offsets {
             return false;
         }
 
-        scrolling.offset = new_offset;
+        scrolling.offsets = offsets;
         true
     }
 
@@ -685,12 +694,12 @@ impl SpatialNode {
                 state.scroll_offset = info.current_offset;
             }
             SpatialNodeType::ScrollFrame(ref scrolling) => {
-                state.parent_accumulated_scroll_offset += scrolling.offset;
-                state.nearest_scrolling_ancestor_offset = scrolling.offset;
+                state.parent_accumulated_scroll_offset += scrolling.offset();
+                state.nearest_scrolling_ancestor_offset = scrolling.offset();
                 state.nearest_scrolling_ancestor_viewport = scrolling.viewport_rect;
                 state.preserves_3d = false;
                 state.external_id = Some(scrolling.external_id);
-                state.scroll_offset = scrolling.offset + scrolling.external_scroll_offset;
+                state.scroll_offset = scrolling.offset() + scrolling.external_scroll_offset;
             }
             SpatialNodeType::ReferenceFrame(ref info) => {
                 state.external_id = None;
@@ -706,70 +715,16 @@ impl SpatialNode {
         }
     }
 
-    pub fn scroll(&mut self, scroll_location: ScrollLocation) -> bool {
-        // TODO(gw): This scroll method doesn't currently support
-        //           scroll nodes with non-zero external scroll
-        //           offsets. However, it's never used by Gecko,
-        //           which is the only client that requires
-        //           non-zero external scroll offsets.
-
-        let scrolling = match self.node_type {
-            SpatialNodeType::ScrollFrame(ref mut scrolling) => scrolling,
-            _ => return false,
-        };
-
-        let delta = match scroll_location {
-            ScrollLocation::Delta(delta) => delta,
-            ScrollLocation::Start => {
-                if scrolling.offset.y.round() >= 0.0 {
-                    // Nothing to do on this layer.
-                    return false;
-                }
-
-                scrolling.offset.y = 0.0;
-                return true;
-            }
-            ScrollLocation::End => {
-                let end_pos = -scrolling.scrollable_size.height;
-                if scrolling.offset.y.round() <= end_pos {
-                    // Nothing to do on this layer.
-                    return false;
-                }
-
-                scrolling.offset.y = end_pos;
-                return true;
-            }
-        };
-
-        let scrollable_width = scrolling.scrollable_size.width;
-        let scrollable_height = scrolling.scrollable_size.height;
-        let original_layer_scroll_offset = scrolling.offset;
-
-        if scrollable_width > 0. {
-            scrolling.offset.x = (scrolling.offset.x + delta.x)
-                .min(0.0)
-                .max(-scrollable_width);
-        }
-
-        if scrollable_height > 0. {
-            scrolling.offset.y = (scrolling.offset.y + delta.y)
-                .min(0.0)
-                .max(-scrollable_height);
-        }
-
-        scrolling.offset != original_layer_scroll_offset
-    }
-
     pub fn scroll_offset(&self) -> LayoutVector2D {
         match self.node_type {
-            SpatialNodeType::ScrollFrame(ref scrolling) => scrolling.offset,
+            SpatialNodeType::ScrollFrame(ref scrolling) => scrolling.offset(),
             _ => LayoutVector2D::zero(),
         }
     }
 
     pub fn matches_external_id(&self, external_id: ExternalScrollId) -> bool {
         match self.node_type {
-            SpatialNodeType::ScrollFrame(info) if info.external_id == external_id => true,
+            SpatialNodeType::ScrollFrame(ref info) if info.external_id == external_id => true,
             _ => false,
         }
     }
@@ -801,7 +756,7 @@ pub enum ScrollFrameKind {
     Explicit,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ScrollFrameInfo {
@@ -830,15 +785,25 @@ pub struct ScrollFrameInfo {
     /// pre-scrolled in their local coordinates.
     pub external_scroll_offset: LayoutVector2D,
 
-    /// The negated scroll offset of this scroll node. including the
-    /// pre-scrolled amount. If, for example, a scroll node was pre-scrolled
-    /// to y=10 (10 pixels down from the initial unscrolled position), then
+    /// A set of a pair of negated scroll offset and scroll generation of this
+    /// scroll node. The negated scroll offset is including the pre-scrolled
+    /// amount. If, for example, a scroll node was pre-scrolled to y=10 (10
+    /// pixels down from the initial unscrolled position), then
     /// `external_scroll_offset` would be (0,10), and this `offset` field would
     /// be (0,-10). If WebRender is then asked to change the scroll position by
     /// an additional 10 pixels (without changing the pre-scroll amount in the
     /// display list), `external_scroll_offset` would remain at (0,10) and
     /// `offset` would change to (0,-20).
-    pub offset: LayoutVector2D,
+    pub offsets: Vec<SampledScrollOffset>,
+
+    /// The generation of the external_scroll_offset.
+    /// This is used to pick up the most appropriate scroll offset sampled
+    /// off the main thread.
+    pub offset_generation: APZScrollGeneration,
+
+    /// Whether the document containing this scroll frame has any scroll-linked
+    /// effect or not.
+    pub has_scroll_linked_effect: HasScrollLinkedEffect,
 }
 
 /// Manages scrolling offset.
@@ -849,14 +814,46 @@ impl ScrollFrameInfo {
         external_id: ExternalScrollId,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
+        offset_generation: APZScrollGeneration,
+        has_scroll_linked_effect: HasScrollLinkedEffect,
     ) -> ScrollFrameInfo {
         ScrollFrameInfo {
             viewport_rect,
-            offset: -external_scroll_offset,
             scrollable_size,
             external_id,
             frame_kind,
             external_scroll_offset,
+            offsets: vec![SampledScrollOffset{
+                // If this scroll frame is a newly created one, using
+                // `external_scroll_offset` and `offset_generation` is correct.
+                // If this scroll frame is a result of updating an existing
+                // scroll frame and if there have already been sampled async
+                // scroll offsets by APZ, then these offsets will be replaced in
+                // SpatialTree::set_scroll_offsets via a
+                // RenderBackend::update_document call.
+                offset: -external_scroll_offset,
+                generation: offset_generation.clone(),
+            }],
+            offset_generation,
+            has_scroll_linked_effect,
+        }
+    }
+
+    pub fn offset(&self) -> LayoutVector2D {
+        debug_assert!(self.offsets.len() > 0, "There should be at least one sampled offset!");
+
+        if self.has_scroll_linked_effect == HasScrollLinkedEffect::No {
+            // If there's no scroll-linked effect, use the one-frame delay offset.
+            return self.offsets.first().map_or(LayoutVector2D::zero(), |sampled| sampled.offset);
+        }
+
+        match self.offsets.iter().find(|sampled| sampled.generation == self.offset_generation) {
+            // If we found an offset having the same generation, use it.
+            Some(sampled) => sampled.offset,
+            // If we don't have any offset having the same generation, i.e.
+            // the generation of this scroll frame is behind sampled offsets,
+            // use the first queued sampled offset.
+            _ => self.offsets.first().map_or(LayoutVector2D::zero(), |sampled| sampled.offset),
         }
     }
 }
@@ -942,6 +939,7 @@ fn test_cst_perspective_relative_scroll() {
         ReferenceFrameKind::Transform {
             is_2d_scale_translation: false,
             should_snap: false,
+            paired_with_perspective: false,
         },
         LayoutVector2D::zero(),
         pipeline_id,
@@ -956,6 +954,8 @@ fn test_cst_perspective_relative_scroll() {
         &LayoutSize::new(100.0, 500.0),
         ScrollFrameKind::Explicit,
         LayoutVector2D::zero(),
+        APZScrollGeneration::default(),
+        HasScrollLinkedEffect::No,
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1), PipelineId::dummy(), pid),
     );
 
@@ -967,6 +967,8 @@ fn test_cst_perspective_relative_scroll() {
         &LayoutSize::new(100.0, 500.0),
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 50.0),
+        APZScrollGeneration::default(),
+        HasScrollLinkedEffect::No,
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3), PipelineId::dummy(), pid),
     );
 

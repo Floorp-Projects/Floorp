@@ -12,7 +12,7 @@
 #include "ipc/WebGPUTypes.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/gfx/CanvasManagerChild.h"
 
 namespace mozilla {
 namespace webgpu {
@@ -24,7 +24,7 @@ already_AddRefed<Instance> Instance::Create(nsIGlobalObject* aOwner) {
   RefPtr<WebGPUChild> bridge;
 
   if (gfx::gfxConfig::IsEnabled(gfx::Feature::WEBGPU)) {
-    bridge = layers::CompositorBridgeChild::Get()->GetWebGPUChild();
+    bridge = gfx::CanvasManagerChild::Get()->GetWebGPUChild();
     if (NS_WARN_IF(!bridge)) {
       MOZ_CRASH("Failed to create an IPDL bridge for WebGPU!");
     }
@@ -60,7 +60,7 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
   RefPtr<Instance> instance = this;
 
   mBridge->InstanceRequestAdapter(aOptions)->Then(
-      GetMainThreadSerialEventTarget(), __func__,
+      GetCurrentSerialEventTarget(), __func__,
       [promise, instance](ipc::ByteBuf aInfoBuf) {
         ffi::WGPUAdapterInformation info = {};
         ffi::wgpu_client_adapter_extract_info(ToFFI(&aInfoBuf), &info);
@@ -72,8 +72,7 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
         if (aResponseReason.isSome()) {
           promise->MaybeRejectWithAbortError("Internal communication error!");
         } else {
-          promise->MaybeRejectWithInvalidStateError(
-              "No matching adapter found!");
+          promise->MaybeResolve(JS::NullHandleValue);
         }
       });
 

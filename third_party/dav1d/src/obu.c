@@ -263,6 +263,11 @@ static int parse_seq_hdr(Dav1dContext *const c, GetBits *const gb,
         hdr->chr = hdr->ss_hor == 1 && hdr->ss_ver == 1 ?
                    dav1d_get_bits(gb, 2) : DAV1D_CHR_UNKNOWN;
     }
+    if (c->strict_std_compliance &&
+        hdr->mtrx == DAV1D_MC_IDENTITY && hdr->layout != DAV1D_PIXEL_LAYOUT_I444)
+    {
+        goto error;
+    }
     hdr->separate_uv_delta_q = !hdr->monochrome && dav1d_get_bits(gb, 1);
 #if DEBUG_SEQ_HDR
     printf("SEQHDR: post-colorinfo: off=%u\n",
@@ -1528,8 +1533,10 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
 
         break;
     }
-    case DAV1D_OBU_PADDING:
     case DAV1D_OBU_TD:
+        c->frame_flags |= PICTURE_FLAG_NEW_TEMPORAL_UNIT;
+        break;
+    case DAV1D_OBU_PADDING:
         // ignore OBUs we don't care about
         break;
     default:
@@ -1542,9 +1549,9 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
         if (c->frame_hdr->show_existing_frame) {
             if (!c->refs[c->frame_hdr->existing_frame_idx].p.p.data[0]) return DAV1D_ERR(EINVAL);
             if (c->n_fc == 1) {
-                dav1d_picture_ref(&c->out,
-                                  &c->refs[c->frame_hdr->existing_frame_idx].p.p);
-                dav1d_data_props_copy(&c->out.m, &in->m);
+                dav1d_thread_picture_ref(&c->out,
+                                         &c->refs[c->frame_hdr->existing_frame_idx].p);
+                dav1d_data_props_copy(&c->out.p.m, &in->m);
                 c->event_flags |= dav1d_picture_get_event_flags(&c->refs[c->frame_hdr->existing_frame_idx].p);
             } else {
                 pthread_mutex_lock(&c->task_thread.lock);
@@ -1564,14 +1571,16 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
                         atomic_fetch_add(&c->task_thread.first, 1U);
                     else
                         atomic_store(&c->task_thread.first, 0);
-                    if (c->task_thread.cur < c->n_fc)
+                    if (c->task_thread.cur && c->task_thread.cur < c->n_fc)
                         c->task_thread.cur--;
                 }
                 if (out_delayed->p.data[0]) {
                     const unsigned progress = atomic_load_explicit(&out_delayed->progress[1],
                                                                    memory_order_relaxed);
-                    if (out_delayed->visible && progress != FRAME_ERROR) {
-                        dav1d_picture_ref(&c->out, &out_delayed->p);
+                    if ((out_delayed->visible || c->output_invisible_frames) &&
+                        progress != FRAME_ERROR)
+                    {
+                        dav1d_thread_picture_ref(&c->out, out_delayed);
                         c->event_flags |= dav1d_picture_get_event_flags(out_delayed);
                     }
                     dav1d_thread_picture_unref(out_delayed);

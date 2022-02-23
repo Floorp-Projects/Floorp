@@ -87,7 +87,7 @@ class MOZ_STACK_CLASS StackScopedCloneData : public StructuredCloneHolderBase {
       }
 
       FunctionForwarderOptions forwarderOptions;
-      if (!xpc::NewFunctionForwarder(aCx, JSID_VOIDHANDLE, obj,
+      if (!xpc::NewFunctionForwarder(aCx, JS::VoidHandlePropertyKey, obj,
                                      forwarderOptions, &functionValue)) {
         return nullptr;
       }
@@ -398,7 +398,7 @@ bool NewFunctionForwarder(JSContext* cx, HandleId idArg, HandleObject callable,
                           FunctionForwarderOptions& options,
                           MutableHandleValue vp) {
   RootedId id(cx, idArg);
-  if (id == JSID_VOIDHANDLE) {
+  if (id.isVoid()) {
     id = GetJSIDByIndex(cx, XPCJSContext::IDX_EMPTYSTRING);
   }
 
@@ -485,7 +485,7 @@ bool ExportFunction(JSContext* cx, HandleValue vfunction, HandleValue vscope,
     }
 
     RootedId id(cx, options.defineAs);
-    if (JSID_IS_VOID(id)) {
+    if (id.isVoid()) {
       // If there wasn't any function name specified, copy the name from the
       // function being imported.  But be careful in case the callable we have
       // is not actually a JSFunction.
@@ -505,7 +505,7 @@ bool ExportFunction(JSContext* cx, HandleValue vfunction, HandleValue vscope,
     } else {
       JS_MarkCrossZoneId(cx, id);
     }
-    MOZ_ASSERT(JSID_IS_STRING(id));
+    MOZ_ASSERT(id.isString());
 
     // The function forwarder will live in the target compartment. Since
     // this function will be referenced from its private slot, to avoid a
@@ -527,7 +527,7 @@ bool ExportFunction(JSContext* cx, HandleValue vfunction, HandleValue vscope,
     // We have the forwarder function in the target compartment. If
     // defineAs was set, we also need to define it as a property on
     // the target.
-    if (!JSID_IS_VOID(options.defineAs)) {
+    if (!options.defineAs.isVoid()) {
       if (!JS_DefinePropertyById(cx, targetScope, id, rval, JSPROP_ENUMERATE)) {
         return false;
       }
@@ -558,7 +558,7 @@ bool CreateObjectIn(JSContext* cx, HandleValue vobj,
     return false;
   }
 
-  bool define = !JSID_IS_VOID(options.defineAs);
+  bool define = !options.defineAs.isVoid();
 
   if (define && js::IsScriptedProxy(scope)) {
     JS_ReportErrorASCII(cx, "Defining property on proxy object is not allowed");

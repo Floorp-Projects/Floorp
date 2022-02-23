@@ -24,18 +24,18 @@ namespace jxl {
 // NOTE this return value can avoid an extra color conversion if `in` would
 // later be passed to JxlButteraugliComparator.
 const ImageBundle* ToXYB(const ImageBundle& in, ThreadPool* pool,
-                         Image3F* JXL_RESTRICT xyb,
+                         Image3F* JXL_RESTRICT xyb, const JxlCmsInterface& cms,
                          ImageBundle* JXL_RESTRICT linear = nullptr);
 
 // Bt.601 to match JPEG/JFIF. Outputs _signed_ YCbCr values suitable for DCT,
 // see F.1.1.3 of T.81 (because our data type is float, there is no need to add
 // a bias to make the values unsigned).
-void RgbToYcbcr(const ImageF& r_plane, const ImageF& g_plane,
-                const ImageF& b_plane, ImageF* y_plane, ImageF* cb_plane,
-                ImageF* cr_plane, ThreadPool* pool);
+Status RgbToYcbcr(const ImageF& r_plane, const ImageF& g_plane,
+                  const ImageF& b_plane, ImageF* y_plane, ImageF* cb_plane,
+                  ImageF* cr_plane, ThreadPool* pool);
 
 // DEPRECATED, used by opsin_image_wrapper.
-Image3F OpsinDynamicsImage(const Image3B& srgb8);
+Image3F OpsinDynamicsImage(const Image3B& srgb8, const JxlCmsInterface& cms);
 
 // For opsin_image_test.
 void TestCubeRoot();

@@ -27,6 +27,7 @@
 #include "mozilla/layers/MemoryPressureObserver.h"
 
 namespace mozilla {
+enum class NativeKeyBindingsType : uint8_t;
 
 namespace dom {
 class BrowserChild;

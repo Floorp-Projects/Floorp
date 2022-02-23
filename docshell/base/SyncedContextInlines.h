@@ -12,6 +12,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "nsReadableUtils.h"
+#include "mozilla/HalIPCUtils.h"
 
 namespace mozilla {
 namespace dom {

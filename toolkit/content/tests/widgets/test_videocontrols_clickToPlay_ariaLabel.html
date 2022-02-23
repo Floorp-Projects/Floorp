@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Video controls test - clickToPlayAriaLabel</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <script type="text/javascript" src="head.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="content">
+        <video controls preload="auto" width="480" height="320"></video>
+</div>
+
+<pre id="test">
+<script clas="testbody" type="application/javascript">
+        SimpleTest.waitForExplicitFinish();
+
+        const videoElems = [...document.getElementsByTagName("video")];
+        const testCases = [];
+
+        function testUI(video) {
+            const clickToPlay = getElementWithinVideo(video, "clickToPlay");
+            ok(!!clickToPlay.getAttribute("aria-label"), "clickToPlay has aria-label attribute");
+        };
+
+        videoElems.forEach(video => {
+          testCases.push(() => new Promise(resolve => {
+            SimpleTest.executeSoon(() => {
+              testUI(video);
+              resolve();
+            });
+          }));
+        });
+
+        function executeTasks(tasks) {
+          return tasks.reduce((promise, task) => promise.then(task), Promise.resolve());
+        }
+
+        function start() {
+          executeTasks(testCases).then(SimpleTest.finish);
+        }
+
+        function loadevent() {
+          SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, start);
+        }
+
+        window.addEventListener("load", loadevent);
+</script>
+</pre>
+</body>
+</html>

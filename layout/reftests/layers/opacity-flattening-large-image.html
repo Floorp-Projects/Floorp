@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Opacity Flattening for Large Images</title>
+<style>
+div {
+  display: inline-block;
+  height: 40px;
+  width: 40px;
+  opacity: 0.25;
+}
+
+.png40x40 {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoAQMAAAC2MCouAAAAA1BMVEUAAACnej3aAAAADElEQVQI12NgGFkAAADwAAHXt5aiAAAAAElFTkSuQmCC) no-repeat;
+}
+
+.png40x4096 {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAABAAAQMAAAA6ETG7AAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5QceCDgMmIF9RQAAAANQTFRFAAAAp3o92gAAAC5JREFUGBntwTEBAAAAwiD7p14IX2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAtYAAAAfQusroAAAAASUVORK5CYII=) no-repeat;
+}
+
+.png40x4097 {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAABABAQMAAADxTeIeAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5QceCDgchTZtIQAAAANQTFRFAAAAp3o92gAAAC5JREFUGBntwTEBAAAAwiD7p14JT2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMBJYAYAAYO1lz8AAAAASUVORK5CYII=) no-repeat;
+}
+
+.png4096x40 {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAEAAAAAAoAQMAAABETK3BAAAAA1BMVEUAAACnej3aAAAAK0lEQVR42u3BMQEAAADCoPVPbQ0PoAAAAAAAAAAAAAAAAAAAAAAAAACAFwNQKAAB/x49MAAAAABJRU5ErkJggg==) no-repeat;
+}
+
+.png4097x40 {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAEAEAAAAoAQMAAACrjsb/AAAAA1BMVEUAAACnej3aAAAAK0lEQVR42u3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAAAAAAAAAAAAAAACANwNQUAABp9gL6AAAAABJRU5ErkJggg==) no-repeat;
+}
+</style>
+</head>
+
+<body>
+<div class="png40x40"></div>
+<div class="png40x4096"></div>
+<div class="png40x4097"></div>
+<div class="png4096x40"></div>
+<div class="png4097x40"></div>
+</body>
+</html>

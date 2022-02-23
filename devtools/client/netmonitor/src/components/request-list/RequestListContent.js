@@ -25,6 +25,7 @@ const {
   getDisplayedRequests,
   getColumns,
   getSelectedRequest,
+  getClickedRequest,
 } = require("devtools/client/netmonitor/src/selectors/index");
 
 loader.lazyRequireGetter(
@@ -59,6 +60,7 @@ const REQUESTS_TOOLTIP_TOGGLE_DELAY = 500;
 const REQUESTS_TOOLTIP_IMAGE_MAX_DIM = 400;
 
 const LEFT_MOUSE_BUTTON = 0;
+const MIDDLE_MOUSE_BUTTON = 1;
 const RIGHT_MOUSE_BUTTON = 2;
 
 /**
@@ -77,7 +79,8 @@ class RequestListContent extends Component {
       cloneRequest: PropTypes.func.isRequired,
       clickedRequest: PropTypes.object,
       openDetailsPanelTab: PropTypes.func.isRequired,
-      openDetailsHTTPCustomRequestTab: PropTypes.func.isRequired,
+      openHTTPCustomRequestTab: PropTypes.func.isRequired,
+      closeHTTPCustomRequestTab: PropTypes.func.isRequired,
       sendCustomRequest: PropTypes.func.isRequired,
       displayedRequests: PropTypes.array.isRequired,
       firstRequestStartedMs: PropTypes.number.isRequired,
@@ -270,6 +273,8 @@ class RequestListContent extends Component {
       this.props.selectRequest(id, request);
     } else if (evt.button === RIGHT_MOUSE_BUTTON) {
       this.props.onItemRightMouseButtonDown(id);
+    } else if (evt.button === MIDDLE_MOUSE_BUTTON) {
+      this.onMiddleMouseButtonDown(request);
     }
   }
 
@@ -328,6 +333,10 @@ class RequestListContent extends Component {
     this.openRequestInTab(id, url, requestHeaders, requestPostData);
   }
 
+  onMiddleMouseButtonDown({ id, url, requestHeaders, requestPostData }) {
+    this.openRequestInTab(id, url, requestHeaders, requestPostData);
+  }
+
   onDragStart(evt, { url }) {
     evt.dataTransfer.setData("text/plain", url);
   }
@@ -341,7 +350,8 @@ class RequestListContent extends Component {
         connector,
         cloneRequest,
         openDetailsPanelTab,
-        openDetailsHTTPCustomRequestTab,
+        openHTTPCustomRequestTab,
+        closeHTTPCustomRequestTab,
         sendCustomRequest,
         openStatistics,
         openRequestBlockingAndAddUrl,
@@ -352,7 +362,8 @@ class RequestListContent extends Component {
         connector,
         cloneRequest,
         openDetailsPanelTab,
-        openDetailsHTTPCustomRequestTab,
+        openHTTPCustomRequestTab,
+        closeHTTPCustomRequestTab,
         sendCustomRequest,
         openStatistics,
         openRequestBlockingAndAddUrl,
@@ -453,7 +464,7 @@ module.exports = connect(
     networkDetailsOpen: state.ui.networkDetailsOpen,
     networkDetailsWidth: state.ui.networkDetailsWidth,
     networkDetailsHeight: state.ui.networkDetailsHeight,
-    clickedRequest: state.requests.clickedRequest,
+    clickedRequest: getClickedRequest(state),
     displayedRequests: getDisplayedRequests(state),
     firstRequestStartedMs: state.requests.firstStartedMs,
     selectedActionBarTabId: state.ui.selectedActionBarTabId,
@@ -463,8 +474,10 @@ module.exports = connect(
   (dispatch, props) => ({
     cloneRequest: id => dispatch(Actions.cloneRequest(id)),
     openDetailsPanelTab: () => dispatch(Actions.openNetworkDetails(true)),
-    openDetailsHTTPCustomRequestTab: () =>
+    openHTTPCustomRequestTab: () =>
       dispatch(Actions.openHTTPCustomRequest(true)),
+    closeHTTPCustomRequestTab: () =>
+      dispatch(Actions.openHTTPCustomRequest(false)),
     sendCustomRequest: () =>
       dispatch(Actions.sendCustomRequest(props.connector)),
     openStatistics: open =>

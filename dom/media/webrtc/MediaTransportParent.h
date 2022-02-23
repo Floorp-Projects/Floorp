@@ -21,8 +21,9 @@ class MediaTransportParent : public dom::PMediaTransportParent {
   mozilla::ipc::IPCResult RecvClearIceLog();
   mozilla::ipc::IPCResult RecvEnterPrivateMode();
   mozilla::ipc::IPCResult RecvExitPrivateMode();
-  mozilla::ipc::IPCResult RecvCreateIceCtx(
-      const string& name, nsTArray<RTCIceServer>&& iceServers,
+  mozilla::ipc::IPCResult RecvCreateIceCtx(const string& name);
+  mozilla::ipc::IPCResult RecvSetIceConfig(
+      nsTArray<RTCIceServer>&& iceServers,
       const RTCIceTransportPolicy& icePolicy);
   mozilla::ipc::IPCResult RecvSetProxyConfig(
       const net::WebrtcProxyConfig& aProxyConfig);

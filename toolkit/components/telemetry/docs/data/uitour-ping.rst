@@ -23,4 +23,3 @@ Structure:
     }
 
 See also: :doc:`common ping fields <common-ping>`
-

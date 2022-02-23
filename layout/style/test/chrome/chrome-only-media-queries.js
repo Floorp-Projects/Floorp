@@ -31,9 +31,13 @@ const CHROME_ONLY_TOGGLES = [
 // Non-parseable queries can be tested directly in
 // `test_chrome_only_media_queries.html`.
 const CHROME_ONLY_QUERIES = [
-  "(-moz-os-version: windows-win7)",
-  "(-moz-os-version: windows-win8)",
-  "(-moz-os-version: windows-win10)",
+  "(-moz-platform: linux)",
+  "(-moz-platform: windows)",
+  "(-moz-platform: macos)",
+  "(-moz-platform: android)",
+  "(-moz-platform: windows-win7)",
+  "(-moz-platform: windows-win8)",
+  "(-moz-platform: windows-win10)",
   "(-moz-content-prefers-color-scheme: dark)",
   "(-moz-content-prefers-color-scheme: light)",
 ];

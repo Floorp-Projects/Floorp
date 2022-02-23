@@ -94,7 +94,7 @@ class TestSafeBrowsingNotificationBar(WindowManagerMixin, MarionetteTestCase):
             expected.element_present(By.ID, "main-feature"),
             message='Expected target element "#main-feature" has not been found',
         )
-        self.assertEquals(self.marionette.get_url(), self.get_final_url(unsafe_page))
+        self.assertEqual(self.marionette.get_url(), self.get_final_url(unsafe_page))
 
         # Clean up here since the permission gets set in this function
         self.remove_permission("https://www.itisatrap.org", "safe-browsing")

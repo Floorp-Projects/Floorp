@@ -546,7 +546,6 @@ bool IsMacbookOrMacbookAir() {
     UniquePtr<char[]> model(new char[len]);
     // This string can be
     // MacBook%d,%d for a normal MacBook
-    // MacBookPro%d,%d for a MacBook Pro
     // MacBookAir%d,%d for a Macbook Air
     sysctlbyname("hw.model", model.get(), &len, NULL, 0);
     char* substring = strstr(model.get(), "MacBook");

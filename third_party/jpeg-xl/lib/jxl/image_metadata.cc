@@ -234,6 +234,13 @@ Status ExtraChannelInfo::VisitFields(Visitor* JXL_RESTRICT visitor) {
     JXL_QUIET_RETURN_IF_ERROR(visitor->U32(Val(1), Bits(2), BitsOffset(4, 3),
                                            BitsOffset(8, 19), 1, &cfa_channel));
   }
+
+  if (type == ExtraChannel::kUnknown ||
+      (int(ExtraChannel::kReserved0) <= int(type) &&
+       int(type) <= int(ExtraChannel::kReserved7))) {
+    return JXL_FAILURE("Unknown extra channel (bits %u, shift %u, name '%s')\n",
+                       bit_depth.bits_per_sample, dim_shift, name.c_str());
+  }
   return true;
 }
 

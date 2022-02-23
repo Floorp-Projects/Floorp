@@ -7,7 +7,6 @@ test.run_analysis_script("gcTypes")
 
 # gcFunctions should be the inverse, but we get to rely on unmangled names here.
 gcFunctions = test.load_gcFunctions()
-print(gcFunctions)
 assert "void GC()" in gcFunctions
 assert "void suppressedFunction()" not in gcFunctions
 assert "void halfSuppressedFunction()" in gcFunctions
@@ -26,10 +25,11 @@ assert "cell6" not in hazmap
 assert "<returnvalue>" in hazmap
 assert "this" in hazmap
 
-# All hazards should be in f(), loopy(), safevals(), and method()
+# All hazards should be in f(), loopy(), safevals(), method(), and refptr_test{1,3,4}()
 assert hazmap["cell2"].function == "Cell* f()"
-print(len(set(haz.function for haz in hazards)))
-assert len(set(haz.function for haz in hazards)) == 4
+haz_functions = set(haz.function for haz in hazards)
+print(haz_functions)
+assert len(haz_functions) == 7
 
 # Check that the correct GC call is reported for each hazard. (cell3 has a
 # hazard from two different GC calls; it doesn't really matter which is
@@ -39,8 +39,16 @@ assert hazmap["cell3"].GCFunction in (
     "void halfSuppressedFunction()",
     "void unsuppressedFunction()",
 )
-assert hazmap["<returnvalue>"].GCFunction.startswith(
-    "void GCInDestructor::~GCInDestructor()"
+returnval_hazards = set(
+    haz.function for haz in hazards if haz.variable == "<returnvalue>"
+)
+assert returnval_hazards == set(
+    [
+        "Cell* f()",
+        "Cell* refptr_test1()",
+        "Cell* refptr_test3()",
+        "Cell* refptr_test4()",
+    ]
 )
 
 assert "container1" in hazmap

@@ -2676,6 +2676,8 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
             specIgnoringRef.EqualsLiteral(
                 "chrome://mozapps/content/extensions/aboutaddons.html") ||
 #ifdef MOZ_THUNDERBIRD
+            specIgnoringRef.EqualsLiteral("about:3pane") ||
+            specIgnoringRef.EqualsLiteral("about:message") ||
             specIgnoringRef.EqualsLiteral("about:preferences") ||
 #endif
             specIgnoringRef.EqualsLiteral(
@@ -2852,26 +2854,6 @@ BrowserBridgeChild* nsFrameLoader::GetBrowserBridgeChild() const {
 mozilla::layers::LayersId nsFrameLoader::GetLayersId() const {
   MOZ_ASSERT(mIsRemoteFrame);
   return mRemoteBrowser->GetLayersId();
-}
-
-void nsFrameLoader::ActivateRemoteFrame(ErrorResult& aRv) {
-  auto* browserParent = GetBrowserParent();
-  if (!browserParent) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  browserParent->Activate(nsFocusManager::GenerateFocusActionId());
-}
-
-void nsFrameLoader::DeactivateRemoteFrame(ErrorResult& aRv) {
-  auto* browserParent = GetBrowserParent();
-  if (!browserParent) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  browserParent->Deactivate(false, nsFocusManager::GenerateFocusActionId());
 }
 
 void nsFrameLoader::ActivateFrameEvent(const nsAString& aType, bool aCapture,

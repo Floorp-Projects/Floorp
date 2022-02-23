@@ -439,4 +439,12 @@ this.AppConstants = Object.freeze({
     false,
 #endif
 
+  // Returns true for CN region build when distibution id set as 'MozillaOnline'
+  isChinaRepack() {
+    return (
+      Services.prefs
+      .getDefaultBranch("")
+      .getCharPref("distribution.id", "default") === "MozillaOnline"
+    );
+  },
 });

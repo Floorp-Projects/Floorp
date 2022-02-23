@@ -73,7 +73,7 @@ bool GenerateInterfaceHelp(JSContext* cx, HandleObject obj, const char* name) {
       return false;
     }
 
-    if (!buf.append(usage.isString() ? usage.toString() : JSID_TO_STRING(id))) {
+    if (!buf.append(usage.isString() ? usage.toString() : id.toString())) {
       return false;
     }
   }

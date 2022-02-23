@@ -1536,6 +1536,38 @@ var PlacesUIUtils = {
     Services.obs.addObserver(obs, "Migration:ItemAfterMigrate");
     Services.obs.addObserver(obs, "Migration:ItemError");
   },
+
+  /**
+   * Tries to initiate a speculative connection to a given url.
+   * @param {nsIURI|URL|string} url entity to initiate
+   *        a speculative connection for.
+   * @param {window} window the window from where the connection is initialized.
+   * @note This is not infallible, if a speculative connection cannot be
+   *       initialized, it will be a no-op.
+   */
+  setupSpeculativeConnection(url, window) {
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.places.speculativeConnect.enabled",
+        true
+      )
+    ) {
+      return;
+    }
+    if (!url.startsWith("http")) {
+      return;
+    }
+    try {
+      let uri = url instanceof Ci.nsIURI ? url : Services.io.newURI(url);
+      Services.io.speculativeConnect(
+        uri,
+        window.gBrowser.contentPrincipal,
+        null
+      );
+    } catch (ex) {
+      // Can't setup speculative connection for this url, just ignore it.
+    }
+  },
 };
 
 /**

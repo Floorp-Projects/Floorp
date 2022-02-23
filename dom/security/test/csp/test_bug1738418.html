@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1738418: CSP sandbox for embed/object frames</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe id="testframe"></iframe>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var elements = new Set(["iframe", "embed", "object"]);
+
+window.addEventListener("message", event => {
+  is(event.data.domain, "", `document in <${event.data.element}> should have sandboxed origin`);
+  elements.delete(event.data.element);
+  if (elements.size == 0) {
+    SimpleTest.finish();
+  }
+});
+
+document.getElementById("testframe").src = "file_bug1738418_parent.html";
+
+</script>
+</body>
+</html>

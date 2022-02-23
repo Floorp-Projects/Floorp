@@ -13,6 +13,7 @@
 #include <hwy/tests/test_util-inl.h>
 #include <utility>
 
+#include "lib/jxl/base/random.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dct_scales.h"
 #include "lib/jxl/dec_transforms_testonly.h"
@@ -32,9 +33,12 @@ class AcStrategyRoundtrip : public ::hwy::TestWithParamTargetAndT<int> {
     float* scratch_space = mem.get();
     float* coeffs = scratch_space + AcStrategy::kMaxCoeffArea;
     float* idct = coeffs + AcStrategy::kMaxCoeffArea;
+    Rng rng(type * 65537 + 13);
 
-    for (size_t i = 0; i < std::min(1024u, 64u << acs.log2_covered_blocks());
-         i++) {
+    for (size_t j = 0; j < 64; j++) {
+      size_t i = (acs.log2_covered_blocks()
+                      ? rng.UniformU(0, 64u << acs.log2_covered_blocks())
+                      : j);
       float* input = idct + AcStrategy::kMaxCoeffArea;
       std::fill_n(input, AcStrategy::kMaxCoeffArea, 0);
       input[i] = 0.2f;
@@ -88,9 +92,13 @@ class AcStrategyRoundtripDownsample
     float* coeffs = scratch_space + AcStrategy::kMaxCoeffArea;
     std::fill_n(coeffs, AcStrategy::kMaxCoeffArea, 0.0f);
     float* idct = coeffs + AcStrategy::kMaxCoeffArea;
+    Rng rng(type * 65537 + 13);
 
     for (size_t y = 0; y < acs.covered_blocks_y(); y++) {
       for (size_t x = 0; x < acs.covered_blocks_x(); x++) {
+        if (x > 4 || y > 4) {
+          if (rng.Bernoulli(0.9f)) continue;
+        }
         float* dc = idct + AcStrategy::kMaxCoeffArea;
         std::fill_n(dc, AcStrategy::kMaxCoeffArea, 0);
         dc[y * acs.covered_blocks_x() * 8 + x] = 0.2f;
@@ -141,9 +149,13 @@ class AcStrategyDownsample : public ::hwy::TestWithParamTargetAndT<int> {
     float* scratch_space = mem.get();
     float* idct = scratch_space + AcStrategy::kMaxCoeffArea;
     float* idct_acs_downsampled = idct + AcStrategy::kMaxCoeffArea;
+    Rng rng(type * 65537 + 13);
 
     for (size_t y = 0; y < cy; y++) {
       for (size_t x = 0; x < cx; x++) {
+        if (x > 4 || y > 4) {
+          if (rng.Bernoulli(0.9f)) continue;
+        }
         float* coeffs = idct + AcStrategy::kMaxCoeffArea;
         std::fill_n(coeffs, AcStrategy::kMaxCoeffArea, 0);
         coeffs[y * cx * 8 + x] = 0.2f;

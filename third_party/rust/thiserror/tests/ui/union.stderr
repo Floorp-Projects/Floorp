@@ -1,5 +1,5 @@
 error: union as errors are not supported
- --> $DIR/union.rs:4:1
+ --> tests/ui/union.rs:4:1
   |
 4 | / pub union U {
 5 | |     msg: &'static str,

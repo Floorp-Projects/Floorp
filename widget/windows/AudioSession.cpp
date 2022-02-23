@@ -10,10 +10,10 @@
 
 #include "mozilla/RefPtr.h"
 #include "nsIStringBundle.h"
-#include "nsIUUIDGenerator.h"
 
 //#include "AudioSession.h"
 #include "nsCOMPtr.h"
+#include "nsID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
@@ -193,10 +193,8 @@ nsresult AudioSession::Start() {
     mIconPath.GetMutableData(&buffer, MAX_PATH);
     ::GetModuleFileNameW(nullptr, buffer, MAX_PATH);
 
-    nsCOMPtr<nsIUUIDGenerator> uuidgen =
-        do_GetService("@mozilla.org/uuid-generator;1");
-    NS_ENSURE_TRUE(uuidgen, NS_ERROR_FAILURE);
-    uuidgen->GenerateUUIDInPlace(&mSessionGroupingParameter);
+    nsresult rv = nsID::GenerateUUIDInPlace(mSessionGroupingParameter);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   mState = FAILED;

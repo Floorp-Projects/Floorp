@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBackground;
+include protocol PBackgroundStarter;
 
 namespace mozilla {
 namespace net {
@@ -17,12 +17,12 @@ namespace net {
   * content process and PSocketProcessBridgeParent lives in
   * socket process.
   */
-[NestedUpTo=inside_cpow, NeedsOtherPid]
+[ManualDealloc, NestedUpTo=inside_cpow, NeedsOtherPid]
 sync protocol PSocketProcessBridge
 {
 
 parent:
-  async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
+  async InitBackground(Endpoint<PBackgroundStarterParent> aEndpoint);
 both:
   async Test();
 };

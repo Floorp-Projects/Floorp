@@ -61,7 +61,7 @@ macosx64-geckodriver:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang
+            - linux64-clang-toolchain
             - linux64-rust-macos
             - macosx64-sdk-11.0
 
@@ -76,7 +76,7 @@ macosx64-aarch64-geckodriver:
     fetches:
         toolchain:
             - linux64-cctools-port
-            - linux64-clang
+            - linux64-clang-toolchain
             - linux64-rust-macos
             - macosx64-sdk-11.0
 
@@ -97,7 +97,7 @@ win32-geckodriver:
         build_platform: win32-geckodriver
     fetches:
         toolchain:
-            - linux64-clang
+            - linux64-clang-toolchain
             - linux64-liblowercase
             - linux64-rust-windows
 
@@ -118,6 +118,6 @@ win64-geckodriver:
         build_platform: win64-geckodriver
     fetches:
         toolchain:
-            - linux64-clang
+            - linux64-clang-toolchain
             - linux64-liblowercase
             - linux64-rust-windows

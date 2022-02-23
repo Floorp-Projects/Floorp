@@ -245,6 +245,10 @@ void JSRuntime::destroyRuntime() {
   sharedIntlData.ref().destroyInstance();
 #endif
 
+  // Caches might hold on ScriptData which are saved in the ScriptDataTable.
+  // Clear all stencils from caches to remove ScriptDataTable entries.
+  caches().purgeStencils();
+
   if (gcInitialized) {
     /*
      * Finish any in-progress GCs first.
@@ -265,6 +269,7 @@ void JSRuntime::destroyRuntime() {
      */
     CancelOffThreadIonCompile(this);
     CancelOffThreadParses(this);
+    CancelOffThreadDelazify(this);
     CancelOffThreadCompressions(this);
 
     /*
@@ -280,7 +285,7 @@ void JSRuntime::destroyRuntime() {
     profilingScripts = false;
 
     JS::PrepareForFullGC(cx);
-    gc.gc(JS::GCOptions::Normal, JS::GCReason::DESTROY_RUNTIME);
+    gc.gc(JS::GCOptions::Shutdown, JS::GCReason::DESTROY_RUNTIME);
   }
 
   AutoNoteSingleThreadedRegion anstr;

@@ -47,7 +47,7 @@ If you *need* to specify a narrowing matcher (because it's a required argument t
 Traversal Matchers
 ~~~~~~~~~~~~~~~~~~
 
-Traversal Matchers *also* can be thought of as adjectives - at least most of them.  They also describe a specific node, but the difference from a narrowing matcher is that the scope of the description is broader than the individual node.  A narrowing matcher says something about the node in isolation (e.g. the number of arguments it has) while a traversal matcher says something about the node's contents or place in the program.  
+Traversal Matchers *also* can be thought of as adjectives - at least most of them.  They also describe a specific node, but the difference from a narrowing matcher is that the scope of the description is broader than the individual node.  A narrowing matcher says something about the node in isolation (e.g. the number of arguments it has) while a traversal matcher says something about the node's contents or place in the program.
 
 Again, the `the documentation <https://clang.llvm.org/docs/LibASTMatchersReference.html#traversal-matchers>`_ is the best place to explore and understand these, but here is a simple example for the traversal matcher ``hasArraySize()``:
 
@@ -56,14 +56,14 @@ Again, the `the documentation <https://clang.llvm.org/docs/LibASTMatchersReferen
   Given:
     class MyClass { };
     MyClass *p1 = new MyClass[10];
-    
-  
+
+
   cxxNewExpr()
     matches the expression 'new MyClass[10]'.
-  
+
   cxxNewExpr(hasArraySize(integerLiteral(equals(9))))
     does not match anything
-    
+
   cxxNewExpr(hasArraySize(integerLiteral(equals(10))))
     matches the expression 'new MyClass[10]'.
 
@@ -86,10 +86,10 @@ As an example of the above, below is a sample iterative development process of a
 
   int add1(int a, int b) { return a + b; }
   int add2(int c, int d = 8) { return c + d; }
-  
+
   int main() {
    int x, y, z;
-  
+
    add1(x, y);     // <- No match, no assignment
    add1(3 + 4, y); // <- No match, no assignment
    add1(z = x, y); // <- No match, assignment, but not an integer literal
@@ -106,12 +106,12 @@ Here is the iterative development process:
   // Step 1: Find all the function calls
   m callExpr()
   // Matches all calls, as expected.
-  
+
   //-------------------------------------
   // Step 2: Start refining based on the arguments to the call
   m callExpr(forEachArgumentWithParam()))
   // Error: forEachArgumentWithParam expects two parameters
-  
+
   //-------------------------------------
   // Step 3: Figure out the syntax to matching all the calls with this new operator
   m callExpr(
@@ -121,78 +121,78 @@ Here is the iterative development process:
   	)
   )
   // Matches all calls, as expected
-  
+
   //-------------------------------------
   // Step 4: Find the calls with a binary operator of any kind
   m callExpr(
     forEachArgumentWithParam(
-       binaryOperator(), 
+       binaryOperator(),
        anything()
      )
   )
   // Does not match the first call, but matches the others
-  
+
   //-------------------------------------
   // Step 5: Limit the binary operator to assignments
   m callExpr(
     forEachArgumentWithParam(
-       binaryOperator(isAssignmentOperator()), 
+       binaryOperator(isAssignmentOperator()),
        anything()
      )
   )
   // Now matches the final three calls
-  
+
   //-------------------------------------
   // Step 6: Starting to refine matching the right-hand of the assignment
   m callExpr(
     forEachArgumentWithParam(
        binaryOperator(
        	allOf(
-       	  isAssignmentOperator(), 
+       	  isAssignmentOperator(),
        	  hasRHS()
-   	    )), 
+   	    )),
        anything()
      )
   )
   // Error, hasRHS expects a parameter
-  
+
   //-------------------------------------
   // Step 7:
   m callExpr(
     forEachArgumentWithParam(
        binaryOperator(
        	allOf(
-       	  isAssignmentOperator(), 
+       	  isAssignmentOperator(),
        	  hasRHS(anything())
-   		  )), 
+   		  )),
        anything()
      )
   )
   // Okay, back to matching the final three calls
-  
+
   //-------------------------------------
   // Step 8: Refine to just integer literals
   m callExpr(
     forEachArgumentWithParam(
        binaryOperator(
        	allOf(
-       	  isAssignmentOperator(), 
+       	  isAssignmentOperator(),
        	  hasRHS(integerLiteral())
-   		  )), 
+   		  )),
        anything()
      )
   )
   // Now we match the final two calls
-  
+
   //-------------------------------------
   // Step 9: Apply a restriction to the parameter definition
   m callExpr(
     forEachArgumentWithParam(
        binaryOperator(
        	allOf(
-       	  isAssignmentOperator(), 
+       	  isAssignmentOperator(),
        	  hasRHS(integerLiteral())
-   		  )), 
+   		  )),
        hasDefaultArgument()
      )
   )

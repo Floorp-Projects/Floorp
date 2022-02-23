@@ -68,6 +68,9 @@ static inline bool NS_NeedsPlatformNativeHandling(char16_t aChar) {
                        // Tibetan; better to just use our class-based breaker.
       (0x0e01 <= aChar && aChar <= 0x0eff) ||  // Thai, Lao
 #else
+      // Routing Tibetan to the platform-native breaker currently results in
+      // WPT failures in a few css3-text-line-break-opclns-* testcases that mix
+      // a Tibetan character with other-script context.
       (0x0e01 <= aChar && aChar <= 0x0fff) ||  // Thai, Lao, Tibetan
 #endif
       (0x1780 <= aChar && aChar <= 0x17ff);  // Khmer

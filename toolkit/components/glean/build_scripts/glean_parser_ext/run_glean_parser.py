@@ -7,7 +7,6 @@
 import cpp
 import js
 import os
-import re
 import rust
 import sys
 
@@ -49,11 +48,7 @@ def get_parser_options(moz_app_version):
     app_version_major = moz_app_version.split(".", 1)[0]
     return {
         "allow_reserved": False,
-        "custom_is_expired": lambda expires: expires == "expired"
-        or expires != "never"
-        and int(expires) <= int(app_version_major),
-        "custom_validate_expires": lambda expires: expires in ("expired", "never")
-        or re.fullmatch(r"\d\d+", expires, flags=re.ASCII),
+        "expire_by_version": int(app_version_major),
     }
 
 
@@ -99,7 +94,9 @@ def parse_with_options(input_files, options):
     # bug 1720494: This should be a simple call to translate.transform
     counters = {}
     numerators_by_denominator: Dict[str, Any] = {}
-    for category_val in objects.values():
+    for (category_name, category_val) in objects.items():
+        if category_name == "tags":
+            continue
         for metric in category_val.values():
             fqmn = metric.identifier()
             if getattr(metric, "type", None) == "counter":

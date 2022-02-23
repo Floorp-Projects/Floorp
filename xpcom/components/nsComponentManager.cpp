@@ -112,6 +112,10 @@ bool ProcessSelectorMatches(ProcessSelector aSelector) {
     return !!(aSelector & Module::ALLOW_IN_VR_PROCESS);
   }
 
+  if (type == GeckoProcessType_Utility) {
+    return !!(aSelector & Module::ALLOW_IN_UTILITY_PROCESS);
+  }
+
   if (aSelector & Module::MAIN_PROCESS_ONLY) {
     return type == GeckoProcessType_Default;
   }
@@ -341,9 +345,17 @@ nsresult nsComponentManagerImpl::Init() {
         ProcessSelectorMatches(
             ProcessSelector::ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS);
     gProcessMatchTable[size_t(
+        ProcessSelector::ALLOW_IN_GPU_RDD_SOCKET_AND_UTILITY_PROCESS)] =
+        ProcessSelectorMatches(
+            ProcessSelector::ALLOW_IN_GPU_RDD_SOCKET_AND_UTILITY_PROCESS);
+    gProcessMatchTable[size_t(
         ProcessSelector::ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS)] =
         ProcessSelectorMatches(
             ProcessSelector::ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS);
+    gProcessMatchTable[size_t(
+        ProcessSelector::ALLOW_IN_GPU_RDD_VR_SOCKET_AND_UTILITY_PROCESS)] =
+        ProcessSelectorMatches(
+            ProcessSelector::ALLOW_IN_GPU_RDD_VR_SOCKET_AND_UTILITY_PROCESS);
   }
 
   MOZ_ASSERT(NOT_INITIALIZED == mStatus);

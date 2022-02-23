@@ -1,0 +1,13 @@
+include protocol PMyManager;
+
+namespace mozilla {
+namespace myns {
+
+protocol PMyManaged {
+  manager PMyManager;
+  child:
+    async __delete__(Shmem aShmem);
+};
+
+}    // namespace myns
+}    // namespace mozilla

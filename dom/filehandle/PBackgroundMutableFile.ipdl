@@ -6,6 +6,8 @@ include protocol PBackgroundFileHandle;
 include protocol PBackgroundIDBDatabase;
 
 include "mozilla/dom/filehandle/SerializationHelpers.h";
+include "mozilla/dom/indexedDB/ActorsChild.h";
+include "mozilla/dom/filehandle/ActorsParent.h";
 
 using mozilla::dom::FileMode
   from "mozilla/dom/FileModeBinding.h";
@@ -13,6 +15,7 @@ using mozilla::dom::FileMode
 namespace mozilla {
 namespace dom {
 
+[ManualDealloc, ChildImpl="indexedDB::BackgroundMutableFileChild", ParentImpl="BackgroundMutableFileParentBase"]
 sync protocol PBackgroundMutableFile
 {
   manager PBackgroundIDBDatabase;

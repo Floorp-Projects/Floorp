@@ -1263,6 +1263,10 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
         case CKM_NSS_CHACHA20_POLY1305:
         case CKM_CHACHA20_POLY1305:
             if (pMechanism->mechanism == CKM_NSS_CHACHA20_POLY1305) {
+                if (key_type != CKK_NSS_CHACHA20) {
+                    crv = CKR_KEY_TYPE_INCONSISTENT;
+                    break;
+                }
                 if ((pMechanism->pParameter == NULL) ||
                     (pMechanism->ulParameterLen != sizeof(CK_NSS_AEAD_PARAMS))) {
                     crv = CKR_MECHANISM_PARAM_INVALID;
@@ -1271,6 +1275,10 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
                 nss_aead_params_ptr = (CK_NSS_AEAD_PARAMS *)pMechanism->pParameter;
             } else {
                 CK_SALSA20_CHACHA20_POLY1305_PARAMS_PTR chacha_poly_params;
+                if (key_type != CKK_CHACHA20) {
+                    crv = CKR_KEY_TYPE_INCONSISTENT;
+                    break;
+                }
                 if ((pMechanism->pParameter == NULL) ||
                     (pMechanism->ulParameterLen !=
                      sizeof(CK_SALSA20_CHACHA20_POLY1305_PARAMS))) {
@@ -1288,10 +1296,6 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
             }
 
             context->multi = PR_FALSE;
-            if ((key_type != CKK_NSS_CHACHA20) && (key_type != CKK_CHACHA20)) {
-                crv = CKR_KEY_TYPE_INCONSISTENT;
-                break;
-            }
             att = sftk_FindAttribute(key, CKA_VALUE);
             if (att == NULL) {
                 crv = CKR_KEY_HANDLE_INVALID;

@@ -21,8 +21,18 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("network.cookie.sameSite.laxByDefault");
 });
 
+// Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+// All instances of addPermission and removePermission set up 3rd-party storage
+// access in a way that allows the test to proceed with TCP enabled.
+
 function run_test(url, shouldHaveCookies, description) {
   add_task(async () => {
+    await SpecialPowers.addPermission(
+      "3rdPartyStorage^http://example.com",
+      true,
+      url
+    );
+
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: "about:blank" },
       async browser => {
@@ -56,6 +66,10 @@ function run_test(url, shouldHaveCookies, description) {
           );
         }
       }
+    );
+    await SpecialPowers.removePermission(
+      "3rdPartyStorage^http://example.com",
+      url
     );
   });
 }

@@ -16,6 +16,7 @@
 
 #include "nsCOMPtr.h"
 #include "mozilla/dom/HTMLOptionElement.h"
+#include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "nsComboboxControlFrame.h"
 #include "nsContainerFrame.h"
@@ -121,22 +122,20 @@ role HTMLSelectOptionAccessible::NativeRole() const {
 }
 
 ENameValueFlag HTMLSelectOptionAccessible::NativeName(nsString& aName) const {
-  // CASE #1 -- great majority of the cases
-  // find the label attribute - this is what the W3C says we should use
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
-  if (!aName.IsEmpty()) return eNameOK;
-
-  // CASE #2 -- no label parameter, get the first child,
-  // use it if it is a text node
-  LocalAccessible* firstChild = LocalFirstChild();
-  nsIContent* text = firstChild ? firstChild->GetContent() : nullptr;
-  if (text && text->IsText()) {
-    nsTextEquivUtils::AppendTextEquivFromTextContent(text, &aName);
-    aName.CompressWhitespace();
+  if (auto* option = dom::HTMLOptionElement::FromNode(mContent)) {
+    option->GetAttr(nsGkAtoms::label, aName);
+    if (!aName.IsEmpty()) {
+      return eNameOK;
+    }
+    option->GetText(aName);
+    return eNameFromSubtree;
+  }
+  if (auto* group = dom::HTMLOptGroupElement::FromNode(mContent)) {
+    group->GetLabel(aName);
     return aName.IsEmpty() ? eNameOK : eNameFromSubtree;
   }
-
-  return eNameOK;
+  MOZ_ASSERT_UNREACHABLE("What content do we have?");
+  return eNameFromSubtree;
 }
 
 void HTMLSelectOptionAccessible::DOMAttributeChanged(
@@ -195,8 +194,8 @@ uint64_t HTMLSelectOptionAccessible::NativeState() const {
     // <select> is not collapsed: compare bounds to calculate OFFSCREEN
     LocalAccessible* listAcc = LocalParent();
     if (listAcc) {
-      nsIntRect optionRect = Bounds();
-      nsIntRect listRect = listAcc->Bounds();
+      LayoutDeviceIntRect optionRect = Bounds();
+      LayoutDeviceIntRect listRect = listAcc->Bounds();
       if (optionRect.Y() < listRect.Y() ||
           optionRect.YMost() > listRect.YMost()) {
         state |= states::OFFSCREEN;
@@ -244,14 +243,7 @@ void HTMLSelectOptionAccessible::ActionNameAt(uint8_t aIndex,
   if (aIndex == eAction_Select) aName.AssignLiteral("select");
 }
 
-uint8_t HTMLSelectOptionAccessible::ActionCount() const { return 1; }
-
-bool HTMLSelectOptionAccessible::DoAction(uint8_t aIndex) const {
-  if (aIndex != eAction_Select) return false;
-
-  DoCommand();
-  return true;
-}
+bool HTMLSelectOptionAccessible::HasPrimaryAction() const { return true; }
 
 void HTMLSelectOptionAccessible::SetSelected(bool aSelect) {
   HTMLOptionElement* option = HTMLOptionElement::FromNode(mContent);
@@ -286,16 +278,7 @@ bool HTMLSelectOptGroupAccessible::IsAcceptableChild(nsIContent* aEl) const {
   return aEl->IsCharacterData() || aEl->IsHTMLElement(nsGkAtoms::option);
 }
 
-uint8_t HTMLSelectOptGroupAccessible::ActionCount() const { return 0; }
-
-void HTMLSelectOptGroupAccessible::ActionNameAt(uint8_t aIndex,
-                                                nsAString& aName) {
-  aName.Truncate();
-}
-
-bool HTMLSelectOptGroupAccessible::DoAction(uint8_t aIndex) const {
-  return false;
-}
+bool HTMLSelectOptGroupAccessible::HasPrimaryAction() const { return false; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLComboboxAccessible
@@ -308,14 +291,10 @@ HTMLComboboxAccessible::HTMLComboboxAccessible(nsIContent* aContent,
   mGenericTypes |= eCombobox;
   mStateFlags |= eNoKidsFromDOM;
 
-  nsComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
-  if (comboFrame) {
-    nsIFrame* listFrame = comboFrame->GetDropDown();
-    if (listFrame) {
-      mListAccessible = new HTMLComboboxListAccessible(mParent, mContent, mDoc);
-      Document()->BindToDocument(mListAccessible, nullptr);
-      AppendChild(mListAccessible);
-    }
+  if ((nsComboboxControlFrame*)do_QueryFrame(GetFrame())) {
+    mListAccessible = new HTMLComboboxListAccessible(mParent, mContent, mDoc);
+    Document()->BindToDocument(mListAccessible, nullptr);
+    AppendChild(mListAccessible);
   }
 }
 
@@ -378,14 +357,7 @@ void HTMLComboboxAccessible::Value(nsString& aValue) const {
   if (option) option->Name(aValue);
 }
 
-uint8_t HTMLComboboxAccessible::ActionCount() const { return 1; }
-
-bool HTMLComboboxAccessible::DoAction(uint8_t aIndex) const {
-  if (aIndex != eAction_Click) return false;
-
-  DoCommand();
-  return true;
-}
+bool HTMLComboboxAccessible::HasPrimaryAction() const { return true; }
 
 void HTMLComboboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex != HTMLComboboxAccessible::eAction_Click) return;
@@ -457,16 +429,6 @@ HTMLComboboxListAccessible::HTMLComboboxListAccessible(LocalAccessible* aParent,
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLComboboxAccessible: LocalAccessible
-
-nsIFrame* HTMLComboboxListAccessible::GetFrame() const {
-  nsIFrame* frame = HTMLSelectListAccessible::GetFrame();
-  nsComboboxControlFrame* comboBox = do_QueryFrame(frame);
-  if (comboBox) {
-    return comboBox->GetDropDown();
-  }
-
-  return nullptr;
-}
 
 role HTMLComboboxListAccessible::NativeRole() const {
   return roles::COMBOBOX_LIST;

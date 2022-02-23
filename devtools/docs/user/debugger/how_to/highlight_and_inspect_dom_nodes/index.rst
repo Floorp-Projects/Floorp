@@ -16,4 +16,3 @@ Also, when you view the details of a DOM node in the code panel, objects that yo
 
 .. image:: highlight_dom_node.png
   :class: border
-

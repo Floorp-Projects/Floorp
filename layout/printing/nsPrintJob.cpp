@@ -9,7 +9,6 @@
 #include "nsDebug.h"
 #include "nsDocShell.h"
 #include "nsReadableUtils.h"
-#include "nsCRT.h"
 #include "nsQueryObject.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
@@ -47,19 +46,11 @@
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsService.h"
 #include "nsIPrintSession.h"
-#include "nsGfxCIID.h"
 #include "nsGkAtoms.h"
 #include "nsXPCOM.h"
 
 static const char sPrintSettingsServiceContractID[] =
     "@mozilla.org/gfx/printsettings-service;1";
-
-#include "nsThreadUtils.h"
-
-// Printing Prompts
-#include "nsIPrintingPromptService.h"
-static const char kPrintingPromptService[] =
-    "@mozilla.org/embedcomp/printingprompt-service;1";
 
 // Printing Timer
 #include "nsPagePrintTimer.h"
@@ -68,24 +59,17 @@ static const char kPrintingPromptService[] =
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 
-// Focus
-
 // Misc
 #include "gfxContext.h"
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/layout/RemotePrintJobChild.h"
 #include "nsISupportsUtils.h"
 #include "nsIScriptContext.h"
-#include "nsIDocumentObserver.h"
-#include "nsContentCID.h"
-#include "nsLayoutCID.h"
-#include "nsContentUtils.h"
-#include "nsLayoutUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "Text.h"
 
-#include "nsWidgetsCID.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecProxy.h"
 #include "nsViewManager.h"
@@ -94,7 +78,6 @@ static const char kPrintingPromptService[] =
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsFrameManager.h"
 #include "mozilla/ReflowInput.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewerPrint.h"
@@ -104,9 +87,6 @@ static const char kPrintingPromptService[] =
 #include "mozilla/Components.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLFrameElement.h"
-#include "nsContentList.h"
-#include "xpcpublic.h"
-#include "nsVariant.h"
 #include "mozilla/ServoStyleSet.h"
 
 using namespace mozilla;
@@ -577,7 +557,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   // need to be cleared from the settings at the end of the job.
   // XXX What lifetime does the printSession need to have?
   nsCOMPtr<nsIPrintSession> printSession;
-  bool remotePrintJobListening = false;
   if (!mIsCreatingPrintPreview) {
     rv = printData->mPrintSettings->GetPrintSession(
         getter_AddRefs(printSession));
@@ -592,7 +571,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
         // If we have a RemotePrintJob add it to the print progress listeners,
         // so it can forward to the parent.
         printData->mPrintProgressListeners.AppendElement(remotePrintJob);
-        remotePrintJobListening = true;
       }
     }
   }
@@ -621,112 +599,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_SILENT_PRINT, 1);
   }
 
-  // If printing via parent we still call ShowPrintDialog even for print preview
-  // because we use that to retrieve the print settings from the printer.
-  // The dialog is not shown, but this means we don't need to access the printer
-  // driver from the child, which causes sandboxing issues.
-  if (!mIsCreatingPrintPreview || printingViaParent) {
-    // Ask dialog to be Print Shown via the Plugable Printing Dialog Service
-    // This service is for the Print Dialog and the Print Progress Dialog
-    // If printing silently or you can't get the service continue on
-    // If printing via the parent then we need to confirm that the pref is set
-    // and get a remote print job, but the parent won't display a prompt.
-    // Note: The new print UI does not need to enter ShowPrintDialog below to
-    // spin the event loop and fetch real printer settings from the parent.
-    bool print_tab_modal_enabled = true;
-    if (!print_tab_modal_enabled && (!printSilently || printingViaParent)) {
-      nsCOMPtr<nsIPrintingPromptService> printPromptService(
-          do_GetService(kPrintingPromptService));
-      if (printPromptService) {
-        nsPIDOMWindowOuter* domWin = nullptr;
-        // We leave domWin as nullptr to indicate a call for print preview.
-        if (!mIsCreatingPrintPreview) {
-          domWin = aDoc->GetOriginalDocument()->GetWindow();
-          NS_ENSURE_TRUE(domWin, NS_ERROR_FAILURE);
-
-          if (!printSilently) {
-            if (mCreatedForPrintPreview) {
-              Telemetry::ScalarAdd(
-                  Telemetry::ScalarID::PRINTING_DIALOG_OPENED_VIA_PREVIEW, 1);
-            } else {
-              Telemetry::ScalarAdd(
-                  Telemetry::ScalarID::PRINTING_DIALOG_OPENED_WITHOUT_PREVIEW,
-                  1);
-            }
-          }
-        }
-
-        // Platforms not implementing a given dialog for the service may
-        // return NS_ERROR_NOT_IMPLEMENTED or an error code.
-        //
-        // NS_ERROR_NOT_IMPLEMENTED indicates they want default behavior
-        // Any other error code means we must bail out
-        //
-        rv = printPromptService->ShowPrintDialog(domWin,
-                                                 printData->mPrintSettings);
-
-        if (!mIsCreatingPrintPreview) {
-          if (rv == NS_ERROR_ABORT) {
-            // When printing silently we can't get here since the user doesn't
-            // have the opportunity to cancel printing.
-            if (mCreatedForPrintPreview) {
-              Telemetry::ScalarAdd(
-                  Telemetry::ScalarID::PRINTING_DIALOG_VIA_PREVIEW_CANCELLED,
-                  1);
-            } else {
-              Telemetry::ScalarAdd(
-                  Telemetry::ScalarID::
-                      PRINTING_DIALOG_WITHOUT_PREVIEW_CANCELLED,
-                  1);
-            }
-          }
-        }
-
-        //
-        // ShowPrintDialog triggers an event loop which means we can't assume
-        // that the state of this->{anything} matches the state we've checked
-        // above. Including that a given {thing} is non null.
-        if (NS_WARN_IF(mPrt != printData)) {
-          return NS_ERROR_FAILURE;
-        }
-
-        if (NS_SUCCEEDED(rv)) {
-          // since we got the dialog and it worked then make sure we
-          // are telling GFX we want to print silent
-          printSilently = true;
-
-          if (printData->mPrintSettings && !mIsCreatingPrintPreview) {
-            // The user might have changed shrink-to-fit in the print dialog, so
-            // update our copy of its state
-            printData->mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
-
-            // If we haven't already added the RemotePrintJob as a listener,
-            // add it now if there is one.
-            if (!remotePrintJobListening) {
-              RefPtr<layout::RemotePrintJobChild> remotePrintJob =
-                  printSession->GetRemotePrintJob();
-              if (remotePrintJob) {
-                printData->mPrintProgressListeners.AppendElement(
-                    remotePrintJob);
-              }
-            }
-          }
-        } else if (rv == NS_ERROR_NOT_IMPLEMENTED) {
-          // This means the Dialog service was there,
-          // but they choose not to implement this dialog and
-          // are looking for default behavior from the toolkit
-          rv = NS_OK;
-        }
-      } else {
-        // No dialog service available
-        rv = NS_ERROR_NOT_IMPLEMENTED;
-      }
-    }
-    // Check explicitly for abort because it's expected
-    if (rv == NS_ERROR_ABORT) return rv;
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   MOZ_TRY(devspec->Init(nullptr, printData->mPrintSettings,
                         mIsCreatingPrintPreview));
 
@@ -737,14 +609,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     RefPtr<nsPrintJob> self(this);
     printData->mPrintDC->RegisterPageDoneCallback(
         [self](nsresult aResult) { self->PageDone(aResult); });
-  }
-
-  bool print_tab_modal_enabled = true;
-  if (!print_tab_modal_enabled && mIsCreatingPrintPreview) {
-    // In legacy print-preview mode, override any UI that wants to PrintPreview
-    // any selection or page range.  The legacy print-preview intends to view
-    // every page in PrintPreview each time.
-    printData->mPrintSettings->SetPageRanges({});
   }
 
   MOZ_TRY(EnablePOsForPrinting());

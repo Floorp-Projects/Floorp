@@ -903,12 +903,10 @@ option(
 )
 
 
-@depends("--enable-wasm-moz-intgemm")
-def wasm_moz_intgemm(value):
-    if not value:
-        return
-
-    return True
+@depends("--enable-wasm-moz-intgemm", target)
+def wasm_moz_intgemm(value, target):
+    if value and target.cpu in ("x86", "x86_64"):
+        return True
 
 
 set_config("ENABLE_WASM_MOZ_INTGEMM", wasm_moz_intgemm)
@@ -959,46 +957,6 @@ def wasm_memory64(value, cranelift, simulator, target):
 
 set_config("ENABLE_WASM_MEMORY64", wasm_memory64)
 set_define("ENABLE_WASM_MEMORY64", wasm_memory64)
-
-# Support for checking for indirect call to null via traps
-# =====================================================
-
-
-@depends(milestone.is_nightly, "--enable-jit", "--enable-simulator")
-def default_wasm_call_indirect_null(is_nightly, enable_jit, simulator):
-    if not enable_jit:
-        return
-
-    if simulator:
-        return
-
-    if is_nightly:
-        return True
-
-
-option(
-    "--enable-wasm-call-indirect-null",
-    default=default_wasm_call_indirect_null,
-    help="{Enable|Disable} WebAssembly call-indirect-to-null optimization",
-)
-
-
-@depends("--enable-wasm-call-indirect-null", "--enable-jit", "--enable-simulator")
-def wasm_call_indirect_null(value, enable_jit, simulator):
-    if not value:
-        return
-
-    if not enable_jit:
-        return
-
-    if simulator:
-        return
-
-    return True
-
-
-set_config("ENABLE_WASM_CALL_INDIRECT_NULL", wasm_call_indirect_null)
-set_define("ENABLE_WASM_CALL_INDIRECT_NULL", wasm_call_indirect_null)
 
 # Options for generating the shell as a script
 # ============================================
@@ -1259,6 +1217,24 @@ set_config(
 )
 
 
+# Some platforms have HeapReg, some don't
+# =====================================================
+
+# The ARM simulator runs on x86 and might be excluded by the first test,
+# so we special-case it.
+
+
+@depends("--enable-simulator", target)
+def wasm_has_heapreg(simulator, target):
+    if target.cpu != "x86":
+        return True
+
+    if simulator and simulator[0] == "arm":
+        return True
+
+
+set_define("WASM_HAS_HEAPREG", wasm_has_heapreg)
+
 # Check for tm_zone, tm_gmtoff in struct tm
 # ===================================================
 with only_when(compile_environment):
@@ -1270,3 +1246,35 @@ with only_when(compile_environment):
             check_msg="for tm_zone and tm_gmtoff in struct tm",
         ),
     )
+
+#
+# Checks for library functions
+# ==============================================================
+with only_when(compile_environment & depends(target.os)(lambda os: os != "WINNT")):
+    set_define("HAVE_GETPAGESIZE", check_symbol("getpagesize"))
+    set_define("HAVE_GMTIME_R", check_symbol("gmtime_r"))
+    set_define("HAVE_LOCALTIME_R", check_symbol("localtime_r"))
+    set_define("HAVE_GETTID", check_symbol("gettid"))
+    set_define("HAVE_SETPRIORITY", check_symbol("setpriority"))
+    set_define("HAVE_SYSCALL", check_symbol("syscall"))
+    set_define("HAVE_GETC_UNLOCKED", check_symbol("getc_unlocked"))
+    set_define("HAVE_PTHREAD_GETNAME_NP", check_symbol("pthread_getname_np"))
+    set_define("HAVE_PTHREAD_GET_NAME_NP", check_symbol("pthread_get_name_np"))
+    set_define("HAVE_STRERROR", check_symbol("strerror"))
+
+    @depends(check_symbol("__cxa_demangle", language="C++"), moz_debug, dmd)
+    def demangle_symbols(cxa_demangle, moz_debug, dmd):
+        # Demangle only for debug or DMD builds
+        if cxa_demangle and (moz_debug or dmd):
+            return True
+
+    set_define("MOZ_DEMANGLE_SYMBOLS", demangle_symbols)
+
+    set_define(
+        "HAVE__UNWIND_BACKTRACE",
+        check_symbol("_Unwind_Backtrace", when=check_header("unwind.h")),
+    )
+
+with only_when(compile_environment):
+    set_define("HAVE__GETC_NOLOCK", check_symbol("_getc_nolock"))
+    set_define("HAVE_LOCALECONV", check_symbol("localeconv"))

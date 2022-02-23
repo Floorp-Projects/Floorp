@@ -246,6 +246,12 @@ pub fn probe_library(name: &str) -> Result<Library, Error> {
     Config::new().probe(name)
 }
 
+#[doc(hidden)]
+#[deprecated(note = "use config.target_supported() instance method instead")]
+pub fn target_supported() -> bool {
+    Config::new().target_supported()
+}
+
 /// Run `pkg-config` to get the value of a variable from a package using
 /// `--variable`.
 ///
@@ -394,6 +400,7 @@ impl Config {
         Ok(library)
     }
 
+    /// True if pkg-config is used for the host system, or configured for cross-compilation
     pub fn target_supported(&self) -> bool {
         let target = env::var_os("TARGET").unwrap_or_default();
         let host = env::var_os("HOST").unwrap_or_default();

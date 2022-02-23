@@ -9,6 +9,7 @@
 
 #include <type_traits>
 
+#include "gc/FinalizationRegistry.h"
 #include "gc/FreeOp.h"
 #include "gc/GCLock.h"
 #include "gc/Policy.h"
@@ -173,8 +174,7 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       externalStringCache_(this),
       functionToStringCache_(this),
       shapeZone_(this, this),
-      finalizationRegistries_(this, this),
-      finalizationRecordMap_(this, this),
+      finalizationRegistryZone_(this),
       jitZone_(this, nullptr),
       gcScheduled_(false),
       gcScheduledSaved_(false),
@@ -904,7 +904,9 @@ void Zone::clearScriptLCov(Realm* realm) {
 
 void Zone::clearRootsForShutdownGC() {
   // Finalization callbacks are not called if we're shutting down.
-  finalizationRecordMap().clear();
+  if (finalizationRegistryZone()) {
+    finalizationRegistryZone()->clearRecords();
+  }
 
   clearKeptObjects();
 }
@@ -922,3 +924,12 @@ bool Zone::keepDuringJob(HandleObject target) {
 }
 
 void Zone::clearKeptObjects() { keptObjects.ref().clear(); }
+
+bool Zone::ensureFinalizationRegistryZone() {
+  if (finalizationRegistryZone_.ref()) {
+    return true;
+  }
+
+  finalizationRegistryZone_ = js::MakeUnique<FinalizationRegistryZone>(this);
+  return bool(finalizationRegistryZone_.ref());
+}

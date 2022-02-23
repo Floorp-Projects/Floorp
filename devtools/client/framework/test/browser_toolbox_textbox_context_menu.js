@@ -15,15 +15,6 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function checkMenuEntryStates() {
-  // We have to disable CSP for this test otherwise the CSP of
-  // about:devtools-toolbox will block the data: url.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["security.csp.enable", false],
-      ["dom.security.skip_about_page_has_csp_assert", true],
-    ],
-  });
-
   info("Checking the state of edit menuitems with an empty clipboard");
   const toolbox = await openNewTabAndToolbox(URL, "inspector");
 
@@ -72,23 +63,13 @@ add_task(async function checkMenuEntryStates() {
 });
 
 add_task(async function automaticallyBindTexbox() {
-  // We have to disable CSP for this test otherwise the CSP of
-  // about:devtools-toolbox will block the data: url.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["security.csp.enable", false],
-      ["dom.security.skip_about_page_has_csp_assert", true],
-    ],
-  });
-
   info(
     "Registering a tool with an input field and making sure the context menu works"
   );
   gDevTools.registerTool({
     id: textboxToolId,
     isTargetSupported: () => true,
-    url: `data:text/html;charset=utf8,<input /><input type='text' />
-            <input type='search' /><textarea></textarea><input type='radio' />`,
+    url: CHROME_URL_ROOT + "doc_textbox_tool.html",
     label: "Context menu works without tool intervention",
     build: function(iframeWindow, toolbox) {
       this.panel = createTestPanel(iframeWindow, toolbox);

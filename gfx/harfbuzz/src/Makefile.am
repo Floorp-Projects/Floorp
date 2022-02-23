@@ -351,6 +351,7 @@ COMPILED_TESTS = \
 	test-ot-tag \
 	test-priority-queue \
 	test-set \
+	test-serialize \
 	test-unicode-ranges \
 	test-vector \
 	test-bimap \
@@ -396,6 +397,10 @@ test_ot_tag_LDADD = $(COMPILED_TESTS_LDADD)
 test_set_SOURCES = test-set.cc hb-static.cc
 test_set_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
 test_set_LDADD = $(COMPILED_TESTS_LDADD)
+
+test_serialize_SOURCES = test-serialize.cc hb-static.cc
+test_serialize_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_serialize_LDADD = $(COMPILED_TESTS_LDADD)
 
 test_unicode_ranges_SOURCES = test-unicode-ranges.cc
 test_unicode_ranges_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)

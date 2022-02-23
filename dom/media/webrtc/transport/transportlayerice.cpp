@@ -47,7 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nsComponentManagerUtils.h"
 #include "nsError.h"
 #include "nsNetCID.h"
-#include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 
 // nICEr includes
@@ -94,7 +93,7 @@ void TransportLayerIce::SetParameters(RefPtr<NrIceMediaStream> stream,
                                       int component) {
   // Stream could be null in the case of some badly written js that causes
   // us to be in an ICE restart case, but not have valid streams due to
-  // not calling PeerConnectionMedia::EnsureTransports if
+  // not calling PeerConnectionImpl::EnsureTransports if
   // PeerConnectionImpl::SetSignalingState_m thinks the conditions were
   // not correct.  We also solved a case where an incoming answer was
   // incorrectly beginning an ICE restart when the offer did not indicate one.

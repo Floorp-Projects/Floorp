@@ -162,7 +162,6 @@ void GMPProcessParent::Delete(nsCOMPtr<nsIRunnable> aCallback) {
 
 void GMPProcessParent::DoDelete() {
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
-  Join();
 
   if (mDeletedCallback) {
     mDeletedCallback->Run();

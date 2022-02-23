@@ -160,7 +160,9 @@ nsAsyncStreamCopier::Cancel(nsresult status) {
   nsCOMPtr<nsISupports> copierCtx;
   {
     MutexAutoLock lock(mLock);
-    if (!mIsPending) return NS_OK;
+    if (!mIsPending) {
+      return NS_OK;
+    }
     copierCtx.swap(mCopierCtx);
   }
 
@@ -214,6 +216,7 @@ nsAsyncStreamCopier::GetLoadGroup(nsILoadGroup** aLoadGroup) {
 NS_IMETHODIMP
 nsAsyncStreamCopier::SetLoadGroup(nsILoadGroup* aLoadGroup) { return NS_OK; }
 
+// Can't be accessed by multiple threads yet
 nsresult nsAsyncStreamCopier::InitInternal(nsIInputStream* source,
                                            nsIOutputStream* sink,
                                            nsIEventTarget* target,
@@ -328,7 +331,10 @@ nsAsyncStreamCopier::AsyncCopy(nsIRequestObserver* observer, nsISupports* ctx) {
 
   // from this point forward, AsyncCopy is going to return NS_OK.  any errors
   // will be reported via OnStopRequest.
-  mIsPending = true;
+  {
+    MutexAutoLock lock(mLock);
+    mIsPending = true;
+  }
 
   if (mObserver) {
     rv = mObserver->OnStartRequest(AsRequest());

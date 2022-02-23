@@ -6,12 +6,12 @@
 // Should access the closest breakpoint to a passed in cursorPosition.
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "long");
+  const dbg = await initDebugger("doc-scripts.html", "long.js");
 
   let cursorPosition = { line: undefined, column: undefined };
 
-  await selectSource(dbg, "long");
-  await waitForSelectedSource(dbg, "long");
+  await selectSource(dbg, "long.js");
+  await waitForSelectedSource(dbg, "long.js");
 
   info("toggle conditional panel with shortcut: no breakpoints, default cursorPosition");
   pressKey(dbg, "toggleCondPanel");
@@ -52,7 +52,7 @@ add_task(async function() {
   info("toggle conditional panel with shortcut and add condition to first breakpoint");
   setConditionalBreakpoint(dbg, "1");
   await waitForCondition(dbg, 1);
-  const firstBreakpoint = findColumnBreakpoint(dbg, "long", 32, 2);
+  const firstBreakpoint = findColumnBreakpoint(dbg, "long.js", 32, 2);
   is(firstBreakpoint.options.condition, "1", "first breakpoint created with condition using shortcut");
 
   info("set cursor at second breakpoint position and activate breakpoint");
@@ -62,7 +62,7 @@ add_task(async function() {
   info("toggle conditional panel with shortcut and add condition to second breakpoint");
   setConditionalBreakpoint(dbg, "2");
   await waitForCondition(dbg, 2);
-  const secondBreakpoint = findColumnBreakpoint(dbg, "long", 32, 26);
+  const secondBreakpoint = findColumnBreakpoint(dbg, "long.js", 32, 26);
   is(secondBreakpoint.options.condition, "2", "second breakpoint created with condition using shortcut");
 
   info("set cursor position near first breakpoint, toggle conditional panel and edit breakpoint");
@@ -100,7 +100,7 @@ async function waitForConditionalPanelFocus(dbg) {
 // from browser_dbg-breakpoints-columns.js
 async function enableFirstBreakpoint(dbg) {
   getCM(dbg).setCursor({ line: 32, ch: 0 });
-  await addBreakpoint(dbg, "long", 32);
+  await addBreakpoint(dbg, "long.js", 32);
   const bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
 
   ok(bpMarkers.length === 2, "2 column breakpoints");

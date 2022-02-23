@@ -134,7 +134,7 @@ bool InterpretObjLiteralObj(JSContext* cx, HandlePlainObject obj,
                   !insn.getKey().isArrayIndex());
 
     if (kind == PropertySetKind::Normal && insn.getKey().isArrayIndex()) {
-      propId = INT_TO_JSID(insn.getKey().getArrayIndex());
+      propId = PropertyKey::Int(insn.getKey().getArrayIndex());
     } else {
       JSAtom* jsatom =
           atomCache.getExistingAtomAt(cx, insn.getKey().getAtomIndex());
@@ -268,14 +268,6 @@ Shape* InterpretObjLiteralShape(JSContext* cx,
                      GlobalObject::getOrCreatePrototype(cx, JSProto_Object));
   if (!proto) {
     return nullptr;
-  }
-
-  // In rare cases involving off-thread XDR, Object.prototype is not yet marked
-  // used-as-prototype, so do that now.
-  if (MOZ_UNLIKELY(!proto->isUsedAsPrototype())) {
-    if (!JSObject::setIsUsedAsPrototype(cx, proto)) {
-      return nullptr;
-    }
   }
 
   return SharedShape::getInitialOrPropMapShape(

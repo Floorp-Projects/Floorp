@@ -378,7 +378,7 @@ class HTMLElement(object):
 class ShadowRoot(object):
     """A Class to handling Shadow Roots"""
 
-    identifiers = WEB_SHADOW_ROOT_KEY
+    identifiers = (WEB_SHADOW_ROOT_KEY,)
 
     def __init__(self, marionette, id, kind=WEB_SHADOW_ROOT_KEY):
         self.marionette = marionette
@@ -492,6 +492,7 @@ class Marionette(object):
         self.bin = bin
         self.client = None
         self.instance = None
+        self.requested_capabilities = None
         self.session = None
         self.session_id = None
         self.process_id = None
@@ -667,22 +668,9 @@ class Marionette(object):
             self._handle_error(err)
 
         if key is not None:
-            return self._unwrap_response(res.get(key))
+            return self._from_json(res.get(key))
         else:
-            return self._unwrap_response(res)
-
-    def _unwrap_response(self, value):
-
-        if isinstance(value, dict) and any(
-            k in value.keys() for k in HTMLElement.identifiers
-        ):
-            return HTMLElement._from_json(value, self)
-        elif isinstance(value, dict) and ShadowRoot.identifiers in value.keys():
-            return ShadowRoot._from_json(value, self)
-        elif isinstance(value, list):
-            return list(self._unwrap_response(item) for item in value)
-        else:
-            return value
+            return self._from_json(res)
 
     def _handle_error(self, obj):
         error = obj["error"]
@@ -944,7 +932,7 @@ class Marionette(object):
             self.delete_session()
             self.instance.restart(prefs)
             self.raise_for_port()
-            self.start_session()
+            self.start_session(self.requested_capabilities)
 
             # Restore the context as used before the restart
             self.set_context(context)
@@ -1085,8 +1073,8 @@ class Marionette(object):
                 "restart() can only be called "
                 "on Gecko instances launched by Marionette"
             )
-        context = self._send_message("Marionette:GetContext", key="value")
 
+        context = self._send_message("Marionette:GetContext", key="value")
         restart_details = {"cause": "restart", "forced": False}
 
         # Safe mode is only available with in_app restarts.
@@ -1167,7 +1155,7 @@ class Marionette(object):
                 "restarting the process".format(restart_details["cause"])
             )
 
-        self.start_session()
+        self.start_session(self.requested_capabilities)
         # Restore the context as used before the restart
         self.set_context(context)
 
@@ -1203,6 +1191,7 @@ class Marionette(object):
         """
         if capabilities is None:
             capabilities = {"strictFileInteractability": True}
+        self.requested_capabilities = capabilities
 
         if timeout is None:
             timeout = self.startup_timeout
@@ -1595,19 +1584,18 @@ class Marionette(object):
         return wrapped
 
     def _from_json(self, value):
-        if isinstance(value, list):
-            unwrapped = []
-            for item in value:
-                unwrapped.append(self._from_json(item))
-            return unwrapped
+        if isinstance(value, dict) and any(
+            k in value.keys() for k in HTMLElement.identifiers
+        ):
+            return HTMLElement._from_json(value, self)
+        elif isinstance(value, dict) and any(
+            k in value.keys() for k in ShadowRoot.identifiers
+        ):
+            return ShadowRoot._from_json(value, self)
         elif isinstance(value, dict):
-            unwrapped = {}
-            for key in value:
-                if key in HTMLElement.identifiers:
-                    return HTMLElement._from_json(value[key], self)
-                else:
-                    unwrapped[key] = self._from_json(value[key])
-            return unwrapped
+            return {key: self._from_json(val) for key, val in value.items()}
+        elif isinstance(value, list):
+            return list(self._from_json(item) for item in value)
         else:
             return value
 
@@ -1708,7 +1696,7 @@ class Marionette(object):
             if script_timeout is not None:
                 self.timeout.script = original_timeout
 
-        return self._from_json(rv)
+        return rv
 
     def execute_async_script(
         self,
@@ -1778,7 +1766,7 @@ class Marionette(object):
             if script_timeout is not None:
                 self.timeout.script = original_timeout
 
-        return self._from_json(rv)
+        return rv
 
     def find_element(self, method, target, id=None):
         """Returns an :class:`~marionette_driver.marionette.HTMLElement`

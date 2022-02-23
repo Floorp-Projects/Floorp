@@ -1370,7 +1370,7 @@ RasterImage::Draw(gfxContext* aContext, const IntSize& aSize,
     return ImgDrawResult::BAD_ARGS;
   }
 
-  if (mAnimationConsumers == 0) {
+  if (mAnimationConsumers == 0 && mAnimationState) {
     SendOnUnlockedDraw(aFlags);
   }
 

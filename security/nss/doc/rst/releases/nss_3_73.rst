@@ -1,0 +1,65 @@
+.. _mozilla_projects_nss_nss_3_73_release_notes:
+
+NSS 3.73 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.73 was released on **1 December 2021**.
+
+   **This release contains an important security fix for CVE-2021-43527:**
+
+   https://www.mozilla.org/en-US/security/advisories/mfsa2021-51/
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_73_RTM. NSS 3.73 requires NSPR 4.32 or newer.
+
+   NSS 3.73 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_73_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_in_nss_3.73:
+
+`Changes in NSS 3.73 <#changes_in_nss_3.73>`__
+----------------------------------------------------
+
+.. container::
+
+   - Bug 1735028 - Check for missing signedData field.
+   - Bug 1737470 - Ensure DER encoded signatures are within size limits.
+   - Bug 1729550 - NSS needs FiPS 140-3 version indicators.
+   - Bug 1692132 - pkix_CacheCert_Lookup doesn't return cached certs.
+   - Bug 1738600 - Sunset Coverity from NSS.
+
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.73 shared libraries are backwards-compatible with all older NSS 3.x shared
+   libraries. A program linked with older NSS 3.x shared libraries will work with
+   this new version of the shared libraries without recompiling or
+   relinking. Furthermore, applications that restrict their use of NSS APIs to the
+   functions listed in NSS Public Functions will remain compatible with future
+   versions of the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).

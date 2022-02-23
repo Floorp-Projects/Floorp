@@ -35,8 +35,6 @@ class ActiveLayerTracker {
    *   eCSSProperty_offset_path, eCSSProperty_offset_distance,
    *   eCSSProperty_offset_rotate, eCSSProperty_offset_anchor,
    *   eCSSProperty_opacity
-   *   eCSSProperty_left, eCSSProperty_top,
-   *   eCSSProperty_right, eCSSProperty_bottom
    * and use that information to guess whether style changes are animated.
    */
 
@@ -48,12 +46,6 @@ class ActiveLayerTracker {
    */
   static void NotifyRestyle(nsIFrame* aFrame, nsCSSPropertyID aProperty);
   /**
-   * Notify aFrame's left/top/right/bottom properties as having (maybe)
-   * changed due to a restyle, and therefore possibly wanting an active layer
-   * to render that style. Any such marking will time out after a short period.
-   */
-  static void NotifyOffsetRestyle(nsIFrame* aFrame);
-  /**
    * Mark aFrame as being known to have an animation of aProperty.
    * Any such marking will time out after a short period.
    * aNewValue and aDOMCSSDecl are used to determine whether the property's
@@ -62,13 +54,6 @@ class ActiveLayerTracker {
   static void NotifyAnimated(nsIFrame* aFrame, nsCSSPropertyID aProperty,
                              const nsACString& aNewValue,
                              nsDOMCSSDeclaration* aDOMCSSDecl);
-  /**
-   * Notify aFrame as being known to have an animation of aProperty through an
-   * inline style modification during aScrollFrame's scroll event handler.
-   */
-  static void NotifyAnimatedFromScrollHandler(nsIFrame* aFrame,
-                                              nsCSSPropertyID aProperty,
-                                              nsIFrame* aScrollFrame);
   /**
    * Notify that a property in the inline style rule of aFrame's element
    * has been modified.
@@ -94,17 +79,6 @@ class ActiveLayerTracker {
    */
   static bool IsStyleAnimated(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                               const nsCSSPropertyIDSet& aPropertySet);
-  /**
-   * Return true if any of aFrame's offset property styles should be considered
-   * as being animated for constructing active layers.
-   */
-  static bool IsOffsetStyleAnimated(nsIFrame* aFrame);
-  /**
-   * Return true if aFrame's background-position-x or background-position-y
-   * property is animated.
-   */
-  static bool IsBackgroundPositionAnimated(nsDisplayListBuilder* aBuilder,
-                                           nsIFrame* aFrame);
   /**
    * Return true if aFrame's transform-like property,
    * i.e. transform/translate/rotate/scale, is animated.
@@ -135,28 +109,6 @@ class ActiveLayerTracker {
    * frame after the frame has been created.
    */
   static void TransferActivityToFrame(nsIContent* aContent, nsIFrame* aFrame);
-
-  /*
-   * We track modifications to the content of certain frames (i.e. canvas
-   * frames) and use that to make layering decisions.
-   */
-
-  /**
-   * Mark aFrame's content as being active. This marking will time out after
-   * a short period.
-   */
-  static void NotifyContentChange(nsIFrame* aFrame);
-  /**
-   * Return true if this frame's content is still marked as active.
-   */
-  static bool IsContentActive(nsIFrame* aFrame);
-
-  /**
-   * Called before and after a scroll event handler is executed, with the
-   * scrollframe or nullptr, respectively. This acts as a hint to treat
-   * inline style changes during the handler differently.
-   */
-  static void SetCurrentScrollHandlerFrame(nsIFrame* aFrame);
 };
 
 }  // namespace mozilla

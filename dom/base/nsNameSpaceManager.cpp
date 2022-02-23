@@ -19,7 +19,6 @@
 #include "nsGkAtoms.h"
 #include "mozilla/dom/Document.h"
 #include "nsString.h"
-#include "mozilla/dom/NodeInfo.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"

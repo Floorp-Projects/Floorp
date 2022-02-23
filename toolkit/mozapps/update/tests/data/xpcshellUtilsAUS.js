@@ -2465,8 +2465,12 @@ function isBinarySigned(aBinPath) {
  * Helper function for setting up the application files required to launch the
  * application for the updater tests by either copying or creating symlinks to
  * the files.
+ *
+ * @param options.requiresOmnijar when true, copy or symlink omnijars as well.
+ * This may be required to launch the updated application and have non-trivial
+ * functionality available.
  */
-function setupAppFiles() {
+function setupAppFiles({ requiresOmnijar = false } = {}) {
   debugDump(
     "start - copying or creating symlinks to application files " +
       "for the test"
@@ -2494,6 +2498,18 @@ function setupAppFiles() {
     { relPath: FILE_APPLICATION_INI, inGreDir: true },
     { relPath: "dependentlibs.list", inGreDir: true },
   ];
+
+  if (requiresOmnijar) {
+    appFiles.push({ relPath: AppConstants.OMNIJAR_NAME, inGreDir: true });
+
+    if (AppConstants.MOZ_BUILD_APP == "browser") {
+      // Only Firefox uses an app-specific omnijar.
+      appFiles.push({
+        relPath: "browser/" + AppConstants.OMNIJAR_NAME,
+        inGreDir: true,
+      });
+    }
+  }
 
   // On Linux the updater.png must also be copied and libsoftokn3.so must be
   // symlinked or copied.
@@ -3080,12 +3096,18 @@ async function waitForHelperExit() {
  *          passed to createUpdaterINI.
  * @param   aSetupActiveUpdate
  *          Whether to setup the active update.
+ *
+ * @param   options.requiresOmnijar
+ *          When true, copy or symlink omnijars as well.  This may be required
+ *          to launch the updated application and have non-trivial functionality
+ *          available.
  */
 async function setupUpdaterTest(
   aMarFile,
   aPostUpdateAsync,
   aPostUpdateExeRelPathPrefix = "",
-  aSetupActiveUpdate = true
+  aSetupActiveUpdate = true,
+  { requiresOmnijar = false } = {}
 ) {
   debugDump("start - updater test setup");
   let updatesPatchDir = getUpdateDirFile(DIR_PATCH);
@@ -3200,7 +3222,7 @@ async function setupUpdaterTest(
 
   await TestUtils.waitForCondition(() => {
     try {
-      setupAppFiles();
+      setupAppFiles({ requiresOmnijar });
       return true;
     } catch (e) {
       logTestInfo("exception when calling setupAppFiles, Exception: " + e);
@@ -3568,8 +3590,8 @@ function checkFilesAfterUpdateSuccess(
       if (AppConstants.platform != "win" && aTestFile.comparePerms) {
         // Check if the permssions as set in the complete mar file are correct.
         Assert.equal(
-          testFile.permissions & 0xfff,
-          aTestFile.comparePerms & 0xfff,
+          "0o" + (testFile.permissions & 0xfff).toString(8),
+          "0o" + (aTestFile.comparePerms & 0xfff).toString(8),
           "the file permissions" + MSG_SHOULD_EQUAL
         );
       }
@@ -3842,9 +3864,14 @@ function checkFilesAfterUpdateCommon(aStageDirExists, aToBeDeletedDirExists) {
  * Helper function for updater binary tests for verifying the contents of the
  * updater callback application log which should contain the arguments passed to
  * the callback application.
+ *
+ * @param appLaunchLog (optional)
+ *        The application log nsIFile to verify.  Defaults to the second
+ *        parameter passed to the callback executable (in the apply directory).
  */
-function checkCallbackLog() {
-  let appLaunchLog = getApplyDirFile(DIR_RESOURCES + gCallbackArgs[1]);
+function checkCallbackLog(
+  appLaunchLog = getApplyDirFile(DIR_RESOURCES + gCallbackArgs[1])
+) {
   if (!appLaunchLog.exists()) {
     // Uses do_timeout instead of do_execute_soon to lessen log spew.
     do_timeout(FILE_IN_USE_TIMEOUT_MS, checkCallbackLog);

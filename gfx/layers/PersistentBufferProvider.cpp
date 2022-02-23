@@ -10,6 +10,7 @@
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/DrawTargetWebgl.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_layers.h"
@@ -100,15 +101,39 @@ PersistentBufferProviderAccelerated::PersistentBufferProviderAccelerated(
     DrawTarget* aDt)
     : PersistentBufferProviderBasic(aDt) {
   MOZ_COUNT_CTOR(PersistentBufferProviderAccelerated);
+  MOZ_ASSERT(aDt->GetBackendType() == BackendType::WEBGL);
 }
 
 PersistentBufferProviderAccelerated::~PersistentBufferProviderAccelerated() {
   MOZ_COUNT_DTOR(PersistentBufferProviderAccelerated);
 }
 
-ClientWebGLContext* PersistentBufferProviderAccelerated::AsWebgl() {
-  return (ClientWebGLContext*)mDrawTarget->GetNativeSurface(
-      NativeSurfaceType::WEBGL_CONTEXT);
+inline gfx::DrawTargetWebgl*
+PersistentBufferProviderAccelerated::GetDrawTargetWebgl() const {
+  return static_cast<gfx::DrawTargetWebgl*>(mDrawTarget.get());
+}
+
+Maybe<layers::SurfaceDescriptor>
+PersistentBufferProviderAccelerated::GetFrontBuffer() {
+  return GetDrawTargetWebgl()->GetFrontBuffer();
+}
+
+bool PersistentBufferProviderAccelerated::CopySnapshotTo(gfx::DrawTarget* aDT) {
+  return GetDrawTargetWebgl()->CopySnapshotTo(aDT);
+}
+
+already_AddRefed<gfx::DrawTarget>
+PersistentBufferProviderAccelerated::BorrowDrawTarget(
+    const gfx::IntRect& aPersistedRect) {
+  GetDrawTargetWebgl()->BeginFrame(aPersistedRect);
+  return PersistentBufferProviderBasic::BorrowDrawTarget(aPersistedRect);
+}
+
+bool PersistentBufferProviderAccelerated::ReturnDrawTarget(
+    already_AddRefed<gfx::DrawTarget> aDT) {
+  bool result = PersistentBufferProviderBasic::ReturnDrawTarget(std::move(aDT));
+  GetDrawTargetWebgl()->EndFrame();
+  return result;
 }
 
 static already_AddRefed<TextureClient> CreateTexture(

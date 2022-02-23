@@ -30,7 +30,7 @@ For more details and other workflows see the "Advanced guide" below.
 ### Checking out the code
 
 ```bash
-git clone https://github.com/libjxl/libjxl.git --recursive
+git clone https://github.com/libjxl/libjxl.git --recursive --shallow-submodules
 ```
 
 This repository uses git submodules to handle some third party dependencies
@@ -38,8 +38,19 @@ under `third_party`, that's why is important to pass `--recursive`. If you
 didn't check out with `--recursive`, or any submodule has changed, run:
 
 ```bash
+git submodule update --init --recursive --depth 1 --recommend-shallow
+```
+
+The `--shallow-submodules` and `--depth 1 --recommend-shallow` options create
+shallow clones which only downloads the commits requested, and is all that is
+needed to build `libjxl`. Should full clones be necessary, you could always run:
+
+```bash
+git submodule foreach git fetch --unshallow
 git submodule update --init --recursive
 ```
+
+which pulls the rest of the commits in the submodules.
 
 Important: If you downloaded a zip file or tarball from the web interface you
 won't get the needed submodules and the code will not compile. You can download
@@ -52,7 +63,7 @@ Required dependencies for compiling the code, in a Debian/Ubuntu based
 distribution run:
 
 ```bash
-sudo apt install cmake pkg-config libbrotli-dev
+sudo apt install cmake pkg-config libbrotli-dev libgflags-dev
 ```
 
 Optional dependencies for supporting other formats in the `cjxl`/`djxl` tools,

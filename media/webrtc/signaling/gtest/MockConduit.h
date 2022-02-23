@@ -24,6 +24,8 @@ class MockConduit : public MediaSessionConduit {
   MockConduit() = default;
 
   MOCK_CONST_METHOD0(type, Type());
+  MOCK_CONST_METHOD0(ActiveSendPayloadType, Maybe<int>());
+  MOCK_CONST_METHOD0(ActiveRecvPayloadType, Maybe<int>());
   MOCK_METHOD1(SetTransportActive, void(bool));
   MOCK_METHOD0(SenderRtpSendEvent, MediaEventSourceExc<MediaPacket>&());
   MOCK_METHOD0(SenderRtcpSendEvent, MediaEventSourceExc<MediaPacket>&());
@@ -40,6 +42,7 @@ class MockConduit : public MediaSessionConduit {
   MOCK_CONST_METHOD0(GetLocalSSRCs, Ssrcs());
   MOCK_CONST_METHOD0(GetRemoteSSRC, Maybe<Ssrc>());
   MOCK_METHOD1(UnsetRemoteSSRC, void(Ssrc));
+  MOCK_METHOD0(DisableSsrcChanges, void());
   MOCK_CONST_METHOD1(HasCodecPluginID, bool(uint64_t));
   MOCK_METHOD0(RtcpByeEvent, MediaEventSource<void>&());
   MOCK_METHOD0(RtcpTimeoutEvent, MediaEventSource<void>&());

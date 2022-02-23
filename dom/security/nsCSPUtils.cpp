@@ -123,7 +123,7 @@ bool CSP_ShouldResponseInheritCSP(nsIChannel* aChannel) {
 
 void CSP_ApplyMetaCSPToDoc(mozilla::dom::Document& aDoc,
                            const nsAString& aPolicyStr) {
-  if (!mozilla::StaticPrefs::security_csp_enable() || aDoc.IsLoadedAsData()) {
+  if (aDoc.IsLoadedAsData()) {
     return;
   }
 

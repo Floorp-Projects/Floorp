@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-
 // Implementation note: It seems tempting to use if cfg!(feature = ...) directly
 // in the macro, but that doesn't work, as the feature would be evaluated
 // against the dependent crate.
@@ -19,10 +18,10 @@
 // is also how rust's `debug_assert!` is implemented)
 
 /// Whether Nightly-only assertions are enabled.
-pub const NIGHTLY_BUILD: bool = cfg!(feature = "nightly");
+pub use mozbuild::config::NIGHTLY_BUILD;
 
 /// Whether diagnostic assertions are enabled.
-pub const MOZ_DIAGNOSTIC_ASSERT_ENABLED: bool = cfg!(feature = "diagnostic");
+pub use mozbuild::config::MOZ_DIAGNOSTIC_ASSERT_ENABLED;
 
 /// assert! on Nightly, gets compiled out otherwise.
 #[macro_export]

@@ -19,6 +19,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ProfilerLabels.h"
 
+#include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsPoint.h"

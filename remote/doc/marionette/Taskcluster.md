@@ -13,13 +13,14 @@ one-click loaner as provided by Taskcluster. Such a loaner creates
 an interactive task you can interact with via a shell and VNC.
 
 To create an interactive task for a Marionette job which is shown
-as failed on Treeherder, follow the Taskcluster documentation for
-[Debugging a task].
+as failed on Treeherder, select the job, click the ellipse in the lower
+left pane, and choose `Create Interactive Task`.
 
 Please note that you need special permissions to actually request
 such a loaner.
 
-When the task has been created the shell needs to be opened.
+When the task has been created you will receive an email with the connection
+details. Open the referenced shell and you will be connected via a WebSocket.
 Once that has been done a wizard will automatically launch and
 provide some options. Best here is to choose the second option,
 which will run all the setup steps, installs the Firefox or Fennec
@@ -27,7 +28,6 @@ binary, and then exits.
 
 [Taskcluster]: https://docs.taskcluster.net/
 [Treeherder]: https://treeherder.mozilla.org
-[Debugging a task]: https://docs.taskcluster.net/tutorial/debug-task#content
 
 
 Setting up the Marionette environment

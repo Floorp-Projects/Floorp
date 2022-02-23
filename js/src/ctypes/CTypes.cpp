@@ -1871,8 +1871,8 @@ static bool DefineToStringTag(JSContext* cx, HandleObject obj,
     return false;
   }
 
-  RootedId toStringTagId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
-                                 cx, JS::SymbolCode::toStringTag)));
+  RootedId toStringTagId(
+      cx, JS::GetWellKnownSymbolKey(cx, JS::SymbolCode::toStringTag));
   return JS_DefinePropertyById(cx, obj, toStringTagId, toStringTagStr,
                                JSPROP_READONLY);
 }
@@ -2954,19 +2954,19 @@ static bool jsidToBigInteger(JSContext* cx, jsid val, bool allowString,
                              IntegerType* result) {
   static_assert(numeric_limits<IntegerType>::is_exact);
 
-  if (JSID_IS_INT(val)) {
+  if (val.isInt()) {
     // Make sure the integer fits in the alotted precision, and has the right
     // sign.
-    int32_t i = JSID_TO_INT(val);
+    int32_t i = val.toInt();
     return ConvertExact(i, result);
   }
-  if (allowString && JSID_IS_STRING(val)) {
+  if (allowString && val.isString()) {
     // Allow conversion from base-10 or base-16 strings, provided the result
     // fits in IntegerType. (This allows an Int64 or UInt64 object to be passed
     // to the JS array element operator, which will automatically call
     // toString() on the object for us.)
     bool dummy;
-    return StringToInteger(cx, JSID_TO_STRING(val), result, &dummy);
+    return StringToInteger(cx, val.toString(), result, &dummy);
   }
   return false;
 }
@@ -3734,12 +3734,12 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
         for (size_t i = 0; i < props.length(); ++i) {
           id = props[i];
 
-          if (!JSID_IS_STRING(id)) {
+          if (!id.isString()) {
             return PropNameNonStringError(cx, id, val, convType, funObj,
                                           argIndex);
           }
 
-          JSLinearString* name = JSID_TO_LINEAR_STRING(id);
+          JSLinearString* name = id.toLinearString();
           const FieldInfo* field =
               StructType::LookupField(cx, targetType, name);
           if (!field) {
@@ -5666,8 +5666,8 @@ bool ArrayType::Getter(JSContext* cx, HandleObject obj, HandleId idval,
     return true;
   }
   bool dummy2;
-  if (!ok && JSID_IS_STRING(idval) &&
-      !StringToInteger(cx, JSID_TO_STRING(idval), &dummy, &dummy2)) {
+  if (!ok && idval.isString() &&
+      !StringToInteger(cx, idval.toString(), &dummy, &dummy2)) {
     // String either isn't a number, or doesn't fit in size_t.
     // Chances are it's a regular property lookup, so return.
     return true;
@@ -5713,8 +5713,8 @@ bool ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval,
     return true;
   }
   bool dummy2;
-  if (!ok && JSID_IS_STRING(idval) &&
-      !StringToInteger(cx, JSID_TO_STRING(idval), &dummy, &dummy2)) {
+  if (!ok && idval.isString() &&
+      !StringToInteger(cx, idval.toString(), &dummy, &dummy2)) {
     // String either isn't a number, or doesn't fit in size_t.
     // Chances are it's a regular property lookup, so return.
     return result.succeed();
@@ -5818,7 +5818,7 @@ static JSLinearString* ExtractStructField(JSContext* cx, HandleValue val,
   }
 
   RootedId nameid(cx, props[0]);
-  if (!JSID_IS_STRING(nameid)) {
+  if (!nameid.isString()) {
     FieldDescriptorNameError(cx, nameid);
     return nullptr;
   }
@@ -5843,7 +5843,7 @@ static JSLinearString* ExtractStructField(JSContext* cx, HandleValue val,
     return nullptr;
   }
 
-  return JSID_TO_LINEAR_STRING(nameid);
+  return nameid.toLinearString();
 }
 
 // For a struct field with 'name' and 'type', add an element of the form

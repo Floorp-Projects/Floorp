@@ -48,6 +48,8 @@
 	0	rsa_-K		RSA_Populate
 	0	dsa_-S		DSA_Sign
 	0	dsa_-V		DSA_Verify
+	0	ecdsa_-S	ECDSA_Sign
+	0	ecdsa_-V	ECDSA_Verify
 	0	md2_-H		MD2_Hash
 	0	md5_-H		MD5_Hash
 	0	sha1_-H		SHA1_Hash

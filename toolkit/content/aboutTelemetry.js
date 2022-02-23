@@ -47,7 +47,8 @@ const PREF_TELEMETRY_SERVER_OWNER = "toolkit.telemetry.server_owner";
 const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 const PREF_DEBUG_SLOW_SQL = "toolkit.telemetry.debugSlowSql";
 const PREF_SYMBOL_SERVER_URI = "profiler.symbolicationUrl";
-const DEFAULT_SYMBOL_SERVER_URI = "https://symbols.mozilla.org/symbolicate/v4";
+const DEFAULT_SYMBOL_SERVER_URI =
+  "https://symbolication.services.mozilla.com/symbolicate/v4";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 // ms idle before applying the filter (allow uninterrupted typing)
@@ -1057,41 +1058,6 @@ SymbolicationRequest.prototype.fetchSymbols = function SymbolicationRequest_fetc
   this.symbolRequest.setRequestHeader("Connection", "close");
   this.symbolRequest.onreadystatechange = this.handleSymbolResponse.bind(this);
   this.symbolRequest.send(requestJSON);
-};
-
-var CapturedStacks = {
-  symbolRequest: null,
-
-  render: function CapturedStacks_render(payload) {
-    // Retrieve captured stacks from telemetry payload.
-    let capturedStacks =
-      "processes" in payload && "parent" in payload.processes
-        ? payload.processes.parent.capturedStacks
-        : false;
-    let hasData =
-      capturedStacks && capturedStacks.stacks && !!capturedStacks.stacks.length;
-    setHasData("captured-stacks-section", hasData);
-    if (!hasData) {
-      return;
-    }
-
-    let stacks = capturedStacks.stacks;
-    let memoryMap = capturedStacks.memoryMap;
-    let captures = capturedStacks.captures;
-
-    StackRenderer.renderStacks("captured-stacks", stacks, memoryMap, index =>
-      this.renderCaptureHeader(index, captures)
-    );
-  },
-
-  renderCaptureHeader: function CaptureStacks_renderCaptureHeader(
-    index,
-    captures
-  ) {
-    let key = captures[index][0];
-    let cardinality = captures[index][2];
-    StackRenderer.renderHeader("captured-stacks", [key, cardinality]);
-  },
 };
 
 var Histogram = {
@@ -2265,31 +2231,6 @@ function setupListeners() {
   search.addEventListener("input", Search.searchHandler);
 
   document
-    .getElementById("captured-stacks-fetch-symbols")
-    .addEventListener("click", function() {
-      if (!gPingData) {
-        return;
-      }
-      let capturedStacks = gPingData.payload.processes.parent.capturedStacks;
-      let req = new SymbolicationRequest(
-        "captured-stacks",
-        CapturedStacks.renderCaptureHeader,
-        capturedStacks.memoryMap,
-        capturedStacks.stacks,
-        capturedStacks.captures
-      );
-      req.fetchSymbols();
-    });
-
-  document
-    .getElementById("captured-stacks-hide-symbols")
-    .addEventListener("click", function() {
-      if (gPingData) {
-        CapturedStacks.render(gPingData.payload);
-      }
-    });
-
-  document
     .getElementById("late-writes-fetch-symbols")
     .addEventListener("click", function() {
       if (!gPingData) {
@@ -2700,9 +2641,6 @@ function displayRichPingData(ping, updatePayloadList) {
 
   // Show event data.
   Events.render(payload);
-
-  // Show captured stacks.
-  CapturedStacks.render(payload);
 
   LateWritesSingleton.renderLateWrites(payload.lateWrites);
 

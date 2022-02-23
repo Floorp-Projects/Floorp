@@ -90,6 +90,32 @@ add_task(async function simple_navigation() {
   });
 });
 
+add_task(async function accel_navigation() {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URL }, async function(
+    browser
+  ) {
+    let dialogAppeared = promiseHelperAppDialog();
+    let tabOpened = BrowserTestUtils.waitForEvent(
+      gBrowser.tabContainer,
+      "TabOpen"
+    ).then(event => {
+      return [event.target, BrowserTestUtils.waitForTabClosing(event.target)];
+    });
+
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#regular_load",
+      { accelKey: true },
+      browser
+    );
+
+    let windowContext = await dialogAppeared;
+    is(windowContext, browser.ownerGlobal, "got the right windowContext");
+    let [tab, closingPromise] = await tabOpened;
+    await closingPromise;
+    is(tab.linkedBrowser, null, "tab was opened and closed");
+  });
+});
+
 // Given a browser pointing to download_page.html, clicks on the link that
 // opens with target="_blank" (i.e. a new tab) and ensures that we
 // automatically open and close that tab.

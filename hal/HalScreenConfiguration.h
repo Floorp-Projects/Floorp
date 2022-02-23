@@ -8,27 +8,27 @@
 #define mozilla_HalScreenConfiguration_h
 
 #include "mozilla/Observer.h"
+#include "mozilla/TypedEnumBits.h"
 
-namespace mozilla {
-namespace hal {
+namespace mozilla::hal {
 
 // Make sure that any change to ScreenOrientation values are also made in
 // mobile/android/geckoview/src/main/java/org/mozilla/gecko/GeckoScreenOrientation.java
-typedef uint32_t ScreenOrientation;
+enum class ScreenOrientation : uint32_t {
+  None = 0,
+  PortraitPrimary = 1u << 0,
+  PortraitSecondary = 1u << 1,
+  LandscapePrimary = 1u << 2,
+  LandscapeSecondary = 1u << 3,
+  // Default will use the natural orientation for the device, it could be
+  // PortraitPrimary or LandscapePrimary depends on display resolution
+  Default = 1u << 4,
+};
 
-static const ScreenOrientation eScreenOrientation_None = 0;
-static const ScreenOrientation eScreenOrientation_PortraitPrimary = 1u << 0;
-static const ScreenOrientation eScreenOrientation_PortraitSecondary = 1u << 1;
-static const ScreenOrientation eScreenOrientation_LandscapePrimary = 1u << 2;
-static const ScreenOrientation eScreenOrientation_LandscapeSecondary = 1u << 3;
-// eScreenOrientation_Default will use the natural orientation for the deivce,
-// it could be PortraitPrimary or LandscapePrimary depends on display resolution
-static const ScreenOrientation eScreenOrientation_Default = 1u << 4;
+constexpr auto kAllScreenOrientationBits = ScreenOrientation((1 << 5) - 1);
 
-class ScreenConfiguration;
-typedef Observer<ScreenConfiguration> ScreenConfigurationObserver;
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ScreenOrientation);
 
-}  // namespace hal
-}  // namespace mozilla
+}  // namespace mozilla::hal
 
 #endif  // mozilla_HalScreenConfiguration_h

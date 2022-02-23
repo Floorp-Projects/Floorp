@@ -16,11 +16,11 @@
 if [ "$1" ] ; then
   DATE=`date`
   REVISION=`(cd $1; git log --pretty=oneline | head -1 | cut -c 1-40)`
-  cp -rf $1/srtp $1/crypto $1/include $1/test $1/LICENSE $1/README.md netwerk/srtp/src
+  cp -rf $1/srtp $1/crypto $1/include $1/test $1/LICENSE $1/CHANGES $1/README.md third_party/libsrtp/src
 
-  hg addremove netwerk/srtp/src --include "netwerk/srtp/src/VERSION" --include "netwerk/srtp/src/LICENSE" --include "netwerk/srtp/src/README.md" --include "**.c" --include "**.h" --similarity 90
+  hg addremove third_party/libsrtp/src --include "third_party/libsrtp/src/VERSION" --include "third_party/libsrtp/src/LICENSE" --include "third_party/libsrtp/src/README.md" --include "**.c" --include "**.h" --similarity 90
 
-  echo "srtp updated to revision $REVISION from git on $DATE" >> netwerk/srtp/srtp_update.log
+  echo "srtp updated to revision $REVISION from git on $DATE" >> third_party/libsrtp/srtp_update.log
   echo "srtp updated to revision $REVISION from git on $DATE"
   echo "WARNING: reapply any local patches!"
 else

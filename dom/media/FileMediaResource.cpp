@@ -59,6 +59,7 @@ nsresult FileMediaResource::Open(nsIStreamListener** aStreamListener) {
   *aStreamListener = nullptr;
   nsresult rv = NS_OK;
 
+  MutexAutoLock lock(mLock);
   // The channel is already open. We need a synchronous stream that
   // implements nsISeekableStream, so we have to find the underlying
   // file and reopen it

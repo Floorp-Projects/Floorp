@@ -8,6 +8,8 @@
   <title>PathUtils tests</title>
 </head>
 <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/WorkerHandler.js"></script>
 <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 <script>
   "use strict";
@@ -119,6 +121,37 @@
         "\\\\server",
         "PathUtils.parent() with a UNC server path and child component"
       );
+
+      Assert.throws(
+        () => PathUtils.parent("C:", -1),
+        /^NotSupportedError: PathUtils.parent: A depth of at least 1 is required/,
+        "PathUtils.parent() with a negative depth throws"
+      );
+      Assert.throws(
+        () => PathUtils.parent("C:", 0),
+        /^NotSupportedError: PathUtils.parent: A depth of at least 1 is required/,
+        "PathUtils.parent() with a zero depth throws"
+      );
+
+      {
+        const path = "C:\\Users\\User\\AppData\\Local\\Mozilla\\Firefox\\Profiles\\foo.default";
+
+        const expected = [
+          "C:\\Users\\User\\AppData\\Local\\Mozilla\\Firefox\\Profiles",
+          "C:\\Users\\User\\AppData\\Local\\Mozilla\\Firefox",
+          "C:\\Users\\User\\AppData\\Local\\Mozilla",
+          "C:\\Users\\User\\AppData\\Local",
+          "C:\\Users\\User\\AppData",
+          "C:\\Users\\User",
+          "C:\\Users",
+          "C:",
+          null,
+        ];
+
+        for (const [i, parent] of expected.entries()) {
+          is(PathUtils.parent(path, i + 1), parent, `PathUtils.parent() with depth=${i + 1}`)
+        }
+      }
     } else {
       is(
         PathUtils.parent("/"),
@@ -135,6 +168,37 @@
         "/var",
         "PathUtils.parent() with a 3 component path"
       );
+
+      Assert.throws(
+        () => PathUtils.parent("/", -1),
+        /^NotSupportedError: PathUtils.parent: A depth of at least 1 is required/,
+        "PathUtils.parent() with a negative depth throws"
+      );
+      Assert.throws(
+        () => PathUtils.parent("/", 0),
+        /^NotSupportedError: PathUtils.parent: A depth of at least 1 is required/,
+        "PathUtils.parent() with a zero depth throws"
+      );
+
+      {
+        const path = "/home/user/.mozilla/firefox/foo.default";
+        const expected = [
+          "/home/user/.mozilla/firefox",
+          "/home/user/.mozilla",
+          "/home/user",
+          "/home",
+          "/",
+          null,
+        ];
+
+        for (const [i, parent] of expected.entries()) {
+          is(
+            PathUtils.parent(path, i + 1),
+            parent,
+            `PathUtils.parent() with depth=${i + 1}`
+          );
+        }
+      }
     }
   });
 
@@ -392,51 +456,39 @@
     }
   });
 
-  add_task(async function test_getDirectories() {
-    const profile = await PathUtils.getProfileDir();
-    is(
-      profile,
-      Services.dirsvc.get("ProfD", Ci.nsIFile).path,
-      "PathUtils.getProfileDir() should match dirsvc"
-    );
-
-    const localProfile = await PathUtils.getLocalProfileDir();
-    is(
-      localProfile,
-      Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
-      "PathUtils.getLocalProfileDir() should match dirsvc"
-    );
-
-    // See: nsAppDirectoryServiceDefs.h
-    const tempDir = await PathUtils.getTempDir();
-    if (AppConstants.MOZ_SANDBOX) {
-      is(
-        tempDir,
-        Services.dirsvc.get("ContentTmpD", Ci.nsIFile).path,
-        "PathUtils.getTempDir() should match dirsvc"
-      );
+  add_task(async function test_isAbsolute() {
+    if (Services.appinfo.OS === "WINNT") {
+      ok(PathUtils.isAbsolute("C:"), "Drive paths are absolute paths on Windows");
+      ok(PathUtils.isAbsolute("C:\\Windows"), "Paths from the root are absolute paths on Windows");
+      ok(!PathUtils.isAbsolute("foo"), "Paths containing a single item are not absolute paths on Windows");
+      ok(!PathUtils.isAbsolute(".\\foo"), "Paths relative to the current working directory are not absolute paths on Windows");
+      ok(!PathUtils.isAbsolute("..\\foo"), "Paths relative to the parent directory are not absolute paths on Windows");
     } else {
-      is(
-        tempDir,
-        Services.dirsvc.get("TmpD", Ci.nsIFile).path,
-        "PathUtils.getTempDir() should match dirsvc"
-      );
+      ok(PathUtils.isAbsolute("/"), "Root paths are absolute paths");
+      ok(PathUtils.isAbsolute("/home"), "Paths with a root stem are absolute paths");
+      ok(!PathUtils.isAbsolute("foo"), "Paths containing a single non-root item are not absolute paths");
+      ok(!PathUtils.isAbsolute("./foo"), "Paths relative to the current working directory are not absolute paths");
+      ok(!PathUtils.isAbsolute("../foo"), "Paths relative to the parent directory are not absolute paths");
     }
   });
 
-  add_task(async function test_createUniquePath() {
-    let path = PathUtils.join(await PathUtils.getProfileDir(), ".test");
+  add_task(async function test_getDirectories() {
+    // See: nsAppDirectoryServiceDefs.h
+    const tests = [
+      ["profileDir", "getProfileDir", "ProfD"],
+      ["localProfileDir", "getLocalProfileDir", "ProfLD"],
+      ["tempDir", "getTempDir", AppConstants.MOZ_SANDBOX ? "ContentTmpD" : "TmpD"],
+    ];
 
-    let firstPath = PathUtils.createUniquePath(path);
-    let secondPath = PathUtils.createUniquePath(path);
-    SimpleTest.registerCleanupFunction(async () => {
-      await IOUtils.remove(firstPath);
-      await IOUtils.remove(secondPath);
-    });
+    for (const [attrName, methName, dirConstant] of tests) {
+      const expected = Services.dirsvc.get(dirConstant, Ci.nsIFile).path;
 
-    isnot(firstPath, secondPath, "Create unique paths returns different paths");
-    is(PathUtils.filename(firstPath), ".test", "PathUtils.createUniquePath() matches filename for first path");
-    is(PathUtils.filename(secondPath), "-1.test", "PathUtils.createUniquePath() has unique filename for second path");
+      const attrValue = PathUtils[attrName];
+      is(attrValue, expected, `PathUtils.${attrName} == Services.dirsvc.get("${dirConstant}", Ci.nsIFile).path`);
+
+      const methValue = await PathUtils[methName]();
+      is(methValue, expected, `PathUtils.${methName}() == Services.dirsvc.get("${dirConstant}", Ci.nsIFile).path`);
+    }
   });
 </script>
 

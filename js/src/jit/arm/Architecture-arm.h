@@ -33,7 +33,6 @@ static const int32_t NUNBOX32_TYPE_OFFSET = 4;
 static const int32_t NUNBOX32_PAYLOAD_OFFSET = 0;
 
 static const uint32_t ShadowStackSpace = 0;
-static const uint32_t SizeOfReturnAddressAfterCall = 0u;
 
 // How far forward/back can a jump go? Provide a generous buffer for thunks.
 static const uint32_t JumpImmediateRange = 20 * 1024 * 1024;
@@ -714,10 +713,11 @@ inline bool hasMultiAlias() { return true; }
 // instead; see ParseARMHwCapFlags.
 void InitARMFlags();
 
-// Parse a string denoting ARM hardware flags and unconditionally set the flags.
-// Doing this after the flags have been observed is likely to cause problems, as
-// code is allowed to assume that the flags are stable.
-bool ParseARMHwCapFlags(const char* armHwCap);
+// Register a string denoting ARM hardware flags. During engine initialization,
+// these flags will then be used instead of the actual hardware capabilities.
+// This must be called before JS_Init and the passed string's buffer must
+// outlive the JS_Init call.
+void SetARMHwCapFlagsString(const char* armHwCap);
 
 // Retrive the ARM hardware flags at a bitmask.  They must have been set.
 uint32_t GetARMFlags();

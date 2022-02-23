@@ -166,10 +166,7 @@ bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
     // We compare its end offset in aPoint.mContainer with aPoint.mOffset.
     Accessible* child = parents1.ElementAt(pos1 - 1);
     MOZ_ASSERT(child->Parent() == aPoint.mContainer);
-    bool unused;
-    uint32_t endOffset = child->IsRemote()
-                             ? child->AsRemote()->EndOffset(&unused)
-                             : child->AsLocal()->EndOffset();
+    uint32_t endOffset = child->EndOffset();
     return endOffset < static_cast<uint32_t>(aPoint.mOffset);
   }
 
@@ -530,7 +527,7 @@ int32_t GeckoTextMarkerRange::Length() const {
 }
 
 NSValue* GeckoTextMarkerRange::Bounds() const {
-  nsIntRect rect;
+  LayoutDeviceIntRect rect;
   if (mStart.mContainer->IsRemote() && mEnd.mContainer->IsRemote()) {
     DocAccessibleParent* ipcDoc = mStart.mContainer->AsRemote()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendBoundsForRange(

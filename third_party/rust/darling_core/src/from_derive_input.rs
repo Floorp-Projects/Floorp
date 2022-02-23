@@ -1,6 +1,6 @@
 use syn::DeriveInput;
 
-use Result;
+use crate::Result;
 
 /// Creates an instance by parsing an entire proc-macro `derive` input,
 /// including the, identity, generics, and visibility of the type.

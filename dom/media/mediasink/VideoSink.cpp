@@ -128,6 +128,14 @@ bool VideoSink::HasUnplayedFrames(TrackType aType) const {
   return mAudioSink->HasUnplayedFrames(aType);
 }
 
+media::TimeUnit VideoSink::UnplayedDuration(TrackType aType) const {
+  AssertOwnerThread();
+  MOZ_ASSERT(aType == TrackInfo::kAudioTrack,
+             "Not implemented for non audio tracks.");
+
+  return mAudioSink->UnplayedDuration(aType);
+}
+
 void VideoSink::SetPlaybackRate(double aPlaybackRate) {
   AssertOwnerThread();
 

@@ -153,3 +153,20 @@ def rebase(oldbase, base, relativepath):
     if relativepath.endswith("/") and not result.endswith("/"):
         result += "/"
     return result
+
+
+def ancestors(path):
+    """Emit the parent directories of a path.
+
+    Args:
+        path (str): Path to emit parents of.
+
+    Yields:
+        str: Path of parent directory.
+    """
+    while path:
+        yield path
+        newpath = os.path.dirname(path)
+        if newpath == path:
+            break
+        path = newpath

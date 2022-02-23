@@ -33,6 +33,7 @@ addAccessibleTask(
 ef gh</pre>
 <p id="linksStartEnd"><a href="https://example.com/">a</a>b<a href="https://example.com/">c</a></p>
 <p id="linksBreaking">a<a href="https://example.com/">b<br>c</a>d</p>
+<p id="p">a<br role="presentation">b</p>
   `,
   async function(browser, docAcc) {
     for (const id of ["br", "pre"]) {
@@ -49,11 +50,88 @@ ef gh</pre>
         [0, 5, "ab cd\n", 0, 6],
         [6, 11, "ef gh", 6, 11],
       ]);
+      testTextBeforeOffset(acc, BOUNDARY_LINE_START, [
+        [0, 5, "", 0, 0],
+        [6, 11, "ab cd\n", 0, 6],
+      ]);
+      testTextAfterOffset(acc, BOUNDARY_LINE_START, [
+        [0, 5, "ef gh", 6, 11],
+        [6, 11, "", 11, 11],
+      ]);
+      if (isWinNoCache) {
+        todo(
+          false,
+          "Cache disabled, so RemoteAccessible doesn't support BOUNDARY_LINE_END on Windows"
+        );
+      } else {
+        testTextAtOffset(acc, BOUNDARY_LINE_END, [
+          [0, 5, "ab cd", 0, 5],
+          [6, 11, "\nef gh", 5, 11],
+        ]);
+        testTextBeforeOffset(acc, BOUNDARY_LINE_END, [
+          [0, 5, "", 0, 0],
+          [6, 11, "ab cd", 0, 5],
+        ]);
+        testTextAfterOffset(acc, BOUNDARY_LINE_END, [
+          [0, 5, "\nef gh", 5, 11],
+          [6, 11, "", 11, 11],
+        ]);
+      }
       testTextAtOffset(acc, BOUNDARY_WORD_START, [
         [0, 2, "ab ", 0, 3],
         [3, 5, "cd\n", 3, 6],
         [6, 8, "ef ", 6, 9],
         [9, 11, "gh", 9, 11],
+      ]);
+      testTextBeforeOffset(acc, BOUNDARY_WORD_START, [
+        [0, 2, "", 0, 0],
+        [3, 5, "ab ", 0, 3],
+        [6, 8, "cd\n", 3, 6],
+        [9, 11, "ef ", 6, 9],
+      ]);
+      testTextAfterOffset(acc, BOUNDARY_WORD_START, [
+        [0, 2, "cd\n", 3, 6],
+        [3, 5, "ef ", 6, 9],
+        [6, 8, "gh", 9, 11],
+        [9, 11, "", 11, 11],
+      ]);
+      if (isWinNoCache) {
+        todo(
+          false,
+          "Cache disabled, so RemoteAccessible doesn't support BOUNDARY_WORD_END on Windows"
+        );
+      } else {
+        testTextAtOffset(acc, BOUNDARY_WORD_END, [
+          [0, 1, "ab", 0, 2],
+          [2, 4, " cd", 2, 5],
+          [5, 7, "\nef", 5, 8],
+          [8, 11, " gh", 8, 11],
+        ]);
+        testTextBeforeOffset(acc, BOUNDARY_WORD_END, [
+          [0, 2, "", 0, 0],
+          [3, 5, "ab", 0, 2],
+          // See below for offset 6.
+          [7, 8, " cd", 2, 5],
+          [9, 11, "\nef", 5, 8],
+        ]);
+        if (id == "br" && !isCacheEnabled) {
+          todo(
+            false,
+            "Cache disabled, so TextBeforeOffset BOUNDARY_WORD_END returns incorrect result after br"
+          );
+        } else {
+          testTextBeforeOffset(acc, BOUNDARY_WORD_END, [[6, 6, " cd", 2, 5]]);
+        }
+        testTextAfterOffset(acc, BOUNDARY_WORD_END, [
+          [0, 2, " cd", 2, 5],
+          [3, 5, "\nef", 5, 8],
+          [6, 8, " gh", 8, 11],
+          [9, 11, "", 11, 11],
+        ]);
+      }
+      testTextAtOffset(acc, BOUNDARY_PARAGRAPH, [
+        [0, 5, "ab cd\n", 0, 6],
+        [6, 11, "ef gh", 6, 11],
       ]);
     }
     const linksStartEnd = findAccessibleChildByID(docAcc, "linksStartEnd");
@@ -81,6 +159,12 @@ ef gh</pre>
         "TextLeafPoint disabled, so word boundaries are incorrect for linksBreaking"
       );
     }
+    const p = findAccessibleChildByID(docAcc, "p");
+    testTextAtOffset(p, BOUNDARY_LINE_START, [
+      [0, 0, "a", 0, 1],
+      [1, 2, "b", 1, 2],
+    ]);
+    testTextAtOffset(p, BOUNDARY_PARAGRAPH, [[0, 2, "ab", 0, 2]]);
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );
@@ -99,8 +183,32 @@ addAccessibleTask(
     is(getAccessibleDOMNodeID(link), "link", "LinkAt 0 is the link");
     is(container.getLinkIndex(link), 0, "getLinkIndex for link is 0");
     is(link.startIndex, 1, "link's startIndex is 1");
+    is(link.endIndex, 2, "link's endIndex is 2");
     is(container.getLinkIndexAtOffset(1), 0, "getLinkIndexAtOffset(1) is 0");
     is(container.getLinkIndexAtOffset(0), -1, "getLinkIndexAtOffset(0) is -1");
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+    remoteIframe: !isWinNoCache,
+  }
+);
+
+/**
+ * Test HyperText embedded object methods near a list bullet.
+ */
+addAccessibleTask(
+  `<ul><li id="li"><a id="link" href="https://example.com/">a</a></li></ul>`,
+  async function(browser, docAcc) {
+    const li = findAccessibleChildByID(docAcc, "li", [nsIAccessibleHyperText]);
+    let link = li.getLinkAt(0);
+    queryInterfaces(link, [nsIAccessible]);
+    is(getAccessibleDOMNodeID(link), "link", "LinkAt 0 is the link");
+    is(li.getLinkIndex(link), 0, "getLinkIndex for link is 0");
+    is(link.startIndex, 2, "link's startIndex is 2");
+    is(li.getLinkIndexAtOffset(2), 0, "getLinkIndexAtOffset(2) is 0");
+    is(li.getLinkIndexAtOffset(0), -1, "getLinkIndexAtOffset(0) is -1");
   },
   {
     chrome: true,

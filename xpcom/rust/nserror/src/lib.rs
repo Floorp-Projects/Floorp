@@ -73,7 +73,7 @@ extern "C" {
 }
 
 mod error_list {
-    include!(concat!(env!("MOZ_TOPOBJDIR"), "/xpcom/base/error_list.rs"));
+    include!(mozbuild::objdir_path!("xpcom/base/error_list.rs"));
 }
 
 pub use error_list::*;

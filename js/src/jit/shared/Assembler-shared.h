@@ -562,7 +562,8 @@ class MemoryAccessDesc {
   }
 
   void setSplatSimd128Load() {
-    MOZ_ASSERT(type() == Scalar::Float64);
+    MOZ_ASSERT(type() == Scalar::Uint8 || type() == Scalar::Uint16 ||
+               type() == Scalar::Float32 || type() == Scalar::Float64);
     MOZ_ASSERT(!isAtomic());
     MOZ_ASSERT(loadOp_ == Plain);
     loadOp_ = Splat;
@@ -659,9 +660,13 @@ class AssemblerShared {
   // This one returns an index as the try note so that it can be looked up
   // later to add the end point and stack position of the try block.
 #ifdef ENABLE_WASM_EXCEPTIONS
-  size_t append(wasm::WasmTryNote tryNote) {
-    enoughMemory_ &= tryNotes_.append(tryNote);
-    return tryNotes_.length() - 1;
+  [[nodiscard]] bool append(wasm::WasmTryNote tryNote, size_t* tryNoteIndex) {
+    if (!tryNotes_.append(tryNote)) {
+      enoughMemory_ = false;
+      return false;
+    }
+    *tryNoteIndex = tryNotes_.length() - 1;
+    return true;
   }
 #endif
 

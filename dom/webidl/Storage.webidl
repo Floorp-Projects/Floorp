@@ -73,9 +73,20 @@ partial interface Storage {
   void endExplicitSnapshot();
 
   /**
-   * Returns true if the underlying database has been opened and it has an
-   * active snapshot (initialized implicitly or explicitly).
+   * Returns true if the underlying database has been opened, the database is
+   * not being closed and it has a snapshot (initialized implicitly or
+   * explicitly).
    */
   [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
-  readonly attribute boolean hasActiveSnapshot;
+  readonly attribute boolean hasSnapshot;
+
+  /**
+   * Returns snapshot usage.
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE if the underlying database hasn't been
+   *         opened or the database is being closed or it doesn't have a
+   *         snapshot.
+   */
+  [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
+  readonly attribute long long snapshotUsage;
 };

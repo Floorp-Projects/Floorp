@@ -392,20 +392,33 @@ uint32_t ComputeBestMethod(
     HistogramParams::ANSHistogramStrategy ans_histogram_strategy) {
   size_t method = 0;
   float fcost = ComputeHistoAndDataCost(histogram, alphabet_size, 0);
-  for (uint32_t shift = 0; shift <= ANS_LOG_TAB_SIZE;
-       ans_histogram_strategy != HistogramParams::ANSHistogramStrategy::kPrecise
-           ? shift += 2
-           : shift++) {
+  auto try_shift = [&](size_t shift) {
     float c = ComputeHistoAndDataCost(histogram, alphabet_size, shift + 1);
     if (c < fcost) {
       method = shift + 1;
       fcost = c;
-    } else if (ans_histogram_strategy ==
-               HistogramParams::ANSHistogramStrategy::kFast) {
-      // do not be as precise if estimating cost.
+    }
+  };
+  switch (ans_histogram_strategy) {
+    case HistogramParams::ANSHistogramStrategy::kPrecise: {
+      for (uint32_t shift = 0; shift <= ANS_LOG_TAB_SIZE; shift++) {
+        try_shift(shift);
+      }
       break;
     }
-  }
+    case HistogramParams::ANSHistogramStrategy::kApproximate: {
+      for (uint32_t shift = 0; shift <= ANS_LOG_TAB_SIZE; shift += 2) {
+        try_shift(shift);
+      }
+      break;
+    }
+    case HistogramParams::ANSHistogramStrategy::kFast: {
+      try_shift(0);
+      try_shift(ANS_LOG_TAB_SIZE / 2);
+      try_shift(ANS_LOG_TAB_SIZE);
+      break;
+    }
+  };
   *cost = fcost;
   return method;
 }
@@ -1496,14 +1509,32 @@ size_t BuildAndEncodeHistograms(const HistogramParams& params,
     uint_config = HybridUintConfig(10, 0, 0);
   }
   for (size_t i = 0; i < tokens.size(); ++i) {
-    for (size_t j = 0; j < tokens[i].size(); ++j) {
-      const Token token = tokens[i][j];
-      total_tokens++;
-      uint32_t tok, nbits, bits;
-      (token.is_lz77_length ? codes->lz77.length_uint_config : uint_config)
-          .Encode(token.value, &tok, &nbits, &bits);
-      tok += token.is_lz77_length ? codes->lz77.min_symbol : 0;
-      builder.VisitSymbol(tok, token.context);
+    if (codes->lz77.enabled) {
+      for (size_t j = 0; j < tokens[i].size(); ++j) {
+        const Token& token = tokens[i][j];
+        total_tokens++;
+        uint32_t tok, nbits, bits;
+        (token.is_lz77_length ? codes->lz77.length_uint_config : uint_config)
+            .Encode(token.value, &tok, &nbits, &bits);
+        tok += token.is_lz77_length ? codes->lz77.min_symbol : 0;
+        builder.VisitSymbol(tok, token.context);
+      }
+    } else if (num_contexts == 1) {
+      for (size_t j = 0; j < tokens[i].size(); ++j) {
+        const Token& token = tokens[i][j];
+        total_tokens++;
+        uint32_t tok, nbits, bits;
+        uint_config.Encode(token.value, &tok, &nbits, &bits);
+        builder.VisitSymbol(tok, /*token.context=*/0);
+      }
+    } else {
+      for (size_t j = 0; j < tokens[i].size(); ++j) {
+        const Token& token = tokens[i][j];
+        total_tokens++;
+        uint32_t tok, nbits, bits;
+        uint_config.Encode(token.value, &tok, &nbits, &bits);
+        builder.VisitSymbol(tok, token.context);
+      }
     }
   }
 
@@ -1569,33 +1600,49 @@ size_t WriteTokens(const std::vector<Token>& tokens,
   size_t numallbits = 0;
   // Writes in *reversed* order.
   auto addbits = [&](size_t bits, size_t nbits) {
-    JXL_DASSERT(bits >> nbits == 0);
-    if (JXL_UNLIKELY(numallbits + nbits > BitWriter::kMaxBitsPerCall)) {
-      out.push_back(allbits);
-      out_nbits.push_back(numallbits);
-      numallbits = allbits = 0;
+    if (JXL_UNLIKELY(nbits)) {
+      JXL_DASSERT(bits >> nbits == 0);
+      if (JXL_UNLIKELY(numallbits + nbits > BitWriter::kMaxBitsPerCall)) {
+        out.push_back(allbits);
+        out_nbits.push_back(numallbits);
+        numallbits = allbits = 0;
+      }
+      allbits <<= nbits;
+      allbits |= bits;
+      numallbits += nbits;
     }
-    allbits <<= nbits;
-    allbits |= bits;
-    numallbits += nbits;
   };
   const int end = tokens.size();
   ANSCoder ans;
-  for (int i = end - 1; i >= 0; --i) {
-    const Token token = tokens[i];
-    const uint8_t histo = context_map[token.context];
-    uint32_t tok, nbits, bits;
-    (token.is_lz77_length ? codes.lz77.length_uint_config
-                          : codes.uint_config[histo])
-        .Encode(tokens[i].value, &tok, &nbits, &bits);
-    tok += token.is_lz77_length ? codes.lz77.min_symbol : 0;
-    const ANSEncSymbolInfo& info = codes.encoding_info[histo][tok];
-    // Extra bits first as this is reversed.
-    addbits(bits, nbits);
-    num_extra_bits += nbits;
-    uint8_t ans_nbits = 0;
-    uint32_t ans_bits = ans.PutSymbol(info, &ans_nbits);
-    addbits(ans_bits, ans_nbits);
+  if (codes.lz77.enabled || context_map.size() > 1) {
+    for (int i = end - 1; i >= 0; --i) {
+      const Token token = tokens[i];
+      const uint8_t histo = context_map[token.context];
+      uint32_t tok, nbits, bits;
+      (token.is_lz77_length ? codes.lz77.length_uint_config
+                            : codes.uint_config[histo])
+          .Encode(tokens[i].value, &tok, &nbits, &bits);
+      tok += token.is_lz77_length ? codes.lz77.min_symbol : 0;
+      const ANSEncSymbolInfo& info = codes.encoding_info[histo][tok];
+      // Extra bits first as this is reversed.
+      addbits(bits, nbits);
+      num_extra_bits += nbits;
+      uint8_t ans_nbits = 0;
+      uint32_t ans_bits = ans.PutSymbol(info, &ans_nbits);
+      addbits(ans_bits, ans_nbits);
+    }
+  } else {
+    for (int i = end - 1; i >= 0; --i) {
+      uint32_t tok, nbits, bits;
+      codes.uint_config[0].Encode(tokens[i].value, &tok, &nbits, &bits);
+      const ANSEncSymbolInfo& info = codes.encoding_info[0][tok];
+      // Extra bits first as this is reversed.
+      addbits(bits, nbits);
+      num_extra_bits += nbits;
+      uint8_t ans_nbits = 0;
+      uint32_t ans_bits = ans.PutSymbol(info, &ans_nbits);
+      addbits(ans_bits, ans_nbits);
+    }
   }
   const uint32_t state = ans.GetState();
   writer->Write(32, state);

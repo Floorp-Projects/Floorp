@@ -63,7 +63,7 @@ fn assert_not_in_callback() {
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 /// Entry point from C code.
-pub unsafe extern "C" fn audioipc_client_init(
+pub unsafe extern "C" fn audioipc2_client_init(
     c: *mut *mut ffi::cubeb,
     context_name: *const c_char,
     init_params: *const AudioIpcInitParams,

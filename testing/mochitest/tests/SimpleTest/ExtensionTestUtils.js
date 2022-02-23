@@ -1,9 +1,21 @@
-var ExtensionTestUtils = {};
-
 const { ExtensionTestCommon } = SpecialPowers.Cu.import(
   "resource://testing-common/ExtensionTestCommon.jsm",
   {}
 );
+
+var ExtensionTestUtils = {
+  // Shortcut to more easily access WebExtensionPolicy.backgroundServiceWorkerEnabled
+  // from mochitest-plain tests.
+  getBackgroundServiceWorkerEnabled() {
+    return ExtensionTestCommon.getBackgroundServiceWorkerEnabled();
+  },
+
+  // A test helper used to check if the pref "extension.backgroundServiceWorker.forceInTestExtension"
+  // is set to true.
+  isInBackgroundServiceWorkerTests() {
+    return ExtensionTestCommon.isInBackgroundServiceWorkerTests();
+  },
+};
 
 ExtensionTestUtils.loadExtension = function(ext) {
   // Cleanup functions need to be registered differently depending on

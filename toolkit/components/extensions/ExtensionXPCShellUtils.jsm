@@ -202,6 +202,16 @@ class ExtensionWrapper {
     return this.startupPromise;
   }
 
+  awaitBackgroundStarted() {
+    if (!this.extension.manifest.background) {
+      throw new Error("Extension has no background");
+    }
+    return Promise.all([
+      this.startupPromise,
+      this.extension.promiseBackgroundStarted(),
+    ]);
+  }
+
   async startup() {
     if (this.state != "uninitialized") {
       throw new Error("Extension already started");
@@ -256,6 +266,14 @@ class ExtensionWrapper {
     }
 
     this.state = "unloaded";
+  }
+
+  /**
+   * This method sends the message to force-sleep the background scripts.
+   * @returns {Promise} resolves after the background is asleep and listeners primed.
+   */
+  terminateBackground() {
+    return this.extension.terminateBackground();
   }
 
   /*
@@ -608,6 +626,18 @@ class ExternallyInstalledWrapper extends AOMExtensionWrapper {
 
 var ExtensionTestUtils = {
   BASE_MANIFEST,
+
+  // Shortcut to more easily access WebExtensionPolicy.backgroundServiceWorkerEnabled
+  // from mochitest-plain tests.
+  getBackgroundServiceWorkerEnabled() {
+    return ExtensionTestCommon.getBackgroundServiceWorkerEnabled();
+  },
+
+  // A test helper used to check if the pref "extension.backgroundServiceWorker.forceInTestExtension"
+  // is set to true.
+  isInBackgroundServiceWorkerTests() {
+    return ExtensionTestCommon.isInBackgroundServiceWorkerTests();
+  },
 
   async normalizeManifest(
     manifest,

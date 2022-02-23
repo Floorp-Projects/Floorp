@@ -24,6 +24,26 @@ import yaml
 if sys.version_info < (3, 7):
     import iso8601  # type: ignore
 
+    def date_fromisoformat(datestr: str) -> datetime.date:
+        try:
+            return iso8601.parse_date(datestr).date()
+        except iso8601.ParseError:
+            raise ValueError()
+
+    def datetime_fromisoformat(datestr: str) -> datetime.datetime:
+        try:
+            return iso8601.parse_date(datestr)
+        except iso8601.ParseError:
+            raise ValueError()
+
+else:
+
+    def date_fromisoformat(datestr: str) -> datetime.date:
+        return datetime.date.fromisoformat(datestr)
+
+    def datetime_fromisoformat(datestr: str) -> datetime.datetime:
+        return datetime.datetime.fromisoformat(datestr)
+
 
 TESTING_MODE = "pytest" in sys.modules
 
@@ -45,7 +65,6 @@ if sys.version_info < (3, 7):
 
     class DictWrapper(OrderedDict):
         pass
-
 
 else:
 
@@ -355,27 +374,41 @@ def format_error(
         return f"{filepath}:\n{textwrap.indent(content, '    ')}"
 
 
-def parse_expires(expires: str) -> datetime.date:
+def parse_expiration_date(expires: str) -> datetime.date:
     """
     Parses the expired field date (yyyy-mm-dd) as a date.
     Raises a ValueError in case the string is not properly formatted.
     """
     try:
-        if sys.version_info < (3, 7):
-            try:
-                return iso8601.parse_date(expires).date()
-            except iso8601.ParseError:
-                raise ValueError()
-        else:
-            return datetime.date.fromisoformat(expires)
-    except ValueError:
+        return date_fromisoformat(expires)
+    except (TypeError, ValueError):
         raise ValueError(
             f"Invalid expiration date '{expires}'. "
             "Must be of the form yyyy-mm-dd in UTC."
         )
 
 
-def is_expired(expires: str) -> bool:
+def parse_expiration_version(expires: str) -> int:
+    """
+    Parses the expired field version string as an integer.
+    Raises a ValueError in case the string does not contain a valid
+    positive integer.
+    """
+    try:
+        if isinstance(expires, int):
+            version_number = int(expires)
+            if version_number > 0:
+                return version_number
+        # Fall-through: if it's not an integer or is not greater than zero,
+        # raise an error.
+        raise ValueError()
+    except ValueError:
+        raise ValueError(
+            f"Invalid expiration version '{expires}'. Must be a positive integer."
+        )
+
+
+def is_expired(expires: str, major_version: Optional[int] = None) -> bool:
     """
     Parses the `expires` field in a metric or ping and returns whether
     the object should be considered expired.
@@ -384,20 +417,32 @@ def is_expired(expires: str) -> bool:
         return False
     elif expires == "expired":
         return True
+    elif major_version is not None:
+        return parse_expiration_version(expires) <= major_version
     else:
-        date = parse_expires(expires)
+        date = parse_expiration_date(expires)
         return date <= datetime.datetime.utcnow().date()
 
 
-def validate_expires(expires: str) -> None:
+def validate_expires(expires: str, major_version: Optional[int] = None) -> None:
     """
-    Raises a ValueError in case the `expires` is not ISO8601 parseable,
-    or in case the date is more than 730 days (~2 years) in the future.
+    If expiration by major version is enabled, raises a ValueError in
+    case `expires` is not a positive integer.
+    Otherwise raises a ValueError in case the `expires` is not ISO8601
+    parseable, or in case the date is more than 730 days (~2 years) in
+    the future.
     """
     if expires in ("never", "expired"):
         return
 
-    date = parse_expires(expires)
+    if major_version is not None:
+        parse_expiration_version(expires)
+        # Don't need to keep parsing dates if expiration by version
+        # is enabled. We don't allow mixing dates and versions for a
+        # single product.
+        return
+
+    date = parse_expiration_date(expires)
     max_date = datetime.datetime.now() + datetime.timedelta(days=730)
     if date > max_date.date():
         raise ValueError(
@@ -408,16 +453,43 @@ def validate_expires(expires: str) -> None:
         )
 
 
+def build_date(date: Optional[str]) -> datetime.datetime:
+    """
+    Generate the build timestamp.
+
+    If `date` is set to `0` a static unix epoch time will be used.
+    If `date` it is set to a ISO8601 datetime string (e.g. `2022-01-03T17:30:00`)
+    it will use that date.
+    Note that any timezone offset will be ignored and UTC will be used.
+    Otherwise it will throw an error.
+
+    If `date` is `None` it will use the current date & time.
+    """
+
+    if date is not None:
+        date = str(date)
+        if date == "0":
+            ts = datetime.datetime(1970, 1, 1, 0, 0, 0)
+        else:
+            ts = datetime_fromisoformat(date).replace(tzinfo=datetime.timezone.utc)
+    else:
+        ts = datetime.datetime.utcnow()
+
+    return ts
+
+
 def report_validation_errors(all_objects):
     """
     Report any validation errors found to the console.
+
+    Returns the number of errors reported.
     """
-    found_error = False
+    found_errors = 0
     for error in all_objects:
-        found_error = True
+        found_errors += 1
         print("=" * 78, file=sys.stderr)
         print(error, file=sys.stderr)
-    return found_error
+    return found_errors
 
 
 def remove_output_params(d, output_params):

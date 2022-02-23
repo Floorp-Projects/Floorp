@@ -516,24 +516,24 @@ function registerRunTests(existingPasswordFieldsCount = 0) {
   });
 }
 
-function enableMasterPassword() {
-  setMasterPassword(true);
+function enablePrimaryPassword() {
+  setPrimaryPassword(true);
 }
 
-function disableMasterPassword() {
-  setMasterPassword(false);
+function disablePrimaryPassword() {
+  setPrimaryPassword(false);
 }
 
-function setMasterPassword(enable) {
-  PWMGR_COMMON_PARENT.sendAsyncMessage("setMasterPassword", { enable });
+function setPrimaryPassword(enable) {
+  PWMGR_COMMON_PARENT.sendAsyncMessage("setPrimaryPassword", { enable });
 }
 
 function isLoggedIn() {
   return PWMGR_COMMON_PARENT.sendQuery("isLoggedIn");
 }
 
-function logoutMasterPassword() {
-  runInParent(function parent_logoutMasterPassword() {
+function logoutPrimaryPassword() {
+  runInParent(function parent_logoutPrimaryPassword() {
     var sdr = Cc["@mozilla.org/security/sdr;1"].getService(
       Ci.nsISecretDecoderRing
     );

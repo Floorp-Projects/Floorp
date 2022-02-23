@@ -14,7 +14,7 @@ use unicode_normalization::UnicodeNormalization;
 
 fn main() {
     assert_eq!(compose('A','\u{30a}'), Some('Å'));
-    
+
     let s = "ÅΩ";
     let c = s.nfc().collect::<String>();
     assert_eq!(c, "ÅΩ");
@@ -28,5 +28,5 @@ to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-unicode-normalization = "0.1.3"
+unicode-normalization = "0.1.7"
 ```

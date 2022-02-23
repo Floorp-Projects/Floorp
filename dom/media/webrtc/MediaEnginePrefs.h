@@ -38,7 +38,6 @@ class MediaEnginePrefs {
         mAgc2Forced(false),
         mAgc(0),
         mNoise(0),
-        mFakeDeviceChangeEventOn(false),
         mChannels(0) {}
 
   int32_t mWidth;
@@ -55,7 +54,6 @@ class MediaEnginePrefs {
   bool mAgc2Forced;
   int32_t mAgc;
   int32_t mNoise;
-  bool mFakeDeviceChangeEventOn;
   int32_t mChannels;
 
   bool operator==(const MediaEnginePrefs& aRhs) {

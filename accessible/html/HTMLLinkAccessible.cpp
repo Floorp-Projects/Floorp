@@ -5,6 +5,7 @@
 
 #include "HTMLLinkAccessible.h"
 
+#include "CacheConstants.h"
 #include "nsCoreUtils.h"
 #include "DocAccessible.h"
 #include "Role.h"
@@ -13,6 +14,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/MutationEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -72,8 +74,9 @@ void HTMLLinkAccessible::Value(nsString& aValue) const {
   }
 }
 
-uint8_t HTMLLinkAccessible::ActionCount() const {
-  return IsLinked() ? 1 : HyperTextAccessible::ActionCount();
+bool HTMLLinkAccessible::HasPrimaryAction() const {
+  return IsLinked() || HyperTextAccessible::HasPrimaryAction();
+  ;
 }
 
 void HTMLLinkAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
@@ -88,14 +91,24 @@ void HTMLLinkAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (aIndex == eAction_Jump) aName.AssignLiteral("jump");
 }
 
-bool HTMLLinkAccessible::DoAction(uint8_t aIndex) const {
-  if (!IsLinked()) return HyperTextAccessible::DoAction(aIndex);
+bool HTMLLinkAccessible::AttributeChangesState(nsAtom* aAttribute) {
+  return aAttribute == nsGkAtoms::href ||
+         HyperTextAccessibleWrap::AttributeChangesState(aAttribute);
+}
 
-  // Action 0 (default action): Jump to link
-  if (aIndex != eAction_Jump) return false;
+void HTMLLinkAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
+                                             nsAtom* aAttribute,
+                                             int32_t aModType,
+                                             const nsAttrValue* aOldValue,
+                                             uint64_t aOldState) {
+  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
+                                               aModType, aOldValue, aOldState);
 
-  DoCommand();
-  return true;
+  if (aAttribute == nsGkAtoms::href &&
+      (aModType == dom::MutationEvent_Binding::ADDITION ||
+       aModType == dom::MutationEvent_Binding::REMOVAL)) {
+    SendCache(CacheDomain::Actions, CacheUpdateType::Update);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

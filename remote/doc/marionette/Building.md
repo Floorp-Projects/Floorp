@@ -50,8 +50,8 @@ You may also opt out of building all the WebDriver specific components
     ac_add_options --disable-webdriver
 
 [mozilla-unified]: https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmozilla/unifiedrepo.html
-[artifact builds]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds
-[mozconfig]: ../build/buildsystem/mozconfigs.html
+[artifact builds]: /contributing/build/artifact_builds.rst
+[mozconfig]: /build/buildsystem/mozconfigs.rst
 [ccache]: https://ccache.samba.org/
 [sccache]: https://github.com/mozilla/sccache
-[Remote Agent]: ../remote/index.html
+[Remote Agent]: /remote/index.rst

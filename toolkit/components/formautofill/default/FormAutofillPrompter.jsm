@@ -299,6 +299,13 @@ let FormAutofillPrompter = {
 
     if (descriptionIcon) {
       let descriptionIconElement = chromeDoc.createXULElement("image");
+      if (
+        typeof descriptionIcon == "string" &&
+        (descriptionIcon.includes("cc-logo") ||
+          descriptionIcon.includes("icon-credit"))
+      ) {
+        descriptionIconElement.setAttribute("src", descriptionIcon);
+      }
       descriptionWrapper.appendChild(descriptionIconElement);
     }
 
@@ -374,8 +381,19 @@ let FormAutofillPrompter = {
       creditCard.record["cc-number"] ||
       creditCard.record["cc-number-decrypted"];
     let name = creditCard.record["cc-name"];
-    const description = await CreditCard.getLabel({ name, number });
-
+    let month = creditCard.record["cc-exp-month"];
+    let year = creditCard.record["cc-exp-year"];
+    let type = CreditCard.getType(number);
+    let ccLabelInfo = CreditCard.getLabelInfo({
+      number,
+      name,
+      month,
+      year,
+      type,
+    });
+    let description = [ccLabelInfo.args.number, ccLabelInfo.args.name].join(
+      ", "
+    );
     const telemetryObject = creditCard.guid
       ? "update_doorhanger"
       : "capture_doorhanger";
@@ -389,7 +407,8 @@ let FormAutofillPrompter = {
     const state = await FormAutofillPrompter._showCCorAddressCaptureDoorhanger(
       browser,
       creditCard.guid ? "updateCreditCard" : "addCreditCard",
-      description
+      description,
+      type
     );
 
     if (state == "cancel") {
@@ -462,6 +481,10 @@ let FormAutofillPrompter = {
     changedGUIDs.forEach(guid => storage.creditCards.notifyUsed(guid));
   },
 
+  _getUpdatedCCIcon(network) {
+    return FormAutofillUtils.getCreditCardLogo(network);
+  },
+
   /**
    * Show different types of doorhanger by leveraging PopupNotifications.
    * @param  {XULElement} browser
@@ -470,10 +493,12 @@ let FormAutofillPrompter = {
    *         The type of the doorhanger. There will have first time use/update/credit card.
    * @param  {string} description
    *         The message that provides more information on doorhanger.
+   * @param {string} network
+   *         The network type for credit card doorhangers.
    * @returns {Promise}
               Resolved with action type when action callback is triggered.
    */
-  async _showCCorAddressCaptureDoorhanger(browser, type, description) {
+  async _showCCorAddressCaptureDoorhanger(browser, type, description, network) {
     log.debug("show doorhanger with type:", type);
     return new Promise(resolve => {
       let {
@@ -488,6 +513,10 @@ let FormAutofillPrompter = {
         secondaryActions,
         options,
       } = CONTENT[type];
+      // Follow up in Bug 1737329 to make doorhanger types more explicit
+      if (type == "updateCreditCard" || type == "addCreditCard") {
+        descriptionIcon = CreditCard.getCreditCardLogo(network);
+      }
 
       const { ownerGlobal: chromeWin, ownerDocument: chromeDoc } = browser;
       options.eventCallback = topic => {

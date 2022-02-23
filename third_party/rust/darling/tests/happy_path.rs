@@ -1,11 +1,5 @@
-#[macro_use]
-extern crate darling;
-#[macro_use]
-extern crate syn;
-#[macro_use]
-extern crate quote;
-
-use darling::FromDeriveInput;
+use darling::{FromDeriveInput, FromMeta};
+use syn::parse_quote;
 
 #[derive(Default, FromMeta, PartialEq, Debug)]
 #[darling(default)]

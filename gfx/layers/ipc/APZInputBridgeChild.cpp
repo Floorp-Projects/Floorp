@@ -86,7 +86,8 @@ void APZInputBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-APZEventResult APZInputBridgeChild::ReceiveInputEvent(InputData& aEvent) {
+APZEventResult APZInputBridgeChild::ReceiveInputEvent(
+    InputData& aEvent, InputBlockCallback&& aCallback) {
   MOZ_ASSERT(mIsOpen);
   APZThreadUtils::AssertOnControllerThread();
 
@@ -96,71 +97,94 @@ APZEventResult APZInputBridgeChild::ReceiveInputEvent(InputData& aEvent) {
       MultiTouchInput& event = aEvent.AsMultiTouchInput();
       MultiTouchInput processedEvent;
 
-      SendReceiveMultiTouchInputEvent(event, &res, &processedEvent);
+      SendReceiveMultiTouchInputEvent(event, !!aCallback, &res,
+                                      &processedEvent);
 
       event = processedEvent;
-      return res;
+      break;
     }
     case MOUSE_INPUT: {
       MouseInput& event = aEvent.AsMouseInput();
       MouseInput processedEvent;
 
-      SendReceiveMouseInputEvent(event, &res, &processedEvent);
+      SendReceiveMouseInputEvent(event, !!aCallback, &res, &processedEvent);
 
       event = processedEvent;
-      return res;
+      break;
     }
     case PANGESTURE_INPUT: {
       PanGestureInput& event = aEvent.AsPanGestureInput();
       PanGestureInput processedEvent;
 
-      SendReceivePanGestureInputEvent(event, &res, &processedEvent);
+      SendReceivePanGestureInputEvent(event, !!aCallback, &res,
+                                      &processedEvent);
 
       event = processedEvent;
-      return res;
+      break;
     }
     case PINCHGESTURE_INPUT: {
       PinchGestureInput& event = aEvent.AsPinchGestureInput();
       PinchGestureInput processedEvent;
 
-      SendReceivePinchGestureInputEvent(event, &res, &processedEvent);
+      SendReceivePinchGestureInputEvent(event, !!aCallback, &res,
+                                        &processedEvent);
 
       event = processedEvent;
-      return res;
+      break;
     }
     case TAPGESTURE_INPUT: {
       TapGestureInput& event = aEvent.AsTapGestureInput();
       TapGestureInput processedEvent;
 
-      SendReceiveTapGestureInputEvent(event, &res, &processedEvent);
+      SendReceiveTapGestureInputEvent(event, !!aCallback, &res,
+                                      &processedEvent);
 
       event = processedEvent;
-      return res;
+      break;
     }
     case SCROLLWHEEL_INPUT: {
       ScrollWheelInput& event = aEvent.AsScrollWheelInput();
       ScrollWheelInput processedEvent;
 
-      SendReceiveScrollWheelInputEvent(event, &res, &processedEvent);
+      SendReceiveScrollWheelInputEvent(event, !!aCallback, &res,
+                                       &processedEvent);
 
       event = processedEvent;
-      return res;
+      break;
     }
     case KEYBOARD_INPUT: {
       KeyboardInput& event = aEvent.AsKeyboardInput();
       KeyboardInput processedEvent;
 
-      SendReceiveKeyboardInputEvent(event, &res, &processedEvent);
+      SendReceiveKeyboardInputEvent(event, !!aCallback, &res, &processedEvent);
 
       event = processedEvent;
-      return res;
+      break;
     }
     default: {
       MOZ_ASSERT_UNREACHABLE("Invalid InputData type.");
       res.SetStatusAsConsumeNoDefault();
-      return res;
+      break;
     }
   }
+
+  if (aCallback && res.WillHaveDelayedResult()) {
+    mInputBlockCallbacks.emplace(res.mInputBlockId, std::move(aCallback));
+  }
+
+  return res;
+}
+
+mozilla::ipc::IPCResult APZInputBridgeChild::RecvCallInputBlockCallback(
+    uint64_t aInputBlockId, const APZHandledResult& aHandledResult) {
+  auto it = mInputBlockCallbacks.find(aInputBlockId);
+  if (it != mInputBlockCallbacks.end()) {
+    it->second(aInputBlockId, aHandledResult);
+    // The callback is one-shot; discard it after calling it.
+    mInputBlockCallbacks.erase(it);
+  }
+
+  return IPC_OK();
 }
 
 void APZInputBridgeChild::ProcessUnhandledEvent(

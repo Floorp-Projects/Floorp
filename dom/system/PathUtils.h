@@ -8,11 +8,13 @@
 #define mozilla_dom_PathUtils__
 
 #include "mozilla/DataMutex.h"
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Result.h"
 #include "mozilla/dom/Promise.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -41,7 +43,8 @@ class PathUtils final {
                        nsString& aResult, ErrorResult& aErr);
 
   static void Parent(const GlobalObject&, const nsAString& aPath,
-                     nsString& aResult, ErrorResult& aErr);
+                     const int32_t aDepth, nsString& aResult,
+                     ErrorResult& aErr);
 
   static void Join(const GlobalObject&, const Sequence<nsString>& aComponents,
                    nsString& aResult, ErrorResult& aErr);
@@ -49,9 +52,6 @@ class PathUtils final {
   static void JoinRelative(const GlobalObject&, const nsAString& aBasePath,
                            const nsAString& aRelativePath, nsString& aResult,
                            ErrorResult& aErr);
-
-  static void CreateUniquePath(const GlobalObject&, const nsAString& aPath,
-                               nsString& aResult, ErrorResult& aErr);
 
   static void ToExtendedWindowsPath(const GlobalObject&, const nsAString& aPath,
                                     nsString& aResult, ErrorResult& aErr);
@@ -65,14 +65,21 @@ class PathUtils final {
   static void ToFileURI(const GlobalObject&, const nsAString& aPath,
                         nsCString& aResult, ErrorResult& aErr);
 
-  static already_AddRefed<Promise> GetProfileDir(const GlobalObject& aGlobal,
-                                                 ErrorResult& aErr);
+  static bool IsAbsolute(const GlobalObject&, const nsAString& aPath);
 
-  static already_AddRefed<Promise> GetLocalProfileDir(
+  static void GetProfileDirSync(const GlobalObject&, nsString& aResult,
+                                ErrorResult& aErr);
+  static void GetLocalProfileDirSync(const GlobalObject&, nsString& aResult,
+                                     ErrorResult& aErr);
+  static void GetTempDirSync(const GlobalObject&, nsString& aResult,
+                             ErrorResult& aErr);
+
+  static already_AddRefed<Promise> GetProfileDirAsync(
       const GlobalObject& aGlobal, ErrorResult& aErr);
-
-  static already_AddRefed<Promise> GetTempDir(const GlobalObject& aGlobal,
-                                              ErrorResult& aErr);
+  static already_AddRefed<Promise> GetLocalProfileDirAsync(
+      const GlobalObject& aGlobal, ErrorResult& aErr);
+  static already_AddRefed<Promise> GetTempDirAsync(const GlobalObject& aGlobal,
+                                                   ErrorResult& aErr);
 
  private:
   class DirectoryCache;
@@ -87,7 +94,8 @@ class PathUtils final {
 class PathUtils::DirectoryCache final {
  public:
   /**
-   * A directory that can be requested via |GetDirectory|.
+   * A directory that can be requested via |GetDirectorySync| or
+   * |GetDirectoryAsync|.
    */
   enum class Directory {
     /**
@@ -102,6 +110,10 @@ class PathUtils::DirectoryCache final {
      * The temporary directory for the process.
      */
     Temp,
+    /**
+     * The number of Directory entries.
+     */
+    Count,
   };
 
   DirectoryCache();
@@ -120,6 +132,9 @@ class PathUtils::DirectoryCache final {
    */
   static DirectoryCache& Ensure(Maybe<DirectoryCache>& aCache);
 
+  void GetDirectorySync(nsString& aResult, ErrorResult& aErr,
+                        const Directory aRequestedDir);
+
   /**
    * Request the path of a specific directory.
    *
@@ -132,9 +147,9 @@ class PathUtils::DirectoryCache final {
    *
    * @return A promise that resolves to the path of the requested directory.
    */
-  already_AddRefed<Promise> GetDirectory(const GlobalObject& aGlobalObject,
-                                         ErrorResult& aErr,
-                                         const Directory aRequestedDir);
+  already_AddRefed<Promise> GetDirectoryAsync(const GlobalObject& aGlobalObject,
+                                              ErrorResult& aErr,
+                                              const Directory aRequestedDir);
 
  private:
   using PopulateDirectoriesPromise = MozPromise<Ok, nsresult, false>;
@@ -197,19 +212,17 @@ class PathUtils::DirectoryCache final {
    */
   void ResolveWithDirectory(Promise* aPromise, const Directory aRequestedDir);
 
-  /**
-   * A promise that is resolved when |mProfileDir| and |mLocalProfileDir| are
-   * populated.
-   */
-  MozPromiseHolder<PopulateDirectoriesPromise> mProfileDirsPromise;
-  nsString mProfileDir;
-  nsString mLocalProfileDir;
+  template <typename T>
+  using DirectoryArray = EnumeratedArray<Directory, Directory::Count, T>;
 
-  /**
-   * A promise that is resolved when *all* cache entries are populated.
-   */
-  MozPromiseHolder<PopulateDirectoriesPromise> mAllDirsPromise;
-  nsString mTempDir;
+  DirectoryArray<nsString> mDirectories;
+  DirectoryArray<MozPromiseHolder<PopulateDirectoriesPromise>> mPromises;
+
+  static constexpr DirectoryArray<const char*> kDirectoryNames{
+      NS_APP_USER_PROFILE_50_DIR,
+      NS_APP_USER_PROFILE_LOCAL_50_DIR,
+      NS_APP_CONTENT_PROCESS_TEMP_DIR,
+  };
 };
 
 }  // namespace dom

@@ -8,11 +8,12 @@
   onunload="onunload();">
 <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 <body  xmlns="http://www.w3.org/1999/xhtml">
-<p id="display">
+<div id="display">
 <input id="input" type="text"/><input id="anotherInput" type="text"/><br/>
 <iframe id="iframe" width="300" height="150"
         src="data:text/html,&lt;textarea id='textarea' cols='20' rows='4'&gt;&lt;/textarea&gt;"></iframe><br/>
-</p>
+<div contenteditable=""><br/></div>
+</div>
 <div id="content" style="display: none">
 
 </div>
@@ -82,6 +83,7 @@ var input = document.getElementById("input");
 var otherWindow = window.arguments[0];
 var otherDocument = otherWindow.document;
 var inputInChildWindow = otherDocument.getElementById("input");
+var contenteditable = document.querySelector("div[contenteditable]");
 
 function createTIP()
 {
@@ -4155,24 +4157,28 @@ async function runCallbackTests(aForTests)
     if (aNotification.type != "notify-selection-change") {
       return;
     }
-    is(aNotification.offset, aExpected.offset,
-       aDescription + " should cause selection change notification whose offset is " + aExpected.offset);
-    is(aNotification.text, aExpected.text,
-       aDescription + " should cause selection change notification whose text is '" + aExpected.text + "'");
-    is(aNotification.collapsed, aExpected.text.length == 0,
-       aDescription + " should cause selection change notification whose collapsed is " + (aExpected.text.length == 0));
-    is(aNotification.length, aExpected.text.length,
-       aDescription + " should cause selection change notification whose length is " + aExpected.text.length);
-    is(aNotification.reversed, aExpected.reversed || false,
-       aDescription + " should cause selection change notification whose reversed is " + (aExpected.reversed || false));
+    is(aNotification.hasRange, aExpected.hasRange !== false,
+      `${aDescription} should cause selection change notification whose hasRange is ${aExpected.hasRange}`);
+    if (aNotification.hasRange) {
+      is(aNotification.offset, aExpected.offset,
+        `${aDescription} should cause selection change notification whose offset is ${aExpected.offset}`);
+      is(aNotification.text, aExpected.text,
+        `${aDescription} should cause selection change notification whose text is "${aExpected.text}"`);
+      is(aNotification.length, aExpected.text.length,
+        `${aDescription} should cause selection change notification whose length is ${aExpected.text.length}`);
+      is(aNotification.reversed, aExpected.reversed || false,
+        `${aDescription} should cause selection change notification whose reversed is ${aExpected.reversed || false}`);
+    }
+    is(aNotification.collapsed, aExpected.hasRange === false || aExpected.text.length == 0,
+      `${aDescription} should cause selection change notification whose collapsed is ${aExpected.hasRange === false || aExpected.text.length == 0}`);
     is(aNotification.writingMode, aExpected.writingMode || "horizontal-tb",
-       aDescription + " should cause selection change notification whose writingMode is '" + (aExpected.writingMode || "horizontal-tb"));
+      `${aDescription} should cause selection change notification whose writingMode is ${aExpected.writingMode || "horizontal-tb"}`);
     is(aNotification.causedByComposition, aExpected.causedByComposition || false,
-       aDescription + " should cause selection change notification whose causedByComposition is " + (aExpected.causedByComposition || false));
+      `${aDescription} should cause selection change notification whose causedByComposition is ${aExpected.causedByComposition || false}`);
     is(aNotification.causedBySelectionEvent, aExpected.causedBySelectionEvent || false,
-       aDescription + " should cause selection change notification whose causedBySelectionEvent is " + (aExpected.causedBySelectionEvent || false));
+      `${aDescription} should cause selection change notification whose causedBySelectionEvent is ${aExpected.causedBySelectionEvent || false}`);
     is(aNotification.occurredDuringComposition, aExpected.occurredDuringComposition || false,
-       aDescription + " should cause cause selection change notification whose occurredDuringComposition is " + (aExpected.occurredDuringComposition || false));
+      `${aDescription} should cause cause selection change notification whose occurredDuringComposition is ${aExpected.occurredDuringComposition || false}`);
   }
 
   function checkTextChangeNotification(aNotification, aDescription, aExpected)
@@ -4313,6 +4319,18 @@ async function runCallbackTests(aForTests)
   dumpUnexpectedNotifications(1);
 
   notifications = [];
+  input.editor.selection.removeAllRanges();
+  await waitUntilNotificationsReceived();
+  is(notifications.length, 1,
+    `${description}Removing all selection ranges should cause a selection change notification`);
+  checkSelectionChangeNotification(
+    notifications[0],
+    `${description}Removing all selection ranges in editor`,
+    { hasRange: false }
+  );
+  dumpUnexpectedNotifications(1);
+
+  notifications = [];
   let TIP2 = createTIP();
   if (aForTests) {
     TIP2.beginInputTransactionForTests(window, callback);
@@ -4384,6 +4402,69 @@ async function runFocusNotificationTestAfterDrop() {
   }
 }
 
+async function runQuerySelectionEventTestAtTextChangeNotification() {
+  contenteditable.innerHTML = "<p>abc</p><p>def</p>";
+  contenteditable.focus();
+  // Ensure to send notify-focus from IMEContentObserver
+  await new Promise(
+    resolve => requestAnimationFrame(
+      () => requestAnimationFrame(resolve)
+    )
+  );
+  document.execCommand("selectall");
+  // Ensure to send notify-selection-change from IMEContentObserver
+  await new Promise(
+    resolve => requestAnimationFrame(
+      () => requestAnimationFrame(resolve)
+    )
+  );
+
+  const kTestName = "runQuerySelectionEventTestAtTextChangeNotification";
+  await new Promise(resolve => {
+    const TIP = createTIP();
+    TIP.beginInputTransactionForTests(window, (aTIP, aNotification) => {
+      if (aTIP != TIP) {
+        return true;
+      }
+      switch (aNotification.type) {
+        case "request-to-commit":
+          aTIP.commitComposition();
+          break;
+        case "request-to-cancel":
+          aTIP.cancelComposition();
+          break;
+        case "notify-text-change":
+          const textContent = synthesizeQueryTextContent(0, 100);
+          if (textContent?.text.includes("abc")) {
+            break;  // Different notification which we want to test, wait next one.
+          }
+          ok(
+            textContent?.succeeded,
+            `${kTestName}: query text content should succeed from notify-text-change handler`
+          );
+          const selectedText = synthesizeQuerySelectedText();
+          ok(
+            selectedText?.succeeded,
+            `${kTestName}: query selected text should succeed from notify-text-change handler`
+          );
+          if (textContent?.succeeded && selectedText?.succeeded) {
+            is(
+              selectedText.text,
+              textContent.text,
+              `${kTestName}: selected text should be same as all text`
+            );
+          }
+          resolve();
+          break;
+      }
+      return true;
+    });
+    // TODO: We want to do this  while selection is batched but can flush
+    //       pending notifications, however, I have no idea how to do it.
+    contenteditable.firstChild.remove();
+  });
+}
+
 async function runTests()
 {
   textareaInFrame = iframe.contentDocument.getElementById("textarea");
@@ -4400,6 +4481,7 @@ async function runTests()
   await runFocusNotificationTestAfterDrop();
   await runUnloadTests1();
   await runUnloadTests2();
+  await runQuerySelectionEventTestAtTextChangeNotification();
 
   finish();
 }

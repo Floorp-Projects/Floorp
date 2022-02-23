@@ -19,6 +19,8 @@ pub enum Architecture {
     Aarch64(Aarch64Architecture),
     Asmjs,
     Avr,
+    Bpfeb,
+    Bpfel,
     Hexagon,
     X86_32(X86_32Architecture),
     Mips32(Mips32Architecture),
@@ -469,6 +471,8 @@ pub enum Environment {
     Gnuspe,
     Gnux32,
     GnuIlp32,
+    HermitKernel,
+    LinuxKernel,
     Macabi,
     Musl,
     Musleabi,
@@ -479,6 +483,7 @@ pub enum Environment {
     Uclibc,
     Uclibceabi,
     Sgx,
+    Sim,
     Softfloat,
     Spe,
 }
@@ -509,6 +514,7 @@ impl Architecture {
             AmdGcn
             | Asmjs
             | Avr
+            | Bpfel
             | Hexagon
             | X86_32(_)
             | Mips64(Mips64Architecture::Mips64el)
@@ -523,7 +529,8 @@ impl Architecture {
             | Wasm32
             | Wasm64
             | X86_64 => Ok(Endianness::Little),
-            Mips32(Mips32Architecture::Mips)
+            Bpfeb
+            | Mips32(Mips32Architecture::Mips)
             | Mips64(Mips64Architecture::Mips64)
             | Mips32(Mips32Architecture::Mipsisa32r6)
             | Mips64(Mips64Architecture::Mipsisa64r6)
@@ -555,6 +562,8 @@ impl Architecture {
             | Mips32(_)
             | Powerpc => Ok(PointerWidth::U32),
             AmdGcn
+            | Bpfeb
+            | Bpfel
             | Powerpc64le
             | Riscv64(_)
             | X86_64
@@ -730,6 +739,8 @@ impl fmt::Display for Architecture {
             AmdGcn => f.write_str("amdgcn"),
             Asmjs => f.write_str("asmjs"),
             Avr => f.write_str("avr"),
+            Bpfeb => f.write_str("bpfeb"),
+            Bpfel => f.write_str("bpfel"),
             Hexagon => f.write_str("hexagon"),
             X86_32(x86_32) => x86_32.fmt(f),
             Mips32(mips32) => mips32.fmt(f),
@@ -909,6 +920,8 @@ impl FromStr for Architecture {
             "amdgcn" => AmdGcn,
             "asmjs" => Asmjs,
             "avr" => Avr,
+            "bpfeb" => Bpfeb,
+            "bpfel" => Bpfel,
             "hexagon" => Hexagon,
             "msp430" => Msp430,
             "nvptx64" => Nvptx64,
@@ -1163,6 +1176,8 @@ impl fmt::Display for Environment {
             Gnuspe => "gnuspe",
             Gnux32 => "gnux32",
             GnuIlp32 => "gnu_ilp32",
+            HermitKernel => "hermitkernel",
+            LinuxKernel => "linuxkernel",
             Macabi => "macabi",
             Musl => "musl",
             Musleabi => "musleabi",
@@ -1173,6 +1188,7 @@ impl fmt::Display for Environment {
             Uclibc => "uclibc",
             Uclibceabi => "uclibceabi",
             Sgx => "sgx",
+            Sim => "sim",
             Softfloat => "softfloat",
             Spe => "spe",
         };
@@ -1200,6 +1216,8 @@ impl FromStr for Environment {
             "gnuspe" => Gnuspe,
             "gnux32" => Gnux32,
             "gnu_ilp32" => GnuIlp32,
+            "hermitkernel" => HermitKernel,
+            "linuxkernel" => LinuxKernel,
             "macabi" => Macabi,
             "musl" => Musl,
             "musleabi" => Musleabi,
@@ -1210,6 +1228,7 @@ impl FromStr for Environment {
             "uclibc" => Uclibc,
             "uclibceabi" => Uclibceabi,
             "sgx" => Sgx,
+            "sim" => Sim,
             "softfloat" => Softfloat,
             "spe" => Spe,
             _ => return Err(()),
@@ -1264,6 +1283,7 @@ mod tests {
             "aarch64-apple-darwin",
             "aarch64-apple-ios",
             "aarch64-apple-ios-macabi",
+            "aarch64-apple-ios-sim",
             "aarch64-apple-tvos",
             "aarch64_be-unknown-linux-gnu",
             "aarch64_be-unknown-linux-gnu_ilp32",
@@ -1322,6 +1342,8 @@ mod tests {
             "armv7s-apple-ios",
             "asmjs-unknown-emscripten",
             "avr-unknown-unknown",
+            "bpfeb-unknown-none",
+            "bpfel-unknown-none",
             "hexagon-unknown-linux-musl",
             "i386-apple-ios",
             "i586-pc-windows-msvc",
@@ -1378,6 +1400,7 @@ mod tests {
             "powerpc-unknown-linux-gnuspe",
             "powerpc-unknown-linux-musl",
             "powerpc-unknown-netbsd",
+            "powerpc-unknown-openbsd",
             "powerpc-wrs-vxworks",
             "powerpc-wrs-vxworks-spe",
             "powerpc64-unknown-freebsd",
@@ -1387,14 +1410,17 @@ mod tests {
             "powerpc64le-unknown-linux-gnu",
             "powerpc64le-unknown-linux-musl",
             "riscv32gc-unknown-linux-gnu",
+            "riscv32gc-unknown-linux-musl",
             "riscv32i-unknown-none-elf",
             "riscv32imac-unknown-none-elf",
             "riscv32imc-unknown-none-elf",
             "riscv32i-unknown-none-elf",
             "riscv64gc-unknown-linux-gnu",
+            "riscv64gc-unknown-linux-musl",
             "riscv64gc-unknown-none-elf",
             "riscv64imac-unknown-none-elf",
             "s390x-unknown-linux-gnu",
+            "s390x-unknown-linux-musl",
             "sparc-unknown-linux-gnu",
             "sparc64-unknown-linux-gnu",
             "sparc64-unknown-netbsd",
@@ -1418,8 +1444,8 @@ mod tests {
             "wasm32-experimental-emscripten",
             "wasm32-unknown-emscripten",
             "wasm32-unknown-unknown",
-            "wasm64-unknown-unknown",
             "wasm32-wasi",
+            "wasm64-unknown-unknown",
             "wasm64-wasi",
             "x86_64-apple-darwin",
             "x86_64-apple-ios",
@@ -1428,12 +1454,12 @@ mod tests {
             "x86_64-fortanix-unknown-sgx",
             "x86_64-fuchsia",
             "x86_64-linux-android",
-            "x86_64-linux-kernel",
+            "x86_64-linux-kernel", // Changed to x86_64-unknown-none-linuxkernel in 1.53.0
             "x86_64-apple-macosx10.7.0",
             "x86_64-pc-solaris",
             "x86_64-pc-windows-gnu",
             "x86_64-pc-windows-msvc",
-            "x86_64-rumprun-netbsd",
+            "x86_64-rumprun-netbsd", // Removed in 1.53.0
             "x86_64-sun-solaris",
             "x86_64-unknown-bitrig",
             "x86_64-unknown-cloudabi",
@@ -1441,12 +1467,14 @@ mod tests {
             "x86_64-unknown-freebsd",
             "x86_64-unknown-haiku",
             "x86_64-unknown-hermit",
-            "x86_64-unknown-hermit-kernel",
+            "x86_64-unknown-hermit-kernel", // Changed to x86_64-unknown-none-hermitkernel in 1.53.0
             "x86_64-unknown-illumos",
             "x86_64-unknown-l4re-uclibc",
             "x86_64-unknown-linux-gnu",
             "x86_64-unknown-linux-gnux32",
             "x86_64-unknown-linux-musl",
+            "x86_64-unknown-none-hermitkernel",
+            "x86_64-unknown-none-linuxkernel",
             "x86_64-unknown-netbsd",
             "x86_64-unknown-openbsd",
             "x86_64-unknown-redox",
@@ -1459,7 +1487,7 @@ mod tests {
         for target in targets.iter() {
             let t = Triple::from_str(target).expect("can't parse target");
             assert_ne!(t.architecture, Architecture::Unknown);
-            assert_eq!(t.to_string(), *target);
+            assert_eq!(t.to_string(), *target, "{:#?}", t);
         }
     }
 

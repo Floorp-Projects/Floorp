@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Bug 1747673 : HTTPS First fallback to http for non-standard 5xx status code responses</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+/*
+ * Description of the test:
+ * Perform five tests where https-first receives an
+ * 5xx status code (standard and non-standard 5xx status) if request is send to site by https.
+ * Expected behaviour: https-first fallbacks to http after receiving 5xx error.
+ * Test 1: 501 Response
+ * Test 2: 504 Response
+ * Test 3: 521 Response
+ * Test 4: 530 Response
+ * Test 5: 560 Response
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const REQUEST_URL =
+  "http://example.com/tests/dom/security/test/https-first/file_downgrade_500_responses.sjs";
+
+const redirectQueries = ["?test1a", "?test2a","?test3a", "?test4a", "?test5a"];
+let currentTest = 0;
+let testWin;
+let currentQuery;
+window.addEventListener("message", receiveMessage);
+
+// Receive message and verify that it is from an http site.
+// When the message is 'downgraded' then it was send by an http site
+// and the redirection worked.
+async function receiveMessage(event) {
+  let data = event.data;
+  currentQuery = redirectQueries[currentTest];
+  ok(data.result === "downgraded", "Redirected successful to 'http' for " + currentQuery);
+  is(data.scheme, "http:", "scheme is 'http' for " + currentQuery );
+  testWin.close();
+  if (++currentTest < redirectQueries.length) {
+    runTest();
+    return;
+  }
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+async function runTest() {
+  currentQuery = redirectQueries[currentTest];
+  testWin = window.open(REQUEST_URL + currentQuery, "_blank");
+}
+
+SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_first", true]
+  ]}, runTest);
+
+</script>
+</body>
+</html>

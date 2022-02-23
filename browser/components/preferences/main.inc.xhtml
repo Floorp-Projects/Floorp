@@ -277,7 +277,7 @@
   <vbox id="browserLanguagesBox" align="start" hidden="true">
     <description flex="1" controls="chooseBrowserLanguage" data-l10n-id="choose-browser-language-description"/>
     <hbox>
-      <menulist id="defaultBrowserLanguage">
+      <menulist id="primaryBrowserLocale">
         <menupopup/>
       </menulist>
       <button id="manageBrowserLanguagesButton"
@@ -581,6 +581,11 @@
             data-l10n-id="update-application-use-service"
             preference="app.update.service.enabled"/>
 #endif
+#ifdef NIGHTLY_BUILD
+  <checkbox id="showUpdatePrompts"
+            data-l10n-id="update-application-suppress-prompts"
+            preference="app.update.suppressPrompts"/>
+#endif
 #endif
 </groupbox>
 
@@ -647,7 +652,11 @@
   <checkbox id="useSmoothScrolling"
             data-l10n-id="browsing-use-smooth-scrolling"
             preference="general.smoothScroll"/>
-
+#ifdef MOZ_WIDGET_GTK
+  <checkbox id="useOverlayScrollbars"
+            data-l10n-id="browsing-gtk-use-non-overlay-scrollbars"
+            preference="widget.gtk.overlay-scrollbars.enabled"/>
+#endif
 #ifdef XP_WIN
   <checkbox id="useOnScreenKeyboard"
             hidden="true"

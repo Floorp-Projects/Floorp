@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #aboutDialogContainer {
-  background-color: #20123a;
+  background-color: #130829;
   color: #fff;
+  color-scheme: dark;
 }
 
 #clientBox {
@@ -34,22 +35,13 @@
   text-decoration: underline;
 }
 
-.text-link:-moz-focusring {
-  border-color: #fff;
-}
-
 #rightBox {
+  background-size: auto 64px;
   margin-inline: 30px;
+  padding-top: 64px;
 }
 
 #bottomBox {
   background-color: hsla(235, 43%, 10%, .5);
   padding: 15px 10px 15px;
-}
-
-#trademark {
-  font-size: xx-small;
-  text-align: center;
-  color: #999999;
-  margin-block: 10px;
 }

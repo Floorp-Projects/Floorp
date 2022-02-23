@@ -117,7 +117,7 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   }  // run destructor for `bytes`
 
   auto info = nsContentUtils::GetSubresourceCacheValidationInfo(
-      aRequest, mSheetLoadData->mURI, nsContentUtils::SubresourceKind::Style);
+      aRequest, mSheetLoadData->mURI);
 
   // For now, we never cache entries that we have to revalidate, or whose
   // channel don't support caching.

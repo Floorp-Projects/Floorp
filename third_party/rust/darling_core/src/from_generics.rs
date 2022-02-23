@@ -1,6 +1,6 @@
 use syn::Generics;
 
-use Result;
+use crate::Result;
 
 /// Creates an instance by parsing an entire generics declaration, including the
 /// `where` clause.

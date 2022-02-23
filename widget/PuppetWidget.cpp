@@ -14,6 +14,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SchedulerGroup.h"
@@ -835,11 +836,7 @@ nsresult PuppetWidget::NotifyIMEOfSelectionChange(
 
   // Note that selection change must be notified after text change if it occurs.
   // Therefore, we don't need to query text content again here.
-  mContentCache.SetSelection(
-      this, aIMENotification.mSelectionChangeData.mOffset,
-      aIMENotification.mSelectionChangeData.Length(),
-      aIMENotification.mSelectionChangeData.mReversed,
-      aIMENotification.mSelectionChangeData.GetWritingMode());
+  mContentCache.SetSelection(this, aIMENotification.mSelectionChangeData);
 
   mBrowserChild->SendNotifyIMESelection(mContentCache, aIMENotification);
 

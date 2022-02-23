@@ -313,7 +313,7 @@ def main(*args, **kwargs):
         args.extend(
             [
                 "--rootdir",
-                topsrcdir,
+                str(topsrcdir),
                 "-c",
                 os.path.join(here, "pytest.ini"),
                 "-vv",

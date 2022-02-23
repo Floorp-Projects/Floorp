@@ -739,7 +739,8 @@ bool ModuleNamespaceObject::ProxyHandler::ownPropertyKeys(
     props.infallibleAppend(AtomToId(&names[i].toString()->asAtom()));
   }
 
-  props.infallibleAppend(SYMBOL_TO_JSID(cx->wellKnownSymbols().toStringTag));
+  props.infallibleAppend(
+      PropertyKey::Symbol(cx->wellKnownSymbols().toStringTag));
 
   return true;
 }

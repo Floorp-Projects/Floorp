@@ -52,7 +52,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.echconfig.enabled");
   Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
   Services.prefs.clearUserPref("network.dns.httpssvc.reset_exclustion_list");
-  Services.prefs.clearUserPref("network.http.http3.enabled");
+  Services.prefs.clearUserPref("network.http.http3.enable");
   Services.prefs.clearUserPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout"
   );
@@ -564,7 +564,7 @@ add_task(async function testH3Connection() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
 
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",
@@ -624,7 +624,7 @@ add_task(async function testFastfallbackToH2() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
   // Use a short timeout to make sure the fast fallback timer will be triggered.
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",
@@ -717,7 +717,7 @@ add_task(async function testFailedH3Connection() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",
     0
@@ -764,7 +764,7 @@ add_task(async function testHttp3ExcludedList() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",
     0
@@ -837,7 +837,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",
     0

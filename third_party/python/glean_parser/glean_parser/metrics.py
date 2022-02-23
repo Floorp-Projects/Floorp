@@ -198,10 +198,16 @@ class Metric:
         return self.disabled or self.is_expired()
 
     def is_expired(self) -> bool:
-        return self._config.get("custom_is_expired", util.is_expired)(self.expires)
+        def default_handler(expires) -> bool:
+            return util.is_expired(expires, self._config.get("expire_by_version"))
+
+        return self._config.get("custom_is_expired", default_handler)(self.expires)
 
     def validate_expires(self):
-        return self._config.get("custom_validate_expires", util.validate_expires)(
+        def default_handler(expires):
+            return util.validate_expires(expires, self._config.get("expire_by_version"))
+
+        return self._config.get("custom_validate_expires", default_handler)(
             self.expires
         )
 

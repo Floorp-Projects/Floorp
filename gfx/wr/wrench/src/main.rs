@@ -147,10 +147,7 @@ pub struct HeadlessEventIterater;
 impl WindowWrapper {
     #[cfg(feature = "software")]
     fn upload_software_to_native(&self) {
-        match *self {
-            WindowWrapper::Headless(..) => return,
-            _ => {}
-        }
+        if matches!(*self, WindowWrapper::Headless(..)) { return }
         let swgl = match self.software_gl() {
             Some(swgl) => swgl,
             None => return,
@@ -277,7 +274,7 @@ impl WindowWrapper {
             WindowWrapper::Headless(_, ref gl, ref swgl) => {
                 match swgl {
                     #[cfg(feature = "software")]
-                    Some(ref swgl) => Rc::new(swgl.clone()),
+                    Some(ref swgl) => Rc::new(*swgl),
                     None => gl.clone(),
                     #[cfg(not(feature = "software"))]
                     _ => panic!(),
@@ -331,89 +328,90 @@ fn make_window(
         None
     };
 
-    let wrapper = match *events_loop {
-        Some(ref events_loop) => {
-            let context_builder = glutin::ContextBuilder::new()
-                .with_gl(gl_request)
-                .with_vsync(vsync);
-            let window_builder = winit::WindowBuilder::new()
-                .with_title("WRench")
-                .with_multitouch()
-                .with_dimensions(LogicalSize::new(size.width as f64, size.height as f64));
+    let wrapper = if let Some(events_loop) = events_loop {
+        let context_builder = glutin::ContextBuilder::new()
+            .with_gl(gl_request)
+            .with_vsync(vsync);
+        let window_builder = winit::WindowBuilder::new()
+            .with_title("WRench")
+            .with_multitouch()
+            .with_dimensions(LogicalSize::new(size.width as f64, size.height as f64));
 
-            if angle {
-                angle::Context::with_window(
-                    window_builder, context_builder, events_loop
-                ).map(|(_window, _context)| {
-                    unsafe {
-                        _context
-                            .make_current()
-                            .expect("unable to make context current!");
-                    }
-
-                    let gl = match _context.get_api() {
-                        glutin::Api::OpenGl => unsafe {
-                            gl::GlFns::load_with(|symbol| _context.get_proc_address(symbol) as *const _)
-                        },
-                        glutin::Api::OpenGlEs => unsafe {
-                            gl::GlesFns::load_with(|symbol| _context.get_proc_address(symbol) as *const _)
-                        },
-                        glutin::Api::WebGl => unimplemented!(),
-                    };
-
-                    WindowWrapper::Angle(_window, _context, gl, sw_ctx)
-                }).unwrap()
-            } else {
-                let windowed_context = context_builder
-                    .build_windowed(window_builder, events_loop)
-                    .unwrap();
-
-                let windowed_context = unsafe {
-                    windowed_context
+        if angle {
+            angle::Context::with_window(
+                window_builder, context_builder, events_loop
+            ).map(|(_window, _context)| {
+                unsafe {
+                    _context
                         .make_current()
-                        .expect("unable to make context current!")
-                };
+                        .expect("unable to make context current!");
+                }
 
-                let gl = match windowed_context.get_api() {
+                let gl = match _context.get_api() {
                     glutin::Api::OpenGl => unsafe {
-                        gl::GlFns::load_with(
-                            |symbol| windowed_context.get_proc_address(symbol) as *const _
-                        )
+                        gl::GlFns::load_with(|symbol| _context.get_proc_address(symbol) as *const _)
                     },
                     glutin::Api::OpenGlEs => unsafe {
-                        gl::GlesFns::load_with(
-                            |symbol| windowed_context.get_proc_address(symbol) as *const _
-                        )
+                        gl::GlesFns::load_with(|symbol| _context.get_proc_address(symbol) as *const _)
                     },
                     glutin::Api::WebGl => unimplemented!(),
                 };
 
-                WindowWrapper::WindowedContext(windowed_context, gl, sw_ctx)
-            }
-        }
-        None => {
-            let gl = match sw_ctx {
-                #[cfg(feature = "software")]
-                Some(ref sw_ctx) => Rc::new(sw_ctx.clone()),
-                None => {
-                    match gl::GlType::default() {
-                        gl::GlType::Gl => unsafe {
-                            gl::GlFns::load_with(|symbol| {
-                                HeadlessContext::get_proc_address(symbol) as *const _
-                            })
-                        },
-                        gl::GlType::Gles => unsafe {
-                            gl::GlesFns::load_with(|symbol| {
-                                HeadlessContext::get_proc_address(symbol) as *const _
-                            })
-                        },
-                    }
-                }
-                #[cfg(not(feature = "software"))]
-                _ => panic!(),
+                WindowWrapper::Angle(_window, _context, gl, sw_ctx)
+            }).unwrap()
+        } else {
+            let windowed_context = context_builder
+                .build_windowed(window_builder, events_loop)
+                .unwrap();
+
+            let windowed_context = unsafe {
+                windowed_context
+                    .make_current()
+                    .expect("unable to make context current!")
             };
-            WindowWrapper::Headless(HeadlessContext::new(size.width, size.height), gl, sw_ctx)
+
+            let gl = match windowed_context.get_api() {
+                glutin::Api::OpenGl => unsafe {
+                    gl::GlFns::load_with(
+                        |symbol| windowed_context.get_proc_address(symbol) as *const _
+                    )
+                },
+                glutin::Api::OpenGlEs => unsafe {
+                    gl::GlesFns::load_with(
+                        |symbol| windowed_context.get_proc_address(symbol) as *const _
+                    )
+                },
+                glutin::Api::WebGl => unimplemented!(),
+            };
+
+            WindowWrapper::WindowedContext(windowed_context, gl, sw_ctx)
         }
+    } else {
+        #[cfg_attr(not(feature = "software"), allow(unused_variables))]
+        let gl = if let Some(sw_ctx) = sw_ctx {
+            #[cfg(feature = "software")]
+            {
+                Rc::new(sw_ctx)
+            }
+            #[cfg(not(feature = "software"))]
+            {
+                unreachable!("make_software_context() should have failed if 'software' feature is not enabled")
+            }
+        } else {
+            match gl::GlType::default() {
+                gl::GlType::Gl => unsafe {
+                    gl::GlFns::load_with(|symbol| {
+                        HeadlessContext::get_proc_address(symbol) as *const _
+                    })
+                },
+                gl::GlType::Gles => unsafe {
+                    gl::GlesFns::load_with(|symbol| {
+                        HeadlessContext::get_proc_address(symbol) as *const _
+                    })
+                },
+            }
+        };
+        WindowWrapper::Headless(HeadlessContext::new(size.width, size.height), gl, sw_ctx)
     };
 
     let gl = wrapper.gl();
@@ -479,7 +477,7 @@ impl RenderNotifier for Notifier {
 
 fn create_notifier() -> (Box<dyn RenderNotifier>, Receiver<NotifierEvent>) {
     let (tx, rx) = channel();
-    (Box::new(Notifier { tx: tx }), rx)
+    (Box::new(Notifier { tx }), rx)
 }
 
 fn rawtest(mut wrench: Wrench, window: &mut WindowWrapper, rx: Receiver<NotifierEvent>) {
@@ -499,7 +497,7 @@ fn reftest<'a>(
     } else {
         Path::new("reftests/reftest.list")
     };
-    let specific_reftest = subargs.value_of("REFTEST").map(|x| Path::new(x));
+    let specific_reftest = subargs.value_of("REFTEST").map(Path::new);
     let mut reftest_options = ReftestOptions::default();
     if let Some(allow_max_diff) = subargs.value_of("fuzz_tolerance") {
         reftest_options.allow_max_difference = allow_max_diff.parse().unwrap_or(1);
@@ -541,13 +539,13 @@ fn main() {
 
         if let Ok(wrench_args) = fs::read_to_string("/sdcard/wrench/args") {
             for line in wrench_args.lines() {
-                if line.starts_with("env: ") {
-                    let envvar = &line[5..];
-                    if let Some(ix) = envvar.find('=') {
-                        std::env::set_var(&envvar[0..ix], &envvar[ix + 1..]);
+                if let Some(envvar) = line.strip_prefix("env: ") {
+                    if let Some((lhs, rhs)) = envvar.split_once('=') {
+                        std::env::set_var(lhs, rhs);
                     } else {
                         std::env::set_var(envvar, "");
                     }
+
                     continue;
                 }
                 for arg in line.split_whitespace() {
@@ -562,7 +560,7 @@ fn main() {
     };
 
     // handle some global arguments
-    let res_path = args.value_of("shaders").map(|s| PathBuf::from(s));
+    let res_path = args.value_of("shaders").map(PathBuf::from);
     let size = args.value_of("size")
         .map(|s| if s == "720p" {
             DeviceIntSize::new(1280, 720)
@@ -581,24 +579,21 @@ fn main() {
         .unwrap_or(DeviceIntSize::new(1920, 1080));
     let chase_primitive = match args.value_of("chase") {
         Some(s) => {
-            match s.find(',') {
-                Some(_) => {
-                    let items = s
-                        .split(',')
-                        .map(|s| s.parse::<f32>().unwrap())
-                        .collect::<Vec<_>>();
-                    let rect = LayoutRect::from_origin_and_size(
-                        LayoutPoint::new(items[0], items[1]),
-                        LayoutSize::new(items[2], items[3]),
-                    );
-                    webrender::ChasePrimitive::LocalRect(rect)
-                }
-                None => {
-                    let id = s.parse::<usize>().unwrap();
-                    webrender::ChasePrimitive::Id(webrender::PrimitiveDebugId(id))
-                }
+            if s.contains(',') {
+                let items = s
+                    .split(',')
+                    .map(|s| s.parse::<f32>().unwrap())
+                    .collect::<Vec<_>>();
+                let rect = LayoutRect::from_origin_and_size(
+                    LayoutPoint::new(items[0], items[1]),
+                    LayoutSize::new(items[2], items[3]),
+                );
+                webrender::ChasePrimitive::LocalRect(rect)
+            } else {
+                let id = s.parse::<usize>().unwrap();
+                webrender::ChasePrimitive::Id(webrender::PrimitiveDebugId(id))
             }
-        },
+        }
         None => webrender::ChasePrimitive::Nothing,
     };
 
@@ -640,9 +635,9 @@ fn main() {
     );
     let dim = window.get_inner_size();
 
-    let needs_frame_notifier = ["perf", "reftest", "png", "rawtest", "test_invalidation"]
-        .iter()
-        .any(|s| args.subcommand_matches(s).is_some());
+    let needs_frame_notifier = args.subcommand_name().map_or(false, |name| {
+        ["perf", "reftest", "png", "rawtest", "test_invalidation"].contains(&name)
+    });
     let (notifier, rx) = if needs_frame_notifier {
         let (notifier, rx) = create_notifier();
         (Some(notifier), Some(rx))
@@ -669,7 +664,7 @@ fn main() {
     );
 
     if let Some(ui_str) = args.value_of("profiler_ui") {
-        wrench.renderer.set_profiler_ui(&ui_str);
+        wrench.renderer.set_profiler_ui(ui_str);
     }
 
     window.update(&mut wrench);
@@ -704,7 +699,7 @@ fn main() {
     } else if let Some(subargs) = args.subcommand_matches("reftest") {
         // Exit with an error code in order to ensure the CI job fails.
         process::exit(reftest(wrench, &mut window, subargs, rx.unwrap()) as _);
-    } else if let Some(_) = args.subcommand_matches("rawtest") {
+    } else if args.subcommand_matches("rawtest").is_some() {
         rawtest(wrench, &mut window, rx.unwrap());
         return;
     } else if let Some(subargs) = args.subcommand_matches("perf") {
@@ -724,10 +719,7 @@ fn main() {
                                        warmup_frames,
                                        sample_count);
 
-        let benchmark = match subargs.value_of("benchmark") {
-            Some(path) => path,
-            None => "benchmarks/benchmarks.list"
-        };
+        let benchmark = subargs.value_of("benchmark").unwrap_or("benchmarks/benchmarks.list");
         println!("Benchmark: {}", benchmark);
         let base_manifest = Path::new(benchmark);
 
@@ -741,7 +733,7 @@ fn main() {
         }
         harness.run(base_manifest, &filename, as_csv);
         return;
-    } else if let Some(_) = args.subcommand_matches("test_invalidation") {
+    } else if args.subcommand_matches("test_invalidation").is_some() {
         let harness = test_invalidation::TestHarness::new(
             &mut wrench,
             &mut window,
@@ -754,11 +746,11 @@ fn main() {
         let second_filename = subargs.value_of("second_filename").unwrap();
         perf::compare(first_filename, second_filename);
         return;
-    } else if let Some(_) = args.subcommand_matches("test_init") {
+    } else if args.subcommand_matches("test_init").is_some() {
         // Wrench::new() unwraps the Renderer initialization, so if
         // we reach this point then we have initialized successfully.
         println!("Initialization successful");
-    } else if let Some(_) = args.subcommand_matches("test_shaders") {
+    } else if args.subcommand_matches("test_shaders").is_some() {
         test_shaders::test_shaders();
     } else {
         panic!("Should never have gotten here! {:?}", args);
@@ -798,14 +790,10 @@ fn render<'a>(
         wrench.document_id = captured.document_id;
         Box::new(captured) as Box<dyn WrenchThing>
     } else {
-        let extension = input_path
-            .extension()
-            .expect("Tried to render with an unknown file type.")
-            .to_str()
-            .expect("Tried to render with an unknown file type.");
-
-        match extension {
-            "yaml" => Box::new(YamlFrameReader::new_from_args(subargs)) as Box<dyn WrenchThing>,
+        match input_path.extension().and_then(std::ffi::OsStr::to_str) {
+            Some("yaml") => {
+                Box::new(YamlFrameReader::new_from_args(subargs)) as Box<dyn WrenchThing>
+            }
             _ => panic!("Tried to render with an unknown file type."),
         }
     };
@@ -832,21 +820,17 @@ fn render<'a>(
 
     let mut body = |wrench: &mut Wrench, events: Vec<winit::Event>| {
         let mut do_frame = false;
-        let mut do_render = false;
+        let mut do_render = !events.is_empty();
 
         for event in events {
             match event {
-                winit::Event::Awakened => {
-                    do_render = true;
-                }
+                winit::Event::Awakened => {}
                 winit::Event::WindowEvent { event, .. } => match event {
                     winit::WindowEvent::CloseRequested => {
                         return winit::ControlFlow::Break;
                     }
                     winit::WindowEvent::Refresh |
-                    winit::WindowEvent::Focused(..) => {
-                        do_render = true;
-                    }
+                    winit::WindowEvent::Focused(..) => {}
                     winit::WindowEvent::CursorMoved { position: LogicalPosition { x, y }, .. } => {
                         cursor_position = WorldPoint::new(x as f32, y as f32);
                         wrench.renderer.set_cursor_position(
@@ -855,7 +839,6 @@ fn render<'a>(
                                 cursor_position.y.round() as i32,
                             ),
                         );
-                        do_render = true;
                     }
                     winit::WindowEvent::KeyboardInput {
                         input: winit::KeyboardInput {
@@ -871,37 +854,30 @@ fn render<'a>(
                         VirtualKeyCode::B => {
                             debug_flags.toggle(DebugFlags::INVALIDATION_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::P => {
                             debug_flags.toggle(DebugFlags::PROFILER_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::O => {
                             debug_flags.toggle(DebugFlags::RENDER_TARGET_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::I => {
                             debug_flags.toggle(DebugFlags::TEXTURE_CACHE_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::D => {
                             debug_flags.toggle(DebugFlags::PICTURE_CACHING_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::Q => {
                             debug_flags.toggle(DebugFlags::GPU_TIME_QUERIES | DebugFlags::GPU_SAMPLE_QUERIES);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::V => {
                             debug_flags.toggle(DebugFlags::SHOW_OVERDRAW);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::G => {
                             debug_flags.toggle(DebugFlags::GPU_CACHE_DBG);
@@ -912,31 +888,32 @@ fn render<'a>(
                             txn.set_root_pipeline(wrench.root_pipeline_id);
                             wrench.api.send_transaction(wrench.document_id, txn);
 
+                            do_render = false;
                             do_frame = true;
                         }
                         VirtualKeyCode::M => {
                             wrench.api.notify_memory_pressure();
-                            do_render = true;
                         }
                         VirtualKeyCode::L => {
                             do_loop = !do_loop;
-                            do_render = true;
                         }
                         VirtualKeyCode::Left => {
                             thing.prev_frame();
+                            do_render = false;
                             do_frame = true;
                         }
                         VirtualKeyCode::Right => {
                             thing.next_frame();
+                            do_render = false;
                             do_frame = true;
                         }
                         VirtualKeyCode::H => {
                             show_help = !show_help;
-                            do_render = true;
                         }
                         VirtualKeyCode::C => {
                             let path = PathBuf::from("../captures/wrench");
                             wrench.api.save_capture(path, CaptureBits::all());
+                            do_render = false;
                         }
                         VirtualKeyCode::X => {
                             let results = wrench.api.hit_test(
@@ -948,23 +925,23 @@ fn render<'a>(
                             for item in &results.items {
                                 println!("  • {:?}", item);
                             }
-                            println!("");
+                            println!();
+                            do_render = false;
                         }
                         VirtualKeyCode::Z => {
                             debug_flags.toggle(DebugFlags::ZOOM_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
-                            do_render = true;
                         }
                         VirtualKeyCode::Y => {
                             println!("Clearing all caches...");
                             wrench.api.send_debug_cmd(DebugCommand::ClearCaches(ClearCache::all()));
                             do_frame = true;
                         }
-                        _ => {}
+                        _other_virtual_keycode => { do_render = false; }
                     }
-                    _ => {}
+                    _other_window_event => { do_render = false; }
                 },
-                _ => {}
+                _other_event => { do_render = false; }
             }
         }
 
@@ -994,47 +971,44 @@ fn render<'a>(
         winit::ControlFlow::Continue
     };
 
-    match *events_loop {
-        None => {
-            while body(wrench, vec![winit::Event::Awakened]) == winit::ControlFlow::Continue {}
-            let fb_rect = FramebufferIntSize::new(size.width, size.height).into();
-            let pixels = wrench.renderer.read_pixels_rgba8(fb_rect);
-            save_flipped("screenshot.png", pixels, size);
-        }
-        Some(ref mut events_loop) => {
-            // We want to ensure that we:
-            //
-            // (a) Block the thread when no events are present (for CPU/battery purposes)
-            // (b) Don't lag the input events by having the event queue back up.
-            loop {
-                let mut pending_events = Vec::new();
+    if let Some(events_loop) = events_loop.as_mut() {
+        // We want to ensure that we:
+        //
+        // (a) Block the thread when no events are present (for CPU/battery purposes)
+        // (b) Don't lag the input events by having the event queue back up.
+        loop {
+            let mut pending_events = Vec::new();
 
-                // Block the thread until at least one event arrives
-                // On Android, we are generally profiling when running
-                // wrench, and don't want to block on UI events.
-                if !no_block && cfg!(not(target_os = "android")) {
-                    events_loop.run_forever(|event| {
-                        pending_events.push(event);
-                        winit::ControlFlow::Break
-                    });
-                }
-
-                // Collect any other pending events that are also available
-                events_loop.poll_events(|event| {
+            // Block the thread until at least one event arrives
+            // On Android, we are generally profiling when running
+            // wrench, and don't want to block on UI events.
+            if !no_block && cfg!(not(target_os = "android")) {
+                events_loop.run_forever(|event| {
                     pending_events.push(event);
+                    winit::ControlFlow::Break
                 });
+            }
 
-                // Ensure there is at least one event present so that the
-                // frame gets rendered.
-                if pending_events.is_empty() {
-                    pending_events.push(winit::Event::Awakened);
-                }
+            // Collect any other pending events that are also available
+            events_loop.poll_events(|event| {
+                pending_events.push(event);
+            });
 
-                // Process all of those pending events in the next vsync period
-                if body(wrench, pending_events) == winit::ControlFlow::Break {
-                    break;
-                }
+            // Ensure there is at least one event present so that the
+            // frame gets rendered.
+            if pending_events.is_empty() {
+                pending_events.push(winit::Event::Awakened);
+            }
+
+            // Process all of those pending events in the next vsync period
+            if body(wrench, pending_events) == winit::ControlFlow::Break {
+                break;
             }
         }
+    } else {
+        while body(wrench, vec![winit::Event::Awakened]) == winit::ControlFlow::Continue {}
+        let fb_rect = FramebufferIntSize::new(size.width, size.height).into();
+        let pixels = wrench.renderer.read_pixels_rgba8(fb_rect);
+        save_flipped("screenshot.png", pixels, size);
     }
 }

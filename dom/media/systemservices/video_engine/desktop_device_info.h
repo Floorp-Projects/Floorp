@@ -107,7 +107,7 @@ class DesktopDeviceInfoImpl : public DesktopDeviceInfo {
 
   void InitializeWindowList();
   virtual void InitializeTabList();
-  virtual void InitializeScreenList() = 0;
+  void InitializeScreenList();
 
   void RefreshWindowList();
   void RefreshTabList();

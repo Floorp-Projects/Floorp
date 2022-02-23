@@ -124,6 +124,15 @@ if (window.googletag?.apiReady === undefined) {
     return [];
   };
 
+  const updateTargeting = (targeting, map) => {
+    if (typeof map === "object") {
+      const entries = Object.entries(map || {});
+      for (const [k, v] of entries) {
+        targeting.set(k, getTargetingValue(v));
+      }
+    }
+  };
+
   const newSlot = (adUnitPath, size, opt_div) => {
     const attributes = new Map();
     const targeting = new Map();
@@ -215,10 +224,7 @@ if (window.googletag?.apiReady === undefined) {
       },
       toString: () => id,
       updateTargetingFromMap(map) {
-        const entries = map?.entries() || {};
-        for (const [k, v] of entries) {
-          targeting.set(k, getTargetingValue(v));
-        }
+        updateTargeting(targeting, map);
         return slot;
       },
     };
@@ -333,10 +339,7 @@ if (window.googletag?.apiReady === undefined) {
     },
     updateCorrelator() {},
     updateTargetingFromMap(map) {
-      const entries = map?.entries() || {};
-      for (const [k, v] of entries) {
-        gTargeting.set(k, getTargetingValue(v));
-      }
+      updateTargeting(gTargeting, map);
       return this;
     },
   };

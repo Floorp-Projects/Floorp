@@ -722,21 +722,21 @@ pub mod test {
             // In this section, we do the forward and backward transformation
             // to confirm that its bijective.
             // We also do the inverse projection path, and confirm it functions the same way.
-            println!("Points:");
+            info!("Points:");
             for p in points {
                 let pp = m.transform_point2d_homogeneous(*p);
                 let p3 = pp.to_point3d().unwrap();
                 let pi = mi.transform_point3d_homogeneous(p3);
                 let px = pi.to_point2d().unwrap();
                 let py = m.inverse_project(&pp.to_point2d().unwrap()).unwrap();
-                println!("\t{:?} -> {:?} -> {:?} -> ({:?} -> {:?}, {:?})", p, pp, p3, pi, px, py);
+                info!("\t{:?} -> {:?} -> {:?} -> ({:?} -> {:?}, {:?})", p, pp, p3, pi, px, py);
                 assert!(px.approx_eq_eps(p, &Point2D::new(0.001, 0.001)));
                 assert!(py.approx_eq_eps(p, &Point2D::new(0.001, 0.001)));
             }
         }
         // project
         let rp = project_rect(&m, &r, &Box2D::from_size(Size2D::new(1000.0, 1000.0))).unwrap();
-        println!("Projected {:?}", rp);
+        info!("Projected {:?}", rp);
         // one of the points ends up in the negative hemisphere
         assert_eq!(m.inverse_project(&rp.min), None);
         // inverse

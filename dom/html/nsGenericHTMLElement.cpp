@@ -2916,27 +2916,12 @@ void nsGenericHTMLElement::GetInnerText(mozilla::dom::DOMString& aValue,
   }
 }
 
-void nsGenericHTMLElement::SetInnerText(const nsAString& aValue) {
-  // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(OwnerDoc(), nullptr);
-  FireNodeRemovedForChildren();
-
-  // Might as well stick a batch around this since we're performing several
-  // mutations.
-  mozAutoDocUpdate updateBatch(GetComposedDoc(), true);
-  nsAutoMutationBatch mb;
-
-  mb.Init(this, true, false);
-
-  while (HasChildren()) {
-    RemoveChildNode(nsINode::GetFirstChild(), true);
-  }
-
-  mb.RemovalDone();
-
+static already_AddRefed<nsINode> TextToNode(const nsAString& aString,
+                                            nsNodeInfoManager* aNim) {
   nsString str;
-  const char16_t* s = aValue.BeginReading();
-  const char16_t* end = aValue.EndReading();
+  const char16_t* s = aString.BeginReading();
+  const char16_t* end = aString.EndReading();
+  RefPtr<DocumentFragment> fragment;
   while (true) {
     if (s != end && *s == '\r' && s + 1 != end && s[1] == '\n') {
       // a \r\n pair should only generate one <br>, so just skip the \r
@@ -2944,28 +2929,93 @@ void nsGenericHTMLElement::SetInnerText(const nsAString& aValue) {
     }
     if (s == end || *s == '\r' || *s == '\n') {
       if (!str.IsEmpty()) {
-        RefPtr<nsTextNode> textContent = new (NodeInfo()->NodeInfoManager())
-            nsTextNode(NodeInfo()->NodeInfoManager());
+        RefPtr<nsTextNode> textContent = new (aNim) nsTextNode(aNim);
         textContent->SetText(str, true);
-        AppendChildTo(textContent, true, IgnoreErrors());
+        if (!fragment) {
+          if (s == end) {
+            return textContent.forget();
+          }
+          fragment = new (aNim) DocumentFragment(aNim);
+        }
+        fragment->AppendChildTo(textContent, true, IgnoreErrors());
       }
       if (s == end) {
         break;
       }
       str.Truncate();
-      RefPtr<mozilla::dom::NodeInfo> ni =
-          NodeInfo()->NodeInfoManager()->GetNodeInfo(
-              nsGkAtoms::br, nullptr, kNameSpaceID_XHTML, ELEMENT_NODE);
+      RefPtr<NodeInfo> ni = aNim->GetNodeInfo(
+          nsGkAtoms::br, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
       auto* nim = ni->NodeInfoManager();
       RefPtr<HTMLBRElement> br = new (nim) HTMLBRElement(ni.forget());
-      AppendChildTo(br, true, IgnoreErrors());
+      if (!fragment) {
+        if (s + 1 == end) {
+          return br.forget();
+        }
+        fragment = new (aNim) DocumentFragment(aNim);
+      }
+      fragment->AppendChildTo(br, true, IgnoreErrors());
     } else {
       str.Append(*s);
     }
     ++s;
   }
+  return fragment.forget();
+}
 
-  mb.NodesAdded();
+void nsGenericHTMLElement::SetInnerText(const nsAString& aValue) {
+  RefPtr<nsINode> node = TextToNode(aValue, NodeInfo()->NodeInfoManager());
+  ReplaceChildren(node, IgnoreErrors());
+}
+
+// https://html.spec.whatwg.org/#merge-with-the-next-text-node
+static void MergeWithNextTextNode(Text& aText, ErrorResult& aRv) {
+  RefPtr<Text> nextSibling = Text::FromNodeOrNull(aText.GetNextSibling());
+  if (!nextSibling) {
+    return;
+  }
+  nsAutoString data;
+  nextSibling->GetData(data);
+  aText.AppendData(data, aRv);
+  nextSibling->Remove();
+}
+
+// https://html.spec.whatwg.org/#dom-outertext
+void nsGenericHTMLElement::SetOuterText(const nsAString& aValue,
+                                        ErrorResult& aRv) {
+  nsCOMPtr<nsINode> parent = GetParentNode();
+  if (!parent) {
+    return aRv.ThrowNoModificationAllowedError("Element has no parent");
+  }
+
+  RefPtr<nsINode> next = GetNextSibling();
+  RefPtr<nsINode> previous = GetPreviousSibling();
+
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(OwnerDoc(), nullptr);
+
+  nsNodeInfoManager* nim = NodeInfo()->NodeInfoManager();
+  RefPtr<nsINode> node = TextToNode(aValue, nim);
+  if (!node) {
+    // This doesn't match the spec, see
+    // https://github.com/whatwg/html/issues/7508
+    node = new (nim) nsTextNode(nim);
+  }
+  parent->ReplaceChild(*node, *this, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (next) {
+    if (RefPtr<Text> text = Text::FromNodeOrNull(next->GetPreviousSibling())) {
+      MergeWithNextTextNode(*text, aRv);
+      if (aRv.Failed()) {
+        return;
+      }
+    }
+  }
+  if (auto* text = Text::FromNodeOrNull(previous)) {
+    MergeWithNextTextNode(*text, aRv);
+  }
 }
 
 already_AddRefed<ElementInternals> nsGenericHTMLElement::AttachInternals(

@@ -6,7 +6,8 @@ import React, { Component } from "react";
 import { connect } from "../utils/connect";
 import fuzzyAldrin from "fuzzaldrin-plus";
 import { basename } from "../utils/path";
-import { throttle } from "lodash";
+
+const { throttle } = require("devtools/shared/throttle");
 
 import actions from "../actions";
 import {
@@ -35,7 +36,6 @@ import ResultList from "./shared/ResultList";
 
 import "./QuickOpenModal.css";
 
-const updateResultsThrottle = 100;
 const maxResults = 100;
 
 const SIZE_BIG = { size: "big" };
@@ -52,6 +52,9 @@ function filter(values, query) {
 }
 
 export class QuickOpenModal extends Component {
+  // Put it on the class so it can be retrieved in tests
+  static UPDATE_RESULTS_THROTTLE = 100;
+
   constructor(props) {
     super(props);
     this.state = { results: null, selectedIndex: 0 };
@@ -170,7 +173,7 @@ export class QuickOpenModal extends Component {
     }
 
     return this.searchSources(query);
-  }, updateResultsThrottle);
+  }, QuickOpenModal.UPDATE_RESULTS_THROTTLE);
 
   setModifier = item => {
     if (["@", "#", ":"].includes(item.id)) {

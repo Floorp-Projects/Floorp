@@ -7,6 +7,7 @@
 #include "nsStyleUtil.h"
 #include "nsStyleConsts.h"
 
+#include "mozilla/dom/Document.h"
 #include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "nsIContent.h"

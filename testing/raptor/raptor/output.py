@@ -1061,6 +1061,40 @@ class PerftestOutput(object):
 
         return subtests, vals
 
+    def parseMatrixReactBenchOutput(self, test):
+        # https://github.com/jandem/matrix-react-bench
+
+        _subtests = {}
+        data = test["measurements"]["matrix-react-bench"]
+        for page_cycle in data:
+            # Each cycle is formatted like `[[iterations, val], [iterations, val2], ...]`
+            for iteration, val in page_cycle:
+                sub = f"{iteration}-iterations"
+                _subtests.setdefault(
+                    sub,
+                    {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    },
+                )
+
+                # The values produced are far too large for perfherder
+                _subtests[sub]["replicates"].append(val)
+
+        vals = []
+        subtests = []
+        names = list(_subtests)
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]["value"] = filters.mean(_subtests[name]["replicates"])
+            subtests.append(_subtests[name])
+            vals.append([_subtests[name]["value"], name])
+
+        return subtests, vals
+
 
 class RaptorOutput(PerftestOutput):
     """class for raptor output"""
@@ -1582,6 +1616,8 @@ class BrowsertimeOutput(PerftestOutput):
                     subtests, vals = self.parseAssortedDomOutput(test)
                 if "jetstream2" in test["measurements"]:
                     subtests, vals = self.parseJetstreamTwoOutput(test)
+                if "matrix-react-bench" in test["name"]:
+                    subtests, vals = self.parseMatrixReactBenchOutput(test)
 
                 if subtests is None:
                     raise Exception("No benchmark metrics found in browsertime results")

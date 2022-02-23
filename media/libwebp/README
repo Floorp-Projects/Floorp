@@ -4,7 +4,7 @@
           \__\__/\____/\_____/__/ ____  ___
                 / _/ /    \    \ /  _ \/ _/
                /  \_/   / /   \ \   __/  \__
-               \____/____/\_____/_____/____/v1.2.1
+               \____/____/\_____/_____/____/v1.2.2
 
 Description:
 ============
@@ -13,13 +13,13 @@ WebP codec: library to encode and decode images in WebP format. This package
 contains the library that can be used in other programs to add WebP support,
 as well as the command line tools 'cwebp' and 'dwebp'.
 
-See http://developers.google.com/speed/webp
+See https://developers.google.com/speed/webp
 
 The latest source tree is available at
 https://chromium.googlesource.com/webm/libwebp
 
 It is released under the same license as the WebM project.
-See http://www.webmproject.org/license/software/ or the
+See https://www.webmproject.org/license/software/ or the
 "COPYING" file for details. An additional intellectual
 property rights grant can be found in the file PATENTS.
 
@@ -436,8 +436,8 @@ Prerequisites:
 
 2) (Optional) qcms (Quick Color Management System)
   i. Download qcms from Mozilla / Chromium:
-    http://hg.mozilla.org/mozilla-central/file/0e7639e3bdfb/gfx/qcms
-    http://src.chromium.org/viewvc/chrome/trunk/src/third_party/qcms
+    https://hg.mozilla.org/mozilla-central/file/0e7639e3bdfb/gfx/qcms
+    https://source.chromium.org/chromium/chromium/src/+/main:third_party/qcms/;drc=d4a2f8e1ed461d8fc05ed88d1ae2dc94c9773825
   ii. Build and archive the source files as libqcms.a / qcms.lib
   iii. Update makefile.unix / Makefile.vc
     a) Define WEBP_HAVE_QCMS
@@ -456,7 +456,7 @@ modes, etc.
 
 Usage:
 
-  img2webp [file-level options] [image files...] [per-frame options...]
+  img2webp [file_options] [[frame_options] frame_file]...
 
 File-level options (only used at the start of compression):
  -min_size ............ minimize size
@@ -786,10 +786,10 @@ Bugs:
 Please report all bugs to the issue tracker:
     https://bugs.chromium.org/p/webp
 Patches welcome! See this page to get started:
-    http://www.webmproject.org/code/contribute/submitting-patches/
+    https://www.webmproject.org/code/contribute/submitting-patches/
 
 Discuss:
 ========
 
 Email: webp-discuss@webmproject.org
-Web: http://groups.google.com/a/webmproject.org/group/webp-discuss
+Web: https://groups.google.com/a/webmproject.org/group/webp-discuss

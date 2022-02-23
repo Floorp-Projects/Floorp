@@ -6,44 +6,23 @@
 #ifndef AndroidBridge_h__
 #define AndroidBridge_h__
 
-#include <jni.h>
-#include <android/log.h>
-#include <cstdlib>
-#include <unistd.h>
-
-#include "APKOpen.h"
+#include <unistd.h>  // for gettid
 
 #include "nsCOMPtr.h"
-#include "nsCOMArray.h"
 
-#include "js/RootingAPI.h"
-#include "js/Value.h"
 #include "mozilla/jni/Refs.h"
 
 #include "nsIMutableArray.h"
 #include "nsIMIMEInfo.h"
-#include "nsColor.h"
-#include "gfxRect.h"
 
 #include "nsIAndroidBridge.h"
 
-#include "mozilla/Likely.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/Types.h"
-#include "mozilla/gfx/Point.h"
 #include "mozilla/jni/Utils.h"
 #include "nsTHashMap.h"
-
-#include "Units.h"
 
 // Some debug #defines
 // #define DEBUG_ANDROID_EVENTS
 // #define DEBUG_ANDROID_WIDGET
-
-class nsPIDOMWindowOuter;
-
-typedef void* EGLSurface;
-class nsIRunnable;
 
 namespace mozilla {
 
@@ -52,39 +31,11 @@ class AutoLocalJNIFrame;
 namespace hal {
 class BatteryInformation;
 class NetworkInformation;
+enum class ScreenOrientation : uint32_t;
 }  // namespace hal
-
-// The order and number of the members in this structure must correspond
-// to the attrsAppearance array in GeckoAppShell.getSystemColors()
-struct AndroidSystemColors {
-  nscolor textColorPrimary;
-  nscolor textColorPrimaryInverse;
-  nscolor textColorSecondary;
-  nscolor textColorSecondaryInverse;
-  nscolor textColorTertiary;
-  nscolor textColorTertiaryInverse;
-  nscolor textColorHighlight;
-  nscolor colorForeground;
-  nscolor colorBackground;
-  nscolor panelColorForeground;
-  nscolor panelColorBackground;
-  nscolor colorAccent;
-};
 
 class AndroidBridge final {
  public:
-  enum {
-    // Values for NotifyIME, in addition to values from the Gecko
-    // IMEMessage enum; use negative values here to prevent conflict
-    NOTIFY_IME_OPEN_VKB = -2,
-    NOTIFY_IME_REPLY_EVENT = -1,
-  };
-
-  enum {
-    LAYER_CLIENT_TYPE_NONE = 0,
-    LAYER_CLIENT_TYPE_GL = 2  // AndroidGeckoGLLayerClient
-  };
-
   static bool IsJavaUiThread() {
     return mozilla::jni::GetUIThreadId() == gettid();
   }
@@ -104,17 +55,10 @@ class AndroidBridge final {
                               nsIHandlerApp** aDefaultApp = nullptr,
                               const nsAString& aAction = u""_ns);
 
-  bool HasHWVP8Encoder();
-  bool HasHWVP8Decoder();
-  bool HasHWH264();
-
   void GetMimeTypeFromExtensions(const nsACString& aFileExt,
                                  nsCString& aMimeType);
   void GetExtensionFromMimeType(const nsACString& aMimeType,
                                 nsACString& aFileExt);
-
-  gfx::Rect getScreenSize();
-  int GetScreenDepth();
 
   void Vibrate(const nsTArray<uint32_t>& aPattern);
 
@@ -136,11 +80,7 @@ class AndroidBridge final {
 
   void GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo);
 
-  // These methods don't use a ScreenOrientation because it's an
-  // enum and that would require including the header which requires
-  // include IPC headers which requires including basictypes.h which
-  // requires a lot of changes...
-  uint32_t GetScreenOrientation();
+  hal::ScreenOrientation GetScreenOrientation();
   uint16_t GetScreenAngle();
 
   nsresult GetProxyForURI(const nsACString& aSpec, const nsACString& aScheme,

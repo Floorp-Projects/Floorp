@@ -2,6 +2,44 @@
     <head>
         <meta charset="utf-8">
         <title>Inputs</title>
+        <script>
+            class CustomTextBox extends HTMLElement {
+                constructor() {
+                    super();
+
+                    this.attachShadow({mode: 'open'});
+                    const wrapper = document.createElement('span');
+                    this.textbox = wrapper.appendChild(document.createElement("input"));
+                    this.textbox.value = "adipisci";
+                    this.shadowRoot.append(wrapper);
+                }
+
+                focus() {
+                    this.textbox.focus();
+                }
+
+                select() {
+                    this.textbox.select();
+                }
+
+                setSelectionRange(start, end) {
+                    this.textbox.setSelectionRange(start, end);
+                }
+
+                get selectionStart() {
+                    return this.textbox.selectionStart;
+                }
+
+                get selectionEnd() {
+                    return this.textbox.selectionEnd;
+                }
+
+                get value() {
+                    return this.textbox.value;
+                }
+            }
+            customElements.define('x-input', CustomTextBox);
+        </script>
     </head>
     <body>
         <div id="text">lorem</div>
@@ -10,6 +48,7 @@
         <div id="contenteditable" contenteditable="true">sit</div>
         <iframe id="iframe" src="selectionAction_frame.html"></iframe>
         <iframe id="designmode" src="selectionAction_frame.html"></iframe>
+        <x-input id="x-input"></x-input>
     </body>
     <script>
         addEventListener("load", function() {

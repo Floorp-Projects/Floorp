@@ -260,26 +260,35 @@ endif
 
 
 
+libdav1d_rc_obj = []
+libdav1d_flags = [stackalign_flag]
 api_export_flags = []
 
 #
 # Windows .rc file and API export flags
 #
 
-if host_machine.system() == 'windows' and get_option('default_library') != 'static'
-    rc_file = configure_file(
-        input : 'dav1d.rc.in',
-        output : 'dav1d.rc',
-        configuration : rc_data
-    )
+if host_machine.system() == 'windows'
+    if get_option('default_library') != 'static'
+        rc_file = configure_file(
+            input : 'dav1d.rc.in',
+            output : 'dav1d.rc',
+            configuration : rc_data
+        )
 
-    libdav1d_rc_obj = winmod.compile_resources(rc_file)
+        libdav1d_rc_obj = winmod.compile_resources(rc_file)
 
-    api_export_flags = ['-DDAV1D_BUILDING_DLL']
-else
-    libdav1d_rc_obj = []
+        api_export_flags = ['-DDAV1D_BUILDING_DLL']
+    endif
+
+    if (host_machine.cpu_family() == 'x86_64' and cc.get_id() == 'gcc')
+        # We don't expect to reference data members from other DLLs without
+        # dllimport attributes. Set the -mcmodel=small flag, which avoids
+        # generating indirection via .refptr.<symname> for all potentially
+        # dllimported variable references.
+        libdav1d_flags += '-mcmodel=small'
+    endif
 endif
-
 
 
 
@@ -294,7 +303,7 @@ libdav1d_entrypoints_objs = static_library('dav1d_entrypoint',
 
     include_directories : dav1d_inc_dirs,
     dependencies: [stdatomic_dependencies],
-    c_args : [stackalign_flag, stackrealign_flag, api_export_flags],
+    c_args : [libdav1d_flags, stackrealign_flag, api_export_flags],
     install : false,
     build_by_default : false,
 ).extract_all_objects(recursive: true)
@@ -307,7 +316,7 @@ foreach bitdepth : dav1d_bitdepths
         libdav1d_tmpl_sources, config_h_target,
         include_directories: dav1d_inc_dirs,
         dependencies : [stdatomic_dependencies],
-        c_args : ['-DBITDEPTH=@0@'.format(bitdepth)] + stackalign_flag,
+        c_args : ['-DBITDEPTH=@0@'.format(bitdepth)] + libdav1d_flags,
         install : false,
         build_by_default : false,
     ).extract_all_objects(recursive: true)
@@ -320,7 +329,7 @@ foreach bitdepth : dav1d_bitdepths
         libdav1d_arch_tmpl_sources, config_h_target,
         include_directories: dav1d_inc_dirs,
         dependencies : [stdatomic_dependencies],
-        c_args : ['-DBITDEPTH=@0@'.format(bitdepth)] + stackalign_flag + arch_flags,
+        c_args : ['-DBITDEPTH=@0@'.format(bitdepth)] + libdav1d_flags + arch_flags,
         install : false,
         build_by_default : false,
     ).extract_all_objects(recursive: true)
@@ -350,7 +359,7 @@ libdav1d = library('dav1d',
         thread_compat_dep,
         libdl_dependency,
         ],
-    c_args : [stackalign_flag, api_export_flags],
+    c_args : [libdav1d_flags, api_export_flags],
     version : dav1d_soname_version,
     soversion : dav1d_soversion,
     install : true,

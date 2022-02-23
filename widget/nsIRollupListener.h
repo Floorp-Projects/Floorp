@@ -9,6 +9,7 @@
 
 #include "nsTArray.h"
 #include "nsPoint.h"
+#include "Units.h"
 
 class nsIContent;
 class nsIWidget;

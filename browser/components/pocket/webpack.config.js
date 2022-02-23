@@ -27,4 +27,16 @@ module.exports = {
   resolve: {
     extensions: [".js", ".jsx"],
   },
+  optimization: {
+    minimize: false,
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/](react|react-dom|scheduler|object-assign)[\\/]/,
+          name: "vendor",
+          chunks: "all",
+        },
+      },
+    },
+  },
 };

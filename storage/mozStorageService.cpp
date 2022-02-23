@@ -419,11 +419,14 @@ Collator* Service::getCollator() {
 
 NS_IMETHODIMP
 Service::OpenSpecialDatabase(const nsACString& aStorageKey,
-                             const nsACString& aName,
+                             const nsACString& aName, uint32_t aConnectionFlags,
                              mozIStorageConnection** _connection) {
   if (!aStorageKey.Equals(kMozStorageMemoryStorageKey)) {
     return NS_ERROR_INVALID_ARG;
   }
+
+  const bool interruptible =
+      aConnectionFlags & mozIStorageService::CONNECTION_INTERRUPTIBLE;
 
   int flags = SQLITE_OPEN_READWRITE;
 
@@ -431,9 +434,10 @@ Service::OpenSpecialDatabase(const nsACString& aStorageKey,
     flags |= SQLITE_OPEN_URI;
   }
 
-  RefPtr<Connection> msc = new Connection(this, flags, Connection::SYNCHRONOUS);
+  RefPtr<Connection> msc =
+      new Connection(this, flags, Connection::SYNCHRONOUS, interruptible);
 
-  nsresult rv = msc->initialize(aStorageKey, aName);
+  const nsresult rv = msc->initialize(aStorageKey, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   msc.forget(_connection);
@@ -499,8 +503,8 @@ class AsyncInitDatabase final : public Runnable {
 }  // namespace
 
 NS_IMETHODIMP
-Service::OpenAsyncDatabase(nsIVariant* aDatabaseStore,
-                           nsIPropertyBag2* aOptions,
+Service::OpenAsyncDatabase(nsIVariant* aDatabaseStore, uint32_t aOpenFlags,
+                           uint32_t /* aConnectionFlags */,
                            mozIStorageCompletionCallback* aCallback) {
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
@@ -508,42 +512,17 @@ Service::OpenAsyncDatabase(nsIVariant* aDatabaseStore,
   NS_ENSURE_ARG(aDatabaseStore);
   NS_ENSURE_ARG(aCallback);
 
-  nsresult rv;
-  bool shared = false;
-  bool readOnly = false;
-  bool ignoreLockingMode = false;
-  int32_t growthIncrement = -1;
-
-#define FAIL_IF_SET_BUT_INVALID(rv)                    \
-  if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE) { \
-    return NS_ERROR_INVALID_ARG;                       \
-  }
-
-  // Deal with options first:
-  if (aOptions) {
-    rv = aOptions->GetPropertyAsBool(u"readOnly"_ns, &readOnly);
-    FAIL_IF_SET_BUT_INVALID(rv);
-
-    rv = aOptions->GetPropertyAsBool(u"ignoreLockingMode"_ns,
-                                     &ignoreLockingMode);
-    FAIL_IF_SET_BUT_INVALID(rv);
-    // Specifying ignoreLockingMode will force use of the readOnly flag:
-    if (ignoreLockingMode) {
-      readOnly = true;
-    }
-
-    rv = aOptions->GetPropertyAsBool(u"shared"_ns, &shared);
-    FAIL_IF_SET_BUT_INVALID(rv);
-
-    // NB: we re-set to -1 if we don't have a storage file later on.
-    rv = aOptions->GetPropertyAsInt32(u"growthIncrement"_ns, &growthIncrement);
-    FAIL_IF_SET_BUT_INVALID(rv);
-  }
+  const bool shared = aOpenFlags & mozIStorageService::OPEN_SHARED;
+  const bool ignoreLockingMode =
+      aOpenFlags & mozIStorageService::OPEN_IGNORE_LOCKING_MODE;
+  // Specifying ignoreLockingMode will force use of the readOnly flag:
+  const bool readOnly =
+      ignoreLockingMode || (aOpenFlags & mozIStorageService::OPEN_READONLY);
   int flags = readOnly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE;
 
   nsCOMPtr<nsIFile> storageFile;
   nsCOMPtr<nsISupports> dbStore;
-  rv = aDatabaseStore->GetAsISupports(getter_AddRefs(dbStore));
+  nsresult rv = aDatabaseStore->GetAsISupports(getter_AddRefs(dbStore));
   if (NS_SUCCEEDED(rv)) {
     // Generally, aDatabaseStore holds the database nsIFile.
     storageFile = do_QueryInterface(dbStore, &rv);
@@ -575,34 +554,35 @@ Service::OpenAsyncDatabase(nsIVariant* aDatabaseStore,
     // connection to use a memory DB.
   }
 
-  if (!storageFile && growthIncrement >= 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   // Create connection on this thread, but initialize it on its helper thread.
   RefPtr<Connection> msc =
-      new Connection(this, flags, Connection::ASYNCHRONOUS, ignoreLockingMode);
+      new Connection(this, flags, Connection::ASYNCHRONOUS,
+                     /* interruptible */ true, ignoreLockingMode);
   nsCOMPtr<nsIEventTarget> target = msc->getAsyncExecutionTarget();
   MOZ_ASSERT(target,
              "Cannot initialize a connection that has been closed already");
 
-  RefPtr<AsyncInitDatabase> asyncInit =
-      new AsyncInitDatabase(msc, storageFile, growthIncrement, aCallback);
+  RefPtr<AsyncInitDatabase> asyncInit = new AsyncInitDatabase(
+      msc, storageFile, /* growthIncrement */ -1, aCallback);
   return target->Dispatch(asyncInit, nsIEventTarget::DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP
-Service::OpenDatabase(nsIFile* aDatabaseFile,
+Service::OpenDatabase(nsIFile* aDatabaseFile, uint32_t aConnectionFlags,
                       mozIStorageConnection** _connection) {
   NS_ENSURE_ARG(aDatabaseFile);
 
+  const bool interruptible =
+      aConnectionFlags & mozIStorageService::CONNECTION_INTERRUPTIBLE;
+
   // Always ensure that SQLITE_OPEN_CREATE is passed in for compatibility
   // reasons.
-  int flags =
+  const int flags =
       SQLITE_OPEN_READWRITE | SQLITE_OPEN_SHAREDCACHE | SQLITE_OPEN_CREATE;
-  RefPtr<Connection> msc = new Connection(this, flags, Connection::SYNCHRONOUS);
+  RefPtr<Connection> msc =
+      new Connection(this, flags, Connection::SYNCHRONOUS, interruptible);
 
-  nsresult rv = msc->initialize(aDatabaseFile);
+  const nsresult rv = msc->initialize(aDatabaseFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
   msc.forget(_connection);
@@ -610,17 +590,21 @@ Service::OpenDatabase(nsIFile* aDatabaseFile,
 }
 
 NS_IMETHODIMP
-Service::OpenUnsharedDatabase(nsIFile* aDatabaseFile,
+Service::OpenUnsharedDatabase(nsIFile* aDatabaseFile, uint32_t aConnectionFlags,
                               mozIStorageConnection** _connection) {
   NS_ENSURE_ARG(aDatabaseFile);
 
+  const bool interruptible =
+      aConnectionFlags & mozIStorageService::CONNECTION_INTERRUPTIBLE;
+
   // Always ensure that SQLITE_OPEN_CREATE is passed in for compatibility
   // reasons.
-  int flags =
+  const int flags =
       SQLITE_OPEN_READWRITE | SQLITE_OPEN_PRIVATECACHE | SQLITE_OPEN_CREATE;
-  RefPtr<Connection> msc = new Connection(this, flags, Connection::SYNCHRONOUS);
+  RefPtr<Connection> msc =
+      new Connection(this, flags, Connection::SYNCHRONOUS, interruptible);
 
-  nsresult rv = msc->initialize(aDatabaseFile);
+  const nsresult rv = msc->initialize(aDatabaseFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
   msc.forget(_connection);
@@ -630,16 +614,21 @@ Service::OpenUnsharedDatabase(nsIFile* aDatabaseFile,
 NS_IMETHODIMP
 Service::OpenDatabaseWithFileURL(nsIFileURL* aFileURL,
                                  const nsACString& aTelemetryFilename,
+                                 uint32_t aConnectionFlags,
                                  mozIStorageConnection** _connection) {
   NS_ENSURE_ARG(aFileURL);
 
+  const bool interruptible =
+      aConnectionFlags & mozIStorageService::CONNECTION_INTERRUPTIBLE;
+
   // Always ensure that SQLITE_OPEN_CREATE is passed in for compatibility
   // reasons.
-  int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_SHAREDCACHE |
-              SQLITE_OPEN_CREATE | SQLITE_OPEN_URI;
-  RefPtr<Connection> msc = new Connection(this, flags, Connection::SYNCHRONOUS);
+  const int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_SHAREDCACHE |
+                    SQLITE_OPEN_CREATE | SQLITE_OPEN_URI;
+  RefPtr<Connection> msc =
+      new Connection(this, flags, Connection::SYNCHRONOUS, interruptible);
 
-  nsresult rv = msc->initialize(aFileURL, aTelemetryFilename);
+  const nsresult rv = msc->initialize(aFileURL, aTelemetryFilename);
   NS_ENSURE_SUCCESS(rv, rv);
 
   msc.forget(_connection);

@@ -49,26 +49,13 @@ extern "C" {
 #include "stun_server_ctx.h"
 #include "turn_client_ctx.h"
 
-#define NR_ICE_STUN_SERVER_TYPE_ADDR    1
-#define NR_ICE_STUN_SERVER_TYPE_DNSNAME 2
-
-typedef struct nr_ice_stun_server_ {
-  nr_transport_addr addr;
-  int id;
-} nr_ice_stun_server;
-
-typedef struct nr_ice_turn_server_ {
-    nr_ice_stun_server    turn_server;
-    char                 *username;
-    Data                 *password;
-} nr_ice_turn_server;
-
 typedef struct nr_ice_foundation_ {
   int index;
 
   nr_transport_addr addr;
   int type;
-  nr_ice_stun_server *stun_server;
+  /* ICE spec says that we only compare IP address, not port */
+  nr_transport_addr stun_server_addr;
 
   STAILQ_ENTRY(nr_ice_foundation_) entry;
 } nr_ice_foundation;
@@ -116,10 +103,10 @@ struct nr_ice_ctx_ {
 
   UINT4 Ta;
 
-  nr_ice_stun_server *stun_servers;           /* The list of stun servers */
-  int stun_server_ct;
-  nr_ice_turn_server *turn_servers;           /* The list of turn servers */
-  int turn_server_ct;
+  nr_ice_stun_server *stun_servers_cfg;           /* The list of stun servers */
+  int stun_server_ct_cfg;
+  nr_ice_turn_server *turn_servers_cfg;           /* The list of turn servers */
+  int turn_server_ct_cfg;
   nr_local_addr *local_addrs;                 /* The list of available local addresses and corresponding interface information */
   int local_addr_ct;
 

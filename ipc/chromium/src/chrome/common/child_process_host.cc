@@ -13,7 +13,6 @@
 #include "base/waitable_event.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
-#include "mozilla/ipc/Transport.h"
 typedef mozilla::ipc::BrowserProcessSubThread ChromeThread;
 #include "chrome/common/process_watcher.h"
 

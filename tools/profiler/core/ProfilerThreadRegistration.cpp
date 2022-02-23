@@ -9,6 +9,12 @@
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ProfilerThreadRegistry.h"
 #include "nsString.h"
+#ifdef MOZ_GECKO_PROFILER
+#  include "platform.h"
+#else
+#  define profiler_mark_thread_awake()
+#  define profiler_mark_thread_asleep()
+#endif
 
 namespace mozilla::profiler {
 
@@ -41,6 +47,7 @@ ThreadRegistration::ThreadRegistration(const char* aName, const void* aStackTop)
 
   tls->set(this);
   ThreadRegistry::Register(OnThreadRef{*this});
+  profiler_mark_thread_awake();
 }
 
 ThreadRegistration::~ThreadRegistration() {
@@ -65,6 +72,7 @@ ThreadRegistration::~ThreadRegistration() {
       return;
     }
 
+    profiler_mark_thread_asleep();
     ThreadRegistry::Unregister(OnThreadRef{*this});
 #ifdef DEBUG
     // After ThreadRegistry::Unregister, other threads should not be able to

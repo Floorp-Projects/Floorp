@@ -78,7 +78,7 @@ The [VideoLAN Code of Conduct](https://wiki.videolan.org/CoC) applies to this pr
 
 # Compile
 
-1. Install [Meson](https://mesonbuild.com/) (0.47 or higher), [Ninja](https://ninja-build.org/), and, for x86\* targets, [nasm](https://nasm.us/) (2.14 or higher)
+1. Install [Meson](https://mesonbuild.com/) (0.49 or higher), [Ninja](https://ninja-build.org/), and, for x86\* targets, [nasm](https://nasm.us/) (2.14 or higher)
 2. Run `mkdir build && cd build` to create a build directory and enter it
 3. Run `meson ..` to configure meson, add `--default-library=static` if static linking is desired
 4. Run `ninja` to compile
@@ -104,6 +104,14 @@ For 32-bit linux, run
 ```
 meson build --cross-file=package/crossfiles/i686-linux32.meson
 ```
+
+## Build documentation
+
+1. Install [doxygen](https://www.doxygen.nl/) and [graphviz](https://www.graphviz.org/)
+2. Run `meson build -Denable_docs=true` to create the build directory
+3. Run `ninja -C build doc/html` to build the docs
+
+The result can be found in `build/doc/html/`. An online version built from master can be found [here](https://videolan.videolan.me/dav1d/).
 
 # Run tests
 
@@ -146,6 +154,3 @@ Please read the [AV1 patent license](doc/PATENTS) that applies to the AV1 specif
 ## Will you care about <my_arch>? <my_os>?
 
 - We do, but we don't have either the time or the knowledge. Therefore, patches and contributions welcome.
-
-## Where can I find documentation?
-- The current library documentation, built from master, can be found [here](https://videolan.videolan.me/dav1d/).

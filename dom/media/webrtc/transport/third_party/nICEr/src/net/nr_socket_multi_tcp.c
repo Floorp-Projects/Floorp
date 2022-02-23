@@ -221,6 +221,7 @@ static int nr_socket_multi_tcp_create_stun_server_socket(
   }
 
 int nr_socket_multi_tcp_create(struct nr_ice_ctx_ *ctx,
+    struct nr_ice_component_ *component,
     nr_transport_addr *addr, nr_socket_tcp_type tcp_type,
     int precreated_so_count, int max_pending, nr_socket **sockp)
   {
@@ -245,20 +246,35 @@ int nr_socket_multi_tcp_create(struct nr_ice_ctx_ *ctx,
       ABORT(r);
 
     if (tcp_type!=TCP_TYPE_ACTIVE) {
-      if (sock->ctx && sock->ctx->stun_servers) {
-        for (i=0; i<sock->ctx->stun_server_ct; ++i) {
+      nr_ice_stun_server *stun_servers;
+      nr_ice_turn_server *turn_servers;
+      int stun_server_ct, turn_server_ct;
+      if (component) {
+        stun_servers = component->stream->stun_servers;
+        turn_servers = component->stream->turn_servers;
+        stun_server_ct = component->stream->stun_server_ct;
+        turn_server_ct = component->stream->turn_server_ct;
+      } else {
+        /* Mainly for unit-testing */
+        stun_servers = ctx->stun_servers_cfg;
+        turn_servers = ctx->turn_servers_cfg;
+        stun_server_ct = ctx->stun_server_ct_cfg;
+        turn_server_ct = ctx->turn_server_ct_cfg;
+      }
+      if (stun_servers) {
+        for (i=0; i<stun_server_ct; ++i) {
           if ((r=nr_socket_multi_tcp_create_stun_server_socket(sock,
-              sock->ctx->stun_servers+i, addr, max_pending))) {
+              stun_servers+i, addr, max_pending))) {
             if (r!=R_BAD_ARGS) {
               r_log(LOG_ICE,LOG_WARNING,"%s:%d function %s failed to connect STUN server from addr:%s with error %d",__FILE__,__LINE__,__FUNCTION__,addr->as_string,r);
             }
           }
         }
       }
-      if (sock->ctx && sock->ctx->turn_servers) {
-        for (i=0; i<sock->ctx->turn_server_ct; ++i) {
+      if (turn_servers) {
+        for (i=0; i<turn_server_ct; ++i) {
           if ((r=nr_socket_multi_tcp_create_stun_server_socket(sock,
-              &(sock->ctx->turn_servers[i]).turn_server, addr, max_pending))) {
+              &(turn_servers[i]).turn_server, addr, max_pending))) {
             if (r!=R_BAD_ARGS) {
               r_log(LOG_ICE,LOG_WARNING,"%s:%d function %s failed to connect TURN server from addr:%s with error %d",__FILE__,__LINE__,__FUNCTION__,addr->as_string,r);
             }

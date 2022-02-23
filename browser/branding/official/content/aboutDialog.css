@@ -5,6 +5,7 @@
 #aboutDialogContainer {
   background-color: #20123a;
   color: #fff;
+  color-scheme: dark;
 }
 
 #clientBox {
@@ -32,10 +33,6 @@
 .text-link {
   color: #fff !important;
   text-decoration: underline;
-}
-
-.text-link:-moz-focusring {
-  border-color: #fff;
 }
 
 #rightBox {

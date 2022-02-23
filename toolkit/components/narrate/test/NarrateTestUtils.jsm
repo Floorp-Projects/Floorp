@@ -52,7 +52,7 @@ var NarrateTestUtils = {
     ok(!!$(this.START), "start button is showing");
     ok(!$(this.STOP), "stop button is hidden");
     // This checks for a localized label. Not the best...
-    ok($(this.START).title == "Start", "Button tooltip is correct");
+    ok($(this.START).title == "Start (N)", "Button tooltip is correct");
   },
 
   isStartedState(window, ok) {
@@ -62,7 +62,7 @@ var NarrateTestUtils = {
     ok(!$(this.START), "start button is hidden");
     ok(!!$(this.STOP), "stop button is showing");
     // This checks for a localized label. Not the best...
-    ok($(this.STOP).title == "Stop", "Button tooltip is correct");
+    ok($(this.STOP).title == "Stop (N)", "Button tooltip is correct");
   },
 
   selectVoice(window, voiceUri) {

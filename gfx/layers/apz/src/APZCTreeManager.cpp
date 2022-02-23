@@ -279,7 +279,8 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId,
       mApzcTreeLog("apzctree"),
       mTestDataLock("APZTestDataLock"),
       mDPI(160.0),
-      mHitTester(std::move(aHitTester)) {
+      mHitTester(std::move(aHitTester)),
+      mScrollGenerationLock("APZScrollGenerationLock") {
   RefPtr<APZCTreeManager> self(this);
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "layers::APZCTreeManager::APZCTreeManager",
@@ -735,16 +736,6 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
   for (const auto& mapping : mApzcMap) {
     AsyncPanZoomController* apzc = mapping.second.apzc;
 
-    const AsyncTransformComponents asyncTransformComponents =
-        apzc->GetZoomAnimationId()
-            ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
-            : LayoutAndVisual;
-    ParentLayerPoint layerTranslation =
-        apzc->GetCurrentAsyncTransformWithOverscroll(
-                AsyncPanZoomController::eForCompositing,
-                asyncTransformComponents)
-            .TransformPoint(ParentLayerPoint(0, 0));
-
     if (Maybe<CompositionPayload> payload = apzc->NotifyScrollSampling()) {
       if (wrBridgeParent && aVsyncId) {
         wrBridgeParent->AddPendingScrollPayload(*payload, *aVsyncId);
@@ -760,7 +751,7 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
         it->second->RecordSampledResult(
             apzc->GetCurrentAsyncScrollOffsetInCssPixels(
                 AsyncPanZoomController::eForCompositing),
-            (aSampleTime.Time() - TimeStamp::ProcessCreation(nullptr))
+            (aSampleTime.Time() - TimeStamp::ProcessCreation())
                 .ToMicroseconds(),
             guid.mLayersId, guid.mScrollId);
       }
@@ -789,22 +780,10 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
                                          apzc->IsAsyncZooming());
     }
 
-    // If layerTranslation includes only the layout component of the async
-    // transform then it has not been scaled by the async zoom, so we want to
-    // divide it by the resolution. If layerTranslation includes the visual
-    // component, then we should use the pinch zoom scale, which includes the
-    // async zoom. However, we only use LayoutAndVisual for non-zoomable APZCs,
-    // so it makes no difference.
-    LayoutDeviceToParentLayerScale resolution =
-        apzc->GetCumulativeResolution() * LayerToParentLayerScale(1.0f);
-    // The positive translation means the painted content is supposed to
-    // move down (or to the right), and that corresponds to a reduction in
-    // the scroll offset. Since we are effectively giving WR the async
-    // scroll delta here, we want to negate the translation.
-    LayoutDevicePoint asyncScrollDelta = -layerTranslation / resolution;
+    nsTArray<wr::SampledScrollOffset> sampledOffsets =
+        apzc->GetSampledScrollOffsets();
     aTxn.UpdateScrollPosition(wr::AsPipelineId(apzc->GetGuid().mLayersId),
-                              apzc->GetGuid().mScrollId,
-                              wr::ToLayoutVector2D(asyncScrollDelta));
+                              apzc->GetGuid().mScrollId, sampledOffsets);
 
 #if defined(MOZ_WIDGET_ANDROID)
     // Send the root frame metrics to java through the UIController
@@ -1432,7 +1411,8 @@ static bool HasNonLockModifier(Modifiers aModifiers) {
                         MODIFIER_SYMBOL | MODIFIER_OS)) != 0;
 }
 
-APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
+APZEventResult APZCTreeManager::ReceiveInputEvent(
+    InputData& aEvent, InputBlockCallback&& aCallback) {
   APZThreadUtils::AssertOnControllerThread();
   InputHandlingState state{aEvent};
 
@@ -1541,7 +1521,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
       wheelInput.mHandledByAPZ = WillHandleInput(wheelInput);
       if (!wheelInput.mHandledByAPZ) {
-        return state.Finish();
+        return state.Finish(*this, std::move(aCallback));
       }
 
       if (state.mHit.mTargetApzc) {
@@ -1560,7 +1540,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
                                                  state.mHit.mTargetApzc);
           }
           state.mResult.SetStatusAsConsumeNoDefault();
-          return state.Finish();
+          return state.Finish(*this, std::move(aCallback));
         }
 
         MOZ_ASSERT(wheelInput.mAPZAction == APZWheelAction::Scroll);
@@ -1579,7 +1559,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
             UntransformBy(transformToGecko, wheelInput.mOrigin);
 
         if (!untransformedOrigin) {
-          return state.Finish();
+          return state.Finish(*this, std::move(aCallback));
         }
 
         state.mResult = mInputQueue->ReceiveInputEvent(
@@ -1620,7 +1600,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
                 TargetConfirmationFlags{state.mHit.mHitResult}, panInterrupted);
           }
         }
-        return state.Finish();
+        return state.Finish(*this, std::move(aCallback));
       }
 
       // If/when we enable support for pan inputs off-main-thread, we'll need
@@ -1654,7 +1634,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
                               panInput.mPanStartPoint);
 
         if (!untransformedStartPoint || !untransformedDisplacement) {
-          return state.Finish();
+          return state.Finish(*this, std::move(aCallback));
         }
 
         state.mResult = mInputQueue->ReceiveInputEvent(
@@ -1675,7 +1655,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       if (HasNonLockModifier(pinchInput.modifiers)) {
         APZCTM_LOG("Discarding pinch input due to modifiers 0x%x\n",
                    pinchInput.modifiers);
-        return state.Finish();
+        return state.Finish(*this, std::move(aCallback));
       }
 
       state.mHit = GetTargetAPZC(pinchInput.mFocusPoint);
@@ -1699,7 +1679,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
             UntransformBy(outTransform, pinchInput.mFocusPoint);
 
         if (!untransformedFocusPoint) {
-          return state.Finish();
+          return state.Finish(*this, std::move(aCallback));
         }
 
         state.mResult = mInputQueue->ReceiveInputEvent(
@@ -1725,7 +1705,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
             UntransformBy(outTransform, tapInput.mPoint);
 
         if (!untransformedPoint) {
-          return state.Finish();
+          return state.Finish(*this, std::move(aCallback));
         }
 
         state.mResult = mInputQueue->ReceiveInputEvent(
@@ -1743,7 +1723,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       if (!StaticPrefs::apz_keyboard_enabled_AtStartup() ||
           StaticPrefs::accessibility_browsewithcaret()) {
         APZ_KEY_LOG("Skipping key input from invalid prefs\n");
-        return state.Finish();
+        return state.Finish(*this, std::move(aCallback));
       }
 
       KeyboardInput& keyInput = aEvent.AsKeyboardInput();
@@ -1760,14 +1740,14 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         if (mFocusState.CanIgnoreKeyboardShortcutMisses()) {
           focusSetter.MarkAsNonFocusChanging();
         }
-        return state.Finish();
+        return state.Finish(*this, std::move(aCallback));
       }
 
       // Check if this shortcut needs to be dispatched to content. Anything
       // matching this is assumed to be able to change focus.
       if (shortcut->mDispatchToContent) {
         APZ_KEY_LOG("Skipping key input with dispatch-to-content shortcut\n");
-        return state.Finish();
+        return state.Finish(*this, std::move(aCallback));
       }
 
       // We know we have an action to execute on whatever is the current focus
@@ -1796,7 +1776,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       // to content.
       if (!targetGuid) {
         APZ_KEY_LOG("Skipping key input with no current focus target\n");
-        return state.Finish();
+        return state.Finish(*this, std::move(aCallback));
       }
 
       RefPtr<AsyncPanZoomController> targetApzc =
@@ -1804,7 +1784,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
       if (!targetApzc) {
         APZ_KEY_LOG("Skipping key input with focus target but no APZC\n");
-        return state.Finish();
+        return state.Finish(*this, std::move(aCallback));
       }
 
       // Attach the keyboard scroll action to the input event for processing
@@ -1828,7 +1808,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       break;
     }
   }
-  return state.Finish();
+  return state.Finish(*this, std::move(aCallback));
 }
 
 static TouchBehaviorFlags ConvertToTouchBehavior(
@@ -1903,7 +1883,8 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetTouchInputBlockAPZC(
   return hit;
 }
 
-APZEventResult APZCTreeManager::InputHandlingState::Finish() {
+APZEventResult APZCTreeManager::InputHandlingState::Finish(
+    APZCTreeManager& aTreeManager, InputBlockCallback&& aCallback) {
   // The validity check here handles both the case where mHit was
   // never populated (because this event did not trigger a hit-test),
   // and the case where it was populated with an invalid LayersId
@@ -1915,6 +1896,13 @@ APZEventResult APZCTreeManager::InputHandlingState::Finish() {
   // If the event is over an overscroll gutter, do not dispatch it to Gecko.
   if (mHit.mHitOverscrollGutter) {
     mResult.SetStatusAsConsumeNoDefault();
+  }
+
+  // If the event will have a delayed result then add the callback to the
+  // APZCTreeManager.
+  if (aCallback && mResult.WillHaveDelayedResult()) {
+    aTreeManager.AddInputBlockCallback(mResult.mInputBlockId,
+                                       std::move(aCallback));
   }
 
   return mResult;

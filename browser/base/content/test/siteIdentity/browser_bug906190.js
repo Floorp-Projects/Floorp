@@ -129,7 +129,13 @@ function waitForSomeTabToLoad() {
  */
 add_task(async function test_initialize() {
   await SpecialPowers.pushPrefEnv({
-    set: [["security.mixed_content.block_active_content", true]],
+    set: [
+      ["security.mixed_content.block_active_content", true],
+      // We need to disable the dFPI heuristic. So, we won't have unnecessary
+      // 3rd party cookie permission that could affect following tests because
+      // it will create a permission icon on the URL bar.
+      ["privacy.restrict3rdpartystorage.heuristic.recently_visited", false],
+    ],
   });
 });
 

@@ -273,14 +273,14 @@ CustomizeMode.prototype = {
 
   enter() {
     if (!this.window.toolbar.visible) {
-      let w = this.window.getTopWin(true);
+      let w = this.window.getTopWin({ skipPopups: true });
       if (w) {
         w.gCustomizeMode.enter();
         return;
       }
       let obs = () => {
         Services.obs.removeObserver(obs, "browser-delayed-startup-finished");
-        w = this.window.getTopWin(true);
+        w = this.window.getTopWin({ skipPopups: true });
         w.gCustomizeMode.enter();
       };
       Services.obs.addObserver(obs, "browser-delayed-startup-finished");

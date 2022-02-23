@@ -460,7 +460,7 @@ mod diesel_postgres {
 }
 
 #[cfg(any(feature = "db-postgres", feature = "db-tokio-postgres"))]
-mod postgres {
+mod _postgres {
     use super::*;
     use ::postgres::types::{to_sql_checked, FromSql, IsNull, ToSql, Type};
     use byteorder::{BigEndian, ReadBytesExt};

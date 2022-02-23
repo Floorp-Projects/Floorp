@@ -21,7 +21,7 @@ This is enforced by the version ranges declared in the Python installation manif
 ## Version mismatch of the Python dependencies
 
 The logic for handling version mismatches is very similar to the one for the Rust crates.
-See [Updating the Glean SDK](updating_sdk.html) for details.
+See [Updating the Glean SDK](updating_sdk.md) for details.
 However, updating Python packages also requires to think about Python 3.5 (and Python 2, still) compatibility.
 
 ## Keeping versions in sync

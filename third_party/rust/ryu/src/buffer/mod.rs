@@ -1,7 +1,4 @@
 use crate::raw;
-#[cfg(not(maybe_uninit))]
-use core::mem;
-#[cfg(maybe_uninit)]
 use core::mem::MaybeUninit;
 use core::{slice, str};
 #[cfg(feature = "no-panic")]
@@ -21,10 +18,7 @@ const NEG_INFINITY: &str = "-inf";
 /// assert_eq!(printed, "1.234");
 /// ```
 pub struct Buffer {
-    #[cfg(maybe_uninit)]
     bytes: [MaybeUninit<u8>; 24],
-    #[cfg(not(maybe_uninit))]
-    bytes: [u8; 24],
 }
 
 impl Buffer {
@@ -33,13 +27,7 @@ impl Buffer {
     #[inline]
     #[cfg_attr(feature = "no-panic", no_panic)]
     pub fn new() -> Self {
-        // assume_init is safe here, since this is an array of MaybeUninit, which does not need
-        // to be initialized.
-        #[cfg(maybe_uninit)]
         let bytes = [MaybeUninit::<u8>::uninit(); 24];
-        #[cfg(not(maybe_uninit))]
-        let bytes = unsafe { mem::uninitialized() };
-
         Buffer { bytes }
     }
 

@@ -23,7 +23,12 @@ class APZInputBridgeChild : public PAPZInputBridgeChild, public APZInputBridge {
 
   void Destroy();
 
-  APZEventResult ReceiveInputEvent(InputData& aEvent) override;
+  APZEventResult ReceiveInputEvent(
+      InputData& aEvent,
+      InputBlockCallback&& aCallback = InputBlockCallback()) override;
+
+  mozilla::ipc::IPCResult RecvCallInputBlockCallback(
+      uint64_t aInputBlockId, const APZHandledResult& handledResult);
 
  protected:
   void ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,
@@ -45,6 +50,10 @@ class APZInputBridgeChild : public PAPZInputBridgeChild, public APZInputBridge {
 
   bool mIsOpen;
   uint64_t mProcessToken;
+
+  using InputBlockCallbackMap =
+      std::unordered_map<uint64_t, InputBlockCallback>;
+  InputBlockCallbackMap mInputBlockCallbacks;
 };
 
 }  // namespace layers

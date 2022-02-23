@@ -140,10 +140,6 @@ function addSyntheticLine(line, linePos, addDisableLine) {
 function recursiveExpand(node) {
   for (let [attr, value] of Object.entries(node.attributes)) {
     if (attr.startsWith("on")) {
-      if (attr == "oncommand" && value == ";") {
-        // Ignore these, see bug 371900 for why people might do this.
-        continue;
-      }
       // Ignore dashes in the tag name
       let nodeDesc = node.local.replace(/-/g, "");
       if (node.attributes.id) {

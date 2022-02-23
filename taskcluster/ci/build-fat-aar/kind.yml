@@ -32,7 +32,7 @@ job-defaults:
             MOZ_ANDROID_FAT_AAR_ARCHITECTURES: "armeabi-v7a,arm64-v8a,x86,x86_64"
         artifacts:
             - name: public/build/maven
-              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/maven/
+              path: /builds/worker/workspace/obj-build/gradle/maven/
               type: directory
             - name: public/build
               path: /builds/worker/artifacts/
@@ -95,6 +95,8 @@ jobs:
             shippable: true
             enable-full-crashsymbols: true
             disable-push-apk: true
+            maven_packages:
+                - geckoview
         shipping-phase: build
         shipping-product: fennec
         index:
@@ -129,6 +131,9 @@ jobs:
             shippable: true
             enable-full-crashsymbols: true
             disable-push-apk: true
+            maven_packages:
+                - geckoview
+                - geckoview-exoplayer2
         shipping-phase: build
         shipping-product: fennec
         index:

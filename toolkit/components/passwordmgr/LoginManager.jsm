@@ -97,11 +97,11 @@ LoginManager.prototype = {
     this.initializationPromise = this._storage.initialize();
     this.initializationPromise.then(() => {
       log.debug(
-        "initializationPromise is resolved, updating isMasterPasswordSet in sharedData"
+        "initializationPromise is resolved, updating isPrimaryPasswordSet in sharedData"
       );
       Services.ppmm.sharedData.set(
-        "isMasterPasswordSet",
-        LoginHelper.isMasterPasswordSet()
+        "isPrimaryPasswordSet",
+        LoginHelper.isPrimaryPasswordSet()
       );
     });
   },

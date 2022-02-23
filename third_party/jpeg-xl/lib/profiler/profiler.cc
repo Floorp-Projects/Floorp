@@ -138,7 +138,7 @@ class Results {
   void AnalyzePackets(const Packet* HWY_RESTRICT packets,
                       const size_t num_packets) {
     // Ensures prior weakly-ordered streaming stores are globally visible.
-    hwy::StoreFence();
+    hwy::FlushStream();
 
     const uint64_t t0 = TicksBefore();
 
@@ -448,12 +448,12 @@ void ThreadSpecific::ComputeOverhead() {
       const size_t kReps = 10000;
       // Analysis time should not be included => must fit within buffer.
       HWY_ASSERT(kReps * 2 < max_packets_);
-      hwy::StoreFence();
+      hwy::FlushStream();
       const uint64_t t0 = TicksBefore();
       for (size_t i = 0; i < kReps; ++i) {
         PROFILER_ZONE("Dummy");
       }
-      hwy::StoreFence();
+      hwy::FlushStream();
       const uint64_t t1 = TicksAfter();
       HWY_ASSERT(num_packets_ + buffer_size_ == kReps * 2);
       buffer_size_ = 0;

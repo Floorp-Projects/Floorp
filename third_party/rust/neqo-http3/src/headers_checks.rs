@@ -4,53 +4,83 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::{Error, MessageType, Res};
-use neqo_common::Header;
+#![allow(clippy::expl_impl_clone_on_copy)] // see https://github.com/Lymia/enumset/issues/28
 
-const PSEUDO_HEADER_STATUS: u8 = 0x1;
-const PSEUDO_HEADER_METHOD: u8 = 0x2;
-const PSEUDO_HEADER_SCHEME: u8 = 0x4;
-const PSEUDO_HEADER_AUTHORITY: u8 = 0x8;
-const PSEUDO_HEADER_PATH: u8 = 0x10;
-const PSEUDO_HEADER_PROTOCOL: u8 = 0x20;
-const REGULAR_HEADER: u8 = 0x80;
+use crate::{Error, MessageType, Res};
+use enumset::{enum_set, EnumSet, EnumSetType};
+use neqo_common::Header;
+use std::convert::TryFrom;
+
+#[derive(EnumSetType, Debug)]
+enum PseudoHeaderState {
+    Status,
+    Method,
+    Scheme,
+    Authority,
+    Path,
+    Protocol,
+    Regular,
+}
+
+impl PseudoHeaderState {
+    fn is_pseudo(self) -> bool {
+        self != Self::Regular
+    }
+}
+
+impl TryFrom<(MessageType, &str)> for PseudoHeaderState {
+    type Error = Error;
+
+    fn try_from(v: (MessageType, &str)) -> Res<Self> {
+        match v {
+            (MessageType::Response, ":status") => Ok(Self::Status),
+            (MessageType::Request, ":method") => Ok(Self::Method),
+            (MessageType::Request, ":scheme") => Ok(Self::Scheme),
+            (MessageType::Request, ":authority") => Ok(Self::Authority),
+            (MessageType::Request, ":path") => Ok(Self::Path),
+            (MessageType::Request, ":protocol") => Ok(Self::Protocol),
+            (_, _) => Err(Error::InvalidHeader),
+        }
+    }
+}
 
 /// Check whether the response is informational(1xx).
 /// # Errors
 /// Returns an error if response headers do not contain
-/// a status header or if the value of the header cannot be parsed.
+/// a status header or if the value of the header is 101 or cannot be parsed.
 pub fn is_interim(headers: &[Header]) -> Res<bool> {
     let status = headers.iter().take(1).find(|h| h.name() == ":status");
     if let Some(h) = status {
         #[allow(clippy::map_err_ignore)]
         let status_code = h.value().parse::<i32>().map_err(|_| Error::InvalidHeader)?;
-        Ok((100..200).contains(&status_code))
+        if status_code == 101 {
+            // https://datatracker.ietf.org/doc/html/draft-ietf-quic-http#section-4.3
+            Err(Error::InvalidHeader)
+        } else {
+            Ok((100..200).contains(&status_code))
+        }
     } else {
         Err(Error::InvalidHeader)
     }
 }
 
-fn track_pseudo(name: &str, state: &mut u8, message_type: MessageType) -> Res<bool> {
-    let (pseudo, bit) = if name.starts_with(':') {
-        if *state & REGULAR_HEADER != 0 {
+fn track_pseudo(
+    name: &str,
+    result_state: &mut EnumSet<PseudoHeaderState>,
+    message_type: MessageType,
+) -> Res<bool> {
+    let new_state = if name.starts_with(':') {
+        if result_state.contains(PseudoHeaderState::Regular) {
             return Err(Error::InvalidHeader);
         }
-        let bit = match (message_type, name) {
-            (MessageType::Response, ":status") => PSEUDO_HEADER_STATUS,
-            (MessageType::Request, ":method") => PSEUDO_HEADER_METHOD,
-            (MessageType::Request, ":scheme") => PSEUDO_HEADER_SCHEME,
-            (MessageType::Request, ":authority") => PSEUDO_HEADER_AUTHORITY,
-            (MessageType::Request, ":path") => PSEUDO_HEADER_PATH,
-            (MessageType::Request, ":protocol") => PSEUDO_HEADER_PROTOCOL,
-            (_, _) => return Err(Error::InvalidHeader),
-        };
-        (true, bit)
+        PseudoHeaderState::try_from((message_type, name))?
     } else {
-        (false, REGULAR_HEADER)
+        PseudoHeaderState::Regular
     };
 
-    if *state & bit == 0 || !pseudo {
-        *state |= bit;
+    let pseudo = new_state.is_pseudo();
+    if *result_state & new_state == EnumSet::empty() || !pseudo {
+        *result_state |= new_state;
         Ok(pseudo)
     } else {
         Err(Error::InvalidHeader)
@@ -63,7 +93,7 @@ fn track_pseudo(name: &str, state: &mut u8, message_type: MessageType) -> Res<bo
 /// Returns an error if headers are not well formed.
 pub fn headers_valid(headers: &[Header], message_type: MessageType) -> Res<()> {
     let mut method_value: Option<&str> = None;
-    let mut pseudo_state = 0;
+    let mut pseudo_state = EnumSet::new();
     for header in headers {
         let is_pseudo = track_pseudo(header.name(), &mut pseudo_state, message_type)?;
 
@@ -80,20 +110,20 @@ pub fn headers_valid(headers: &[Header], message_type: MessageType) -> Res<()> {
         }
     }
     // Clear the regular header bit, since we only check pseudo headers below.
-    pseudo_state &= !REGULAR_HEADER;
+    pseudo_state.remove(PseudoHeaderState::Regular);
     let pseudo_header_mask = match message_type {
-        MessageType::Response => PSEUDO_HEADER_STATUS,
+        MessageType::Response => enum_set!(PseudoHeaderState::Status),
         MessageType::Request => {
             if method_value == Some(&"CONNECT".to_string()) {
-                PSEUDO_HEADER_METHOD | PSEUDO_HEADER_AUTHORITY
+                PseudoHeaderState::Method | PseudoHeaderState::Authority
             } else {
-                PSEUDO_HEADER_METHOD | PSEUDO_HEADER_SCHEME | PSEUDO_HEADER_PATH
+                PseudoHeaderState::Method | PseudoHeaderState::Scheme | PseudoHeaderState::Path
             }
         }
     };
 
     if (MessageType::Request == message_type)
-        && ((pseudo_state & PSEUDO_HEADER_PROTOCOL) > 0)
+        && pseudo_state.contains(PseudoHeaderState::Protocol)
         && method_value != Some(&"CONNECT".to_string())
     {
         return Err(Error::InvalidHeader);

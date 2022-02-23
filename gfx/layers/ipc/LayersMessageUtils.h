@@ -207,6 +207,13 @@ struct ParamTraits<mozilla::layers::CompositableHandle> {
 };
 
 template <>
+struct ParamTraits<mozilla::layers::CompositableHandleOwner>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::layers::CompositableHandleOwner,
+          mozilla::layers::CompositableHandleOwner::WebRenderBridge,
+          mozilla::layers::CompositableHandleOwner::InProcessManager> {};
+
+template <>
 struct ParamTraits<mozilla::layers::FrameMetrics>
     : BitfieldHelper<mozilla::layers::FrameMetrics> {
   typedef mozilla::layers::FrameMetrics paramType;
@@ -217,7 +224,6 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mCompositionBounds);
     WriteParam(aMsg, aParam.mCompositionBoundsWidthIgnoringScrollbars);
     WriteParam(aMsg, aParam.mDisplayPort);
-    WriteParam(aMsg, aParam.mCriticalDisplayPort);
     WriteParam(aMsg, aParam.mScrollableRect);
     WriteParam(aMsg, aParam.mCumulativeResolution);
     WriteParam(aMsg, aParam.mDevPixelsPerCSSPixel);
@@ -247,7 +253,6 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter,
                       &aResult->mCompositionBoundsWidthIgnoringScrollbars) &&
             ReadParam(aMsg, aIter, &aResult->mDisplayPort) &&
-            ReadParam(aMsg, aIter, &aResult->mCriticalDisplayPort) &&
             ReadParam(aMsg, aIter, &aResult->mScrollableRect) &&
             ReadParam(aMsg, aIter, &aResult->mCumulativeResolution) &&
             ReadParam(aMsg, aIter, &aResult->mDevPixelsPerCSSPixel) &&
@@ -295,6 +300,7 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
     WriteParam(aMsg, aParam.mScrollOffset);
     WriteParam(aMsg, aParam.mZoom);
     WriteParam(aMsg, aParam.mScrollGeneration);
+    WriteParam(aMsg, aParam.mScrollGenerationOnApz);
     WriteParam(aMsg, aParam.mDisplayPortMargins);
     WriteParam(aMsg, aParam.mPresShellId);
     WriteParam(aMsg, aParam.mLayoutViewport);
@@ -316,6 +322,7 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
             ReadParam(aMsg, aIter, &aResult->mScrollOffset) &&
             ReadParam(aMsg, aIter, &aResult->mZoom) &&
             ReadParam(aMsg, aIter, &aResult->mScrollGeneration) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollGenerationOnApz) &&
             ReadParam(aMsg, aIter, &aResult->mDisplayPortMargins) &&
             ReadParam(aMsg, aIter, &aResult->mPresShellId) &&
             ReadParam(aMsg, aIter, &aResult->mLayoutViewport) &&
@@ -407,9 +414,9 @@ struct ParamTraits<mozilla::layers::OverscrollBehaviorInfo> {
   }
 };
 
-template <>
-struct ParamTraits<mozilla::ScrollGeneration>
-    : PlainOldDataSerializer<mozilla::ScrollGeneration> {};
+template <typename T>
+struct ParamTraits<mozilla::ScrollGeneration<T>>
+    : PlainOldDataSerializer<mozilla::ScrollGeneration<T>> {};
 
 template <>
 struct ParamTraits<mozilla::ScrollPositionUpdate>
@@ -436,6 +443,8 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
     WriteParam(aMsg, aParam.mIsRDMTouchSimulationActive);
     WriteParam(aMsg, aParam.mDidContentGetPainted);
     WriteParam(aMsg, aParam.mPrefersReducedMotion);
+    WriteParam(aMsg, aParam.mForceMousewheelAutodir);
+    WriteParam(aMsg, aParam.mForceMousewheelAutodirHonourRoot);
     WriteParam(aMsg, aParam.mDisregardedDirection);
     WriteParam(aMsg, aParam.mOverscrollBehavior);
     WriteParam(aMsg, aParam.mScrollUpdates);
@@ -476,6 +485,11 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
                                &paramType::SetDidContentGetPainted) &&
            ReadBoolForBitfield(aMsg, aIter, aResult,
                                &paramType::SetPrefersReducedMotion) &&
+           ReadBoolForBitfield(aMsg, aIter, aResult,
+                               &paramType::SetForceMousewheelAutodir) &&
+           ReadBoolForBitfield(
+               aMsg, aIter, aResult,
+               &paramType::SetForceMousewheelAutodirHonourRoot) &&
            ReadParam(aMsg, aIter, &aResult->mDisregardedDirection) &&
            ReadParam(aMsg, aIter, &aResult->mOverscrollBehavior) &&
            ReadParam(aMsg, aIter, &aResult->mScrollUpdates);

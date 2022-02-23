@@ -109,7 +109,10 @@ struct CCRunnerStep {
 
 class CCGCScheduler {
  public:
-  CCGCScheduler() : mInterruptRequested(false) {}
+  CCGCScheduler()
+      : mAskParentBeforeMajorGC(XRE_IsContentProcess()),
+        mReadyForMajorGC(!mAskParentBeforeMajorGC),
+        mInterruptRequested(false) {}
 
   static bool CCRunnerFired(TimeStamp aDeadline);
 
@@ -153,9 +156,12 @@ class CCGCScheduler {
   void KillCCRunner();
   void KillAllTimersAndRunners();
 
-  js::SliceBudget CreateGCSliceBudget(JS::GCReason aReason, int64_t aMillis) {
-    return js::SliceBudget(mozilla::TimeDuration::FromMilliseconds(aMillis),
-                           &mInterruptRequested);
+  js::SliceBudget CreateGCSliceBudget(mozilla::TimeDuration aDuration,
+                                      bool isIdle, bool isExtended) {
+    auto budget = js::SliceBudget(aDuration, &mInterruptRequested);
+    budget.idle = isIdle;
+    budget.extended = isExtended;
+    return budget;
   }
 
   /*
@@ -330,8 +336,8 @@ class CCGCScheduler {
                                        TimeStamp aNow,
                                        bool* aPreferShorterSlices) const;
 
-  TimeDuration ComputeInterSliceGCBudget(TimeStamp aDeadline,
-                                         TimeStamp aNow) const;
+  js::SliceBudget ComputeInterSliceGCBudget(TimeStamp aDeadline,
+                                            TimeStamp aNow);
 
   bool ShouldForgetSkippable(uint32_t aSuspectedCCObjects) const {
     // Only do a forget skippable if there are more than a few new objects
@@ -435,12 +441,16 @@ class CCGCScheduler {
   // duration (or until it goes too long and is finished synchronously.)
   bool mInIncrementalGC = false;
 
+  // Whether to ask the parent process if now is a good time to GC (false for
+  // the parent process.)
+  const bool mAskParentBeforeMajorGC;
+
   // We've asked the parent process if now is a good time to GC (do not ask
   // again).
   bool mHaveAskedParent = false;
 
   // The parent process is ready for us to do a major GC.
-  bool mReadyForMajorGC = false;
+  bool mReadyForMajorGC;
 
   // Set when the IdleTaskRunner requests the current task be interrupted.
   // Cleared when the GC slice budget has detected the interrupt request.

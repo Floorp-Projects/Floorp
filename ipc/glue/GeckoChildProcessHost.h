@@ -39,6 +39,10 @@
 #  include "mozilla/Sandbox.h"
 #endif
 
+#if defined(MOZ_SANDBOX)
+#  include "mozilla/ipc/UtilityProcessSandboxing.h"
+#endif
+
 struct _MacSandboxInfo;
 typedef _MacSandboxInfo MacSandboxInfo;
 
@@ -145,12 +149,6 @@ class GeckoChildProcessHost : public ChildProcessHost,
   }
 #endif
 
-  /**
-   * Must run on the IO thread.  Cause the OS process to exit and
-   * ensure its OS resources are cleaned up.
-   */
-  void Join();
-
   // For bug 943174: Skip the EnsureProcessTerminated call in the destructor.
   void SetAlreadyDead();
 
@@ -232,6 +230,10 @@ class GeckoChildProcessHost : public ChildProcessHost,
   int32_t mSandboxLevel;
 #  endif
 #endif  // XP_WIN
+
+#if defined(MOZ_SANDBOX)
+  SandboxingKind mSandbox;
+#endif
 
   ProcessHandle mChildProcessHandle;
 #if defined(OS_MACOSX)

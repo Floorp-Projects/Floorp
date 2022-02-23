@@ -48,11 +48,7 @@ enum RegExpRunStatus : int32_t {
 };
 
 inline bool IsNativeRegExpEnabled() {
-#ifdef JS_CODEGEN_NONE
-  return false;
-#else
-  return jit::JitOptions.nativeRegExp;
-#endif
+  return jit::HasJitBackend() && jit::JitOptions.nativeRegExp;
 }
 
 /*

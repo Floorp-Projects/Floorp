@@ -275,7 +275,7 @@ class MediaDecoderStateMachine
   // Sets the video decode mode. Used by the suspend-video-decoder feature.
   void SetVideoDecodeMode(VideoDecodeMode aMode);
 
-  RefPtr<GenericPromise> InvokeSetSink(RefPtr<AudioDeviceInfo> aSink);
+  RefPtr<GenericPromise> InvokeSetSink(const RefPtr<AudioDeviceInfo>& aSink);
 
   void InvokeSuspendMediaSink();
   void InvokeResumeMediaSink();
@@ -351,8 +351,8 @@ class MediaDecoderStateMachine
 
   // Resets all states related to decoding and aborts all pending requests
   // to the decoders.
-  void ResetDecode(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
-                                               TrackInfo::kVideoTrack));
+  void ResetDecode(const TrackSet& aTracks = TrackSet(TrackInfo::kAudioTrack,
+                                                      TrackInfo::kVideoTrack));
 
   void SetVideoDecodeModeInternal(VideoDecodeMode aMode);
 
@@ -364,7 +364,7 @@ class MediaDecoderStateMachine
   // If there are multiple pending requests only the last one will be
   // executed, for all previous requests the promise will be resolved
   // with true or false similar to above.
-  RefPtr<GenericPromise> SetSink(RefPtr<AudioDeviceInfo> aSink);
+  RefPtr<GenericPromise> SetSink(const RefPtr<AudioDeviceInfo>& aDevice);
 
   // Shutdown MediaSink on suspend to clean up resources.
   void SuspendMediaSink();

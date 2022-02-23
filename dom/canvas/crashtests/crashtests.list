@@ -59,3 +59,4 @@ load 1569648.html
 skip-if(!winWidget||!isDebugBuild) pref(layers.gpu-process.crash-also-crashes-browser,true) load 1654477.html
 load 1739454-1.html
 load 1740031.html
+pref(webgl.enable-privileged-extensions,true) load 1744172.html

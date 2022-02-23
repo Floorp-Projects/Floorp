@@ -10,6 +10,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/NotificationBinding.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 #include "nsIObserver.h"
 #include "nsISupports.h"
@@ -29,7 +30,6 @@ class NotificationRef;
 class WorkerNotificationObserver;
 class Promise;
 class StrongWorkerRef;
-class WorkerPrivate;
 
 /*
  * Notifications on workers introduce some lifetime issues. The property we
@@ -207,7 +207,7 @@ class Notification : public DOMEventTargetHelper,
 
   // Initialized on the worker thread, never unset, and always used in
   // a read-only capacity. Used on any thread.
-  WorkerPrivate* mWorkerPrivate;
+  CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate;
 
   // Main thread only.
   WorkerNotificationObserver* mObserver;

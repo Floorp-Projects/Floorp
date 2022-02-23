@@ -914,9 +914,39 @@ Inspector.prototype = {
     this.toolbox.emit("inspector-sidebar-resized", { width, height });
   },
 
+  /**
+   * Returns inspector tab that is active.
+   */
+  getActiveSidebar: function() {
+    return Services.prefs.getCharPref("devtools.inspector.activeSidebar");
+  },
+
+  setActiveSidebar: function(toolId) {
+    Services.prefs.setCharPref("devtools.inspector.activeSidebar", toolId);
+  },
+
+  /**
+   * Returns tab that is explicitly selected by user.
+   */
+  getSelectedSidebar: function() {
+    const pref = "devtools.inspector.selectedSidebar";
+    // @backward-compat { version 99 } If selected sidebar pref is not set from older versions,
+    //                                 falls back to active sidebar pref.
+    if (!Services.prefs.prefHasUserValue(pref)) {
+      return this.getActiveSidebar();
+    }
+
+    return Services.prefs.getCharPref(pref);
+  },
+
+  setSelectedSidebar: function(toolId) {
+    Services.prefs.setCharPref("devtools.inspector.selectedSidebar", toolId);
+  },
+
   onSidebarSelect: function(toolId) {
     // Save the currently selected sidebar panel
-    Services.prefs.setCharPref("devtools.inspector.activeSidebar", toolId);
+    this.setSelectedSidebar(toolId);
+    this.setActiveSidebar(toolId);
 
     // Then forces the panel creation by calling getPanel
     // (This allows lazy loading the panels only once we select them)
@@ -997,15 +1027,11 @@ Inspector.prototype = {
   /**
    * Adds the rule view to the middle (in landscape/horizontal mode) or bottom-left panel
    * (in portrait/vertical mode) or inspector sidebar depending on whether or not it is 3
-   * pane mode. The default tab specifies whether or not the rule view should be selected.
-   * The defaultTab defaults to the rule view when reverting to the 2 pane mode and the
-   * rule view is being merged back into the inspector sidebar from middle/bottom-left
-   * panel. Otherwise, we specify the default tab when handling the sidebar setup.
-   *
-   * @params {String} defaultTab
-   *         Thie id of the default tab for the sidebar.
+   * pane mode. Rule view is selected when switching to 2 pane mode. Selected sidebar pref
+   * is used otherwise.
    */
-  addRuleView({ defaultTab = "ruleview", skipQueue = false } = {}) {
+  addRuleView({ skipQueue = false } = {}) {
+    const selectedSidebar = this.getSelectedSidebar();
     const ruleViewSidebar = this.sidebarSplitBoxRef.current.startPanelContainer;
 
     if (this.is3PaneModeEnabled) {
@@ -1020,6 +1046,7 @@ Inspector.prototype = {
       this.getPanel("ruleview");
 
       this.sidebar.removeTab("ruleview");
+      this.sidebar.select(selectedSidebar);
 
       this.ruleViewSideBar.addExistingTab(
         "ruleview",
@@ -1029,6 +1056,8 @@ Inspector.prototype = {
 
       this.ruleViewSideBar.show();
     } else {
+      // When switching to 2 pane view, always set rule view as the active sidebar.
+      this.setActiveSidebar("ruleview");
       // Removes the rule view from the 3 pane mode and adds the rule view to the main
       // inspector sidebar.
       ruleViewSidebar.style.display = "none";
@@ -1059,18 +1088,22 @@ Inspector.prototype = {
         this.sidebar.addExistingTab(
           "ruleview",
           INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
-          defaultTab == "ruleview",
+          true,
           0
         );
       } else {
         this.sidebar.queueExistingTab(
           "ruleview",
           INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
-          defaultTab == "ruleview",
+          true,
           0
         );
       }
     }
+
+    // Adding or removing a tab from sidebar sets selectedSidebar by the active tab,
+    // which we should revert.
+    this.setSelectedSidebar(selectedSidebar);
 
     this.emit("ruleview-added");
   },
@@ -1178,19 +1211,8 @@ Inspector.prototype = {
       hideTabstripe: true,
     });
 
-    // defaultTab may also be an empty string or a tab id that doesn't exist anymore
-    // (e.g. it was a tab registered by an addon that has been uninstalled).
-    let defaultTab = Services.prefs.getCharPref(
-      "devtools.inspector.activeSidebar"
-    );
-
-    if (this.is3PaneModeEnabled && defaultTab === "ruleview") {
-      defaultTab = "layoutview";
-    }
-
     // Append all side panels
-
-    this.addRuleView({ defaultTab });
+    this.addRuleView();
 
     // Inspector sidebar panels in order of appearance.
     const sidebarPanels = [];
@@ -1229,6 +1251,8 @@ Inspector.prototype = {
       id: "animationinspector",
       title: INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle"),
     });
+
+    const defaultTab = this.getActiveSidebar();
 
     for (const { id, title } of sidebarPanels) {
       // The Computed panel is not a React-based panel. We pick its element container from

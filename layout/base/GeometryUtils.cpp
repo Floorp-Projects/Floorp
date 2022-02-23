@@ -191,7 +191,7 @@ class AccumulateQuadCallback : public nsLayoutUtils::BoxCallback {
     }
   }
 
-  virtual void AddBox(nsIFrame* aFrame) override {
+  void AddBox(nsIFrame* aFrame) override {
     nsIFrame* f = aFrame;
     if (mBoxType == CSSBoxType::Margin && f->IsTableFrame()) {
       // Margin boxes for table frames should be taken from the table wrapper
@@ -207,8 +207,8 @@ class AccumulateQuadCallback : public nsLayoutUtils::BoxCallback {
           CSSPoint(nsPresContext::AppUnitsToFloatCSSPixels(appUnits[i].x),
                    nsPresContext::AppUnitsToFloatCSSPixels(appUnits[i].y));
     }
-    nsLayoutUtils::TransformResult rv =
-        nsLayoutUtils::TransformPoints(f, mRelativeToFrame, 4, points);
+    nsLayoutUtils::TransformResult rv = nsLayoutUtils::TransformPoints(
+        RelativeTo{f}, RelativeTo{mRelativeToFrame}, 4, points);
     if (rv == nsLayoutUtils::TRANSFORM_SUCCEEDED) {
       CSSPoint delta(
           nsPresContext::AppUnitsToFloatCSSPixels(mRelativeToBoxTopLeft.x),
@@ -422,8 +422,8 @@ static void TransformPoints(nsINode* aTo, const GeometryNode& aFrom,
   for (uint32_t i = 0; i < aPointCount; ++i) {
     aPoints[i] += fromOffsetGfx;
   }
-  nsLayoutUtils::TransformResult rv =
-      nsLayoutUtils::TransformPoints(fromFrame, toFrame, aPointCount, aPoints);
+  nsLayoutUtils::TransformResult rv = nsLayoutUtils::TransformPoints(
+      RelativeTo{fromFrame}, RelativeTo{toFrame}, aPointCount, aPoints);
   if (rv == nsLayoutUtils::TRANSFORM_SUCCEEDED) {
     CSSPoint toOffsetGfx(nsPresContext::AppUnitsToFloatCSSPixels(toOffset.x),
                          nsPresContext::AppUnitsToFloatCSSPixels(toOffset.y));

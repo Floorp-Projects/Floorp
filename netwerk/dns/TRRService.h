@@ -119,8 +119,6 @@ class TRRService : public TRRServiceBase,
   void AddEtcHosts(const nsTArray<nsCString>&);
 
   bool mInitialized{false};
-  Atomic<uint32_t, Relaxed> mBlocklistDurationSeconds{60};
-
   Mutex mLock{"TRRService"};
 
   nsCString mPrivateCred;  // main thread only
@@ -252,8 +250,10 @@ class TRRService : public TRRServiceBase,
 
     void RecordTRRStatus(nsresult aChannelStatus);
 
-    void HandleEvent(ConfirmationEvent aEvent);
-    void HandleEvent(ConfirmationEvent aEvent, const MutexAutoLock&);
+    // Returns true when handling the event caused a new confirmation task to be
+    // dispatched.
+    bool HandleEvent(ConfirmationEvent aEvent);
+    bool HandleEvent(ConfirmationEvent aEvent, const MutexAutoLock&);
 
     void SetCaptivePortalStatus(int32_t aStatus) {
       mCaptivePortalStatus = aStatus;
@@ -309,19 +309,17 @@ class TRRService : public TRRServiceBase,
       mConfirmation.RecordTRRStatus(aChannelStatus);
     }
 
-    void HandleEvent(ConfirmationEvent aEvent) {
-      mConfirmation.HandleEvent(aEvent);
+    bool HandleEvent(ConfirmationEvent aEvent) {
+      return mConfirmation.HandleEvent(aEvent);
     }
 
-    void HandleEvent(ConfirmationEvent aEvent, const MutexAutoLock& lock) {
-      mConfirmation.HandleEvent(aEvent, lock);
+    bool HandleEvent(ConfirmationEvent aEvent, const MutexAutoLock& lock) {
+      return mConfirmation.HandleEvent(aEvent, lock);
     }
 
     void SetCaptivePortalStatus(int32_t aStatus) {
       mConfirmation.SetCaptivePortalStatus(aStatus);
     }
-
-    uintptr_t TaskAddr() { return mConfirmation.TaskAddr(); }
 
    private:
     friend TRRService* ConfirmationContext::OwningObject();
@@ -331,6 +329,9 @@ class TRRService : public TRRServiceBase,
   ConfirmationWrapper mConfirmation;
 
   bool mParentalControlEnabled{false};
+  // This is used to track whether a confirmation was triggered by a URI change,
+  // so we don't trigger another one just because other prefs have changed.
+  bool mConfirmationTriggered{false};
   RefPtr<ODoHService> mODoHService;
   nsCOMPtr<nsINetworkLinkService> mLinkService;
 };

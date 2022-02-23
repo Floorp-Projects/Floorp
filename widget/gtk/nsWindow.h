@@ -77,17 +77,6 @@ extern mozilla::LazyLogModule gWidgetVsync;
 
 #endif /* MOZ_LOGGING */
 
-#ifdef MOZ_WAYLAND
-gboolean WindowDragMotionHandler(GtkWidget* aWidget,
-                                 GdkDragContext* aDragContext,
-                                 RefPtr<DataOffer> aDataOffer, gint aX, gint aY,
-                                 guint aTime);
-gboolean WindowDragDropHandler(GtkWidget* aWidget, GdkDragContext* aDragContext,
-                               RefPtr<DataOffer> aDataOffer, gint aX, gint aY,
-                               guint aTime);
-void WindowDragLeaveHandler(GtkWidget* aWidget);
-#endif
-
 class gfxPattern;
 class nsIFrame;
 #if !GTK_CHECK_VERSION(3, 18, 0)
@@ -97,9 +86,10 @@ typedef struct _GdkEventTouchpadPinch GdkEventTouchpadPinch;
 #endif
 
 namespace mozilla {
+enum class NativeKeyBindingsType : uint8_t;
+
 class TimeStamp;
 class CurrentX11TimeGetter;
-
 }  // namespace mozilla
 
 class nsWindow final : public nsBaseWidget {
@@ -179,8 +169,7 @@ class nsWindow final : public nsBaseWidget {
                                    uint16_t aDuration, nsISupports* aData,
                                    nsIRunnable* aCallback) override;
   already_AddRefed<nsIScreen> GetWidgetScreen() override;
-  nsresult MakeFullScreen(bool aFullScreen,
-                          nsIScreen* aTargetScreen = nullptr) override;
+  nsresult MakeFullScreen(bool aFullScreen) override;
   void HideWindowChrome(bool aShouldHide) override;
 
   /**
@@ -285,7 +274,8 @@ class nsWindow final : public nsBaseWidget {
   InputContext GetInputContext() override;
   TextEventDispatcherListener* GetNativeTextEventDispatcherListener() override;
   MOZ_CAN_RUN_SCRIPT bool GetEditCommands(
-      NativeKeyBindingsType aType, const mozilla::WidgetKeyboardEvent& aEvent,
+      mozilla::NativeKeyBindingsType aType,
+      const mozilla::WidgetKeyboardEvent& aEvent,
       nsTArray<mozilla::CommandInt>& aCommands) override;
 
   // These methods are for toplevel windows only.

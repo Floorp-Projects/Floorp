@@ -25,6 +25,11 @@ option('enable_tests',
     value: true,
     description: 'Build dav1d tests')
 
+option('enable_docs',
+    type: 'boolean',
+    value: false,
+    description: 'Build dav1d documentation')
+
 option('logging',
     type: 'boolean',
     value: true,

@@ -25,8 +25,7 @@
 #include "nsTArray.h"
 #include "nsISupportsBase.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ReadableStream;
 class ReadableStreamDefaultReader;
@@ -47,12 +46,12 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
   explicit ReadableStreamDefaultController(nsIGlobalObject* aGlobal);
 
  protected:
-  ~ReadableStreamDefaultController();
+  ~ReadableStreamDefaultController() override;
 
  public:
-  virtual bool IsDefault() override { return true; }
-  virtual bool IsByte() override { return false; }
-  virtual ReadableStreamDefaultController* AsDefault() override { return this; }
+  bool IsDefault() override { return true; }
+  bool IsByte() override { return false; }
+  ReadableStreamDefaultController* AsDefault() override { return this; }
   ReadableByteStreamController* AsByte() override { return nullptr; }
 
   JSObject* WrapObject(JSContext* aCx,
@@ -60,18 +59,19 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
 
   Nullable<double> GetDesiredSize();
 
-  void Close(JSContext* aCx, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Close(JSContext* aCx, ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT void Enqueue(JSContext* aCx, JS::Handle<JS::Value> aChunk,
                                   ErrorResult& aRv);
 
   void Error(JSContext* aCx, JS::Handle<JS::Value> aError, ErrorResult& aRv);
 
-  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> CancelSteps(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CancelSteps(
       JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) override;
-  MOZ_CAN_RUN_SCRIPT virtual void PullSteps(JSContext* aCx,
-                                            ReadRequest* aReadRequest,
-                                            ErrorResult& aRv) override;
+  MOZ_CAN_RUN_SCRIPT void PullSteps(JSContext* aCx, ReadRequest* aReadRequest,
+                                    ErrorResult& aRv) override;
+
+  void ReleaseSteps() override;
 
   // Internal Slot Accessors
   UnderlyingSourceCancelCallbackHelper* GetCancelAlgorithm() const {
@@ -124,8 +124,7 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
   void SetStream(ReadableStream* aStream);
 
  private:
-  // Internal Slots: Public for ease of prototyping because
-  // of the reams of static methods that access internal slots.
+  // Internal Slots:
   RefPtr<UnderlyingSourceCancelCallbackHelper> mCancelAlgorithm;
   bool mCloseRequested = false;
   bool mPullAgain = false;
@@ -158,7 +157,7 @@ MOZ_CAN_RUN_SCRIPT extern void ReadableStreamDefaultControllerEnqueue(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
 
-extern void ReadableStreamDefaultControllerClose(
+MOZ_CAN_RUN_SCRIPT extern void ReadableStreamDefaultControllerClose(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     ErrorResult& aRv);
 
@@ -170,7 +169,9 @@ extern void ReadableStreamDefaultControllerError(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
-}  // namespace dom
-}  // namespace mozilla
+extern void ReadableStreamDefaultControllerClearAlgorithms(
+    ReadableStreamDefaultController* aController);
+
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ReadableStreamDefaultController_h

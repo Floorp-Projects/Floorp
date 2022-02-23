@@ -315,6 +315,18 @@ interface CanonicalBrowsingContext : BrowsingContext {
    */
   [SetterThrows] inherit attribute TouchEventsOverride touchEventsOverride;
 
+  /**
+   * Set the cross-group opener of this BrowsingContext. This is used to
+   * retarget the download dialog to an opener window, and close this
+   * BrowsingContext, if the first load in a newly created BrowsingContext is a
+   * download.
+   *
+   * This value will be automatically set for documents created using
+   * `window.open`.
+   */
+  [Throws]
+  void setCrossGroupOpener(CanonicalBrowsingContext crossGroupOpener);
+
   readonly attribute boolean isReplaced;
 
 

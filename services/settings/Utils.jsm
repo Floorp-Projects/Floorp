@@ -46,6 +46,16 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   });
 });
 
+// Various tests harness disable non local connections and will crash if any is
+// performed. Note this cannot be replaced by Cu.isInAutomation as some tests
+// are unable to satisfy the other requirements for this flag.
+XPCOMUtils.defineLazyGetter(this, "localConnectionsOnly", () => {
+  const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  return env.get("MOZ_DISABLE_NONLOCAL_CONNECTIONS") === "1";
+});
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "gServerURL",
@@ -58,14 +68,9 @@ function _isUndefined(value) {
 
 var Utils = {
   get SERVER_URL() {
-    const env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
-    );
-    const isXpcshell = env.exists("XPCSHELL_TEST_PROFILE_DIR");
     const isNotThunderbird = AppConstants.MOZ_APP_NAME != "thunderbird";
     return AppConstants.RELEASE_OR_BETA &&
-      !Cu.isInAutomation &&
-      !isXpcshell &&
+      !localConnectionsOnly &&
       isNotThunderbird
       ? "https://firefox.settings.services.mozilla.com/v1"
       : gServerURL;
@@ -338,8 +343,7 @@ var Utils = {
     serverTimeMillis += cacheAgeSeconds * 1000;
 
     // Age of data (time between publication and now).
-    let lastModifiedMillis = Date.parse(response.headers.get("Last-Modified"));
-    const ageSeconds = (serverTimeMillis - lastModifiedMillis) / 1000;
+    const ageSeconds = (serverTimeMillis - timestamp) / 1000;
 
     // Check if the server asked the clients to back off.
     let backoffSeconds;

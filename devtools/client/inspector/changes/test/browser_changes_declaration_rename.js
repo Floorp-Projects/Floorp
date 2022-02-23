@@ -28,7 +28,7 @@ add_task(async function() {
   const newPropertyName = "background-color";
 
   info(`Rename the CSS declaration name to ${newPropertyName}`);
-  onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   await renameProperty(ruleView, prop, newPropertyName);
   info("Wait for the change to be tracked");
   await onTrackChange;
@@ -52,7 +52,7 @@ add_task(async function() {
   info(
     `Reverting the CSS declaration name to ${oldPropertyName} should clear changes.`
   );
-  onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
+  onTrackChange = waitForDispatch(store, "TRACK_CHANGE");
   await renameProperty(ruleView, prop, oldPropertyName);
   info("Wait for the change to be tracked");
   await onTrackChange;

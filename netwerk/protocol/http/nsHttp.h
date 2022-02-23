@@ -37,12 +37,21 @@ enum class HttpVersion {
 
 enum class SpdyVersion { NONE = 0, HTTP_2 = 5 };
 
-enum class SupportedAlpnType : uint8_t {
-  HTTP_3 = 0,
-  HTTP_2,
-  HTTP_1_1,
-  NOT_SUPPORTED
+enum class SupportedAlpnRank : uint8_t {
+  NOT_SUPPORTED = 0,
+  HTTP_1_1 = 1,
+  HTTP_2 = 2,
+  // Note that the order here MUST be the same as the order in kHttp3Versions.
+  HTTP_3_DRAFT_29 = 3,
+  HTTP_3_DRAFT_30 = 4,
+  HTTP_3_DRAFT_31 = 5,
+  HTTP_3_DRAFT_32 = 6,
+  HTTP_3_VER_1 = 7,
 };
+
+inline bool IsHttp3(SupportedAlpnRank aRank) {
+  return aRank >= SupportedAlpnRank::HTTP_3_DRAFT_29;
+}
 
 extern const uint32_t kHttp3VersionCount;
 extern const nsCString kHttp3Versions[];
@@ -389,7 +398,7 @@ void LogHeaders(const char* lineStart);
 nsresult HttpProxyResponseToErrorCode(uint32_t aStatusCode);
 
 // Convert an alpn string to SupportedAlpnType.
-SupportedAlpnType IsAlpnSupported(const nsACString& aAlpn);
+SupportedAlpnRank IsAlpnSupported(const nsACString& aAlpn);
 
 static inline bool AllowedErrorForHTTPSRRFallback(nsresult aError) {
   return psm::IsNSSErrorCode(-1 * NS_ERROR_GET_CODE(aError)) ||

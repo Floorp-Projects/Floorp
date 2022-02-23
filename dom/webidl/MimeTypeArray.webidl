@@ -7,11 +7,7 @@
 [LegacyUnenumerableNamedProperties,
  Exposed=Window]
 interface MimeTypeArray {
-  [NeedsCallerType]
   readonly attribute unsigned long length;
-
-  [NeedsCallerType]
   getter MimeType? item(unsigned long index);
-  [NeedsCallerType]
   getter MimeType? namedItem(DOMString name);
 };

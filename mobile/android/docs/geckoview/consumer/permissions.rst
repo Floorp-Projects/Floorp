@@ -29,19 +29,19 @@ To get notified about permission requests, you need to implement the
 
    private class ExamplePermissionDelegate implements GeckoSession.PermissionDelegate {
        @Override
-       public void onAndroidPermissionsRequest(final GeckoSession session, 
+       public void onAndroidPermissionsRequest(final GeckoSession session,
                                                final String[] permissions,
                                                final Callback callback) { }
 
        @Override
-       public void onContentPermissionRequest(final GeckoSession session, 
+       public void onContentPermissionRequest(final GeckoSession session,
                                               final String uri,
                                               final int type, final Callback callback) { }
 
        @Override
-       public void onMediaPermissionRequest(final GeckoSession session, 
+       public void onMediaPermissionRequest(final GeckoSession session,
                                             final String uri,
-                                            final MediaSource[] video, 
+                                            final MediaSource[] video,
                                             final MediaSource[] audio,
                                             final MediaCallback callback) { }
    }
@@ -76,7 +76,7 @@ The user will often need to grant these Android permissions to the app
 alongside granting the Content or Media site permissions.
 
 When you receive an
-`onAndroidPermissionsRequest <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#onAndroidPermissionsRequest-org.mozilla.geckoview.GeckoSession-java.lang.String:A-org.mozilla.geckoview.GeckoSession.PermissionDelegate.Callback->`_
+`onAndroidPermissionsRequest <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#onAndroidPermissionsRequest(org.mozilla.geckoview.GeckoSession,java.lang.String[],org.mozilla.geckoview.GeckoSession.PermissionDelegate.Callback)>`_
 call, you will also receive the ``GeckoSession`` the request was sent
 from, an array containing the permissions that are being requested, and
 a
@@ -85,16 +85,11 @@ to respond to the request. It is then up to the app to request those
 permissions from the device, which can be done using
 `requestPermissions <https://developer.android.com/reference/android/app/Activity#requestPermissions(java.lang.String%5B%5D,%2520int)>`_.
 
-Possible ``permissions`` values are;
-
+Possible ``permissions`` values are:
 `ACCESS_COARSE_LOCATION <https://developer.android.com/reference/android/Manifest.permission.html#ACCESS_COARSE_LOCATION>`_,
-
 `ACCESS_FINE_LOCATION <https://developer.android.com/reference/android/Manifest.permission.html#ACCESS_FINE_LOCATION>`_,
-
 `CAMERA <https://developer.android.com/reference/android/Manifest.permission.html#CAMERA>`_
-
 or
-
 `RECORD_AUDIO <https://developer.android.com/reference/android/Manifest.permission.html#RECORD_AUDIO>`_.
 
 .. code:: java
@@ -119,7 +114,7 @@ or
        }
 
        @Override
-       public void onAndroidPermissionsRequest(final GeckoSession session, 
+       public void onAndroidPermissionsRequest(final GeckoSession session,
                                                final String[] permissions,
                                                final Callback callback) {
            mCallback = callback;
@@ -148,29 +143,20 @@ Content Permissions
 
 Content permissions are requested whenever a site wants access to
 content that is stored on the device. The content permissions that can
-be requested through GeckoView are;
-
-`Geolocation <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_GEOLOCATION>`_,
-
-`Site Notifications <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_DESKTOP_NOTIFICATION>`_,
-
-`Persistent Storage <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_PERSISTENT_STORAGE>`_,
-
-`XR <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_XR>`_,
-
-`Autoplay Inaudible <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_AUTOPLAY_INAUDIBLE>`_,
-
-`Autoplay Audible <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_AUTOPLAY_AUDIBLE>`_,
-
+be requested through GeckoView are:
+`Geolocation <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_GEOLOCATION>`_,
+`Site Notifications <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_DESKTOP_NOTIFICATION>`_,
+`Persistent Storage <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_PERSISTENT_STORAGE>`_,
+`XR <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_XR>`_,
+`Autoplay Inaudible <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_AUTOPLAY_INAUDIBLE>`_,
+`Autoplay Audible <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_AUTOPLAY_AUDIBLE>`_,
 and
-
-`DRM Media <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_MEDIA_KEY_SYSTEM_ACCESS>`_
-
-access. Additionally, `tracking protection exceptions <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_TRACKING>`_
+`DRM Media access <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_MEDIA_KEY_SYSTEM_ACCESS>`_.
+Additionally, `tracking protection exceptions <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#PERMISSION_TRACKING>`_
 are treated as a type of content permission.
 
 When you receive an
-`onContentPermissionRequest <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#onContentPermissionRequest-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission->`_
+`onContentPermissionRequest <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#onContentPermissionRequest(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission)>`_
 call, you will also receive the ``GeckoSession`` the request was sent
 from, and all relevant information about the permission being requested
 stored in a `ContentPermission <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.ContentPermission.html>`_.
@@ -181,14 +167,14 @@ permissions, and to notify GeckoView of the response via the returned
 Once a permission has been set in this fashion, GeckoView will persist it
 across sessions until it is cleared or modified. When a page is loaded,
 the active permissions associated with it (both allowed and denied) will
-be reported in `onLocationChange <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.NavigationDelegate.html#onLocationChange-org.mozilla.geckoview.GeckoSession-java.lang.String-java.util.List->`_
+be reported in `onLocationChange <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.NavigationDelegate.html#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List)>`_
 as a list of ``ContentPermission`` objects; additionally, one may check all stored
-content permissions by calling `getAllPermissions <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/StorageController.html#getAllPermissions-->`_
+content permissions by calling `getAllPermissions <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/StorageController.html#getAllPermissions()>`_
 and the content permissions associated with a given URI by calling
-`getPermissions <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/StorageController.html#getPermissions-java.lang.String-java.lang.String->`_.
+`getPermissions <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/StorageController.html#getPermissions(java.lang.String,java.lang.String)>`_.
 In order to modify an existing permission, you will need the associated
 ``ContentPermission`` (which can be retrieved from any of the above methods);
-then, call `setPermission <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/StorageController.html#setPermission-org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission-int->`_
+then, call `setPermission <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/StorageController.html#setPermission(org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission,int)>`_
 with the desired new value, or `VALUE_PROMPT <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.ContentPermission.html#VALUE_PROMPT>`_
 if you wish to unset the permission and let the site request it again in the future.
 
@@ -199,7 +185,7 @@ Media permissions are requested whenever a site wants access to play or
 record media from the device’s camera and microphone.
 
 When you receive an
-`onMediaPermissionRequest <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#onMediaPermissionRequest-org.mozilla.geckoview.GeckoSession-java.lang.String-org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource:A-org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource:A-org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaCallback->`_
+`onMediaPermissionRequest <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.html#onMediaPermissionRequest(org.mozilla.geckoview.GeckoSession,java.lang.String,org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource[],org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource[],org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaCallback)>`_
 call, you will also receive the ``GeckoSession`` the request was sent
 from, the URI of the site that requested the permission, as a String,
 the list of video devices available, if requesting video, the list of
@@ -221,9 +207,9 @@ requests are not displayed in this case.*
 
    private class ExamplePermissionDelegate implements GeckoSession.PermissionDelegate {
        @Override
-       public void onMediaPermissionRequest(final GeckoSession session, 
+       public void onMediaPermissionRequest(final GeckoSession session,
                                             final String uri,
-                                            final MediaSource[] video, 
+                                            final MediaSource[] video,
                                             final MediaSource[] audio,
                                             final MediaCallback callback) {
            // Reject permission if Android permission has been previously denied.
@@ -248,7 +234,7 @@ requests are not displayed in this case.*
            }
 
            // Get the media device name from the `MediaDevice`
-           String[] videoNames = normalizeMediaName(video); 
+           String[] videoNames = normalizeMediaName(video);
            String[] audioNames = normalizeMediaName(audio);
 
            final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
@@ -296,6 +282,6 @@ requests are not displayed in this case.*
 
 To see the ``PermissionsDelegate`` in action, you can find the full
 example implementation in the `GeckoView example
-app <https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.MediaCallback.html>`_.
+app <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.MediaCallback.html>`_.
 
-.. _Callback: https://mozilla.github.io/geckoview/https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.Callback.html
+.. _Callback: https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.Callback.html

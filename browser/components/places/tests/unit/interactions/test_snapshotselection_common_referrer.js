@@ -45,7 +45,7 @@ add_task(async function test_setup() {
   });
 });
 
-add_task(async function test_enable_overlapping() {
+add_task(async function test_common_referrer() {
   // Allow all snapshots regardless of their score.
   Services.prefs.setIntPref("browser.places.snapshots.threshold", -10);
 
@@ -61,50 +61,37 @@ add_task(async function test_enable_overlapping() {
   await Snapshots.add({ url: TEST_PRODUCT_B_URL });
   await Snapshots.add({ url: TEST_PRODUCT_C_URL });
 
-  selector.setUrl(TEST_PRODUCT_A_URL);
+  selector.setUrl(TEST_SEARCH_URL);
   snapshots = await snapshotPromise;
-
-  // With no referrer, no snapshots should be found
   await assertSnapshotList(snapshots, []);
 
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_PRODUCT_A_URL, TEST_SEARCH_URL);
+  selector.setUrl(TEST_PRODUCT_A_URL);
   snapshots = await snapshotPromise;
 
-  // With the common referrer, TEST_PRODUCT_B_URL should be found
   await assertSnapshotList(snapshots, [{ url: TEST_PRODUCT_B_URL }]);
+
+  snapshotPromise = selector.once("snapshots-updated");
+  selector.setUrl(TEST_PRODUCT_B_URL);
+  snapshots = await snapshotPromise;
+
+  await assertSnapshotList(snapshots, [{ url: TEST_PRODUCT_A_URL }]);
 });
 
-add_task(async function test_overlapping_with_scoring() {
-  // Reset the threshold, the snapshot should be lower than the required score.
-  Services.prefs.clearUserPref("browser.places.snapshots.threshold");
-
-  let snapshotPromise = selector.once("snapshots-updated");
-  selector.rebuild();
-  let snapshots = await snapshotPromise;
-
-  await assertSnapshotList(snapshots, []);
-
-  snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_PRODUCT_A_URL);
-  snapshots = await snapshotPromise;
-
-  await assertSnapshotList(snapshots, []);
-
+add_task(async function test_test_common_referrer_with_scoring() {
   // Allow any snapshots with a low, but non-zero score
   Services.prefs.setIntPref("browser.places.snapshots.threshold", 0.5);
 
-  snapshotPromise = selector.once("snapshots-updated");
-  selector.rebuild();
-  snapshots = await snapshotPromise;
+  let snapshotPromise = selector.once("snapshots-updated");
+  selector.setUrl(TEST_PRODUCT_C_URL);
+  let snapshots = await snapshotPromise;
 
   // Should still be empty -- no common referrer
   await assertSnapshotList(snapshots, []);
 
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_PRODUCT_A_URL, TEST_SEARCH_URL);
+  selector.setUrl(TEST_PRODUCT_A_URL);
   snapshots = await snapshotPromise;
 
-  // With the common referrer, TEST_PRODUCT_B_URL should be found
   await assertSnapshotList(snapshots, [{ url: TEST_PRODUCT_B_URL }]);
 });

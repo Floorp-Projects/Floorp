@@ -28,6 +28,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layout;
+using image::ImgDrawResult;
 
 nsContainerFrame* NS_NewFieldSetFrame(PresShell* aPresShell,
                                       ComputedStyle* aStyle) {
@@ -126,9 +127,8 @@ class nsDisplayFieldSetBorder final : public nsPaintedDisplayItem {
 
 void nsDisplayFieldSetBorder::Paint(nsDisplayListBuilder* aBuilder,
                                     gfxContext* aCtx) {
-  image::ImgDrawResult result =
-      static_cast<nsFieldSetFrame*>(mFrame)->PaintBorder(
-          aBuilder, *aCtx, ToReferenceFrame(), GetPaintRect(aBuilder, aCtx));
+  ImgDrawResult result = static_cast<nsFieldSetFrame*>(mFrame)->PaintBorder(
+      aBuilder, *aCtx, ToReferenceFrame(), GetPaintRect(aBuilder, aCtx));
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }
@@ -172,12 +172,13 @@ bool nsDisplayFieldSetBorder::CreateWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder) {
   auto frame = static_cast<nsFieldSetFrame*>(mFrame);
   auto offset = ToReferenceFrame();
-  nsRect rect;
   Maybe<wr::SpaceAndClipChainHelper> clipOut;
 
-  if (nsIFrame* legend = frame->GetLegend()) {
-    rect = frame->VisualBorderRectRelativeToSelf() + offset;
+  nsRect rect = frame->VisualBorderRectRelativeToSelf() + offset;
+  nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(
+      aBuilder, aSc, rect, mFrame, rect);
 
+  if (nsIFrame* legend = frame->GetLegend()) {
     nsRect legendRect = legend->GetNormalRect() + offset;
 
     // Make sure we clip all of the border in case the legend is smaller.
@@ -275,9 +276,10 @@ void nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   contentDisplayItems.MoveTo(aLists);
 }
 
-image::ImgDrawResult nsFieldSetFrame::PaintBorder(
-    nsDisplayListBuilder* aBuilder, gfxContext& aRenderingContext, nsPoint aPt,
-    const nsRect& aDirtyRect) {
+ImgDrawResult nsFieldSetFrame::PaintBorder(nsDisplayListBuilder* aBuilder,
+                                           gfxContext& aRenderingContext,
+                                           nsPoint aPt,
+                                           const nsRect& aDirtyRect) {
   // If the border is smaller than the legend, move the border down
   // to be centered on the legend.  We call VisualBorderRectRelativeToSelf() to
   // compute the border positioning.

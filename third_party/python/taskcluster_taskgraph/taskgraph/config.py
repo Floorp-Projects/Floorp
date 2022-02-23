@@ -70,6 +70,7 @@ graph_config_schema = Schema(
         Extra: object,
     }
 )
+"""Schema for GraphConfig"""
 
 
 @attr.s(frozen=True, cmp=False)
@@ -115,15 +116,7 @@ class GraphConfig:
 
     @property
     def taskcluster_yml(self):
-        if path.split(self.root_dir)[-2:] != ["taskcluster", "ci"]:
-            raise Exception(
-                "Not guessing path to `.taskcluster.yml`. "
-                "Graph config in non-standard location."
-            )
-        return os.path.join(
-            os.path.dirname(os.path.dirname(self.root_dir)),
-            ".taskcluster.yml",
-        )
+        return os.path.join(self.vcs_root, ".taskcluster.yml")
 
 
 def validate_graph_config(config):

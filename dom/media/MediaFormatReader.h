@@ -470,6 +470,10 @@ class MediaFormatReader final
         // If the caller asked for a new decoder we shouldn't treat
         // it as fatal.
         return false;
+      } else if (mError.ref() ==
+                 NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR) {
+        // Allow to restart remote decoder.
+        return false;
       } else {
         // All other error types are fatal
         return true;

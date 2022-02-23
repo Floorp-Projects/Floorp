@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  </head>
+  <body>
+    <button>Add Image</button>
+    <script>
+      /* Test to ensure http-on-image-cache-response should only be notified
+       * once per image
+       */
+
+      SimpleTest.waitForExplicitFinish();
+      async function addImage() {
+        const newImage = document.createElement("img");
+
+        const imageLoaded = new Promise((r) => {
+          newImage.onload = r;
+        });
+
+        newImage.src = "./over.png";
+        document.body.appendChild(newImage);
+        return imageLoaded;
+      }
+
+      let imageCacheCallbackRunCount = 0;
+      const cb = SpecialPowers.wrapCallback(() => {
+        imageCacheCallbackRunCount += 1;
+      });
+      SpecialPowers.addObserver(cb, "http-on-image-cache-response");
+
+      async function runTest() {
+        await addImage();
+        SimpleTest.ok(imageCacheCallbackRunCount == 0, "first load of over.png shouldn't be cached");
+        await addImage();
+        SimpleTest.ok(imageCacheCallbackRunCount == 1, "second load of over.png should be cached");
+        await addImage();
+        await addImage();
+        await addImage();
+        SimpleTest.ok(imageCacheCallbackRunCount == 1, "further loads of over.png shouldn't be notified");
+        SimpleTest.finish();
+      }
+
+      runTest();
+    </script>
+  </body>
+</html>

@@ -594,9 +594,7 @@ class CommonBackend(BuildBackend):
         """Write out a rust file which includes the generated xpcom rust modules"""
         topobjdir = self.environment.topobjdir
 
-        include_tmpl = (
-            'include!(concat!(env!("MOZ_TOPOBJDIR"), "/dist/xpcrs/%s/%s.rs"))'
-        )
+        include_tmpl = 'include!(mozbuild::objdir_path!("dist/xpcrs/%s/%s.rs"))'
 
         # Ensure deterministic output files.
         stems = sorted(manager.idl_stems())

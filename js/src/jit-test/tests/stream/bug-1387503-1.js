@@ -1,3 +1,4 @@
+// |jit-test| skip-if: !this.hasOwnProperty("ReadableStream")
 // Test uncatchable error when a stream source's pull() method is called.
 
 // Make `debugger;` raise an uncatchable error.

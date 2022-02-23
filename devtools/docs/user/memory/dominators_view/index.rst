@@ -172,5 +172,3 @@ Using the Call Stack view
 *************************
 
 Finally, you can switch to the Call Stack view, see where the objects are being allocated, and jump to that point in the Debugger.
-
-

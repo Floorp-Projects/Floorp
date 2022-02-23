@@ -502,16 +502,16 @@ LoginTestUtils.recipes = {
   },
 };
 
-LoginTestUtils.masterPassword = {
-  masterPassword: "omgsecret!",
+LoginTestUtils.primaryPassword = {
+  primaryPassword: "omgsecret!",
 
   _set(enable, stayLoggedIn) {
     let oldPW, newPW;
     if (enable) {
       oldPW = "";
-      newPW = this.masterPassword;
+      newPW = this.primaryPassword;
     } else {
-      oldPW = this.masterPassword;
+      oldPW = this.primaryPassword;
       newPW = "";
     }
     try {

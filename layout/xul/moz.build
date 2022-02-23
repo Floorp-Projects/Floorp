@@ -68,5 +68,3 @@ LOCAL_INCLUDES += [
     "/dom/base",
     "/dom/xul",
 ]
-
-REQUIRES_UNIFIED_BUILD = True

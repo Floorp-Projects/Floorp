@@ -14,11 +14,3 @@
     outline: none;
   }
 }
-
-/* ::::: editable tree ::::: */
-
-html|input.tree-input {
-  appearance: none;
-  border-width: 0;
-  box-shadow: var(--focus-ring-box-shadow);
-}

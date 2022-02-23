@@ -17,6 +17,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SwipeTracker.h"
 #include "mozilla/TextEventDispatcher.h"
@@ -1572,7 +1573,7 @@ bool nsChildView::GetEditCommands(NativeKeyBindingsType aType, const WidgetKeybo
   Maybe<WritingMode> writingMode;
   if (aEvent.NeedsToRemapNavigationKey()) {
     if (RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher()) {
-      writingMode = dispatcher->MaybeWritingModeAtSelection();
+      writingMode = dispatcher->MaybeQueryWritingModeAtSelection();
     }
   }
 
@@ -4265,6 +4266,10 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
               operation:(NSDragOperation)aOperation {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
+#ifdef NIGHTLY_BUILD
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+#endif
+
   gDraggedTransferables = nullptr;
 
   NSEvent* currentEvent = [NSApp currentEvent];
@@ -4369,6 +4374,10 @@ static CFTypeRefPtr<CFURLRef> GetPasteLocation(NSPasteboard* aPasteboard) {
                   item:(NSPasteboardItem*)aItem
     provideDataForType:(NSString*)aType {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+
+#ifdef NIGHTLY_BUILD
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+#endif
 
   if (!gDraggedTransferables) {
     return;

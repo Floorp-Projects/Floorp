@@ -1011,17 +1011,10 @@ nsBufferedOutputStream::Finish() {
   return NS_OK;
 }
 
-static nsresult nsReadFromInputStream(nsIOutputStream* outStr, void* closure,
-                                      char* toRawSegment, uint32_t offset,
-                                      uint32_t count, uint32_t* readCount) {
-  nsIInputStream* fromStream = (nsIInputStream*)closure;
-  return fromStream->Read(toRawSegment, count, readCount);
-}
-
 NS_IMETHODIMP
 nsBufferedOutputStream::WriteFrom(nsIInputStream* inStr, uint32_t count,
                                   uint32_t* _retval) {
-  return WriteSegments(nsReadFromInputStream, inStr, count, _retval);
+  return WriteSegments(NS_CopyStreamToSegment, inStr, count, _retval);
 }
 
 NS_IMETHODIMP

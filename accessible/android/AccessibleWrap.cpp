@@ -356,14 +356,16 @@ void AccessibleWrap::NavigateText(int32_t aGranularity, int32_t aStartOffset,
   }
 
   int32_t newOffset;
-  LocalAccessible* newAnchor = nullptr;
+  Accessible* newAnchorBase = nullptr;
   if (aForward) {
-    newAnchor = pivot.NextText(this, &start, &end, pivotGranularity);
+    newAnchorBase = pivot.NextText(this, &start, &end, pivotGranularity);
     newOffset = end;
   } else {
-    newAnchor = pivot.PrevText(this, &start, &end, pivotGranularity);
+    newAnchorBase = pivot.PrevText(this, &start, &end, pivotGranularity);
     newOffset = start;
   }
+  LocalAccessible* newAnchor =
+      newAnchorBase ? newAnchorBase->AsLocal() : nullptr;
 
   if (newAnchor && (start != aStartOffset || end != aEndOffset)) {
     if (IsTextLeaf() && newAnchor == LocalParent()) {
@@ -660,11 +662,11 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(bool aSmall) {
 }
 
 mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
-    const uint64_t aState, const nsIntRect& aBounds, const uint8_t aActionCount,
-    const nsString& aName, const nsString& aTextValue,
-    const nsString& aDOMNodeID, const nsString& aDescription,
-    const double& aCurVal, const double& aMinVal, const double& aMaxVal,
-    const double& aStep, AccAttributes* aAttributes) {
+    const uint64_t aState, const LayoutDeviceIntRect& aBounds,
+    const uint8_t aActionCount, const nsString& aName,
+    const nsString& aTextValue, const nsString& aDOMNodeID,
+    const nsString& aDescription, const double& aCurVal, const double& aMinVal,
+    const double& aMaxVal, const double& aStep, AccAttributes* aAttributes) {
   if (!IsProxy() && IsDefunct()) {
     return nullptr;
   }

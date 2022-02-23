@@ -177,7 +177,7 @@ def t_ID(t):
 
 def t_STRING(t):
     r'"[^"\n]*"'
-    t.value = t.value[1:-1]
+    t.value = StringLiteral(Loc(Parser.current.filename, t.lineno), t.value[1:-1])
     return t
 
 
@@ -259,7 +259,7 @@ def p_PreambleStmt(p):
 
 def p_CxxIncludeStmt(p):
     """CxxIncludeStmt : INCLUDE STRING"""
-    p[0] = CxxInclude(locFromTok(p, 1), p[2])
+    p[0] = CxxInclude(locFromTok(p, 1), p[2].value)
 
 
 def p_IncludeStmt(p):
@@ -298,7 +298,7 @@ def p_UsingStmt(p):
         attributes=p[1],
         kind=p[3],
         cxxTypeSpec=p[4],
-        cxxHeader=p[6],
+        cxxHeader=p[6].value,
     )
 
 
@@ -542,6 +542,7 @@ def p_Attribute(p):
 
 def p_AttributeValue(p):
     """AttributeValue : '=' ID
+    | '=' STRING
     |"""
     if 1 == len(p):
         p[0] = None

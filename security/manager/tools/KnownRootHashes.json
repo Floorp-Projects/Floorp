@@ -1137,7 +1137,72 @@
       "label": "Certum_Trusted_Root_CA",
       "binNumber": 226,
       "sha256Fingerprint": "/naWVzhVdz43qV561NnMlsMBV8FdMXZbqbFXBOGueP0="
+    },
+    {
+      "label": "TunTrust_Root_CA",
+      "binNumber": 227,
+      "sha256Fingerprint": "LkQQKrWMuFQZRRyOGdms82Ysr7xhS2pTlgow99Di60E="
+    },
+    {
+      "label": "HARICA_TLS_RSA_Root_CA_2021",
+      "binNumber": 228,
+      "sha256Fingerprint": "2V0Ojtp5Ulv5vrEbFNIQDTKUmF8MYtn6vZzZmezLex0="
+    },
+    {
+      "label": "HARICA_TLS_ECC_Root_CA_2021",
+      "binNumber": 229,
+      "sha256Fingerprint": "P5nMR0rPzk3+1YeUZl5HjRVHc58ueA8btMqbEzCX1AE="
+    },
+    {
+      "label": "Autoridad_de_Certificacion_Firmaprofesional_CIF_A62634068",
+      "binNumber": 230,
+      "sha256Fingerprint": "V94Fg+/Ssm4DYdqZ2p30ZI3vfuhEHDtyivqbzeD5smo="
+    },
+    {
+      "label": "vTrus_ECC_Root_CA",
+      "binNumber": 231,
+      "sha256Fingerprint": "MPu6LDIjjiqYVHr5eTHlUEKLmz8cjutmM9z6hsWyfdM="
+    },
+    {
+      "label": "vTrus_Root_CA",
+      "binNumber": 232,
+      "sha256Fingerprint": "inHeZVkzb0JsJuU4gNANiKGNpMapHw3LYZTiBsXJY4c="
+    },
+    {
+      "label": "ISRG_Root_X2",
+      "binNumber": 233,
+      "sha256Fingerprint": "aXKbjhWobvwXelevtxcd/GSt0owvyozxUH40RTzLFHA="
+    },
+    {
+      "label": "HiPKI_Root_CA___G1",
+      "binNumber": 234,
+      "sha256Fingerprint": "8BXOPMI5v+8GS+nx0sQX4aAmSgqUvh8MjRIYZOtpScw="
+    },
+    {
+      "label": "GlobalSign",
+      "binNumber": 235,
+      "sha256Fingerprint": "sIXXC5ZPGRpz5K8NVK56Dgeq/a+bcd0IYhOKtzJaJKI="
+    },
+    {
+      "label": "GTS_Root_R1",
+      "binNumber": 236,
+      "sha256Fingerprint": "2UdDKr3nt/qQ/C5rWRAbEoDg4cfk5A+jxoh//1en9M8="
+    },
+    {
+      "label": "GTS_Root_R2",
+      "binNumber": 237,
+      "sha256Fingerprint": "jSXNlyKdv3A1a9pOs8xzQDHiTPAPr8/TLcdutYQcfqg="
+    },
+    {
+      "label": "GTS_Root_R3",
+      "binNumber": 238,
+      "sha256Fingerprint": "NNinPuII2bzbDZVlIJNLTkDmlIJZbotvc8hCawEKb0g="
+    },
+    {
+      "label": "GTS_Root_R4",
+      "binNumber": 239,
+      "sha256Fingerprint": "NJ36QFjF4mMSOzmK55VXPE4TE8g/5o+TVWzV6AMbPH0="
     }
   ],
-  "maxBin": 226
+  "maxBin": 239
 }

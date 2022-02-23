@@ -185,6 +185,8 @@ devtools.jar:
     skin/images/command-measure.svg (themes/images/command-measure.svg)
     skin/images/command-noautohide.svg (themes/images/command-noautohide.svg)
     skin/images/command-chevron.svg (themes/images/command-chevron.svg)
+    skin/images/command-accented.svg (themes/images/command-accented.svg)
+    skin/images/command-bidi.svg (themes/images/command-bidi.svg)
     skin/images/rules-view-light-mode-simulation.svg (themes/images/rules-view-light-mode-simulation.svg)
     skin/images/rules-view-dark-mode-simulation.svg (themes/images/rules-view-dark-mode-simulation.svg)
     skin/images/rules-view-print-simulation.svg (themes/images/rules-view-print-simulation.svg)

@@ -1,6 +1,5 @@
 // META: script=/common/utils.js
-// META: script=resources/support.js
-// META: script=resources/ports.sub.js
+// META: script=resources/support.sub.js
 //
 // Spec: https://wicg.github.io/private-network-access/#integration-fetch
 //
@@ -16,87 +15,84 @@ setup(() => {
 });
 
 promise_test(t => fetchTest(t, {
-  source: { port: kPorts.httpLocal },
-  target: { port: kPorts.httpLocal },
-  expected: kFetchTestResult.success,
+  source: { server: Server.HTTP_LOCAL },
+  target: { server: Server.HTTP_LOCAL },
+  expected: FetchTestResult.SUCCESS,
 }), "local to local: no preflight required.");
 
 promise_test(t => fetchTest(t, {
-  source: { port: kPorts.httpLocal },
+  source: { server: Server.HTTP_LOCAL },
   target: {
-    port: kPorts.httpPrivate,
-    searchParams: { "final-headers": "cors" },
+    server: Server.HTTP_PRIVATE,
+    behavior: { response: ResponseBehavior.allowCrossOrigin() },
   },
-  expected: kFetchTestResult.success,
+  expected: FetchTestResult.SUCCESS,
 }), "local to private: no preflight required.");
 
 promise_test(t => fetchTest(t, {
-  source: { port: kPorts.httpLocal },
+  source: { server: Server.HTTP_LOCAL },
   target: {
-    port: kPorts.httpPublic,
-    searchParams: { "final-headers": "cors" },
+    server: Server.HTTP_PUBLIC,
+    behavior: { response: ResponseBehavior.allowCrossOrigin() },
   },
-  expected: kFetchTestResult.success,
+  expected: FetchTestResult.SUCCESS,
 }), "local to public: no preflight required.");
 
 promise_test(t => fetchTest(t, {
-  source: { port: kPorts.httpPrivate },
+  source: { server: Server.HTTP_PRIVATE },
   target: {
-    port: kPorts.httpLocal,
-    searchParams: {
-      "preflight-uuid": token(),
-      "preflight-headers": "cors+pna",
-      "final-headers": "cors",
+    server: Server.HTTP_LOCAL,
+    behavior: {
+      preflight: PreflightBehavior.success(token()),
+      response: ResponseBehavior.allowCrossOrigin(),
     },
   },
-  expected: kFetchTestResult.failure,
+  expected: FetchTestResult.FAILURE,
 }), "private to local: failure.");
 
 promise_test(t => fetchTest(t, {
-  source: { port: kPorts.httpPrivate },
-  target: { port: kPorts.httpPrivate },
-  expected: kFetchTestResult.success,
+  source: { server: Server.HTTP_PRIVATE },
+  target: { server: Server.HTTP_PRIVATE },
+  expected: FetchTestResult.SUCCESS,
 }), "private to private: no preflight required.");
 
 promise_test(t => fetchTest(t, {
-  source: { port: kPorts.httpPrivate },
+  source: { server: Server.HTTP_PRIVATE },
   target: {
-    port: kPorts.httpPublic,
-    searchParams: { "final-headers": "cors" },
+    server: Server.HTTP_PUBLIC,
+    behavior: { response: ResponseBehavior.allowCrossOrigin() },
   },
-  expected: kFetchTestResult.success,
+  expected: FetchTestResult.SUCCESS,
 }), "private to public: no preflight required.");
 
 promise_test(t => fetchTest(t, {
-  source: { port: kPorts.httpPublic },
+  source: { server: Server.HTTP_PUBLIC },
   target: {
-    port: kPorts.httpLocal,
-    searchParams: {
-      "preflight-uuid": token(),
-      "preflight-headers": "cors+pna",
-      "final-headers": "cors",
+    server: Server.HTTP_LOCAL,
+    behavior: {
+      preflight: PreflightBehavior.success(token()),
+      response: ResponseBehavior.allowCrossOrigin(),
     },
   },
-  expected: kFetchTestResult.failure,
+  expected: FetchTestResult.FAILURE,
 }), "public to local: failure.");
 
 promise_test(t => fetchTest(t, {
-  source: { port: kPorts.httpPublic },
+  source: { server: Server.HTTP_PUBLIC },
   target: {
-    port: kPorts.httpPrivate,
-    searchParams: {
-      "preflight-uuid": token(),
-      "preflight-headers": "cors+pna",
-      "final-headers": "cors",
+    server: Server.HTTP_PRIVATE,
+    behavior: {
+      preflight: PreflightBehavior.success(token()),
+      response: ResponseBehavior.allowCrossOrigin(),
     },
   },
-  expected: kFetchTestResult.failure,
+  expected: FetchTestResult.FAILURE,
 }), "public to private: failure.");
 
 promise_test(t => fetchTest(t, {
-  source: { port: kPorts.httpPublic },
-  target: { port: kPorts.httpPublic },
-  expected: kFetchTestResult.success,
+  source: { server: Server.HTTP_PUBLIC },
+  target: { server: Server.HTTP_PUBLIC },
+  expected: FetchTestResult.SUCCESS,
 }), "public to public: no preflight required.");
 
 // These tests verify that documents fetched from the `local` address space yet
@@ -105,46 +101,44 @@ promise_test(t => fetchTest(t, {
 
 promise_test(t => fetchTest(t, {
   source: {
-    port: kPorts.httpLocal,
-    headers: { "Content-Security-Policy": "treat-as-public-address" },
+    server: Server.HTTP_LOCAL,
+    treatAsPublic: true,
   },
   target: {
-    port: kPorts.httpLocal,
-    searchParams: {
-      "preflight-uuid": token(),
-      "preflight-headers": "cors+pna",
-      "final-headers": "cors",
+    server: Server.HTTP_LOCAL,
+    behavior: {
+      preflight: PreflightBehavior.success(token()),
+      response: ResponseBehavior.allowCrossOrigin(),
     },
   },
-  expected: kFetchTestResult.failure,
+  expected: FetchTestResult.FAILURE,
 }), "treat-as-public-address to local: failure.");
 
 promise_test(t => fetchTest(t, {
   source: {
-    port: kPorts.httpLocal,
-    headers: { "Content-Security-Policy": "treat-as-public-address" },
+    server: Server.HTTP_LOCAL,
+    treatAsPublic: true,
   },
   target: {
-    port: kPorts.httpPrivate,
-    searchParams: {
-      "preflight-uuid": token(),
-      "preflight-headers": "cors+pna",
-      "final-headers": "cors",
+    server: Server.HTTP_PRIVATE,
+    behavior: {
+      preflight: PreflightBehavior.success(token()),
+      response: ResponseBehavior.allowCrossOrigin(),
     },
   },
-  expected: kFetchTestResult.failure,
+  expected: FetchTestResult.FAILURE,
 }), "treat-as-public-address to private: failure.");
 
 promise_test(t => fetchTest(t, {
   source: {
-    port: kPorts.httpLocal,
-    headers: { "Content-Security-Policy": "treat-as-public-address" },
+    server: Server.HTTP_LOCAL,
+    treatAsPublic: true,
   },
   target: {
-    port: kPorts.httpPublic,
-    searchParams: { "final-headers": "cors" },
+    server: Server.HTTP_PUBLIC,
+    behavior: { response: ResponseBehavior.allowCrossOrigin() },
   },
-  expected: kFetchTestResult.success,
+  expected: FetchTestResult.SUCCESS,
 }), "treat-as-public-address to public: no preflight required.");
 
 // These tests verify that HTTPS iframes embedded in an HTTP top-level document
@@ -153,52 +147,37 @@ promise_test(t => fetchTest(t, {
 // their parent is a non-secure context.
 
 promise_test(t => fetchTest(t, {
-  source: {
-    protocol: "https:",
-    port: kPorts.httpsPrivate,
-  },
+  source: { server: Server.HTTPS_PRIVATE },
   target: {
-    protocol: "https:",
-    port: kPorts.httpsLocal,
-    searchParams: {
-      "preflight-uuid": token(),
-      "preflight-headers": "cors+pna",
-      "final-headers": "cors",
+    server: Server.HTTPS_LOCAL,
+    behavior: {
+      preflight: PreflightBehavior.success(token()),
+      response: ResponseBehavior.allowCrossOrigin(),
     },
   },
-  expected: kFetchTestResult.failure,
+  expected: FetchTestResult.FAILURE,
 }), "private https to local: failure.");
 
 promise_test(t => fetchTest(t, {
-  source: {
-    protocol: "https:",
-    port: kPorts.httpsPublic,
-  },
+  source: { server: Server.HTTPS_PUBLIC },
   target: {
-    protocol: "https:",
-    port: kPorts.httpsLocal,
-    searchParams: {
-      "preflight-uuid": token(),
-      "preflight-headers": "cors+pna",
-      "final-headers": "cors",
+    server: Server.HTTPS_LOCAL,
+    behavior: {
+      preflight: PreflightBehavior.success(token()),
+      response: ResponseBehavior.allowCrossOrigin(),
     },
   },
-  expected: kFetchTestResult.failure,
+  expected: FetchTestResult.FAILURE,
 }), "public https to local: failure.");
 
 promise_test(t => fetchTest(t, {
-  source: {
-    protocol: "https:",
-    port: kPorts.httpsPublic,
-  },
+  source: { server: Server.HTTPS_PUBLIC },
   target: {
-    protocol: "https:",
-    port: kPorts.httpsPrivate,
-    searchParams: {
-      "preflight-uuid": token(),
-      "preflight-headers": "cors+pna",
-      "final-headers": "cors",
+    server: Server.HTTPS_PRIVATE,
+    behavior: {
+      preflight: PreflightBehavior.success(token()),
+      response: ResponseBehavior.allowCrossOrigin(),
     },
   },
-  expected: kFetchTestResult.failure,
+  expected: FetchTestResult.FAILURE,
 }), "public https to private: failure.");

@@ -1014,6 +1014,10 @@ nsresult DNSPacket::DecodeInternal(
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
+  if (aType == TRRTYPE_NS && rcode != 0) {
+    return NS_ERROR_UNKNOWN_HOST;
+  }
+
   if ((aType != TRRTYPE_NS) && aCname.IsEmpty() && aResp.mAddresses.IsEmpty() &&
       aTypeResult.is<TypeRecordEmpty>()) {
     // no entries were stored!

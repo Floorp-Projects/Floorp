@@ -86,4 +86,3 @@ See also
 - :ref:`Style panel <page_inspector_ui_tour_rules_view>`
 - :doc:`Tools <../index>`
 - `New Developer Tools in Firefox 11 Aurora <https://hacks.mozilla.org/2011/12/new-developer-tools-in-firefox-11-aurora>`_ (blog post)
-

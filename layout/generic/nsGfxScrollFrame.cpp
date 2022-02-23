@@ -9,7 +9,6 @@
 #include "nsGfxScrollFrame.h"
 
 #include "nsIXULRuntime.h"
-#include "ActiveLayerTracker.h"
 #include "base/compiler_specific.h"
 #include "DisplayItemClip.h"
 #include "Layers.h"
@@ -462,7 +461,7 @@ ScrollReflowInput::ScrollReflowInput(nsHTMLScrollFrame* aFrame,
   // makes us suppress scrollbars in CreateAnonymousContent. But if this frame
   // initially had a non-'none' scrollbar-width and dynamically changed to
   // 'none', then we'll need to handle it here.
-  if (scrollbarStyle->StyleUIReset()->mScrollbarWidth ==
+  if (scrollbarStyle->StyleUIReset()->ScrollbarWidth() ==
       StyleScrollbarWidth::None) {
     mHScrollbar = ShowScrollbar::Never;
     mHScrollbarAllowedForScrollingVVInsideLV = false;
@@ -1112,7 +1111,7 @@ nscoord nsHTMLScrollFrame::IntrinsicScrollbarGutterSizeAtInlineEdges(
   }
 
   const auto* styleForScrollbar = nsLayoutUtils::StyleForScrollbar(this);
-  if (styleForScrollbar->StyleUIReset()->mScrollbarWidth ==
+  if (styleForScrollbar->StyleUIReset()->ScrollbarWidth() ==
       StyleScrollbarWidth::None) {
     // Scrollbar shouldn't appear at all with "scrollbar-width: none".
     return 0;
@@ -1464,8 +1463,7 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
       // visual viewport is updated to account for that before we read the
       // visual viewport size.
       manager->UpdateVisualViewportSizeForPotentialScrollbarChange();
-    } else if ((oldScrollPort.Size() != newScrollPort.Size()) &&
-               !HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
+    } else if (oldScrollPort.Size() != newScrollPort.Size()) {
       // We want to make sure to send a visual viewport resize event if the
       // scrollport changed sizes for root scroll frames. The
       // MobileViewportManager will do that, but if we don't have one (ie we
@@ -1485,7 +1483,8 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
       (didHaveHScrollbar != state.mShowHScrollbar ||
        didHaveVScrollbar != state.mShowVScrollbar ||
        didOnlyHScrollbar != mHelper.mOnlyNeedHScrollbarToScrollVVInsideLV ||
-       didOnlyVScrollbar != mHelper.mOnlyNeedVScrollbarToScrollVVInsideLV)) {
+       didOnlyVScrollbar != mHelper.mOnlyNeedVScrollbarToScrollVVInsideLV) &&
+      PresShell()->IsVisualViewportOffsetSet()) {
     // Removing layout/classic scrollbars can make a previously valid vvoffset
     // invalid. For example, if we are zoomed in on an overflow hidden document
     // and then zoom back out, when apz reaches the initial resolution (ie 1.0)
@@ -1616,26 +1615,15 @@ nsMargin ScrollFrameHelper::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
   return result;
 }
 
-nscoord ScrollFrameHelper::GetNondisappearingScrollbarWidth(
-    nsBoxLayoutState* aState, WritingMode aWM) {
-  NS_ASSERTION(aState && aState->GetRenderingContext(),
-               "Must have rendering context in layout state for size "
-               "computations");
-
-  bool verticalWM = aWM.IsVertical();
-  // We need to have the proper un-themed scrollbar size, regardless of whether
-  // we're using e.g. scrollbar-width: thin, or overlay scrollbars.
-  nsIFrame* box = verticalWM ? mHScrollbarBox : mVScrollbarBox;
-  if (box) {
-    auto sizes = aState->PresContext()->Theme()->GetScrollbarSizes(
-        aState->PresContext(), StyleScrollbarWidth::Auto,
-        nsITheme::Overlay::No);
-    return aState->PresContext()->DevPixelsToAppUnits(
-        verticalWM ? sizes.mHorizontal : sizes.mVertical);
-  }
-
-  nsMargin sizes(GetDesiredScrollbarSizes(aState));
-  return verticalWM ? sizes.TopBottom() : sizes.LeftRight();
+nscoord nsIScrollableFrame::GetNondisappearingScrollbarWidth(nsPresContext* aPc,
+                                                             WritingMode aWM) {
+  // We use this to size the combobox dropdown button. For that, we need to have
+  // the proper big, non-overlay scrollbar size, regardless of whether we're
+  // using e.g. scrollbar-width: thin, or overlay scrollbars.
+  auto sizes = aPc->Theme()->GetScrollbarSizes(aPc, StyleScrollbarWidth::Auto,
+                                               nsITheme::Overlay::No);
+  return aPc->DevPixelsToAppUnits(aWM.IsVertical() ? sizes.mHorizontal
+                                                   : sizes.mVertical);
 }
 
 void ScrollFrameHelper::HandleScrollbarStyleSwitching() {
@@ -3246,8 +3234,13 @@ void ScrollFrameHelper::ScrollToImpl(
     AutoScrollbarRepaintSuppression repaintSuppression(this, weakFrame,
                                                        !schedulePaint);
 
-    nsPoint relativeOffset =
-        presContext->PresShell()->GetVisualViewportOffset() - curPos;
+    nsPoint visualViewportOffset = curPos;
+    if (presContext->PresShell()->IsVisualViewportOffsetSet()) {
+      visualViewportOffset =
+          presContext->PresShell()->GetVisualViewportOffset();
+    }
+    nsPoint relativeOffset = visualViewportOffset - curPos;
+
     presContext->PresShell()->SetVisualViewportOffset(pt + relativeOffset,
                                                       curPos);
     if (!weakFrame.IsAlive()) {
@@ -4500,23 +4493,25 @@ bool ScrollFrameHelper::DecideScrollableLayer(
         content, &displayPort,
         DisplayPortOptions().With(DisplayportRelativeTo::ScrollFrame));
 
+    auto OverrideDirtyRect = [&](const nsRect& aRect) {
+      *aDirtyRect = aRect;
+      if (aDirtyRectHasBeenOverriden) {
+        *aDirtyRectHasBeenOverriden = true;
+      }
+    };
+
     if (usingDisplayPort) {
       // Override the dirty rectangle if the displayport has been set.
       *aVisibleRect = displayPort;
-      if (!aBuilder->IsPartialUpdate() || aBuilder->InInvalidSubtree() ||
+      if (aBuilder->IsReusingStackingContextItems() ||
+          !aBuilder->IsPartialUpdate() || aBuilder->InInvalidSubtree() ||
           mOuter->IsFrameModified()) {
-        *aDirtyRect = displayPort;
-        if (aDirtyRectHasBeenOverriden) {
-          *aDirtyRectHasBeenOverriden = true;
-        }
+        OverrideDirtyRect(displayPort);
       } else if (mOuter->HasOverrideDirtyRegion()) {
         nsRect* rect = mOuter->GetProperty(
             nsDisplayListBuilder::DisplayListBuildingDisplayPortRect());
         if (rect) {
-          *aDirtyRect = *rect;
-          if (aDirtyRectHasBeenOverriden) {
-            *aDirtyRectHasBeenOverriden = true;
-          }
+          OverrideDirtyRect(*rect);
         }
       }
     } else if (mIsRoot) {
@@ -5475,7 +5470,7 @@ auto ScrollFrameHelper::GetNeededAnonymousContent() const
     result += AnonymousContentType::HorizontalScrollbar;
     result += AnonymousContentType::VerticalScrollbar;
     // If scrollbar-width is none, don't generate scrollbars.
-  } else if (mOuter->StyleUIReset()->mScrollbarWidth !=
+  } else if (mOuter->StyleUIReset()->ScrollbarWidth() !=
              StyleScrollbarWidth::None) {
     nsIScrollableFrame* scrollable = do_QueryFrame(mOuter);
     ScrollStyles styles = scrollable->GetScrollStyles();
@@ -5770,7 +5765,8 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent,
     return;
   }
 
-  if (mScrollbarActivity) {
+  if (mScrollbarActivity &&
+      (mHasHorizontalScrollbar || mHasVerticalScrollbar)) {
     RefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
     scrollbarActivity->ActivityOccurred();
   }
@@ -5858,7 +5854,6 @@ void ScrollFrameHelper::FireScrollEvent() {
 
   mProcessingScrollEvent = true;
 
-  ActiveLayerTracker::SetCurrentScrollHandlerFrame(mOuter);
   WidgetGUIEvent event(true, eScroll, nullptr);
   nsEventStatus status = nsEventStatus_eIgnore;
   // Fire viewport scroll events at the document (where they
@@ -5877,7 +5872,6 @@ void ScrollFrameHelper::FireScrollEvent() {
     event.mFlags.mBubbles = false;
     EventDispatcher::Dispatch(content, presContext, &event, nullptr, &status);
   }
-  ActiveLayerTracker::SetCurrentScrollHandlerFrame(nullptr);
 }
 
 void ScrollFrameHelper::PostScrollEvent(bool aDelayed) {
@@ -6120,18 +6114,6 @@ bool ScrollFrameHelper::IsScrollingActive() const {
   nsIContent* content = mOuter->GetContent();
   return mHasBeenScrolledRecently || IsAlwaysActive() ||
          DisplayPortUtils::HasDisplayPort(content) ||
-         nsContentUtils::HasScrollgrab(content);
-}
-
-bool ScrollFrameHelper::IsScrollingActiveNotMinimalDisplayPort() const {
-  const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  if (disp->mWillChange.bits & StyleWillChangeBits::SCROLL) {
-    return true;
-  }
-
-  nsIContent* content = mOuter->GetContent();
-  return mHasBeenScrolledRecently || IsAlwaysActive() ||
-         DisplayPortUtils::HasNonMinimalDisplayPort(content) ||
          nsContentUtils::HasScrollgrab(content);
 }
 
@@ -6578,11 +6560,11 @@ bool ScrollFrameHelper::ReflowFinished() {
   nsAutoScriptBlocker scriptBlocker;
 
   if (mReclampVVOffsetInReflowFinished) {
-    MOZ_ASSERT(mIsRoot);
+    MOZ_ASSERT(mIsRoot && mOuter->PresShell()->IsVisualViewportOffsetSet());
     mReclampVVOffsetInReflowFinished = false;
     AutoWeakFrame weakFrame(mOuter);
-    mOuter->PresShell()->SetVisualViewportOffset(GetVisualViewportOffset(),
-                                                 GetScrollPosition());
+    mOuter->PresShell()->SetVisualViewportOffset(
+        mOuter->PresShell()->GetVisualViewportOffset(), GetScrollPosition());
     NS_ENSURE_TRUE(weakFrame.IsAlive(), false);
   }
 
@@ -6965,7 +6947,7 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     nsPresContext* pc = aState.PresContext();
     auto scrollbarWidth = nsLayoutUtils::StyleForScrollbar(mOuter)
                               ->StyleUIReset()
-                              ->mScrollbarWidth;
+                              ->ScrollbarWidth();
     auto sizes = pc->Theme()->GetScrollbarSizes(pc, scrollbarWidth,
                                                 nsITheme::Overlay::No);
     nsSize resizerMinSize = mResizerBox->GetXULMinSize(aState);
@@ -7068,7 +7050,8 @@ void ScrollFrameHelper::SetCoordAttribute(Element* aElement, nsAtom* aAtom,
     return;
   }
 
-  if (mScrollbarActivity) {
+  if (mScrollbarActivity &&
+      (mHasHorizontalScrollbar || mHasVerticalScrollbar)) {
     RefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
     scrollbarActivity->ActivityOccurred();
   }
@@ -7349,12 +7332,15 @@ bool ScrollFrameHelper::IsScrollAnimating(
 }
 
 void ScrollFrameHelper::ResetScrollInfoIfNeeded(
-    const ScrollGeneration& aGeneration,
+    const MainThreadScrollGeneration& aGeneration,
+    const APZScrollGeneration& aGenerationOnApz,
     APZScrollAnimationType aAPZScrollAnimationType) {
   if (aGeneration == mScrollGeneration) {
     mLastScrollOrigin = ScrollOrigin::None;
     mApzAnimationRequested = false;
   }
+
+  mScrollGenerationOnApz = aGenerationOnApz;
   // We can reset this regardless of scroll generation, as this is only set
   // here, as a response to APZ requesting a repaint.
   mCurrentAPZScrollAnimationType = aAPZScrollAnimationType;

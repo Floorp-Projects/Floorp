@@ -3,7 +3,7 @@ use std::string::ToString;
 
 use syn::{Meta, NestedMeta, Path};
 
-use {Error, FromMeta, Result};
+use crate::{Error, FromMeta, Result};
 
 /// A list of `syn::Path` instances. This type is used to extract a list of paths from an
 /// attribute.
@@ -27,7 +27,16 @@ impl PathList {
 
     /// Create a new `Vec` containing the string representation of each path.
     pub fn to_strings(&self) -> Vec<String> {
-        self.0.iter().map(|p| p.segments.iter().map(|s| s.ident.to_string()).collect::<Vec<String>>().join("::")).collect()
+        self.0
+            .iter()
+            .map(|p| {
+                p.segments
+                    .iter()
+                    .map(|s| s.ident.to_string())
+                    .collect::<Vec<String>>()
+                    .join("::")
+            })
+            .collect()
     }
 }
 
@@ -63,9 +72,9 @@ impl FromMeta for PathList {
 #[cfg(test)]
 mod tests {
     use super::PathList;
+    use crate::FromMeta;
     use proc_macro2::TokenStream;
     use syn::{Attribute, Meta};
-    use FromMeta;
 
     /// parse a string as a syn::Meta instance.
     fn pm(tokens: TokenStream) -> ::std::result::Result<Meta, String> {

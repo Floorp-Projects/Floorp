@@ -1,10 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::ToTokens;
-use syn::{self, Ident};
+use syn::Ident;
 
-use codegen::FromDeriveInputImpl;
-use options::{OuterFrom, ParseAttribute, ParseData, Shape};
-use {FromMeta, Result};
+use crate::codegen::FromDeriveInputImpl;
+use crate::options::{OuterFrom, ParseAttribute, ParseData, Shape};
+use crate::{FromMeta, Result};
 
 #[derive(Debug)]
 pub struct FdiOptions {
@@ -24,7 +24,7 @@ pub struct FdiOptions {
 impl FdiOptions {
     pub fn new(di: &syn::DeriveInput) -> Result<Self> {
         (FdiOptions {
-            base: OuterFrom::start(di),
+            base: OuterFrom::start(di)?,
             vis: Default::default(),
             generics: Default::default(),
             data: Default::default(),

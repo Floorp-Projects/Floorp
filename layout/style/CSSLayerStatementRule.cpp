@@ -10,9 +10,9 @@
 
 namespace mozilla::dom {
 
-CSSLayerStatementRule::CSSLayerStatementRule(RefPtr<RawServoLayerStatementRule> aRawRule,
-                           StyleSheet* aSheet, css::Rule* aParentRule,
-                           uint32_t aLine, uint32_t aColumn)
+CSSLayerStatementRule::CSSLayerStatementRule(
+    RefPtr<RawServoLayerStatementRule> aRawRule, StyleSheet* aSheet,
+    css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn)
     : Rule(aSheet, aParentRule, aLine, aColumn),
       mRawRule(std::move(aRawRule)) {}
 
@@ -34,9 +34,12 @@ void CSSLayerStatementRule::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
-StyleCssRuleType CSSLayerStatementRule::Type() const { return StyleCssRuleType::LayerStatement; }
+StyleCssRuleType CSSLayerStatementRule::Type() const {
+  return StyleCssRuleType::LayerStatement;
+}
 
-void CSSLayerStatementRule::SetRawAfterClone(RefPtr<RawServoLayerStatementRule> aRaw) {
+void CSSLayerStatementRule::SetRawAfterClone(
+    RefPtr<RawServoLayerStatementRule> aRaw) {
   mRawRule = std::move(aRaw);
 }
 
@@ -47,16 +50,18 @@ void CSSLayerStatementRule::GetCssText(nsACString& aCssText) const {
 void CSSLayerStatementRule::GetNameList(nsTArray<nsCString>& aNames) const {
   size_t size = Servo_LayerStatementRule_GetNameCount(mRawRule.get());
   for (size_t i = 0; i < size; ++i) {
-    Servo_LayerStatementRule_GetNameAt(mRawRule.get(), i, aNames.AppendElement());
+    Servo_LayerStatementRule_GetNameAt(mRawRule.get(), i,
+                                       aNames.AppendElement());
   }
 }
 
-size_t CSSLayerStatementRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+size_t CSSLayerStatementRule::SizeOfIncludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
 
 JSObject* CSSLayerStatementRule::WrapObject(JSContext* aCx,
-                                   JS::Handle<JSObject*> aGivenProto) {
+                                            JS::Handle<JSObject*> aGivenProto) {
   return CSSLayerStatementRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 

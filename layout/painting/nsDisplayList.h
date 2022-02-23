@@ -1691,6 +1691,38 @@ class nsDisplayListBuilder {
    */
   nsIFrame* FindAnimatedGeometryRootFrameFor(nsIFrame* aFrame);
 
+  /**
+   * Returns true if this is a retained builder and reuse stacking contexts
+   * mode is enabled by pref.
+   */
+  bool IsReusingStackingContextItems() const {
+    return mIsReusingStackingContextItems;
+  }
+
+  /**
+   * Adds display item |aItem| to the reuseable display items set.
+   */
+  void AddReusableDisplayItem(nsDisplayItem* aItem);
+
+  /**
+   * Removes display item |aItem| from the reuseable display items set.
+   * This is needed because display items are sometimes deleted during
+   * display list building.
+   * Called by |nsDisplayItem::Destroy()| when the item has been reused.
+   */
+  void RemoveReusedDisplayItem(nsDisplayItem* aItem);
+
+  /**
+   * Clears the reuseable display items set.
+   */
+  void ClearReuseableDisplayItems();
+
+  /**
+   * Marks the given display item |aItem| as reused, and updates the necessary
+   * display list builder state.
+   */
+  void ReuseDisplayItem(nsDisplayItem* aItem);
+
  private:
   bool MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                     const nsRect& aVisibleRect,
@@ -1885,6 +1917,10 @@ class nsDisplayListBuilder {
   gfx::CompositorHitTestInfo mCompositorHitTestInfo;
 
   bool mIsForContent;
+  bool mIsReusingStackingContextItems;
+
+  // Stores reusable items collected during display list preprocessing.
+  nsTHashSet<nsDisplayItem*> mReuseableItems;
 };
 
 class nsDisplayItem;
@@ -2079,6 +2115,11 @@ class nsDisplayItem : public nsDisplayItemLink {
     if (aBuilder->IsForPainting() && aBuilder->IsForContent()) {
       DL_LOGV("Destroying display item %p (%s)", this, Name());
     }
+
+    if (IsReusedItem()) {
+      aBuilder->RemoveReusedDisplayItem(this);
+    }
+
     this->~nsDisplayItem();
     aBuilder->Destroy(type, this);
   }
@@ -2115,6 +2156,12 @@ class nsDisplayItem : public nsDisplayItemLink {
    * be checked when deciding if this display item can be reused.
    */
   virtual nsIFrame* FrameForInvalidation() const { return Frame(); }
+
+  /**
+   * Display items can override this to communicate that they won't
+   * contribute any visual information (for example fully transparent).
+   */
+  virtual bool IsInvisible() const { return false; }
 
   /**
    * Returns the printable name of this display item.
@@ -2756,6 +2803,44 @@ class nsDisplayItem : public nsDisplayItemLink {
 
   virtual const HitTestInfo& GetHitTestInfo() { return HitTestInfo::Empty(); }
 
+  enum class ReuseState : uint8_t {
+    None,
+    // Set during display list building.
+    Reusable,
+    // Set during display list preprocessing.
+    PreProcessed,
+    // Set during partial display list build.
+    Reused,
+  };
+
+  void SetReusable() {
+    MOZ_ASSERT(mReuseState == ReuseState::None ||
+               mReuseState == ReuseState::Reused);
+    mReuseState = ReuseState::Reusable;
+  }
+
+  bool IsReusable() const { return mReuseState == ReuseState::Reusable; }
+
+  void SetPreProcessed() {
+    MOZ_ASSERT(mReuseState == ReuseState::Reusable);
+    mReuseState = ReuseState::PreProcessed;
+  }
+
+  bool IsPreProcessed() const {
+    return mReuseState == ReuseState::PreProcessed;
+  }
+
+  void SetReusedItem() {
+    MOZ_ASSERT(mReuseState == ReuseState::PreProcessed);
+    mReuseState = ReuseState::Reused;
+  }
+
+  bool IsReusedItem() const { return mReuseState == ReuseState::Reused; }
+
+  void ResetReuseState() { mReuseState = ReuseState::None; }
+
+  ReuseState GetReuseState() const { return mReuseState; }
+
   nsIFrame* mFrame;  // 8
 
  private:
@@ -2784,7 +2869,7 @@ class nsDisplayItem : public nsDisplayItemLink {
   DisplayItemType mType = DisplayItemType::TYPE_ZERO;  // 1
   uint8_t mExtraPageForPageNum = 0;                    // 1
   uint16_t mPerFrameIndex = 0;                         // 2
-  // 2 free bytes here
+  ReuseState mReuseState = ReuseState::None;
   OldListIndex mOldListIndex;  // 4
   uintptr_t mOldList = 0;      // 8
 
@@ -2917,8 +3002,8 @@ class nsPaintedDisplayItem : public nsDisplayItem {
  * (HitTest()) internally build a temporary array of all
  * the items while they do the downward traversal, so overall they're still
  * linear time. We have optimized for efficient AppendToTop() of both
- * items and lists, with minimal codesize. AppendToBottom() is efficient too.
- */
+ * items and lists, with minimal codesize.
+ * */
 class nsDisplayList {
  public:
   class Iterator {
@@ -3066,65 +3151,12 @@ class nsDisplayList {
   }
 
   /**
-   * Append a new item to the bottom of the list. The item must be non-null
-   * and not already in a list.
-   */
-  void AppendToBottom(nsDisplayItem* aItem) {
-    if (!aItem) {
-      return;
-    }
-    MOZ_ASSERT(!aItem->mAbove, "Already in a list!");
-    aItem->mAbove = mSentinel.mAbove;
-    mSentinel.mAbove = aItem;
-    if (mTop == &mSentinel) {
-      mTop = aItem;
-    }
-    mLength++;
-  }
-
-  template <typename T, typename F, typename... Args>
-  void AppendNewToBottom(nsDisplayListBuilder* aBuilder, F* aFrame,
-                         Args&&... aArgs) {
-    AppendNewToBottomWithIndex<T>(aBuilder, aFrame, 0,
-                                  std::forward<Args>(aArgs)...);
-  }
-
-  template <typename T, typename F, typename... Args>
-  void AppendNewToBottomWithIndex(nsDisplayListBuilder* aBuilder, F* aFrame,
-                                  const uint16_t aIndex, Args&&... aArgs) {
-    nsDisplayItem* item = MakeDisplayItemWithIndex<T>(
-        aBuilder, aFrame, aIndex, std::forward<Args>(aArgs)...);
-
-    if (item) {
-      AppendToBottom(item);
-    }
-  }
-
-  /**
    * Removes all items from aList and appends them to the top of this list
    */
   void AppendToTop(nsDisplayList* aList) {
     if (aList->mSentinel.mAbove) {
       mTop->mAbove = aList->mSentinel.mAbove;
       mTop = aList->mTop;
-      aList->mTop = &aList->mSentinel;
-      aList->mSentinel.mAbove = nullptr;
-      mLength += aList->mLength;
-      aList->mLength = 0;
-    }
-  }
-
-  /**
-   * Removes all items from aList and prepends them to the bottom of this list
-   */
-  void AppendToBottom(nsDisplayList* aList) {
-    if (aList->mSentinel.mAbove) {
-      aList->mTop->mAbove = mSentinel.mAbove;
-      mSentinel.mAbove = aList->mSentinel.mAbove;
-      if (mTop == &mSentinel) {
-        mTop = aList->mTop;
-      }
-
       aList->mTop = &aList->mSentinel;
       aList->mSentinel.mAbove = nullptr;
       mLength += aList->mLength;
@@ -3484,6 +3516,13 @@ class RetainedDisplayList : public nsDisplayList {
     return *this;
   }
 
+  RetainedDisplayList& operator=(nsDisplayList&& aOther) {
+    MOZ_ASSERT(!Count(), "Can only move into an empty list!");
+    MOZ_ASSERT(mOldItems.IsEmpty(), "Can only move into an empty list!");
+    AppendToTop(&aOther);
+    return *this;
+  }
+
   void DeleteAll(nsDisplayListBuilder* aBuilder) override {
     for (OldItemInfo& i : mOldItems) {
       if (i.mItem && i.mOwnsItem) {
@@ -3682,22 +3721,22 @@ class nsDisplayReflowCount : public nsPaintedDisplayItem {
   nscolor mColor;
 };
 
-#  define DO_GLOBAL_REFLOW_COUNT_DSP(_name)                                   \
-    PR_BEGIN_MACRO                                                            \
-    if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() &&   \
-        PresShell()->IsPaintingFrameCounts()) {                               \
-      aLists.Outlines()->AppendNewToTop<nsDisplayReflowCount>(aBuilder, this, \
-                                                              _name);         \
-    }                                                                         \
+#  define DO_GLOBAL_REFLOW_COUNT_DSP(_name)                                 \
+    PR_BEGIN_MACRO                                                          \
+    if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() && \
+        PresShell()->IsPaintingFrameCounts()) {                             \
+      aLists.Outlines()->AppendNewToTop<mozilla::nsDisplayReflowCount>(     \
+          aBuilder, this, _name);                                           \
+    }                                                                       \
     PR_END_MACRO
 
-#  define DO_GLOBAL_REFLOW_COUNT_DSP_COLOR(_name, _color)                     \
-    PR_BEGIN_MACRO                                                            \
-    if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() &&   \
-        PresShell()->IsPaintingFrameCounts()) {                               \
-      aLists.Outlines()->AppendNewToTop<nsDisplayReflowCount>(aBuilder, this, \
-                                                              _name, _color); \
-    }                                                                         \
+#  define DO_GLOBAL_REFLOW_COUNT_DSP_COLOR(_name, _color)                   \
+    PR_BEGIN_MACRO                                                          \
+    if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() && \
+        PresShell()->IsPaintingFrameCounts()) {                             \
+      aLists.Outlines()->AppendNewToTop<mozilla::nsDisplayReflowCount>(     \
+          aBuilder, this, _name, _color);                                   \
+    }                                                                       \
     PR_END_MACRO
 
 /*
@@ -4055,9 +4094,7 @@ class nsDisplayBackgroundImage : public nsPaintedDisplayItem {
   Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) const override;
 
   bool CanApplyOpacity(WebRenderLayerManager* aManager,
-                       nsDisplayListBuilder* aBuilder) const override {
-    return CanBuildWebRenderDisplayItems(aManager, aBuilder);
-  }
+                       nsDisplayListBuilder* aBuilder) const override;
 
   /**
    * GetBounds() returns the background painting area.
@@ -4099,7 +4136,7 @@ class nsDisplayBackgroundImage : public nsPaintedDisplayItem {
   nsIFrame* GetDependentFrame() override { return mDependentFrame; }
 
   void SetDependentFrame(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {
-    if (!aBuilder->IsRetainingDisplayList()) {
+    if (!aBuilder->IsRetainingDisplayList() || mDependentFrame == aFrame) {
       return;
     }
     mDependentFrame = aFrame;
@@ -4388,7 +4425,7 @@ class nsDisplayBackgroundColor : public nsPaintedDisplayItem {
   nsIFrame* GetDependentFrame() override { return mDependentFrame; }
 
   void SetDependentFrame(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {
-    if (!aBuilder->IsRetainingDisplayList()) {
+    if (!aBuilder->IsRetainingDisplayList() || mDependentFrame == aFrame) {
       return;
     }
     mDependentFrame = aFrame;
@@ -4633,6 +4670,8 @@ class nsDisplayCompositorHitTestInfo final : public nsDisplayItem {
       layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
+  bool isInvisible() const { return true; }
+
   int32_t ZIndex() const override;
   void SetOverrideZIndex(int32_t aZIndex);
 
@@ -4647,6 +4686,8 @@ class nsDisplayCompositorHitTestInfo final : public nsDisplayItem {
   HitTestInfo mHitTestInfo;
   Maybe<int32_t> mOverrideZIndex;
 };
+
+class nsDisplayWrapper;
 
 /**
  * A class that lets you wrap a display list as a display item.
@@ -4722,12 +4763,10 @@ class nsDisplayWrapList : public nsPaintedDisplayItem {
   }
 
   /**
-   * Creates a new nsDisplayWrapList that holds a pointer to the display list
-   * owned by the given nsDisplayItem. The new nsDisplayWrapList will be added
-   * to the bottom of this item's contents.
+   * Creates a new nsDisplayWrapper that holds a pointer to the display list
+   * owned by the given nsDisplayItem.
    */
-  void MergeDisplayListFromItem(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayWrapList* aItem);
+  nsDisplayWrapper* CreateShallowCopy(nsDisplayListBuilder* aBuilder);
 
   /**
    * Call this if the wrapped list is changed.
@@ -6321,6 +6360,12 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
     return mPrerenderDecision == PrerenderDecision::Partial;
   }
 
+  /**
+   * Mark this item as created together with `nsDisplayPerspective`.
+   * \see nsIFrame::BuildDisplayListForStackingContext().
+   */
+  void MarkWithAssociatedPerspective() { mHasAssociatedPerspective = true; }
+
   void AddSizeOfExcludingThis(nsWindowSizes&) const override;
 
   bool CreatesStackingContextHelper() override { return true; }
@@ -6367,6 +6412,9 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
   bool mIsTransformSeparator : 1;
   // True if we have a transform getter.
   bool mHasTransformGetter : 1;
+  // True if this item is created together with `nsDisplayPerspective`
+  // from the same CSS stacking context.
+  bool mHasAssociatedPerspective : 1;
 };
 
 /* A display item that applies a perspective transformation to a single

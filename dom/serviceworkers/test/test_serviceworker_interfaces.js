@@ -40,6 +40,16 @@ var wasmGlobalInterfaces = [
     insecureContext: true,
     nightly: true,
   },
+  {
+    name: "Exception",
+    insecureContext: true,
+    nightly: true,
+  },
+  {
+    name: "Tag",
+    insecureContext: true,
+    nightly: true,
+  },
 ];
 // IMPORTANT: Do not change this list without review from
 //            a JavaScript Engine peer!
@@ -214,7 +224,9 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "MessagePort",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "NetworkInformation", android: true },
+  { name: "NetworkInformation", disabled: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  "NavigationPreloadManager",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "Notification",
   // IMPORTANT: Do not change this list without review from a DOM peer!

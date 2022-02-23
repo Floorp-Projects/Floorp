@@ -1,6 +1,6 @@
-use syn::{self, Field};
+use syn::Field;
 
-use Result;
+use crate::Result;
 
 /// Creates an instance by parsing an individual field and its attributes.
 pub trait FromField: Sized {

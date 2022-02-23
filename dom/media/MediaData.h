@@ -494,7 +494,7 @@ class VideoData : public MediaData {
   // This frame's image.
   RefPtr<Image> mImage;
 
-  int32_t mFrameID;
+  uint32_t mFrameID;
 
   VideoData(int64_t aOffset, const media::TimeUnit& aTime,
             const media::TimeUnit& aDuration, bool aKeyframe,

@@ -64,7 +64,6 @@ function serveChangesEntries(serverTime, entries) {
     const latest = entries[0]?.last_modified ?? 42;
     if (entries.length) {
       response.setHeader("ETag", `"${latest}"`);
-      response.setHeader("Last-Modified", new Date(latest).toGMTString());
     }
     response.write(JSON.stringify({ timestamp: latest, changes: entries }));
   };

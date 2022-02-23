@@ -39,10 +39,10 @@
 //! prototype_ping.submit(None);
 //! ```
 
-use once_cell::sync::OnceCell;
+use once_cell::sync::{Lazy, OnceCell};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 pub use configuration::Configuration;
 use configuration::DEFAULT_GLEAN_ENDPOINT;
@@ -100,6 +100,12 @@ static PRE_INIT_PING_REGISTRATION: OnceCell<Mutex<Vec<private::PingType>>> = Onc
 ///
 /// Requires a Mutex, because in tests we can actual reset this.
 static STATE: OnceCell<Mutex<RustBindingsState>> = OnceCell::new();
+
+/// Global singleton of the handles of the glean.init threads.
+/// For joining. For tests.
+/// (Why a Vec? There might be more than one concurrent call to initialize.)
+static INIT_HANDLES: Lazy<Arc<Mutex<Vec<std::thread::JoinHandle<()>>>>> =
+    Lazy::new(|| Arc::new(Mutex::new(Vec::new())));
 
 /// Get a reference to the global state object.
 ///
@@ -173,16 +179,9 @@ fn launch_with_glean_mut(callback: impl FnOnce(&mut Glean) + Send + 'static) {
 /// * `client_info` - the [`ClientInfoMetrics`] values used to set Glean
 ///   core metrics.
 pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
-    initialize_internal(cfg, client_info);
-}
-
-fn initialize_internal(
-    cfg: Configuration,
-    client_info: ClientInfoMetrics,
-) -> Option<std::thread::JoinHandle<()>> {
     if was_initialize_called() {
         log::error!("Glean should not be initialized multiple times");
-        return None;
+        return;
     }
 
     let init_handle = std::thread::Builder::new()
@@ -351,10 +350,21 @@ fn initialize_internal(
         })
         .expect("Failed to spawn Glean's init thread");
 
+    // For test purposes, store the glean init thread's JoinHandle.
+    INIT_HANDLES.lock().unwrap().push(init_handle);
+
     // Mark the initialization as called: this needs to happen outside of the
     // dispatched block!
     INITIALIZE_CALLED.store(true, Ordering::SeqCst);
-    Some(init_handle)
+}
+
+/// TEST ONLY FUNCTION
+/// Waits on all the glean.init threads' join handles.
+pub fn join_init() {
+    let mut handles = INIT_HANDLES.lock().unwrap();
+    for handle in handles.drain(..) {
+        handle.join().unwrap();
+    }
 }
 
 /// Shuts down Glean in an orderly fashion.
@@ -668,6 +678,9 @@ pub fn test_get_experiment_data(experiment_id: String) -> RecordedExperimentData
 pub(crate) fn destroy_glean(clear_stores: bool) {
     // Destroy the existing glean instance from glean-core.
     if was_initialize_called() {
+        // Just because initialize was called doesn't mean it's done.
+        join_init();
+
         // Reset the dispatcher first (it might still run tasks against the database)
         dispatcher::reset_dispatcher();
 
@@ -709,9 +722,8 @@ pub(crate) fn destroy_glean(clear_stores: bool) {
 pub fn test_reset_glean(cfg: Configuration, client_info: ClientInfoMetrics, clear_stores: bool) {
     destroy_glean(clear_stores);
 
-    if let Some(handle) = initialize_internal(cfg, client_info) {
-        handle.join().unwrap();
-    }
+    initialize(cfg, client_info);
+    join_init();
 }
 
 /// Sets a debug view tag.

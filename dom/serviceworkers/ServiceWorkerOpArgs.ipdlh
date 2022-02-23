@@ -10,7 +10,7 @@ include FetchTypes;
 include "mozilla/dom/ServiceWorkerIPCUtils.h";
 
 using ServiceWorkerState from "mozilla/dom/ServiceWorkerBinding.h";
-using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using mozilla::TimeStamp from "mozilla/TimeStamp.h";
 
 namespace mozilla {
 namespace dom {

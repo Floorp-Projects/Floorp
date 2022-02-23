@@ -142,4 +142,3 @@ Storage Inspector
 - Right-click the column headers to open a menu allowing to toggle the display of the columns.
 - Right-click an entry and click "Delete *name*" to delete it or "Delete All" to delete all entries.
 - Select an entry to see the parsed value of it in the sidebar.
-

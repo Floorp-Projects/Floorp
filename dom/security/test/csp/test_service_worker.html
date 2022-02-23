@@ -17,14 +17,10 @@
  */
 SimpleTest.waitForExplicitFinish();
 
-const BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN = 5;
-var cookieBehavior = SpecialPowers.getIntPref("network.cookie.cookieBehavior");
 var tests = [
   {
     policy: "default-src 'self'; script-src 'unsafe-inline'; child-src test1.example.com;",
-    expected: cookieBehavior == BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
-              ? "blocked,blocked"
-              : "blocked"
+    expected: "blocked"
   },
 ];
 
@@ -42,7 +38,8 @@ onload = function() {
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
-    ["dom.caches.enabled", true]
+    ["dom.caches.enabled", true],
+    ["privacy.partition.serviceWorkers", true],
   ]}, loadNextTest);
 }
 
