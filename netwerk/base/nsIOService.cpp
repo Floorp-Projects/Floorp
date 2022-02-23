@@ -643,9 +643,7 @@ void nsIOService::NotifySocketProcessPrefsChanged(const char* aName) {
     return;
   }
 
-  dom::Pref pref(nsCString(aName), /* isLocked */ false,
-                 ShouldSanitizePreference(aName, false), Nothing(), Nothing());
-
+  dom::Pref pref(nsCString(aName), /* isLocked */ false, Nothing(), Nothing());
   Preferences::GetPreference(&pref);
   auto sendPrefUpdate = [pref]() {
     Unused << gIOService->mSocketProcess->GetActor()->SendPreferenceUpdate(

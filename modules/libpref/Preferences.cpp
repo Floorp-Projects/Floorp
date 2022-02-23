@@ -445,7 +445,6 @@ class Pref {
         mType(static_cast<uint32_t>(PrefType::None)),
         mIsSticky(false),
         mIsLocked(false),
-        mIsSanitized(false),
         mHasDefaultValue(false),
         mHasUserValue(false),
         mIsSkippedByIteration(false),
@@ -483,8 +482,6 @@ class Pref {
 
   bool IsSticky() const { return mIsSticky; }
 
-  bool IsSanitized() const { return mIsSanitized; }
-
   bool HasDefaultValue() const { return mHasDefaultValue; }
   bool HasUserValue() const { return mHasUserValue; }
 
@@ -516,13 +513,6 @@ class Pref {
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
 
-    if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
-      MOZ_CRASH_UNSAFE_PRINTF(
-          "Should not access the preference '%s' in the Content Processes",
-          Name());
-    }
-
     return aKind == PrefValueKind::Default ? mDefaultValue.mBoolVal
                                            : mUserValue.mBoolVal;
   }
@@ -531,13 +521,6 @@ class Pref {
     MOZ_ASSERT(IsTypeInt());
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
-
-    if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
-      MOZ_CRASH_UNSAFE_PRINTF(
-          "Should not access the preference '%s' in the Content Processes",
-          Name());
-    }
 
     return aKind == PrefValueKind::Default ? mDefaultValue.mIntVal
                                            : mUserValue.mIntVal;
@@ -548,13 +531,6 @@ class Pref {
     MOZ_ASSERT(IsTypeString());
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
-
-    if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
-      MOZ_CRASH_UNSAFE_PRINTF(
-          "Should not access the preference '%s' in the Content Processes",
-          Name());
-    }
 
     return aKind == PrefValueKind::Default ? mDefaultValue.mStringVal
                                            : mUserValue.mStringVal;
@@ -572,8 +548,6 @@ class Pref {
 
     aDomPref->isLocked() = mIsLocked;
 
-    aDomPref->isSanitized() = mIsSanitized;
-
     if (mHasDefaultValue) {
       aDomPref->defaultValue() = Some(dom::PrefValue());
       mDefaultValue.ToDomPrefValue(Type(), &aDomPref->defaultValue().ref());
@@ -581,7 +555,7 @@ class Pref {
       aDomPref->defaultValue() = Nothing();
     }
 
-    if (mHasUserValue && !mIsSanitized && !sOmitBlocklistedPrefValues) {
+    if (mHasUserValue) {
       aDomPref->userValue() = Some(dom::PrefValue());
       mUserValue.ToDomPrefValue(Type(), &aDomPref->userValue().ref());
     } else {
@@ -590,7 +564,6 @@ class Pref {
 
     MOZ_ASSERT(aDomPref->defaultValue().isNothing() ||
                aDomPref->userValue().isNothing() ||
-               (mIsSanitized && sOmitBlocklistedPrefValues) ||
                (aDomPref->defaultValue().ref().type() ==
                 aDomPref->userValue().ref().type()));
   }
@@ -600,7 +573,6 @@ class Pref {
     MOZ_ASSERT(mName == aDomPref.name());
 
     mIsLocked = aDomPref.isLocked();
-    mIsSanitized = aDomPref.isSanitized();
 
     const Maybe<dom::PrefValue>& defaultValue = aDomPref.defaultValue();
     bool defaultValueChanged = false;
@@ -746,10 +718,12 @@ class Pref {
   //
   // The grammar for the serialized prefs has the following form.
   //
-  // <pref>         = <type> <locked> ':' <sanitized> ':' <name> ':' <value>?
-  // ':' <value>? '\n' <type>         = 'B' | 'I' | 'S' <locked>       = 'L' |
-  // '-' <sanitized>    = 'S' | '-' <name>         = <string-value> <value> =
-  // <bool-value> | <int-value> | <string-value> <bool-value>   = 'T' | 'F'
+  // <pref>         = <type> <locked> ':' <name> ':' <value>? ':' <value>? '\n'
+  // <type>         = 'B' | 'I' | 'S'
+  // <locked>       = 'L' | '-'
+  // <name>         = <string-value>
+  // <value>        = <bool-value> | <int-value> | <string-value>
+  // <bool-value>   = 'T' | 'F'
   // <int-value>    = an integer literal accepted by strtol()
   // <string-value> = <int-value> '/' <chars>
   // <chars>        = any char sequence of length dictated by the preceding
@@ -773,21 +747,21 @@ class Pref {
   //   print it and inspect it easily in a debugger.
   //
   // Examples of unlocked boolean prefs:
-  // - "B-:-:8/my.bool1:F:T\n"
-  // - "B-:-:8/my.bool2:F:\n"
-  // - "B-:-:8/my.bool3::T\n"
+  // - "B-:8/my.bool1:F:T\n"
+  // - "B-:8/my.bool2:F:\n"
+  // - "B-:8/my.bool3::T\n"
   //
   // Examples of locked integer prefs:
-  // - "IL:-:7/my.int1:0:1\n"
-  // - "IL:-:7/my.int2:123:\n"
-  // - "IL:-:7/my.int3::-99\n"
+  // - "IL:7/my.int1:0:1\n"
+  // - "IL:7/my.int2:123:\n"
+  // - "IL:7/my.int3::-99\n"
   //
   // Examples of unlocked string prefs:
-  // - "S-:-:10/my.string1:3/abc:4/wxyz\n"
-  // - "S-:-:10/my.string2:5/1.234:\n"
-  // - "S-:-:10/my.string3::7/string!\n"
+  // - "S-:10/my.string1:3/abc:4/wxyz\n"
+  // - "S-:10/my.string2:5/1.234:\n"
+  // - "S-:10/my.string3::7/string!\n"
 
-  void SerializeAndAppend(nsCString& aStr, bool aSanitizeUserValue) {
+  void SerializeAndAppend(nsCString& aStr) {
     switch (Type()) {
       case PrefType::Bool:
         aStr.Append('B');
@@ -808,7 +782,6 @@ class Pref {
     }
 
     aStr.Append(mIsLocked ? 'L' : '-');
-    aStr.Append(aSanitizeUserValue ? 'S' : '-');
     aStr.Append(':');
 
     SerializeAndAppendString(mName, aStr);
@@ -819,7 +792,7 @@ class Pref {
     }
     aStr.Append(':');
 
-    if (mHasUserValue && !aSanitizeUserValue) {
+    if (mHasUserValue) {
       mUserValue.SerializeAndAppend(Type(), aStr);
     }
     aStr.Append('\n');
@@ -854,18 +827,6 @@ class Pref {
     }
     p++;  // move past the isLocked char
 
-    // Sanitize?
-    bool isSanitized;
-    if (*p == 'S') {
-      isSanitized = true;
-    } else if (*p == '-') {
-      isSanitized = false;
-    } else {
-      NS_ERROR("bad pref sanitized status");
-      isSanitized = false;
-    }
-    p++;  // move past the isSanitized char
-
     MOZ_ASSERT(*p == ':');
     p++;  // move past the ':'
 
@@ -894,8 +855,7 @@ class Pref {
     MOZ_ASSERT(*p == '\n');
     p++;  // move past the '\n' following the user value
 
-    *aDomPref = dom::Pref(name, isLocked, isSanitized, maybeDefaultValue,
-                          maybeUserValue);
+    *aDomPref = dom::Pref(name, isLocked, maybeDefaultValue, maybeUserValue);
 
     return p;
   }
@@ -919,7 +879,6 @@ class Pref {
   uint32_t mType : 2;
   uint32_t mIsSticky : 1;
   uint32_t mIsLocked : 1;
-  uint32_t mIsSanitized : 1;
   uint32_t mHasDefaultValue : 1;
   uint32_t mHasUserValue : 1;
   uint32_t mIsSkippedByIteration : 1;
@@ -971,7 +930,6 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
   }
 
   FORWARD(bool, IsLocked)
-  FORWARD(bool, IsSanitized)
   FORWARD(bool, IsSticky)
   FORWARD(bool, HasDefaultValue)
   FORWARD(bool, HasUserValue)
@@ -1126,7 +1084,6 @@ void Pref::FromWrapper(PrefWrapper& aWrapper) {
   mType = uint32_t(pref.Type());
 
   mIsLocked = pref.IsLocked();
-  mIsSanitized = pref.IsSanitized();
   mIsSticky = pref.IsSticky();
 
   mHasDefaultValue = pref.HasDefaultValue();
@@ -2565,16 +2522,6 @@ nsPrefBranch::PrefIsLocked(const char* aPrefName, bool* aRetVal) {
 }
 
 NS_IMETHODIMP
-nsPrefBranch::PrefIsSanitized(const char* aPrefName, bool* aRetVal) {
-  NS_ENSURE_ARG_POINTER(aRetVal);
-  NS_ENSURE_ARG(aPrefName);
-
-  const PrefName& pref = GetPrefName(aPrefName);
-  *aRetVal = Preferences::IsSanitized(pref.get());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPrefBranch::UnlockPref(const char* aPrefName) {
   NS_ENSURE_ARG(aPrefName);
 
@@ -3601,16 +3548,16 @@ NS_IMPL_ISUPPORTS(Preferences, nsIPrefService, nsIObserver, nsIPrefBranch,
 /* static */
 void Preferences::SerializePreferences(
     nsCString& aStr,
-    const std::function<bool(const char*, bool)>& aShouldSanitizeFn) {
+    const std::function<bool(const char*)>& aShouldSerializeFn) {
   MOZ_RELEASE_ASSERT(InitStaticMembers());
 
   aStr.Truncate();
 
   for (auto iter = HashTable()->iter(); !iter.done(); iter.next()) {
     Pref* pref = iter.get().get();
-    if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues()) {
-      pref->SerializeAndAppend(
-          aStr, aShouldSanitizeFn(pref->Name(), XRE_IsContentProcess()));
+    if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues() &&
+        aShouldSerializeFn(pref->Name())) {
+      pref->SerializeAndAppend(aStr);
     }
   }
 
@@ -5035,14 +4982,6 @@ bool Preferences::IsLocked(const char* aPrefName) {
 }
 
 /* static */
-bool Preferences::IsSanitized(const char* aPrefName) {
-  NS_ENSURE_TRUE(InitStaticMembers(), false);
-
-  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
-  return pref.isSome() && pref->IsSanitized();
-}
-
-/* static */
 nsresult Preferences::ClearUser(const char* aPrefName) {
   ENSURE_PARENT_PROCESS("ClearUser", aPrefName);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
@@ -5692,64 +5631,6 @@ NS_IMPL_COMPONENT_FACTORY(nsPrefLocalizedString) {
 namespace mozilla {
 
 void UnloadPrefsModule() { Preferences::Shutdown(); }
-
-bool ShouldSanitizePreference(const char* aPref,
-                              bool aIsContentProcess /* = true */) {
-#define PREF_LIST_ENTRY(s) \
-  { s, (sizeof(s) / sizeof(char)) - 1 }
-  struct PrefListEntry {
-    const char* mPrefBranch;
-    size_t mLen;
-  };
-
-  if (!aIsContentProcess) {
-    return false;
-  }
-
-  // These prefs are not useful in child processes.
-  static const PrefListEntry sParentOnlyPrefBranchList[] = {
-      PREF_LIST_ENTRY("app.update.lastUpdateTime."),
-      PREF_LIST_ENTRY("datareporting.policy."),
-      PREF_LIST_ENTRY("browser.safebrowsing.provider."),
-      PREF_LIST_ENTRY("browser.shell."),
-      PREF_LIST_ENTRY("browser.slowStartup."),
-      // PREF_LIST_ENTRY("browser.startup."),
-      PREF_LIST_ENTRY("extensions.getAddons.cache."),
-      PREF_LIST_ENTRY("media.gmp-manager."),
-      PREF_LIST_ENTRY("media.gmp-gmpopenh264."),
-      PREF_LIST_ENTRY("privacy.sanitize."),
-  };
-
-  static const PrefListEntry sDynamicPrefOverrideList[]{
-      PREF_LIST_ENTRY("print.printer_")};
-
-#undef PREF_LIST_ENTRY
-
-  // In the parent process, we use a heuristic to decide if a pref
-  // value should be sanitized before sending to subprocesses.
-  if (XRE_IsParentProcess()) {
-    if (Preferences::GetType(aPref) == nsIPrefBranch::PREF_STRING &&
-        !Preferences::HasDefaultValue(aPref)) {
-      for (const auto& entry : sDynamicPrefOverrideList) {
-        if (strncmp(entry.mPrefBranch, aPref, entry.mLen) == 0) {
-          return false;
-        }
-      }
-      return true;
-    }
-
-    for (const auto& entry : sParentOnlyPrefBranchList) {
-      if (strncmp(entry.mPrefBranch, aPref, entry.mLen) == 0) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  // In subprocesses we only check the sanitized bit
-  return Preferences::IsSanitized(aPref);
-}
 
 }  // namespace mozilla
 

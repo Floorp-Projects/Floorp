@@ -64,7 +64,8 @@ bool SocketProcessHost::Launch() {
   std::vector<std::string> extraArgs;
   ProcessChild::AddPlatformBuildID(extraArgs);
 
-  SharedPreferenceSerializer prefSerializer(ShouldSanitizePreference);
+  SharedPreferenceSerializer prefSerializer(
+      mozilla::dom::ContentParent::ShouldSyncPreference);
   if (!prefSerializer.SerializeToSharedMemory()) {
     return false;
   }
