@@ -6,7 +6,12 @@
 
 "use strict";
 
-var { ExtensionError } = ExtensionUtils;
+var { ExtensionError, getUniqueId, parseMatchPatterns } = ExtensionUtils;
+
+// Map<Extension, Map<string, number>> - For each extension, we keep a map
+// where the key is a user-provided script ID, the value is an internal
+// generated integer.
+const gScriptIdsMap = new Map();
 
 /**
  * Inserts a script or style in the given tab, and returns a promise which
@@ -105,8 +110,56 @@ const execute = (context, details, kind, method) => {
   return tab.queryContent("Execute", options);
 };
 
+const makeInternalContentScript = details => {
+  return {
+    scriptId: getUniqueId(),
+    options: {
+      allFrames: details.allFrames || false,
+      // TODO: Bug 1755976 - Add support for `details.css`.
+      cssPaths: [],
+      excludeMatches: details.excludeMatches,
+      jsPaths: details.js || [],
+      matchAboutBlank: true,
+      matches: details.matches,
+      originAttributesPatterns: null,
+      // TODO: Bug 1755978 - Add support for `details.runAt`.
+      runAt: "document_idle",
+    },
+  };
+};
+
 this.scripting = class extends ExtensionAPI {
+  constructor(extension) {
+    super(extension);
+
+    gScriptIdsMap.set(extension, new Map());
+  }
+
+  onShutdown() {
+    // When the extension is unloaded, the following happens:
+    //
+    // 1. The shared memory is cleared in the parent, see [1]
+    // 2. The policy is marked as invalid, see [2]
+    //
+    // The following are not explicitly cleaned up:
+    //
+    // - `extension.registeredContentScripts
+    // - `ExtensionProcessScript.registeredContentScripts` +
+    //   `policy.contentScripts` (via `policy.unregisterContentScripts`)
+    //
+    // This means the script won't run again, but there is still potential for
+    // memory leaks if there is a reference to `extension` or `policy`
+    // somewhere.
+    //
+    // [1]: https://searchfox.org/mozilla-central/rev/211649f071259c4c733b4cafa94c44481c5caacc/toolkit/components/extensions/Extension.jsm#2974-2976
+    // [2]: https://searchfox.org/mozilla-central/rev/211649f071259c4c733b4cafa94c44481c5caacc/toolkit/components/extensions/ExtensionProcessScript.jsm#239
+
+    gScriptIdsMap.delete(this.extension);
+  }
+
   getAPI(context) {
+    const { extension } = context;
+
     return {
       scripting: {
         executeScriptInternal: async details => {
@@ -119,6 +172,66 @@ this.scripting = class extends ExtensionAPI {
 
         removeCSS: async details => {
           return execute(context, details, "css", "removeCSS").then(() => {});
+        },
+
+        registerContentScripts: async scripts => {
+          // Map<string, number>
+          const scriptIdsMap = gScriptIdsMap.get(extension);
+          // Map<string, { scriptId: number, options: Object }>
+          const scriptsToRegister = new Map();
+
+          for (const script of scripts) {
+            if (!script.id.length || script.id.startsWith("_")) {
+              throw new ExtensionError("Invalid content script id.");
+            }
+
+            if (scriptIdsMap.has(script.id)) {
+              throw new ExtensionError(
+                `Content script with id "${script.id}" is already registered.`
+              );
+            }
+
+            if (scriptsToRegister.has(script.id)) {
+              throw new ExtensionError(
+                `Attempt to register content script with id "${script.id}" more than once.`
+              );
+            }
+
+            if (!script.js?.length) {
+              throw new ExtensionError("js must be specified.");
+            }
+
+            if (!script.matches?.length) {
+              throw new ExtensionError("matches must be specified.");
+            }
+
+            // This will throw if a match pattern is invalid.
+            parseMatchPatterns(script.matches);
+
+            if (script.excludeMatches) {
+              // This will throw if a match pattern is invalid.
+              parseMatchPatterns(script.excludeMatches);
+            }
+
+            scriptsToRegister.set(script.id, makeInternalContentScript(script));
+          }
+
+          for (const [id, { scriptId }] of scriptsToRegister.entries()) {
+            scriptIdsMap.set(id, scriptId);
+          }
+
+          await extension.broadcast("Extension:RegisterContentScripts", {
+            id: extension.id,
+            scripts: Array.from(scriptsToRegister.values()),
+          });
+
+          for (const { scriptId, options } of scriptsToRegister.values()) {
+            extension.registeredContentScripts.set(scriptId, options);
+          }
+
+          // TODO: Bug 1756495 - Registration may be incomplete when a new
+          // process spawns during the registration.
+          extension.updateContentScripts();
         },
       },
     };
