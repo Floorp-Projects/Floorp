@@ -516,6 +516,13 @@ class Pref {
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
 
+    if (!XRE_IsParentProcess() &&
+        ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
+      MOZ_CRASH_UNSAFE_PRINTF(
+          "Should not access the preference '%s' in the Content Processes",
+          Name());
+    }
+
     return aKind == PrefValueKind::Default ? mDefaultValue.mBoolVal
                                            : mUserValue.mBoolVal;
   }
@@ -524,6 +531,13 @@ class Pref {
     MOZ_ASSERT(IsTypeInt());
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
+
+    if (!XRE_IsParentProcess() &&
+        ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
+      MOZ_CRASH_UNSAFE_PRINTF(
+          "Should not access the preference '%s' in the Content Processes",
+          Name());
+    }
 
     return aKind == PrefValueKind::Default ? mDefaultValue.mIntVal
                                            : mUserValue.mIntVal;
@@ -534,6 +548,13 @@ class Pref {
     MOZ_ASSERT(IsTypeString());
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
+
+    if (!XRE_IsParentProcess() &&
+        ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
+      MOZ_CRASH_UNSAFE_PRINTF(
+          "Should not access the preference '%s' in the Content Processes",
+          Name());
+    }
 
     return aKind == PrefValueKind::Default ? mDefaultValue.mStringVal
                                            : mUserValue.mStringVal;
