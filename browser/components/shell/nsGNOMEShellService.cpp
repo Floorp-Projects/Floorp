@@ -26,9 +26,7 @@
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/WidgetUtilsGtk.h"
 #include "mozilla/dom/Element.h"
-#if defined(MOZ_WIDGET_GTK)
-#  include "nsImageToPixbuf.h"
-#endif
+#include "nsImageToPixbuf.h"
 #include "nsXULAppAPI.h"
 #include "gfxPlatform.h"
 
@@ -359,9 +357,6 @@ nsGNOMEShellService::GetCanSetDesktopBackground(bool* aResult) {
 }
 
 static nsresult WriteImage(const nsCString& aPath, imgIContainer* aImage) {
-#if !defined(MOZ_WIDGET_GTK)
-  return NS_ERROR_NOT_AVAILABLE;
-#else
   GdkPixbuf* pixbuf = nsImageToPixbuf::ImageToPixbuf(aImage);
   if (!pixbuf) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -371,7 +366,6 @@ static nsresult WriteImage(const nsCString& aPath, imgIContainer* aImage) {
 
   g_object_unref(pixbuf);
   return res ? NS_OK : NS_ERROR_FAILURE;
-#endif
 }
 
 NS_IMETHODIMP
