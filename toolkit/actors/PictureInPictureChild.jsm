@@ -73,6 +73,8 @@ const TOGGLE_VISIBILITY_THRESHOLD_PREF =
 
 const MOUSEMOVE_PROCESSING_DELAY_MS = 50;
 const TOGGLE_HIDING_TIMEOUT_MS = 2000;
+// If you change this, also change VideoControlsWidget.SEEK_TIME_SECS:
+const SEEK_TIME_SECS = 5;
 
 // The ToggleChild does not want to capture events from the PiP
 // windows themselves. This set contains all currently open PiP
@@ -1995,7 +1997,7 @@ class PictureInPictureChild extends JSWindowActorChild {
           }
           this.videoWrapper.setMuted(video, false);
           break;
-        case "leftArrow": /* Seek back 15 seconds */
+        case "leftArrow": /* Seek back 5 seconds */
         case "accel-leftArrow" /* Seek back 10% */:
           if (isVideoStreaming || !this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
             return;
@@ -2003,13 +2005,13 @@ class PictureInPictureChild extends JSWindowActorChild {
 
           oldval = this.videoWrapper.getCurrentTime(video);
           if (keystroke == "leftArrow") {
-            newval = oldval - 15;
+            newval = oldval - SEEK_TIME_SECS;
           } else {
             newval = oldval - this.videoWrapper.getDuration(video) / 10;
           }
           this.videoWrapper.setCurrentTime(video, newval >= 0 ? newval : 0);
           break;
-        case "rightArrow": /* Seek forward 15 seconds */
+        case "rightArrow": /* Seek forward 5 seconds */
         case "accel-rightArrow" /* Seek forward 10% */:
           if (isVideoStreaming || !this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
             return;
@@ -2018,7 +2020,7 @@ class PictureInPictureChild extends JSWindowActorChild {
           oldval = this.videoWrapper.getCurrentTime(video);
           var maxtime = this.videoWrapper.getDuration(video);
           if (keystroke == "rightArrow") {
-            newval = oldval + 15;
+            newval = oldval + SEEK_TIME_SECS;
           } else {
             newval = oldval + maxtime / 10;
           }
