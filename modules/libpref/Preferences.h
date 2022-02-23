@@ -532,7 +532,7 @@ class Preferences final : public nsIPrefService,
   static bool InitStaticMembers();
 };
 
-bool ShouldSyncPreference(const char* aPref, bool aIsContentProcess = true);
+bool ShouldSanitizePreference(const char* aPref, bool aIsContentProcess = true);
 
 }  // namespace mozilla
 

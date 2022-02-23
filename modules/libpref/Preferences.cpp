@@ -3579,7 +3579,7 @@ NS_IMPL_ISUPPORTS(Preferences, nsIPrefService, nsIObserver, nsIPrefBranch,
 /* static */
 void Preferences::SerializePreferences(
     nsCString& aStr,
-    const std::function<bool(const char*, bool)>& aShouldSerializeFn) {
+    const std::function<bool(const char*, bool)>& aShouldSanitizeFn) {
   MOZ_RELEASE_ASSERT(InitStaticMembers());
 
   aStr.Truncate();
@@ -3588,7 +3588,7 @@ void Preferences::SerializePreferences(
     Pref* pref = iter.get().get();
     if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues()) {
       pref->SerializeAndAppend(
-          aStr, !aShouldSerializeFn(pref->Name(), XRE_IsContentProcess()));
+          aStr, aShouldSanitizeFn(pref->Name(), XRE_IsContentProcess()));
     }
   }
 
@@ -5671,8 +5671,8 @@ namespace mozilla {
 
 void UnloadPrefsModule() { Preferences::Shutdown(); }
 
-bool ShouldSyncPreference(const char* aPref,
-                          bool aIsContentProcess /* = true */) {
+bool ShouldSanitizePreference(const char* aPref,
+                              bool aIsContentProcess /* = true */) {
 #define PREF_LIST_ENTRY(s) \
   { s, (sizeof(s) / sizeof(char)) - 1 }
   struct PrefListEntry {
@@ -5697,11 +5697,11 @@ bool ShouldSyncPreference(const char* aPref,
 
   for (const auto& entry : sParentOnlyPrefBranchList) {
     if (strncmp(entry.mPrefBranch, aPref, entry.mLen) == 0) {
-      return false;
+      return true;
     }
   }
 
-  return true;
+  return false;
 }
 
 }  // namespace mozilla
