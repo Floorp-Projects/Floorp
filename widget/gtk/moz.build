@@ -108,7 +108,7 @@ if CONFIG["MOZ_WAYLAND"]:
         "/media/mozva",
     ]
     USE_LIBS += [
-      "mozva",
+        "mozva",
     ]
 
 if CONFIG["MOZ_X11"]:
