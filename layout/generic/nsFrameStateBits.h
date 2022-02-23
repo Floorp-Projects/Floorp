@@ -540,7 +540,7 @@ FRAME_STATE_BIT(Block, 21, NS_BLOCK_HAS_PUSHED_FLOATS)
 // nsBlockReflowContext::ComputeCollapsedBStartMargin() via
 // nsBlockFrame::IsMarginRoot().
 //
-// This causes the BlockReflowInput's constructor to set the
+// This causes the BlockReflowState's constructor to set the
 // mIsBStartMarginRoot and mIsBEndMarginRoot flags.
 FRAME_STATE_BIT(Block, 22, NS_BLOCK_MARGIN_ROOT)
 
