@@ -95,7 +95,7 @@
 //! improved as a follow up).
 
 use api::{MixBlendMode, PremultipliedColorF, FilterPrimitiveKind};
-use api::{PropertyBinding, PropertyBindingId, FilterPrimitive};
+use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, RasterSpace};
 use api::{DebugFlags, ImageKey, ColorF, ColorU, PrimitiveFlags};
 use api::{ImageRendering, ColorDepth, YuvRangedColorSpace, YuvFormat, AlphaType};
 use api::units::*;
@@ -129,6 +129,7 @@ use crate::renderer::BlendMode;
 use crate::resource_cache::{ResourceCache, ImageGeneration, ImageRequest};
 use crate::space::SpaceMapper;
 use crate::scene::SceneProperties;
+use crate::spatial_tree::CoordinateSystemId;
 use smallvec::SmallVec;
 use std::{mem, u8, marker, u32};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -297,25 +298,6 @@ fn clamp(value: i32, low: i32, high: i32) -> i32 {
 
 fn clampf(value: f32, low: f32, high: f32) -> f32 {
     value.max(low).min(high)
-}
-
-/// Clamps the blur radius depending on scale factors.
-fn clamp_blur_radius(blur_radius: f32, scale_factors: (f32, f32)) -> f32 {
-    // Clamping must occur after scale factors are applied, but scale factors are not applied
-    // until later on. To clamp the blur radius, we first apply the scale factors and then clamp
-    // and finally revert the scale factors.
-
-    // TODO: the clamping should be done on a per-axis basis, but WR currently only supports
-    // having a single value for both x and y blur.
-    let largest_scale_factor = f32::max(scale_factors.0, scale_factors.1);
-    let scaled_blur_radius = blur_radius * largest_scale_factor;
-
-    if scaled_blur_radius > MAX_BLUR_RADIUS {
-        MAX_BLUR_RADIUS / largest_scale_factor
-    } else {
-        // Return the original blur radius to avoid any rounding errors
-        blur_radius
-    }
 }
 
 /// An index into the prims array in a TileDescriptor.
@@ -3706,8 +3688,10 @@ pub struct SurfaceInfo {
     pub render_tasks: Option<SurfaceRenderTasks>,
     /// The device pixel ratio specific to this surface.
     pub device_pixel_scale: DevicePixelScale,
-    /// The scale factors of the surface to raster transform.
-    pub parent_scale_factors: (f32, f32),
+    /// The scale factors of the surface to world transform.
+    pub world_scale_factors: (f32, f32),
+    /// Local scale factors surface to raster transform
+    pub local_scale: (f32, f32),
 }
 
 impl SurfaceInfo {
@@ -3717,7 +3701,8 @@ impl SurfaceInfo {
         world_rect: WorldRect,
         spatial_tree: &SpatialTree,
         device_pixel_scale: DevicePixelScale,
-        parent_scale_factors: (f32, f32),
+        world_scale_factors: (f32, f32),
+        local_scale: (f32, f32),
     ) -> Self {
         let map_surface_to_world = SpaceMapper::new_with_target(
             spatial_tree.root_reference_frame_index(),
@@ -3744,8 +3729,66 @@ impl SurfaceInfo {
             raster_spatial_node_index,
             surface_spatial_node_index,
             device_pixel_scale,
-            parent_scale_factors,
+            world_scale_factors,
+            local_scale,
         }
+    }
+
+    /// Clamps the blur radius depending on scale factors.
+    pub fn clamp_blur_radius(
+        &self,
+        x_blur_radius: f32,
+        y_blur_radius: f32,
+    ) -> (f32, f32) {
+        // Clamping must occur after scale factors are applied, but scale factors are not applied
+        // until later on. To clamp the blur radius, we first apply the scale factors and then clamp
+        // and finally revert the scale factors.
+
+        let sx_blur_radius = x_blur_radius * self.local_scale.0;
+        let sy_blur_radius = y_blur_radius * self.local_scale.1;
+
+        let largest_scaled_blur_radius = f32::max(
+            sx_blur_radius * self.world_scale_factors.0,
+            sy_blur_radius * self.world_scale_factors.1,
+        );
+
+        if largest_scaled_blur_radius > MAX_BLUR_RADIUS {
+            let sf = MAX_BLUR_RADIUS / largest_scaled_blur_radius;
+            (x_blur_radius * sf, y_blur_radius * sf)
+        } else {
+            // Return the original blur radius to avoid any rounding errors
+            (x_blur_radius, y_blur_radius)
+        }
+    }
+
+    /// Clip and transform a local rect to a device rect suitable for allocating
+    /// a child off-screen surface of this surface (e.g. for clip-masks)
+    pub fn get_surface_rect(
+        &self,
+        local_rect: &PictureRect,
+        spatial_tree: &SpatialTree,
+    ) -> Option<DeviceRect> {
+        let local_rect = match local_rect.intersection(&self.clipping_rect) {
+            Some(rect) => rect,
+            None => return None,
+        };
+
+        let raster_rect = if self.raster_spatial_node_index != self.surface_spatial_node_index {
+            assert_eq!(self.device_pixel_scale.0, 1.0);
+
+            let local_to_world = SpaceMapper::new_with_target(
+                spatial_tree.root_reference_frame_index(),
+                self.surface_spatial_node_index,
+                WorldRect::max_rect(),
+                spatial_tree,
+            );
+
+            local_to_world.map(&local_rect).unwrap()
+        } else {
+            local_rect.cast_unit()
+        };
+
+        Some((raster_rect * self.device_pixel_scale).round_out())
     }
 }
 
@@ -3823,10 +3866,12 @@ impl PictureCompositeMode {
         match self {
             PictureCompositeMode::Filter(Filter::Blur { width, height, should_inflate }) => {
                 if *should_inflate {
-                    let width_factor = clamp_blur_radius(*width, surface.parent_scale_factors).ceil() * BLUR_SAMPLE_SCALE;
-                    let height_factor = clamp_blur_radius(*height, surface.parent_scale_factors).ceil() * BLUR_SAMPLE_SCALE;
+                    let (width_factor, height_factor) = surface.clamp_blur_radius(*width, *height);
 
-                    surface_rect.inflate(width_factor, height_factor)
+                    surface_rect.inflate(
+                        width_factor.ceil() * BLUR_SAMPLE_SCALE,
+                        height_factor.ceil() * BLUR_SAMPLE_SCALE,
+                    )
                 } else {
                     surface_rect
                 }
@@ -3837,13 +3882,14 @@ impl PictureCompositeMode {
                     max_blur_radius = f32::max(max_blur_radius, shadow.blur_radius);
                 }
 
-                let max_blur_radius = clamp_blur_radius(
+                let (max_blur_radius_x, max_blur_radius_y) = surface.clamp_blur_radius(
                     max_blur_radius,
-                    surface.parent_scale_factors
-                ).ceil();
-                let blur_inflation = max_blur_radius * BLUR_SAMPLE_SCALE;
+                    max_blur_radius,
+                );
+                let blur_inflation_x = max_blur_radius_x.ceil() * BLUR_SAMPLE_SCALE;
+                let blur_inflation_y = max_blur_radius_y.ceil() * BLUR_SAMPLE_SCALE;
 
-                surface_rect.inflate(blur_inflation, blur_inflation)
+                surface_rect.inflate(blur_inflation_x, blur_inflation_y)
             }
             PictureCompositeMode::SvgFilter(primitives, _) => {
                 let mut result_rect = surface_rect;
@@ -3910,10 +3956,12 @@ impl PictureCompositeMode {
         match self {
             PictureCompositeMode::Filter(Filter::Blur { width, height, should_inflate }) => {
                 if *should_inflate {
-                    let width_factor = clamp_blur_radius(*width, surface.parent_scale_factors).ceil() * BLUR_SAMPLE_SCALE;
-                    let height_factor = clamp_blur_radius(*height, surface.parent_scale_factors).ceil() * BLUR_SAMPLE_SCALE;
+                    let (width_factor, height_factor) = surface.clamp_blur_radius(*width, *height);
 
-                    surface_rect.inflate(width_factor, height_factor)
+                    surface_rect.inflate(
+                        width_factor.ceil() * BLUR_SAMPLE_SCALE,
+                        height_factor.ceil() * BLUR_SAMPLE_SCALE,
+                    )
                 } else {
                     surface_rect
                 }
@@ -3922,15 +3970,16 @@ impl PictureCompositeMode {
                 let mut rect = surface_rect;
 
                 for shadow in shadows {
-                    let blur_radius = clamp_blur_radius(
+                    let (blur_radius_x, blur_radius_y) = surface.clamp_blur_radius(
                         shadow.blur_radius,
-                        surface.parent_scale_factors,
-                    ).ceil();
-                    let blur_inflation = blur_radius * BLUR_SAMPLE_SCALE;
+                        shadow.blur_radius,
+                    );
+                    let blur_inflation_x = blur_radius_x.ceil() * BLUR_SAMPLE_SCALE;
+                    let blur_inflation_y = blur_radius_y.ceil() * BLUR_SAMPLE_SCALE;
 
                     let shadow_rect = surface_rect
                         .translate(shadow.offset)
-                        .inflate(blur_inflation, blur_inflation);
+                        .inflate(blur_inflation_x, blur_inflation_y);
                     rect = rect.union(&shadow_rect);
                 }
 
@@ -4250,6 +4299,9 @@ pub struct PicturePrimitive {
 
     /// Set to true if we know for sure the picture is fully opaque.
     pub is_opaque: bool,
+
+    /// Requested raster space for this picture
+    pub raster_space: RasterSpace,
 }
 
 impl PicturePrimitive {
@@ -4339,6 +4391,7 @@ impl PicturePrimitive {
         flags: PrimitiveFlags,
         prim_list: PrimitiveList,
         spatial_node_index: SpatialNodeIndex,
+        raster_space: RasterSpace,
     ) -> Self {
         PicturePrimitive {
             prim_list,
@@ -4354,6 +4407,7 @@ impl PicturePrimitive {
             prev_local_rect: LayoutRect::zero(),
             segments_are_valid: false,
             is_opaque: false,
+            raster_space,
         }
     }
 
@@ -4414,13 +4468,6 @@ impl PicturePrimitive {
         let map_local_to_pic = SpaceMapper::new(
             surface_spatial_node_index,
             pic_bounds,
-        );
-
-        let (map_raster_to_world, map_pic_to_raster) = create_raster_mappers(
-            surface_spatial_node_index,
-            raster_spatial_node_index,
-            frame_context.global_screen_world_rect,
-            frame_context.spatial_tree,
         );
 
         match self.raster_config {
@@ -4876,11 +4923,10 @@ impl PicturePrimitive {
                     }
                     PictureCompositeMode::Filter(Filter::Blur { width, height, .. }) => {
                         let surface = &frame_state.surfaces[raster_config.surface_index.0];
-                        let width = clamp_blur_radius(width, surface.parent_scale_factors);
-                        let height = clamp_blur_radius(height, surface.parent_scale_factors);
+                        let (width, height) = surface.clamp_blur_radius(width, height);
 
-                        let width_std_deviation = width * device_pixel_scale.0;
-                        let height_std_deviation = height * device_pixel_scale.0;
+                        let width_std_deviation = width * surface.local_scale.0 * device_pixel_scale.0;
+                        let height_std_deviation = height * surface.local_scale.1 * device_pixel_scale.0;
                         let blur_std_deviation = DeviceSize::new(
                             width_std_deviation,
                             height_std_deviation,
@@ -4935,10 +4981,6 @@ impl PicturePrimitive {
                         );
                     }
                     PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
-                        let mut max_std_deviation = 0.0;
-                        for shadow in shadows {
-                            max_std_deviation = f32::max(max_std_deviation, shadow.blur_radius);
-                        }
                         let surface = &frame_state.surfaces[raster_config.surface_index.0];
 
                         let device_rect = surface_rects.clipped;
@@ -4966,15 +5008,15 @@ impl PicturePrimitive {
 
                         let mut blur_render_task_id = picture_task_id;
                         for shadow in shadows {
-                            let blur_radius = clamp_blur_radius(
+                            let (blur_radius_x, blur_radius_y) = surface.clamp_blur_radius(
                                 shadow.blur_radius,
-                                surface.parent_scale_factors,
-                            ) * device_pixel_scale.0;
+                                shadow.blur_radius,
+                            );
 
                             blur_render_task_id = RenderTask::new_blur(
                                 DeviceSize::new(
-                                    blur_radius,
-                                    blur_radius,
+                                    blur_radius_x * surface.local_scale.0 * device_pixel_scale.0,
+                                    blur_radius_y * surface.local_scale.1 * device_pixel_scale.0,
                                 ),
                                 picture_task_id,
                                 frame_state.rg_builder,
@@ -5236,11 +5278,8 @@ impl PicturePrimitive {
         };
 
         let state = PictureState {
-            //TODO: check for MAX_CACHE_SIZE here?
             map_local_to_pic,
             map_pic_to_world,
-            map_pic_to_raster,
-            map_raster_to_world,
         };
 
         let mut dirty_region_count = 0;
@@ -5483,6 +5522,7 @@ impl PicturePrimitive {
     pub fn assign_surface(
         &mut self,
         frame_context: &FrameBuildingContext,
+        parent_surface_index: Option<SurfaceIndex>,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
         surfaces: &mut Vec<SurfaceInfo>,
     ) -> Option<SurfaceIndex> {
@@ -5500,12 +5540,43 @@ impl PicturePrimitive {
                 // If a raster root is established, this surface should be scaled based on the scale factors of the surface raster to parent raster transform.
                 // This scaling helps ensure that the content in this surface does not become blurry or pixelated when composited in the parent surface.
 
-                let world_transform = frame_context.spatial_tree.get_world_transform(self.spatial_node_index);
-                let scale_factors = world_transform.scale_factors();
+                let world_scale_factors = match parent_surface_index {
+                    Some(parent_surface_index) => {
+                        let parent_surface = &surfaces[parent_surface_index.0];
+
+                        let local_to_surface_scale_factors = frame_context
+                            .spatial_tree
+                            .get_relative_transform(
+                                surface_spatial_node_index,
+                                parent_surface.surface_spatial_node_index,
+                            )
+                            .scale_factors();
+
+                        (
+                            local_to_surface_scale_factors.0 * parent_surface.world_scale_factors.0,
+                            local_to_surface_scale_factors.1 * parent_surface.world_scale_factors.1,
+                        )
+                    }
+                    None => {
+                        let local_to_surface_scale_factors = frame_context
+                            .spatial_tree
+                            .get_relative_transform(
+                                surface_spatial_node_index,
+                                frame_context.spatial_tree.root_reference_frame_index(),
+                            )
+                            .scale_factors();
+
+                        (
+                            local_to_surface_scale_factors.0,
+                            local_to_surface_scale_factors.1,
+                        )
+
+                    }
+                };
 
                 // Check if there is perspective or if an SVG filter is applied, and thus whether a new
                 // rasterization root should be established.
-                let device_pixel_scale = match composite_mode {
+                let (device_pixel_scale, raster_spatial_node_index, local_scale, world_scale_factors) = match composite_mode {
                     PictureCompositeMode::TileCache { slice_id } => {
                         let tile_cache = tile_caches.get_mut(&slice_id).unwrap();
 
@@ -5540,23 +5611,46 @@ impl PicturePrimitive {
                         }
 
                         // Pick the largest scale factor of the transform for the scaling factor.
-                        let scaling_factor = scale_factors.0.max(scale_factors.1).max(min_scale).min(max_scale);
+                        let scaling_factor = world_scale_factors.0.max(world_scale_factors.1).max(min_scale).min(max_scale);
 
                         let device_pixel_scale = Scale::new(scaling_factor);
 
-                        device_pixel_scale
+                        (device_pixel_scale, surface_spatial_node_index, (1.0, 1.0), world_scale_factors)
                     }
                     _ => {
-                        let min_scale = 1.0;
+                        let surface_spatial_node = frame_context.spatial_tree.get_spatial_node(surface_spatial_node_index);
 
-                        let scaling_factor = scale_factors.0.max(scale_factors.1).max(min_scale);
-                        let device_pixel_scale = Scale::new(scaling_factor);
+                        let enable_snapping =
+                            surface_spatial_node.coordinate_system_id == CoordinateSystemId::root() &&
+                            surface_spatial_node.snapping_transform.is_some();
 
-                        device_pixel_scale
+                        if enable_snapping {
+                            let raster_spatial_node_index = frame_context.spatial_tree.root_reference_frame_index();
+
+                            let local_to_raster_transform = frame_context
+                                .spatial_tree
+                                .get_relative_transform(
+                                    self.spatial_node_index,
+                                    raster_spatial_node_index,
+                                );
+
+                            let local_scale = local_to_raster_transform.scale_factors();
+
+                            (Scale::new(1.0), raster_spatial_node_index, local_scale, (1.0, 1.0))
+                        } else {
+                            // If client supplied a specific local scale, use that instead of
+                            // estimating from parent transform
+                            let world_scale_factors = match self.raster_space {
+                                RasterSpace::Screen => world_scale_factors,
+                                RasterSpace::Local(scale) => (scale, scale),
+                            };
+
+                            let device_pixel_scale = Scale::new(world_scale_factors.0.max(world_scale_factors.1));
+
+                            (device_pixel_scale, surface_spatial_node_index, (1.0, 1.0), world_scale_factors)
+                        }
                     }
                 };
-
-                let raster_spatial_node_index = surface_spatial_node_index;
 
                 let surface = SurfaceInfo::new(
                     surface_spatial_node_index,
@@ -5564,7 +5658,8 @@ impl PicturePrimitive {
                     frame_context.global_screen_world_rect,
                     &frame_context.spatial_tree,
                     device_pixel_scale,
-                    scale_factors,
+                    world_scale_factors,
+                    local_scale,
                 );
 
                 let surface_index = SurfaceIndex(surfaces.len());
@@ -5767,14 +5862,14 @@ impl PicturePrimitive {
                         // Basic brush primitive header is (see end of prepare_prim_for_render_inner in prim_store.rs)
                         //  [brush specific data]
                         //  [segment_rect, segment data]
-                        let blur_inflation = clamp_blur_radius(
+                        let (blur_inflation_x, blur_inflation_y) = surface.clamp_blur_radius(
                             shadow.blur_radius,
-                            surface.parent_scale_factors,
-                        ) * BLUR_SAMPLE_SCALE;
+                            shadow.blur_radius,
+                        );
 
                         let shadow_rect = prim_rect.inflate(
-                            blur_inflation,
-                            blur_inflation
+                            blur_inflation_x * BLUR_SAMPLE_SCALE,
+                            blur_inflation_y * BLUR_SAMPLE_SCALE,
                         ).translate(shadow.offset);
 
                         // ImageBrush colors
@@ -5827,33 +5922,6 @@ impl PicturePrimitive {
 
         true
     }
-}
-
-fn create_raster_mappers(
-    surface_spatial_node_index: SpatialNodeIndex,
-    raster_spatial_node_index: SpatialNodeIndex,
-    world_rect: WorldRect,
-    spatial_tree: &SpatialTree,
-) -> (SpaceMapper<RasterPixel, WorldPixel>, SpaceMapper<PicturePixel, RasterPixel>) {
-    let map_raster_to_world = SpaceMapper::new_with_target(
-        spatial_tree.root_reference_frame_index(),
-        raster_spatial_node_index,
-        world_rect,
-        spatial_tree,
-    );
-
-    let raster_bounds = map_raster_to_world
-        .unmap(&world_rect)
-        .unwrap_or_else(RasterRect::max_rect);
-
-    let map_pic_to_raster = SpaceMapper::new_with_target(
-        raster_spatial_node_index,
-        surface_spatial_node_index,
-        raster_bounds,
-        spatial_tree,
-    );
-
-    (map_raster_to_world, map_pic_to_raster)
 }
 
 fn get_transform_key(
@@ -6582,8 +6650,8 @@ fn get_surface_rects(
     let parent_surface = &surfaces[parent_surface_index.0];
 
     let local_to_parent = SpaceMapper::new_with_target(
-        parent_surface.raster_spatial_node_index,
-        surfaces[surface_index.0].raster_spatial_node_index,
+        parent_surface.surface_spatial_node_index,
+        surfaces[surface_index.0].surface_spatial_node_index,
         parent_surface.clipping_rect,
         spatial_tree,
     );
@@ -6605,17 +6673,18 @@ fn get_surface_rects(
             };
 
             for shadow in shadows {
-                let blur_radius = clamp_blur_radius(
+                let (blur_radius_x, blur_radius_y) = surface.clamp_blur_radius(
                     shadow.blur_radius,
-                    surface.parent_scale_factors
-                ).ceil();
-                let blur_inflation = blur_radius * BLUR_SAMPLE_SCALE;
+                    shadow.blur_radius,
+                );
+                let blur_inflation_x = blur_radius_x.ceil() * BLUR_SAMPLE_SCALE;
+                let blur_inflation_y = blur_radius_y.ceil() * BLUR_SAMPLE_SCALE;
 
                 let local_shadow_rect = local_prim_rect
                     .translate(shadow.offset.cast_unit());
 
                 if let Some(clipped_shadow_rect) = local_clip_rect.intersection(&local_shadow_rect) {
-                    let required_shadow_rect = clipped_shadow_rect.inflate(blur_inflation, blur_inflation);
+                    let required_shadow_rect = clipped_shadow_rect.inflate(blur_inflation_x, blur_inflation_y);
 
                     let local_clipped_shadow_rect = required_shadow_rect.translate(-shadow.offset.cast_unit());
 
@@ -6663,20 +6732,40 @@ fn get_surface_rects(
         }
     };
 
-    let mut clipped = (clipped_local.cast_unit() * surface.device_pixel_scale).round_out();
+    let (mut clipped, mut unclipped) = if surface.raster_spatial_node_index != surface.surface_spatial_node_index {
+        assert_eq!(surface.device_pixel_scale.0, 1.0);
+
+        let local_to_world = SpaceMapper::new_with_target(
+            spatial_tree.root_reference_frame_index(),
+            surface.surface_spatial_node_index,
+            WorldRect::max_rect(),
+            spatial_tree,
+        );
+
+        let clipped = local_to_world.map(&clipped_local.cast_unit()).unwrap() * surface.device_pixel_scale;
+        let unclipped = local_to_world.map(&unclipped_local).unwrap() * surface.device_pixel_scale;
+
+        (clipped, unclipped)
+    } else {
+        let clipped = (clipped_local.cast_unit() * surface.device_pixel_scale).round_out();
+        let unclipped = unclipped_local.cast_unit() * surface.device_pixel_scale;
+
+        (clipped, unclipped)
+    };
+
     let task_size_f = clipped.size();
 
     if task_size_f.width > MAX_SURFACE_SIZE || task_size_f.height > MAX_SURFACE_SIZE {
         let max_dimension = task_size_f.width.max(task_size_f.height);
 
+        surface.raster_spatial_node_index = surface.surface_spatial_node_index;
         surface.device_pixel_scale = Scale::new(MAX_SURFACE_SIZE / max_dimension);
 
         clipped = (clipped_local.cast_unit() * surface.device_pixel_scale).round();
+        unclipped = (unclipped_local.cast_unit() * surface.device_pixel_scale).round();
     }
 
-    let unclipped = unclipped_local.cast_unit() * surface.device_pixel_scale;
     let task_size = clipped.size().to_i32();
-
     debug_assert!(task_size.width <= MAX_SURFACE_SIZE as i32);
     debug_assert!(task_size.height <= MAX_SURFACE_SIZE as i32);
 
@@ -6684,6 +6773,11 @@ fn get_surface_rects(
         clipped,
         unclipped,
     );
+
+    // If the task size is zero sized, skip creation and drawing of it
+    if task_size.width == 0 || task_size.height == 0 {
+        return None;
+    }
 
     Some(SurfaceAllocInfo {
         task_size,

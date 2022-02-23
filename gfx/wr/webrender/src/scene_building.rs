@@ -229,6 +229,8 @@ struct PictureChainBuilder {
     spatial_node_index: SpatialNodeIndex,
     /// Prim flags for any pictures in this chain
     flags: PrimitiveFlags,
+    /// Requested raster space for enclosing stacking context
+    raster_space: RasterSpace,
 }
 
 impl PictureChainBuilder {
@@ -237,6 +239,7 @@ impl PictureChainBuilder {
         prim_list: PrimitiveList,
         flags: PrimitiveFlags,
         spatial_node_index: SpatialNodeIndex,
+        raster_space: RasterSpace,
     ) -> Self {
         PictureChainBuilder {
             current: PictureSource::PrimitiveList {
@@ -244,6 +247,7 @@ impl PictureChainBuilder {
             },
             spatial_node_index,
             flags,
+            raster_space,
         }
     }
 
@@ -252,6 +256,7 @@ impl PictureChainBuilder {
         instance: PrimitiveInstance,
         flags: PrimitiveFlags,
         spatial_node_index: SpatialNodeIndex,
+        raster_space: RasterSpace,
     ) -> Self {
         PictureChainBuilder {
             current: PictureSource::WrappedPicture {
@@ -259,6 +264,7 @@ impl PictureChainBuilder {
             },
             flags,
             spatial_node_index,
+            raster_space,
         }
     }
 
@@ -300,6 +306,7 @@ impl PictureChainBuilder {
                 self.flags,
                 prim_list,
                 self.spatial_node_index,
+                self.raster_space,
             ))
         );
 
@@ -316,6 +323,7 @@ impl PictureChainBuilder {
             },
             spatial_node_index: self.spatial_node_index,
             flags: self.flags,
+            raster_space: self.raster_space,
         }
     }
 
@@ -344,6 +352,7 @@ impl PictureChainBuilder {
                         self.flags,
                         prim_list,
                         self.spatial_node_index,
+                        self.raster_space,
                     ))
                 );
 
@@ -2073,6 +2082,7 @@ impl<'a> SceneBuilder<'a> {
                 is_redundant,
                 is_backdrop_root: flags.contains(StackingContextFlags::IS_BACKDROP_ROOT),
                 flags,
+                raster_space: new_space,
             });
         }
 
@@ -2168,6 +2178,7 @@ impl<'a> SceneBuilder<'a> {
                         stacking_context.prim_flags,
                         stacking_context.prim_list,
                         stacking_context.spatial_node_index,
+                        stacking_context.raster_space,
                     ))
                 );
 
@@ -2182,6 +2193,7 @@ impl<'a> SceneBuilder<'a> {
                     instance,
                     stacking_context.prim_flags,
                     stacking_context.spatial_node_index,
+                    stacking_context.raster_space,
                 )
             }
             Picture3DContext::Out => {
@@ -2190,6 +2202,7 @@ impl<'a> SceneBuilder<'a> {
                         stacking_context.prim_list,
                         stacking_context.prim_flags,
                         stacking_context.spatial_node_index,
+                        stacking_context.raster_space,
                     )
                 } else {
                     let composite_mode = Some(
@@ -2206,6 +2219,7 @@ impl<'a> SceneBuilder<'a> {
                             stacking_context.prim_flags,
                             stacking_context.prim_list,
                             stacking_context.spatial_node_index,
+                            stacking_context.raster_space,
                         ))
                     );
 
@@ -2220,6 +2234,7 @@ impl<'a> SceneBuilder<'a> {
                         instance,
                         stacking_context.prim_flags,
                         stacking_context.spatial_node_index,
+                        stacking_context.raster_space,
                     )
                 }
             }
@@ -2304,6 +2319,7 @@ impl<'a> SceneBuilder<'a> {
                     stacking_context.prim_flags,
                     prim_list,
                     stacking_context.spatial_node_index,
+                    stacking_context.raster_space,
                 ))
             );
 
@@ -2318,6 +2334,7 @@ impl<'a> SceneBuilder<'a> {
                 instance,
                 stacking_context.prim_flags,
                 stacking_context.spatial_node_index,
+                stacking_context.raster_space,
             );
         }
 
@@ -2797,6 +2814,7 @@ impl<'a> SceneBuilder<'a> {
                                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
                                 prim_list,
                                 pending_shadow.spatial_node_index,
+                                RasterSpace::Screen,
                             ))
                         );
 
@@ -3492,6 +3510,7 @@ impl<'a> SceneBuilder<'a> {
                     prim_flags,
                     prim_list,
                     backdrop_spatial_node_index,
+                    stacking_context.raster_space,
                 ))
             );
 
@@ -3507,6 +3526,7 @@ impl<'a> SceneBuilder<'a> {
             instance,
             info.flags,
             backdrop_spatial_node_index,
+            RasterSpace::Screen,
         );
 
         source = self.wrap_prim_with_filters(
@@ -3784,6 +3804,9 @@ struct FlattenedStackingContext {
 
     /// Flags identifying the type of container (among other things) this stacking context is
     flags: StackingContextFlags,
+
+    /// Requested raster space for this stacking context
+    raster_space: RasterSpace,
 }
 
 impl FlattenedStackingContext {
@@ -3861,6 +3884,7 @@ impl FlattenedStackingContext {
                 self.prim_flags,
                 mem::replace(&mut self.prim_list, PrimitiveList::empty()),
                 self.spatial_node_index,
+                self.raster_space,
             ))
         );
 
