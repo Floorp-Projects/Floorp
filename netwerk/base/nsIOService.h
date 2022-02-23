@@ -146,6 +146,8 @@ class nsIOService final : public nsIIOService,
 
   nsresult LaunchSocketProcess();
 
+  static bool TooManySocketProcessCrash();
+
  private:
   // These shouldn't be called directly:
   // - construct using GetInstance
@@ -235,6 +237,7 @@ class nsIOService final : public nsIIOService,
   uint32_t mTotalRequests{0};
   uint32_t mCacheWon{0};
   uint32_t mNetWon{0};
+  static uint32_t sSocketProcessCrashedCount;
 
   // These timestamps are needed for collecting telemetry on PR_Connect,
   // PR_ConnectContinue and PR_Close blocking time.  If we spend very long
