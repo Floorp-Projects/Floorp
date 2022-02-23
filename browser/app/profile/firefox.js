@@ -1522,7 +1522,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.readTime.enabled", fals
 pref("browser.newtabpage.activity-stream.discoverystream.newSponsoredLabel.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.essentialReadsHeader.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.editorsPicksHeader.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.spoc-positions", "2,4,11,20");
+pref("browser.newtabpage.activity-stream.discoverystream.spoc-positions", "1,5,7,11,18,20");
 
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint-query", "");
