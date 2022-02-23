@@ -26,18 +26,28 @@ const Notify = (url, now, latest) =>{
     return null;
 };
 
-window.onload = () =>{
-    fetch(`${API_END_POINT}?name=${APP_ID}`)
-    .then(res =>{
-        if(res.ok){
-            return res.json()
-        }
-    }).then(data =>{
-        if(data.build != BROWSER_VERSION){
-            Notify(data.file, BROWSER_VERSION, data.build);
-            console.log("notificationTitle");
-        }
-    }).then(e =>{
-        return e;
-    });
-};
+(
+    async() => {
+    var pref = await browser.aboutConfigPrefs.getPref("enable.floorp.updater")
+    console.log("enable.floorp.updater =" + pref)
+
+    const i=pref
+})();
+
+if(i=true){
+    window.onload = () =>{
+        fetch(`${API_END_POINT}?name=${APP_ID}`)
+        .then(res =>{
+            if(res.ok){
+                return res.json()
+            }
+        }).then(data =>{
+            if(data.build != BROWSER_VERSION){
+                Notify(data.file, BROWSER_VERSION, data.build);
+                console.log("notificationTitle");
+            }
+        }).then(e =>{
+            return e;
+        });
+    };
+}

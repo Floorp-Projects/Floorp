@@ -49,7 +49,7 @@
         "schema": "updateAPIs/aboutConfigPrefs.json",
         "parent": {
             "scopes": ["addon_parent"],
-            "script": "protectionAPIs/aboutConfigPrefs.js",
+            "script": "updateAPIs/aboutConfigPrefs.js",
             "paths": [["aboutConfigPrefs"]]
         }
     }
