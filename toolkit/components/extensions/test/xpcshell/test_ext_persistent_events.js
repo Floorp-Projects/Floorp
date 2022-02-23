@@ -570,7 +570,7 @@ add_task(async function test_background_restarted() {
 // restart the background once the background has been shutdown or
 // put to sleep.
 add_task(
-  { prefs_set: [["extensions.eventPages.enabled", true]] },
+  { pref_set: [["extensions.eventPages.enabled", true]] },
   async function test_eventpage_startup() {
     await AddonTestUtils.promiseStartupManager();
 
@@ -672,6 +672,5 @@ add_task(
 
     await extension.unload();
     await AddonTestUtils.promiseShutdownManager();
-    Services.prefs.setBoolPref("extensions.eventPages.enabled", false);
   }
 );

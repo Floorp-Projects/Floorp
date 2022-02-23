@@ -1529,6 +1529,7 @@ async function schedulePreciseGCAndForceCC(maxCount) {
  *        Supported properties:
  *          skip_if : An arrow function which has an expression to be
  *                    evaluated whether the test is skipped or not.
+ *          pref_set: An array of preferences to set for the test, reset at end of test.
  * @param func
  *        A function to be run only if the funcOrProperies is not a function.
  * @param isTask
@@ -1540,6 +1541,7 @@ async function schedulePreciseGCAndForceCC(maxCount) {
  *
  * @return the test function that was passed in.
  */
+var _gSupportedProperties = ["skip_if", "pref_set"];
 var _gTests = [];
 var _gRunOnlyThisTest = null;
 function add_test(properties, func = properties, isTask = false) {
@@ -1547,6 +1549,12 @@ function add_test(properties, func = properties, isTask = false) {
     properties = { isTask };
     _gTests.push([properties, func]);
   } else if (typeof properties == "object") {
+    // Ensure only documented properties are in the object.
+    for (let prop of Object.keys(properties)) {
+      if (!_gSupportedProperties.includes(prop)) {
+        do_throw(`Task property is not supported: ${prop}`);
+      }
+    }
     properties.isTask = isTask;
     _gTests.push([properties, func]);
   } else {
