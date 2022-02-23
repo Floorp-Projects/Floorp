@@ -26,11 +26,18 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ShellService: "resource:///modules/ShellService.jsm",
   UpdatePing: "resource://gre/modules/UpdatePing.jsm",
 });
-XPCOMUtils.defineLazyServiceGetters(this, {
-  UpdateManager: ["@mozilla.org/updates/update-manager;1", "nsIUpdateManager"],
-  WinTaskbar: ["@mozilla.org/windows-taskbar;1", "nsIWinTaskbar"],
-  WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
-});
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "WindowsUIUtils",
+  "@mozilla.org/windows-ui-utils;1",
+  "nsIWindowsUIUtils"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "UpdateManager",
+  "@mozilla.org/updates/update-manager;1",
+  "nsIUpdateManager"
+);
 
 XPCOMUtils.defineLazyGetter(this, "gSystemPrincipal", () =>
   Services.scriptSecurityManager.getSystemPrincipal()
@@ -40,11 +47,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, [URL]);
 // One-time startup homepage override configurations
 const ONCE_DOMAINS = ["mozilla.org", "firefox.com"];
 const ONCE_PREF = "browser.startup.homepage_override.once";
-
-// Index of Private Browsing icon in firefox.exe
-// Must line up with the one in nsNativeAppSupportWin.h.
-const PRIVATE_BROWSING_ICON_INDEX = 5;
-const PRIVACY_SEGMENTATION_PREF = "browser.privacySegmentation.enabled";
 
 function shouldLoadURI(aURI) {
   if (aURI && !aURI.schemeIs("chrome")) {
@@ -274,20 +276,6 @@ function openBrowserWindow(
         win.docShell.QueryInterface(
           Ci.nsILoadContext
         ).usePrivateBrowsing = true;
-        if (Services.prefs.getBoolPref(PRIVACY_SEGMENTATION_PREF)) {
-          // TODO: Changing this after the Window has been painted causes it to
-          // change Taskbar icons if the original one had a different AUMID.
-          // This must stay pref'ed off until this is resolved.
-          // https://bugzilla.mozilla.org/show_bug.cgi?id=1751010
-          WinTaskbar.setGroupIdForWindow(win, WinTaskbar.defaultPrivateGroupId);
-          WindowsUIUtils.setWindowIconFromExe(
-            win,
-            Services.dirsvc.get("XREExeF", Ci.nsIFile).path,
-            // This corresponds to the definitions in
-            // nsNativeAppSupportWin.h
-            PRIVATE_BROWSING_ICON_INDEX
-          );
-        }
       }
 
       let openTime = win.openTime;
