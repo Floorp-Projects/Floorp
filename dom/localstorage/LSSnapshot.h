@@ -108,6 +108,7 @@ class LSSnapshot final : public nsIRunnable {
 
   LoadState mLoadState;
 
+  bool mHasOtherProcessDatabases;
   bool mHasOtherProcessObservers;
   bool mExplicit;
   bool mHasPendingStableStateCallback;

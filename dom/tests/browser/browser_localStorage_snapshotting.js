@@ -1,5 +1,5 @@
 const HELPER_PAGE_URL =
-  "http://example.com/browser/dom/tests/browser/page_localstorage_snapshotting_e10s.html";
+  "http://example.com/browser/dom/tests/browser/page_localstorage_snapshotting.html";
 const HELPER_PAGE_ORIGIN = "http://example.com/";
 
 /* import-globals-from helper_localStorage.js */

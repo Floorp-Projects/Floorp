@@ -55,7 +55,7 @@ add_task(async function test_add_and_query_no_snapshots() {
   assertSnapshotGroup(groups[0], {
     title: "Group",
     builder: "domain",
-    urls: [],
+    snapshotCount: 0,
   });
 });
 

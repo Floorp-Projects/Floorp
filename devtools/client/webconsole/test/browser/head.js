@@ -16,16 +16,9 @@ Services.scriptloader.loadSubScript(
 );
 
 // Import helpers for the new debugger
-/* import-globals-from ../../../debugger/test/mochitest/helpers/context.js */
+/* import-globals-from ../../../debugger/test/mochitest/shared-head.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers/context.js",
-  this
-);
-
-// Import helpers for the new debugger
-/* import-globals-from ../../../debugger/test/mochitest/helpers.js*/
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers.js",
+  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
   this
 );
 

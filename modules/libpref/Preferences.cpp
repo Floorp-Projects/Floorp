@@ -2494,6 +2494,16 @@ nsPrefBranch::PrefHasUserValue(const char* aPrefName, bool* aRetVal) {
 }
 
 NS_IMETHODIMP
+nsPrefBranch::PrefHasDefaultValue(const char* aPrefName, bool* aRetVal) {
+  NS_ENSURE_ARG_POINTER(aRetVal);
+  NS_ENSURE_ARG(aPrefName);
+
+  const PrefName& pref = GetPrefName(aPrefName);
+  *aRetVal = Preferences::HasDefaultValue(pref.get());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPrefBranch::LockPref(const char* aPrefName) {
   NS_ENSURE_ARG(aPrefName);
 
@@ -5009,6 +5019,14 @@ bool Preferences::HasUserValue(const char* aPrefName) {
 
   Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
   return pref.isSome() && pref->HasUserValue();
+}
+
+/* static */
+bool Preferences::HasDefaultValue(const char* aPrefName) {
+  NS_ENSURE_TRUE(InitStaticMembers(), false);
+
+  Maybe<PrefWrapper> pref = pref_Lookup(aPrefName);
+  return pref.isSome() && pref->HasDefaultValue();
 }
 
 /* static */

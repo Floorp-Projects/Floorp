@@ -5346,6 +5346,11 @@
         return;
       }
 
+      // Skip if chrome code has cancelled this:
+      if (aEvent.defaultPreventedByChrome) {
+        return;
+      }
+
       // Don't check if the event was already consumed because tab
       // navigation should always work for better user experience.
 
@@ -5435,6 +5440,11 @@
 
       // Skip this only if something has explicitly cancelled it.
       if (aEvent.defaultCancelled) {
+        return;
+      }
+
+      // Skip if chrome code has cancelled this:
+      if (aEvent.defaultPreventedByChrome) {
         return;
       }
 

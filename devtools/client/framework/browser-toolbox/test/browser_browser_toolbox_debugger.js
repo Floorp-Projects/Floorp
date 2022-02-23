@@ -18,20 +18,10 @@ requestLongerTimeout(4);
 const { fetch } = require("devtools/shared/DevToolsUtils");
 
 const debuggerHeadURL =
-  CHROME_URL_ROOT + "../../../debugger/test/mochitest/head.js";
-const helpersURL =
-  CHROME_URL_ROOT + "../../../debugger/test/mochitest/helpers.js";
-const helpersContextURL =
-  CHROME_URL_ROOT + "../../../debugger/test/mochitest/helpers/context.js";
+  CHROME_URL_ROOT + "../../../debugger/test/mochitest/shared-head.js";
 
 add_task(async function runTest() {
   let { content: debuggerHead } = await fetch(debuggerHeadURL);
-
-  // Also include the debugger helpers which are separated from debugger's head to be
-  // reused in other modules.
-  const { content: debuggerHelpers } = await fetch(helpersURL);
-  const { content: debuggerContextHelpers } = await fetch(helpersContextURL);
-  debuggerHead = debuggerHead + debuggerContextHelpers + debuggerHelpers;
 
   // We remove its import of shared-head, which isn't available in browser toolbox process
   // And isn't needed thanks to testHead's symbols

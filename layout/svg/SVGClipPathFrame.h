@@ -80,13 +80,10 @@ class SVGClipPathFrame final : public SVGContainerFrame {
    *   current transform.
    * @param [in, optional] aExtraMask An extra surface that the returned
    *   surface should be masked with.
-   * @param [in, optional] aExtraMasksTransform The transform to use with
-   *   aExtraMask. Should be passed when aExtraMask is passed.
    */
   already_AddRefed<SourceSurface> GetClipMask(
       gfxContext& aReferenceContext, nsIFrame* aClippedFrame,
-      const gfxMatrix& aMatrix, SourceSurface* aExtraMask = nullptr,
-      const Matrix& aExtraMasksTransform = Matrix());
+      const gfxMatrix& aMatrix, SourceSurface* aExtraMask = nullptr);
 
   /**
    * Paint mask directly onto a given context(aMaskContext).
@@ -98,12 +95,9 @@ class SVGClipPathFrame final : public SVGContainerFrame {
    *   current transform.
    * @param [in, optional] aExtraMask An extra surface that the returned
    *   surface should be masked with.
-   * @param [in, optional] aExtraMasksTransform The transform to use with
-   *   aExtraMask. Should be passed when aExtraMask is passed.
    */
   void PaintClipMask(gfxContext& aMaskContext, nsIFrame* aClippedFrame,
-                     const gfxMatrix& aMatrix, SourceSurface* aExtraMask,
-                     const Matrix& aExtraMasksTransform);
+                     const gfxMatrix& aMatrix, SourceSurface* aExtraMask);
 
   /**
    * aPoint is expected to be in aClippedFrame's SVG user space.

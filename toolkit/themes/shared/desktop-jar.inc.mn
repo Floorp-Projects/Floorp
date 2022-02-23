@@ -126,5 +126,6 @@
   skin/classic/global/reader/RM-Line-Height-Minus-38x14.svg            (../../shared/reader/RM-Line-Height-Minus-38x14.svg)
   skin/classic/global/reader/RM-Line-Height-Plus-38x24.svg             (../../shared/reader/RM-Line-Height-Plus-38x24.svg)
   skin/classic/global/pictureinpicture/player.css           (../../shared/pictureinpicture/player.css)
+  skin/classic/global/pictureinpicture/texttracks.css           (../../shared/pictureinpicture/texttracks.css)
   skin/classic/global/media/picture-in-picture-open.svg     (../../shared/media/picture-in-picture-open.svg)
   skin/classic/global/media/picture-in-picture-closed.svg   (../../shared/media/picture-in-picture-closed.svg)

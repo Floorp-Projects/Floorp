@@ -29,6 +29,7 @@
 #include "mozilla/webrender/RenderMacIOSurfaceTextureHost.h"
 #include "nsCocoaFeatures.h"
 #include "ScopedGLHelpers.h"
+#include "SDKDeclarations.h"
 
 @interface CALayer (PrivateSetContentsOpaque)
 - (void)setContentsOpaque:(BOOL)opaque;
@@ -781,9 +782,47 @@ bool NativeLayerCA::IsVideoAndLocked(const MutexAutoLock& aProofOfLock) {
 }
 
 bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
-  return StaticPrefs::gfx_core_animation_specialize_video() &&
-         nsCocoaFeatures::OnHighSierraOrLater() && mRootWindowIsFullscreen &&
-         IsVideoAndLocked(aProofOfLock);
+  if (!IsVideoAndLocked(aProofOfLock)) {
+    // Only videos are eligible.
+    return false;
+  }
+
+  if (!StaticPrefs::gfx_core_animation_specialize_video() ||
+      !nsCocoaFeatures::OnHighSierraOrLater()) {
+    // Pref must be set and we must be on a modern-enough macOS.
+    return false;
+  }
+
+  // Beyond this point, we need to know about the format of the video.
+
+  MOZ_ASSERT(mTextureHost);
+  MacIOSurface* macIOSurface = mTextureHost->GetSurface();
+  if (macIOSurface->GetYUVColorSpace() == gfx::YUVColorSpace::BT2020) {
+    // BT2020 is a signifier of HDR color space, whether or not the bit depth
+    // is expanded to cover that color space. This video needs a specialized
+    // video layer.
+    return true;
+  }
+
+  CFTypeRefPtr<IOSurfaceRef> surface = macIOSurface->GetIOSurfaceRef();
+  OSType pixelFormat = IOSurfaceGetPixelFormat(surface.get());
+  if (pixelFormat == kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange ||
+      pixelFormat == kCVPixelFormatType_420YpCbCr10BiPlanarFullRange) {
+    // HDR videos require specialized video layers.
+    return true;
+  }
+
+  // Beyond this point, we return true if-and-only-if we think we can achieve
+  // the power-saving "detached mode" of the macOS compositor.
+
+  if (pixelFormat != kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange &&
+      pixelFormat != kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) {
+    // The video is not in one of the formats that qualifies for detachment.
+    return false;
+  }
+
+  // It will only detach if we're fullscreen.
+  return mRootWindowIsFullscreen;
 }
 
 void NativeLayerCA::SetRootWindowIsFullscreen(bool aFullscreen) {
@@ -1244,6 +1283,10 @@ static NSString* NSStringForOSType(OSType type) {
   CGColorSpaceRef colorSpace = CVImageBufferGetColorSpace(aBuffer);
   NSLog(@"ColorSpace is %@.\n", colorSpace);
 
+  CFDictionaryRef bufferAttachments =
+      CVBufferGetAttachments(aBuffer, kCVAttachmentMode_ShouldPropagate);
+  NSLog(@"Buffer attachments are %@.\n", bufferAttachments);
+
   OSType codec = CMFormatDescriptionGetMediaSubType(aFormat);
   NSLog(@"Codec is %@.\n", NSStringForOSType(codec));
 
@@ -1380,13 +1423,10 @@ bool NativeLayerCA::Representation::ApplyChanges(
     bool updateSucceeded = false;
     if (aSpecializeVideo) {
       IOSurfaceRef surface = aFrontSurface.get();
-      if (CanSpecializeSurface(surface)) {
-        IOSurfaceRef surface = aFrontSurface.get();
-        updateSucceeded = EnqueueSurface(surface);
+      updateSucceeded = EnqueueSurface(surface);
 
-        if (updateSucceeded) {
-          mMutatedFrontSurface = false;
-        }
+      if (updateSucceeded) {
+        mMutatedFrontSurface = false;
       }
     }
 
@@ -1540,7 +1580,7 @@ bool NativeLayerCA::Representation::ApplyChanges(
   if (mMutatedFrontSurface) {
     bool isEnqueued = false;
     IOSurfaceRef surface = aFrontSurface.get();
-    if (aSpecializeVideo && CanSpecializeSurface(surface)) {
+    if (aSpecializeVideo) {
       // Attempt to enqueue this as a video frame. If we fail, we'll fall back to image case.
       isEnqueued = EnqueueSurface(surface);
     }
@@ -1600,15 +1640,6 @@ NativeLayerCA::UpdateType NativeLayerCA::Representation::HasUpdate(bool aIsVideo
 bool NativeLayerCA::WillUpdateAffectLayers(WhichRepresentation aRepresentation) {
   MutexAutoLock lock(mMutex);
   return GetRepresentation(aRepresentation).mMutatedSpecializeVideo;
-}
-
-bool NativeLayerCA::Representation::CanSpecializeSurface(IOSurfaceRef surface) {
-  // Software decoded videos can't achieve detached mode. Until Bug 1731691 is fixed,
-  // there's no benefit to specializing these videos. For now, only allow 420v or 420f,
-  // which we get from hardware decode.
-  OSType pixelFormat = IOSurfaceGetPixelFormat(surface);
-  return (pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange ||
-          pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange);
 }
 
 // Called when mMutex is already being held by the current thread.

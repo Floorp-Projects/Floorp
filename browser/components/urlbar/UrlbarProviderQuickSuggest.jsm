@@ -67,7 +67,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     super(...args);
     this._updateExperimentState();
     UrlbarPrefs.addObserver(this);
-    NimbusFeatures.urlbar.onUpdate(this._updateExperimentState);
+    NimbusFeatures.urlbar.onUpdate(() => this._updateExperimentState());
   }
 
   /**
@@ -188,10 +188,18 @@ class ProviderQuickSuggest extends UrlbarProvider {
     // Filter suggestions, keeping in mind both the remote settings and Merino
     // fetches return null when there are no matches. Take the remaining one
     // with the largest score.
-    let suggestion = allSuggestions
-      .flat()
-      .filter(s => s && this._canAddSuggestion(s))
+    allSuggestions = await Promise.all(
+      allSuggestions
+        .flat()
+        .map(async s => (s && (await this._canAddSuggestion(s)) ? s : null))
+    );
+    if (instance != this.queryInstance) {
+      return;
+    }
+    const suggestion = allSuggestions
+      .filter(Boolean)
       .sort((a, b) => b.score - a.score)[0];
+
     if (!suggestion) {
       return;
     }
@@ -763,12 +771,13 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * @returns {boolean}
    *   Whether the suggestion can be added.
    */
-  _canAddSuggestion(suggestion) {
+  async _canAddSuggestion(suggestion) {
     return (
-      (suggestion.is_sponsored &&
+      ((suggestion.is_sponsored &&
         UrlbarPrefs.get("suggest.quicksuggest.sponsored")) ||
-      (!suggestion.is_sponsored &&
-        UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"))
+        (!suggestion.is_sponsored &&
+          UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"))) &&
+      !(await this.isSuggestionBlocked(suggestion.url))
     );
   }
 
