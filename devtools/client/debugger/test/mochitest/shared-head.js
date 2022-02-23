@@ -8,7 +8,12 @@
  */
 
 /* eslint-disable no-unused-vars */
-/* import-globals-from ./head.js */
+
+// We can't use "import globals from head.js" because of bug 1395426.
+// So workaround by manually importing the few symbols we are using from it.
+// (Note that only ./mach eslint devtools/client fails while devtools/client/debugger passes)
+/* global EXAMPLE_URL, ContentTask */
+
 // Assume that shared-head is always imported before this file
 /* import-globals-from ../../../shared/test/shared-head.js */
 
