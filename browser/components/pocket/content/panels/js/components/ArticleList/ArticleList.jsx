@@ -10,11 +10,15 @@ function ArticleList(props) {
       {props.articles?.map(article => (
         <li className="stp_article_list_item">
           <a className="stp_article_list_link" href={article.url}>
-            <img
-              className="stp_article_list_thumb"
-              src={article.thumbnail}
-              alt={article.alt}
-            />
+            {article.thumbnail ? (
+              <img
+                className="stp_article_list_thumb"
+                src={article.thumbnail}
+                alt={article.alt}
+              />
+            ) : (
+              <div className="stp_article_list_thumb_placeholder" />
+            )}
             <div className="stp_article_list_meta">
               <header className="stp_article_list_header">
                 {article.title}
