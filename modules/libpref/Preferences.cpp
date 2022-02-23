@@ -3579,7 +3579,7 @@ NS_IMPL_ISUPPORTS(Preferences, nsIPrefService, nsIObserver, nsIPrefBranch,
 /* static */
 void Preferences::SerializePreferences(
     nsCString& aStr,
-    const std::function<bool(const char*)>& aShouldSerializeFn) {
+    const std::function<bool(const char*, bool)>& aShouldSerializeFn) {
   MOZ_RELEASE_ASSERT(InitStaticMembers());
 
   aStr.Truncate();
@@ -3587,7 +3587,8 @@ void Preferences::SerializePreferences(
   for (auto iter = HashTable()->iter(); !iter.done(); iter.next()) {
     Pref* pref = iter.get().get();
     if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues()) {
-      pref->SerializeAndAppend(aStr, !aShouldSerializeFn(pref->Name()));
+      pref->SerializeAndAppend(
+          aStr, !aShouldSerializeFn(pref->Name(), XRE_IsContentProcess()));
     }
   }
 
@@ -5669,6 +5670,39 @@ NS_IMPL_COMPONENT_FACTORY(nsPrefLocalizedString) {
 namespace mozilla {
 
 void UnloadPrefsModule() { Preferences::Shutdown(); }
+
+bool ShouldSyncPreference(const char* aPref,
+                          bool aIsContentProcess /* = true */) {
+#define PREF_LIST_ENTRY(s) \
+  { s, (sizeof(s) / sizeof(char)) - 1 }
+  struct PrefListEntry {
+    const char* mPrefBranch;
+    size_t mLen;
+  };
+
+  // These prefs are not useful in child processes.
+  static const PrefListEntry sParentOnlyPrefBranchList[] = {
+      PREF_LIST_ENTRY("app.update.lastUpdateTime."),
+      PREF_LIST_ENTRY("datareporting.policy."),
+      PREF_LIST_ENTRY("browser.safebrowsing.provider."),
+      PREF_LIST_ENTRY("browser.shell."),
+      PREF_LIST_ENTRY("browser.slowStartup."),
+      PREF_LIST_ENTRY("browser.startup."),
+      PREF_LIST_ENTRY("extensions.getAddons.cache."),
+      PREF_LIST_ENTRY("media.gmp-manager."),
+      PREF_LIST_ENTRY("media.gmp-gmpopenh264."),
+      PREF_LIST_ENTRY("privacy.sanitize."),
+  };
+#undef PREF_LIST_ENTRY
+
+  for (const auto& entry : sParentOnlyPrefBranchList) {
+    if (strncmp(entry.mPrefBranch, aPref, entry.mLen) == 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 }  // namespace mozilla
 

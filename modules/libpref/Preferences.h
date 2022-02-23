@@ -401,7 +401,7 @@ class Preferences final : public nsIPrefService,
   // prefs in bulk from the parent process, via shared memory.
   static void SerializePreferences(
       nsCString& aStr,
-      const std::function<bool(const char*)>& aShouldSerializeFn);
+      const std::function<bool(const char*, bool)>& aShouldSerializeFn);
   static void DeserializePreferences(char* aStr, size_t aPrefsLen);
 
   static mozilla::ipc::FileDescriptor EnsureSnapshot(size_t* aSize);
@@ -531,6 +531,8 @@ class Preferences final : public nsIPrefService,
   // Init static members. Returns true on success.
   static bool InitStaticMembers();
 };
+
+bool ShouldSyncPreference(const char* aPref, bool aIsContentProcess = true);
 
 }  // namespace mozilla
 

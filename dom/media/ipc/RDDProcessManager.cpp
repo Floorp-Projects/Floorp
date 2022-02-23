@@ -97,14 +97,14 @@ void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
   NS_LossyConvertUTF16toASCII strData(aData);
 
   // A pref changed. If it is useful to do so, inform child processes.
-  if (!dom::ContentParent::ShouldSyncPreference(strData.Data())) {
+  if (!ShouldSyncPreference(strData.Data(), false)) {
     return;
   }
 
-  mozilla::dom::Pref pref(
-      strData, /* isLocked */ false,
-      !dom::ContentParent::ShouldSyncPreference(strData.Data()), Nothing(),
-      Nothing());
+  mozilla::dom::Pref pref(strData, /* isLocked */ false,
+                          !ShouldSyncPreference(strData.Data()), Nothing(),
+                          Nothing());
+
   Preferences::GetPreference(&pref);
   if (!!mRDDChild) {
     MOZ_ASSERT(mQueuedPrefs.IsEmpty());
