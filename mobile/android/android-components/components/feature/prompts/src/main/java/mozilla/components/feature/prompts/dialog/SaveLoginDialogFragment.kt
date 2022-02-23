@@ -82,6 +82,8 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
     @VisibleForTesting
     internal var password by SafeArgString(KEY_LOGIN_PASSWORD)
 
+    @Volatile
+    private var loginValid = false
     private var validateStateUpdate: Job? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -227,20 +229,19 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
     private fun bindPassword(view: View) {
         val passwordEditText = view.findViewById<TextInputEditText>(R.id.password_field)
 
-        passwordEditText.setText(password)
         passwordEditText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(editable: Editable) {
                 // Note that password is accessed by `fun update`
                 password = editable.toString()
                 if (password.isEmpty()) {
                     setViewState(
-                        confirmButtonEnabled = false,
+                        loginValid = false,
                         passwordErrorText =
                         context?.getString(R.string.mozac_feature_prompt_error_empty_password)
                     )
                 } else {
                     setViewState(
-                        confirmButtonEnabled = true,
+                        loginValid = true,
                         passwordErrorText = ""
                     )
                 }
@@ -251,6 +252,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
         })
+        passwordEditText.setText(password)
 
         with(passwordEditText) {
             onDone(false) {
@@ -299,6 +301,10 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
 
         var validateDeferred: Deferred<Result>?
         validateStateUpdate = launch validate@{
+            if (!loginValid) {
+                // Don't run the validation logic if we know the login is invalid
+                return@validate
+            }
             val validationDelegate =
                 feature?.loginValidationDelegate ?: return@validate
             validateDeferred = validationDelegate.shouldUpdateOrCreateAsync(entry)
@@ -340,7 +346,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
         headline: String? = null,
         negativeText: String? = null,
         confirmText: String? = null,
-        confirmButtonEnabled: Boolean? = null,
+        loginValid: Boolean? = null,
         passwordErrorText: String? = null
     ) {
         if (headline != null) {
@@ -356,8 +362,9 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
             confirmButton?.text = confirmText
         }
 
-        if (confirmButtonEnabled != null) {
-            confirmButton?.isEnabled = confirmButtonEnabled
+        if (loginValid != null) {
+            this.loginValid = loginValid
+            confirmButton?.isEnabled = loginValid
         }
 
         if (passwordErrorText != null) {
