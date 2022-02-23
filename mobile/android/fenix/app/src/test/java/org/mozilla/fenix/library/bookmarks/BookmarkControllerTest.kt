@@ -6,6 +6,7 @@ package org.mozilla.fenix.library.bookmarks
 
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
@@ -54,6 +55,8 @@ class BookmarkControllerTest {
     private val homeActivity: HomeActivity = mockk(relaxed = true)
     private val services: Services = mockk(relaxed = true)
     private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase = mockk(relaxed = true)
+    private val navBackStackEntry: NavBackStackEntry = mockk(relaxed = true)
+    private val navDestination: NavDestination = mockk(relaxed = true)
 
     private val item =
         BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0u, "Mozilla", "http://mozilla.org", 0, null)
@@ -89,6 +92,9 @@ class BookmarkControllerTest {
         every { navController.currentDestination } returns NavDestination("").apply {
             id = R.id.bookmarkFragment
         }
+        every { navController.previousBackStackEntry } returns navBackStackEntry
+        every { navBackStackEntry.destination } returns navDestination
+        every { navDestination.id } returns R.id.browserFragment
         every { bookmarkStore.dispatch(any()) } returns mockk()
         every { sharedViewModel.selectedFolder = any() } just runs
         every { tabsUseCases.addTab } returns addNewTabUseCase
@@ -110,8 +116,55 @@ class BookmarkControllerTest {
     }
 
     @Test
-    fun `handleBookmarkTapped should load the bookmark in a new tab`() {
+    fun `WHEN handleBookmarkTapped is called with BrowserFragment THEN load the bookmark in current tab`() {
         var invokePendingDeletionInvoked = false
+        val flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
+
+        createController(
+            invokePendingDeletion = {
+                invokePendingDeletionInvoked = true
+            }
+        ).handleBookmarkTapped(item)
+
+        assertTrue(invokePendingDeletionInvoked)
+        verify {
+            homeActivity.openToBrowserAndLoad(
+                item.url!!,
+                false,
+                BrowserDirection.FromBookmarks,
+                flags = flags
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN handleBookmarkTapped is called with HomeFragment THEN load the bookmark in new tab`() {
+        var invokePendingDeletionInvoked = false
+        val flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
+
+        every { navDestination.id } returns R.id.homeFragment
+
+        createController(
+            invokePendingDeletion = {
+                invokePendingDeletionInvoked = true
+            }
+        ).handleBookmarkTapped(item)
+
+        assertTrue(invokePendingDeletionInvoked)
+        verify {
+            homeActivity.openToBrowserAndLoad(
+                item.url!!,
+                true,
+                BrowserDirection.FromBookmarks,
+                flags = flags
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN handleBookmarkTapped is called with private browsing THEN load the bookmark in new tab`() {
+        var invokePendingDeletionInvoked = false
+        every { homeActivity.browsingModeManager.mode } returns BrowsingMode.Private
         val flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
 
         createController(
@@ -290,7 +343,7 @@ class BookmarkControllerTest {
         verify {
             homeActivity.openToBrowserAndLoad(
                 item.url!!,
-                true,
+                false,
                 BrowserDirection.FromBookmarks,
                 flags = flags
             )
