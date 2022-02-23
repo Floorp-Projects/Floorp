@@ -443,7 +443,8 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
   auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
   wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
 
-  aBuilder.PushImage(fill, fill, !BackfaceIsHidden(), rendering, key.value());
+  aBuilder.PushImage(fill, fill, !BackfaceIsHidden(), false, rendering,
+                     key.value());
   return result;
 }
 

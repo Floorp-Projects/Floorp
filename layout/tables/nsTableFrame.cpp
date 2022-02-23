@@ -6868,7 +6868,7 @@ static void CreateWRCommandsForBeveledBorder(
                        aBorderParams.mAppUnitsPerDevPixel,
                        aBorderParams.mBackfaceIsVisible, false);
 
-    aBuilder.PushRect(r, r, aBorderParams.mBackfaceIsVisible, color);
+    aBuilder.PushRect(r, r, aBorderParams.mBackfaceIsVisible, false, color);
   }
 }
 

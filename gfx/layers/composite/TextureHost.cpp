@@ -555,7 +555,7 @@ void BufferTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
       aFlags.contains(PushDisplayItemFlag::SUPPORTS_EXTERNAL_BUFFER_TEXTURES);
   if (GetFormat() != gfx::SurfaceFormat::YUV) {
     MOZ_ASSERT(aImageKeys.length() == 1);
-    aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
+    aBuilder.PushImage(aBounds, aClip, true, false, aFilter, aImageKeys[0],
                        !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                        wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
                        preferCompositorSurface, useExternalSurface);
