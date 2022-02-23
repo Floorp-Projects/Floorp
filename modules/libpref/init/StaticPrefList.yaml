@@ -9470,6 +9470,11 @@
 #endif
   mirror: always
 
+- name: media.webrtc.platformencoder.sw_mft
+  type: RelaxedAtomicBool
+  value: @IS_EARLY_BETA_OR_EARLIER@
+  mirror: always
+
 - name: media.block-autoplay-until-in-foreground
   type: bool
 #if !defined(MOZ_WIDGET_ANDROID)
