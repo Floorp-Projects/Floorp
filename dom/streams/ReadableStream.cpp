@@ -71,22 +71,11 @@ inline void ImplCycleCollectionUnlink(
 namespace mozilla::dom {
 
 // Only needed for refcounted objects.
-NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStream)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStream)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mController, mReader,
-                                  mErrorAlgorithm, mNativeUnderlyingSource)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  tmp->mStoredError.setNull();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ReadableStream)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal, mController, mReader,
-                                    mErrorAlgorithm, mNativeUnderlyingSource)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ReadableStream)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStoredError)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(ReadableStream,
+                                                      (mGlobal, mController,
+                                                       mReader, mErrorAlgorithm,
+                                                       mNativeUnderlyingSource),
+                                                      (mStoredError))
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStream)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ReadableStream)
