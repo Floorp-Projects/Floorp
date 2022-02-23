@@ -1324,7 +1324,7 @@ public class GeckoViewActivity extends AppCompatActivity
 
   private void setGeckoViewSession(TabSession session, boolean activateTab) {
     final WebExtensionController controller = sGeckoRuntime.getWebExtensionController();
-    final GeckoSession previousSession = mGeckoView.releaseSession();
+    final GeckoSession previousSession = mGeckoView.getSession();
     if (previousSession != null) {
       controller.setTabActive(previousSession, false);
     }
