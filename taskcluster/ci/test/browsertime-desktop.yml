@@ -63,10 +63,18 @@ browsertime-tp6:
         run-on-projects:
             by-variant:
                 fission:
-                    by-test-platform:
-                        windows.*-32.*: []
-                        .*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
-                        default: []
+                    by-subtest:
+                        netflix:  # Bug 1756212 - Disable temporarily due to perma on mac
+                            by-test-platform:
+                                windows.*-32.*: []
+                                (linux|windows10-64).*shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
+                                macosx1015.*shippable-qr.*: []
+                                default: []
+                        default:
+                            by-test-platform:
+                                windows.*-32.*: []
+                                .*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                                default: []
                 default:
                     by-app:
                         firefox:
