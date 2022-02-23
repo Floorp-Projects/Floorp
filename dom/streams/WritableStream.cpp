@@ -35,27 +35,12 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(WritableStream)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WritableStream)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mCloseRequest, mController,
-                                  mInFlightWriteRequest, mInFlightCloseRequest,
-                                  mPendingAbortRequestPromise, mWriter,
-                                  mWriteRequests)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  tmp->mPendingAbortRequestReason.setNull();
-  tmp->mStoredError.setNull();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WritableStream)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
-      mGlobal, mCloseRequest, mController, mInFlightWriteRequest,
-      mInFlightCloseRequest, mWriter, mWriteRequests)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(WritableStream)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mPendingAbortRequestReason)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStoredError)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(
+    WritableStream,
+    (mGlobal, mCloseRequest, mController, mInFlightWriteRequest,
+     mInFlightCloseRequest, mPendingAbortRequestPromise, mWriter,
+     mWriteRequests),
+    (mPendingAbortRequestReason, mStoredError))
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WritableStream)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WritableStream)
