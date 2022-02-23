@@ -18,7 +18,7 @@ add_task(async function() {
     ["vertical", "window:small"],
     ["horizontal", "bottom"],
     ["vertical", "right"],
-    ["horizontal", "window:big"]
+    ["horizontal", "window:big"],
   ];
 
   for (const layout of layouts) {

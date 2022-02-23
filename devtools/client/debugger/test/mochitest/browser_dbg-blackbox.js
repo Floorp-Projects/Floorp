@@ -1,10 +1,9 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public↩
- * License, v. 2.0. If a copy of the MPL was not distributed with this↩
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // This test covers all the blackboxing functionality relating to a selected
 // source open in the debugger editor.
-"use strict";
 
 requestLongerTimeout(5);
 
@@ -12,11 +11,16 @@ const contextMenuItems = {
   ignoreSource: { selector: "#node-menu-blackbox", label: "Ignore source" },
   unignoreSource: { selector: "#node-menu-blackbox", label: "Unignore source" },
   ignoreLines: { selector: "#node-menu-blackbox-lines", label: "Ignore lines" },
-  unignoreLines: { selector: "#node-menu-blackbox-lines", label: "Unignore lines" },
+  unignoreLines: {
+    selector: "#node-menu-blackbox-lines",
+    label: "Unignore lines",
+  },
   ignoreLine: { selector: "#node-menu-blackbox-line", label: "Ignore line" },
-  unignoreLine: { selector: "#node-menu-blackbox-line", label: "Unignore line" },
-}
-
+  unignoreLine: {
+    selector: "#node-menu-blackbox-line",
+    label: "Unignore line",
+  },
+};
 
 // Tests basic functionality for blackbox source and blackbox single and multiple lines
 add_task(async function testAllBlackBox() {
@@ -81,7 +85,10 @@ add_task(async function testBlackBoxOnReload() {
   info("Ignoring line 7 to 9");
   selectEditorLines(dbg, 7, 9);
   await openContextMenu(dbg, "CodeMirrorLines");
-  await assertBlackBoxBoxContextMenuItems(dbg, [contextMenuItems.unignoreSource, contextMenuItems.ignoreLines]);
+  await assertBlackBoxBoxContextMenuItems(dbg, [
+    contextMenuItems.unignoreSource,
+    contextMenuItems.ignoreLines,
+  ]);
   await selectBlackBoxContextMenuItem(dbg, "blackbox-lines");
 
   await reload(dbg, file);
@@ -98,17 +105,24 @@ async function testBlackBoxSource(dbg, source) {
 
   info("blackbox the whole simple4.js source file");
   await openContextMenu(dbg, "CodeMirrorLines");
-  await assertBlackBoxBoxContextMenuItems(dbg, [contextMenuItems.ignoreSource, contextMenuItems.ignoreLine]);
+  await assertBlackBoxBoxContextMenuItems(dbg, [
+    contextMenuItems.ignoreSource,
+    contextMenuItems.ignoreLine,
+  ]);
   await selectBlackBoxContextMenuItem(dbg, "blackbox");
 
   invokeInTab("funcA");
 
-  info("The debugger statement on line 2 and the breakpoint on line 8 should not be hit")
+  info(
+    "The debugger statement on line 2 and the breakpoint on line 8 should not be hit"
+  );
   assertNotPaused(dbg);
 
   info("unblackbox the whole source");
   await openContextMenu(dbg, "CodeMirrorLines");
-  await assertBlackBoxBoxContextMenuItems(dbg, [contextMenuItems.unignoreSource]);
+  await assertBlackBoxBoxContextMenuItems(dbg, [
+    contextMenuItems.unignoreSource,
+  ]);
   await selectBlackBoxContextMenuItem(dbg, "blackbox");
 
   invokeInTab("funcA");
@@ -130,7 +144,10 @@ async function testBlackBoxMultipleLines(dbg, source) {
   info("Blackbox lines 7 to 13");
   selectEditorLines(dbg, 7, 13);
   await openContextMenu(dbg, "CodeMirrorLines");
-  await assertBlackBoxBoxContextMenuItems(dbg, [contextMenuItems.ignoreSource, contextMenuItems.ignoreLines]);
+  await assertBlackBoxBoxContextMenuItems(dbg, [
+    contextMenuItems.ignoreSource,
+    contextMenuItems.ignoreLines,
+  ]);
   await selectBlackBoxContextMenuItem(dbg, "blackbox-lines");
 
   invokeInTab("funcA");
@@ -140,13 +157,18 @@ async function testBlackBoxMultipleLines(dbg, source) {
   assertPausedAtSourceAndLine(dbg, source.id, 2);
   await resumeAndWaitForPauseCounter(dbg);
 
-  info("The breakpoint set on line 8 should not get hit as its within the blackboxed range");
+  info(
+    "The breakpoint set on line 8 should not get hit as its within the blackboxed range"
+  );
   assertNotPaused(dbg);
 
-  info ("Unblackbox lines 7 to 13");
+  info("Unblackbox lines 7 to 13");
   selectEditorLines(dbg, 7, 13);
   await openContextMenu(dbg, "CodeMirrorLines");
-  await assertBlackBoxBoxContextMenuItems(dbg, [contextMenuItems.unignoreSource, contextMenuItems.unignoreLines]);
+  await assertBlackBoxBoxContextMenuItems(dbg, [
+    contextMenuItems.unignoreSource,
+    contextMenuItems.unignoreLines,
+  ]);
   await selectBlackBoxContextMenuItem(dbg, "blackbox-lines");
 
   invokeInTab("funcA");
@@ -170,7 +192,6 @@ async function testBlackBoxSingleLine(dbg, source) {
   await assertBlackBoxBoxContextMenuItems(dbg, [contextMenuItems.ignoreLine]);
   await selectBlackBoxContextMenuItem(dbg, "blackbox-line");
 
-
   invokeInTab("funcA");
 
   // assert the pause at the breakpoint set on line 8
@@ -183,7 +204,10 @@ async function testBlackBoxSingleLine(dbg, source) {
   info("Un-blackbox line 2 of funcA()");
   selectEditorLines(dbg, 2, 2);
   await openContextMenu(dbg, "CodeMirrorLines");
-  await assertBlackBoxBoxContextMenuItems(dbg, [contextMenuItems.unignoreSource, contextMenuItems.unignoreLine]);
+  await assertBlackBoxBoxContextMenuItems(dbg, [
+    contextMenuItems.unignoreSource,
+    contextMenuItems.unignoreLine,
+  ]);
   await selectBlackBoxContextMenuItem(dbg, "blackbox-line");
 
   invokeInTab("funcA");
@@ -206,8 +230,8 @@ async function testBlackBoxSingleLine(dbg, source) {
 async function resumeAndWaitForPauseCounter(dbg) {
   const prevThreadPauseCounter = getThreadContext(dbg).pauseCounter;
   await resume(dbg);
-  return waitFor(() =>
-    getThreadContext(dbg).pauseCounter > prevThreadPauseCounter
+  return waitFor(
+    () => getThreadContext(dbg).pauseCounter > prevThreadPauseCounter
   );
 }
 
@@ -219,7 +243,10 @@ async function resumeAndWaitForPauseCounter(dbg) {
  *                 e.g When the whole source is blackboxed, we should only see the "Unignore source"
  *                 context menu item.
  */
-async function assertBlackBoxBoxContextMenuItems(dbg, expectedContextMenuItems) {
+async function assertBlackBoxBoxContextMenuItems(
+  dbg,
+  expectedContextMenuItems
+) {
   for (const item of expectedContextMenuItems) {
     await assertContextMenuLabel(dbg, item.selector, item.label);
   }
@@ -261,6 +288,8 @@ async function selectBlackBoxContextMenuItem(dbg, itemName) {
  * @params {Number} endLine
  */
 function selectEditorLines(dbg, startLine, endLine) {
- getCM(dbg).setSelection({ line: startLine - 1, ch: 0 }, { line: endLine - 1, ch: 0 });
+  getCM(dbg).setSelection(
+    { line: startLine - 1, ch: 0 },
+    { line: endLine - 1, ch: 0 }
+  );
 }
-

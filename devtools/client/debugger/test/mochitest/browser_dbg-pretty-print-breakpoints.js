@@ -19,7 +19,11 @@ add_task(async function() {
 
   await assertBreakpointsInNonPrettyAndPrettySources(dbg);
 
-  is(dbg.selectors.getBreakpointCount(), 1, "Only one breakpoint still exists after pause ");
+  is(
+    dbg.selectors.getBreakpointCount(),
+    1,
+    "Only one breakpoint still exists after pause "
+  );
 
   await resume(dbg);
 });
@@ -51,7 +55,11 @@ add_task(async function() {
 
   await assertBreakpointsInNonPrettyAndPrettySources(dbg);
 
-  is(dbg.selectors.getBreakpointCount(), 1, "Only one breakpoint still exists after reload and pause ");
+  is(
+    dbg.selectors.getBreakpointCount(),
+    1,
+    "Only one breakpoint still exists after reload and pause "
+  );
 });
 
 // Test that breakpoints appear and work when set in the minified source
@@ -60,12 +68,14 @@ add_task(async function() {
 
   await selectSource(dbg, "pretty.js");
 
-  info ("Add breakpoint to pretty.js (generated source)");
+  info("Add breakpoint to pretty.js (generated source)");
   await addBreakpoint(dbg, "pretty.js", 4, 7);
 
   await prettyPrint(dbg);
 
-  info("Check that equivalent breakpoint is added to pretty.js:formatted (original source)");
+  info(
+    "Check that equivalent breakpoint is added to pretty.js:formatted (original source)"
+  );
   await selectSource(dbg, "pretty.js:formatted");
   await assertBreakpoint(dbg, 5);
 
@@ -80,13 +90,17 @@ add_task(async function() {
 
   await assertBreakpointsInNonPrettyAndPrettySources(dbg);
 
-  is(dbg.selectors.getBreakpointCount(), 1, "Only one breakpoint still exists after reload and pause ");
+  is(
+    dbg.selectors.getBreakpointCount(),
+    1,
+    "Only one breakpoint still exists after reload and pause "
+  );
 });
 
-
-
 async function assertBreakpointsInNonPrettyAndPrettySources(dbg) {
-  info("Asserts breakpoint pause and display on the correct line in the pretty printed source");
+  info(
+    "Asserts breakpoint pause and display on the correct line in the pretty printed source"
+  );
   const prettyPrintedSource = findSource(dbg, "pretty.js:formatted");
   await assertPausedAtSourceAndLine(dbg, prettyPrintedSource.id, 5);
   await assertBreakpoint(dbg, 5);

@@ -28,7 +28,11 @@ add_task(async function() {
     "Refresh button is displayed after adding a watch expression"
   );
 
-  is(getWatchExpressionLabel(dbg, 1), "someVariable", "Watch expression was added");
+  is(
+    getWatchExpressionLabel(dbg, 1),
+    "someVariable",
+    "Watch expression was added"
+  );
   is(
     getWatchExpressionValue(dbg, 1),
     "(unavailable)",
@@ -42,7 +46,11 @@ add_task(async function() {
   info("Switch back to the debugger");
   await dbg.toolbox.selectTool("jsdebugger");
 
-  is(getWatchExpressionLabel(dbg, 1), "someVariable", "Watch expression is still available");
+  is(
+    getWatchExpressionLabel(dbg, 1),
+    "someVariable",
+    "Watch expression is still available"
+  );
   is(
     getWatchExpressionValue(dbg, 1),
     "(unavailable)",
@@ -57,7 +65,11 @@ add_task(async function() {
   await clickElement(dbg, "expressionRefresh");
   await refreshed;
 
-  is(getWatchExpressionLabel(dbg, 1), "someVariable", "Watch expression is still available");
+  is(
+    getWatchExpressionLabel(dbg, 1),
+    "someVariable",
+    "Watch expression is still available"
+  );
   is(
     getWatchExpressionValue(dbg, 1),
     "1",

@@ -12,9 +12,9 @@ add_task(async function() {
   await waitForSources(dbg, "bundle.js");
   const bundleSrc = findSource(dbg, "bundle.js");
 
-  info('Pretty print the bundle');
+  info("Pretty print the bundle");
   await selectSource(dbg, bundleSrc);
   clickElement(dbg, "prettyPrintButton");
   await waitForSelectedSource(dbg, "bundle.js:formatted");
-  ok(true, 'everything finished');
+  ok(true, "everything finished");
 });

@@ -22,6 +22,8 @@ add_task(async function() {
   const calls = dbg.win.document.querySelectorAll(".highlight-function-calls");
   is(calls.length, 2);
   pressKey(dbg, "commandKeyUp");
-  const nocalls = dbg.win.document.querySelectorAll(".highlight-function-calls");
+  const nocalls = dbg.win.document.querySelectorAll(
+    ".highlight-function-calls"
+  );
   is(nocalls.length, 0);
 });

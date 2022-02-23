@@ -35,7 +35,7 @@ function getSplitConsole(dbg) {
   return new Promise(resolve => {
     toolbox.getPanelWhenReady("webconsole").then(() => {
       ok(toolbox.splitConsole, "Split console is shown.");
-      let jsterm = toolbox.getPanel("webconsole").hud.jsterm;
+      const jsterm = toolbox.getPanel("webconsole").hud.jsterm;
       resolve(jsterm);
     });
   });

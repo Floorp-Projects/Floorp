@@ -5,7 +5,11 @@
 // Test that URL-less sources have tabs added to the UI but
 // do not persist upon reload
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "simple1.js", "simple2.js");
+  const dbg = await initDebugger(
+    "doc-scripts.html",
+    "simple1.js",
+    "simple2.js"
+  );
 
   await selectSource(dbg, "simple1.js");
   await selectSource(dbg, "simple2.js");

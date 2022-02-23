@@ -25,7 +25,7 @@ add_task(async function() {
   await reload(dbg);
   await waitForPaused(dbg);
 
-  info("Assert that the source is not long.js")
+  info("Assert that the source is not long.js");
   // Adding this is redundant but just to make it explicit that we
   // make sure long.js should not exist yet
   assertSourceDoesNotExist(dbg, "long.js");

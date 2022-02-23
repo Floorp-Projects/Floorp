@@ -21,7 +21,7 @@ function createDebuggerContext(toolbox) {
     commands: toolbox.commands,
     toolbox: toolbox,
     win: win,
-    panel: panel
+    panel: panel,
   };
 }
 
@@ -232,10 +232,8 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
           if (!source.url.includes(sourceOrUrl)) {
             return false;
           }
-        } else {
-          if (source.id != sourceOrUrl.id) {
-            return false;
-          }
+        } else if (source.id != sourceOrUrl.id) {
+          return false;
         }
       }
 
@@ -317,7 +315,6 @@ function assertDebugLine(dbg, line, column) {
   // on the line is rendered and in the dom.
   getCM(dbg).scrollIntoView({ line, ch: 0 });
 
-
   if (!lineInfo.wrapClass) {
     const pauseLine = getVisibleSelectedFrameLine(dbg);
     ok(false, `Expected pause line on line ${line}, it is on ${pauseLine}`);
@@ -381,7 +378,6 @@ function assertLineIsBreakable(dbg, file, line, shouldBeBreakable) {
   }
 }
 
-
 /**
  * Assert that the debugger is highlighting the correct location.
  *
@@ -438,7 +434,12 @@ function isPaused(dbg) {
  * @param {Number} expectedLine
  * @param {Number} [expectedColumn]
  */
-function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine, expectedColumn) {
+function assertPausedAtSourceAndLine(
+  dbg,
+  expectedSourceId,
+  expectedLine,
+  expectedColumn
+) {
   // Check that the debugger is paused.
   assertPaused(dbg);
 
@@ -449,7 +450,9 @@ function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine, expect
   ok(frames.length >= 1, "Got at least one frame");
 
   // Lets make sure we can assert both original and generated file locations when needed
-  const { sourceId, line, column } =  isGeneratedId(expectedSourceId) ? frames[0].generatedLocation : frames[0].location;
+  const { sourceId, line, column } = isGeneratedId(expectedSourceId)
+    ? frames[0].generatedLocation
+    : frames[0].location;
   is(sourceId, expectedSourceId, "Frame has correct source");
   ok(
     line == expectedLine,
@@ -670,20 +673,28 @@ function pauseTest() {
  *        If true, won't throw if the source is missing.
  * @return {Object} source
  */
-function findSource(dbg, filenameOrUrlOrSource, { silent } = { silent: false }) {
+function findSource(
+  dbg,
+  filenameOrUrlOrSource,
+  { silent } = { silent: false }
+) {
   if (typeof filenameOrUrlOrSource !== "string") {
     // Support passing in a source object itself all APIs that use this
     // function support both styles
-    return filenameOrUrlOrSource; 
+    return filenameOrUrlOrSource;
   }
 
   const sources = dbg.selectors.getSourceList();
   const source = sources.find(s => {
     // Sources don't have a file name attribute, we need to compute it here:
-    const sourceFileName = s.url ? s.url.substring(s.url.lastIndexOf("/") + 1) : "";
+    const sourceFileName = s.url
+      ? s.url.substring(s.url.lastIndexOf("/") + 1)
+      : "";
     // The input argument may either be only the filename, or the complete URL
     // This helps match sources whose URL doesn't contain a filename, like data: URLs
-    return sourceFileName == filenameOrUrlOrSource || s.url == filenameOrUrlOrSource;
+    return (
+      sourceFileName == filenameOrUrlOrSource || s.url == filenameOrUrlOrSource
+    );
   });
 
   if (!source) {
@@ -711,7 +722,7 @@ function findSourceContent(dbg, url, opts) {
   }
 
   if (content.state !== "fulfilled") {
-    throw new Error("Expected loaded source, got" + content.value);
+    throw new Error(`Expected loaded source, got${content.value}`);
   }
 
   return content.value;
@@ -890,8 +901,6 @@ async function navigateToAbsoluteURL(dbg, url, ...sources) {
   await navigateTo(url);
   return waitForSources(dbg, ...sources);
 }
-
-
 
 function getFirstBreakpointColumn(dbg, { line, sourceId }) {
   const { getSource, getFirstBreakpointPosition } = dbg.selectors;
@@ -2218,7 +2227,7 @@ async function hasConsoleMessage({ toolbox }, msg) {
 function evaluateExpressionInConsole(hud, expression) {
   const onResult = new Promise(res => {
     const onNewMessage = messages => {
-      for (let message of messages) {
+      for (const message of messages) {
         if (message.node.classList.contains("result")) {
           hud.ui.off("new-messages", onNewMessage);
           res(message.node);
@@ -2332,8 +2341,8 @@ function createVersionizedHttpTestServer(testFolderName) {
     if (request.path == "/" || request.path == "/index.html") {
       response.setHeader("Content-Type", "text/html");
     }
-    const url = URL_ROOT + `examples/${testFolderName}/v${currentVersion}${request.path}`;
-    info("[test-http-server] serving: " + url);
+    const url = `${URL_ROOT}examples/${testFolderName}/v${currentVersion}${request.path}`;
+    info(`[test-http-server] serving: ${url}`);
     const content = await fetch(url);
     const text = await content.text();
     response.write(text);

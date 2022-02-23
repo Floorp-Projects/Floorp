@@ -37,7 +37,10 @@ add_task(async function() {
 
   rightClickElement(dbg, "breakpointItem", 2);
   await waitForContextMenu(dbg);
-  const disableBreakpointDispatch = waitForDispatch(dbg.store, "SET_BREAKPOINT");
+  const disableBreakpointDispatch = waitForDispatch(
+    dbg.store,
+    "SET_BREAKPOINT"
+  );
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableSelf);
   await disableBreakpointDispatch;
 

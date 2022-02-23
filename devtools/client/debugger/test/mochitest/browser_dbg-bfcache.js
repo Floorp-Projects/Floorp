@@ -23,7 +23,9 @@ add_task(async function() {
 });
 
 async function testSourcesOnNavigation() {
-  info("Test that sources appear in the debugger when navigating using the BFCache")
+  info(
+    "Test that sources appear in the debugger when navigating using the BFCache"
+  );
   const dbg = await initDebugger("doc-bfcache1.html");
 
   await navigate(dbg, "doc-bfcache2.html", "doc-bfcache2.html");
@@ -51,7 +53,7 @@ async function testDebuggerPauseStateOnNavigation() {
   await navigate(dbg, "doc-bfcache2.html");
   await waitForSources(dbg, "doc-bfcache2.html");
 
-  await goBack(EXAMPLE_URL + "doc-bfcache1.html");
+  await goBack(`${EXAMPLE_URL}doc-bfcache1.html`);
   await waitForSources(dbg, "doc-bfcache1.html");
 
   await reload(dbg);
@@ -59,7 +61,7 @@ async function testDebuggerPauseStateOnNavigation() {
 
   ok(dbg.toolbox.isHighlighted("jsdebugger"), "Debugger is highlighted");
 
-  await goForward(EXAMPLE_URL + "doc-bfcache2.html");
+  await goForward(`${EXAMPLE_URL}doc-bfcache2.html`);
 
   await waitUntil(() => !dbg.toolbox.isHighlighted("jsdebugger"));
   ok(true, "Debugger is not highlighted");

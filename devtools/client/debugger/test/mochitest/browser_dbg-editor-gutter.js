@@ -35,7 +35,7 @@ add_task(async function() {
   dbg.actions.toggleMapScopes();
   const {
     selectors: { getBreakpoint, getBreakpointCount },
-    getState
+    getState,
   } = dbg;
   await waitForSources(dbg, "bundle.js", "sorted.js", "test.js");
 

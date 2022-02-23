@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-
 /**
  * Tests that a chrome debugger can be created in a new process.
  */
@@ -14,7 +13,9 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(/NS_ERROR_FAILURE/);
 
 requestLongerTimeout(5);
 
-const { BrowserToolboxLauncher } = ChromeUtils.import("resource://devtools/client/framework/browser-toolbox/Launcher.jsm");
+const { BrowserToolboxLauncher } = ChromeUtils.import(
+  "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
+);
 let gProcess = undefined;
 
 add_task(async function() {
@@ -38,10 +39,10 @@ add_task(async function() {
     "The remote debugger process doesn't have a pid (?!)"
   );
 
-  info("process location: " + gProcess._dbgProcess.location);
-  info("process pid: " + gProcess._dbgProcess.pid);
-  info("process name: " + gProcess._dbgProcess.processName);
-  info("process sig: " + gProcess._dbgProcess.processSignature);
+  info(`process location: ${gProcess._dbgProcess.location}`);
+  info(`process pid: ${gProcess._dbgProcess.pid}`);
+  info(`process name: ${gProcess._dbgProcess.processName}`);
+  info(`process sig: ${gProcess._dbgProcess.processSignature}`);
 
   ok(
     gProcess._dbgProfilePath,
@@ -54,7 +55,7 @@ add_task(async function() {
     "The remote debugger profile isn't where we expect it!"
   );
 
-  info("profile path: " + gProcess._dbgProfilePath);
+  info(`profile path: ${gProcess._dbgProfilePath}`);
 
   await gProcess.close();
 });
@@ -76,9 +77,9 @@ function onClose() {
     "The remote debugger process didn't die cleanly."
   );
 
-  info("process exit value: " + gProcess._dbgProcess.exitCode);
+  info(`process exit value: ${gProcess._dbgProcess.exitCode}`);
 
-  info("profile path: " + gProcess._dbgProfilePath);
+  info(`profile path: ${gProcess._dbgProfilePath}`);
 
   finish();
 }
