@@ -2141,7 +2141,7 @@ void ReflowInput::InitConstraints(
     ComputedMinISize() = ComputedMinBSize() = 0;
     ComputedMaxBSize() = ComputedMaxBSize() = NS_UNCONSTRAINEDSIZE;
   } else {
-    // Get the containing block reflow input
+    // Get the containing block's reflow input
     const ReflowInput* cbri = mCBReflowInput;
     MOZ_ASSERT(cbri, "no containing block");
     MOZ_ASSERT(mFrame->GetParent());
@@ -2187,7 +2187,7 @@ void ReflowInput::InitConstraints(
         // such as images.  See bug 54119.  The else clause "blockSizeUnit =
         // eStyleUnit_Auto;" used to be called exclusively.
         if (mFlags.mIsReplaced && mStyleDisplay->IsInlineOutsideStyle()) {
-          // Get the containing block reflow input
+          // Get the containing block's reflow input
           NS_ASSERTION(nullptr != cbri, "no containing block");
           // in quirks mode, get the cb height using the special quirk method
           if (!wm.IsVertical() &&

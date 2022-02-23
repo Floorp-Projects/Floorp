@@ -753,7 +753,7 @@ void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     // In general, frames that have contain:layout+size can be reflow roots.
     // (One exception: table-wrapper frames don't work well as reflow roots,
     // because their inner-table ReflowInput init path tries to reuse & deref
-    // the wrapper's containing block reflow input, which may be null if we
+    // the wrapper's containing block's reflow input, which may be null if we
     // initiate reflow from the table-wrapper itself.)
     //
     // Changes to `contain` force frame reconstructions, so this bit can be set
@@ -10788,8 +10788,8 @@ void nsIFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
 
     // create a reflow input to tell our child to flow at the given size.
 
-    // Construct a bogus parent reflow input so that there's a usable
-    // containing block reflow input.
+    // Construct a bogus parent reflow input so that there's a usable reflow
+    // input for the containing block.
     nsMargin margin(0, 0, 0, 0);
     GetXULMargin(margin);
 
