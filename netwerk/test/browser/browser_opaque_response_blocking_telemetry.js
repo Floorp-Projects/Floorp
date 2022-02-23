@@ -153,6 +153,33 @@ add_task(async function() {
         browser,
         [testcase.url, testcase.loadType, testcase.iframe],
         async (url, loadType, iframe) => {
+          async function ensureDecodeFinished() {
+            // Calling drawWindow (via snapshotWindowWithOptions) sync decodes
+            // images by default, as long as this asks for the same image
+            // surface with the same options it should force the decode that
+            // was kicked off by being in the document to finish.
+            SpecialPowers.snapshotWindowWithOptions(
+              content.window,
+              undefined /* use the default rect */,
+              undefined /* use the default bgcolor */,
+              // Use flags to make this snapshot as close as possible to
+              // drawing to the screen.
+              {
+                DRAWWINDOW_DRAW_VIEW: true,
+                DRAWWINDOW_USE_WIDGET_LAYERS: true,
+                DRAWWINDOW_DRAW_CARET: true,
+              }
+            );
+
+            // And then wait two frames to make sure the results of that
+            // decode are flushed to the screen.
+            await new Promise(r =>
+              content.requestAnimationFrame(() =>
+                content.requestAnimationFrame(r)
+              )
+            );
+          }
+
           try {
             if (loadType == "media") {
               const audio = content.document.createElement("audio");
@@ -188,6 +215,7 @@ add_task(async function() {
               });
               content.document.body.appendChild(object);
               await onloadPromise;
+              await ensureDecodeFinished();
               content.document.body.removeChild(object);
               return;
             }
@@ -199,6 +227,7 @@ add_task(async function() {
               });
               content.document.body.appendChild(embed);
               await onloadPromise;
+              await ensureDecodeFinished();
               content.document.body.removeChild(embed);
               return;
             }
