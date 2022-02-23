@@ -108,7 +108,7 @@ bool IsRunningUnderSnap() {
       return g_getenv("SNAP_NAME");
     }();
     return instanceName && !strcmp(instanceName, SNAP_INSTANCE_NAME);
-  };
+  }();
   return sRunning;
 }
 
