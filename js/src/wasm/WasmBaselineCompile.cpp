@@ -6690,22 +6690,22 @@ static void DivF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
 #  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 static void MinF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
                      RegV128 temp1, RegV128 temp2) {
-  masm.minFloat32x4(rs, rsd, temp1, temp2);
+  masm.minFloat32x4(rsd, rs, rsd, temp1, temp2);
 }
 
 static void MinF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
                      RegV128 temp1, RegV128 temp2) {
-  masm.minFloat64x2(rs, rsd, temp1, temp2);
+  masm.minFloat64x2(rsd, rs, rsd, temp1, temp2);
 }
 
 static void MaxF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
                      RegV128 temp1, RegV128 temp2) {
-  masm.maxFloat32x4(rs, rsd, temp1, temp2);
+  masm.maxFloat32x4(rsd, rs, rsd, temp1, temp2);
 }
 
 static void MaxF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
                      RegV128 temp1, RegV128 temp2) {
-  masm.maxFloat64x2(rs, rsd, temp1, temp2);
+  masm.maxFloat64x2(rsd, rs, rsd, temp1, temp2);
 }
 
 static void PMinF32x4(MacroAssembler& masm, RegV128 rsd, RegV128 rs,

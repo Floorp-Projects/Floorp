@@ -853,6 +853,45 @@ void MacroAssemblerX86Shared::minMaxFloat32x4(bool isMin, FloatRegister lhs,
   /* clang-format on */
 }
 
+void MacroAssemblerX86Shared::minMaxFloat32x4AVX(bool isMin, FloatRegister lhs,
+                                                 FloatRegister rhs,
+                                                 FloatRegister temp1,
+                                                 FloatRegister temp2,
+                                                 FloatRegister output) {
+  ScratchSimd128Scope scratch(asMasm());
+  Label l;
+  SimdConstant quietBits(SimdConstant::SplatX4(int32_t(0x00400000)));
+
+  /* clang-format off */ /* leave my comments alone */
+  FloatRegister lhsCopy = moveSimd128FloatIfEqual(lhs, scratch, output);
+  // Allow rhs be assigned to scratch when rhs == lhs and == output --
+  // don't make a special case since the semantics require setup QNaN bits.
+  FloatRegister rhsCopy = moveSimd128FloatIfEqual(rhs, scratch, output);
+  if (isMin) {
+    vminps(Operand(rhs), lhs, temp2);             // min lhs, rhs
+    vminps(Operand(lhs), rhs, temp1);             // min rhs, lhs
+  } else {
+    vmaxps(Operand(rhs), lhs, temp2);             // max lhs, rhs
+    vmaxps(Operand(lhs), rhs, temp1);             // max rhs, lhs
+  }
+  vorps(temp1, temp2, output);                    // fix min(-0, 0) with OR
+  vcmpunordps(Operand(rhsCopy), lhsCopy, temp1);  // lhs UNORD rhs
+  vptest(temp1, temp1);                           // check if any unordered
+  j(Assembler::Equal, &l);                        //   and exit if not
+
+  // Slow path.
+  // output has result for non-NaN lanes, garbage in NaN lanes.
+  // temp1 has lhs UNORD rhs.
+  // temp2 is dead.
+  vcmpunordps(Operand(lhsCopy), lhsCopy, temp2);  // find NaN lanes in lhs
+  vblendvps(temp2, lhsCopy, rhsCopy, temp2);      //   add other lines from rhs
+  asMasm().vporSimd128(quietBits, temp2, temp2);  // setup QNaN bits in NaN lanes
+  vblendvps(temp1, temp2, output, output);        // replace NaN lines from temp2
+
+  bind(&l);
+  /* clang-format on */
+}
+
 // Exactly as above.
 void MacroAssemblerX86Shared::minMaxFloat64x2(bool isMin, FloatRegister lhs,
                                               Operand rhs, FloatRegister temp1,
@@ -906,32 +945,87 @@ void MacroAssemblerX86Shared::minMaxFloat64x2(bool isMin, FloatRegister lhs,
   /* clang-format on */
 }
 
-void MacroAssemblerX86Shared::minFloat32x4(FloatRegister lhs, Operand rhs,
-                                           FloatRegister temp1,
-                                           FloatRegister temp2,
-                                           FloatRegister output) {
-  minMaxFloat32x4(/*isMin=*/true, lhs, rhs, temp1, temp2, output);
+void MacroAssemblerX86Shared::minMaxFloat64x2AVX(bool isMin, FloatRegister lhs,
+                                                 FloatRegister rhs,
+                                                 FloatRegister temp1,
+                                                 FloatRegister temp2,
+                                                 FloatRegister output) {
+  ScratchSimd128Scope scratch(asMasm());
+  Label l;
+  SimdConstant quietBits(SimdConstant::SplatX2(int64_t(0x0008000000000000ull)));
+
+  /* clang-format off */ /* leave my comments alone */
+  FloatRegister lhsCopy = moveSimd128FloatIfEqual(lhs, scratch, output);
+  // Allow rhs be assigned to scratch when rhs == lhs and == output --
+  // don't make a special case since the semantics require setup QNaN bits.
+  FloatRegister rhsCopy = moveSimd128FloatIfEqual(rhs, scratch, output);
+  if (isMin) {
+    vminpd(Operand(rhs), lhs, temp2);             // min lhs, rhs
+    vminpd(Operand(lhs), rhs, temp1);             // min rhs, lhs
+  } else {
+    vmaxpd(Operand(rhs), lhs, temp2);             // max lhs, rhs
+    vmaxpd(Operand(lhs), rhs, temp1);             // max rhs, lhs
+  }
+  vorpd(temp1, temp2, output);                    // fix min(-0, 0) with OR
+  vcmpunordpd(Operand(rhsCopy), lhsCopy, temp1);  // lhs UNORD rhs
+  vptest(temp1, temp1);                           // check if any unordered
+  j(Assembler::Equal, &l);                        //   and exit if not
+
+  // Slow path.
+  // output has result for non-NaN lanes, garbage in NaN lanes.
+  // temp1 has lhs UNORD rhs.
+  // temp2 is dead.
+  vcmpunordpd(Operand(lhsCopy), lhsCopy, temp2);  // find NaN lanes in lhs
+  vblendvpd(temp2, lhsCopy, rhsCopy, temp2);      //   add other lines from rhs
+  asMasm().vporSimd128(quietBits, temp2, temp2);  // setup QNaN bits in NaN lanes
+  vblendvpd(temp1, temp2, output, output);        // replace NaN lines from temp2
+
+  bind(&l);
+  /* clang-format on */
 }
 
-void MacroAssemblerX86Shared::maxFloat32x4(FloatRegister lhs, Operand rhs,
+void MacroAssemblerX86Shared::minFloat32x4(FloatRegister lhs, FloatRegister rhs,
                                            FloatRegister temp1,
                                            FloatRegister temp2,
                                            FloatRegister output) {
-  minMaxFloat32x4(/*isMin=*/false, lhs, rhs, temp1, temp2, output);
+  if (HasAVX()) {
+    minMaxFloat32x4AVX(/*isMin=*/true, lhs, rhs, temp1, temp2, output);
+    return;
+  }
+  minMaxFloat32x4(/*isMin=*/true, lhs, Operand(rhs), temp1, temp2, output);
 }
 
-void MacroAssemblerX86Shared::minFloat64x2(FloatRegister lhs, Operand rhs,
+void MacroAssemblerX86Shared::maxFloat32x4(FloatRegister lhs, FloatRegister rhs,
                                            FloatRegister temp1,
                                            FloatRegister temp2,
                                            FloatRegister output) {
-  minMaxFloat64x2(/*isMin=*/true, lhs, rhs, temp1, temp2, output);
+  if (HasAVX()) {
+    minMaxFloat32x4AVX(/*isMin=*/false, lhs, rhs, temp1, temp2, output);
+    return;
+  }
+  minMaxFloat32x4(/*isMin=*/false, lhs, Operand(rhs), temp1, temp2, output);
 }
 
-void MacroAssemblerX86Shared::maxFloat64x2(FloatRegister lhs, Operand rhs,
+void MacroAssemblerX86Shared::minFloat64x2(FloatRegister lhs, FloatRegister rhs,
                                            FloatRegister temp1,
                                            FloatRegister temp2,
                                            FloatRegister output) {
-  minMaxFloat64x2(/*isMin=*/false, lhs, rhs, temp1, temp2, output);
+  if (HasAVX()) {
+    minMaxFloat64x2AVX(/*isMin=*/true, lhs, rhs, temp1, temp2, output);
+    return;
+  }
+  minMaxFloat64x2(/*isMin=*/true, lhs, Operand(rhs), temp1, temp2, output);
+}
+
+void MacroAssemblerX86Shared::maxFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister temp1,
+                                           FloatRegister temp2,
+                                           FloatRegister output) {
+  if (HasAVX()) {
+    minMaxFloat64x2AVX(/*isMin=*/false, lhs, rhs, temp1, temp2, output);
+    return;
+  }
+  minMaxFloat64x2(/*isMin=*/false, lhs, Operand(rhs), temp1, temp2, output);
 }
 
 void MacroAssemblerX86Shared::packedShiftByScalarInt8x16(
