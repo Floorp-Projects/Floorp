@@ -36,6 +36,7 @@ class FirstRunTest {
         webServer = MockWebServer()
         webServer.start()
         featureSettingsHelper.setShieldIconCFREnabled(false)
+        featureSettingsHelper.setNumberOfTabsOpened(4)
     }
 
     @After

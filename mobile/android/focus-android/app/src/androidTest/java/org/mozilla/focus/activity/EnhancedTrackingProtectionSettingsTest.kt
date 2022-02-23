@@ -39,6 +39,7 @@ class EnhancedTrackingProtectionSettingsTest {
     @Before
     fun setUp() {
         featureSettingsHelper.setShieldIconCFREnabled(false)
+        featureSettingsHelper.setNumberOfTabsOpened(4)
         webServer = MockWebServer()
         try {
             webServer.start()

@@ -24,6 +24,7 @@ class MediaPlaybackTest {
     @Before
     fun setUp() {
         featureSettingsHelper.setShieldIconCFREnabled(false)
+        featureSettingsHelper.setNumberOfTabsOpened(4)
         webServer = MockWebServer()
         webServer.start()
     }

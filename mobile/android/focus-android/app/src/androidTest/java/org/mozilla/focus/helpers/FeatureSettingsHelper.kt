@@ -15,8 +15,15 @@ class FeatureSettingsHelper {
     // saving default values of feature flags
     private var shouldShowCfrForShieldToolbarIcon: Boolean = settings.shouldShowCfrForShieldToolbarIcon
 
+    // saving default value of number of tabs opened, which is used for erase tabs cfr
+    private var numberOfTabsOpened: Int = settings.numberOfTabsOpened
+
     fun setShieldIconCFREnabled(enabled: Boolean) {
         settings.shouldShowCfrForShieldToolbarIcon = enabled
+    }
+
+    fun setNumberOfTabsOpened(tabsOpened: Int) {
+        settings.numberOfTabsOpened = tabsOpened
     }
 
     // Important:
@@ -24,5 +31,6 @@ class FeatureSettingsHelper {
     // to make sure the app goes back to the default state
     fun resetAllFeatureFlags() {
         settings.shouldShowCfrForShieldToolbarIcon = shouldShowCfrForShieldToolbarIcon
+        settings.numberOfTabsOpened = numberOfTabsOpened
     }
 }

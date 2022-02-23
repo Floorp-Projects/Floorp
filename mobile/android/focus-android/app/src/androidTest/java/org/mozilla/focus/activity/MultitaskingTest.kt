@@ -49,6 +49,7 @@ class MultitaskingTest {
     @Throws(Exception::class)
     fun startWebServer() {
         featureSettingsHelper.setShieldIconCFREnabled(false)
+        featureSettingsHelper.setNumberOfTabsOpened(4)
         webServer = MockWebServer()
         webServer.enqueue(createMockResponseFromAsset("tab1.html"))
         webServer.enqueue(createMockResponseFromAsset("tab2.html"))

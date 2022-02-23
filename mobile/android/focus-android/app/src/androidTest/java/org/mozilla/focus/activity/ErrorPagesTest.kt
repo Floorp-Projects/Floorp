@@ -27,6 +27,7 @@ class ErrorPagesTest {
     @Before
     fun setUp() {
         featureSettingsHelper.setShieldIconCFREnabled(false)
+        featureSettingsHelper.setNumberOfTabsOpened(4)
     }
 
     @After

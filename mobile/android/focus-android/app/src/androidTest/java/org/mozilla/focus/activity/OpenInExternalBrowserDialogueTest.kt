@@ -37,6 +37,7 @@ class OpenInExternalBrowserDialogueTest {
     @Before
     fun setUp() {
         featureSettingsHelper.setShieldIconCFREnabled(false)
+        featureSettingsHelper.setNumberOfTabsOpened(4)
         webServer = MockWebServer()
         try {
             webServer.enqueue(
