@@ -19,6 +19,7 @@
 #include "vm/JSContext.h"
 
 #include "gc/PrivateIterators-inl.h"
+#include "gc/WeakMap-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -26,12 +27,12 @@ using namespace js;
 using namespace js::gc;
 
 FinalizationRegistryZone::FinalizationRegistryZone(Zone* zone)
-    : zone(zone), registries(zone), recordMap(zone), crossZoneCount(zone) {}
+    : zone(zone), registries(zone), recordMap(zone), crossZoneWrappers(zone) {}
 
 FinalizationRegistryZone::~FinalizationRegistryZone() {
   MOZ_ASSERT(registries.empty());
   MOZ_ASSERT(recordMap.empty());
-  MOZ_ASSERT(crossZoneCount.empty());
+  MOZ_ASSERT(crossZoneWrappers.empty());
 }
 
 bool GCRuntime::addFinalizationRegistry(
@@ -84,22 +85,22 @@ bool FinalizationRegistryZone::addRecord(HandleObject target,
 
   Zone* registryZone = unwrappedRecord->zone();
   bool crossZone = registryZone != zone;
-  if (crossZone && !incCrossZoneCount(registryZone)) {
+  if (crossZone && !addCrossZoneWrapper(record)) {
     return false;
   }
-  auto countGuard = mozilla::MakeScopeExit([&] {
+  auto wrapperGuard = mozilla::MakeScopeExit([&] {
     if (crossZone) {
-      decCrossZoneCount(registryZone);
+      removeCrossZoneWrapper(record);
     }
   });
 
   GlobalObject* registryGlobal = &unwrappedRecord->global();
   auto* globalData = registryGlobal->getOrCreateFinalizationRegistryData();
-  if (!globalData || !globalData->addRecord(record)) {
+  if (!globalData || !globalData->addRecord(unwrappedRecord)) {
     return false;
   }
-  auto globalDataGuard =
-      mozilla::MakeScopeExit([&] { globalData->removeRecord(record); });
+  auto globalDataGuard = mozilla::MakeScopeExit(
+      [&] { globalData->removeRecord(unwrappedRecord); });
 
   auto ptr = recordMap.lookupForAdd(target);
   if (!ptr && !recordMap.add(ptr, target, RecordVector(zone))) {
@@ -113,38 +114,31 @@ bool FinalizationRegistryZone::addRecord(HandleObject target,
   unwrappedRecord->setInRecordMap(true);
 
   globalDataGuard.release();
-  countGuard.release();
+  wrapperGuard.release();
   return true;
 }
 
-bool FinalizationRegistryZone::incCrossZoneCount(Zone* otherZone) {
-  MOZ_ASSERT(otherZone != zone);
+bool FinalizationRegistryZone::addCrossZoneWrapper(JSObject* wrapper) {
+  MOZ_ASSERT(IsCrossCompartmentWrapper(wrapper));
+  MOZ_ASSERT(UncheckedUnwrapWithoutExpose(wrapper)->zone() != zone);
 
-  auto ptr = crossZoneCount.lookupForAdd(otherZone);
-  if (!ptr && !crossZoneCount.add(ptr, otherZone, 0)) {
-    return false;
-  }
-
-  ptr->value()++;
-  return true;
+  auto ptr = crossZoneWrappers.lookupForAdd(wrapper);
+  MOZ_ASSERT(!ptr);
+  return crossZoneWrappers.add(ptr, wrapper, UndefinedValue());
 }
 
-void FinalizationRegistryZone::decCrossZoneCount(Zone* otherZone) {
-  MOZ_ASSERT(otherZone != zone);
+void FinalizationRegistryZone::removeCrossZoneWrapper(JSObject* wrapper) {
+  MOZ_ASSERT(IsCrossCompartmentWrapper(wrapper));
+  MOZ_ASSERT(UncheckedUnwrapWithoutExpose(wrapper)->zone() != zone);
 
-  auto ptr = crossZoneCount.lookup(otherZone);
+  auto ptr = crossZoneWrappers.lookupForAdd(wrapper);
   MOZ_ASSERT(ptr);
-  MOZ_ASSERT(ptr->value() != 0);
-  ptr->value()--;
-
-  if (ptr->value() == 0) {
-    crossZoneCount.remove(ptr);
-  }
+  crossZoneWrappers.remove(ptr);
 }
 
 void FinalizationRegistryZone::clearRecords() {
   recordMap.clear();
-  crossZoneCount.clear();
+  crossZoneWrappers.clear();
 }
 
 static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
@@ -163,6 +157,12 @@ void GCRuntime::traceWeakFinalizationRegistryEdges(JSTracer* trc, Zone* zone) {
   if (frzone) {
     frzone->traceWeakEdges(trc);
   }
+}
+
+void FinalizationRegistryZone::traceRoots(JSTracer* trc) {
+  // The crossZoneWrappers weak map is traced as a root; this does not keep any
+  // of its entries alive by itself.
+  crossZoneWrappers.trace(trc);
 }
 
 void FinalizationRegistryZone::traceWeakEdges(JSTracer* trc) {
@@ -240,12 +240,12 @@ void FinalizationRegistryZone::updateForRemovedRecord(
 
   Zone* registryZone = record->zone();
   if (registryZone != zone) {
-    decCrossZoneCount(registryZone);
+    removeCrossZoneWrapper(wrapper);
   }
 
   GlobalObject* registryGlobal = &record->global();
   auto* globalData = registryGlobal->maybeFinalizationRegistryData();
-  globalData->removeRecord(wrapper);
+  globalData->removeRecord(record);
 
   // The removed record may be gray, and that's OK.
   AutoTouchingGrayThings atgt;
@@ -286,50 +286,20 @@ void GCRuntime::queueFinalizationRegistryForCleanup(
   queue->setQueuedForCleanup(true);
 }
 
-bool FinalizationRegistryZone::findSweepGroupEdges() {
-  // Ensure finalization registries are swept in the same sweep group as their
-  // targets.
-
-  for (ZoneCountMap::Enum e(crossZoneCount); !e.empty(); e.popFront()) {
-    Zone* registryZone = e.front().key();
-    if (!zone->addSweepGroupEdgeTo(registryZone) ||
-        !registryZone->addSweepGroupEdgeTo(zone)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 FinalizationRegistryGlobalData::FinalizationRegistryGlobalData(Zone* zone)
     : recordSet(zone) {}
 
-bool FinalizationRegistryGlobalData::addRecord(JSObject* record) {
+bool FinalizationRegistryGlobalData::addRecord(
+    FinalizationRecordObject* record) {
   return recordSet.putNew(record);
 }
 
-void FinalizationRegistryGlobalData::removeRecord(JSObject* record) {
+void FinalizationRegistryGlobalData::removeRecord(
+    FinalizationRecordObject* record) {
   MOZ_ASSERT(recordSet.has(record));
   recordSet.remove(record);
 }
 
-void FinalizationRegistryGlobalData::trace(JSTracer* trc,
-                                           GlobalObject* global) {
-  // Disable compartment checks. We trace potentially cross-compartment edges
-  // here that are not in the CCW map. This is only OK because we ensure the
-  // source and destination zones are always swept in the same sweep group.
-  AutoDisableCompartmentCheckTracer adcct;
-
-  for (RecordSet::Enum e(recordSet); !e.empty(); e.popFront()) {
-    HeapPtrObject& obj = e.mutableFront();
-    TraceCrossCompartmentEdge(trc, global, &obj,
-                              "FinalizationRegistryGlobalData::recordSet");
-#ifdef DEBUG
-    if (trc->kind() != JS::TracerKind::Moving) {
-      FinalizationRecordObject* record = UnwrapFinalizationRecord(obj);
-      MOZ_ASSERT(record);
-      MOZ_ASSERT(record->isInRecordMap());
-    }
-#endif
-  }
+void FinalizationRegistryGlobalData::trace(JSTracer* trc) {
+  recordSet.trace(trc);
 }

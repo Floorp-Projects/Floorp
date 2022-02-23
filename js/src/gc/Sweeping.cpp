@@ -640,11 +640,6 @@ bool Zone::findSweepGroupEdges(Zone* atomsZone) {
     }
   }
 
-  FinalizationRegistryZone* frzone = finalizationRegistryZone();
-  if (frzone && !frzone->findSweepGroupEdges()) {
-    return false;
-  }
-
   return WeakMapBase::findSweepGroupEdgesForZone(this);
 }
 

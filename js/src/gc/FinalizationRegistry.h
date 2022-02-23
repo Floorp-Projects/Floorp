@@ -8,6 +8,7 @@
 #define gc_FinalizationRegistry_h
 
 #include "gc/Barrier.h"
+#include "gc/WeakMap.h"
 #include "gc/ZoneAllocator.h"
 #include "js/GCHashTable.h"
 #include "js/GCVector.h"
@@ -41,11 +42,11 @@ class FinalizationRegistryZone {
                 ZoneAllocPolicy>;
   RecordMap recordMap;
 
-  // A map containing the number of targets in this zone whose finalization
-  // registry is in a different zone.
-  using ZoneCountMap =
-      HashMap<Zone*, size_t, DefaultHasher<Zone*>, ZoneAllocPolicy>;
-  ZoneCountMap crossZoneCount;
+  // A weak map used as a set of cross-zone record wrappers. The weak map
+  // marking rules keep the wrappers alive while the record is alive and ensure
+  // that they are both swept in the same sweep group.
+  using WrapperWeakSet = ObjectValueWeakMap;
+  WrapperWeakSet crossZoneWrappers;
 
  public:
   explicit FinalizationRegistryZone(Zone* zone);
@@ -56,23 +57,23 @@ class FinalizationRegistryZone {
 
   void clearRecords();
 
+  void traceRoots(JSTracer* trc);
   void traceWeakEdges(JSTracer* trc);
-  bool findSweepGroupEdges();
 
   void updateForRemovedRecord(JSObject* wrapper,
                               FinalizationRecordObject* record);
 
  private:
-  bool incCrossZoneCount(Zone* otherZone);
-  void decCrossZoneCount(Zone* otherZone);
+  bool addCrossZoneWrapper(JSObject* wrapper);
+  void removeCrossZoneWrapper(JSObject* wrapper);
 
   static bool shouldRemoveRecord(FinalizationRecordObject* record);
 };
 
 // Per-global data structures to support FinalizationRegistry.
 class FinalizationRegistryGlobalData {
-  // Set of possibly cross-realm finalization record wrappers for finalization
-  // registries in this realm. These are traced as part of the realm's global.
+  // Set of finalization records for finalization registries in this
+  // realm. These are traced as part of the realm's global.
   using RecordSet = GCHashSet<HeapPtrObject, MovableCellHasher<HeapPtrObject>,
                               ZoneAllocPolicy>;
   RecordSet recordSet;
@@ -80,10 +81,10 @@ class FinalizationRegistryGlobalData {
  public:
   explicit FinalizationRegistryGlobalData(Zone* zone);
 
-  bool addRecord(JSObject* record);
-  void removeRecord(JSObject* record);
+  bool addRecord(FinalizationRecordObject* record);
+  void removeRecord(FinalizationRecordObject* record);
 
-  void trace(JSTracer* trc, GlobalObject* global);
+  void trace(JSTracer* trc);
 };
 
 }  // namespace gc

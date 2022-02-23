@@ -1097,7 +1097,7 @@ void GlobalObjectData::trace(JSTracer* trc, GlobalObject* global) {
                     "self-hosting-script-source");
 
   if (finalizationRegistryData) {
-    finalizationRegistryData->trace(trc, global);
+    finalizationRegistryData->trace(trc);
   }
 }
 
