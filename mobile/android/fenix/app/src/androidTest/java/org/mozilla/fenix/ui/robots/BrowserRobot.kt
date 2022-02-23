@@ -750,6 +750,8 @@ class BrowserRobot {
             val tabCrashedCloseButton = mDevice.findObject(text("Close tab"))
             tabCrashedCloseButton.click()
 
+            mDevice.waitForIdle()
+
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }

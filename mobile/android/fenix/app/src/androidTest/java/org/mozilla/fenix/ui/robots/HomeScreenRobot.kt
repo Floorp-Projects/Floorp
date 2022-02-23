@@ -222,14 +222,12 @@ class HomeScreenRobot {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
-            mDevice.waitForIdle()
+            mDevice.findObject(
+                UiSelector().descriptionContains("open tab. Tap to switch tabs.")
+            ).waitForExists(waitingTime)
 
             tabsCounter().click()
-
-            mDevice.waitNotNull(
-                Until.findObject(By.res("$packageName:id/tab_layout")),
-                waitingTime
-            )
+            mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/tab_layout")))
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()

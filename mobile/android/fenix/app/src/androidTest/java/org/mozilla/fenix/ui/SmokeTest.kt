@@ -17,7 +17,6 @@ import mozilla.components.concept.engine.mediasession.MediaSession
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.IntentReceiverActivity
@@ -1020,34 +1019,6 @@ class SmokeTest {
             verifyAppearanceColorDark(true)
             verifyAppearanceColorLight(true)
             verifyAppearanceColorSepia(true)
-        }
-    }
-
-    @Test
-    fun closeTabCrashedReporterTest() {
-
-        homeScreen {
-        }.openNavigationToolbar {
-        }.openTabCrashReporter {
-        }.clickTabCrashedCloseButton {
-        }.openTabDrawer {
-            verifyNoOpenTabsInNormalBrowsing()
-        }
-    }
-
-    @Ignore("Test failure caused by: https://github.com/mozilla-mobile/fenix/issues/19964")
-    @Test
-    fun restoreTabCrashedReporterTest() {
-        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        homeScreen {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(website.url) {}
-
-        navigationToolbar {
-        }.openTabCrashReporter {
-            clickTabCrashedRestoreButton()
-            verifyPageContent(website.content)
         }
     }
 
