@@ -6,15 +6,12 @@
 import logging
 import os
 import re
-import taskcluster_urls
 
-from .util import create_tasks, fetch_graph_and_labels
-from gecko_taskgraph.util.taskcluster import (
-    send_email,
-    get_root_url,
-)
-from .registry import register_callback_action
-from gecko_taskgraph.util import taskcluster
+import taskcluster_urls
+from taskgraph.util.taskcluster import get_task_definition, get_root_url, send_email
+
+from gecko_taskgraph.actions.registry import register_callback_action
+from gecko_taskgraph.actions.util import create_tasks, fetch_graph_and_labels
 
 
 logger = logging.getLogger(__name__)
@@ -113,7 +110,7 @@ def create_interactive_action(parameters, graph_config, input, task_group_id, ta
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
         parameters, graph_config
     )
-    task = taskcluster.get_task_definition(task_id)
+    task = get_task_definition(task_id)
     label = task["metadata"]["name"]
 
     def edit(task):
