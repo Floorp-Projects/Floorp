@@ -1130,7 +1130,7 @@ class LayerViewSupport final
     }
 
     nsWindow* gkWindow = acc->GetNsWindow();
-    if (!gkWindow) {
+    if (!gkWindow || !gkWindow->mCompositorBridgeChild) {
       return;
     }
 

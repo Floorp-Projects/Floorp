@@ -6220,7 +6220,8 @@ struct CPUAwakeMarker {
 #ifdef GP_OS_windows
                                    ,
                                    int32_t aAbsolutePriority,
-                                   int32_t aRelativePriority
+                                   int32_t aRelativePriority,
+                                   int32_t aCurrentPriority
 #endif
   ) {
 #ifndef GP_PLAT_arm64_darwin
@@ -6229,6 +6230,9 @@ struct CPUAwakeMarker {
 #ifdef GP_OS_windows
     if (aAbsolutePriority) {
       aWriter.IntProperty("absPriority", aAbsolutePriority);
+    }
+    if (aCurrentPriority) {
+      aWriter.IntProperty("curPriority", aCurrentPriority);
     }
     aWriter.IntProperty("priority", aRelativePriority);
 #endif
@@ -6270,7 +6274,9 @@ struct CPUAwakeMarker {
 #ifdef GP_OS_windows
     schema.AddKeyLabelFormat("priority", "Relative Thread Priority",
                              MS::Format::Integer);
-    schema.AddKeyLabelFormat("absPriority", "Absolute Thread Priority",
+    schema.AddKeyLabelFormat("absPriority", "Base Thread Priority",
+                             MS::Format::Integer);
+    schema.AddKeyLabelFormat("curPriority", "Current Thread Priority",
                              MS::Format::Integer);
 #endif
 #ifdef GP_OS_darwin
@@ -6318,6 +6324,23 @@ void profiler_thread_sleep() {
       });
 }
 
+#if defined(GP_OS_windows)
+#  if !defined(__MINGW32__)
+enum {
+  ThreadBasicInformation,
+};
+#  endif
+
+struct THREAD_BASIC_INFORMATION {
+  NTSTATUS ExitStatus;
+  PVOID TebBaseAddress;
+  CLIENT_ID ClientId;
+  KAFFINITY AffMask;
+  DWORD Priority;
+  DWORD BasePriority;
+};
+#endif
+
 void profiler_mark_thread_awake() {
   if (!profiler_thread_is_being_profiled_for_markers()) {
     return;
@@ -6351,16 +6374,31 @@ void profiler_mark_thread_awake() {
                                  &priority, sizeof(priority))) {
     priority = 0;
   }
+
+  static const auto nt_query_information_thread_fn =
+      reinterpret_cast<decltype(&::NtQueryInformationThread)>(::GetProcAddress(
+          ::GetModuleHandle(L"ntdll.dll"), "NtQueryInformationThread"));
+
+  LONG currentPriority = 0;
+  if (nt_query_information_thread_fn) {
+    THREAD_BASIC_INFORMATION threadInfo;
+    auto status = (*nt_query_information_thread_fn)(
+        GetCurrentThread(), (THREADINFOCLASS)ThreadBasicInformation,
+        &threadInfo, sizeof(threadInfo), NULL);
+    if (NT_SUCCESS(status)) {
+      currentPriority = threadInfo.Priority;
+    }
+  }
 #endif
-  PROFILER_MARKER("Awake", OTHER, MarkerTiming::IntervalStart(), CPUAwakeMarker,
-                  cpuId
+  PROFILER_MARKER(
+      "Awake", OTHER, MarkerTiming::IntervalStart(), CPUAwakeMarker, cpuId
 #if defined(GP_OS_darwin)
-                  ,
-                  qos_class_self()
+      ,
+      qos_class_self()
 #endif
 #if defined(GP_OS_windows)
-                      ,
-                  priority, GetThreadPriority(GetCurrentThread())
+          ,
+      priority, GetThreadPriority(GetCurrentThread()), currentPriority
 #endif
   );
 }

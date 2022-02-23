@@ -404,10 +404,21 @@ already_AddRefed<mozilla::gfx::DrawTarget> MacIOSurface::GetAsDrawTargetLocked(
 }
 
 SurfaceFormat MacIOSurface::GetFormat() const {
+#if !defined(MAC_OS_VERSION_10_13) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
+  enum : OSType {
+    kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange = 'x420',
+    kCVPixelFormatType_420YpCbCr10BiPlanarFullRange = 'xf20',
+  };
+#endif
+
   switch (GetPixelFormat()) {
     case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
     case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
       return SurfaceFormat::NV12;
+    case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
+    case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
+      return SurfaceFormat::P010;
     case kCVPixelFormatType_422YpCbCr8_yuvs:
     case kCVPixelFormatType_422YpCbCr8FullRange:
       return SurfaceFormat::YUV422;

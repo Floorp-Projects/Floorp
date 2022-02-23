@@ -197,6 +197,8 @@ class Manager final : public SafeRefCounted<Manager> {
   void NoteStreamOpenComplete(const nsID& aBodyId, ErrorResult&& aRv,
                               nsCOMPtr<nsIInputStream>&& aBodyStream);
 
+  void RecordMayNotDeleteCSCP(int32_t aCacheStreamControlParentId);
+
  private:
   class Factory;
   class BaseAction;

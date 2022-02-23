@@ -69,7 +69,9 @@ def retrigger_decision_action(parameters, graph_config, input, task_group_id, ta
     # absolute timestamps relative to the current time.
     task = taskcluster.get_task_definition(task_id)
     task = relativize_datestamps(task)
-    create_task_from_def(task, parameters["level"])
+    create_task_from_def(
+        task, parameters["level"], action_tag="retrigger-decision-task"
+    )
 
 
 @register_callback_action(
@@ -183,6 +185,7 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
             parameters,
             decision_task_id,
             i,
+            action_tag="retrigger-task",
         )
 
         logger.info(f"Scheduled {label}{with_downstream}(time {i + 1}/{times})")
@@ -323,6 +326,7 @@ def retrigger_multiple(parameters, graph_config, input, task_group_id, task_id):
                 parameters,
                 decision_task_id,
                 suffix,
+                action_tag="retrigger-multiple-task",
             )
 
     if suffixes:

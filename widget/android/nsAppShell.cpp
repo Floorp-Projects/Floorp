@@ -9,6 +9,7 @@
 #include "base/message_loop.h"
 #include "base/task.h"
 #include "mozilla/Hal.h"
+#include "gfxConfig.h"
 #include "nsExceptionHandler.h"
 #include "nsIScreen.h"
 #include "nsWindow.h"
@@ -32,7 +33,6 @@
 #include "mozilla/Hal.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/intl/OSPreferences.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/java/GeckoAppShellNatives.h"
@@ -324,12 +324,12 @@ class GeckoAppShellSupport final
 
   static bool IsParentProcess() { return XRE_IsParentProcess(); }
 
-  static jni::Object::LocalRef EnsureGpuProcessReady() {
+  static jni::Object::LocalRef IsGpuProcessEnabled() {
     java::GeckoResult::GlobalRef result = java::GeckoResult::New();
 
     NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "GeckoAppShellSupport::EnsureGpuProcessReady", [result]() {
-          result->Complete(gfx::GPUProcessManager::Get()->EnsureGPUReady()
+        "GeckoAppShellSupport::IsGpuProcessEnabled", [result]() {
+          result->Complete(gfx::gfxConfig::IsEnabled(gfx::Feature::GPU_PROCESS)
                                ? java::sdk::Boolean::TRUE()
                                : java::sdk::Boolean::FALSE());
         }));

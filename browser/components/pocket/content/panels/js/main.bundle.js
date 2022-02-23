@@ -308,10 +308,25 @@ HomeOverlay.prototype = {
 
 };
 /* harmony default export */ const overlay = (HomeOverlay);
+;// CONCATENATED MODULE: ./content/panels/js/components/Button/Button.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function Button(props) {
+  return /*#__PURE__*/react.createElement("a", {
+    href: props.url,
+    className: `stp_button${props?.style && ` stp_button_${props.style}`}`
+  }, props.children);
+}
+
+/* harmony default export */ const Button_Button = (Button);
 ;// CONCATENATED MODULE: ./content/panels/js/components/Signup/Signup.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -322,18 +337,42 @@ function Signup(props) {
   return /*#__PURE__*/react.createElement("div", {
     className: "stp_panel_container"
   }, /*#__PURE__*/react.createElement("div", {
-    className: "stp_panel stp_panel_home"
-  }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement("a", null, /*#__PURE__*/react.createElement("span", {
-    "data-l10n-id": "pocket-panel-header-sign-in"
-  }))), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("p", {
-    "data-l10n-id": "pocket-panel-signup-cta-a"
+    className: "stp_panel stp_panel_signup"
+  }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement(Button_Button, {
+    style: "secondary"
+  }, /*#__PURE__*/react.createElement("span", {
+    "data-l10n-id": "pocket-panel-signup-login"
+  }))), /*#__PURE__*/react.createElement("hr", null), locale?.startsWith("en") ? /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("div", {
+    className: "stp_signup_content_wrapper"
+  }, /*#__PURE__*/react.createElement("h3", {
+    className: "header_medium",
+    "data-l10n-id": "pocket-panel-signup-cta-a-fix"
   }), /*#__PURE__*/react.createElement("p", {
     "data-l10n-id": "pocket-panel-signup-cta-b"
-  }), locale?.startsWith("en") ? /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("p", null, "Get thought-provoking article recommendations"), /*#__PURE__*/react.createElement("p", null, "Find stories that go deep into a subject or offer a new perspective.")) : /*#__PURE__*/react.createElement("p", {
+  })), /*#__PURE__*/react.createElement("div", {
+    className: "stp_signup_content_wrapper"
+  }, /*#__PURE__*/react.createElement("hr", null)), /*#__PURE__*/react.createElement("div", {
+    className: "stp_signup_content_wrapper"
+  }, /*#__PURE__*/react.createElement("div", {
+    className: "stp_signup_img_rainbow_reader"
+  }), /*#__PURE__*/react.createElement("h3", {
+    className: "header_medium"
+  }, "Get thought-provoking article recommendations"), /*#__PURE__*/react.createElement("p", null, "Find stories that go deep into a subject or offer a new perspective."))) : /*#__PURE__*/react.createElement("div", {
+    className: "stp_signup_content_wrapper"
+  }, /*#__PURE__*/react.createElement("h3", {
+    className: "header_large",
+    "data-l10n-id": "pocket-panel-signup-cta-a-fix"
+  }), /*#__PURE__*/react.createElement("p", {
+    "data-l10n-id": "pocket-panel-signup-cta-b-short"
+  }), /*#__PURE__*/react.createElement("strong", null, /*#__PURE__*/react.createElement("p", {
     "data-l10n-id": "pocket-panel-signup-cta-c"
-  }), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("p", {
+  }))), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("span", {
+    className: "stp_button_wide"
+  }, /*#__PURE__*/react.createElement(Button_Button, {
+    style: "primary"
+  }, /*#__PURE__*/react.createElement("span", {
     "data-l10n-id": "pocket-panel-button-activate"
-  })));
+  })))));
 }
 
 /* harmony default export */ const Signup_Signup = (Signup);
@@ -390,8 +429,11 @@ var SignupOverlay = function (options) {
     this.active = true;
 
     if (layoutRefresh) {
-      // Create actual content
-      document.querySelector(`.pkt_ext_containersignup`)?.classList.remove(`pkt_ext_containersignup`);
+      // For now, we need to do a little work on the body element
+      // to support both old and new versions.
+      document.querySelector(`.pkt_ext_containersignup`)?.classList.add(`stp_signup_body`);
+      document.querySelector(`.pkt_ext_containersignup`)?.classList.remove(`pkt_ext_containersignup`); // Create actual content
+
       react_dom.render( /*#__PURE__*/react.createElement(Signup_Signup, {
         pockethost: pockethost,
         locale: locale
@@ -1044,20 +1086,6 @@ SavedOverlay.prototype = {
 
 };
 /* harmony default export */ const saved_overlay = (SavedOverlay);
-;// CONCATENATED MODULE: ./content/panels/js/components/Button/Button.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-function Button(props) {
-  return /*#__PURE__*/react.createElement("a", {
-    href: props.url,
-    className: `stp_button${props?.style && ` stp_button_${props.style}`}`
-  }, props.children);
-}
-
-/* harmony default export */ const Button_Button = (Button);
 ;// CONCATENATED MODULE: ./content/panels/js/style-guide/overlay.js
 
 

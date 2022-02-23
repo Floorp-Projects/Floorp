@@ -706,9 +706,8 @@ var gSearchResultsPane = {
       for (let subItem of this.subItems.keys()) {
         subItem.classList.remove("visually-hidden");
       }
+      this.subItems.clear();
     }
-
-    this.subItems.clear();
   },
 
   /**

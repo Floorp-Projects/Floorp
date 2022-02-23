@@ -261,10 +261,9 @@ void nsParentalControlsService::LogFileDownload(bool blocked, nsIURI* aSource,
   EventDataDescCreate(&eventData[WPC_ARGS_FILEDOWNLOADEVENT_BLOCKED],
                       (const void*)&dwBlocked, sizeof(dwBlocked));
 
-  nsCOMPtr<nsILocalFileWin> local(do_QueryInterface(aTarget));  // May be null
-  if (local) {
+  if (aTarget) {  // May be null
     nsAutoString path;
-    local->GetCanonicalPath(path);
+    aTarget->GetPath(path);
     EventDataDescCreate(&eventData[WPC_ARGS_FILEDOWNLOADEVENT_PATH],
                         (const void*)path.get(),
                         ((ULONG)path.Length() + 1) * sizeof(WCHAR));

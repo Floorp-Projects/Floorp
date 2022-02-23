@@ -55,10 +55,15 @@ var SignupOverlay = function(options) {
     this.active = true;
 
     if (layoutRefresh) {
-      // Create actual content
+      // For now, we need to do a little work on the body element
+      // to support both old and new versions.
+      document
+        .querySelector(`.pkt_ext_containersignup`)
+        ?.classList.add(`stp_signup_body`);
       document
         .querySelector(`.pkt_ext_containersignup`)
         ?.classList.remove(`pkt_ext_containersignup`);
+      // Create actual content
       ReactDOM.render(
         <Signup pockethost={pockethost} locale={locale} />,
         document.querySelector(`body`)

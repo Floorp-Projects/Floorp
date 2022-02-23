@@ -7375,6 +7375,24 @@ contextual.services.quicksuggest:
       - main
 
 power:
+  cpu_time_bogus_values:
+    bug_numbers:
+      - 1755733
+    description: >
+      Impossibly large CPU time values that were discarded.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'content'
+      - 'gpu'
+      - 'socket'
+
   cpu_time_per_process_type_ms:
     bug_numbers:
       - 1747138
@@ -7408,6 +7426,22 @@ power:
       - gpu
       - gmplugin
       - utility
+
+  gpu_time_bogus_values:
+    bug_numbers:
+      - 1755733
+    description: >
+      Impossibly large GPU time values that were discarded.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'gpu'
 
   gpu_time_per_process_type_ms:
     bug_numbers:

@@ -196,16 +196,6 @@ menuitem.bookmark-item {
   color: -moz-menubartext;
 }
 
-#nav-bar {
-  -moz-window-dragging: drag;
-}
-
-@media (-moz-menubar-drag) {
-  #TabsToolbar {
-    -moz-window-dragging: drag;
-  }
-}
-
 #context_reloadTab {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }

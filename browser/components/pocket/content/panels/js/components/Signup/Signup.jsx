@@ -4,34 +4,60 @@
 
 import React from "react";
 import Header from "../Header/Header";
+import Button from "../Button/Button";
 
 function Signup(props) {
   const { locale } = props;
   return (
     <div className="stp_panel_container">
-      <div className="stp_panel stp_panel_home">
+      <div className="stp_panel stp_panel_signup">
         <Header>
-          <a>
-            <span data-l10n-id="pocket-panel-header-sign-in"></span>
-          </a>
+          <Button style="secondary">
+            <span data-l10n-id="pocket-panel-signup-login" />
+          </Button>
         </Header>
         <hr />
-        <p data-l10n-id="pocket-panel-signup-cta-a"></p>
-        <p data-l10n-id="pocket-panel-signup-cta-b"></p>
         {locale?.startsWith("en") ? (
           <>
-            <hr />
-            <p>Get thought-provoking article recommendations</p>
-            <p>
-              Find stories that go deep into a subject or offer a new
-              perspective.
-            </p>
+            <div className="stp_signup_content_wrapper">
+              <h3
+                className="header_medium"
+                data-l10n-id="pocket-panel-signup-cta-a-fix"
+              />
+              <p data-l10n-id="pocket-panel-signup-cta-b" />
+            </div>
+            <div className="stp_signup_content_wrapper">
+              <hr />
+            </div>
+            <div className="stp_signup_content_wrapper">
+              <div className="stp_signup_img_rainbow_reader" />
+              <h3 className="header_medium">
+                Get thought-provoking article recommendations
+              </h3>
+              <p>
+                Find stories that go deep into a subject or offer a new
+                perspective.
+              </p>
+            </div>
           </>
         ) : (
-          <p data-l10n-id="pocket-panel-signup-cta-c"></p>
+          <div className="stp_signup_content_wrapper">
+            <h3
+              className="header_large"
+              data-l10n-id="pocket-panel-signup-cta-a-fix"
+            />
+            <p data-l10n-id="pocket-panel-signup-cta-b-short" />
+            <strong>
+              <p data-l10n-id="pocket-panel-signup-cta-c" />
+            </strong>
+          </div>
         )}
         <hr />
-        <p data-l10n-id="pocket-panel-button-activate"></p>
+        <span className="stp_button_wide">
+          <Button style="primary">
+            <span data-l10n-id="pocket-panel-button-activate" />
+          </Button>
+        </span>
       </div>
     </div>
   );

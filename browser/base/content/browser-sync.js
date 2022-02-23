@@ -255,8 +255,8 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
       if (hasNextPage) {
         client.tabs = client.tabs.slice(0, maxTabs);
       }
-      for (let tab of client.tabs) {
-        let tabEnt = this._createSyncedTabElement(tab);
+      for (let [index, tab] of client.tabs.entries()) {
+        let tabEnt = this._createSyncedTabElement(tab, index);
         container.appendChild(tabEnt);
       }
       if (hasNextPage) {
@@ -266,7 +266,7 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
     }
   }
 
-  _createSyncedTabElement(tabInfo) {
+  _createSyncedTabElement(tabInfo, index) {
     let item = document.createXULElement("toolbarbutton");
     let tooltipText = (tabInfo.title ? tabInfo.title + "\n" : "") + tabInfo.url;
     item.setAttribute("itemtype", "tab");
@@ -283,6 +283,15 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
     // We need to use "click" instead of "command" here so openUILink
     // respects different buttons (eg, to open in a new tab).
     item.addEventListener("click", e => {
+      // We want to differentiate between when the fxa panel is within the app menu/hamburger bar
+      let object = "fxa_avatar_menu";
+      const appMenuPanel = document.getElementById("appMenu-popup");
+      if (appMenuPanel.contains(e.currentTarget)) {
+        object = "fxa_app_menu";
+      }
+      SyncedTabs.recordSyncedTabsTelemetry(object, "click", {
+        tab_pos: index.toString(),
+      });
       document.defaultView.openUILink(tabInfo.url, e, {
         triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
           {}
