@@ -10,7 +10,6 @@ import kotlinx.coroutines.withContext
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
-import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.BuildConfig
 import java.io.File
@@ -24,7 +23,6 @@ import java.io.File
 class WallpaperDownloader(
     private val context: Context,
     private val client: Client,
-    private val crashReporter: CrashReporter,
 ) {
     private val logger = Logger("WallpaperDownloader")
     private val remoteHost = BuildConfig.WALLPAPER_URL
@@ -63,7 +61,6 @@ class WallpaperDownloader(
                 }
 
                 logger.error(it.message ?: "Download failed: no throwable message included.", it)
-                crashReporter.submitCaughtException(it)
             }
         }
     }

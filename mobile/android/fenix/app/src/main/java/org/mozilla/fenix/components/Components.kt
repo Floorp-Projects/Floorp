@@ -148,7 +148,7 @@ class Components(private val context: Context) {
     val wallpaperManager by lazyMonitored {
         WallpaperManager(
             settings,
-            WallpaperDownloader(context, core.client, analytics.crashReporter),
+            WallpaperDownloader(context, core.client),
             WallpaperFileManager(context.filesDir),
             analytics.crashReporter,
         )
