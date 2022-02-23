@@ -29,7 +29,7 @@
 #include "nsCSSRendering.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsBlockReflowContext.h"
-#include "BlockReflowInput.h"
+#include "BlockReflowState.h"
 #include "nsFontMetrics.h"
 #include "nsGenericHTMLElement.h"
 #include "nsLineBox.h"
