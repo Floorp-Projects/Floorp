@@ -10239,7 +10239,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
         TaggedParserAtomIndex field = anyChars.currentName();
         return privateNameReference(field);
       }
-      error(JSMSG_ILLEGAL_PRIVATE_NAME);
+      error(JSMSG_INVALID_PRIVATE_NAME_IN_UNARY_EXPR);
       return null();
     }
 
