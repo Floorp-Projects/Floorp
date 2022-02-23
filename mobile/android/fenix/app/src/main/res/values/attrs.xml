@@ -8,6 +8,8 @@
     <attr name="layer3" format="reference" />
     <!-- Small heading, Text link -->
     <attr name="textAccent" format="reference" />
+    <!-- Active tab -->
+    <attr name="iconActive" format="reference" />
 
     <!-- Color palette attributes -->
     <attr name="primaryText" format="reference" />

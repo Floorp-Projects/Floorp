@@ -36,6 +36,8 @@
         <item name="layer3">@color/fx_mobile_layer_color_3</item>
         <!-- Small heading, Text link -->
         <item name="textAccent">@color/fx_mobile_text_color_accent</item>
+        <!-- Active tab -->
+        <item name="iconActive">@color/fx_mobile_icon_color_active</item>
 
         <!-- Active thumb color & Active track color (30% transparency) -->
         <item name="colorControlActivated">@color/accent_high_contrast_normal_theme</item>
@@ -214,6 +216,8 @@
         <item name="layer3">@color/fx_mobile_private_layer_color_3</item>
         <!-- Small heading, Text link -->
         <item name="textAccent">@color/fx_mobile_private_text_color_accent</item>
+        <!-- Active tab -->
+        <item name="iconActive">@color/fx_mobile_private_icon_color_active</item>
 
         <!-- Inactive thumb color -->
         <item name="colorSwitchThumbNormal">@color/toggle_off_knob_dark_theme</item>

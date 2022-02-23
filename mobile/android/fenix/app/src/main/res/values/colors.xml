@@ -209,7 +209,7 @@
     <!-- Secondary icon -->
     <color name="fx_mobile_private_icon_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
     <!-- Active tab -->
-    <color name="fx_mobile_private_icon_color_active" tools:ignore="UnusedResources">@color/photonViolet40</color>
+    <color name="fx_mobile_private_icon_color_active">@color/photonViolet40</color>
     <!-- Disabled icon -->
     <color name="fx_mobile_private_icon_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey05A40</color>
     <!-- Icon inverted (on color) -->

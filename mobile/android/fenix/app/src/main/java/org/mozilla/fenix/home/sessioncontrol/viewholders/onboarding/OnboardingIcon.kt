@@ -16,7 +16,7 @@ import org.mozilla.fenix.ext.setBounds
  * Sets the drawableStart of a header in an onboarding card.
  */
 fun TextView.setOnboardingIcon(@DrawableRes id: Int) {
-    val icon = context.getDrawableWithTint(id, context.getColorFromAttr(R.attr.onboardingSelected))?.apply {
+    val icon = context.getDrawableWithTint(id, context.getColorFromAttr(R.attr.iconActive))?.apply {
         val size = context.resources.getDimensionPixelSize(R.dimen.onboarding_header_icon_height_width)
         setBounds(size)
     }
