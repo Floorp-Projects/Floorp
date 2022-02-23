@@ -14,6 +14,7 @@
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 
+#include "gc/WeakMap-inl.h"
 #include "vm/Interpreter-inl.h"
 
 using namespace js;
@@ -137,6 +138,12 @@ bool WeakMapObject::set(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::set_impl>(cx,
                                                                           args);
+}
+
+size_t WeakCollectionObject::sizeOfExcludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) {
+  ObjectValueWeakMap* map = getMap();
+  return map ? map->sizeOfIncludingThis(aMallocSizeOf) : 0;
 }
 
 bool WeakCollectionObject::nondeterministicGetKeys(
