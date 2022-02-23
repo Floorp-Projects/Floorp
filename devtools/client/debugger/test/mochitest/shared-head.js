@@ -1476,6 +1476,7 @@ const selectors = {
   scopesHeader: ".scopes-pane ._header",
   breakpointItem: i => `.breakpoints-list div:nth-of-type(${i})`,
   breakpointLabel: i => `${selectors.breakpointItem(i)} .breakpoint-label`,
+  breakpointHeadings: ".breakpoints-list .breakpoint-heading",
   breakpointItems: ".breakpoints-list .breakpoint",
   breakpointContextMenu: {
     disableSelf: "#node-menu-disable-self",
