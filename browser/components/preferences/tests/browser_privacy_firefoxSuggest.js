@@ -43,9 +43,10 @@ const EXPECTED_L10N_IDS = {
   },
 };
 
-// This test can take a while due to the many permutations some of these tasks
-// run through, so request a longer timeout.
-requestLongerTimeout(10);
+// Allow more time for Mac machines so they don't time out in verify mode.
+if (AppConstants.platform == "macosx") {
+  requestLongerTimeout(3);
+}
 
 // The following tasks check the visibility of the Firefox Suggest UI based on
 // the value of the feature pref. See doVisibilityTest().
