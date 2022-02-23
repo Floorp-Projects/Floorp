@@ -56,7 +56,7 @@ use crate::glyph_rasterizer::FontInstance;
 use crate::hit_test::HitTestingScene;
 use crate::intern::Interner;
 use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitter, PlaneSplitterIndex, PipelineInstanceId};
-use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions};
+use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
 use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, SurfaceInfo};
 use crate::picture_graph::PictureGraph;
 use crate::prim_store::{PrimitiveInstance, register_prim_chase_id};
@@ -268,7 +268,6 @@ impl PictureChainBuilder {
         self,
         composite_mode: PictureCompositeMode,
         context_3d: Picture3DContext<OrderedPictureChild>,
-        options: PictureOptions,
         interners: &mut Interners,
         prim_store: &mut PrimitiveStore,
         prim_instances: &mut Vec<PrimitiveInstance>,
@@ -301,7 +300,6 @@ impl PictureChainBuilder {
                 self.flags,
                 prim_list,
                 self.spatial_node_index,
-                options,
             ))
         );
 
@@ -346,7 +344,6 @@ impl PictureChainBuilder {
                         self.flags,
                         prim_list,
                         self.spatial_node_index,
-                        PictureOptions::default(),
                     ))
                 );
 
@@ -2171,7 +2168,6 @@ impl<'a> SceneBuilder<'a> {
                         stacking_context.prim_flags,
                         stacking_context.prim_list,
                         stacking_context.spatial_node_index,
-                        PictureOptions::default(),
                     ))
                 );
 
@@ -2210,7 +2206,6 @@ impl<'a> SceneBuilder<'a> {
                             stacking_context.prim_flags,
                             stacking_context.prim_list,
                             stacking_context.spatial_node_index,
-                            PictureOptions::default(),
                         ))
                     );
 
@@ -2309,7 +2304,6 @@ impl<'a> SceneBuilder<'a> {
                     stacking_context.prim_flags,
                     prim_list,
                     stacking_context.spatial_node_index,
-                    PictureOptions::default(),
                 ))
             );
 
@@ -2334,7 +2328,6 @@ impl<'a> SceneBuilder<'a> {
             stacking_context.composite_ops.filters,
             stacking_context.composite_ops.filter_primitives,
             stacking_context.composite_ops.filter_datas,
-            true,
         );
 
         // Same for mix-blend-mode, except we can skip if this primitive is the first in the parent
@@ -2360,7 +2353,6 @@ impl<'a> SceneBuilder<'a> {
                 source = source.add_picture(
                     composite_mode,
                     Picture3DContext::Out,
-                    PictureOptions::default(),
                     &mut self.interners,
                     &mut self.prim_store,
                     &mut self.prim_instances,
@@ -2717,7 +2709,11 @@ impl<'a> SceneBuilder<'a> {
                     // Add any primitives that come after this shadow in the item
                     // list to this shadow.
                     let mut prim_list = PrimitiveList::empty();
-                    let blur_filter = Filter::Blur(std_deviation, std_deviation);
+                    let blur_filter = Filter::Blur {
+                        width: std_deviation,
+                        height: std_deviation,
+                        should_inflate: pending_shadow.should_inflate,
+                    };
                     let blur_is_noop = blur_filter.is_noop();
 
                     for item in &items {
@@ -2787,16 +2783,9 @@ impl<'a> SceneBuilder<'a> {
                         // blur radius is 0, the code in Picture::prepare_for_render will
                         // detect this and mark the picture to be drawn directly into the
                         // parent picture, which avoids an intermediate surface and blur.
-                        let blur_filter = Filter::Blur(std_deviation, std_deviation);
                         assert!(!blur_filter.is_noop());
                         let composite_mode = Some(PictureCompositeMode::Filter(blur_filter));
                         let composite_mode_key = composite_mode.clone().into();
-
-                        // Pass through configuration information about whether WR should
-                        // do the bounding rect inflation for text shadows.
-                        let options = PictureOptions {
-                            inflate_if_required: pending_shadow.should_inflate,
-                        };
 
                         // Create the primitive to draw the shadow picture into the scene.
                         let shadow_pic_index = PictureIndex(self.prim_store.pictures
@@ -2808,7 +2797,6 @@ impl<'a> SceneBuilder<'a> {
                                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
                                 prim_list,
                                 pending_shadow.spatial_node_index,
-                                options,
                             ))
                         );
 
@@ -3504,9 +3492,6 @@ impl<'a> SceneBuilder<'a> {
                     prim_flags,
                     prim_list,
                     backdrop_spatial_node_index,
-                    PictureOptions {
-                       inflate_if_required: false,
-                    },
                 ))
             );
 
@@ -3529,7 +3514,6 @@ impl<'a> SceneBuilder<'a> {
             filters,
             filter_primitives,
             filter_datas,
-            false,
         );
 
         // Apply filters from all stacking contexts up to, but not including the backdrop root.
@@ -3548,7 +3532,6 @@ impl<'a> SceneBuilder<'a> {
                 filters,
                 filter_primitives,
                 filter_datas,
-                false,
             );
         }
 
@@ -3629,7 +3612,6 @@ impl<'a> SceneBuilder<'a> {
         mut filter_ops: Vec<Filter>,
         mut filter_primitives: Vec<FilterPrimitive>,
         filter_datas: Vec<FilterData>,
-        inflate_if_required: bool,
     ) -> PictureChainBuilder {
         // TODO(cbrewster): Currently CSS and SVG filters live side by side in WebRender, but unexpected results will
         // happen if they are used simulataneously. Gecko only provides either filter ops or filter primitives.
@@ -3681,7 +3663,6 @@ impl<'a> SceneBuilder<'a> {
             source = source.add_picture(
                 composite_mode,
                 Picture3DContext::Out,
-                PictureOptions { inflate_if_required },
                 &mut self.interners,
                 &mut self.prim_store,
                 &mut self.prim_instances,
@@ -3718,7 +3699,6 @@ impl<'a> SceneBuilder<'a> {
             source = source.add_picture(
                 composite_mode,
                 Picture3DContext::Out,
-                PictureOptions { inflate_if_required },
                 &mut self.interners,
                 &mut self.prim_store,
                 &mut self.prim_instances,
@@ -3881,7 +3861,6 @@ impl FlattenedStackingContext {
                 self.prim_flags,
                 mem::replace(&mut self.prim_list, PrimitiveList::empty()),
                 self.spatial_node_index,
-                PictureOptions::default(),
             ))
         );
 
