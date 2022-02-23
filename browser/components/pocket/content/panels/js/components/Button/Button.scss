@@ -55,3 +55,11 @@
     }
   }
 }
+
+.stp_button_wide {
+  .stp_button {
+    display: block;
+    margin: 12px 0;
+    text-align: center;
+  }
+}
