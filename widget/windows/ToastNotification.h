@@ -10,16 +10,13 @@
 #include "nsIObserver.h"
 #include "nsIThread.h"
 #include "nsRefPtrHashtable.h"
-#include "nsWeakReference.h"
 
 namespace mozilla {
 namespace widget {
 
 class ToastNotificationHandler;
 
-class ToastNotification final : public nsIAlertsService,
-                                public nsIObserver,
-                                public nsSupportsWeakReference {
+class ToastNotification final : public nsIAlertsService, public nsIObserver {
  public:
   NS_DECL_NSIALERTSSERVICE
   NS_DECL_NSIOBSERVER
