@@ -16,9 +16,12 @@ namespace widget {
 
 class ToastNotificationHandler;
 
-class ToastNotification final : public nsIAlertsService, public nsIObserver {
+class ToastNotification final : public nsIAlertsService,
+                                public nsIAlertsDoNotDisturb,
+                                public nsIObserver {
  public:
   NS_DECL_NSIALERTSSERVICE
+  NS_DECL_NSIALERTSDONOTDISTURB
   NS_DECL_NSIOBSERVER
   NS_DECL_ISUPPORTS
 
@@ -37,8 +40,8 @@ class ToastNotification final : public nsIAlertsService, public nsIObserver {
   virtual ~ToastNotification();
 
   nsRefPtrHashtable<nsStringHashKey, ToastNotificationHandler> mActiveHandlers;
-
   nsCOMPtr<nsIThread> mBackgroundThread;
+  bool mSuppressForScreenSharing = false;
 };
 
 }  // namespace widget
