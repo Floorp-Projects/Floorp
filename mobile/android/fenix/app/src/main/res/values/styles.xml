@@ -85,7 +85,6 @@
         <item name="preferenceSectionHeader">@color/fx_mobile_text_color_accent</item>
         <item name="selectPromptHeaderTextColor">@color/fx_mobile_text_color_accent</item>
         <item name="menuItemButtonTintColor">@color/fx_mobile_text_color_accent</item>
-        <item name="recentlyUsedShareMenu">@color/recently_used_share_theme</item>
 
         <!-- Shared widget colors -->
         <item name="mozac_primary_text_color">@color/fx_mobile_text_color_primary</item>

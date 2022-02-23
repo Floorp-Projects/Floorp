@@ -31,7 +31,6 @@
     <attr name="scrimEnd" format="reference"/>
     <attr name="toolbarDivider" format="reference"/>
     <attr name="preferenceSectionHeader" format="reference"/>
-    <attr name="recentlyUsedShareMenu" format="reference" />
 
     <!-- Color used in DefaultToolbarMenu for buttons placed at the end of menu items -->
     <attr name="menuItemButtonTintColor" format="reference"/>
@@ -43,7 +42,6 @@
     <attr name="privateBrowsingButtonBackground" format="reference" />
     <attr name="privateBrowsingButtonAccent" format="reference" />
     <attr name="fenixLogo" format="reference" />
-    <attr name="fenixSnackbarBackground" format="reference" />
     <attr name="toolbarStartGradient" format="reference"/>
     <attr name="toolbarCenterGradient" format="reference"/>
     <attr name="toolbarEndGradient" format="reference"/>
