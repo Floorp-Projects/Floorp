@@ -43,6 +43,8 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Pings
+import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -399,7 +401,7 @@ class DefaultSessionControlControllerTest {
 
         every { controller.getAvailableSearchEngines() } returns listOf(searchEngine)
 
-        controller.handleSelectTopSite(topSite)
+        controller.handleSelectTopSite(topSite, position = 0)
 
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenDefault) }
@@ -425,7 +427,7 @@ class DefaultSessionControlControllerTest {
 
         every { controller.getAvailableSearchEngines() } returns listOf(searchEngine)
 
-        controller.handleSelectTopSite(topSite)
+        controller.handleSelectTopSite(topSite, position = 0)
 
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify {
@@ -452,7 +454,7 @@ class DefaultSessionControlControllerTest {
 
         store.dispatch(SearchAction.SetRegionAction(RegionState("US", "US"))).joinBlocking()
 
-        controller.handleSelectTopSite(topSite)
+        controller.handleSelectTopSite(topSite, position = 0)
 
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenDefault) }
@@ -481,7 +483,7 @@ class DefaultSessionControlControllerTest {
 
         store.dispatch(SearchAction.SetRegionAction(RegionState("DE", "FR"))).joinBlocking()
 
-        controller.handleSelectTopSite(topSite)
+        controller.handleSelectTopSite(topSite, position = 0)
 
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenDefault) }
@@ -514,7 +516,7 @@ class DefaultSessionControlControllerTest {
 
             every { any<SearchState>().selectedOrDefaultSearchEngine } returns googleSearchEngine
 
-            controller.handleSelectTopSite(topSite)
+            controller.handleSelectTopSite(topSite, position = 0)
 
             verify {
                 metrics.track(
@@ -550,7 +552,7 @@ class DefaultSessionControlControllerTest {
 
             every { any<SearchState>().selectedOrDefaultSearchEngine } returns googleSearchEngine
 
-            controller.handleSelectTopSite(topSite)
+            controller.handleSelectTopSite(topSite, position = 0)
 
             verify {
                 metrics.track(
@@ -582,7 +584,7 @@ class DefaultSessionControlControllerTest {
 
         store.dispatch(SearchAction.SetRegionAction(RegionState("US", "US"))).joinBlocking()
 
-        controller.handleSelectTopSite(topSite)
+        controller.handleSelectTopSite(topSite, position = 0)
 
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenPinned) }
@@ -611,7 +613,7 @@ class DefaultSessionControlControllerTest {
 
         store.dispatch(SearchAction.SetRegionAction(RegionState("DE", "FR"))).joinBlocking()
 
-        controller.handleSelectTopSite(topSite)
+        controller.handleSelectTopSite(topSite, position = 0)
 
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenPinned) }
@@ -640,7 +642,7 @@ class DefaultSessionControlControllerTest {
 
         store.dispatch(SearchAction.SetRegionAction(RegionState("US", "US"))).joinBlocking()
 
-        controller.handleSelectTopSite(topSite)
+        controller.handleSelectTopSite(topSite, position = 0)
 
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenFrecent) }
@@ -669,7 +671,7 @@ class DefaultSessionControlControllerTest {
 
         store.dispatch(SearchAction.SetRegionAction(RegionState("DE", "FR"))).joinBlocking()
 
-        controller.handleSelectTopSite(topSite)
+        controller.handleSelectTopSite(topSite, position = 0)
 
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenFrecent) }
@@ -695,11 +697,12 @@ class DefaultSessionControlControllerTest {
             impressionUrl = "",
             createdAt = 0
         )
+        val position = 0
         val controller = spyk(createController())
 
         every { controller.getAvailableSearchEngines() } returns listOf(searchEngine)
 
-        controller.handleSelectTopSite(topSite)
+        controller.handleSelectTopSite(topSite, position)
 
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenProvided) }
@@ -710,7 +713,39 @@ class DefaultSessionControlControllerTest {
                 startLoading = true
             )
         }
+        verify { controller.submitTopSitesImpressionPing(topSite, position) }
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
+    }
+
+    @Test
+    fun `GIVEN a provided top site WHEN the provided top site is clicked THEN submit a top site impression ping`() {
+        val controller = spyk(createController())
+        val topSite = TopSite.Provided(
+            id = 3,
+            title = "Mozilla",
+            url = "https://mozilla.com",
+            clickUrl = "https://mozilla.com/click",
+            imageUrl = "https://test.com/image2.jpg",
+            impressionUrl = "https://example.com",
+            createdAt = 3
+        )
+        val position = 0
+
+        controller.submitTopSitesImpressionPing(topSite, position)
+
+        verify {
+            metrics.track(
+                Event.TopSiteContileClick(
+                    position = position + 1,
+                    source = Event.TopSiteContileClick.Source.NEWTAB
+                )
+            )
+
+            TopSites.contileTileId.set(3)
+            TopSites.contileAdvertiser.set("mozilla")
+            TopSites.contileReportingUrl.set(topSite.clickUrl)
+            Pings.topsitesImpression.submit()
+        }
     }
 
     @Test

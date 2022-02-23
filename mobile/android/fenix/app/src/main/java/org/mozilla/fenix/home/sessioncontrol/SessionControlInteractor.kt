@@ -211,8 +211,9 @@ interface TopSiteInteractor {
      * Selects the given top site. Called when a user clicks on a top site.
      *
      * @param topSite The top site that was selected.
+     * @param position The position of the top site.
      */
-    fun onSelectTopSite(topSite: TopSite)
+    fun onSelectTopSite(topSite: TopSite, position: Int)
 
     /**
      * Navigates to the Homepage Settings. Called when an user clicks on the "Settings" top site
@@ -310,8 +311,8 @@ class SessionControlInteractor(
         controller.handleRenameCollectionTapped(collection)
     }
 
-    override fun onSelectTopSite(topSite: TopSite) {
-        controller.handleSelectTopSite(topSite)
+    override fun onSelectTopSite(topSite: TopSite, position: Int) {
+        controller.handleSelectTopSite(topSite, position)
     }
 
     override fun onSettingsClicked() {

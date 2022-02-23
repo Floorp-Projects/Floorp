@@ -17,6 +17,10 @@ import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.Pings
+import org.mozilla.fenix.GleanMetrics.TopSites
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.databinding.TopSiteItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -28,6 +32,7 @@ class TopSiteItemViewHolderTest {
     private lateinit var binding: TopSiteItemBinding
     private lateinit var interactor: TopSiteInteractor
     private lateinit var lifecycleOwner: LifecycleOwner
+    private lateinit var metrics: MetricController
 
     private val pocket = TopSite.Default(
         id = 1L,
@@ -41,22 +46,24 @@ class TopSiteItemViewHolderTest {
         binding = TopSiteItemBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk(relaxed = true)
         lifecycleOwner = mockk(relaxed = true)
+        metrics = mockk(relaxed = true)
 
         every { testContext.components.core.icons } returns BrowserIcons(testContext, mockk(relaxed = true))
+        every { testContext.components.analytics.metrics } returns metrics
     }
 
     @Test
     fun `calls interactor on click`() {
-        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(pocket)
+        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(pocket, position = 0)
 
         binding.topSiteItem.performClick()
-        verify { interactor.onSelectTopSite(pocket) }
+        verify { interactor.onSelectTopSite(pocket, position = 0) }
     }
 
     @Test
     fun `calls interactor on long click`() {
         every { testContext.components.analytics } returns mockk(relaxed = true)
-        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(pocket)
+        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(pocket, position = 0)
 
         binding.topSiteItem.performLongClick()
         verify { interactor.onTopSiteMenuOpened() }
@@ -71,7 +78,7 @@ class TopSiteItemViewHolderTest {
             createdAt = 0
         )
 
-        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(defaultTopSite)
+        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(defaultTopSite, position = 0)
         val pinIndicator = binding.topSiteTitle.compoundDrawables[0]
 
         assertNotNull(pinIndicator)
@@ -86,7 +93,7 @@ class TopSiteItemViewHolderTest {
             createdAt = 0
         )
 
-        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(pinnedTopSite)
+        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(pinnedTopSite, position = 0)
         val pinIndicator = binding.topSiteTitle.compoundDrawables[0]
 
         assertNotNull(pinIndicator)
@@ -101,9 +108,39 @@ class TopSiteItemViewHolderTest {
             createdAt = 0
         )
 
-        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(frecentTopSite)
+        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(frecentTopSite, position = 0)
         val pinIndicator = binding.topSiteTitle.compoundDrawables[0]
 
         assertNull(pinIndicator)
+    }
+
+    @Test
+    fun `GIVEN a provided top site and position WHEN the provided top site is shown THEN submit a top site impression ping`() {
+        val topSite = TopSite.Provided(
+            id = 3,
+            title = "Mozilla",
+            url = "https://mozilla.com",
+            clickUrl = "https://mozilla.com/click",
+            imageUrl = "https://test.com/image2.jpg",
+            impressionUrl = "https://example.com",
+            createdAt = 3
+        )
+        val position = 0
+
+        TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).submitTopSitesImpressionPing(topSite, position)
+
+        verify {
+            metrics.track(
+                Event.TopSiteContileImpression(
+                    position = position + 1,
+                    source = Event.TopSiteContileImpression.Source.NEWTAB
+                )
+            )
+
+            TopSites.contileTileId.set(3)
+            TopSites.contileAdvertiser.set("mozilla")
+            TopSites.contileReportingUrl.set(topSite.impressionUrl)
+            Pings.topsitesImpression.submit()
+        }
     }
 }

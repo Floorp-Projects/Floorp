@@ -30,3 +30,16 @@ first-session:
     - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
   notification_emails:
     - android-probes@mozilla.com
+
+topsites-impression:
+  description: |
+    Recorded when a sponsored top site is rendered and visible on the home
+    screen. Visibility is qualified as when the homepage is brought to the
+    front of the Browser, and sponsored tiles are 100% visible on screen.
+  include_client_id: false
+  bugs:
+    - https://github.com/mozilla-mobile/fenix/issues/23893
+  data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/23945
+  notification_emails:
+    - android-probes@mozilla.com

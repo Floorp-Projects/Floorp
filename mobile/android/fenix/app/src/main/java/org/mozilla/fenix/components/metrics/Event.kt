@@ -331,6 +331,14 @@ sealed class Event {
             get() = hashMapOf(TopSites.longPressKeys.type to topSite.name())
     }
 
+    data class TopSiteContileImpression(val position: Int, val source: Source) : Event() {
+        enum class Source { NEWTAB }
+    }
+
+    data class TopSiteContileClick(val position: Int, val source: Source) : Event() {
+        enum class Source { NEWTAB }
+    }
+
     data class OnboardingToolbarPosition(val position: Position) : Event() {
         enum class Position { TOP, BOTTOM }
 

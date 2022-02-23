@@ -29,6 +29,8 @@ import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.GleanMetrics.Pings
+import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -119,7 +121,7 @@ interface SessionControlController {
     /**
      * @see [TopSiteInteractor.onSelectTopSite]
      */
-    fun handleSelectTopSite(topSite: TopSite)
+    fun handleSelectTopSite(topSite: TopSite, position: Int)
 
     /**
      * @see [TopSiteInteractor.onSettingsClicked]
@@ -391,7 +393,7 @@ class DefaultSessionControlController(
         metrics.track(Event.CollectionRenamePressed)
     }
 
-    override fun handleSelectTopSite(topSite: TopSite) {
+    override fun handleSelectTopSite(topSite: TopSite, position: Int) {
         dismissSearchDialogIfDisplayed()
 
         metrics.track(Event.TopSiteOpenInNewTab)
@@ -401,7 +403,9 @@ class DefaultSessionControlController(
                 is TopSite.Default -> Event.TopSiteOpenDefault
                 is TopSite.Frecent -> Event.TopSiteOpenFrecent
                 is TopSite.Pinned -> Event.TopSiteOpenPinned
-                is TopSite.Provided -> Event.TopSiteOpenProvided
+                is TopSite.Provided -> Event.TopSiteOpenProvided.also {
+                    submitTopSitesImpressionPing(topSite, position)
+                }
             }
         )
 
@@ -433,6 +437,21 @@ class DefaultSessionControlController(
             activity.handleRequestDesktopMode(tabId)
         }
         activity.openToBrowser(BrowserDirection.FromHome)
+    }
+
+    @VisibleForTesting
+    internal fun submitTopSitesImpressionPing(topSite: TopSite.Provided, position: Int) {
+        metrics.track(
+            Event.TopSiteContileClick(
+                position = position + 1,
+                source = Event.TopSiteContileClick.Source.NEWTAB
+            )
+        )
+
+        topSite.id?.let { TopSites.contileTileId.set(it) }
+        topSite.title?.let { TopSites.contileAdvertiser.set(it.lowercase()) }
+        TopSites.contileReportingUrl.set(topSite.clickUrl)
+        Pings.topsitesImpression.submit()
     }
 
     override fun handleTopSiteSettingsClicked() {

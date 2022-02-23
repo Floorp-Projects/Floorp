@@ -19,8 +19,10 @@ import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.service.glean.testing.GleanTestRule
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -29,6 +31,7 @@ import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
+import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -87,7 +90,7 @@ class FenixApplicationTest {
     fun `WHEN setStartupMetrics is called THEN sets some base metrics`() {
         val expectedAppName = "org.mozilla.fenix"
         val expectedAppInstallSource = "org.mozilla.install.source"
-        val settings: Settings = mockk()
+        val settings = spyk(Settings(testContext))
         val application = spyk(application)
         val packageManager: PackageManager = mockk()
 
@@ -142,6 +145,9 @@ class FenixApplicationTest {
         every { application.reportHomeScreenMetrics(settings) } just Runs
         every { settings.inactiveTabsAreEnabled } returns true
 
+        assertTrue(settings.contileContextId.isEmpty())
+        assertFalse(TopSites.contextId.testHasValue())
+
         application.setStartupMetrics(browserStore, settings, browsersCache, mozillaProductDetector)
 
         // Verify that browser defaults metrics are set.
@@ -181,10 +187,20 @@ class FenixApplicationTest {
         assertEquals(true, Preferences.inactiveTabsEnabled.testGetValue())
         assertEquals(expectedAppInstallSource, Metrics.installSource.testGetValue())
 
+        val contextId = TopSites.contextId.testGetValue().toString()
+
+        assertTrue(TopSites.contextId.testHasValue())
+        assertEquals(contextId, settings.contileContextId)
+
         // Verify that search engine defaults are NOT set. This test does
         // not mock most of the objects telemetry is collected from.
         assertFalse(SearchDefaultEngine.code.testHasValue())
         assertFalse(SearchDefaultEngine.name.testHasValue())
         assertFalse(SearchDefaultEngine.searchUrl.testHasValue())
+
+        application.setStartupMetrics(browserStore, settings, browsersCache, mozillaProductDetector)
+
+        assertEquals(contextId, TopSites.contextId.testGetValue().toString())
+        assertEquals(contextId, settings.contileContextId)
     }
 }

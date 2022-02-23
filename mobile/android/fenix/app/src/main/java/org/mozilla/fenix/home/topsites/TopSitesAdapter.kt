@@ -25,7 +25,7 @@ class TopSitesAdapter(
 
     override fun onBindViewHolder(holder: TopSiteItemViewHolder, position: Int) {
         StartupTimeline.onTopSitesItemBound(holder)
-        holder.bind(getItem(position))
+        holder.bind(getItem(position), position)
     }
 
     override fun onBindViewHolder(
@@ -38,7 +38,7 @@ class TopSitesAdapter(
         } else {
             when (payloads[0]) {
                 is TopSite -> {
-                    holder.bind((payloads[0] as TopSite))
+                    holder.bind((payloads[0] as TopSite), position)
                 }
             }
         }

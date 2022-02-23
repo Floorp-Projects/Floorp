@@ -4786,6 +4786,7 @@ voice_search:
       tags:
         - Search
         - Voice
+
 top_sites:
   open_default:
     type: event
@@ -5088,6 +5089,141 @@ top_sites:
     notification_emails:
       - android-probes@mozilla.com
     expires: 111
+  context_id:
+    type: uuid
+    description: |
+      A UUID that is unjoinable with other browser metrics. This ID will not be
+      shared with AdM, only for internal uses. This ID is shared across all
+      contextual services features.
+    lifetime: ping
+    send_in_pings:
+      - topsites-impression
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23893
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23945
+    data_sensitivity:
+      - highly_sensitive
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 112
+    metadata:
+      tags:
+        - TopSites
+  contile_tile_id:
+    type: quantity
+    description: |
+      A unique identifier provided by the AdM for the sponsored TopSites tile
+    lifetime: ping
+    send_in_pings:
+      - topsites-impression
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23893
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23945
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 112
+    unit: integer
+    metadata:
+      tags:
+        - TopSites
+  contile_advertiser:
+    type: string
+    description: |
+      Advertiser brand for the sponsored TopSites tile
+    lifetime: ping
+    send_in_pings:
+      - topsites-impression
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23893
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23945
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 112
+    metadata:
+      tags:
+        - TopSites
+  contile_reporting_url:
+    type: url
+    description: |
+      The AdM reporting endpoint (impression_url for “impression” event,
+      click_url for “click” event).
+    lifetime: ping
+    send_in_pings:
+      - topsites-impression
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23893
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23945
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 112
+    metadata:
+      tags:
+        - TopSites
+  contile_impression:
+    type: event
+    description: |
+      A user saw a Contile top site
+    extra_keys:
+      source:
+        description: The source of the event, example "newtab", "urlbar"
+        type: string
+      position:
+        description: The tile placement (1-based)
+        type: quantity
+    send_in_pings:
+      - topsites-impression
+      - events
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23893
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23945
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 112
+    metadata:
+      tags:
+        - TopSites
+  contile_click:
+    type: event
+    description: |
+      A user clicked a Contile top site
+    extra_keys:
+      source:
+        description: The source of the event, example "newtab", "urlbar"
+        type: string
+      position:
+        description: The tile placement (1-based)
+        type: quantity
+    send_in_pings:
+      - topsites-impression
+      - events
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23893
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23945
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 112
+    metadata:
+      tags:
+        - TopSites
 
 app_theme:
   dark_theme_selected:
@@ -5113,7 +5249,6 @@ app_theme:
     notification_emails:
       - android-probes@mozilla.com
     expires: 108
-
     metadata:
       tags:
         - Themes

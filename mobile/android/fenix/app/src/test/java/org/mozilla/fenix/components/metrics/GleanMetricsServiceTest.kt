@@ -23,6 +23,7 @@ import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.TabsTray
+import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -372,5 +373,46 @@ class GleanMetricsServiceTest {
         assertFalse(CreditCards.managementCardTapped.testHasValue())
         gleanService.track(Event.CreditCardManagementCardTapped)
         assertTrue(CreditCards.managementCardTapped.testHasValue())
+    }
+
+    @Test
+    fun `GIVEN contile top site events WHEN the event is track THEN verify the event is correctly recorded`() {
+        assertFalse(TopSites.contileImpression.testHasValue())
+
+        gleanService.track(
+            Event.TopSiteContileImpression(
+                position = 1,
+                source = Event.TopSiteContileImpression.Source.NEWTAB
+            )
+        )
+
+        assertTrue(TopSites.contileImpression.testHasValue())
+
+        var event = TopSites.contileImpression.testGetValue()
+
+        assertEquals(1, event.size)
+        assertEquals("top_sites", event[0].category)
+        assertEquals("contile_impression", event[0].name)
+        assertEquals("1", event[0].extra!!["position"])
+        assertEquals("newtab", event[0].extra!!["source"])
+
+        assertFalse(TopSites.contileClick.testHasValue())
+
+        gleanService.track(
+            Event.TopSiteContileClick(
+                position = 2,
+                source = Event.TopSiteContileClick.Source.NEWTAB
+            )
+        )
+
+        assertTrue(TopSites.contileClick.testHasValue())
+
+        event = TopSites.contileClick.testGetValue()
+
+        assertEquals(1, event.size)
+        assertEquals("top_sites", event[0].category)
+        assertEquals("contile_click", event[0].name)
+        assertEquals("2", event[0].extra!!["position"])
+        assertEquals("newtab", event[0].extra!!["source"])
     }
 }
