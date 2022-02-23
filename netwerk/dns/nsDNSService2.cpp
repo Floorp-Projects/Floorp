@@ -138,6 +138,12 @@ nsDNSRecord::IsTRR(bool* retval) {
 }
 
 NS_IMETHODIMP
+nsDNSRecord::ResolvedInSocketProcess(bool* retval) {
+  *retval = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDNSRecord::GetTrrFetchDuration(double* aTime) {
   MutexAutoLock lock(mHostRecord->addr_info_lock);
   if (mHostRecord->addr_info && mHostRecord->addr_info->IsTRROrODoH()) {
