@@ -362,7 +362,9 @@ android.applicationVariants.all { variant ->
                 throw new RuntimeException("Unknown ABI: " + abi)
             }
 
-            output.versionNameOverride = versionName
+            if (versionName != null) {
+                output.versionNameOverride = versionName
+            }
             output.versionCodeOverride = versionCodeOverride
 
             println("versionCode for $abi = $versionCodeOverride")
