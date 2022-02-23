@@ -19,6 +19,15 @@ namespace mozilla {
 
 NS_IMPL_ISUPPORTS(BackgroundTasks, nsIBackgroundTasks);
 
+BackgroundTasks::BackgroundTasks(Maybe<nsCString> aBackgroundTask)
+    : mBackgroundTask(std::move(aBackgroundTask)) {
+  // Log when a background task is created.
+  if (mBackgroundTask.isSome()) {
+    MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Info,
+            ("Created background task: %s", mBackgroundTask->get()));
+  }
+}
+
 void BackgroundTasks::Init(Maybe<nsCString> aBackgroundTask) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
 
@@ -31,12 +40,24 @@ void BackgroundTasks::Init(Maybe<nsCString> aBackgroundTask) {
 void BackgroundTasks::Shutdown() {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
 
+  MOZ_LOG(sBackgroundTasksLog, LogLevel::Info, ("Shutdown"));
+
   if (!sSingleton) {
     return;
   }
 
   if (sSingleton->mProfD) {
     AutoSuspendLateWriteChecks suspend;
+
+    // Log that the temporary profile is being removed.
+    if (MOZ_LOG_TEST(sBackgroundTasksLog, mozilla::LogLevel::Info)) {
+      nsAutoString path;
+      if (NS_SUCCEEDED(sSingleton->mProfD->GetPath(path))) {
+        MOZ_LOG(
+            sBackgroundTasksLog, mozilla::LogLevel::Info,
+            ("Removing profile: %s", NS_LossyConvertUTF16toASCII(path).get()));
+      }
+    }
 
     Unused << sSingleton->mProfD->Remove(/* aRecursive */ true);
   }
@@ -83,8 +104,25 @@ nsresult BackgroundTasks::CreateTemporaryProfileDirectory(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return GetSingleton()->CreateTemporaryProfileDirectoryImpl(aInstallHash,
-                                                             aFile);
+  nsresult rv =
+      GetSingleton()->CreateTemporaryProfileDirectoryImpl(aInstallHash, aFile);
+
+  // Log whether the temporary profile was created.
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Warning,
+            ("Failed to create temporary profile directory!"));
+  } else {
+    if (MOZ_LOG_TEST(sBackgroundTasksLog, mozilla::LogLevel::Info)) {
+      nsAutoString path;
+      if (aFile && *aFile && NS_SUCCEEDED((*aFile)->GetPath(path))) {
+        MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Info,
+                ("Created temporary profile directory: %s",
+                 NS_LossyConvertUTF16toASCII(path).get()));
+      }
+    }
+  }
+
+  return rv;
 }
 
 bool BackgroundTasks::IsUsingTemporaryProfile() {
@@ -174,5 +212,7 @@ nsresult BackgroundTasks::OverrideBackgroundTaskNameForTesting(
 }
 
 StaticRefPtr<BackgroundTasks> BackgroundTasks::sSingleton;
+
+LazyLogModule BackgroundTasks::sBackgroundTasksLog("BackgroundTasks");
 
 }  // namespace mozilla
