@@ -16,7 +16,7 @@ add_task(async function() {
         "Module",
         ["config", "{\u2026}"],
         "EmberRouter:Class()",
-        "Router:Class()"
+        "Router:Class()",
       ]);
     }
   );

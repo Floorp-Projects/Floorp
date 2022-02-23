@@ -6,7 +6,7 @@
 // different HTML when attaching to an open page.
 
 add_task(async function() {
-  await addTab(EXAMPLE_URL + "different_html.sjs");
+  await addTab(`${EXAMPLE_URL}different_html.sjs`);
 
   // This goop is here to manually clear the HTTP cache because setting response
   // headers in different_html.sjs to not cache the response doesn't work.
@@ -21,5 +21,8 @@ add_task(async function() {
   await waitForLoadedSource(dbg, "different_html.sjs");
   const contents = findSourceContent(dbg, "different_html.sjs");
 
-  ok(contents.value.includes("Incorrect contents fetched"), "Error message is shown");
+  ok(
+    contents.value.includes("Incorrect contents fetched"),
+    "Error message is shown"
+  );
 });

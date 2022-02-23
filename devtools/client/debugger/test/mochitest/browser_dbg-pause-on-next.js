@@ -7,7 +7,7 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
   const {
-    selectors: { getIsWaitingOnBreak, getCurrentThread }
+    selectors: { getIsWaitingOnBreak, getCurrentThread },
   } = dbg;
 
   clickElement(dbg, "pause");

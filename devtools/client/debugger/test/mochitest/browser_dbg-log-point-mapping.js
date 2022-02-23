@@ -23,7 +23,7 @@ add_task(async function() {
   await dbg.actions.addBreakpoint(
     getContext(dbg),
     { line: 5, sourceId: source.id },
-    { logValue: "`value: ${JSON.stringify(test)}`", requiresMapping: true },
+    { logValue: "`value: ${JSON.stringify(test)}`", requiresMapping: true }
   );
   await waitForBreakpoint(dbg, "test.js", 5);
 
@@ -33,6 +33,10 @@ add_task(async function() {
 
   await hasConsoleMessage(dbg, "value:");
   const { value } = await findConsoleMessage(dbg, "value:");
-  is(value, 'value: ["b (30)","a","b (5)","z"]', "Variables in logpoint expression should be mapped");
+  is(
+    value,
+    'value: ["b (30)","a","b (5)","z"]',
+    "Variables in logpoint expression should be mapped"
+  );
   await resume(dbg);
 });

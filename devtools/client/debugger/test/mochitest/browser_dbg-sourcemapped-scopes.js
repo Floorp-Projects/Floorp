@@ -53,21 +53,17 @@ async function breakpointScopes(
   { line, column },
   scopes
 ) {
-  if (!ACTIVE_TARGETS.has(target)) return;
+  if (!ACTIVE_TARGETS.has(target)) {
+    return;
+  }
 
   const extension = fixture == "typescript-classes" ? "ts" : "js";
   const url = `${target}://./${fixture}/input.${extension}`;
   const fnName = pairToFnName(target, fixture);
 
-  await invokeWithBreakpoint(
-    dbg,
-    fnName,
-    url,
-    { line, column },
-    async () => {
-      await assertScopes(dbg, scopes);
-    }
-  );
+  await invokeWithBreakpoint(dbg, fnName, url, { line, column }, async () => {
+    await assertScopes(dbg, scopes);
+  });
 
   ok(true, `Ran tests for ${fixture} at line ${line} column ${column}`);
 }
@@ -109,14 +105,14 @@ function targetToFlags(target) {
   };
 }
 function pairToFnName(target, fixture) {
-  return (target + "-" + fixture).replace(/-([a-z])/g, (s, c) =>
-    c.toUpperCase()
-  );
+  return `${target}-${fixture}`.replace(/-([a-z])/g, (s, c) => c.toUpperCase());
 }
 
 function runtimeFunctionName(target, fixture) {
   // Webpack 4 appears to output it's bundles in such a way that Spidermonkey
-  if (target === "webpack4") return "js";
+  if (target === "webpack4") {
+    return "js";
+  }
 
   return pairToFnName(target, fixture);
 }

@@ -1,11 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test that all kinds of workers show up properly in the multiprocess browser
 // toolbox.
-
-"use strict";
 
 requestLongerTimeout(4);
 
@@ -20,9 +18,12 @@ add_task(async function() {
   await pushPref("dom.serviceWorkers.testing.enabled", true);
 
   const ToolboxTask = await initBrowserToolboxTask();
-  await ToolboxTask.importFunctions({ waitUntil, waitForAllTargetsToBeAttached });
+  await ToolboxTask.importFunctions({
+    waitUntil,
+    waitForAllTargetsToBeAttached,
+  });
 
-  await addTab(EXAMPLE_URL + "doc-all-workers.html");
+  await addTab(`${EXAMPLE_URL}doc-all-workers.html`);
 
   await ToolboxTask.spawn(null, async () => {
     await gToolbox.selectTool("jsdebugger");

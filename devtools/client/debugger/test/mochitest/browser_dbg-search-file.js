@@ -44,7 +44,7 @@ add_task(async function() {
     // constructor (in Klass)
     55,
     // console.log
-    62
+    62,
   ];
 
   await waitFor(
