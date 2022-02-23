@@ -62,7 +62,7 @@ class BlockReflowState {
     // ShouldApplyBStartMargin() uses it as a fast-path way to return whether
     // the BStart margin should apply.
     //
-    // If the flag hasn't been set in the block reflow input, then
+    // If the flag hasn't been set in the block reflow state, then
     // ShouldApplyBStartMargin() will crawl the line list to see if a block
     // frame precedes the specified frame. If so, the BStart margin should be
     // applied, and the flag is set to cache the result. (If not, the BStart

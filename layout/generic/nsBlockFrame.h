@@ -296,8 +296,8 @@ class nsBlockFrame : public nsContainerFrame {
   /**
    * Compute the final block size of this frame.
    *
-   * @param aBri BlockReflowState passed from parent during reflow.
-   *        Note: aBri.mReflowStatus is mostly an "input" parameter. When this
+   * @param aState BlockReflowState passed from parent during reflow.
+   *        Note: aState.mReflowStatus is mostly an "input" parameter. When this
    *        method is called, it should represent what our status would be as if
    *        we were shrinkwrapping our children's block-size. This method will
    *        then adjust it before returning if our status is different in light
@@ -309,7 +309,7 @@ class nsBlockFrame : public nsContainerFrame {
    *        block-size of our children, precomputed outside of this function.
    * @return our final block-size with respect to aReflowInput's writing-mode.
    */
-  nscoord ComputeFinalBSize(BlockReflowState& aBri,
+  nscoord ComputeFinalBSize(BlockReflowState& aState,
                             nscoord aBEndEdgeOfChildren);
 
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
@@ -785,7 +785,7 @@ class nsBlockFrame : public nsContainerFrame {
   /**
    * Create a next-in-flow, if necessary, for aFrame. If a new frame is
    * created, place it in aLine if aLine is not null.
-   * @param aState the block reflow input
+   * @param aState the block reflow state
    * @param aLine where to put a new frame
    * @param aFrame the frame
    * @return true if a new frame was created, false if not

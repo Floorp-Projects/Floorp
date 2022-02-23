@@ -37,7 +37,7 @@ class nsLineLayout {
 
   void Init(BlockReflowState* aState, nscoord aMinLineBSize,
             int32_t aLineNumber) {
-    mBlockRI = aState;
+    mBlockRS = aState;
     mMinLineBSize = aMinLineBSize;
     mLineNumber = aLineNumber;
   }
@@ -146,14 +146,14 @@ class nsLineLayout {
   // Inform the line-layout about the presence of a floating frame
   // XXX get rid of this: use get-frame-type?
   bool AddFloat(nsIFrame* aFloat, nscoord aAvailableISize) {
-    // When reflowing ruby text frames, no block reflow input is
+    // When reflowing ruby text frames, no block reflow state is
     // provided to the line layout. However, floats should never be
     // associated with ruby text containers, hence this method should
     // not be called in that case.
-    MOZ_ASSERT(mBlockRI,
-               "Should not call this method if there is no block reflow input "
+    MOZ_ASSERT(mBlockRS,
+               "Should not call this method if there is no block reflow state "
                "available");
-    return mBlockRI->AddFloat(this, aFloat, aAvailableISize);
+    return mBlockRS->AddFloat(this, aFloat, aAvailableISize);
   }
 
   void SetTrimmableISize(nscoord aTrimmableISize) {
@@ -364,7 +364,7 @@ class nsLineLayout {
   //     member. It should not be a problem currently, since the only
   //     code use it is handling float, which does not affect ruby.
   //     See comment in nsLineLayout::AddFloat
-  BlockReflowState* mBlockRI; /* XXX hack! */
+  BlockReflowState* mBlockRS = nullptr; /* XXX hack! */
 
   nsLineList::iterator mLineBox;
 
