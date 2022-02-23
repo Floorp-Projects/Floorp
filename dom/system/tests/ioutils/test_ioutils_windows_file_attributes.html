@@ -15,7 +15,7 @@
     const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
     add_task(async function getSetWindowsAttributes() {
-      const tmpDir = PathUtils.join(await PathUtils.getTempDir(), "ioutils-windows-attributes.tmp.d");
+      const tmpDir = PathUtils.join(PathUtils.tempDir, "ioutils-windows-attributes.tmp.d");
       await createDir(tmpDir);
       ok(await dirExists(tmpDir), `Expected ${tmpDir} to be a directory`);
 

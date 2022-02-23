@@ -16,12 +16,11 @@ use test_fixture::*;
 
 fn exchange_packets(client: &mut Http3Client, server: &mut Http3Server) {
     let mut out = None;
-    let mut client_data;
     loop {
         out = client.process(out, now()).dgram();
-        client_data = out.is_none();
+        let client_done = out.is_none();
         out = server.process(out, now()).dgram();
-        if out.is_none() && client_data {
+        if out.is_none() && client_done {
             break;
         }
     }
@@ -107,23 +106,20 @@ fn priority_update() {
     client.priority_update(stream_id, update_priority).unwrap();
     exchange_packets(&mut client, &mut server);
 
-    let priority_event = loop {
-        let event = server.next_event().unwrap();
-        if matches!(event, Http3ServerEvent::PriorityUpdate { .. }) {
-            break event;
-        }
-    };
-
-    match priority_event {
-        Http3ServerEvent::PriorityUpdate {
+    let found = server.events().any(|e| {
+        if let Http3ServerEvent::PriorityUpdate {
             stream_id: update_id,
             priority,
-        } => {
+        } = e
+        {
             assert_eq!(update_id, stream_id);
             assert_eq!(priority, update_priority);
+            true
+        } else {
+            false
         }
-        other => panic!("unexpected server event: {:?}", other),
-    }
+    });
+    assert!(found);
 }
 
 #[test]

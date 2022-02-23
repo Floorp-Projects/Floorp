@@ -586,6 +586,12 @@ void DisplayPortUtils::InvalidateForDisplayPortChange(
       return;
     }
 
+    if (StaticPrefs::layout_display_list_retain_sc()) {
+      // DisplayListBuildingDisplayPortRect property is not used when retain sc
+      // mode is enabled.
+      return;
+    }
+
     bool found;
     nsRect* rect = frame->GetProperty(
         nsDisplayListBuilder::DisplayListBuildingDisplayPortRect(), &found);
@@ -601,7 +607,7 @@ void DisplayPortUtils::InvalidateForDisplayPortChange(
 
       RetainedDisplayListData* data =
           GetOrSetRetainedDisplayListData(rootFrame);
-      data->Flags(frame) |= RetainedDisplayListData::FrameFlags::HasProps;
+      data->Flags(frame) += RetainedDisplayListData::FrameFlag::HasProps;
     } else {
       MOZ_ASSERT(rect, "this property should only store non-null values");
     }
@@ -765,18 +771,6 @@ void DisplayPortUtils::SetDisplayPortBaseIfNotSet(nsIContent* aContent,
   if (!aContent->GetProperty(nsGkAtoms::DisplayPortBase)) {
     SetDisplayPortBase(aContent, aBase);
   }
-}
-
-bool DisplayPortUtils::GetCriticalDisplayPort(
-    nsIContent* aContent, nsRect* aResult, const DisplayPortOptions& aOptions) {
-  if (StaticPrefs::layers_low_precision_buffer()) {
-    return GetDisplayPortImpl(aContent, aResult, 1.0f, aOptions);
-  }
-  return false;
-}
-
-bool DisplayPortUtils::HasCriticalDisplayPort(nsIContent* aContent) {
-  return GetCriticalDisplayPort(aContent, nullptr);
 }
 
 void DisplayPortUtils::RemoveDisplayPort(nsIContent* aContent) {

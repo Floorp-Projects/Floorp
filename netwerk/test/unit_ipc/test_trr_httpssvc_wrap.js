@@ -61,7 +61,7 @@ registerCleanupFunction(() => {
   prefs.clearUserPref("network.trr.useGET");
   prefs.clearUserPref("network.trr.confirmationNS");
   prefs.clearUserPref("network.trr.bootstrapAddr");
-  prefs.clearUserPref("network.trr.blacklist-duration");
+  prefs.clearUserPref("network.trr.temp_blocklist_duration_sec");
   prefs.clearUserPref("network.trr.request-timeout");
   prefs.clearUserPref("network.trr.clear-cache-on-pref-change");
 });

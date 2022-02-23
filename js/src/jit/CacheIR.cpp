@@ -42,6 +42,7 @@
 #include "vm/RegExpObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/ThrowMsgKind.h"  // ThrowCondition
+#include "vm/Watchtower.h"
 #include "wasm/WasmInstance.h"
 
 #include "jit/BaselineFrame-inl.h"
@@ -225,6 +226,10 @@ jsid CacheIRCloner::getIdField(uint32_t stubOffset) {
 }
 const Value CacheIRCloner::getValueField(uint32_t stubOffset) {
   return Value::fromRawBits(uint64_t(readStubInt64(stubOffset)));
+}
+double CacheIRCloner::getDoubleField(uint32_t stubOffset) {
+  uint64_t bits = uint64_t(readStubInt64(stubOffset));
+  return mozilla::BitwiseCast<double>(bits);
 }
 
 IRGenerator::IRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
@@ -4552,6 +4557,11 @@ bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
     }
   }
 
+  // For now we don't optimize Watchtower-monitored objects.
+  if (Watchtower::watchesPropertyAdd(obj.as<NativeObject>())) {
+    return false;
+  }
+
   // Object must be extensible, or we must be initializing a private
   // elem.
   bool canAddNewProperty = obj->nonProxyIsExtensible() || id.isPrivateName();
@@ -6900,12 +6910,18 @@ AttachDecision CallIRGenerator::tryAttachMathFRound(HandleFunction callee) {
 }
 
 static bool CanAttachInt32Pow(const Value& baseVal, const Value& powerVal) {
-  MOZ_ASSERT(baseVal.isInt32() || baseVal.isBoolean());
-  MOZ_ASSERT(powerVal.isInt32() || powerVal.isBoolean());
-
-  int32_t base = baseVal.isInt32() ? baseVal.toInt32() : baseVal.toBoolean();
-  int32_t power =
-      powerVal.isInt32() ? powerVal.toInt32() : powerVal.toBoolean();
+  auto valToInt32 = [](const Value& v) {
+    if (v.isInt32()) {
+      return v.toInt32();
+    }
+    if (v.isBoolean()) {
+      return int32_t(v.toBoolean());
+    }
+    MOZ_ASSERT(v.isNull());
+    return 0;
+  };
+  int32_t base = valToInt32(baseVal);
+  int32_t power = valToInt32(powerVal);
 
   // x^y where y < 0 is most of the time not an int32, except when x is 1 or y
   // gets large enough. It's hard to determine when exactly y is "large enough",
@@ -10633,17 +10649,35 @@ AttachDecision UnaryArithIRGenerator::tryAttachStub() {
   return AttachDecision::NoAction;
 }
 
+static bool CanConvertToInt32ForToNumber(const Value& v) {
+  return v.isInt32() || v.isBoolean() || v.isNull();
+}
+
+static Int32OperandId EmitGuardToInt32ForToNumber(CacheIRWriter& writer,
+                                                  ValOperandId id,
+                                                  const Value& v) {
+  if (v.isInt32()) {
+    return writer.guardToInt32(id);
+  }
+  if (v.isNull()) {
+    writer.guardIsNull(id);
+    return writer.loadInt32Constant(0);
+  }
+  MOZ_ASSERT(v.isBoolean());
+  return writer.guardBooleanToInt32(id);
+}
+
 AttachDecision UnaryArithIRGenerator::tryAttachInt32() {
   if (op_ == JSOp::BitNot) {
     return AttachDecision::NoAction;
   }
-  if (!val_.isInt32() || !res_.isInt32()) {
+  if (!CanConvertToInt32ForToNumber(val_) || !res_.isInt32()) {
     return AttachDecision::NoAction;
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
 
-  Int32OperandId intId = writer.guardToInt32(valId);
+  Int32OperandId intId = EmitGuardToInt32ForToNumber(writer, valId, val_);
   switch (op_) {
     case JSOp::Pos:
       writer.loadInt32Result(intId);
@@ -10673,18 +10707,41 @@ AttachDecision UnaryArithIRGenerator::tryAttachInt32() {
   return AttachDecision::Attach;
 }
 
+static bool CanConvertToDoubleForToNumber(const Value& v) {
+  return v.isNumber() || v.isBoolean() || v.isNullOrUndefined();
+}
+
+static NumberOperandId EmitGuardToDoubleForToNumber(CacheIRWriter& writer,
+                                                    ValOperandId id,
+                                                    const Value& v) {
+  if (v.isNumber()) {
+    return writer.guardIsNumber(id);
+  }
+  if (v.isBoolean()) {
+    BooleanOperandId boolId = writer.guardToBoolean(id);
+    return writer.booleanToNumber(boolId);
+  }
+  if (v.isNull()) {
+    writer.guardIsNull(id);
+    return writer.loadDoubleConstant(0.0);
+  }
+  MOZ_ASSERT(v.isUndefined());
+  writer.guardIsUndefined(id);
+  return writer.loadDoubleConstant(JS::GenericNaN());
+}
+
 AttachDecision UnaryArithIRGenerator::tryAttachNumber() {
   if (op_ == JSOp::BitNot) {
     return AttachDecision::NoAction;
   }
-  if (!val_.isNumber()) {
+  if (!CanConvertToDoubleForToNumber(val_)) {
     return AttachDecision::NoAction;
   }
   MOZ_ASSERT(res_.isNumber());
 
   ValOperandId valId(writer.setInputOperandId(0));
-  NumberOperandId numId = writer.guardIsNumber(valId);
-  Int32OperandId truncatedId;
+  NumberOperandId numId = EmitGuardToDoubleForToNumber(writer, valId, val_);
+
   switch (op_) {
     case JSOp::Pos:
       writer.loadDoubleResult(numId);
@@ -11106,16 +11163,17 @@ AttachDecision BinaryArithIRGenerator::tryAttachDouble() {
     return AttachDecision::NoAction;
   }
 
-  // Check guard conditions
-  if (!lhs_.isNumber() || !rhs_.isNumber()) {
+  // Check guard conditions.
+  if (!CanConvertToDoubleForToNumber(lhs_) ||
+      !CanConvertToDoubleForToNumber(rhs_)) {
     return AttachDecision::NoAction;
   }
 
   ValOperandId lhsId(writer.setInputOperandId(0));
   ValOperandId rhsId(writer.setInputOperandId(1));
 
-  NumberOperandId lhs = writer.guardIsNumber(lhsId);
-  NumberOperandId rhs = writer.guardIsNumber(rhsId);
+  NumberOperandId lhs = EmitGuardToDoubleForToNumber(writer, lhsId, lhs_);
+  NumberOperandId rhs = EmitGuardToDoubleForToNumber(writer, rhsId, rhs_);
 
   switch (op_) {
     case JSOp::Add:
@@ -11150,9 +11208,9 @@ AttachDecision BinaryArithIRGenerator::tryAttachDouble() {
 }
 
 AttachDecision BinaryArithIRGenerator::tryAttachInt32() {
-  // Check guard conditions
-  if (!(lhs_.isInt32() || lhs_.isBoolean()) ||
-      !(rhs_.isInt32() || rhs_.isBoolean())) {
+  // Check guard conditions.
+  if (!CanConvertToInt32ForToNumber(lhs_) ||
+      !CanConvertToInt32ForToNumber(rhs_)) {
     return AttachDecision::NoAction;
   }
 
@@ -11174,16 +11232,8 @@ AttachDecision BinaryArithIRGenerator::tryAttachInt32() {
   ValOperandId lhsId(writer.setInputOperandId(0));
   ValOperandId rhsId(writer.setInputOperandId(1));
 
-  auto guardToInt32 = [&](ValOperandId id, const Value& v) {
-    if (v.isInt32()) {
-      return writer.guardToInt32(id);
-    }
-    MOZ_ASSERT(v.isBoolean());
-    return writer.guardBooleanToInt32(id);
-  };
-
-  Int32OperandId lhsIntId = guardToInt32(lhsId, lhs_);
-  Int32OperandId rhsIntId = guardToInt32(rhsId, rhs_);
+  Int32OperandId lhsIntId = EmitGuardToInt32ForToNumber(writer, lhsId, lhs_);
+  Int32OperandId rhsIntId = EmitGuardToInt32ForToNumber(writer, rhsId, rhs_);
 
   switch (op_) {
     case JSOp::Add:

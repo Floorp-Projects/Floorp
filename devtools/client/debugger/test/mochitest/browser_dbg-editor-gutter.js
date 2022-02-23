@@ -17,13 +17,13 @@ add_task(async function() {
   await selectSource(dbg, source.url);
 
   // Make sure that clicking the gutter creates a breakpoint icon.
-  clickGutter(dbg, 4);
+  await clickGutter(dbg, 4);
   await waitForDispatch(dbg.store, "SET_BREAKPOINT");
   is(dbg.selectors.getBreakpointCount(), 1, "One breakpoint exists");
   await assertBreakpoint(dbg, 4);
 
   // Make sure clicking at the same place removes the icon.
-  clickGutter(dbg, 4);
+  await clickGutter(dbg, 4);
   await waitForDispatch(dbg.store, "REMOVE_BREAKPOINT");
   is(dbg.selectors.getBreakpointCount(), 0, "No breakpoints exist");
   await assertNoBreakpoint(dbg, 4);
@@ -51,7 +51,7 @@ add_task(async function() {
   is(isPaused(dbg), false);
 
   info("ensure gutter breakpoint gets set with click");
-  clickGutter(dbg, 4);
+  await clickGutter(dbg, 4);
   await waitForDispatch(dbg.store, "SET_BREAKPOINT");
   is(dbg.selectors.getBreakpointCount(), 1, "One breakpoint exists");
   await assertBreakpoint(dbg, 4);
@@ -62,8 +62,3 @@ add_task(async function() {
   await waitForPaused(dbg);
   ok(true, "source is un-blackboxed");
 });
-
-// Utilities for interacting with the editor
-function clickGutter(dbg, line) {
-  clickElement(dbg, "gutter", line);
-}

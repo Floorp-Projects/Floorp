@@ -62,7 +62,7 @@ fn experiment_id_and_branch_get_truncated_if_too_long() {
     // Make sure the branch id was truncated as well.
     let experiment_data = glean.test_get_experiment_data_as_json(expected_id);
     assert!(
-        !experiment_data.is_none(),
+        experiment_data.is_some(),
         "Experiment data must be available"
     );
 
@@ -101,7 +101,7 @@ fn limits_on_experiments_extras_are_applied_correctly() {
     // Get the data
     let experiment_data = glean.test_get_experiment_data_as_json(experiment_id);
     assert!(
-        !experiment_data.is_none(),
+        experiment_data.is_some(),
         "Experiment data must be available"
     );
 
@@ -401,7 +401,7 @@ fn correct_order() {
         Counter(0),
         CustomDistributionExponential(Histogram::exponential(1, 500, 10)),
         CustomDistributionLinear(Histogram::linear(1, 500, 10)),
-        Datetime(local_now_with_offset().0, TimeUnit::Second),
+        Datetime(local_now_with_offset(), TimeUnit::Second),
         Experiment(RecordedExperimentData { branch: "branch".into(), extra: None, }),
         Quantity(0),
         String("glean".into()),
@@ -930,21 +930,4 @@ fn test_activity_api() {
 
     // Check that we set everything we needed for the 'inactuve' status.
     assert!(!glean.is_dirty_flag_set());
-}
-
-/// We explicitly test that NO invalid timezone offset was recorded.
-/// If it _does_ happen and fails on a developer machine or CI, we better know about it.
-#[test]
-fn handles_local_now_gracefully() {
-    let _ = env_logger::builder().is_test(true).try_init();
-
-    let dir = tempfile::tempdir().unwrap();
-    let (glean, _) = new_glean(Some(dir));
-
-    let metric = &glean.additional_metrics.invalid_timezone_offset;
-    assert_eq!(
-        None,
-        metric.test_get_value(&glean, "metrics"),
-        "Timezones should be valid"
-    );
 }

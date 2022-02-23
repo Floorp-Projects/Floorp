@@ -41,8 +41,14 @@ async function test() {
   ok(!weakWorker.get(), "worker weak reference should be garbage collected");
   SimpleTest.finish();
 }
-
-test();
+// Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+// Acquire storage access permission here so that the Cache API is avaialable
+SpecialPowers.wrap(document).notifyUserGestureActivation();
+  SpecialPowers.addPermission("storageAccessAPI", true, window.location.href).then(() => {
+    SpecialPowers.wrap(document).requestStorageAccess().then(() => {
+    test();
+  });
+});
 </script>
 </body>
 </html>

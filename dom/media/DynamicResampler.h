@@ -332,7 +332,7 @@ class AudioChunkList {
  private:
   nsTArray<AudioChunk> mChunks;
   uint32_t mIndex = 0;
-  uint32_t mChunkCapacity = 128;
+  uint32_t mChunkCapacity = WEBAUDIO_BLOCK_SIZE;
   AudioSampleFormat mSampleFormat = AUDIO_FORMAT_SILENCE;
 };
 

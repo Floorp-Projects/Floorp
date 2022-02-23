@@ -1,5 +1,5 @@
-; Copyright © 2019-2021, VideoLAN and dav1d authors
-; Copyright © 2019, Two Orioles, LLC
+; Copyright © 2019-2022, VideoLAN and dav1d authors
+; Copyright © 2019-2022, Two Orioles, LLC
 ; All rights reserved.
 ;
 ; Redistribution and use in source and binary forms, with or without
@@ -33,11 +33,15 @@ pb_8x_27_17_8x_17_27: times 8 db 27, 17
                       times 8 db 17, 27
 pw_1024: times 16 dw 1024
 pb_mask: db 0, 0x80, 0x80, 0, 0x80, 0, 0, 0x80, 0x80, 0, 0, 0x80, 0, 0x80, 0x80, 0
+gen_shufE:     db  0,  1,  8,  9,  2,  3, 10, 11,  4,  5, 12, 13,  6,  7, 14, 15
+gen_shufA:     db  0,  1,  2,  3,  2,  3,  4,  5,  4,  5,  6,  7,  6,  7,  8,  9
+gen_shufB:     db  2,  3,  4,  5,  4,  5,  6,  7,  6,  7,  8,  9,  8,  9, 10, 11
+gen_shufC:     db  4,  5,  6,  7,  6,  7,  8,  9,  8,  9, 10, 11, 10, 11, 12, 13
+gen_shufD:     db  6,  7,  8,  9,  8,  9, 10, 11, 10, 11, 12, 13, 12, 13, 14, 15
 rnd_next_upperbit_mask: dw 0x100B, 0x2016, 0x402C, 0x8058
 byte_blend: db 0, 0, 0, 0xff, 0, 0, 0, 0
 pw_seed_xor: times 2 dw 0xb524
              times 2 dw 0x49d8
-pd_m65536: dd ~0xffff
 pb_23_22: db 23, 22
           times 3 db 0, 32
 pb_1: times 4 db 1
@@ -52,10 +56,9 @@ pb_27_17_17_27: db 27, 17, 17, 27
 pw_1: dw 1
 
 %macro JMP_TABLE 2-*
-    %xdefine %1_8bpc_%2_table %%table
+    %1_8bpc_%2_table:
     %xdefine %%base %1_8bpc_%2_table
     %xdefine %%prefix mangle(private_prefix %+ _%1_8bpc_%2)
-    %%table:
     %rep %0 - 2
         dd %%prefix %+ .ar%3 - %%base
         %rotate 1
@@ -63,7 +66,7 @@ pw_1: dw 1
 %endmacro
 
 ALIGN 4
-JMP_TABLE generate_grain_y, avx2, 0, 1, 2, 3
+JMP_TABLE generate_grain_y,      avx2, 0, 1, 2, 3
 JMP_TABLE generate_grain_uv_420, avx2, 0, 1, 2, 3
 JMP_TABLE generate_grain_uv_422, avx2, 0, 1, 2, 3
 JMP_TABLE generate_grain_uv_444, avx2, 0, 1, 2, 3
@@ -100,63 +103,91 @@ SECTION .text
 %endrep
 %endmacro
 
-INIT_XMM avx2
-cglobal generate_grain_y_8bpc, 2, 9, 16, buf, fg_data
-    lea              r4, [pb_mask]
-%define base r4-pb_mask
-    movq            xm1, [base+rnd_next_upperbit_mask]
-    movq            xm4, [base+mul_bits]
-    movq            xm7, [base+hmul_bits]
-    mov             r2d, [fg_dataq+FGData.grain_scale_shift]
-    vpbroadcastw    xm8, [base+round+r2*2]
-    mova            xm5, [base+pb_mask]
+INIT_YMM avx2
+cglobal generate_grain_y_8bpc, 2, 9, 8, buf, fg_data
+%define base r4-generate_grain_y_8bpc_avx2_table
+    lea              r4, [generate_grain_y_8bpc_avx2_table]
     vpbroadcastw    xm0, [fg_dataq+FGData.seed]
-    vpbroadcastd    xm9, [base+pd_m65536]
-    mov              r2, -73*82
-    sub            bufq, r2
-    lea              r3, [gaussian_sequence]
+    mov             r6d, [fg_dataq+FGData.grain_scale_shift]
+    movq            xm1, [base+rnd_next_upperbit_mask]
+    movsxd           r5, [fg_dataq+FGData.ar_coeff_lag]
+    movq            xm4, [base+mul_bits]
+    movq            xm5, [base+hmul_bits]
+    mov              r7, -73*82
+    mova            xm6, [base+pb_mask]
+    sub            bufq, r7
+    vpbroadcastw    xm7, [base+round+r6*2]
+    lea              r6, [gaussian_sequence]
+    movsxd           r5, [r4+r5*4]
 .loop:
     pand            xm2, xm0, xm1
     psrlw           xm3, xm2, 10
     por             xm2, xm3            ; bits 0xf, 0x1e, 0x3c and 0x78 are set
     pmullw          xm2, xm4            ; bits 0x0f00 are set
-    pshufb          xm2, xm5, xm2       ; set 15th bit for next 4 seeds
-    psllq           xm6, xm2, 30
-    por             xm2, xm6
-    psllq           xm6, xm2, 15
-    por             xm2, xm6            ; aggregate each bit into next seed's high bit
-    pmulhuw         xm3, xm0, xm7
-    por             xm2, xm3            ; 4 next output seeds
-    pshuflw         xm0, xm2, q3333
-    psrlw           xm2, 5
-    pmovzxwd        xm3, xm2
-    mova            xm6, xm9
-    vpgatherdd      xm2, [r3+xm3*2], xm6
-    pandn           xm2, xm9, xm2
-    packusdw        xm2, xm2
-    pmulhrsw        xm2, xm8
+    pmulhuw         xm0, xm5
+    pshufb          xm3, xm6, xm2       ; set 15th bit for next 4 seeds
+    psllq           xm2, xm3, 30
+    por             xm2, xm3
+    psllq           xm3, xm2, 15
+    por             xm2, xm0            ; aggregate each bit into next seed's high bit
+    por             xm3, xm2            ; 4 next output seeds
+    pshuflw         xm0, xm3, q3333
+    psrlw           xm3, 5
+    pand            xm2, xm0, xm1
+    movq             r2, xm3
+    psrlw           xm3, xm2, 10
+    por             xm2, xm3
+    pmullw          xm2, xm4
+    pmulhuw         xm0, xm5
+    movzx           r3d, r2w
+    pshufb          xm3, xm6, xm2
+    psllq           xm2, xm3, 30
+    por             xm2, xm3
+    psllq           xm3, xm2, 15
+    por             xm0, xm2
+    movd            xm2, [r6+r3*2]
+    rorx             r3, r2, 32
+    por             xm3, xm0
+    shr             r2d, 16
+    pinsrw          xm2, [r6+r2*2], 1
+    pshuflw         xm0, xm3, q3333
+    movzx           r2d, r3w
+    psrlw           xm3, 5
+    pinsrw          xm2, [r6+r2*2], 2
+    shr             r3d, 16
+    movq             r2, xm3
+    pinsrw          xm2, [r6+r3*2], 3
+    movzx           r3d, r2w
+    pinsrw          xm2, [r6+r3*2], 4
+    rorx             r3, r2, 32
+    shr             r2d, 16
+    pinsrw          xm2, [r6+r2*2], 5
+    movzx           r2d, r3w
+    pinsrw          xm2, [r6+r2*2], 6
+    shr             r3d, 16
+    pinsrw          xm2, [r6+r3*2], 7
+    pmulhrsw        xm2, xm7
     packsswb        xm2, xm2
-    movd      [bufq+r2], xm2
-    add              r2, 4
+    movq      [bufq+r7], xm2
+    add              r7, 8
     jl .loop
 
     ; auto-regression code
-    movsxd           r2, [fg_dataq+FGData.ar_coeff_lag]
-    movsxd           r2, [base+generate_grain_y_8bpc_avx2_table+r2*4]
-    lea              r2, [r2+base+generate_grain_y_8bpc_avx2_table]
-    jmp              r2
+    add              r5, r4
+    jmp              r5
 
 .ar1:
     DEFINE_ARGS buf, fg_data, cf3, shift, val3, min, max, x, val0
     mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
     movsx          cf3d, byte [fg_dataq+FGData.ar_coeffs_y+3]
-    movd            xm4, [fg_dataq+FGData.ar_coeffs_y]
+    movd            xm5, [fg_dataq+FGData.ar_coeffs_y]
+    mova            xm2, [base+gen_shufC]
     DEFINE_ARGS buf, h, cf3, shift, val3, min, max, x, val0
-    pinsrb          xm4, [pb_1], 3
-    pmovsxbw        xm4, xm4
-    pshufd          xm5, xm4, q1111
-    pshufd          xm4, xm4, q0000
+    pinsrb          xm5, [base+pb_1], 3
     vpbroadcastw    xm3, [base+round_vals+shiftq*2-12]    ; rnd
+    pmovsxbw        xm5, xm5
+    pshufd          xm4, xm5, q0000
+    pshufd          xm5, xm5, q1111
     sub            bufq, 82*73-(82*3+79)
     mov              hd, 70
     mov            mind, -128
@@ -165,11 +196,9 @@ cglobal generate_grain_y_8bpc, 2, 9, 16, buf, fg_data
     mov              xq, -76
     movsx         val3d, byte [bufq+xq-1]
 .x_loop_ar1:
-    pmovsxbw        xm0, [bufq+xq-82-1]     ; top/left
-    pmovsxbw        xm2, [bufq+xq-82+0]     ; top
-    pmovsxbw        xm1, [bufq+xq-82+1]     ; top/right
-    punpcklwd       xm0, xm2
-    punpcklwd       xm1, xm3
+    pmovsxbw        xm1, [bufq+xq-82-3]
+    pshufb          xm0, xm1, xm2
+    punpckhwd       xm1, xm3
     pmaddwd         xm0, xm4
     pmaddwd         xm1, xm5
     paddd           xm0, xm1
@@ -178,25 +207,20 @@ cglobal generate_grain_y_8bpc, 2, 9, 16, buf, fg_data
     psrldq          xm0, 4
     imul          val3d, cf3d
     add           val3d, val0d
-%if WIN64
-    sarx          val3d, val3d, shiftd
-%else
-    sar           val3d, shiftb
-%endif
     movsx         val0d, byte [bufq+xq]
+    sarx          val3d, val3d, shiftd
     add           val3d, val0d
     cmp           val3d, maxd
     cmovns        val3d, maxd
     cmp           val3d, mind
     cmovs         val3d, mind
-    mov  byte [bufq+xq], val3b
+    mov       [bufq+xq], val3b
     ; keep val3d in-place as left for next x iteration
     inc              xq
     jz .x_loop_ar1_end
-    test             xq, 3
+    test             xb, 3
     jnz .x_loop_ar1_inner
     jmp .x_loop_ar1
-
 .x_loop_ar1_end:
     add            bufq, 82
     dec              hd
@@ -205,60 +229,67 @@ cglobal generate_grain_y_8bpc, 2, 9, 16, buf, fg_data
     RET
 
 .ar2:
-    DEFINE_ARGS buf, fg_data, shift
-    mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
-    vpbroadcastw   xm14, [base+round_vals-12+shiftq*2]
-    movq           xm15, [base+byte_blend+1]
-    pmovsxbw        xm8, [fg_dataq+FGData.ar_coeffs_y+0]    ; cf0-7
-    movd            xm9, [fg_dataq+FGData.ar_coeffs_y+8]    ; cf8-11
-    pmovsxbw        xm9, xm9
+%if WIN64
+    ; xmm6 and xmm7 already saved
+    %assign xmm_regs_used 16
+    %assign stack_size_padded 168
+    SUB             rsp, stack_size_padded
+    movaps   [rsp+16*2], xmm8
+    movaps   [rsp+16*3], xmm9
+    movaps   [rsp+16*4], xmm10
+    movaps   [rsp+16*5], xmm11
+    movaps   [rsp+16*6], xmm12
+    movaps   [rsp+16*7], xmm13
+    movaps   [rsp+16*8], xmm14
+    movaps   [rsp+16*9], xmm15
+%endif
     DEFINE_ARGS buf, fg_data, h, x
-    pshufd         xm12, xm9, q0000
-    pshufd         xm13, xm9, q1111
-    pshufd         xm11, xm8, q3333
-    pshufd         xm10, xm8, q2222
-    pshufd          xm9, xm8, q1111
-    pshufd          xm8, xm8, q0000
-    pmovzxwd       xm14, xm14
+    mov             r6d, [fg_dataq+FGData.ar_coeff_shift]
+    pmovsxbw        xm7, [fg_dataq+FGData.ar_coeffs_y+0]    ; cf0-7
+    movd            xm9, [fg_dataq+FGData.ar_coeffs_y+8]    ; cf8-11
+    vpbroadcastd   xm10, [base+round_vals-14+r6*2]
+    movq           xm11, [base+byte_blend+1]
+    pmovsxbw        xm9, xm9
+    pshufd          xm4, xm7, q0000
+    mova           xm12, [base+gen_shufA]
+    pshufd          xm5, xm7, q3333
+    mova           xm13, [base+gen_shufB]
+    pshufd          xm6, xm7, q1111
+    mova           xm14, [base+gen_shufC]
+    pshufd          xm7, xm7, q2222
+    mova           xm15, [base+gen_shufD]
+    pshufd          xm8, xm9, q0000
+    psrld          xm10, 16
+    pshufd          xm9, xm9, q1111
     sub            bufq, 82*73-(82*3+79)
     mov              hd, 70
 .y_loop_ar2:
     mov              xq, -76
-
 .x_loop_ar2:
     pmovsxbw        xm0, [bufq+xq-82*2-2]   ; y=-2,x=[-2,+5]
     pmovsxbw        xm1, [bufq+xq-82*1-2]   ; y=-1,x=[-2,+5]
-    psrldq          xm2, xm0, 2             ; y=-2,x=[-1,+5]
-    psrldq          xm3, xm1, 2             ; y=-1,x=[-1,+5]
-    psrldq          xm4, xm1, 4             ; y=-1,x=[+0,+5]
-    punpcklwd       xm2, xm0, xm2
-    punpcklwd       xm3, xm4
-    pmaddwd         xm2, xm8
-    pmaddwd         xm3, xm11
+    pshufb          xm2, xm0, xm12
+    pmaddwd         xm2, xm4
+    pshufb          xm3, xm1, xm13
+    pmaddwd         xm3, xm5
     paddd           xm2, xm3
-
-    psrldq          xm4, xm0, 4             ; y=-2,x=[+0,+5]
-    psrldq          xm5, xm0, 6             ; y=-2,x=[+1,+5]
-    psrldq          xm6, xm0, 8             ; y=-2,x=[+2,+5]
-    punpcklwd       xm4, xm5
-    punpcklwd       xm6, xm1
-    psrldq          xm7, xm1, 6             ; y=-1,x=[+1,+5]
-    psrldq          xm1, xm1, 8             ; y=-1,x=[+2,+5]
-    punpcklwd       xm7, xm1
-    pmaddwd         xm4, xm9
-    pmaddwd         xm6, xm10
-    pmaddwd         xm7, xm12
-    paddd           xm4, xm6
-    paddd           xm2, xm7
-    paddd           xm2, xm4
-    paddd           xm2, xm14
-
+    pshufb          xm3, xm0, xm14
+    pmaddwd         xm3, xm6
+    punpckhqdq      xm0, xm0
+    punpcklwd       xm0, xm1
+    pmaddwd         xm0, xm7
+    pshufb          xm1, xm15
+    pmaddwd         xm1, xm8
+    paddd           xm2, xm10
+    paddd           xm2, xm3
+    paddd           xm0, xm1
+    paddd           xm2, xm0
     movq            xm0, [bufq+xq-2]        ; y=0,x=[-2,+5]
 .x_loop_ar2_inner:
     pmovsxbw        xm1, xm0
-    pmaddwd         xm3, xm1, xm13
-    paddd           xm3, xm2
+    pmaddwd         xm3, xm9, xm1
     psrldq          xm1, 4                  ; y=0,x=0
+    paddd           xm3, xm2
     psrldq          xm2, 4                  ; shift top to next pixel
     psrad           xm3, [fg_dataq+FGData.ar_coeff_shift]
     ; don't packssdw since we only care about one value
@@ -266,162 +297,127 @@ cglobal generate_grain_y_8bpc, 2, 9, 16, buf, fg_data
     packsswb        xm3, xm3
     pextrb    [bufq+xq], xm3, 0
     pslldq          xm3, 2
-    pand            xm3, xm15
-    pandn           xm0, xm15, xm0
+    pandn           xm0, xm11, xm0
+    pand            xm3, xm11
     por             xm0, xm3
     psrldq          xm0, 1
     inc              xq
     jz .x_loop_ar2_end
-    test             xq, 3
+    test             xb, 3
     jnz .x_loop_ar2_inner
     jmp .x_loop_ar2
-
 .x_loop_ar2_end:
     add            bufq, 82
     dec              hd
     jg .y_loop_ar2
     RET
 
+INIT_YMM avx2
 .ar3:
-    DEFINE_ARGS buf, fg_data, shift
 %if WIN64
-    SUB             rsp, 16*12
-%assign stack_size_padded (stack_size_padded+16*12)
-%assign stack_size (stack_size+16*12)
+    ; xmm6 and xmm7 already saved
+    %assign stack_offset 16
+    ALLOC_STACK   16*14
+    %assign stack_size stack_size - 16*4
+    %assign xmm_regs_used 12
+    movaps  [rsp+16*12], xmm8
+    movaps  [rsp+16*13], xmm9
+    movaps  [rsp+16*14], xmm10
+    movaps  [rsp+16*15], xmm11
 %else
     ALLOC_STACK   16*12
 %endif
-    mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
-    vpbroadcastw   xm14, [base+round_vals-12+shiftq*2]
-    movq           xm15, [base+byte_blend]
-    pmovsxbw        xm0, [fg_dataq+FGData.ar_coeffs_y+ 0]   ; cf0-7
-    pmovsxbw        xm1, [fg_dataq+FGData.ar_coeffs_y+ 8]   ; cf8-15
+    mov             r6d, [fg_dataq+FGData.ar_coeff_shift]
+    movq           xm11, [base+byte_blend]
+    pmovsxbw         m1, [fg_dataq+FGData.ar_coeffs_y+ 0]   ; cf0-15
     pmovsxbw        xm2, [fg_dataq+FGData.ar_coeffs_y+16]   ; cf16-23
-    pshufd          xm9, xm0, q1111
-    pshufd         xm10, xm0, q2222
-    pshufd         xm11, xm0, q3333
-    pshufd          xm0, xm0, q0000
-    pshufd          xm6, xm1, q1111
-    pshufd          xm7, xm1, q2222
-    pshufd          xm8, xm1, q3333
-    pshufd          xm1, xm1, q0000
-    pshufd          xm3, xm2, q1111
-    psrldq         xm13, xm2, 10
-    pinsrw          xm2, [pw_1], 5
-    pshufd          xm4, xm2, q2222
-    pshufd          xm2, xm2, q0000
-    pinsrw         xm13, [base+round_vals+shiftq*2-10], 3
-    mova    [rsp+ 0*16], xm0
-    mova    [rsp+ 1*16], xm9
-    mova    [rsp+ 2*16], xm10
-    mova    [rsp+ 3*16], xm11
-    mova    [rsp+ 4*16], xm1
-    mova    [rsp+ 5*16], xm6
-    mova    [rsp+ 6*16], xm7
-    mova    [rsp+ 7*16], xm8
-    mova    [rsp+ 8*16], xm2
-    mova    [rsp+ 9*16], xm3
-    mova    [rsp+10*16], xm4
+    pshufd           m0, m1, q0000
+    mova    [rsp+16* 0], m0
+    pshufd           m0, m1, q1111
+    mova    [rsp+16* 2], m0
+    pshufd           m0, m1, q2222
+    mova    [rsp+16* 4], m0
+    pshufd           m1, m1, q3333
+    mova    [rsp+16* 6], m1
+    pshufd          xm0, xm2, q0000
+    mova    [rsp+16* 8], xm0
+    pshufd          xm0, xm2, q1111
+    mova    [rsp+16* 9], xm0
+    psrldq          xm7, xm2, 10
+    mova             m8, [base+gen_shufA]
+    pinsrw          xm2, [base+pw_1], 5
+    mova             m9, [base+gen_shufC]
+    pshufd          xm2, xm2, q2222
+    movu            m10, [base+gen_shufE]
+    vpbroadcastw    xm6, [base+round_vals-12+r6*2]
+    pinsrw          xm7, [base+round_vals+r6*2-10], 3
+    mova    [rsp+16*10], xm2
     DEFINE_ARGS buf, fg_data, h, x
     sub            bufq, 82*73-(82*3+79)
     mov              hd, 70
 .y_loop_ar3:
     mov              xq, -76
-
 .x_loop_ar3:
-    movu            xm0, [bufq+xq-82*3-3]   ; y=-3,x=[-3,+12]
-    movu            xm1, [bufq+xq-82*2-3]   ; y=-2,x=[-3,+12]
-    movu            xm2, [bufq+xq-82*1-3]   ; y=-1,x=[-3,+12]
-    pxor            xm3, xm3
-    pcmpgtb         xm6, xm3, xm2
-    pcmpgtb         xm5, xm3, xm1
-    pcmpgtb         xm4, xm3, xm0
-    punpckhbw       xm3, xm0, xm4
-    punpcklbw       xm0, xm4
-    punpckhbw       xm4, xm1, xm5
-    punpcklbw       xm1, xm5
-    punpckhbw       xm5, xm2, xm6
-    punpcklbw       xm2, xm6
-
-    psrldq          xm6, xm0, 2
-    psrldq          xm7, xm0, 4
-    psrldq          xm8, xm0, 6
-    psrldq          xm9, xm0, 8
-    palignr        xm10, xm3, xm0, 10
-    palignr        xm11, xm3, xm0, 12
-
-    punpcklwd       xm0, xm6
-    punpcklwd       xm7, xm8
-    punpcklwd       xm9, xm10
-    punpcklwd      xm11, xm1
-    pmaddwd         xm0, [rsp+ 0*16]
-    pmaddwd         xm7, [rsp+ 1*16]
-    pmaddwd         xm9, [rsp+ 2*16]
-    pmaddwd        xm11, [rsp+ 3*16]
-    paddd           xm0, xm7
-    paddd           xm9, xm11
-    paddd           xm0, xm9
-
-    psrldq          xm6, xm1, 2
-    psrldq          xm7, xm1, 4
-    psrldq          xm8, xm1, 6
-    psrldq          xm9, xm1, 8
-    palignr        xm10, xm4, xm1, 10
-    palignr        xm11, xm4, xm1, 12
-    psrldq         xm12, xm2, 2
-
-    punpcklwd       xm6, xm7
-    punpcklwd       xm8, xm9
-    punpcklwd      xm10, xm11
-    punpcklwd      xm12, xm2, xm12
-    pmaddwd         xm6, [rsp+ 4*16]
-    pmaddwd         xm8, [rsp+ 5*16]
-    pmaddwd        xm10, [rsp+ 6*16]
-    pmaddwd        xm12, [rsp+ 7*16]
-    paddd           xm6, xm8
-    paddd          xm10, xm12
-    paddd           xm6, xm10
-    paddd           xm0, xm6
-
-    psrldq          xm6, xm2, 4
-    psrldq          xm7, xm2, 6
-    psrldq          xm8, xm2, 8
-    palignr         xm9, xm5, xm2, 10
-    palignr         xm5, xm5, xm2, 12
-
-    punpcklwd       xm6, xm7
-    punpcklwd       xm8, xm9
-    punpcklwd       xm5, xm14
-    pmaddwd         xm6, [rsp+ 8*16]
-    pmaddwd         xm8, [rsp+ 9*16]
-    pmaddwd         xm5, [rsp+10*16]
-    paddd           xm0, xm6
-    paddd           xm8, xm5
-    paddd           xm0, xm8
-
+    movu            xm5, [bufq+xq-82*3-3]    ; y=-3,x=[-3,+12]
+    vinserti128      m5, [bufq+xq-82*2-3], 1 ; y=-2,x=[-3,+12]
+    movu            xm4, [bufq+xq-82*1-3]    ; y=-1,x=[-3,+12]
+    punpcklbw        m3, m5, m5
+    punpckhwd        m5, m4
+    psraw            m3, 8
+    punpcklbw        m5, m5
+    psraw            m5, 8
+    punpcklbw       xm4, xm4
+    psraw           xm4, 8
+    pshufb           m0, m3, m8
+    pmaddwd          m0, [rsp+16*0]
+    pshufb           m1, m3, m9
+    pmaddwd          m1, [rsp+16*2]
+    shufps           m2, m3, m5, q1032
+    paddd            m0, m1
+    pshufb           m1, m2, m8
+    vperm2i128       m3, m4, 0x21
+    pmaddwd          m1, [rsp+16*4]
+    shufps          xm2, xm3, q1021
+    vpblendd         m2, m3, 0xf0
+    pshufb           m2, m10
+    paddd            m0, m1
+    pmaddwd          m2, [rsp+16*6]
+    pshufb          xm1, xm4, xm9
+    pmaddwd         xm1, [rsp+16*8]
+    shufps          xm4, xm5, q1132
+    paddd            m0, m2
+    pshufb          xm2, xm4, xm8
+    pshufd          xm4, xm4, q2121
+    pmaddwd         xm2, [rsp+16*9]
+    punpcklwd       xm4, xm6
+    pmaddwd         xm4, [rsp+16*10]
+    vextracti128    xm3, m0, 1
+    paddd           xm0, xm1
     movq            xm1, [bufq+xq-3]        ; y=0,x=[-3,+4]
+    paddd           xm2, xm4
+    paddd           xm0, xm2
+    paddd           xm0, xm3
 .x_loop_ar3_inner:
     pmovsxbw        xm2, xm1
-    pmaddwd         xm2, xm13
+    pmaddwd         xm2, xm7
     pshufd          xm3, xm2, q1111
-    paddd           xm2, xm3                ; left+cur
     paddd           xm2, xm0                ; add top
+    paddd           xm2, xm3                ; left+cur
     psrldq          xm0, 4
     psrad           xm2, [fg_dataq+FGData.ar_coeff_shift]
     ; don't packssdw since we only care about one value
     packsswb        xm2, xm2
     pextrb    [bufq+xq], xm2, 0
     pslldq          xm2, 3
-    pand            xm2, xm15
-    pandn           xm1, xm15, xm1
+    pand            xm2, xm11
+    pandn           xm1, xm11, xm1
     por             xm1, xm2
     psrldq          xm1, 1
     inc              xq
     jz .x_loop_ar3_end
-    test             xq, 3
+    test             xb, 3
     jnz .x_loop_ar3_inner
     jmp .x_loop_ar3
-
 .x_loop_ar3_end:
     add            bufq, 82
     dec              hd
@@ -431,81 +427,82 @@ cglobal generate_grain_y_8bpc, 2, 9, 16, buf, fg_data
 %macro generate_grain_uv_fn 3 ; ss_name, ss_x, ss_y
 INIT_XMM avx2
 cglobal generate_grain_uv_%1_8bpc, 4, 10, 16, buf, bufy, fg_data, uv
-    lea              r4, [pb_mask]
-%define base r4-pb_mask
+%define base r4-generate_grain_uv_%1_8bpc_avx2_table
+    lea              r4, [generate_grain_uv_%1_8bpc_avx2_table]
+    vpbroadcastw    xm0, [fg_dataq+FGData.seed]
+    mov             r6d, [fg_dataq+FGData.grain_scale_shift]
     movq            xm1, [base+rnd_next_upperbit_mask]
     movq            xm4, [base+mul_bits]
-    movq            xm7, [base+hmul_bits]
-    mov             r5d, [fg_dataq+FGData.grain_scale_shift]
-    vpbroadcastw    xm8, [base+round+r5*2]
-    mova            xm5, [base+pb_mask]
-    vpbroadcastw    xm0, [fg_dataq+FGData.seed]
-    vpbroadcastw    xm9, [base+pw_seed_xor+uvq*4]
-    pxor            xm0, xm9
-    vpbroadcastd    xm9, [base+pd_m65536]
+    movq            xm5, [base+hmul_bits]
+    mova            xm6, [base+pb_mask]
+    vpbroadcastw    xm7, [base+round+r6*2]
+    vpbroadcastd    xm2, [base+pw_seed_xor+uvq*4]
+    pxor            xm0, xm2
     lea              r6, [gaussian_sequence]
 %if %2
     mov             r7d, 73-35*%3
     add            bufq, 44
 .loop_y:
     mov              r5, -44
-.loop_x:
 %else
     mov              r5, -73*82
     sub            bufq, r5
-.loop:
 %endif
+.loop:
     pand            xm2, xm0, xm1
     psrlw           xm3, xm2, 10
     por             xm2, xm3            ; bits 0xf, 0x1e, 0x3c and 0x78 are set
     pmullw          xm2, xm4            ; bits 0x0f00 are set
-    pshufb          xm2, xm5, xm2       ; set 15th bit for next 4 seeds
-    psllq           xm6, xm2, 30
-    por             xm2, xm6
-    psllq           xm6, xm2, 15
-    por             xm2, xm6            ; aggregate each bit into next seed's high bit
-    pmulhuw         xm3, xm0, xm7
+    pmulhuw         xm0, xm5
+    pshufb          xm3, xm6, xm2       ; set 15th bit for next 4 seeds
+    psllq           xm2, xm3, 30
+    por             xm2, xm3
+    psllq           xm3, xm2, 15
+    por             xm2, xm0            ; aggregate each bit into next seed's high bit
     por             xm2, xm3            ; 4 next output seeds
     pshuflw         xm0, xm2, q3333
     psrlw           xm2, 5
-    pmovzxwd        xm3, xm2
-    mova            xm6, xm9
-    vpgatherdd      xm2, [r6+xm3*2], xm6
-    pandn           xm2, xm9, xm2
-    packusdw        xm2, xm2
-    pmulhrsw        xm2, xm8
+    movq             r8, xm2
+    movzx           r9d, r8w
+    movd            xm2, [r6+r9*2]
+    rorx             r9, r8, 32
+    shr             r8d, 16
+    pinsrw          xm2, [r6+r8*2], 1
+    movzx           r8d, r9w
+    pinsrw          xm2, [r6+r8*2], 2
+    shr             r9d, 16
+    pinsrw          xm2, [r6+r9*2], 3
+    pmulhrsw        xm2, xm7
     packsswb        xm2, xm2
     movd      [bufq+r5], xm2
     add              r5, 4
+    jl .loop
 %if %2
-    jl .loop_x
     add            bufq, 82
     dec             r7d
     jg .loop_y
-%else
-    jl .loop
 %endif
 
     ; auto-regression code
-    movsxd           r5, [fg_dataq+FGData.ar_coeff_lag]
-    movsxd           r5, [base+generate_grain_uv_%1_8bpc_avx2_table+r5*4]
-    lea              r5, [r5+base+generate_grain_uv_%1_8bpc_avx2_table]
-    jmp              r5
+    movsxd           r6, [fg_dataq+FGData.ar_coeff_lag]
+    movsxd           r6, [base+generate_grain_uv_%1_8bpc_avx2_table+r6*4]
+    add              r6, r4
+    jmp              r6
 
+INIT_YMM avx2
 .ar0:
-    INIT_YMM avx2
     DEFINE_ARGS buf, bufy, fg_data, uv, unused, shift
     imul            uvd, 28
     mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
-    movd            xm4, [fg_dataq+FGData.ar_coeffs_uv+uvq]
+    movd            xm2, [fg_dataq+FGData.ar_coeffs_uv+uvq]
     movd            xm3, [base+hmul_bits+shiftq*2]
     DEFINE_ARGS buf, bufy, h
-    pmovsxbw        xm4, xm4
+    pmovsxbw        xm2, xm2
 %if %2
-    vpbroadcastd     m7, [pb_1]
-    vpbroadcastw     m6, [hmul_bits+2+%3*2]
+    vpbroadcastd     m7, [base+pb_1]
+    vpbroadcastw     m6, [base+hmul_bits+2+%3*2]
 %endif
-    vpbroadcastw     m4, xm4
+    vpbroadcastw     m2, xm2
     vpbroadcastw     m3, xm3
     pxor            m12, m12
 %if %2
@@ -518,58 +515,54 @@ cglobal generate_grain_uv_%1_8bpc, 4, 10, 16, buf, bufy, fg_data, uv
 .y_loop_ar0:
 %if %2
     ; first 32 pixels
-    movu            xm8, [bufyq]
+    movu            xm4, [bufyq]
+    vinserti128      m4, [bufyq+32], 1
 %if %3
-    movu            xm9, [bufyq+82]
+    movu            xm0, [bufyq+82]
+    vinserti128      m0, [bufyq+82+32], 1
 %endif
-    movu           xm10, [bufyq+16]
+    movu            xm5, [bufyq+16]
+    vinserti128      m5, [bufyq+48], 1
 %if %3
-    movu           xm11, [bufyq+82+16]
+    movu            xm1, [bufyq+82+16]
+    vinserti128      m1, [bufyq+82+48], 1
 %endif
-    vinserti128      m8, [bufyq+32], 1
+    pmaddubsw        m4, m7, m4
 %if %3
-    vinserti128      m9, [bufyq+82+32], 1
+    pmaddubsw        m0, m7, m0
 %endif
-    vinserti128     m10, [bufyq+48], 1
+    pmaddubsw        m5, m7, m5
 %if %3
-    vinserti128     m11, [bufyq+82+48], 1
+    pmaddubsw        m1, m7, m1
+    paddw            m4, m0
+    paddw            m5, m1
 %endif
-    pmaddubsw        m8, m7, m8
-%if %3
-    pmaddubsw        m9, m7, m9
-%endif
-    pmaddubsw       m10, m7, m10
-%if %3
-    pmaddubsw       m11, m7, m11
-    paddw            m8, m9
-    paddw           m10, m11
-%endif
-    pmulhrsw         m8, m6
-    pmulhrsw        m10, m6
+    pmulhrsw         m4, m6
+    pmulhrsw         m5, m6
 %else
     xor             r3d, r3d
     ; first 32x2 pixels
 .x_loop_ar0:
-    movu             m8, [bufyq+r3]
-    pcmpgtb          m9, m12, m8
-    punpckhbw       m10, m8, m9
-    punpcklbw        m8, m9
+    movu             m4, [bufyq+r3]
+    pcmpgtb          m0, m12, m4
+    punpckhbw        m5, m4, m0
+    punpcklbw        m4, m0
 %endif
-    pmullw           m8, m4
-    pmullw          m10, m4
-    pmulhrsw         m8, m3
-    pmulhrsw        m10, m3
+    pmullw           m4, m2
+    pmullw           m5, m2
+    pmulhrsw         m4, m3
+    pmulhrsw         m5, m3
 %if %2
-    movu             m0, [bufq]
+    movu             m1, [bufq]
 %else
-    movu             m0, [bufq+r3]
+    movu             m1, [bufq+r3]
 %endif
-    pcmpgtb          m1, m12, m0
-    punpckhbw        m9, m0, m1
-    punpcklbw        m0, m1
-    paddw            m0, m8
-    paddw            m9, m10
-    packsswb         m0, m9
+    pcmpgtb          m8, m12, m1
+    punpcklbw        m0, m1, m8
+    punpckhbw        m1, m8
+    paddw            m0, m4
+    paddw            m1, m5
+    packsswb         m0, m1
 %if %2
     movu         [bufq], m0
 %else
@@ -580,53 +573,52 @@ cglobal generate_grain_uv_%1_8bpc, 4, 10, 16, buf, bufy, fg_data, uv
 %endif
 
     ; last 6/12 pixels
-    movu            xm8, [bufyq+32*2]
+    movu            xm4, [bufyq+32*2]
 %if %2
 %if %3
-    movu            xm9, [bufyq+32*2+82]
+    movu            xm5, [bufyq+32*2+82]
 %endif
-    pmaddubsw       xm8, xm7, xm8
+    pmaddubsw       xm4, xm7, xm4
 %if %3
-    pmaddubsw       xm9, xm7, xm9
-    paddw           xm8, xm9
+    pmaddubsw       xm5, xm7, xm5
+    paddw           xm4, xm5
 %endif
-    pmulhrsw        xm8, xm6
-    pmullw          xm8, xm4
-    pmulhrsw        xm8, xm3
     movq            xm0, [bufq+32]
-    pcmpgtb         xm9, xm12, xm0
-    punpcklbw       xm9, xm0, xm9
-    paddw           xm8, xm9
-    packsswb        xm8, xm8
-    vpblendw        xm0, xm8, xm0, 1000b
+    pmulhrsw        xm4, xm6
+    pmullw          xm4, xm2
+    pmulhrsw        xm4, xm3
+    pcmpgtb         xm5, xm12, xm0
+    punpcklbw       xm5, xm0, xm5
+    paddw           xm4, xm5
+    packsswb        xm4, xm4
+    pblendw         xm0, xm4, xm0, 1000b
     movq      [bufq+32], xm0
 %else
-    pcmpgtb         xm9, xm12, xm8
-    punpckhbw      xm10, xm8, xm9
-    punpcklbw       xm8, xm9
-    pmullw         xm10, xm4
-    pmullw          xm8, xm4
-    pmulhrsw       xm10, xm3
-    pmulhrsw        xm8, xm3
     movu            xm0, [bufq+64]
-    pcmpgtb         xm9, xm12, xm0
-    punpcklbw       xm1, xm0, xm9
-    punpckhbw       xm9, xm0, xm9
-    paddw           xm1, xm8
-    paddw           xm9, xm10
-    packsswb        xm1, xm9
-    vpblendw        xm0, xm1, xm0, 11000000b
+    pcmpgtb         xm1, xm12, xm4
+    punpckhbw       xm5, xm4, xm1
+    punpcklbw       xm4, xm1
+    pmullw          xm5, xm2
+    pmullw          xm4, xm2
+    vpblendd        xm1, xm3, xm12, 0x0c
+    pmulhrsw        xm5, xm1
+    pmulhrsw        xm4, xm3
+    pcmpgtb         xm1, xm12, xm0
+    punpckhbw       xm8, xm0, xm1
+    punpcklbw       xm0, xm1
+    paddw           xm5, xm8
+    paddw           xm0, xm4
+    packsswb        xm0, xm5
     movu      [bufq+64], xm0
 %endif
-
     add            bufq, 82
     add           bufyq, 82<<%3
     dec              hd
     jg .y_loop_ar0
     RET
 
+INIT_XMM avx2
 .ar1:
-    INIT_XMM avx2
     DEFINE_ARGS buf, bufy, fg_data, uv, val3, cf3, min, max, x, shift
     imul            uvd, 28
     mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
@@ -639,8 +631,8 @@ cglobal generate_grain_uv_%1_8bpc, 4, 10, 16, buf, bufy, fg_data, uv
     pshufd          xm4, xm4, q0000
     pmovsxwd        xm3, [base+round_vals+shiftq*2-12]    ; rnd
 %if %2
-    vpbroadcastd    xm7, [pb_1]
-    vpbroadcastw    xm6, [hmul_bits+2+%3*2]
+    vpbroadcastd    xm7, [base+pb_1]
+    vpbroadcastw    xm6, [base+hmul_bits+2+%3*2]
 %endif
     vpbroadcastd    xm3, xm3
 %if %2
@@ -712,22 +704,22 @@ cglobal generate_grain_uv_%1_8bpc, 4, 10, 16, buf, bufy, fg_data, uv
     DEFINE_ARGS buf, bufy, fg_data, uv, unused, shift
     mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
     imul            uvd, 28
-    vpbroadcastw   xm15, [base+round_vals-12+shiftq*2]
-    pmovsxbw        xm8, [fg_dataq+FGData.ar_coeffs_uv+uvq+0]   ; cf0-7
-    pmovsxbw        xm9, [fg_dataq+FGData.ar_coeffs_uv+uvq+8]   ; cf8-12
-    pinsrw          xm9, [base+pw_1], 5
+    vpbroadcastw   xm13, [base+round_vals-12+shiftq*2]
+    pmovsxbw        xm7, [fg_dataq+FGData.ar_coeffs_uv+uvq+0]   ; cf0-7
+    pmovsxbw        xm0, [fg_dataq+FGData.ar_coeffs_uv+uvq+8]   ; cf8-12
+    pinsrw          xm0, [base+pw_1], 5
 %if %2
-    vpbroadcastw    xm7, [base+hmul_bits+2+%3*2]
-    vpbroadcastd    xm6, [base+pb_1]
+    vpbroadcastw   xm12, [base+hmul_bits+2+%3*2]
+    vpbroadcastd   xm11, [base+pb_1]
 %endif
     DEFINE_ARGS buf, bufy, fg_data, h, unused, x
-    pshufd         xm12, xm9, q0000
-    pshufd         xm13, xm9, q1111
-    pshufd         xm14, xm9, q2222
-    pshufd         xm11, xm8, q3333
-    pshufd         xm10, xm8, q2222
-    pshufd          xm9, xm8, q1111
-    pshufd          xm8, xm8, q0000
+    pshufd          xm4, xm7, q0000
+    pshufd          xm5, xm7, q3333
+    pshufd          xm6, xm7, q1111
+    pshufd          xm7, xm7, q2222
+    pshufd          xm8, xm0, q0000
+    pshufd          xm9, xm0, q1111
+    pshufd         xm10, xm0, q2222
 %if %2
     sub            bufq, 82*(73-35*%3)+44-(82*3+41)
 %else
@@ -741,64 +733,56 @@ cglobal generate_grain_uv_%1_8bpc, 4, 10, 16, buf, bufy, fg_data, uv
 .x_loop_ar2:
     pmovsxbw        xm0, [bufq+xq-82*2-2]   ; y=-2,x=[-2,+5]
     pmovsxbw        xm1, [bufq+xq-82*1-2]   ; y=-1,x=[-2,+5]
-    psrldq          xm2, xm0, 2             ; y=-2,x=[-1,+5]
-    psrldq          xm3, xm1, 2             ; y=-1,x=[-1,+5]
-    psrldq          xm4, xm1, 4             ; y=-1,x=[+0,+5]
-    punpcklwd       xm2, xm0, xm2
-    punpcklwd       xm3, xm4
-    pmaddwd         xm2, xm8
-    pmaddwd         xm3, xm11
+    pshufb          xm2, xm0, [base+gen_shufA]
+    pmaddwd         xm2, xm4
+    pshufb          xm3, xm1, [base+gen_shufB]
+    pmaddwd         xm3, xm5
     paddd           xm2, xm3
-
-    psrldq          xm4, xm0, 4             ; y=-2,x=[+0,+5]
-    psrldq          xm5, xm0, 6             ; y=-2,x=[+1,+5]
-    psrldq          xm0, 8                  ; y=-2,x=[+2,+5]
-    punpcklwd       xm4, xm5
+    pshufb          xm3, xm0, [base+gen_shufC]
+    pmaddwd         xm3, xm6
+    punpckhqdq      xm0, xm0                 ; y=-2,x=[+2,+5]
     punpcklwd       xm0, xm1
-    psrldq          xm3, xm1, 6             ; y=-1,x=[+1,+5]
-    psrldq          xm1, xm1, 8             ; y=-1,x=[+2,+5]
-    punpcklwd       xm3, xm1
-    pmaddwd         xm4, xm9
-    pmaddwd         xm0, xm10
-    pmaddwd         xm3, xm12
-    paddd           xm4, xm0
+    pmaddwd         xm0, xm7
+    pshufb          xm1, [gen_shufD]
+    pmaddwd         xm1, xm8
     paddd           xm2, xm3
-    paddd           xm2, xm4
+    paddd           xm0, xm1
+    paddd           xm2, xm0
 
 %if %2
     movq            xm0, [bufyq+xq*2]
 %if %3
     movq            xm3, [bufyq+xq*2+82]
 %endif
-    pmaddubsw       xm0, xm6, xm0
+    pmaddubsw       xm0, xm11, xm0
 %if %3
-    pmaddubsw       xm3, xm6, xm3
+    pmaddubsw       xm3, xm11, xm3
     paddw           xm0, xm3
 %endif
-    pmulhrsw        xm0, xm7
+    pmulhrsw        xm0, xm12
 %else
     pmovsxbw        xm0, [bufyq+xq]
 %endif
-    punpcklwd       xm0, xm15
-    pmaddwd         xm0, xm14
+    punpcklwd       xm0, xm13
+    pmaddwd         xm0, xm10
     paddd           xm2, xm0
 
     movq            xm0, [bufq+xq-2]        ; y=0,x=[-2,+5]
 .x_loop_ar2_inner:
     pmovsxbw        xm0, xm0
-    pmaddwd         xm3, xm0, xm13
+    pmaddwd         xm3, xm0, xm9
+    psrldq          xm0, 2
     paddd           xm3, xm2
     psrldq          xm2, 4                  ; shift top to next pixel
     psrad           xm3, [fg_dataq+FGData.ar_coeff_shift]
     pslldq          xm3, 2
-    psrldq          xm0, 2
     paddw           xm3, xm0
-    vpblendw        xm0, xm3, 00000010b
+    pblendw         xm0, xm3, 00000010b
     packsswb        xm0, xm0
     pextrb    [bufq+xq], xm0, 1
     inc              xq
     jz .x_loop_ar2_end
-    test             xq, 3
+    test             xb, 3
     jnz .x_loop_ar2_inner
     jmp .x_loop_ar2
 
@@ -809,52 +793,30 @@ cglobal generate_grain_uv_%1_8bpc, 4, 10, 16, buf, bufy, fg_data, uv
     jg .y_loop_ar2
     RET
 
+INIT_YMM avx2
 .ar3:
     DEFINE_ARGS buf, bufy, fg_data, uv, unused, shift
-    SUB             rsp, 16*12
-%assign stack_size_padded (stack_size_padded+16*12)
-%assign stack_size (stack_size+16*12)
     mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
     imul            uvd, 28
-    vpbroadcastw   xm14, [base+round_vals-12+shiftq*2]
-    pmovsxbw        xm0, [fg_dataq+FGData.ar_coeffs_uv+uvq+ 0]   ; cf0-7
-    pmovsxbw        xm1, [fg_dataq+FGData.ar_coeffs_uv+uvq+ 8]   ; cf8-15
-    pmovsxbw        xm2, [fg_dataq+FGData.ar_coeffs_uv+uvq+16]   ; cf16-23
-    pmovsxbw        xm5, [fg_dataq+FGData.ar_coeffs_uv+uvq+24]   ; cf24 [luma]
-    pshufd          xm9, xm0, q1111
-    pshufd         xm10, xm0, q2222
-    pshufd         xm11, xm0, q3333
-    pshufd          xm0, xm0, q0000
-    pshufd          xm6, xm1, q1111
-    pshufd          xm7, xm1, q2222
-    pshufd          xm8, xm1, q3333
-    pshufd          xm1, xm1, q0000
-    pshufd          xm3, xm2, q1111
-    pshufd          xm4, xm2, q2222
-    vpbroadcastw    xm5, xm5
-    vpblendw        xm4, xm5, 10101010b                     ; interleave luma cf
-    psrldq          xm5, xm2, 10
-    pshufd          xm2, xm2, q0000
-    pinsrw          xm5, [base+round_vals+shiftq*2-10], 3
-    pmovzxwd       xm14, xm14
-    mova    [rsp+ 0*16], xm0
-    mova    [rsp+ 1*16], xm9
-    mova    [rsp+ 2*16], xm10
-    mova    [rsp+ 3*16], xm11
-    mova    [rsp+ 4*16], xm1
-    mova    [rsp+ 5*16], xm6
-    mova    [rsp+ 6*16], xm7
-    mova    [rsp+ 7*16], xm8
-    mova    [rsp+ 8*16], xm2
-    mova    [rsp+ 9*16], xm3
-    mova    [rsp+10*16], xm4
-    mova    [rsp+11*16], xm5
-%if %2
-    vpbroadcastd   xm13, [base+pb_1]
-    vpbroadcastw   xm15, [base+hmul_bits+2+%3*2]
-%endif
+    pmovsxbw         m0, [fg_dataq+FGData.ar_coeffs_uv+uvq+ 0] ; cf0-15
+    pmovsxbw        xm1, [fg_dataq+FGData.ar_coeffs_uv+uvq+16] ; cf16-23
+    vpbroadcastb    xm2, [fg_dataq+FGData.ar_coeffs_uv+uvq+24] ; cf24 [luma]
+    movd           xm13, [base+round_vals-10+shiftq*2]
+    vpbroadcastd   xm14, [base+round_vals-14+shiftq*2]
+    pshufd           m6, m0, q0000
+    pshufd           m7, m0, q1111
+    pshufd           m8, m0, q2222
+    pshufd           m9, m0, q3333
+    pshufd         xm10, xm1, q0000
+    pshufd         xm11, xm1, q1111
+    pshufhw        xm12, xm1, q0000
+    psraw           xm2, 8
+    palignr        xm13, xm1, 10
+    punpckhwd      xm12, xm2                     ; interleave luma cf
+    psrld          xm14, 16
     DEFINE_ARGS buf, bufy, fg_data, h, unused, x
 %if %2
+    vpbroadcastw   xm15, [base+hmul_bits+2+%3*2]
     sub            bufq, 82*(73-35*%3)+44-(82*3+41)
 %else
     sub            bufq, 82*70-(82-3)
@@ -863,115 +825,79 @@ cglobal generate_grain_uv_%1_8bpc, 4, 10, 16, buf, bufy, fg_data, uv
     mov              hd, 70-35*%3
 .y_loop_ar3:
     mov              xq, -(76>>%2)
-
 .x_loop_ar3:
-    movu            xm0, [bufq+xq-82*3-3]   ; y=-3,x=[-3,+12]
-    movu            xm1, [bufq+xq-82*2-3]   ; y=-2,x=[-3,+12]
-    movu            xm2, [bufq+xq-82*1-3]   ; y=-1,x=[-3,+12]
-    pxor            xm3, xm3
-    pcmpgtb         xm6, xm3, xm2
-    pcmpgtb         xm5, xm3, xm1
-    pcmpgtb         xm4, xm3, xm0
-    punpckhbw       xm3, xm0, xm4
-    punpcklbw       xm0, xm4
-    punpckhbw       xm4, xm1, xm5
-    punpcklbw       xm1, xm5
-    punpckhbw       xm5, xm2, xm6
-    punpcklbw       xm2, xm6
-
-    psrldq          xm6, xm0, 2
-    psrldq          xm7, xm0, 4
-    psrldq          xm8, xm0, 6
-    psrldq          xm9, xm0, 8
-    palignr        xm10, xm3, xm0, 10
-    palignr        xm11, xm3, xm0, 12
-
-    punpcklwd       xm0, xm6
-    punpcklwd       xm7, xm8
-    punpcklwd       xm9, xm10
-    punpcklwd      xm11, xm1
-    pmaddwd         xm0, [rsp+ 0*16]
-    pmaddwd         xm7, [rsp+ 1*16]
-    pmaddwd         xm9, [rsp+ 2*16]
-    pmaddwd        xm11, [rsp+ 3*16]
-    paddd           xm0, xm7
-    paddd           xm9, xm11
-    paddd           xm0, xm9
-
-    psrldq          xm6, xm1, 2
-    psrldq          xm7, xm1, 4
-    psrldq          xm8, xm1, 6
-    psrldq          xm9, xm1, 8
-    palignr        xm10, xm4, xm1, 10
-    palignr        xm11, xm4, xm1, 12
-    psrldq         xm12, xm2, 2
-
-    punpcklwd       xm6, xm7
-    punpcklwd       xm8, xm9
-    punpcklwd      xm10, xm11
-    punpcklwd      xm12, xm2, xm12
-    pmaddwd         xm6, [rsp+ 4*16]
-    pmaddwd         xm8, [rsp+ 5*16]
-    pmaddwd        xm10, [rsp+ 6*16]
-    pmaddwd        xm12, [rsp+ 7*16]
-    paddd           xm6, xm8
-    paddd          xm10, xm12
-    paddd           xm6, xm10
-    paddd           xm0, xm6
-
-    psrldq          xm6, xm2, 4
-    psrldq          xm7, xm2, 6
-    psrldq          xm8, xm2, 8
-    palignr         xm9, xm5, xm2, 10
-    palignr         xm5, xm5, xm2, 12
-
+    vbroadcasti128   m3, [bufq+xq-82*2-3]         ; y=-2,x=[-3,+12
+    palignr         xm1, xm3, [bufq+xq-82*3-9], 6 ; y=-3,x=[-3,+12]
+    vbroadcasti128   m4, [bufq+xq-82*1-3]    ; y=-1,x=[-3,+12]
+    vpblendd         m3, m1, 0x0f
+    pxor             m0, m0
+    pcmpgtb          m2, m0, m3
+    pcmpgtb          m0, m4
+    punpcklbw        m1, m3, m2
+    punpckhbw        m3, m2
+    punpcklbw        m2, m4, m0
+    punpckhbw       xm4, xm0
+    pshufb           m0, m1, [base+gen_shufA]
+    pmaddwd          m0, m6
+    pshufb           m5, m1, [base+gen_shufC]
+    pmaddwd          m5, m7
+    shufps           m1, m3, q1032
+    paddd            m0, m5
+    pshufb           m5, m1, [base+gen_shufA]
+    pmaddwd          m5, m8
+    shufps          xm1, xm3, q2121
+    vpblendd         m1, m2, 0xf0
+    pshufb           m1, [base+gen_shufE]
+    pmaddwd          m1, m9
+    paddd            m0, m5
+    pshufb          xm3, xm2, [base+gen_shufC]
+    paddd            m0, m1
+    pmaddwd         xm3, xm10
+    palignr         xm1, xm4, xm2, 2
+    punpckhwd       xm1, xm2, xm1
+    pmaddwd         xm1, xm11
+    palignr         xm4, xm2, 12
+    paddd           xm3, xm1
 %if %2
+    vpbroadcastd    xm5, [base+pb_1]
     movq            xm1, [bufyq+xq*2]
+    pmaddubsw       xm1, xm5, xm1
 %if %3
     movq            xm2, [bufyq+xq*2+82]
-%endif
-    pmaddubsw       xm1, xm13, xm1
-%if %3
-    pmaddubsw       xm2, xm13, xm2
-    paddw           xm1, xm2
+    pmaddubsw       xm5, xm2
+    paddw           xm1, xm5
 %endif
     pmulhrsw        xm1, xm15
 %else
     pmovsxbw        xm1, [bufyq+xq]
 %endif
-
-    punpcklwd       xm6, xm7
-    punpcklwd       xm8, xm9
-    punpcklwd       xm5, xm1
-    pmaddwd         xm6, [rsp+ 8*16]
-    pmaddwd         xm8, [rsp+ 9*16]
-    pmaddwd         xm5, [rsp+10*16]
-    paddd           xm0, xm6
-    paddd           xm8, xm5
-    paddd           xm0, xm8
-    paddd           xm0, xm14
-
+    punpcklwd       xm4, xm1
+    pmaddwd         xm4, xm12
     movq            xm1, [bufq+xq-3]        ; y=0,x=[-3,+4]
+    vextracti128    xm2, m0, 1
+    paddd           xm0, xm14
+    paddd           xm3, xm4
+    paddd           xm0, xm3
+    paddd           xm0, xm2
 .x_loop_ar3_inner:
     pmovsxbw        xm1, xm1
-    pmaddwd         xm2, xm1, [rsp+16*11]
-    pshufd          xm3, xm2, q1111
-    paddd           xm2, xm3                ; left+cur
+    pmaddwd         xm2, xm13, xm1
+    pshuflw         xm3, xm2, q1032
     paddd           xm2, xm0                ; add top
+    paddd           xm2, xm3                ; left+cur
     psrldq          xm0, 4
     psrad           xm2, [fg_dataq+FGData.ar_coeff_shift]
+    psrldq          xm1, 2
     ; don't packssdw, we only care about one value
-    pslldq          xm2, 6
-    vpblendw        xm1, xm2, 1000b
+    punpckldq       xm2, xm2
+    pblendw         xm1, xm2, 0100b
     packsswb        xm1, xm1
-    pextrb    [bufq+xq], xm1, 3
-    psrldq          xm1, 1
+    pextrb    [bufq+xq], xm1, 2
     inc              xq
     jz .x_loop_ar3_end
-    test             xq, 3
+    test             xb, 3
     jnz .x_loop_ar3_inner
     jmp .x_loop_ar3
-
 .x_loop_ar3_end:
     add            bufq, 82
     add           bufyq, 82<<%3

@@ -10,6 +10,7 @@
 #include "DrawTargetWebgl.h"
 
 #include "mozilla/HashFunctions.h"
+#include "mozilla/gfx/PathSkia.h"
 
 namespace mozilla::gfx {
 
@@ -52,7 +53,73 @@ class TexturePacker {
   int mAvailable = 0;
 };
 
-class GlyphCacheEntry;
+// CacheEnty is a generic interface for various items that need to be cached to
+// a texture.
+class CacheEntry : public RefCounted<CacheEntry> {
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(CacheEntry)
+
+  CacheEntry(const Matrix& aTransform, const IntRect& aBounds, HashNumber aHash)
+      : mTransform(aTransform), mBounds(aBounds), mHash(aHash) {}
+  virtual ~CacheEntry() = default;
+
+  void Link(const RefPtr<TextureHandle>& aHandle);
+  void Unlink();
+
+  const RefPtr<TextureHandle>& GetHandle() const { return mHandle; }
+
+  const Matrix& GetTransform() const { return mTransform; }
+  const IntRect& GetBounds() const { return mBounds; }
+  HashNumber GetHash() const { return mHash; }
+
+ protected:
+  virtual void RemoveFromList() = 0;
+
+  // The handle of the rendered cache item.
+  RefPtr<TextureHandle> mHandle;
+  // The transform that was used to render the entry. This is necessary as
+  // the geometry might only be correctly rendered in device space after
+  // the transform is applied, so in general we can't cache untransformed
+  // geometry.
+  Matrix mTransform;
+  // The device space bounds of the rendered geometry.
+  IntRect mBounds;
+  // A hash of the geometry that may be used for quickly rejecting entries.
+  HashNumber mHash;
+};
+
+// CacheEntryImpl provides type-dependent boilerplate code for implementations
+// of CacheEntry.
+template <typename T>
+class CacheEntryImpl : public CacheEntry, public LinkedListElement<RefPtr<T>> {
+  typedef LinkedListElement<RefPtr<T>> ListType;
+
+ public:
+  CacheEntryImpl(const Matrix& aTransform, const IntRect& aBounds,
+                 HashNumber aHash)
+      : CacheEntry(aTransform, aBounds, aHash) {}
+
+ protected:
+  void RemoveFromList() override {
+    if (ListType::isInList()) {
+      ListType::remove();
+    }
+  }
+};
+
+// CacheImpl manages a list of CacheEntry.
+template <typename T>
+class CacheImpl {
+ public:
+  ~CacheImpl() {
+    while (RefPtr<T> entry = mEntries.popLast()) {
+      entry->Unlink();
+    }
+  }
+
+ protected:
+  LinkedList<RefPtr<T>> mEntries;
+};
 
 // TextureHandle is an abstract base class for supplying textures to drawing
 // commands that may be backed by different resource types (such as a shared
@@ -102,15 +169,11 @@ class TextureHandle : public RefCounted<TextureHandle>,
     return IntRect(GetSamplingOffset(), GetSize());
   }
 
-  const RefPtr<GlyphCacheEntry>& GetGlyphCacheEntry() const {
-    return mGlyphCacheEntry;
-  }
-  void SetGlyphCacheEntry(const RefPtr<GlyphCacheEntry>& aEntry) {
-    mGlyphCacheEntry = aEntry;
-  }
+  const RefPtr<CacheEntry>& GetCacheEntry() const { return mCacheEntry; }
+  void SetCacheEntry(const RefPtr<CacheEntry>& aEntry) { mCacheEntry = aEntry; }
 
   // Note as used if there is corresponding surface or cache entry.
-  bool IsUsed() const { return mSurface || mGlyphCacheEntry; }
+  bool IsUsed() const { return mSurface || mCacheEntry; }
 
  private:
   bool mValid = true;
@@ -123,8 +186,8 @@ class TextureHandle : public RefCounted<TextureHandle>,
   // If the originating surface requested a sampling rect, then we need to know
   // the offset of the subrect within the surface for texture coordinates.
   IntPoint mSamplingOffset;
-  // If applicable, the GlyphCacheEntry that is linked to this TextureHandle.
-  RefPtr<GlyphCacheEntry> mGlyphCacheEntry;
+  // If applicable, the CacheEntry that is linked to this TextureHandle.
+  RefPtr<CacheEntry> mCacheEntry;
 };
 
 class SharedTextureHandle;
@@ -232,14 +295,13 @@ class StandaloneTexture : public TextureHandle {
 // GlyphCacheEntry stores rendering metadata for a rendered text run, as well
 // the handle to the texture it was rendered into, so that it can be located
 // for reuse under similar rendering circumstances.
-class GlyphCacheEntry : public RefCounted<GlyphCacheEntry>,
-                        public LinkedListElement<RefPtr<GlyphCacheEntry>> {
+class GlyphCacheEntry : public CacheEntryImpl<GlyphCacheEntry> {
  public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(GlyphCacheEntry)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphCacheEntry, override)
 
   GlyphCacheEntry(const GlyphBuffer& aBuffer, const DeviceColor& aColor,
                   const Matrix& aTransform, const IntRect& aBounds,
-                  HashNumber aHash = 0);
+                  HashNumber aHash);
 
   bool MatchesGlyphs(const GlyphBuffer& aBuffer, const DeviceColor& aColor,
                      const Matrix& aTransform, const IntRect& aBounds,
@@ -248,27 +310,11 @@ class GlyphCacheEntry : public RefCounted<GlyphCacheEntry>,
   static HashNumber HashGlyphs(const GlyphBuffer& aBuffer,
                                const Matrix& aTransform);
 
-  void Link(const RefPtr<TextureHandle>& aHandle);
-  void Unlink();
-
-  const RefPtr<TextureHandle>& GetHandle() const { return mHandle; }
-
  private:
-  // The handle of the rendered text run.
-  RefPtr<TextureHandle> mHandle;
   // The glyph keys used to render the text run.
   GlyphBuffer mBuffer = {nullptr, 0};
   // The color of the text run.
   DeviceColor mColor;
-  // The transform that was used to render the text run. This is necessary as
-  // subpixel anti-aliasing is only correctly rendered in device space after
-  // the transform is applied, so in general we can't cache untransformed text
-  // runs.
-  Matrix mTransform;
-  // The device space bounds of the rendered text run.
-  IntRect mBounds;
-  // A hash of the glyph keys that may be used for quickly rejecting entries.
-  HashNumber mHash;
 };
 
 // GlyphCache maintains a list of GlyphCacheEntry's representing previously
@@ -276,21 +322,62 @@ class GlyphCacheEntry : public RefCounted<GlyphCacheEntry>,
 // run has already been rendered to a texture, and if so, just reuses it.
 // Otherwise, the text run will be rendered to a new texture handle and
 // inserted into a new GlyphCacheEntry to represent it.
-class GlyphCache : public LinkedListElement<GlyphCache> {
+class GlyphCache : public LinkedListElement<GlyphCache>,
+                   public CacheImpl<GlyphCacheEntry> {
  public:
   explicit GlyphCache(ScaledFont* aFont);
-  ~GlyphCache();
 
   ScaledFont* GetFont() const { return mFont; }
 
   already_AddRefed<GlyphCacheEntry> FindOrInsertEntry(
       const GlyphBuffer& aBuffer, const DeviceColor& aColor,
-      const Matrix& aTransform, const IntRect& aBounds, HashNumber aHash = 0);
+      const Matrix& aTransform, const IntRect& aBounds);
 
  private:
   // Weak pointer to the owning font
   ScaledFont* mFont;
-  LinkedList<RefPtr<GlyphCacheEntry>> mEntries;
+};
+
+// PathCacheEntry stores a rasterized version of a supplied path with a given
+// pattern.
+class PathCacheEntry : public CacheEntryImpl<PathCacheEntry> {
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathCacheEntry, override)
+
+  PathCacheEntry(const SkPath& aPath, Pattern* aPattern,
+                 StoredStrokeOptions* aStrokeOptions, const Matrix& aTransform,
+                 const IntRect& aBounds, const Point& aOrigin,
+                 HashNumber aHash);
+
+  bool MatchesPath(const SkPath& aPath, const Pattern* aPattern,
+                   const StrokeOptions* aStrokeOptions,
+                   const Matrix& aTransform, const IntRect& aBounds,
+                   HashNumber aHash);
+
+  static HashNumber HashPath(const SkPath& aPath, const Pattern* aPattern,
+                             const Matrix& aTransform, const IntRect& aBounds);
+
+  const Point& GetOrigin() const { return mOrigin; }
+
+ private:
+  // The actual path geometry supplied
+  SkPath mPath;
+  // The transformed origin of the path
+  Point mOrigin;
+  // The pattern used to rasterize the path, if not a mask
+  UniquePtr<Pattern> mPattern;
+  // The StrokeOptions used for stroked paths, if applicable
+  UniquePtr<StoredStrokeOptions> mStrokeOptions;
+};
+
+class PathCache : public CacheImpl<PathCacheEntry> {
+ public:
+  PathCache() = default;
+
+  already_AddRefed<PathCacheEntry> FindOrInsertEntry(
+      const SkPath& aPath, const Pattern* aPattern,
+      const StrokeOptions* aStrokeOptions, const Matrix& aTransform,
+      const IntRect& aBounds, const Point& aOrigin);
 };
 
 }  // namespace mozilla::gfx

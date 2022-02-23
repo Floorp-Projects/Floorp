@@ -64,56 +64,56 @@ const NetworkContentActor = ActorClassWithSpec(networkContentSpec, {
    *        The channel id for the request
    */
   async sendHTTPRequest(request) {
-    const { url, method, headers, body, cause } = request;
-    // Set the loadingNode and loadGroup to the target document - otherwise the
-    // request won't show up in the opened netmonitor.
-    const doc = this.targetActor.window.document;
+    return new Promise(resolve => {
+      const { url, method, headers, body, cause } = request;
+      // Set the loadingNode and loadGroup to the target document - otherwise the
+      // request won't show up in the opened netmonitor.
+      const doc = this.targetActor.window.document;
 
-    const channel = NetUtil.newChannel({
-      uri: NetUtil.newURI(url),
-      loadingNode: doc,
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
-      contentPolicyType:
-        NetworkUtils.stringToCauseType(cause.type) ||
-        Ci.nsIContentPolicy.TYPE_OTHER,
-    });
+      const channel = NetUtil.newChannel({
+        uri: NetUtil.newURI(url),
+        loadingNode: doc,
+        securityFlags:
+          Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+        contentPolicyType:
+          NetworkUtils.stringToCauseType(cause.type) ||
+          Ci.nsIContentPolicy.TYPE_OTHER,
+      });
 
-    channel.QueryInterface(Ci.nsIHttpChannel);
+      channel.QueryInterface(Ci.nsIHttpChannel);
+      channel.loadGroup = doc.documentLoadGroup;
+      channel.loadFlags |=
+        Ci.nsIRequest.LOAD_BYPASS_CACHE |
+        Ci.nsIRequest.INHIBIT_CACHING |
+        Ci.nsIRequest.LOAD_ANONYMOUS;
 
-    channel.loadGroup = doc.documentLoadGroup;
-    channel.loadFlags |=
-      Ci.nsIRequest.LOAD_BYPASS_CACHE |
-      Ci.nsIRequest.INHIBIT_CACHING |
-      Ci.nsIRequest.LOAD_ANONYMOUS;
-
-    channel.requestMethod = method;
-    if (headers) {
-      for (const { name, value } of headers) {
-        if (name.toLowerCase() == "referer") {
-          // The referer header and referrerInfo object should always match. So
-          // if we want to set the header from privileged context, we should set
-          // referrerInfo. The referrer header will get set internally.
-          channel.setNewReferrerInfo(
-            value,
-            Ci.nsIReferrerInfo.UNSAFE_URL,
-            true
-          );
-        } else {
-          channel.setRequestHeader(name, value, false);
+      channel.requestMethod = method;
+      if (headers) {
+        for (const { name, value } of headers) {
+          if (name.toLowerCase() == "referer") {
+            // The referer header and referrerInfo object should always match. So
+            // if we want to set the header from privileged context, we should set
+            // referrerInfo. The referrer header will get set internally.
+            channel.setNewReferrerInfo(
+              value,
+              Ci.nsIReferrerInfo.UNSAFE_URL,
+              true
+            );
+          } else {
+            channel.setRequestHeader(name, value, false);
+          }
         }
       }
-    }
 
-    if (body) {
-      channel.QueryInterface(Ci.nsIUploadChannel2);
-      const bodyStream = Cc[
-        "@mozilla.org/io/string-input-stream;1"
-      ].createInstance(Ci.nsIStringInputStream);
-      bodyStream.setData(body, body.length);
-      channel.explicitSetUploadStream(bodyStream, null, -1, method, false);
-    }
+      if (body) {
+        channel.QueryInterface(Ci.nsIUploadChannel2);
+        const bodyStream = Cc[
+          "@mozilla.org/io/string-input-stream;1"
+        ].createInstance(Ci.nsIStringInputStream);
+        bodyStream.setData(body, body.length);
+        channel.explicitSetUploadStream(bodyStream, null, -1, method, false);
+      }
 
-    return new Promise(resolve => {
       // Make sure the fetch has completed before sending the channel id,
       // so that there is a higher possibilty that the request get into the
       // redux store beforehand (but this does not gurantee that).

@@ -16,6 +16,7 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsPrintfCString.h"
+#include "Tracing.h"
 
 namespace mozilla {
 
@@ -30,9 +31,6 @@ extern LazyLogModule gMediaDecoderLog;
 // The amount of audio frames that is used to fuzz rounding errors.
 static const int64_t AUDIO_FUZZ_FRAMES = 1;
 
-// Amount of audio frames we will be processing ahead of use
-static const int32_t LOW_AUDIO_USECS = 300000;
-
 using media::TimeUnit;
 
 AudioSink::AudioSink(AbstractThread* aThread,
@@ -43,11 +41,9 @@ AudioSink::AudioSink(AbstractThread* aThread,
       mInfo(aInfo),
       mAudioDevice(aAudioDevice),
       mPlaying(true),
-      mMonitor("AudioSink"),
       mWritten(0),
       mErrored(false),
       mOwnerThread(aThread),
-      mProcessedQueueLength(0),
       mFramesParsed(0),
       mOutputRate(DecideAudioPlaybackSampleRate(aInfo)),
       mOutputChannels(DecideAudioPlaybackChannels(aInfo)),
@@ -55,7 +51,18 @@ AudioSink::AudioSink(AbstractThread* aThread,
           mOutputRate,
           StaticPrefs::dom_media_silence_duration_for_audibility()),
       mIsAudioDataAudible(false),
-      mAudioQueue(aAudioQueue) {}
+      mProcessedQueueFinished(false),
+      mAudioQueue(aAudioQueue),
+      mProcessedQueueThresholdMS(
+          StaticPrefs::media_audio_audiosink_threshold_ms()) {
+  // Twice the limit that trigger a refill.
+  float capacitySeconds = mProcessedQueueThresholdMS / 1000.f * 2;
+  mProcessedSPSCQueue =
+      MakeUnique<SPSCQueue<AudioDataValue>>(static_cast<uint32_t>(
+          capacitySeconds * static_cast<float>(mOutputChannels * mOutputRate)));
+  SINK_LOG("Ringbuffer has space for %u elements (%lf seconds)",
+           mProcessedSPSCQueue->Capacity(), capacitySeconds);
+}
 
 AudioSink::~AudioSink() = default;
 
@@ -67,8 +74,8 @@ Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> AudioSink::Start(
       mOwnerThread, this, &AudioSink::OnAudioPushed);
   mAudioQueueFinishListener = mAudioQueue.FinishEvent().Connect(
       mOwnerThread, this, &AudioSink::NotifyAudioNeeded);
-  mProcessedQueueListener = mProcessedQueue.PopFrontEvent().Connect(
-      mOwnerThread, this, &AudioSink::OnAudioPopped);
+  mProcessedQueueListener =
+      mAudioPopped.Connect(mOwnerThread, this, &AudioSink::OnAudioPopped);
 
   // To ensure at least one audio packet will be popped from AudioQueue and
   // ready to be played.
@@ -77,6 +84,7 @@ Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> AudioSink::Start(
   if (NS_FAILED(rv)) {
     return Err(rv);
   }
+
   return mAudioStream->Start();
 }
 
@@ -103,13 +111,8 @@ TimeUnit AudioSink::GetPosition() {
 bool AudioSink::HasUnplayedFrames() {
   // Experimentation suggests that GetPositionInFrames() is zero-indexed,
   // so we need to add 1 here before comparing it to mWritten.
-  int64_t total;
-  {
-    MonitorAutoLock mon(mMonitor);
-    total = mWritten + (mCursor.get() ? mCursor->Available() : 0);
-  }
-  return mProcessedQueue.GetSize() ||
-         (mAudioStream && mAudioStream->GetPositionInFrames() + 1 < total);
+  return mProcessedSPSCQueue->AvailableRead() ||
+         (mAudioStream && mAudioStream->GetPositionInFrames() + 1 < mWritten);
 }
 
 void AudioSink::Shutdown() {
@@ -123,38 +126,7 @@ void AudioSink::Shutdown() {
     mAudioStream->Shutdown();
     mAudioStream = nullptr;
   }
-  // Shutdown audio sink doesn't mean the playback is going to stop, so if we
-  // simply discard these data, then we will no longer be able to play them.
-  // Eg. we change to sink to capture-based sink that will need to continue play
-  // remaining data from the audio queue.
-  {
-    MonitorAutoLock mon(mMonitor);
-    while (mProcessedQueue.GetSize() > 0) {
-      RefPtr<AudioData> audio = mProcessedQueue.PopBack();
-      if (audio == mCurrentData) {
-        break;
-      }
-      mAudioQueue.PushFront(audio);
-    }
-    if (mCurrentData) {
-      uint32_t unplayedFrames = mCursor->Available();
-      // If we've consumed some partial content from the first audio data, then
-      // we have to adjust its data offset and frames number in order not to
-      // play the same content again.
-      if (unplayedFrames > 0 && unplayedFrames < mCurrentData->Frames()) {
-        const uint32_t orginalFrames = mCurrentData->Frames();
-        const uint32_t offsetFrames = mCurrentData->Frames() - unplayedFrames;
-        Unused << mCurrentData->SetTrimWindow(
-            {mCurrentData->mTime + FramesToTimeUnit(offsetFrames, mOutputRate),
-             mCurrentData->GetEndTime()});
-        SINK_LOG_V("After adjustment, audio frame from %u to %u", orginalFrames,
-                   mCurrentData->Frames());
-      }
-      mAudioQueue.PushFront(mCurrentData);
-    }
-    MOZ_ASSERT(mProcessedQueue.GetSize() == 0);
-  }
-  mProcessedQueue.Finish();
+  mProcessedQueueFinished = true;
 }
 
 void AudioSink::SetVolume(double aVolume) {
@@ -198,7 +170,6 @@ void AudioSink::SetPlaying(bool aPlaying) {
 }
 
 nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
-  mAudioStream = new AudioStream(*this);
   // When AudioQueue is empty, there is no way to know the channel layout of
   // the coming audio data, so we use the predefined channel map instead.
   AudioConfig::ChannelLayout::ChannelMap channelMap =
@@ -208,8 +179,9 @@ nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
   // mOutputChannels into SMPTE format, so there is no need to worry if
   // StaticPrefs::accessibility_monoaudio_enable() or
   // StaticPrefs::media_forcestereo_enabled() is applied.
-  nsresult rv = mAudioStream->Init(mOutputChannels, channelMap, mOutputRate,
-                                   mAudioDevice);
+  mAudioStream =
+      new AudioStream(*this, mOutputRate, mOutputChannels, channelMap);
+  nsresult rv = mAudioStream->Init(mAudioDevice);
   if (NS_FAILED(rv)) {
     mAudioStream->Shutdown();
     mAudioStream = nullptr;
@@ -225,12 +197,7 @@ nsresult AudioSink::InitializeAudioStream(const PlaybackParams& aParams) {
 }
 
 TimeUnit AudioSink::GetEndTime() const {
-  int64_t written;
-  {
-    MonitorAutoLock mon(mMonitor);
-    written = mWritten;
-  }
-  TimeUnit played = FramesToTimeUnit(written, mOutputRate) + mStartTime;
+  TimeUnit played = FramesToTimeUnit(mWritten, mOutputRate) + mStartTime;
   if (!played.IsValid()) {
     NS_WARNING("Int overflow calculating audio end time");
     return TimeUnit::Zero();
@@ -240,100 +207,56 @@ TimeUnit AudioSink::GetEndTime() const {
   return std::min(mLastEndTime, played);
 }
 
-UniquePtr<AudioStream::Chunk> AudioSink::PopFrames(uint32_t aFrames) {
-  class Chunk : public AudioStream::Chunk {
-   public:
-    Chunk(AudioData* aBuffer, uint32_t aFrames, AudioDataValue* aData)
-        : mBuffer(aBuffer), mFrames(aFrames), mData(aData) {}
-    Chunk() : mFrames(0), mData(nullptr) {}
-    const AudioDataValue* Data() const override { return mData; }
-    uint32_t Frames() const override { return mFrames; }
-    uint32_t Channels() const override {
-      return mBuffer ? mBuffer->mChannels : 0;
-    }
-    uint32_t Rate() const override { return mBuffer ? mBuffer->mRate : 0; }
-    AudioDataValue* GetWritable() const override { return mData; }
-
-   private:
-    const RefPtr<AudioData> mBuffer;
-    const uint32_t mFrames;
-    AudioDataValue* const mData;
-  };
-
-  bool needPopping = false;
-  if (!mCurrentData) {
-    // No data in the queue. Return an empty chunk.
-    if (!mProcessedQueue.GetSize()) {
-      return MakeUnique<Chunk>();
-    }
-
-    // We need to update our values prior popping the processed queue in
-    // order to prevent the pop event to fire too early (prior
-    // mProcessedQueueLength being updated) or prevent HasUnplayedFrames
-    // to incorrectly return true during the time interval betweeen the
-    // when mProcessedQueue is read and mWritten is updated.
-    needPopping = true;
-    {
-      MonitorAutoLock mon(mMonitor);
-      mCurrentData = mProcessedQueue.PeekFront();
-      mCursor = MakeUnique<AudioBufferCursor>(mCurrentData->Data(),
-                                              mCurrentData->mChannels,
-                                              mCurrentData->Frames());
-    }
-    MOZ_ASSERT(mCurrentData->Frames() > 0);
-    mProcessedQueueLength -=
-        FramesToUsecs(mCurrentData->Frames(), mOutputRate).value();
+uint32_t AudioSink::PopFrames(AudioDataValue* aBuffer, uint32_t aFrames,
+                              bool aAudioThreadChanged) {
+  // This is safe, because we have the guarantee, by the OS, that audio
+  // callbacks are never called concurrently. Audio thread changes can only
+  // happen when not using cubeb remoting, and often when changing audio device
+  // at the system level.
+  if (aAudioThreadChanged) {
+    mProcessedSPSCQueue->ResetThreadIds();
   }
 
-  auto framesToPop = std::min(aFrames, mCursor->Available());
+  TRACE_COMMENT("AudioSink::PopFrames", "%u frames (ringbuffer: %u/%u)",
+                aFrames, SampleToFrame(mProcessedSPSCQueue->AvailableRead()),
+                SampleToFrame(mProcessedSPSCQueue->Capacity()));
 
-  SINK_LOG_V("playing audio at time=%" PRId64 " offset=%u length=%u",
-             mCurrentData->mTime.ToMicroseconds(),
-             mCurrentData->Frames() - mCursor->Available(), framesToPop);
-
-  if (profiler_thread_is_being_profiled_for_markers()) {
-    mOwnerThread->Dispatch(NS_NewRunnableFunction(
-        "AudioSink:AddMarker",
-        [startTime = mCurrentData->mTime.ToMicroseconds(),
-         endTime = mCurrentData->GetEndTime().ToMicroseconds()] {
-          PROFILER_MARKER("PlayAudio", MEDIA_PLAYBACK, {}, MediaSampleMarker,
-                          startTime, endTime);
-        }));
-  }
-
-  UniquePtr<AudioStream::Chunk> chunk =
-      MakeUnique<Chunk>(mCurrentData, framesToPop, mCursor->Ptr());
-
-  {
-    MonitorAutoLock mon(mMonitor);
-    mWritten += framesToPop;
-    mCursor->Advance(framesToPop);
-    // All frames are popped. Reset mCurrentData so we can pop new elements from
-    // the audio queue in next calls to PopFrames().
-    if (!mCursor->Available()) {
-      mCurrentData = nullptr;
+  const int samplesToPop = static_cast<int>(aFrames * mOutputChannels);
+  const int samplesRead = mProcessedSPSCQueue->Dequeue(aBuffer, samplesToPop);
+  MOZ_ASSERT(samplesRead % mOutputChannels == 0);
+  mWritten += SampleToFrame(samplesRead);
+  if (samplesRead != samplesToPop) {
+    if (Ended()) {
+      SINK_LOG("Last PopFrames -- Source ended.");
+    } else {
+      NS_WARNING("Underrun when popping samples from audiosink ring buffer.");
+      TRACE_COMMENT("AudioSink::PopFrames", "Underrun %u frames missing",
+                    SampleToFrame(samplesToPop - samplesRead));
     }
+    // silence the rest
+    PodZero(aBuffer + samplesRead, samplesToPop - samplesRead);
   }
 
-  if (needPopping) {
-    // We can now safely pop the audio packet from the processed queue.
-    // This will fire the popped event, triggering a call to NotifyAudioNeeded.
-    RefPtr<AudioData> releaseMe = mProcessedQueue.PopFront();
-    CheckIsAudible(releaseMe);
-  }
+  mAudioPopped.Notify();
 
-  return chunk;
+  SINK_LOG_V("Popping %u frames. Remaining in ringbuffer %u / %u\n", aFrames,
+             SampleToFrame(mProcessedSPSCQueue->AvailableRead()),
+             SampleToFrame(mProcessedSPSCQueue->Capacity()));
+
+  // Don't consider the silence added because of an underrun.
+  CheckIsAudible(Span(aBuffer, samplesRead), mOutputChannels);
+
+  return SampleToFrame(samplesRead);
 }
 
 bool AudioSink::Ended() const {
   // Return true when error encountered so AudioStream can start draining.
-  return mProcessedQueue.IsFinished() || mErrored;
+  return mProcessedQueueFinished || mErrored;
 }
 
-void AudioSink::CheckIsAudible(const AudioData* aData) {
-  MOZ_ASSERT(aData);
-
-  mAudibilityMonitor.Process(aData);
+void AudioSink::CheckIsAudible(const Span<AudioDataValue>& aInterleaved,
+                               size_t aChannel) {
+  mAudibilityMonitor.ProcessInterleaved(aInterleaved, aChannel);
   bool isAudible = mAudibilityMonitor.RecentlyAudible();
 
   if (isAudible != mIsAudioDataAudible) {
@@ -342,7 +265,7 @@ void AudioSink::CheckIsAudible(const AudioData* aData) {
   }
 }
 
-void AudioSink::OnAudioPopped(const RefPtr<AudioData>& aSample) {
+void AudioSink::OnAudioPopped() {
   SINK_LOG_V("AudioStream has used an audio packet.");
   NotifyAudioNeeded();
 }
@@ -352,15 +275,34 @@ void AudioSink::OnAudioPushed(const RefPtr<AudioData>& aSample) {
   NotifyAudioNeeded();
 }
 
+uint32_t AudioSink::AudioQueuedInRingBufferMS() const {
+  return static_cast<uint32_t>(
+      1000 * SampleToFrame(mProcessedSPSCQueue->AvailableRead()) / mOutputRate);
+}
+
+uint32_t AudioSink::SampleToFrame(uint32_t aSamples) const {
+  return aSamples / mOutputChannels;
+}
+
 void AudioSink::NotifyAudioNeeded() {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn(),
              "Not called from the owner's thread");
 
-  // Always ensure we have two processed frames pending to allow for processing
-  // latency.
   while (mAudioQueue.GetSize() &&
-         (mAudioQueue.IsFinished() || mProcessedQueueLength < LOW_AUDIO_USECS ||
-          mProcessedQueue.GetSize() < 2)) {
+         AudioQueuedInRingBufferMS() < mProcessedQueueThresholdMS) {
+    // Check if there's room in our ring buffer.
+    if (mAudioQueue.PeekFront()->Frames() >
+        SampleToFrame(mProcessedSPSCQueue->AvailableWrite())) {
+      SINK_LOG_V("Can't push %u frames. In ringbuffer %u / %u\n",
+                 mAudioQueue.PeekFront()->Frames(),
+                 SampleToFrame(mProcessedSPSCQueue->AvailableRead()),
+                 SampleToFrame(mProcessedSPSCQueue->Capacity()));
+      return;
+    }
+    SINK_LOG_V("Pushing %u frames. In ringbuffer %u / %u\n",
+               mAudioQueue.PeekFront()->Frames(),
+               SampleToFrame(mProcessedSPSCQueue->AvailableRead()),
+               SampleToFrame(mProcessedSPSCQueue->Capacity()));
     RefPtr<AudioData> data = mAudioQueue.PopFront();
 
     // Ignore the element with 0 frames and try next.
@@ -376,7 +318,7 @@ void AudioSink::NotifyAudioNeeded() {
                  mConverter ? mConverter->InputConfig().Rate() : 0,
                  data->mChannels, data->mRate);
 
-      DrainConverter();
+      DrainConverter(SampleToFrame(mProcessedSPSCQueue->AvailableWrite()));
 
       // mFramesParsed indicates the current playtime in frames at the current
       // input sampling rate. Recalculate it per the new sampling rate.
@@ -432,9 +374,14 @@ void AudioSink::NotifyAudioNeeded() {
       // The next audio packet begins some time after the end of the last packet
       // we pushed to the audio hardware. We must push silence into the audio
       // hardware so that the next audio packet begins playback at the correct
-      // time.
-      missingFrames = std::min<int64_t>(INT32_MAX, missingFrames.value());
+      // time. But don't push more than the ring buffer can receive.
+      missingFrames = std::min<int64_t>(
+          std::min<int64_t>(INT32_MAX, missingFrames.value()),
+          SampleToFrame(mProcessedSPSCQueue->AvailableWrite()));
       mFramesParsed += missingFrames.value();
+
+      SINK_LOG("Gap in the audio input, push %" PRId64 " frames of silence",
+               missingFrames.value());
 
       RefPtr<AudioData> silenceData;
       AlignedAudioBuffer silenceBuffer(missingFrames.value() * data->mChannels);
@@ -451,6 +398,7 @@ void AudioSink::NotifyAudioNeeded() {
       } else {
         silenceData = CreateAudioFromBuffer(std::move(silenceBuffer), data);
       }
+      TRACE("Pushing silence");
       PushProcessedAudio(silenceData);
     }
 
@@ -470,8 +418,8 @@ void AudioSink::NotifyAudioNeeded() {
 
   if (mAudioQueue.IsFinished()) {
     // We have reached the end of the data, drain the resampler.
-    DrainConverter();
-    mProcessedQueue.Finish();
+    DrainConverter(SampleToFrame(mProcessedSPSCQueue->AvailableWrite()));
+    mProcessedQueueFinished = true;
   }
 }
 
@@ -479,14 +427,22 @@ uint32_t AudioSink::PushProcessedAudio(AudioData* aData) {
   if (!aData || !aData->Frames()) {
     return 0;
   }
-  mProcessedQueue.Push(aData);
-  mProcessedQueueLength += FramesToUsecs(aData->Frames(), mOutputRate).value();
+  int framesToEnqueue = static_cast<int>(aData->Frames() * aData->mChannels);
+  TRACE_COMMENT("AudioSink::PushProcessedAudio", "%u frames (%u/%u)",
+                framesToEnqueue,
+                SampleToFrame(mProcessedSPSCQueue->AvailableWrite()),
+                SampleToFrame(mProcessedSPSCQueue->Capacity()));
+  DebugOnly<int> rv =
+      mProcessedSPSCQueue->Enqueue(aData->Data().Elements(), framesToEnqueue);
+  NS_WARNING_ASSERTION(
+      rv == static_cast<int>(aData->Frames() * aData->mChannels),
+      "AudioSink ring buffer over-run, can't push new data");
   return aData->Frames();
 }
 
 already_AddRefed<AudioData> AudioSink::CreateAudioFromBuffer(
     AlignedAudioBuffer&& aBuffer, AudioData* aReference) {
-  uint32_t frames = aBuffer.Length() / mOutputChannels;
+  uint32_t frames = SampleToFrame(aBuffer.Length());
   if (!frames) {
     return nullptr;
   }
@@ -518,7 +474,7 @@ uint32_t AudioSink::DrainConverter(uint32_t aMaxFrames) {
   AlignedAudioBuffer convertedData =
       mConverter->Process(AudioSampleBuffer(AlignedAudioBuffer())).Forget();
 
-  uint32_t frames = convertedData.Length() / mOutputChannels;
+  uint32_t frames = SampleToFrame(convertedData.Length());
   if (!convertedData.SetLength(std::min(frames, aMaxFrames) *
                                mOutputChannels)) {
     // This can never happen as we were reducing the length of convertData.
@@ -531,7 +487,12 @@ uint32_t AudioSink::DrainConverter(uint32_t aMaxFrames) {
   if (!data) {
     return 0;
   }
-  mProcessedQueue.Push(data);
+  int framesToEnqueue = static_cast<int>(data->mChannels * data->Frames());
+  DebugOnly<int> rv =
+      mProcessedSPSCQueue->Enqueue(data->Data().Elements(), framesToEnqueue);
+  NS_WARNING_ASSERTION(
+      rv == static_cast<int>(data->Frames() * data->mChannels),
+      "AudioSink ring buffer over-run when draining, can't push new data");
   return data->Frames();
 }
 

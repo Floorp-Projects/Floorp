@@ -82,6 +82,75 @@ TEST(Moz2D, PremultiplyRow)
   EXPECT_TRUE(ArrayEqual(out, check_argb));
 }
 
+TEST(Moz2D, PremultiplyYFlipData)
+{
+  const uint8_t stride = 2 * 4;
+  const uint8_t in_bgra[6 * 4] = {
+      255, 255, 0,   255,  // row 1: verify 255 alpha leaves RGB unchanged
+      0,   0,   255, 255,
+      0,   255, 255, 0,  // row 2: verify 0 alpha zeroes out RGB
+      0,   0,   0,   0,
+      255, 0,   0,   128,  // row 3: verify that 255 RGB maps to alpha
+      255, 255, 255, 128,
+  };
+  const uint8_t in_bgra_2[4 * 4] = {
+      255, 255, 0,   255,  // row 1: verify 255 alpha leaves RGB unchanged
+      0,   0,   255, 255,
+      0,   255, 255, 0,  // row 2: verify 0 alpha zeroes out RGB
+      0,   0,   0,   0,
+  };
+  const uint8_t in_bgra_3[2 * 4] = {
+      255, 0,   0,   128,  // row 1: verify that 255 RGB maps to alpha
+      255, 255, 255, 128,
+  };
+  uint8_t out[6 * 4];
+  uint8_t out_2[4 * 4];
+  uint8_t out_3[2 * 4];
+  const uint8_t check_bgra[6 * 4] = {
+      128, 0, 0, 128, 128, 128, 128, 128, 0, 0, 0,   0,
+      0,   0, 0, 0,   255, 255, 0,   255, 0, 0, 255, 255,
+  };
+  const uint8_t check_bgra_2[4 * 4] = {
+      0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 255, 0, 0, 255, 255,
+  };
+  const uint8_t check_bgra_3[2 * 4] = {
+      128, 0, 0, 128, 128, 128, 128, 128,
+  };
+  // check swizzled output
+  const uint8_t check_rgba[6 * 4] = {
+      0, 0, 128, 128, 128, 128, 128, 128, 0,   0, 0, 0,
+      0, 0, 0,   0,   0,   255, 255, 255, 255, 0, 0, 255,
+  };
+
+  // Premultiply.
+  PremultiplyYFlipData(in_bgra, stride, SurfaceFormat::B8G8R8A8, out, stride,
+                       SurfaceFormat::B8G8R8A8, IntSize(2, 3));
+  EXPECT_TRUE(ArrayEqual(out, check_bgra));
+
+  // Premultiply in-place with middle row.
+  memcpy(out, in_bgra, sizeof(out));
+  PremultiplyYFlipData(out, stride, SurfaceFormat::B8G8R8A8, out, stride,
+                       SurfaceFormat::B8G8R8A8, IntSize(2, 3));
+  EXPECT_TRUE(ArrayEqual(out, check_bgra));
+
+  // Premultiply in-place without middle row.
+  memcpy(out_2, in_bgra_2, sizeof(out_2));
+  PremultiplyYFlipData(out_2, stride, SurfaceFormat::B8G8R8A8, out_2, stride,
+                       SurfaceFormat::B8G8R8A8, IntSize(2, 2));
+  EXPECT_TRUE(ArrayEqual(out_2, check_bgra_2));
+
+  // Premultiply in-place only middle row.
+  memcpy(out_3, in_bgra_3, sizeof(out_3));
+  PremultiplyYFlipData(out_3, stride, SurfaceFormat::B8G8R8A8, out_3, stride,
+                       SurfaceFormat::B8G8R8A8, IntSize(2, 1));
+  EXPECT_TRUE(ArrayEqual(out_3, check_bgra_3));
+
+  // Premultiply and swizzle with middle row.
+  PremultiplyYFlipData(in_bgra, stride, SurfaceFormat::B8G8R8A8, out, stride,
+                       SurfaceFormat::R8G8B8A8, IntSize(2, 3));
+  EXPECT_TRUE(ArrayEqual(out, check_rgba));
+}
+
 TEST(Moz2D, UnpremultiplyData)
 {
   const uint8_t in_bgra[5 * 4] = {
@@ -233,6 +302,62 @@ TEST(Moz2D, SwizzleData)
               reinterpret_cast<uint8_t*>(out16), sizeof(out16),
               SurfaceFormat::R5G6B5_UINT16, IntSize(5, 1));
   EXPECT_TRUE(ArrayEqual(out16, check_16));
+}
+
+TEST(Moz2D, SwizzleYFlipData)
+{
+  const uint8_t stride = 2 * 4;
+  const uint8_t in_bgra[6 * 4] = {
+      255, 255, 0,   255,                      // row 1
+      0,   0,   255, 255, 0,   255, 255, 0,    // row 2
+      0,   0,   0,   0,   255, 0,   0,   128,  // row 3
+      255, 255, 255, 128,
+  };
+  const uint8_t in_bgra_2[4 * 4] = {
+      255, 255, 0,   255,                  // row 1
+      0,   0,   255, 255, 0, 255, 255, 0,  // row 2
+      0,   0,   0,   0,
+  };
+  const uint8_t in_bgra_3[2 * 4] = {
+      255, 0,   0,   128,  // row 1
+      255, 255, 255, 128,
+  };
+  uint8_t out[6 * 4];
+  uint8_t out_2[4 * 4];
+  uint8_t out_3[2 * 4];
+  const uint8_t check_rgba[6 * 4] = {
+      0, 0, 255, 128, 255, 255, 255, 128, 255, 255, 0, 0,
+      0, 0, 0,   0,   0,   255, 255, 255, 255, 0,   0, 255,
+  };
+  const uint8_t check_rgba_2[4 * 4] = {
+      255, 255, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 255,
+  };
+  const uint8_t check_rgba_3[2 * 4] = {
+      0, 0, 255, 128, 255, 255, 255, 128,
+  };
+
+  // Swizzle.
+  SwizzleYFlipData(in_bgra, stride, SurfaceFormat::B8G8R8A8, out, stride,
+                   SurfaceFormat::R8G8B8A8, IntSize(2, 3));
+  EXPECT_TRUE(ArrayEqual(out, check_rgba));
+
+  // Swizzle in-place with middle row.
+  memcpy(out, in_bgra, sizeof(out));
+  SwizzleYFlipData(out, stride, SurfaceFormat::B8G8R8A8, out, stride,
+                   SurfaceFormat::R8G8B8A8, IntSize(2, 3));
+  EXPECT_TRUE(ArrayEqual(out, check_rgba));
+
+  // Swizzle in-place without middle row.
+  memcpy(out_2, in_bgra_2, sizeof(out_2));
+  SwizzleYFlipData(out_2, stride, SurfaceFormat::B8G8R8A8, out_2, stride,
+                   SurfaceFormat::R8G8B8A8, IntSize(2, 2));
+  EXPECT_TRUE(ArrayEqual(out_2, check_rgba_2));
+
+  // Swizzle in-place only middle row.
+  memcpy(out_3, in_bgra_3, sizeof(out_3));
+  SwizzleYFlipData(out_3, stride, SurfaceFormat::B8G8R8A8, out_3, stride,
+                   SurfaceFormat::R8G8B8A8, IntSize(2, 1));
+  EXPECT_TRUE(ArrayEqual(out_3, check_rgba_3));
 }
 
 TEST(Moz2D, SwizzleRow)

@@ -552,6 +552,8 @@ void nsWindow::DestroyChildWindows() {
 }
 
 void nsWindow::Destroy() {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
   if (mIsDestroyed || !mCreated) return;
 
   LOG("nsWindow::Destroy\n");
@@ -2499,6 +2501,8 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
         gtk_window_deiconify(GTK_WINDOW(mShell));
       } else if (mSizeState == nsSizeMode_Maximized) {
         gtk_window_unmaximize(GTK_WINDOW(mShell));
+      } else if (mSizeState == nsSizeMode_Fullscreen) {
+        MakeFullScreen(false);
       }
       break;
   }
@@ -3965,8 +3969,8 @@ static bool is_top_level_mouse_exit(GdkWindow* aWindow,
                                     GdkEventCrossing* aEvent) {
   auto x = gint(aEvent->x_root);
   auto y = gint(aEvent->y_root);
-  GdkDisplay* display = gdk_window_get_display(aWindow);
-  GdkWindow* winAtPt = gdk_display_get_window_at_pointer(display, &x, &y);
+  GdkDevice* pointer = GdkGetPointer();
+  GdkWindow* winAtPt = gdk_device_get_window_at_position(pointer, &x, &y);
   if (!winAtPt) return true;
   GdkWindow* topLevelAtPt = gdk_window_get_toplevel(winAtPt);
   GdkWindow* topLevelWidget = gdk_window_get_toplevel(aWindow);
@@ -4608,13 +4612,25 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
             mPanInProgress = true;
           }
 
+          const bool isPageMode =
+              StaticPrefs::apz_gtk_kinetic_scroll_delta_mode() != 2;
+          const double multiplier =
+              isPageMode
+                  ? StaticPrefs::
+                        apz_gtk_kinetic_scroll_page_delta_mode_multiplier()
+                  : StaticPrefs::
+                            apz_gtk_kinetic_scroll_pixel_delta_mode_multiplier() *
+                        FractionalScaleFactor();
+          ScreenPoint deltas(float(aEvent->delta_x * multiplier),
+                             float(aEvent->delta_y * multiplier));
+
           LayoutDeviceIntPoint touchPoint = GetRefPoint(this, aEvent);
           PanGestureInput panEvent(
               eventType, aEvent->time, GetEventTimeStamp(aEvent->time),
-              ScreenPoint(touchPoint.x, touchPoint.y),
-              ScreenPoint(aEvent->delta_x, aEvent->delta_y),
+              ScreenPoint(touchPoint.x, touchPoint.y), deltas,
               KeymapWrapper::ComputeKeyModifiers(aEvent->state));
-          panEvent.mDeltaType = PanGestureInput::PANDELTA_PAGE;
+          panEvent.mDeltaType = isPageMode ? PanGestureInput::PANDELTA_PAGE
+                                           : PanGestureInput::PANDELTA_PIXEL;
           panEvent.mSimulateMomentum = true;
 
           DispatchPanGestureInput(panEvent);
@@ -4623,7 +4639,7 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
         }
 
         // Older GTK doesn't support stop events, so we can't support fling
-        wheelEvent.mScrollType = WidgetWheelEvent::SCROLL_ASYNCHRONOUSELY;
+        wheelEvent.mScrollType = WidgetWheelEvent::SCROLL_ASYNCHRONOUSLY;
       }
 
       // TODO - use a more appropriate scrolling unit than lines.
@@ -4810,15 +4826,15 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
 }
 
 void nsWindow::OnDPIChanged() {
+  // Update menu's font size etc.
+  // This affects style / layout because it affects system font sizes.
   if (mWidgetListener) {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
       presShell->BackingScaleFactorChanged();
-      // Update menu's font size etc.
-      // This affects style / layout because it affects system font sizes.
-      presShell->ThemeChanged(ThemeChangeKind::StyleAndLayout);
     }
     mWidgetListener->UIResolutionChanged();
   }
+  NotifyThemeChanged(ThemeChangeKind::StyleAndLayout);
 }
 
 void nsWindow::OnCheckResize() { mPendingConfigures++; }
@@ -4860,11 +4876,11 @@ void nsWindow::OnScaleChanged() {
   if (mWidgetListener) {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
       presShell->BackingScaleFactorChanged();
-      // This affects style / layout because it affects system font sizes.
-      // Update menu's font size etc.
-      presShell->ThemeChanged(ThemeChangeKind::StyleAndLayout);
     }
   }
+  // This affects style / layout because it affects system font sizes.
+  // Update menu's font size etc.
+  NotifyThemeChanged(ThemeChangeKind::StyleAndLayout);
 
   DispatchResized();
 
@@ -4920,71 +4936,71 @@ bool nsWindow::IsHandlingTouchSequence(GdkEventSequence* aSequence) {
 }
 
 gboolean nsWindow::OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent) {
-  if (StaticPrefs::apz_gtk_touchpad_pinch_enabled()) {
-    // Do not respond to pinch gestures involving more than two fingers
-    // unless specifically preffed on. These are sometimes hooked up to other
-    // actions at the desktop environment level and having the browser also
-    // pinch can be undesirable.
-    if (aEvent->n_fingers > 2 &&
-        !StaticPrefs::apz_gtk_touchpad_pinch_three_fingers_enabled()) {
-      return FALSE;
-    }
-    PinchGestureInput::PinchGestureType pinchGestureType =
-        PinchGestureInput::PINCHGESTURE_SCALE;
-    ScreenCoord CurrentSpan;
-    ScreenCoord PreviousSpan;
-
-    switch (aEvent->phase) {
-      case GDK_TOUCHPAD_GESTURE_PHASE_BEGIN:
-        pinchGestureType = PinchGestureInput::PINCHGESTURE_START;
-        CurrentSpan = aEvent->scale;
-
-        // Assign PreviousSpan --> 0.999 to make mDeltaY field of the
-        // WidgetWheelEvent that this PinchGestureInput event will be converted
-        // to not equal Zero as our discussion because we observed that the
-        // scale of the PHASE_BEGIN event is 1.
-        PreviousSpan = 0.999;
-        break;
-
-      case GDK_TOUCHPAD_GESTURE_PHASE_UPDATE:
-        pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
-        if (aEvent->scale == mLastPinchEventSpan) {
-          return FALSE;
-        }
-        CurrentSpan = aEvent->scale;
-        PreviousSpan = mLastPinchEventSpan;
-        break;
-
-      case GDK_TOUCHPAD_GESTURE_PHASE_END:
-        pinchGestureType = PinchGestureInput::PINCHGESTURE_END;
-        CurrentSpan = aEvent->scale;
-        PreviousSpan = mLastPinchEventSpan;
-        break;
-
-      default:
-        return FALSE;
-    }
-
-    LayoutDeviceIntPoint touchpadPoint = GetRefPoint(this, aEvent);
-    PinchGestureInput event(
-        pinchGestureType, PinchGestureInput::TRACKPAD, aEvent->time,
-        GetEventTimeStamp(aEvent->time), ExternalPoint(0, 0),
-        ScreenPoint(touchpadPoint.x, touchpadPoint.y),
-        100.0 * ((aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_END)
-                     ? ScreenCoord(1.f)
-                     : CurrentSpan),
-        100.0 * ((aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_END)
-                     ? ScreenCoord(1.f)
-                     : PreviousSpan),
-        KeymapWrapper::ComputeKeyModifiers(aEvent->state));
-
-    if (!event.SetLineOrPageDeltaY(this)) {
-      return FALSE;
-    }
-
-    mLastPinchEventSpan = aEvent->scale;
-    DispatchPinchGestureInput(event);
+  if (!StaticPrefs::apz_gtk_touchpad_pinch_enabled()) {
+    return TRUE;
   }
+  // Do not respond to pinch gestures involving more than two fingers
+  // unless specifically preffed on. These are sometimes hooked up to other
+  // actions at the desktop environment level and having the browser also
+  // pinch can be undesirable.
+  if (aEvent->n_fingers > 2 &&
+      !StaticPrefs::apz_gtk_touchpad_pinch_three_fingers_enabled()) {
+    return FALSE;
+  }
+  auto pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
+  ScreenCoord currentSpan;
+  ScreenCoord previousSpan;
+
+  switch (aEvent->phase) {
+    case GDK_TOUCHPAD_GESTURE_PHASE_BEGIN:
+      pinchGestureType = PinchGestureInput::PINCHGESTURE_START;
+      currentSpan = aEvent->scale;
+
+      // Assign PreviousSpan --> 0.999 to make mDeltaY field of the
+      // WidgetWheelEvent that this PinchGestureInput event will be converted
+      // to not equal Zero as our discussion because we observed that the
+      // scale of the PHASE_BEGIN event is 1.
+      previousSpan = 0.999;
+      break;
+
+    case GDK_TOUCHPAD_GESTURE_PHASE_UPDATE:
+      pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
+      if (aEvent->scale == mLastPinchEventSpan) {
+        return FALSE;
+      }
+      currentSpan = aEvent->scale;
+      previousSpan = mLastPinchEventSpan;
+      break;
+
+    case GDK_TOUCHPAD_GESTURE_PHASE_END:
+      pinchGestureType = PinchGestureInput::PINCHGESTURE_END;
+      currentSpan = aEvent->scale;
+      previousSpan = mLastPinchEventSpan;
+      break;
+
+    default:
+      return FALSE;
+  }
+
+  LayoutDeviceIntPoint touchpadPoint = GetRefPoint(this, aEvent);
+  PinchGestureInput event(
+      pinchGestureType, PinchGestureInput::TRACKPAD, aEvent->time,
+      GetEventTimeStamp(aEvent->time), ExternalPoint(0, 0),
+      ScreenPoint(touchpadPoint.x, touchpadPoint.y),
+      100.0 * ((aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_END)
+                   ? ScreenCoord(1.f)
+                   : currentSpan),
+      100.0 * ((aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_END)
+                   ? ScreenCoord(1.f)
+                   : previousSpan),
+      KeymapWrapper::ComputeKeyModifiers(aEvent->state));
+
+  if (!event.SetLineOrPageDeltaY(this)) {
+    return FALSE;
+  }
+
+  mLastPinchEventSpan = aEvent->scale;
+  DispatchPinchGestureInput(event);
   return TRUE;
 }
 
@@ -5297,7 +5313,7 @@ void nsWindow::ConfigureGdkWindow() {
     } else {
       // Disable rendering of parent container on X11 to avoid flickering.
       if (GtkWidget* parent = gtk_widget_get_parent(mShell)) {
-        gtk_window_set_opacity(GTK_WINDOW(parent), 0.0);
+        gtk_widget_set_opacity(parent, 0.0);
       }
     }
   }
@@ -6883,11 +6899,13 @@ FullscreenTransitionWindow::FullscreenTransitionWindow(GtkWidget* aWidget) {
              "Can't resize window smaller than 1x1.");
   gtk_window_resize(gtkWin, monitorRect.width, monitorRect.height);
 
-  GdkColor bgColor;
-  bgColor.red = bgColor.green = bgColor.blue = 0;
-  gtk_widget_modify_bg(mWindow, GTK_STATE_NORMAL, &bgColor);
+  GdkRGBA bgColor;
+  bgColor.red = bgColor.green = bgColor.blue = 0.0;
+  bgColor.alpha = 1.0;
+  gtk_widget_override_background_color(mWindow, GTK_STATE_FLAG_NORMAL,
+                                       &bgColor);
 
-  gtk_window_set_opacity(gtkWin, 0.0);
+  gtk_widget_set_opacity(mWindow, 0.0);
   gtk_widget_show(mWindow);
 }
 
@@ -6929,7 +6947,7 @@ gboolean FullscreenTransitionData::TimeoutCallback(gpointer aData) {
   if (data->mStage == nsIWidget::eAfterFullscreenToggle) {
     opacity = 1.0 - opacity;
   }
-  gtk_window_set_opacity(GTK_WINDOW(data->mWindow->mWindow), opacity);
+  gtk_widget_set_opacity(data->mWindow->mWindow, opacity);
 
   if (!finishing) {
     return TRUE;
@@ -7018,7 +7036,7 @@ static bool IsFullscreenSupported(GtkWidget* aShell) {
 #endif
 }
 
-nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
+nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
   LOG("nsWindow::MakeFullScreen aFullScreen %d\n", aFullScreen);
 
   if (GdkIsX11Display() && !IsFullscreenSupported(mShell)) {
@@ -7607,8 +7625,8 @@ static gboolean leave_notify_event_cb(GtkWidget* widget,
   // avoid generating spurious mouse exit events.
   auto x = gint(event->x_root);
   auto y = gint(event->y_root);
-  GdkDisplay* display = gtk_widget_get_display(widget);
-  GdkWindow* winAtPt = gdk_display_get_window_at_pointer(display, &x, &y);
+  GdkDevice* pointer = GdkGetPointer();
+  GdkWindow* winAtPt = gdk_device_get_window_at_position(pointer, &x, &y);
   if (winAtPt == event->window) {
     return TRUE;
   }
@@ -7966,8 +7984,7 @@ void nsWindow::InitDragEvent(WidgetDragEvent& aEvent) {
 }
 
 gboolean WindowDragMotionHandler(GtkWidget* aWidget,
-                                 GdkDragContext* aDragContext,
-                                 RefPtr<DataOffer> aDataOffer, gint aX, gint aY,
+                                 GdkDragContext* aDragContext, gint aX, gint aY,
                                  guint aTime) {
   RefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
   if (!window) {
@@ -7999,8 +8016,8 @@ gboolean WindowDragMotionHandler(GtkWidget* aWidget,
           innerMostWindow.get(), retx, rety);
 
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
-  if (!dragService->ScheduleMotionEvent(innerMostWindow, aDragContext,
-                                        aDataOffer, point, aTime)) {
+  if (!dragService->ScheduleMotionEvent(innerMostWindow, aDragContext, point,
+                                        aTime)) {
     return FALSE;
   }
   // We need to reply to drag_motion event on Wayland immediately,
@@ -8014,7 +8031,7 @@ gboolean WindowDragMotionHandler(GtkWidget* aWidget,
 static gboolean drag_motion_event_cb(GtkWidget* aWidget,
                                      GdkDragContext* aDragContext, gint aX,
                                      gint aY, guint aTime, gpointer aData) {
-  return WindowDragMotionHandler(aWidget, aDragContext, nullptr, aX, aY, aTime);
+  return WindowDragMotionHandler(aWidget, aDragContext, aX, aY, aTime);
 }
 
 void WindowDragLeaveHandler(GtkWidget* aWidget) {
@@ -8057,8 +8074,7 @@ static void drag_leave_event_cb(GtkWidget* aWidget,
 }
 
 gboolean WindowDragDropHandler(GtkWidget* aWidget, GdkDragContext* aDragContext,
-                               RefPtr<DataOffer> aDataOffer, gint aX, gint aY,
-                               guint aTime) {
+                               gint aX, gint aY, guint aTime) {
   RefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
   if (!window) return FALSE;
 
@@ -8087,14 +8103,14 @@ gboolean WindowDragDropHandler(GtkWidget* aWidget, GdkDragContext* aDragContext,
           innerMostWindow.get(), retx, rety);
 
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
-  return dragService->ScheduleDropEvent(innerMostWindow, aDragContext,
-                                        aDataOffer, point, aTime);
+  return dragService->ScheduleDropEvent(innerMostWindow, aDragContext, point,
+                                        aTime);
 }
 
 static gboolean drag_drop_event_cb(GtkWidget* aWidget,
                                    GdkDragContext* aDragContext, gint aX,
                                    gint aY, guint aTime, gpointer aData) {
-  return WindowDragDropHandler(aWidget, aDragContext, nullptr, aX, aY, aTime);
+  return WindowDragDropHandler(aWidget, aDragContext, aX, aY, aTime);
 }
 
 static void drag_data_received_event_cb(GtkWidget* aWidget,
@@ -8698,8 +8714,6 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(
     return NS_OK;
   }
 
-  GdkDisplay* display = gdk_window_get_display(mGdkWindow);
-
   // When a button-press/release event is requested, create it here and put it
   // in the event queue. This will not emit a motion event - this needs to be
   // done explicitly *before* requesting a button-press/release. You will also
@@ -8730,10 +8744,7 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(
       event.button.time = GDK_CURRENT_TIME;
 
       // Get device for event source
-      GdkDeviceManager* device_manager =
-          gdk_display_get_device_manager(display);
-      event.button.device =
-          gdk_device_manager_get_client_pointer(device_manager);
+      event.button.device = GdkGetPointer();
 
       event.button.x_root = DevicePixelsToGdkCoordRoundDown(aPoint.x);
       event.button.y_root = DevicePixelsToGdkCoordRoundDown(aPoint.y);
@@ -8759,7 +8770,7 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(
 #endif
       GdkScreen* screen = gdk_window_get_screen(mGdkWindow);
       GdkPoint point = DevicePixelsToGdkPointRoundDown(aPoint);
-      gdk_display_warp_pointer(display, screen, point.x, point.y);
+      gdk_device_warp(GdkGetPointer(), screen, point.x, point.y);
       return NS_OK;
     }
     case NativeMouseMessage::EnterWindow:

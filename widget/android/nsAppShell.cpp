@@ -32,9 +32,11 @@
 #include "mozilla/Hal.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/intl/OSPreferences.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/java/GeckoAppShellNatives.h"
+#include "mozilla/java/GeckoResultWrappers.h"
 #include "mozilla/java/GeckoThreadNatives.h"
 #include "mozilla/java/XPCOMEventTargetNatives.h"
 #include "mozilla/widget/ScreenManager.h"
@@ -68,6 +70,7 @@
 #include "GeckoTelemetryDelegate.h"
 #include "GeckoVRManager.h"
 #include "ImageDecoderSupport.h"
+#include "JavaBuiltins.h"
 #include "ScreenHelperAndroid.h"
 #include "Telemetry.h"
 #include "WebExecutorSupport.h"
@@ -320,6 +323,21 @@ class GeckoAppShellSupport final
                                           aTopic->ToCString().get(),
                                           aCookie->ToString().get());
   }
+
+  static bool IsParentProcess() { return XRE_IsParentProcess(); }
+
+  static jni::Object::LocalRef EnsureGpuProcessReady() {
+    java::GeckoResult::GlobalRef result = java::GeckoResult::New();
+
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "GeckoAppShellSupport::EnsureGpuProcessReady", [result]() {
+          result->Complete(gfx::GPUProcessManager::Get()->EnsureGPUReady()
+                               ? java::sdk::Boolean::TRUE()
+                               : java::sdk::Boolean::FALSE());
+        }));
+
+    return jni::Object::Ref::From(result);
+  }
 };
 
 class XPCOMEventTargetWrapper final
@@ -388,6 +406,10 @@ nsAppShell::nsAppShell()
       XPCOMEventTargetWrapper::Init();
       mozilla::widget::Telemetry::Init();
       mozilla::widget::GeckoTelemetryDelegate::Init();
+
+      if (XRE_IsGPUProcess()) {
+        mozilla::gl::AndroidSurfaceTexture::Init();
+      }
 
       // Set the corresponding state in GeckoThread.
       java::GeckoThread::SetState(java::GeckoThread::State::RUNNING());

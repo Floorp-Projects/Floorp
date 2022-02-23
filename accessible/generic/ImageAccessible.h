@@ -37,16 +37,9 @@ class ImageAccessible : public LinkableAccessible,
   virtual bool DoAction(uint8_t aIndex) const override;
 
   // ImageAccessible
-  nsIntPoint Position(uint32_t aCoordType);
-  nsIntSize Size();
+  LayoutDeviceIntPoint Position(uint32_t aCoordType);
+  LayoutDeviceIntSize Size();
 
- protected:
-  virtual ~ImageAccessible();
-
-  // LocalAccessible
-  virtual ENameValueFlag NativeName(nsString& aName) const override;
-
- private:
   /**
    * Return whether the element has a longdesc URI.
    */
@@ -55,6 +48,18 @@ class ImageAccessible : public LinkableAccessible,
     return uri;
   }
 
+ protected:
+  virtual ~ImageAccessible();
+
+  // LocalAccessible
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
+
+  virtual void DOMAttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                   int32_t aModType,
+                                   const nsAttrValue* aOldValue,
+                                   uint64_t aOldState) override;
+
+ private:
   /**
    * Return an URI for showlongdesc action if any.
    */

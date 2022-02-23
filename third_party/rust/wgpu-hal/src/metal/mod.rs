@@ -144,6 +144,9 @@ struct PrivateCapabilities {
     msl_version: mtl::MTLLanguageVersion,
     fragment_rw_storage: bool,
     read_write_texture_tier: mtl::MTLReadWriteTextureTier,
+    msaa_desktop: bool,
+    msaa_apple3: bool,
+    msaa_apple7: bool,
     resource_heaps: bool,
     argument_buffers: bool,
     shared_textures: bool,
@@ -524,6 +527,7 @@ pub struct PipelineLayout {
     bind_group_infos: ArrayVec<BindGroupLayoutInfo, { crate::MAX_BIND_GROUPS }>,
     push_constants_infos: MultiStageData<Option<PushConstantsInfo>>,
     total_counters: MultiStageResourceCounters,
+    total_push_constants: u32,
 }
 
 trait AsNative {
@@ -709,6 +713,7 @@ struct CommandState {
     stage_infos: MultiStageData<PipelineStageInfo>,
     storage_buffer_length_map: fxhash::FxHashMap<naga::ResourceBinding, wgt::BufferSize>,
     work_group_memory_sizes: Vec<u32>,
+    push_constants: Vec<u32>,
 }
 
 pub struct CommandEncoder {

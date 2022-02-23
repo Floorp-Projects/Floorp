@@ -215,7 +215,7 @@ nsresult nsChannelClassifier::StartInternal() {
   }
   // The classify is running in parent process, no need to give a valid event
   // target
-  rv = uriClassifier->Classify(principal, nullptr, this, &expectCallback);
+  rv = uriClassifier->Classify(principal, this, &expectCallback);
   if (NS_FAILED(rv)) {
     return rv;
   }

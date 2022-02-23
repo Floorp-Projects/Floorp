@@ -37,8 +37,3 @@
 #protections-popup[type="arrow"][side="right"] {
   margin-block: calc(-20px + 2 * var(--urlbar-container-padding));
 }
-
-.protections-popup-tp-switch:-moz-focusring {
-  outline: var(--default-focusring);
-  outline-offset: unset;
-}

@@ -12,6 +12,7 @@
 #include "mozilla/java/WebResponseWrappers.h"
 #include "mozilla/widget/WindowEvent.h"
 
+class nsPIDOMWindowOuter;
 class nsWindow;
 
 namespace mozilla {

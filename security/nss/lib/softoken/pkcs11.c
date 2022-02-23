@@ -422,6 +422,7 @@ static const struct mechanismList mechanisms[] = {
     { CKM_NSS_CHACHA20_POLY1305, { 32, 32, CKF_EN_DE }, PR_TRUE },
     { CKM_NSS_CHACHA20_CTR, { 32, 32, CKF_EN_DE }, PR_TRUE },
     { CKM_CHACHA20_KEY_GEN, { 32, 32, CKF_GENERATE }, PR_TRUE },
+    { CKM_CHACHA20, { 32, 32, CKF_EN_DE }, PR_TRUE },
     { CKM_CHACHA20_POLY1305, { 32, 32, CKF_EN_DE_MSG }, PR_TRUE },
 #endif /* NSS_DISABLE_CHACHAPOLY */
     /* ------------------------- Hashing Operations ----------------------- */

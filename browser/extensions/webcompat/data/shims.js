@@ -585,6 +585,20 @@ const AVAILABLE_SHIMS = [
     ],
     onlyIfDFPIActive: true,
   },
+  {
+    id: "Crave.ca",
+    platform: "all",
+    name: "Crave.ca",
+    bug: "1746439",
+    contentScripts: [
+      {
+        js: "crave-ca.js",
+        matches: ["*://account.bellmedia.ca/login*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
 ];
 
 module.exports = AVAILABLE_SHIMS;

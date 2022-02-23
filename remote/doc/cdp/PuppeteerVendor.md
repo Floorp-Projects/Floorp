@@ -74,7 +74,7 @@ process interspersed with some tips.
    up for review, run the Puppeteer test job on try again with `--rebuild 10`
 	 to check for stability.
 
-[Testing]: ../Testing.html
+[Testing]: ../Testing.md
 [Puppeteer test suite]: https://github.com/GoogleChrome/puppeteer/tree/master/test
 [re-install the project]: https://github.com/puppeteer/puppeteer/blob/main/CONTRIBUTING.md#getting-code
 [run tests against both Chromium and Firefox]: https://github.com/puppeteer/puppeteer/blob/main/test/README.md#running-tests

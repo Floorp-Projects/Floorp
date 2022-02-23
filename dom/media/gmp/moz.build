@@ -128,9 +128,6 @@ PREPROCESSED_IPDL_SOURCES += [
 if CONFIG["OS_TARGET"] in ["WINNT", "Darwin"]:
     DEFINES["SUPPORT_STORAGE_ID"] = 1
 
-# comment this out to use Unsafe Shmem for more performance
-DEFINES["GMP_SAFE_SHMEM"] = True
-
 include("/ipc/chromium/chromium-config.mozbuild")
 
 if CONFIG["MOZ_SANDBOX"]:

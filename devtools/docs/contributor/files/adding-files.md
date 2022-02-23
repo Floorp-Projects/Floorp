@@ -38,7 +38,7 @@ Example:
 
 ### `ChromeUtils.import()`
 
-Some older DevTools JS modules use the Gecko [JavaScript code module](https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Using) format with the file extension `.jsm`. We are trying to move away from this format, so it's unlikely you would add a new one, but you might need to import an existing one in your code.
+Some older DevTools JS modules use the Gecko JavaScript code module format with the file extension `.jsm`. We are trying to move away from this format, so it's unlikely you would add a new one, but you might need to import an existing one in your code.
 
 These modules are loaded using `ChromeUtils.import()`. To `import()` a file, you provide a `resource://` URL, which is exactly the source tree path.
 
@@ -158,6 +158,6 @@ Example:
 
 Localization files should follow a set of guidelines aimed at making it easier for people to translate the labels in these files in many languages.
 
-[Find these guidelines on MDN](https://developer.mozilla.org/en-US/docs/Mozilla/Localization/Localization_content_best_practices).
+[Read best practices for developers](https://mozilla-l10n.github.io/documentation/localization/dev_best_practices.html).
 
 In particular, it's important to write self-explanatory comments for new keys, deleting unused keys, changing the key name when changing the meaning of a string, and more. So make sure you read through these guidelines should you have to modify a localization file in your patch.

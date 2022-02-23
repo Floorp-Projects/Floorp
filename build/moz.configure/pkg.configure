@@ -13,7 +13,7 @@ def pkg_config(prefixes):
 pkg_config = check_prog(
     "PKG_CONFIG",
     pkg_config,
-    bootstrap="pkgconf",
+    bootstrap=depends(when=target_sysroot.bootstrapped)(lambda: "pkgconf"),
     allow_missing=True,
     when=compile_environment
     & depends(target.os)(lambda os: os not in ("WINNT", "OSX", "Android")),

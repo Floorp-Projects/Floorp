@@ -37,7 +37,7 @@ pub fn parse_function(s: &str) -> (&str, Vec<&str>, &str) {
     let mut p = Parser {
         itr: c,
         start: 0,
-        o: o,
+        o,
     };
 
     p.skip_whitespace();
@@ -89,7 +89,7 @@ pub fn parse_function(s: &str) -> (&str, Vec<&str>, &str) {
                 _ => {}
             }
 
-            let not_in_bracket = brackets.len() == 0 && prev_bracket_count == 0;
+            let not_in_bracket = brackets.is_empty() && prev_bracket_count == 0;
             if !acceptable_arg_character(k.1) && not_in_bracket {
                 break;
             }

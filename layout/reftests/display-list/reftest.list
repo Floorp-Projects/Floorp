@@ -1,17 +1,27 @@
-skip-if(!retainedDisplayList) == retained-dl-style-change-1.html retained-dl-style-change-1-ref.html
-skip-if(!retainedDisplayList) == retained-dl-frame-deleted-1.html retained-dl-style-change-1-ref.html
-skip-if(!retainedDisplayList) == retained-dl-frame-created-1.html retained-dl-style-change-1-ref.html
-skip-if(!retainedDisplayList) == retained-dl-style-change-stacking-context-1.html retained-dl-style-change-stacking-context-1-ref.html
-skip-if(!retainedDisplayList) == retained-dl-style-change-stacking-context-2.html retained-dl-style-change-stacking-context-2-ref.html
+# These tests are testing merging RDL implementation.
+skip-if(!retainedDisplayList||retainedDisplayListNew) == retained-dl-style-change-1.html retained-dl-style-change-1-ref.html
+skip-if(!retainedDisplayList||retainedDisplayListNew) == retained-dl-frame-deleted-1.html retained-dl-style-change-1-ref.html
+skip-if(!retainedDisplayList||retainedDisplayListNew) == retained-dl-frame-created-1.html retained-dl-style-change-1-ref.html
+skip-if(!retainedDisplayList||retainedDisplayListNew) == retained-dl-style-change-stacking-context-1.html retained-dl-style-change-stacking-context-1-ref.html
+skip-if(!retainedDisplayList||retainedDisplayListNew) == retained-dl-style-change-stacking-context-2.html retained-dl-style-change-stacking-context-2-ref.html
 fails == retained-dl-style-change-stacking-context-3.html retained-dl-style-change-stacking-context-3-ref.html # bug 1650699 tracks this failure
-skip-if(!retainedDisplayList) == retained-dl-style-change-stacking-context-4.html retained-dl-style-change-stacking-context-4-ref.html
+skip-if(!retainedDisplayList||retainedDisplayListNew) == retained-dl-style-change-stacking-context-4.html retained-dl-style-change-stacking-context-4-ref.html
+skip-if(!retainedDisplayList||retainedDisplayListNew||Android) == retained-dl-displayport-1.html retained-dl-displayport-1-ref.html
+skip-if(!retainedDisplayList||retainedDisplayListNew) == retained-dl-prerender-transform-1.html retained-dl-prerender-transform-1-ref.html
+skip-if(!retainedDisplayList||retainedDisplayListNew) == retained-dl-animation-on-pseudo.html retained-dl-animation-on-pseudo-ref.html
+#
+
 skip-if(!retainedDisplayList||!asyncPan) == retained-dl-async-scrolled-1.html retained-dl-async-scrolled-1-ref.html
 skip-if(!retainedDisplayList) == retained-dl-remove-for-ancestor-change-1.html retained-dl-remove-for-ancestor-change-1-ref.html
 skip-if(!retainedDisplayList) == retained-dl-scroll-out-of-view-1.html retained-dl-scroll-out-of-view-1-ref.html
-skip-if(!retainedDisplayList) == retained-dl-displayport-1.html retained-dl-displayport-1-ref.html
-skip-if(!retainedDisplayList) == retained-dl-prerender-transform-1.html retained-dl-prerender-transform-1-ref.html
-skip-if(!retainedDisplayList) == retained-dl-animation-on-pseudo.html retained-dl-animation-on-pseudo-ref.html
 skip-if(!retainedDisplayList) == retained-dl-opacity-animation-on-ib-split.html retained-dl-opacity-animation-on-ib-split-ref.html
+skip-if(!retainedDisplayList) == 1544948-1.html 1544948-1-ref.html
+
+skip-if(!retainedDisplayListNew) == reuse-sc-style-change-1.html reuse-sc-style-change-1-ref.html
+skip-if(!retainedDisplayListNew) == reuse-sc-style-change-nested-1.html reuse-sc-style-change-nested-1-ref.html
+skip-if(!retainedDisplayListNew) == reuse-sc-style-change-abs-pos-1.html reuse-sc-style-change-abs-pos-1-ref.html
+skip-if(!retainedDisplayListNew) == reuse-sc-style-change-fixed-pos-1.html reuse-sc-style-change-fixed-pos-1-ref.html
+
 == retained-dl-wrap-list.html retained-dl-wrap-list-ref.html
 == retained-dl-zindex-1.html retained-dl-zindex-1-ref.html
 == retained-dl-zindex-2.html retained-dl-zindex-2-ref.html
@@ -42,7 +52,6 @@ fuzzy(0-2,0-40000) skip-if(!asyncPan) == 1464288-1.html 1464288-ref.html
 == 1482403-1.html 1482403-1-ref.html
 == 1504233-1.html 1504233-1-ref.html
 == 1533317-1.html 1533317-1-ref.html
-skip-if(!retainedDisplayList) == 1544948-1.html 1544948-1-ref.html
 fuzzy-if(swgl,0-1,0-1) == 1551053-1.html 1551053-1-ref.html
 == 1553828-1.html 1553828-1-ref.html
 fuzzy-if(browserIsFission,0-1,0-300) == 1619370-1.html 1619370-1-ref.html

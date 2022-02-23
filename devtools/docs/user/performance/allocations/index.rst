@@ -87,4 +87,3 @@ If you're seeing these problems, consider whether you can reduce the number or s
 
 - can you allocate memory lazily, when it is actually needed, instead of up front?
 - if allocating memory in a loop, can you reuse a single allocation in every loop iteration?
-

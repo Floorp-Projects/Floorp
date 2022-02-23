@@ -677,6 +677,10 @@ impl super::Device {
             },
         })
     }
+
+    pub fn raw_device(&self) -> &ash::Device {
+        &self.shared.raw
+    }
 }
 
 impl crate::Device<super::Api> for super::Device {
@@ -806,7 +810,11 @@ impl crate::Device<super::Api> for super::Device {
         let copy_size = conv::map_extent_to_copy_size(&desc.size, desc.dimension);
 
         let mut raw_flags = vk::ImageCreateFlags::empty();
-        if desc.dimension == wgt::TextureDimension::D2 && desc.size.depth_or_array_layers % 6 == 0 {
+        if desc.dimension == wgt::TextureDimension::D2
+            && desc.size.depth_or_array_layers % 6 == 0
+            && desc.sample_count == 1
+            && desc.size.width == desc.size.height
+        {
             raw_flags |= vk::ImageCreateFlags::CUBE_COMPATIBLE;
         }
 
@@ -1462,8 +1470,9 @@ impl crate::Device<super::Api> for super::Device {
                     .depth_compare_op(conv::map_comparison(ds.depth_compare));
             }
             if ds.stencil.is_enabled() {
-                let front = conv::map_stencil_face(&ds.stencil.front);
-                let back = conv::map_stencil_face(&ds.stencil.back);
+                let s = &ds.stencil;
+                let front = conv::map_stencil_face(&s.front, s.read_mask, s.write_mask);
+                let back = conv::map_stencil_face(&s.back, s.read_mask, s.write_mask);
                 vk_depth_stencil = vk_depth_stencil
                     .stencil_test_enable(true)
                     .front(front)
@@ -1716,7 +1725,7 @@ impl crate::Device<super::Api> for super::Device {
                     .values(&values);
                 let result = match self.shared.extension_fns.timeline_semaphore {
                     Some(super::ExtensionFn::Extension(ref ext)) => {
-                        ext.wait_semaphores(self.shared.raw.handle(), &vk_info, timeout_us)
+                        ext.wait_semaphores(&vk_info, timeout_us)
                     }
                     Some(super::ExtensionFn::Promoted) => {
                         self.shared.raw.wait_semaphores(&vk_info, timeout_us)

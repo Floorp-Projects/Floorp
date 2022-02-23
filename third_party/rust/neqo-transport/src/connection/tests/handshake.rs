@@ -901,7 +901,7 @@ fn damaged_ech_config(config: &[u8]) -> Vec<u8> {
     let mut cfg = Vec::from(config);
     // Ensure that the version and config_id is correct.
     assert_eq!(cfg[2], 0xfe);
-    assert_eq!(cfg[3], 0x0a);
+    assert_eq!(cfg[3], 0x0d);
     assert_eq!(cfg[6], ECH_CONFIG_ID);
     // Change the config_id so that the server doesn't recognize it.
     cfg[6] ^= 0x94;

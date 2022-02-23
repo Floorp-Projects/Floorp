@@ -166,4 +166,3 @@ Internet Explorer to ensure "Work Offline" is unchecked.
    :class: internal
 .. |The WinDbg Symbol Search Path dialog with the Mozilla symbol server configured| image:: img/snip_20170901081816.png
    :class: internal
-

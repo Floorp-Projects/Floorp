@@ -661,6 +661,12 @@ struct PlanarYCbCrData {
   }
 
   static Maybe<PlanarYCbCrData> From(const SurfaceDescriptorBuffer&);
+
+  // We would use mPicSize, but that's not hooked up in WR for RawData
+  // ExternalImages, so we manually clip sizes later on. We should fix WR,
+  // but not in this patch. Do not use unless mPicSize doesn't work for you.
+  Maybe<gfx::IntSize> mCroppedYSize;
+  Maybe<gfx::IntSize> mCroppedCbCrSize;
 };
 
 // This type is currently only used for AVIF and therefore makes some
@@ -726,6 +732,11 @@ class PlanarYCbCrImage : public Image {
    * This doesn't make a copy of the data buffers.
    */
   virtual bool AdoptData(const Data& aData);
+
+  /**
+   * This will create an empty data buffers according to the input data's size.
+   */
+  virtual bool CreateEmptyBuffer(const Data& aData) { return false; }
 
   /**
    * Ask this Image to not convert YUV to RGB during SetData, and make

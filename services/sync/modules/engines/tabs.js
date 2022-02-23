@@ -10,6 +10,9 @@ const TAB_ENTRIES_LIMIT = 5; // How many URLs to include in tab history.
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { TabStateFlusher } = ChromeUtils.import(
+  "resource:///modules/sessionstore/TabStateFlusher.jsm"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Store, SyncEngine, Tracker } = ChromeUtils.import(
@@ -156,7 +159,16 @@ TabStore.prototype = {
 
         // Make sure there are history entries to look at.
         if (!tabState || !tabState.entries.length) {
-          continue;
+          // If we detected a tab but no entries we should
+          // flush the window so SessionState properly updates
+          await TabStateFlusher.flushWindow(win);
+          tabState = this.getTabState(tab);
+
+          // We failed to get entries even after a flush
+          // safe to skip this tab
+          if (!tabState || !tabState.entries.length) {
+            continue;
+          }
         }
 
         let acceptable = !filter

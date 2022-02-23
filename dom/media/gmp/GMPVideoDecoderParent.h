@@ -56,11 +56,7 @@ class GMPVideoDecoderParent final : public PGMPVideoDecoderParent,
   // GMPSharedMemManager
   bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType,
              Shmem* aMem) override {
-#ifdef GMP_SAFE_SHMEM
     return AllocShmem(aSize, aType, aMem);
-#else
-    return AllocUnsafeShmem(aSize, aType, aMem);
-#endif
   }
   void Dealloc(Shmem&& aMem) override { DeallocShmem(aMem); }
 

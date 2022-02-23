@@ -10,6 +10,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/BaseQueuingStrategy.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
 #include "nsCycleCollectionParticipant.h"
@@ -19,43 +20,28 @@
 namespace mozilla {
 namespace dom {
 
-class Function;
-
-}  // namespace dom
-}  // namespace mozilla
-
-namespace mozilla {
-namespace dom {
-
-class CountQueuingStrategy final : public nsISupports, public nsWrapperCache {
+class CountQueuingStrategy final : public BaseQueuingStrategy,
+                                   public nsWrapperCache {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CountQueuingStrategy)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(CountQueuingStrategy,
+                                                         BaseQueuingStrategy)
 
  public:
   explicit CountQueuingStrategy(nsISupports* aGlobal, double aHighWaterMark)
-      : mGlobal(do_QueryInterface(aGlobal)), mHighWaterMark(aHighWaterMark) {}
+      : BaseQueuingStrategy(aGlobal, aHighWaterMark) {}
 
  protected:
   ~CountQueuingStrategy() = default;
 
-  nsCOMPtr<nsIGlobalObject> mGlobal;
-
  public:
-  nsIGlobalObject* GetParentObject() const;
-
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<CountQueuingStrategy> Constructor(
       const GlobalObject& aGlobal, const QueuingStrategyInit& aInit);
 
-  double HighWaterMark() const { return mHighWaterMark; }
-
   already_AddRefed<Function> GetSize(ErrorResult& aRv);
-
- private:
-  double mHighWaterMark = 0.0;
 };
 
 }  // namespace dom

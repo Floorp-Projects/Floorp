@@ -289,15 +289,14 @@ PerformanceRecorder.prototype = {
   /**
    * Checks whether or not recording is currently supported. At the moment,
    * this is only influenced by private browsing mode and the profiler.
+   * This function looks useless after some recent changes -- and it is.
+   * Removing it would involve a lot of cleanup including backward
+   * incompatibility work, which is a lot of work for this panel that's due to
+   * be removed in the near future.
    */
   canCurrentlyRecord: function() {
-    let success = true;
+    const success = true;
     const reasons = [];
-
-    if (!Profiler.canProfile()) {
-      success = false;
-      reasons.push("profiler-unavailable");
-    }
 
     // Check other factors that will affect the possibility of successfully
     // starting a recording here.

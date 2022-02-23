@@ -329,6 +329,9 @@ void* DrawTargetWebgl::GetNativeSurface(NativeSurfaceType aType) {
 already_AddRefed<SourceSurface> DrawTargetWebgl::Snapshot() {
   // If already using the Skia fallback, then just snapshot that.
   if (mSkiaValid) {
+    if (mSkiaLayer) {
+      FlattenSkia();
+    }
     return mSkia->Snapshot();
   }
 
@@ -403,14 +406,16 @@ void DrawTargetWebgl::MarkChanged() {
 bool DrawTargetWebgl::LockBits(uint8_t** aData, IntSize* aSize,
                                int32_t* aStride, SurfaceFormat* aFormat,
                                IntPoint* aOrigin) {
-  if (mSkiaValid) {
+  // Can only access pixels if there is valid, flattened Skia data.
+  if (mSkiaValid && !mSkiaLayer) {
     return mSkia->LockBits(aData, aSize, aStride, aFormat, aOrigin);
   }
   return false;
 }
 
 void DrawTargetWebgl::ReleaseBits(uint8_t* aData) {
-  if (mSkiaValid) {
+  // Can only access pixels if there is valid, flattened Skia data.
+  if (mSkiaValid && !mSkiaLayer) {
     mSkia->ReleaseBits(aData);
   }
 }
@@ -424,7 +429,7 @@ bool DrawTargetWebgl::CreateShaders() {
   if (!mVertexBuffer) {
     mVertexBuffer = mWebgl->CreateBuffer();
     static const float rectData[8] = {0.0f, 0.0f, 1.0f, 0.0f,
-                                      0.0f, 1.0f, 1.0f, 1.0f};
+                                      1.0f, 1.0f, 0.0f, 1.0f};
     mWebgl->BindVertexArray(mVertexArray.get());
     mWebgl->BindBuffer(LOCAL_GL_ARRAY_BUFFER, mVertexBuffer.get());
     mWebgl->RawBufferData(LOCAL_GL_ARRAY_BUFFER,
@@ -556,7 +561,20 @@ void DrawTargetWebgl::CopySurface(SourceSurface* aSurface,
                                   const IntRect& aSourceRect,
                                   const IntPoint& aDestination) {
   if (mSkiaValid) {
-    MarkSkiaChanged();
+    if (mSkiaLayer) {
+      if (IntRect(aDestination, aSourceRect.Size()).Contains(GetRect())) {
+        // If the the destination would override the entire layer, discard the
+        // layer.
+        mSkiaLayer = false;
+      } else if (!IsOpaque(aSurface->GetFormat())) {
+        // If the surface is not opaque, copying it into the layer results in
+        // unintended blending rather than a copy to the destination.
+        FlattenSkia();
+      }
+    } else {
+      // If there is no layer, copying is safe.
+      MarkSkiaChanged();
+    }
     mSkia->CopySurface(aSurface, aSourceRect, aDestination);
     return;
   }
@@ -646,7 +664,8 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
                                Maybe<DeviceColor> aMaskColor,
                                RefPtr<TextureHandle>* aHandle,
                                bool aTransformed, bool aClipped,
-                               bool aAccelOnly, bool aForceUpdate) {
+                               bool aAccelOnly, bool aForceUpdate,
+                               const StrokeOptions* aStrokeOptions) {
   if (aRect.IsEmpty()) {
     return true;
   }
@@ -678,11 +697,13 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
       return false;
     }
     // Invalidate the WebGL target and prepare the Skia target for drawing.
-    MarkSkiaChanged();
+    MarkSkiaChanged(aOptions);
     if (aTransformed) {
       // If transforms are requested, then just translate back to FillRect.
       if (aMaskColor) {
         mSkia->Mask(ColorPattern(*aMaskColor), aPattern, aOptions);
+      } else if (aStrokeOptions) {
+        mSkia->StrokeRect(aRect, aPattern, *aStrokeOptions, aOptions);
       } else {
         mSkia->FillRect(aRect, aPattern, aOptions);
       }
@@ -698,6 +719,8 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
         } else {
           mSkia->Mask(ColorPattern(*aMaskColor), aPattern, aOptions);
         }
+      } else if (aStrokeOptions) {
+        mSkia->StrokeRect(aRect, aPattern, *aStrokeOptions, aOptions);
       } else {
         mSkia->FillRect(aRect, aPattern, aOptions);
       }
@@ -808,7 +831,8 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
       mWebgl->UniformData(LOCAL_GL_FLOAT_VEC4, mSolidProgramColor, false,
                           {(const uint8_t*)colorData, sizeof(colorData)});
       // Finally draw the colored rectangle.
-      mWebgl->DrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+      mWebgl->DrawArrays(
+          aStrokeOptions ? LOCAL_GL_LINE_LOOP : LOCAL_GL_TRIANGLE_FAN, 0, 4);
       break;
     }
     case PatternType::SURFACE: {
@@ -1071,7 +1095,8 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
                           {(const uint8_t*)texBounds, sizeof(texBounds)});
 
       // Finally draw the image rectangle.
-      mWebgl->DrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+      mWebgl->DrawArrays(
+          aStrokeOptions ? LOCAL_GL_LINE_LOOP : LOCAL_GL_TRIANGLE_FAN, 0, 4);
       break;
     }
     default:
@@ -1133,8 +1158,8 @@ void DrawTargetWebgl::PruneTextureHandle(RefPtr<TextureHandle> aHandle) {
   aHandle->Invalidate();
   // If the handle has an associated SourceSurface, unlink it.
   UnlinkSurfaceTexture(aHandle);
-  // If the handle has an associated GlyphCacheEntry, unlink it.
-  if (RefPtr<GlyphCacheEntry> entry = aHandle->GetGlyphCacheEntry()) {
+  // If the handle has an associated CacheEntry, unlink it.
+  if (RefPtr<CacheEntry> entry = aHandle->GetCacheEntry()) {
     entry->Unlink();
   }
   // Deduct the used space from the total.
@@ -1163,7 +1188,126 @@ bool DrawTargetWebgl::PruneTextureMemory(size_t aMargin, bool aPruneUnused) {
 
 void DrawTargetWebgl::FillRect(const Rect& aRect, const Pattern& aPattern,
                                const DrawOptions& aOptions) {
-  DrawRect(aRect, aPattern, aOptions);
+  if (SupportsPattern(aPattern)) {
+    DrawRect(aRect, aPattern, aOptions);
+  } else if (!mWebglValid) {
+    MarkSkiaChanged(aOptions);
+    mSkia->FillRect(aRect, aPattern, aOptions);
+  } else {
+    // If the pattern is unsupported, then transform the rect to a path so it
+    // can be cached.
+    SkPath skiaPath;
+    skiaPath.addRect(RectToSkRect(aRect));
+    RefPtr<PathSkia> path = new PathSkia(skiaPath, FillRule::FILL_WINDING);
+    DrawPath(path, aPattern, aOptions);
+  }
+}
+
+void CacheEntry::Link(const RefPtr<TextureHandle>& aHandle) {
+  mHandle = aHandle;
+  mHandle->SetCacheEntry(this);
+}
+
+// When the CacheEntry becomes unused, it marks the corresponding
+// TextureHandle as unused and unlinks it from the CacheEntry. The
+// entry is removed from its containing Cache, if applicable.
+void CacheEntry::Unlink() {
+  RemoveFromList();
+
+  // The entry may not have a valid handle if rasterization failed.
+  if (mHandle) {
+    mHandle->SetCacheEntry(nullptr);
+    mHandle = nullptr;
+  }
+}
+
+// Hashes a path and pattern to a single hash value that can be used for quick
+// comparisons. This currently avoids to expensive hashing of internal path
+// and pattern data for speed, relying instead on later exact comparisons for
+// disambiguation.
+HashNumber PathCacheEntry::HashPath(const SkPath& aPath,
+                                    const Pattern* aPattern,
+                                    const Matrix& aTransform,
+                                    const IntRect& aBounds) {
+  HashNumber hash = 0;
+  hash = AddToHash(hash, aPath.countVerbs());
+  hash = AddToHash(hash, aPath.countPoints());
+  hash = AddToHash(hash, aBounds.width);
+  hash = AddToHash(hash, aBounds.height);
+  if (aPattern) {
+    hash = AddToHash(hash, (int)aPattern->GetType());
+  }
+  return hash;
+}
+
+// When caching rendered geometry, we need to ensure the scale and orientation
+// is approximately the same. The offset will be considered separately.
+static inline bool HasMatchingScale(const Matrix& aTransform1,
+                                    const Matrix& aTransform2) {
+  return FuzzyEqual(aTransform1._11, aTransform2._11) &&
+         FuzzyEqual(aTransform1._12, aTransform2._12) &&
+         FuzzyEqual(aTransform1._21, aTransform2._21) &&
+         FuzzyEqual(aTransform1._22, aTransform2._22);
+}
+
+// Determines if an existing path cache entry matches an incoming path and
+// pattern.
+bool PathCacheEntry::MatchesPath(const SkPath& aPath, const Pattern* aPattern,
+                                 const StrokeOptions* aStrokeOptions,
+                                 const Matrix& aTransform,
+                                 const IntRect& aBounds, HashNumber aHash) {
+  return aHash == mHash && HasMatchingScale(aTransform, mTransform) &&
+         aBounds.Size() == mBounds.Size() && aPath == mPath &&
+         (!aPattern ? !mPattern : mPattern && *aPattern == *mPattern) &&
+         (!aStrokeOptions
+              ? !mStrokeOptions
+              : mStrokeOptions && *aStrokeOptions == *mStrokeOptions);
+}
+
+PathCacheEntry::PathCacheEntry(const SkPath& aPath, Pattern* aPattern,
+                               StoredStrokeOptions* aStrokeOptions,
+                               const Matrix& aTransform, const IntRect& aBounds,
+                               const Point& aOrigin, HashNumber aHash)
+    : CacheEntryImpl<PathCacheEntry>(aTransform, aBounds, aHash),
+      mPath(aPath),
+      mOrigin(aOrigin),
+      mPattern(aPattern),
+      mStrokeOptions(aStrokeOptions) {}
+
+// Attempt to find a matching entry in the path cache. If one isn't found,
+// a new entry will be created. The caller should check whether the contained
+// texture handle is valid to determine if it will need to render the text run
+// or just reuse the cached texture.
+already_AddRefed<PathCacheEntry> PathCache::FindOrInsertEntry(
+    const SkPath& aPath, const Pattern* aPattern,
+    const StrokeOptions* aStrokeOptions, const Matrix& aTransform,
+    const IntRect& aBounds, const Point& aOrigin) {
+  HashNumber hash =
+      PathCacheEntry::HashPath(aPath, aPattern, aTransform, aBounds);
+  for (const RefPtr<PathCacheEntry>& entry : mEntries) {
+    if (entry->MatchesPath(aPath, aPattern, aStrokeOptions, aTransform, aBounds,
+                           hash)) {
+      return do_AddRef(entry);
+    }
+  }
+  Pattern* pattern = nullptr;
+  if (aPattern) {
+    pattern = aPattern->Clone();
+    if (!pattern) {
+      return nullptr;
+    }
+  }
+  StoredStrokeOptions* strokeOptions = nullptr;
+  if (aStrokeOptions) {
+    strokeOptions = aStrokeOptions->Clone();
+    if (!strokeOptions) {
+      return nullptr;
+    }
+  }
+  RefPtr<PathCacheEntry> entry = new PathCacheEntry(
+      aPath, pattern, strokeOptions, aTransform, aBounds, aOrigin, hash);
+  mEntries.insertFront(entry);
+  return entry.forget();
 }
 
 void DrawTargetWebgl::Fill(const Path* aPath, const Pattern& aPattern,
@@ -1171,12 +1315,116 @@ void DrawTargetWebgl::Fill(const Path* aPath, const Pattern& aPattern,
   if (!aPath || aPath->GetBackendType() != BackendType::SKIA) {
     return;
   }
-  const auto& skiaPath = static_cast<const PathSkia*>(aPath)->GetPath();
+  const SkPath& skiaPath = static_cast<const PathSkia*>(aPath)->GetPath();
   SkRect rect;
-  if (skiaPath.isRect(&rect)) {
+  // Draw the path as a simple rectangle with a supported pattern when possible.
+  if (skiaPath.isRect(&rect) && SupportsPattern(aPattern)) {
     DrawRect(SkRectToRect(rect), aPattern, aOptions);
   } else {
-    MarkSkiaChanged();
+    DrawPath(aPath, aPattern, aOptions);
+  }
+}
+
+void DrawTargetWebgl::DrawPath(const Path* aPath, const Pattern& aPattern,
+                               const DrawOptions& aOptions,
+                               const StrokeOptions* aStrokeOptions) {
+  // If there is a WebGL context, then try to cache the path to avoid slow
+  // fallbacks.
+  if (mWebglValid && SupportsDrawOptions(aOptions)) {
+    // Get the transformed bounds for the path and conservatively check if the
+    // bounds overlap the canvas.
+    const PathSkia* pathSkia = static_cast<const PathSkia*>(aPath);
+    Rect bounds = pathSkia->GetFastBounds(mTransform, aStrokeOptions)
+                      .Intersect(Rect(mSkia->GetRect()));
+    if (bounds.IsEmpty()) {
+      return;
+    }
+    IntRect intBounds = RoundedOut(bounds);
+    // If the pattern is a solid color, then this will be used along with a path
+    // mask to render the path, as opposed to baking the pattern into the cached
+    // path texture.
+    Maybe<DeviceColor> color =
+        aPattern.GetType() == PatternType::COLOR
+            ? Some(static_cast<const ColorPattern&>(aPattern).mColor)
+            : Nothing();
+    if (!mPathCache) {
+      mPathCache = MakeUnique<PathCache>();
+    }
+    // Look for an existing path cache entry, if possible, or otherwise create
+    // one.
+    RefPtr<PathCacheEntry> entry = mPathCache->FindOrInsertEntry(
+        pathSkia->GetPath(), color ? nullptr : &aPattern, aStrokeOptions,
+        mTransform, intBounds, bounds.TopLeft());
+    if (entry) {
+      RefPtr<TextureHandle> handle = entry->GetHandle();
+      if (handle && handle->IsValid()) {
+        // If the entry has a valid texture handle still, use it. However, only
+        // the rounded integer bounds of the path are considered, so we need to
+        // be careful to subtract off the old subpixel offset from the cached
+        // patch and add in the new subpixel offset. The integer bounds origin
+        // is subtracted from the path offset when it is cached, so we rather
+        // need to consider the offset as the difference between the path's real
+        // bounds origin and the rounded integer origin.
+        Point oldOffset = entry->GetOrigin() - entry->GetBounds().TopLeft();
+        Point newOffset = bounds.TopLeft() - intBounds.TopLeft();
+        Rect offsetRect = Rect(intBounds) + (newOffset - oldOffset);
+        SurfacePattern pathPattern(nullptr, ExtendMode::CLAMP,
+                                   Matrix::Translation(offsetRect.TopLeft()));
+        if (DrawRect(offsetRect, pathPattern, aOptions, color, &handle, false,
+                     true, true)) {
+          return;
+        }
+      } else {
+        // If there isn't a valid texture handle, then we need to rasterize the
+        // path in a software canvas and upload this to a texture. Solid color
+        // patterns will be rendered as a path mask that can then be modulated
+        // with any color. Other pattern types have to rasterize the pattern
+        // directly into the cached texture.
+        handle = nullptr;
+        RefPtr<DrawTargetSkia> pathDT = new DrawTargetSkia;
+        if (pathDT->Init(intBounds.Size(),
+                         color ? SurfaceFormat::A8 : SurfaceFormat::B8G8R8A8)) {
+          pathDT->SetTransform(mTransform *
+                               Matrix::Translation(-intBounds.TopLeft()));
+          DrawOptions drawOptions(1.0f, CompositionOp::OP_OVER,
+                                  aOptions.mAntialiasMode);
+          static const ColorPattern maskPattern(
+              DeviceColor(1.0f, 1.0f, 1.0f, 1.0f));
+          const Pattern& cachePattern = color ? maskPattern : aPattern;
+          if (aStrokeOptions) {
+            pathDT->Stroke(aPath, cachePattern, *aStrokeOptions, drawOptions);
+          } else {
+            pathDT->Fill(aPath, cachePattern, drawOptions);
+          }
+          RefPtr<SourceSurface> pathSurface = pathDT->Snapshot();
+          if (pathSurface) {
+            SurfacePattern pathPattern(
+                pathSurface, ExtendMode::CLAMP,
+                Matrix::Translation(intBounds.TopLeft()));
+            // Try and upload the rasterized path to a texture. If there is a
+            // valid texture handle after this, then link it to the entry.
+            // Otherwise, we might have fallen back to software drawing the
+            // path, so unlink it from the entry and bail out.
+            if (DrawRect(Rect(intBounds), pathPattern, aOptions, color, &handle,
+                         false, true) &&
+                handle) {
+              entry->Link(handle);
+            } else {
+              entry->Unlink();
+            }
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  // There was no path cache entry available to use, so fall back to drawing the
+  // path with Skia.
+  MarkSkiaChanged(aOptions);
+  if (aStrokeOptions) {
+    mSkia->Stroke(aPath, aPattern, *aStrokeOptions, aOptions);
+  } else {
     mSkia->Fill(aPath, aPattern, aOptions);
   }
 }
@@ -1198,7 +1446,7 @@ void DrawTargetWebgl::Mask(const Pattern& aSource, const Pattern& aMask,
   if (!SupportsDrawOptions(aOptions) ||
       aMask.GetType() != PatternType::SURFACE ||
       aSource.GetType() != PatternType::COLOR) {
-    MarkSkiaChanged();
+    MarkSkiaChanged(aOptions);
     mSkia->Mask(aSource, aMask, aOptions);
     return;
   }
@@ -1212,7 +1460,7 @@ void DrawTargetWebgl::MaskSurface(const Pattern& aSource, SourceSurface* aMask,
                                   Point aOffset, const DrawOptions& aOptions) {
   if (!SupportsDrawOptions(aOptions) ||
       aSource.GetType() != PatternType::COLOR) {
-    MarkSkiaChanged();
+    MarkSkiaChanged(aOptions);
     mSkia->MaskSurface(aSource, aMask, aOffset, aOptions);
   } else {
     auto sourceColor = static_cast<const ColorPattern&>(aSource).mColor;
@@ -1341,23 +1589,52 @@ void DrawTargetWebgl::SetTransform(const Matrix& aTransform) {
 void DrawTargetWebgl::StrokeRect(const Rect& aRect, const Pattern& aPattern,
                                  const StrokeOptions& aStrokeOptions,
                                  const DrawOptions& aOptions) {
-  MarkSkiaChanged();
-  mSkia->StrokeRect(aRect, aPattern, aStrokeOptions, aOptions);
+  // TODO: Support other stroke options. Ensure that we only stroke with the
+  // default settings for now.
+  if (aStrokeOptions == StrokeOptions() && mTransform.PreservesDistance()) {
+    DrawRect(aRect, aPattern, aOptions, Nothing(), nullptr, true, true, false,
+             false, &aStrokeOptions);
+  } else if (!mWebglValid || !SupportsPattern(aPattern)) {
+    MarkSkiaChanged(aOptions);
+    mSkia->StrokeRect(aRect, aPattern, aStrokeOptions, aOptions);
+  } else {
+    // If the stroke options are unsupported, then transform the rect to a path
+    // so it can be cached.
+    SkPath skiaPath;
+    skiaPath.addRect(RectToSkRect(aRect));
+    RefPtr<PathSkia> path = new PathSkia(skiaPath, FillRule::FILL_WINDING);
+    DrawPath(path, aPattern, aOptions, &aStrokeOptions);
+  }
 }
 
 void DrawTargetWebgl::StrokeLine(const Point& aStart, const Point& aEnd,
                                  const Pattern& aPattern,
                                  const StrokeOptions& aStrokeOptions,
                                  const DrawOptions& aOptions) {
-  MarkSkiaChanged();
+  MarkSkiaChanged(aOptions);
   mSkia->StrokeLine(aStart, aEnd, aPattern, aStrokeOptions, aOptions);
 }
 
 void DrawTargetWebgl::Stroke(const Path* aPath, const Pattern& aPattern,
                              const StrokeOptions& aStrokeOptions,
                              const DrawOptions& aOptions) {
-  MarkSkiaChanged();
-  mSkia->Stroke(aPath, aPattern, aStrokeOptions, aOptions);
+  if (!aPath || aPath->GetBackendType() != BackendType::SKIA) {
+    return;
+  }
+  const auto& skiaPath = static_cast<const PathSkia*>(aPath)->GetPath();
+  SkRect rect;
+  SkPoint line[2];
+  if (!mWebglValid) {
+    MarkSkiaChanged(aOptions);
+    mSkia->Stroke(aPath, aPattern, aStrokeOptions, aOptions);
+  } else if (skiaPath.isRect(&rect)) {
+    StrokeRect(SkRectToRect(rect), aPattern, aStrokeOptions, aOptions);
+  } else if (skiaPath.isLine(line)) {
+    StrokeLine(SkPointToPoint(line[0]), SkPointToPoint(line[1]), aPattern,
+               aStrokeOptions, aOptions);
+  } else {
+    DrawPath(aPath, aPattern, aOptions, &aStrokeOptions);
+  }
 }
 
 void DrawTargetWebgl::StrokeGlyphs(ScaledFont* aFont,
@@ -1365,7 +1642,7 @@ void DrawTargetWebgl::StrokeGlyphs(ScaledFont* aFont,
                                    const Pattern& aPattern,
                                    const StrokeOptions& aStrokeOptions,
                                    const DrawOptions& aOptions) {
-  MarkSkiaChanged();
+  MarkSkiaChanged(aOptions);
   mSkia->StrokeGlyphs(aFont, aBuffer, aPattern, aStrokeOptions, aOptions);
 }
 
@@ -1397,16 +1674,6 @@ HashNumber GlyphCacheEntry::HashGlyphs(const GlyphBuffer& aBuffer,
     hash = AddToHash(hash, pos.y);
   }
   return hash;
-}
-
-// When caching text runs, we need to ensure the scale and orientation of the
-// text is approximately the same. The offset will be considered separately.
-static inline bool HasMatchingScale(const Matrix& aTransform1,
-                                    const Matrix& aTransform2) {
-  return FuzzyEqual(aTransform1._11, aTransform2._11) &&
-         FuzzyEqual(aTransform1._12, aTransform2._12) &&
-         FuzzyEqual(aTransform1._21, aTransform2._21) &&
-         FuzzyEqual(aTransform1._22, aTransform2._22);
 }
 
 // Determines if an existing glyph cache entry matches an incoming text run.
@@ -1444,10 +1711,8 @@ GlyphCacheEntry::GlyphCacheEntry(const GlyphBuffer& aBuffer,
                                  const DeviceColor& aColor,
                                  const Matrix& aTransform,
                                  const IntRect& aBounds, HashNumber aHash)
-    : mColor(aColor),
-      mTransform(aTransform),
-      mBounds(aBounds),
-      mHash(aHash ? aHash : HashGlyphs(aBuffer, aTransform)) {
+    : CacheEntryImpl<GlyphCacheEntry>(aTransform, aBounds, aHash),
+      mColor(aColor) {
   // Store a copy of the glyph buffer with positions already quantized for fast
   // comparison later.
   Glyph* glyphs = new Glyph[aBuffer.mNumGlyphs];
@@ -1470,47 +1735,20 @@ GlyphCacheEntry::GlyphCacheEntry(const GlyphBuffer& aBuffer,
 // or just reuse the cached texture.
 already_AddRefed<GlyphCacheEntry> GlyphCache::FindOrInsertEntry(
     const GlyphBuffer& aBuffer, const DeviceColor& aColor,
-    const Matrix& aTransform, const IntRect& aBounds, HashNumber aHash) {
-  if (!aHash) {
-    aHash = GlyphCacheEntry::HashGlyphs(aBuffer, aTransform);
-  }
+    const Matrix& aTransform, const IntRect& aBounds) {
+  HashNumber hash = GlyphCacheEntry::HashGlyphs(aBuffer, aTransform);
   for (const RefPtr<GlyphCacheEntry>& entry : mEntries) {
-    if (entry->MatchesGlyphs(aBuffer, aColor, aTransform, aBounds, aHash)) {
+    if (entry->MatchesGlyphs(aBuffer, aColor, aTransform, aBounds, hash)) {
       return do_AddRef(entry);
     }
   }
   RefPtr<GlyphCacheEntry> entry =
-      new GlyphCacheEntry(aBuffer, aColor, aTransform, aBounds, aHash);
+      new GlyphCacheEntry(aBuffer, aColor, aTransform, aBounds, hash);
   mEntries.insertFront(entry);
   return entry.forget();
 }
 
 GlyphCache::GlyphCache(ScaledFont* aFont) : mFont(aFont) {}
-
-void GlyphCacheEntry::Link(const RefPtr<TextureHandle>& aHandle) {
-  mHandle = aHandle;
-  mHandle->SetGlyphCacheEntry(this);
-}
-
-// When the GlyphCacheEntry becomes unused, it marks the corresponding
-// TextureHandle as unused and unlinks it from the GlyphCacheEntry. The
-// entry is removed from its containing GlyphCache, if applicable.
-void GlyphCacheEntry::Unlink() {
-  if (isInList()) {
-    remove();
-  }
-  // The entry may not have a valid handle if rasterization failed.
-  if (mHandle) {
-    mHandle->SetGlyphCacheEntry(nullptr);
-    mHandle = nullptr;
-  }
-}
-
-GlyphCache::~GlyphCache() {
-  while (RefPtr<GlyphCacheEntry> entry = mEntries.popLast()) {
-    entry->Unlink();
-  }
-}
 
 static void ReleaseGlyphCache(void* aPtr) {
   delete static_cast<GlyphCache*>(aPtr);
@@ -1603,13 +1841,11 @@ void DrawTargetWebgl::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
         mGlyphCaches.insertFront(cache);
       }
       // Hash the incoming text run and looking for a matching entry.
-      HashNumber hash = GlyphCacheEntry::HashGlyphs(aBuffer, mTransform);
       DeviceColor color = static_cast<const ColorPattern&>(aPattern).mColor;
-      color.a *= aOptions.mAlpha;
       DeviceColor aaColor =
           useColor ? color : DeviceColor(1.0f, 1.0f, 1.0f, 1.0f);
-      RefPtr<GlyphCacheEntry> entry = cache->FindOrInsertEntry(
-          aBuffer, aaColor, mTransform, intBounds, hash);
+      RefPtr<GlyphCacheEntry> entry =
+          cache->FindOrInsertEntry(aBuffer, aaColor, mTransform, intBounds);
       if (entry) {
         RefPtr<TextureHandle> handle = entry->GetHandle();
         if (handle && handle->IsValid()) {
@@ -1620,57 +1856,60 @@ void DrawTargetWebgl::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
           // texture.
           SurfacePattern pattern(nullptr, ExtendMode::CLAMP,
                                  Matrix::Translation(intBounds.TopLeft()));
-          if (!DrawRect(Rect(intBounds), pattern, aOptions,
-                        handle->GetFormat() == SurfaceFormat::A8 ? Some(color)
-                                                                 : Nothing(),
-                        &handle, false, true, true)) {
-            MarkSkiaChanged();
-            mSkia->FillGlyphs(aFont, aBuffer, aPattern, aOptions);
+          if (DrawRect(Rect(intBounds), pattern, aOptions,
+                       handle->GetFormat() == SurfaceFormat::A8 ? Some(color)
+                                                                : Nothing(),
+                       &handle, false, true, true)) {
+            return;
           }
-          return;
-        }
-        handle = nullptr;
+        } else {
+          handle = nullptr;
 
-        // If we get here, either there wasn't a cached texture handle or it
-        // wasn't valid. Render the text run into a temporary target.
-        RefPtr<DrawTargetSkia> textDT = new DrawTargetSkia;
-        if (textDT->Init(intBounds.Size(), SurfaceFormat::B8G8R8A8)) {
-          textDT->SetTransform(mTransform *
-                               Matrix::Translation(-intBounds.TopLeft()));
-          textDT->FillGlyphs(aFont, aBuffer, ColorPattern(aaColor));
-          RefPtr<SourceSurface> textSurface = textDT->Snapshot();
-          if (textSurface) {
-            if (!useColor) {
-              // If we don't expect the text surface to contain color glyphs
-              // such as from subpixel AA, then do one final check to see if
-              // any ended up in the result. If not, extract the alpha values
-              // from the surface so we can render it as a mask.
-              if (CheckForColorGlyphs(textSurface)) {
-                useColor = true;
-              } else {
-                textSurface = ExtractAlpha(textSurface);
-                if (!textSurface) {
-                  // Failed extracting alpha for the text surface...
-                  return;
+          // If we get here, either there wasn't a cached texture handle or it
+          // wasn't valid. Render the text run into a temporary target.
+          RefPtr<DrawTargetSkia> textDT = new DrawTargetSkia;
+          if (textDT->Init(intBounds.Size(), SurfaceFormat::B8G8R8A8)) {
+            textDT->SetTransform(mTransform *
+                                 Matrix::Translation(-intBounds.TopLeft()));
+            textDT->SetPermitSubpixelAA(useSubpixelAA);
+            DrawOptions drawOptions(1.0f, CompositionOp::OP_OVER,
+                                    aOptions.mAntialiasMode);
+            textDT->FillGlyphs(aFont, aBuffer, ColorPattern(aaColor),
+                               drawOptions);
+            RefPtr<SourceSurface> textSurface = textDT->Snapshot();
+            if (textSurface) {
+              if (!useColor) {
+                // If we don't expect the text surface to contain color glyphs
+                // such as from subpixel AA, then do one final check to see if
+                // any ended up in the result. If not, extract the alpha values
+                // from the surface so we can render it as a mask.
+                if (CheckForColorGlyphs(textSurface)) {
+                  useColor = true;
+                } else {
+                  textSurface = ExtractAlpha(textSurface);
+                  if (!textSurface) {
+                    // Failed extracting alpha for the text surface...
+                    return;
+                  }
                 }
               }
+              // Attempt to upload the rendered text surface into a texture
+              // handle and draw it.
+              SurfacePattern pattern(textSurface, ExtendMode::CLAMP,
+                                     Matrix::Translation(intBounds.TopLeft()));
+              if (DrawRect(Rect(intBounds), pattern, aOptions,
+                           useColor ? Nothing() : Some(color), &handle, false,
+                           true) &&
+                  handle) {
+                // If drawing succeeded, then the text surface was uploaded to
+                // a texture handle. Assign it to the glyph cache entry.
+                entry->Link(handle);
+              } else {
+                // If drawing failed, remove the entry from the cache.
+                entry->Unlink();
+              }
+              return;
             }
-            // Attempt to upload the rendered text surface into a texture
-            // handle and draw it.
-            SurfacePattern pattern(textSurface, ExtendMode::CLAMP,
-                                   Matrix::Translation(intBounds.TopLeft()));
-            if (DrawRect(Rect(intBounds), pattern, aOptions,
-                         useColor ? Nothing() : Some(color), &handle, false,
-                         true) &&
-                handle) {
-              // If drawing succeeded, then the text surface was uploaded to
-              // a texture handle. Assign it to the glyph cache entry.
-              entry->Link(handle);
-            } else {
-              // If drawing failed, remove the entry from the cache.
-              entry->Unlink();
-            }
-            return;
           }
         }
       }
@@ -1679,8 +1918,25 @@ void DrawTargetWebgl::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
 
   // If not able to cache the text run to a texture, then just fall back to
   // drawing with the Skia target.
-  MarkSkiaChanged();
+  MarkSkiaChanged(aOptions);
   mSkia->FillGlyphs(aFont, aBuffer, aPattern, aOptions);
+}
+
+void DrawTargetWebgl::MarkSkiaChanged(const DrawOptions& aOptions) {
+  if (aOptions.mCompositionOp == CompositionOp::OP_OVER) {
+    // Layering is only supporting for the default source-over composition op.
+    if (!mSkiaValid) {
+      // If the Skia context needs initialization, clear it and enable layering.
+      mSkia->Clear();
+      mSkiaValid = true;
+      mSkiaLayer = true;
+    }
+    // The WebGL context is no longer up-to-date.
+    mWebglValid = false;
+  } else {
+    // For other composition ops, just overwrite the Skia data.
+    MarkSkiaChanged();
+  }
 }
 
 // Attempts to read the contents of the WebGL context into the Skia target.
@@ -1705,6 +1961,28 @@ void DrawTargetWebgl::ReadIntoSkia() {
     }
   }
   mSkiaValid = true;
+  // The Skia data is flat after reading, so disable any layering.
+  mSkiaLayer = false;
+}
+
+// Reads data from the WebGL context and blends it with the current Skia layer.
+void DrawTargetWebgl::FlattenSkia() {
+  if (!mSkiaValid || !mSkiaLayer) {
+    return;
+  }
+  if (!mWebgl->IsContextLost()) {
+    RefPtr<DataSourceSurface> base =
+        Factory::CreateDataSourceSurface(mSize, mFormat);
+    if (base) {
+      DataSourceSurface::ScopedMap baseMap(base, DataSourceSurface::WRITE);
+      if (baseMap.IsMapped() &&
+          ReadInto(baseMap.GetData(), baseMap.GetStride())) {
+        mSkia->BlendSurface(base, GetRect(), IntPoint(),
+                            CompositionOp::OP_DEST_OVER);
+      }
+    }
+  }
+  mSkiaLayer = false;
 }
 
 // Attempts to draw the contents of the Skia target into the WebGL context.
@@ -1722,9 +2000,12 @@ bool DrawTargetWebgl::FlushFromSkia() {
     RefPtr<SourceSurface> skiaSnapshot = mSkia->Snapshot();
     if (skiaSnapshot) {
       SurfacePattern pattern(skiaSnapshot, ExtendMode::CLAMP);
+      // If there is a layer, blend the snapshot with the WebGL context,
+      // otherwise copy it.
       DrawRect(Rect(GetRect()), pattern,
-               DrawOptions(1.0f, CompositionOp::OP_SOURCE), Nothing(),
-               &mSnapshotTexture, false, false, false, true);
+               DrawOptions(1.0f, mSkiaLayer ? CompositionOp::OP_OVER
+                                            : CompositionOp::OP_SOURCE),
+               Nothing(), &mSnapshotTexture, false, false, false, true);
     }
   }
   return true;
@@ -1793,7 +2074,7 @@ already_AddRefed<FilterNode> DrawTargetWebgl::CreateFilter(FilterType aType) {
 void DrawTargetWebgl::DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
                                  const Point& aDestPoint,
                                  const DrawOptions& aOptions) {
-  MarkSkiaChanged();
+  MarkSkiaChanged(aOptions);
   mSkia->DrawFilter(aNode, aSourceRect, aDestPoint, aOptions);
 }
 

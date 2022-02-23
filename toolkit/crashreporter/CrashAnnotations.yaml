@@ -622,6 +622,12 @@ MacAvailableMemorySysctl:
     Expected to be a percentage integer value.
   type: integer
 
+LinuxUnderMemoryPressure:
+  description: >
+    Set to true if the memory pressure watcher was under memory pressure when
+    the crash occurred.
+  type: boolean
+
 LauncherProcessState:
   description: >
     Launcher process enabled state. The integer value of this annotation must
@@ -963,6 +969,11 @@ User32BeforeBlocklist:
 useragent_locale:
   description: >
     User-agent locale.
+  type: string
+
+UtilityProcessStatus:
+  description: >
+    Status of the Utility process, can be set to "Running" or "Destroyed"
   type: string
 
 Vendor:

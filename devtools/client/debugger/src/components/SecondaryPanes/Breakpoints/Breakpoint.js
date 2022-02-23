@@ -7,7 +7,6 @@ import { connect } from "../../../utils/connect";
 import { createSelector } from "reselect";
 import classnames from "classnames";
 import actions from "../../../actions";
-import { memoize } from "lodash";
 
 import showContextMenu from "./BreakpointsContextMenu";
 import { CloseButton } from "../../shared/Button";
@@ -102,14 +101,11 @@ class Breakpoint extends PureComponent {
     return logValue || condition || getSelectedText(breakpoint, selectedSource);
   }
 
-  highlightText = memoize(
-    (text = "", editor) => {
-      const node = document.createElement("div");
-      editor.CodeMirror.runMode(text, "application/javascript", node);
-      return { __html: node.innerHTML };
-    },
-    text => text
-  );
+  highlightText(text = "", editor) {
+    const node = document.createElement("div");
+    editor.CodeMirror.runMode(text, "application/javascript", node);
+    return { __html: node.innerHTML };
+  }
 
   render() {
     const { breakpoint, editor } = this.props;

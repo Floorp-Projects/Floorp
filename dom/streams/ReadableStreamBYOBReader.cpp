@@ -22,20 +22,15 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ReadableStreamBYOBReader,
-                                   ReadableStreamGenericReader,
-                                   mReadIntoRequests)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(ReadableStreamBYOBReader,
+                                                ReadableStreamGenericReader,
+                                                mReadIntoRequests)
 NS_IMPL_ADDREF_INHERITED(ReadableStreamBYOBReader, ReadableStreamGenericReader)
 NS_IMPL_RELEASE_INHERITED(ReadableStreamBYOBReader, ReadableStreamGenericReader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamBYOBReader)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END_INHERITING(ReadableStreamGenericReader)
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ReadableStreamBYOBReader,
-                                               ReadableStreamGenericReader)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 JSObject* ReadableStreamBYOBReader::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -104,9 +99,17 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
     //
     // chunk steps, given chunk:
     //         Resolve promise with «[ "value" → chunk, "done" → false ]».
+
+    // We need to wrap this as the chunk could have come from
+    // another compartment.
+    JS::RootedObject chunk(aCx, &aChunk.toObject());
+    if (!JS_WrapObject(aCx, &chunk)) {
+      return;
+    }
+
     ReadableStreamBYOBReadResult result;
     result.mValue.Construct();
-    result.mValue.Value().Init(&aChunk.toObject());
+    result.mValue.Value().Init(chunk);
     result.mDone.Construct(false);
 
     mPromise->MaybeResolve(result);
@@ -114,14 +117,23 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
 
   void CloseSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
                   ErrorResult& errorResult) override {
-    MOZ_ASSERT(aChunk.isObject());
+    MOZ_ASSERT(aChunk.isObject() || aChunk.isUndefined());
     // https://streams.spec.whatwg.org/#byob-reader-read Step 6.
     //
     // close steps, given chunk:
     // Resolve promise with «[ "value" → chunk, "done" → true ]».
     ReadableStreamBYOBReadResult result;
-    result.mValue.Construct();
-    result.mValue.Value().Init(&aChunk.toObject());
+    if (aChunk.isObject()) {
+      // We need to wrap this as the chunk could have come from
+      // another compartment.
+      JS::RootedObject chunk(aCx, &aChunk.toObject());
+      if (!JS_WrapObject(aCx, &chunk)) {
+        return;
+      }
+
+      result.mValue.Construct();
+      result.mValue.Value().Init(chunk);
+    }
     result.mDone.Construct(true);
 
     mPromise->MaybeResolve(result);
@@ -194,7 +206,7 @@ already_AddRefed<Promise> ReadableStreamBYOBReader::Read(
     const ArrayBufferView& aArray, ErrorResult& aRv) {
   AutoJSAPI jsapi;
   if (!jsapi.Init(GetParentObject())) {
-    // MG:XXX: Do I need to have reported this error to aRv?
+    aRv.ThrowUnknownError("Internal error");
     return nullptr;
   }
   JSContext* cx = jsapi.cx();
@@ -259,18 +271,65 @@ already_AddRefed<Promise> ReadableStreamBYOBReader::Read(
   return promise.forget();
 }
 
+// https://streams.spec.whatwg.org/#abstract-opdef-readablestreambyobreadererrorreadintorequests
+void ReadableStreamBYOBReaderErrorReadIntoRequests(
+    JSContext* aCx, ReadableStreamBYOBReader* aReader,
+    JS::Handle<JS::Value> aError, ErrorResult& aRv) {
+  // Step 1. Let readIntoRequests be reader.[[readIntoRequests]].
+  LinkedList<RefPtr<ReadIntoRequest>> readIntoRequests =
+      std::move(aReader->ReadIntoRequests());
+
+  // Step 2. Set reader.[[readIntoRequests]] to a new empty list.
+  // Note: The std::move already cleared this anyway.
+  aReader->ReadIntoRequests().clear();
+
+  // Step 3. For each readIntoRequest of readIntoRequests,
+  while (RefPtr<ReadIntoRequest> readIntoRequest =
+             readIntoRequests.popFirst()) {
+    // Step 3.1. Perform readIntoRequest’s error steps, given e.
+    readIntoRequest->ErrorSteps(aCx, aError, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+  }
+}
+
+// https://streams.spec.whatwg.org/#abstract-opdef-readablestreambyobreaderrelease
+void ReadableStreamBYOBReaderRelease(JSContext* aCx,
+                                     ReadableStreamBYOBReader* aReader,
+                                     ErrorResult& aRv) {
+  // Step 1. Perform ! ReadableStreamReaderGenericRelease(reader).
+  ReadableStreamReaderGenericRelease(aReader, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // Step 2. Let e be a new TypeError exception.
+  ErrorResult rv;
+  rv.ThrowTypeError("Releasing lock");
+  JS::Rooted<JS::Value> error(aCx);
+  MOZ_ALWAYS_TRUE(ToJSValue(aCx, std::move(rv), &error));
+
+  // Step 3. Perform ! ReadableStreamBYOBReaderErrorReadIntoRequests(reader, e).
+  ReadableStreamBYOBReaderErrorReadIntoRequests(aCx, aReader, error, aRv);
+}
+
 // https://streams.spec.whatwg.org/#byob-reader-release-lock
 void ReadableStreamBYOBReader::ReleaseLock(ErrorResult& aRv) {
-  if (!GetStream()) {
+  // Step 1. If this.[[stream]] is undefined, return.
+  if (!mStream) {
     return;
   }
 
-  if (!ReadIntoRequests().isEmpty()) {
-    aRv.ThrowTypeError("ReadIntoRequests not empty");
-    return;
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(mGlobal)) {
+    return aRv.ThrowUnknownError("Internal error");
   }
+  JSContext* cx = jsapi.cx();
 
-  ReadableStreamReaderGenericRelease(this, aRv);
+  // Step 2. Perform ! ReadableStreamBYOBReaderRelease(this).
+  RefPtr<ReadableStreamBYOBReader> thisRefPtr = this;
+  ReadableStreamBYOBReaderRelease(cx, thisRefPtr, aRv);
 }
 
 // https://streams.spec.whatwg.org/#acquire-readable-stream-byob-reader

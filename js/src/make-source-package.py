@@ -179,7 +179,7 @@ rsync_filter_list = """
 - /third_party/python/gyp
 + /third_party/python/**
 + /third_party/rust/**
-
++ /third_party/intgemm/**
 + /layout/tools/reftest/reftest/**
 
 + /testing/mach_commands.py
@@ -282,7 +282,7 @@ def is_mozjs_cargo_member(line):
 def is_mozjs_crates_io_local_patch(line):
     """Checks if the line in patch.crates-io is mozjs-related"""
 
-    return 'path = "js' in line
+    return any(f'path = "{p}' in line for p in ("js", "build", "third_party/rust"))
 
 
 def clean():

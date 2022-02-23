@@ -40,6 +40,10 @@ mod concat;
 #[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
 pub use self::concat::Concat;
 
+mod count;
+#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
+pub use self::count::Count;
+
 mod cycle;
 #[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
 pub use self::cycle::Cycle;
@@ -574,6 +578,38 @@ pub trait StreamExt: Stream {
         Self::Item: Extend<<<Self as Stream>::Item as IntoIterator>::Item> + IntoIterator + Default,
     {
         assert_future::<Self::Item, _>(Concat::new(self))
+    }
+
+    /// Drives the stream to completion, counting the number of items.
+    ///
+    /// # Overflow Behavior
+    ///
+    /// The method does no guarding against overflows, so counting elements of a
+    /// stream with more than [`usize::MAX`] elements either produces the wrong
+    /// result or panics. If debug assertions are enabled, a panic is guaranteed.
+    ///
+    /// # Panics
+    ///
+    /// This function might panic if the iterator has more than [`usize::MAX`]
+    /// elements.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # futures::executor::block_on(async {
+    /// use futures::stream::{self, StreamExt};
+    ///
+    /// let stream = stream::iter(1..=10);
+    /// let count = stream.count().await;
+    ///
+    /// assert_eq!(count, 10);
+    /// # });
+    /// ```
+    fn count(self) -> Count<Self>
+    where
+        Self: Sized,
+    {
+        assert_future::<usize, _>(Count::new(self))
     }
 
     /// Repeats a stream endlessly.

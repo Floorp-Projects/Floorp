@@ -90,7 +90,7 @@ class SocketProcessParent final
       const uint64_t& aExtraSizeData, const nsCString& aExtraStringData);
 
   mozilla::ipc::IPCResult RecvInitBackground(
-      Endpoint<PBackgroundParent>&& aEndpoint);
+      Endpoint<PBackgroundStarterParent>&& aEndpoint);
 
   already_AddRefed<PAltServiceParent> AllocPAltServiceParent();
 

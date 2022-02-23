@@ -5,8 +5,7 @@ be used to profile wakeups. This article provides a light introduction
 to it.
 
 :::
-**Note**: The [power profiling
-overview](/en-US/docs/Mozilla/Performance/Power_profiling_overview) is
+**Note**: The [power profiling overview](power_profiling_overview.md) is
 worth reading at this point if you haven't already. It may make parts
 of this document easier to understand.
 :::
@@ -16,7 +15,7 @@ of this document easier to understand.
 `dtrace` must be invoked as the super-user. A good starting command for
 profiling wakeups is the following.
 
-``` 
+```
 sudo dtrace -n 'mach_kernel::wakeup { @[ustack()] = count(); }' -p $FIREFOX_PID > $OUTPUT_FILE
 ```
 

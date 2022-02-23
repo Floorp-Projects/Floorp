@@ -216,6 +216,54 @@ std::pair<bool, int32_t> HyperTextAccessibleBase::TransformOffset(
   return {false, aIsEndOffset ? static_cast<int32_t>(CharacterCount()) : 0};
 }
 
+void HyperTextAccessibleBase::TextBeforeOffset(
+    int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+    int32_t* aStartOffset, int32_t* aEndOffset, nsAString& aText) {
+  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  *aStartOffset = *aEndOffset = 0;
+  aText.Truncate();
+
+  uint32_t adjustedOffset = ConvertMagicOffset(aOffset);
+  if (adjustedOffset == std::numeric_limits<uint32_t>::max()) {
+    NS_ERROR("Wrong given offset!");
+    return;
+  }
+
+  switch (aBoundaryType) {
+    case nsIAccessibleText::BOUNDARY_CHAR:
+      if (adjustedOffset > 0) {
+        CharAt(static_cast<int32_t>(adjustedOffset) - 1, aText, aStartOffset,
+               aEndOffset);
+      }
+      break;
+    case nsIAccessibleText::BOUNDARY_WORD_START:
+    case nsIAccessibleText::BOUNDARY_LINE_START:
+      TextLeafPoint orig;
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+        orig = TextLeafPoint::GetCaret(Acc());
+      } else {
+        orig = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset));
+      }
+      TextLeafPoint end = orig.FindBoundary(aBoundaryType, eDirPrevious,
+                                            /* aIncludeOrigin */ true);
+      bool ok;
+      std::tie(ok, *aEndOffset) = TransformOffset(end.mAcc, end.mOffset,
+                                                  /* aIsEndOffset */ true);
+      if (!ok) {
+        // There is no previous boundary inside this HyperText.
+        *aStartOffset = *aEndOffset = 0;
+        return;
+      }
+      TextLeafPoint start = end.FindBoundary(aBoundaryType, eDirPrevious);
+      // If TransformOffset fails because start is outside this HyperText,
+      // *aStartOffset will be 0, which is what we want.
+      std::tie(ok, *aStartOffset) = TransformOffset(start.mAcc, start.mOffset,
+                                                    /* aIsEndOffset */ false);
+      TextSubstring(*aStartOffset, *aEndOffset, aText);
+      return;
+  }
+}
+
 void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
                                            AccessibleTextBoundary aBoundaryType,
                                            int32_t* aStartOffset,
@@ -271,6 +319,58 @@ void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
       std::tie(ok, *aStartOffset) = TransformOffset(start.mAcc, start.mOffset,
                                                     /* aIsEndOffset */ false);
       end = end.FindBoundary(aBoundaryType, eDirNext);
+      std::tie(ok, *aEndOffset) = TransformOffset(end.mAcc, end.mOffset,
+                                                  /* aIsEndOffset */ true);
+      TextSubstring(*aStartOffset, *aEndOffset, aText);
+      return;
+  }
+}
+
+void HyperTextAccessibleBase::TextAfterOffset(
+    int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+    int32_t* aStartOffset, int32_t* aEndOffset, nsAString& aText) {
+  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  *aStartOffset = *aEndOffset = 0;
+  aText.Truncate();
+
+  uint32_t adjustedOffset = ConvertMagicOffset(aOffset);
+  if (adjustedOffset == std::numeric_limits<uint32_t>::max()) {
+    NS_ERROR("Wrong given offset!");
+    return;
+  }
+
+  switch (aBoundaryType) {
+    case nsIAccessibleText::BOUNDARY_CHAR: {
+      uint32_t count = CharacterCount();
+      if (adjustedOffset >= count) {
+        *aStartOffset = *aEndOffset = static_cast<int32_t>(count);
+      } else {
+        CharAt(static_cast<int32_t>(adjustedOffset) + 1, aText, aStartOffset,
+               aEndOffset);
+      }
+      break;
+    }
+    case nsIAccessibleText::BOUNDARY_WORD_START:
+    case nsIAccessibleText::BOUNDARY_LINE_START:
+      TextLeafPoint orig;
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+        orig = TextLeafPoint::GetCaret(Acc());
+      } else {
+        orig = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset),
+                               /* aDescendToEnd */ true);
+      }
+      TextLeafPoint start = orig.FindBoundary(aBoundaryType, eDirNext);
+      bool ok;
+      std::tie(ok, *aStartOffset) = TransformOffset(start.mAcc, start.mOffset,
+                                                    /* aIsEndOffset */ false);
+      if (!ok) {
+        // There is no next boundary inside this HyperText.
+        *aStartOffset = *aEndOffset = static_cast<int32_t>(CharacterCount());
+        return;
+      }
+      TextLeafPoint end = start.FindBoundary(aBoundaryType, eDirNext);
+      // If TransformOffset fails because end is outside this HyperText,
+      // *aEndOffset will be CharacterCount(), which is what we want.
       std::tie(ok, *aEndOffset) = TransformOffset(end.mAcc, end.mOffset,
                                                   /* aIsEndOffset */ true);
       TextSubstring(*aStartOffset, *aEndOffset, aText);

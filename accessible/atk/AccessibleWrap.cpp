@@ -1276,7 +1276,9 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
     } break;
 
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
-      g_signal_emit_by_name(atkObj, "load_complete");
+      if (accessible->IsDoc()) {
+        g_signal_emit_by_name(atkObj, "load_complete");
+      }
       // XXX - Handle native dialog accessibles.
       if (!accessible->IsRoot() && accessible->HasARIARole() &&
           accessible->ARIARole() == roles::DIALOG) {
@@ -1286,11 +1288,15 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       break;
 
     case nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD:
-      g_signal_emit_by_name(atkObj, "reload");
+      if (accessible->IsDoc()) {
+        g_signal_emit_by_name(atkObj, "reload");
+      }
       break;
 
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED:
-      g_signal_emit_by_name(atkObj, "load_stopped");
+      if (accessible->IsDoc()) {
+        g_signal_emit_by_name(atkObj, "load_stopped");
+      }
       break;
 
     case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
@@ -1317,13 +1323,19 @@ void a11y::ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
       atk_object_notify_state_change(wrapper, ATK_STATE_FOCUSED, true);
       break;
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
-      g_signal_emit_by_name(wrapper, "load_complete");
+      if (aTarget->IsDoc()) {
+        g_signal_emit_by_name(wrapper, "load_complete");
+      }
       break;
     case nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD:
-      g_signal_emit_by_name(wrapper, "reload");
+      if (aTarget->IsDoc()) {
+        g_signal_emit_by_name(wrapper, "reload");
+      }
       break;
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED:
-      g_signal_emit_by_name(wrapper, "load_stopped");
+      if (aTarget->IsDoc()) {
+        g_signal_emit_by_name(wrapper, "load_stopped");
+      }
       break;
     case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
       atk_focus_tracker_notify(wrapper);  // fire extra focus event

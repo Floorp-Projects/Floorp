@@ -279,7 +279,8 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId,
       mApzcTreeLog("apzctree"),
       mTestDataLock("APZTestDataLock"),
       mDPI(160.0),
-      mHitTester(std::move(aHitTester)) {
+      mHitTester(std::move(aHitTester)),
+      mScrollGenerationLock("APZScrollGenerationLock") {
   RefPtr<APZCTreeManager> self(this);
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "layers::APZCTreeManager::APZCTreeManager",
@@ -735,16 +736,6 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
   for (const auto& mapping : mApzcMap) {
     AsyncPanZoomController* apzc = mapping.second.apzc;
 
-    const AsyncTransformComponents asyncTransformComponents =
-        apzc->GetZoomAnimationId()
-            ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
-            : LayoutAndVisual;
-    ParentLayerPoint layerTranslation =
-        apzc->GetCurrentAsyncTransformWithOverscroll(
-                AsyncPanZoomController::eForCompositing,
-                asyncTransformComponents)
-            .TransformPoint(ParentLayerPoint(0, 0));
-
     if (Maybe<CompositionPayload> payload = apzc->NotifyScrollSampling()) {
       if (wrBridgeParent && aVsyncId) {
         wrBridgeParent->AddPendingScrollPayload(*payload, *aVsyncId);
@@ -760,7 +751,7 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
         it->second->RecordSampledResult(
             apzc->GetCurrentAsyncScrollOffsetInCssPixels(
                 AsyncPanZoomController::eForCompositing),
-            (aSampleTime.Time() - TimeStamp::ProcessCreation(nullptr))
+            (aSampleTime.Time() - TimeStamp::ProcessCreation())
                 .ToMicroseconds(),
             guid.mLayersId, guid.mScrollId);
       }
@@ -789,22 +780,10 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
                                          apzc->IsAsyncZooming());
     }
 
-    // If layerTranslation includes only the layout component of the async
-    // transform then it has not been scaled by the async zoom, so we want to
-    // divide it by the resolution. If layerTranslation includes the visual
-    // component, then we should use the pinch zoom scale, which includes the
-    // async zoom. However, we only use LayoutAndVisual for non-zoomable APZCs,
-    // so it makes no difference.
-    LayoutDeviceToParentLayerScale resolution =
-        apzc->GetCumulativeResolution() * LayerToParentLayerScale(1.0f);
-    // The positive translation means the painted content is supposed to
-    // move down (or to the right), and that corresponds to a reduction in
-    // the scroll offset. Since we are effectively giving WR the async
-    // scroll delta here, we want to negate the translation.
-    LayoutDevicePoint asyncScrollDelta = -layerTranslation / resolution;
+    nsTArray<wr::SampledScrollOffset> sampledOffsets =
+        apzc->GetSampledScrollOffsets();
     aTxn.UpdateScrollPosition(wr::AsPipelineId(apzc->GetGuid().mLayersId),
-                              apzc->GetGuid().mScrollId,
-                              wr::ToLayoutVector2D(asyncScrollDelta));
+                              apzc->GetGuid().mScrollId, sampledOffsets);
 
 #if defined(MOZ_WIDGET_ANDROID)
     // Send the root frame metrics to java through the UIController

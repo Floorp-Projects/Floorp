@@ -104,7 +104,7 @@ explicit approval if:
 
 If it meets the above criteria, developers do not need to ask for sec-approval.
 
-In all other cases, developers should ask for sec-approval. 
+In all other cases, developers should ask for sec-approval.
 Set the sec-approval flag to '?' on the patch when it is ready to be landed.
 You will find these flags in Bugzilla using the "Details" links in the
 Bugzilla attachment table (not directly on phabricator at time of writing).
@@ -193,4 +193,3 @@ multiple axes:
 The most common choice is: not much stability risk, not an immediate
 reverse engineering risk, moderate to high difficulty of exploitation:
 "land whenever".
-

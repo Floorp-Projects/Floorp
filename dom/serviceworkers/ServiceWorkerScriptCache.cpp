@@ -210,11 +210,11 @@ class CompareCache final : public PromiseNativeHandler,
 
   void Abort();
 
-  virtual void ResolvedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override;
+  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override;
 
-  virtual void RejectedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override;
+  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override;
 
   const nsString& Buffer() const {
     MOZ_ASSERT(NS_IsMainThread());
@@ -265,9 +265,11 @@ class CompareManager final : public PromiseNativeHandler {
   nsresult Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL,
                       const nsAString& aCacheName);
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
 
   CacheStorage* CacheStorage_() {
     MOZ_ASSERT(NS_IsMainThread());
@@ -1193,7 +1195,8 @@ CompareCache::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
 }
 
 void CompareCache::ResolvedCallback(JSContext* aCx,
-                                    JS::Handle<JS::Value> aValue) {
+                                    JS::Handle<JS::Value> aValue,
+                                    ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
 
   switch (mState) {
@@ -1208,7 +1211,8 @@ void CompareCache::ResolvedCallback(JSContext* aCx,
 }
 
 void CompareCache::RejectedCallback(JSContext* aCx,
-                                    JS::Handle<JS::Value> aValue) {
+                                    JS::Handle<JS::Value> aValue,
+                                    ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mState != Finished) {
@@ -1344,7 +1348,8 @@ nsresult CompareManager::Initialize(nsIPrincipal* aPrincipal,
 // 4. Put the value in the cache.
 // For this reason we have mState to know what callback we are handling.
 void CompareManager::ResolvedCallback(JSContext* aCx,
-                                      JS::Handle<JS::Value> aValue) {
+                                      JS::Handle<JS::Value> aValue,
+                                      ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mCallback);
 
@@ -1374,7 +1379,8 @@ void CompareManager::ResolvedCallback(JSContext* aCx,
 }
 
 void CompareManager::RejectedCallback(JSContext* aCx,
-                                      JS::Handle<JS::Value> aValue) {
+                                      JS::Handle<JS::Value> aValue,
+                                      ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
   switch (mState) {
     case Finished:
@@ -1428,10 +1434,10 @@ class NoopPromiseHandler final : public PromiseNativeHandler {
 
   NoopPromiseHandler() { AssertIsOnMainThread(); }
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
-  }
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
-  }
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {}
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {}
 
  private:
   ~NoopPromiseHandler() { AssertIsOnMainThread(); }

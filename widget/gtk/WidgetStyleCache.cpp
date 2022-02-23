@@ -725,8 +725,6 @@ static GtkWidget* CreateWidget(WidgetNodeType aAppearance) {
       return CreateProgressWidget();
     case MOZ_GTK_RADIOBUTTON_CONTAINER:
       return CreateRadiobuttonWidget();
-    case MOZ_GTK_SCROLLBAR_HORIZONTAL:
-      return CreateScrollbarWidget(aAppearance, GTK_ORIENTATION_HORIZONTAL);
     case MOZ_GTK_SCROLLBAR_VERTICAL:
       return CreateScrollbarWidget(aAppearance, GTK_ORIENTATION_VERTICAL);
     case MOZ_GTK_MENUBAR:
@@ -1065,17 +1063,6 @@ static GtkStyleContext* GetCssNodeStyleInternal(WidgetNodeType aNodeType) {
   if (style) return style;
 
   switch (aNodeType) {
-    case MOZ_GTK_SCROLLBAR_CONTENTS_HORIZONTAL:
-      style = CreateChildCSSNode("contents", MOZ_GTK_SCROLLBAR_HORIZONTAL);
-      break;
-    case MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL:
-      style = CreateChildCSSNode(GTK_STYLE_CLASS_TROUGH,
-                                 MOZ_GTK_SCROLLBAR_CONTENTS_HORIZONTAL);
-      break;
-    case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
-      style = CreateChildCSSNode(GTK_STYLE_CLASS_SLIDER,
-                                 MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL);
-      break;
     case MOZ_GTK_SCROLLBAR_CONTENTS_VERTICAL:
       style = CreateChildCSSNode("contents", MOZ_GTK_SCROLLBAR_VERTICAL);
       break;
@@ -1086,10 +1073,6 @@ static GtkStyleContext* GetCssNodeStyleInternal(WidgetNodeType aNodeType) {
     case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:
       style = CreateChildCSSNode(GTK_STYLE_CLASS_SLIDER,
                                  MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL);
-      break;
-    case MOZ_GTK_SCROLLBAR_BUTTON:
-      style = CreateChildCSSNode(GTK_STYLE_CLASS_BUTTON,
-                                 MOZ_GTK_SCROLLBAR_CONTENTS_VERTICAL);
       break;
     case MOZ_GTK_RADIOBUTTON:
       style = CreateChildCSSNode(GTK_STYLE_CLASS_RADIO,
@@ -1254,14 +1237,6 @@ static GtkStyleContext* GetWidgetStyleInternal(WidgetNodeType aNodeType) {
   if (style) return style;
 
   switch (aNodeType) {
-    case MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL:
-      style = CreateSubStyleWithClass(MOZ_GTK_SCROLLBAR_HORIZONTAL,
-                                      GTK_STYLE_CLASS_TROUGH);
-      break;
-    case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
-      style = CreateSubStyleWithClass(MOZ_GTK_SCROLLBAR_HORIZONTAL,
-                                      GTK_STYLE_CLASS_SLIDER);
-      break;
     case MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL:
       style = CreateSubStyleWithClass(MOZ_GTK_SCROLLBAR_VERTICAL,
                                       GTK_STYLE_CLASS_TROUGH);

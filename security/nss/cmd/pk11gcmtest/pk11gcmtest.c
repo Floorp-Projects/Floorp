@@ -439,10 +439,13 @@ loser:
 int
 main(int argc, char **argv)
 {
-    if (argc < 2)
-        exit(1);
+    if (argc < 2) {
+        return 1;
+    }
 
-    NSS_NoDB_Init(NULL);
+    if (NSS_NoDB_Init(NULL) != SECSuccess) {
+        return 1;
+    }
 
     /*************/
     /*   AES     */
@@ -455,6 +458,8 @@ main(int argc, char **argv)
         }
     }
 
-    NSS_Shutdown();
+    if (NSS_Shutdown() != SECSuccess) {
+        return 1;
+    }
     return 0;
 }

@@ -170,6 +170,15 @@ mozilla::ipc::IPCResult DocAccessibleChildBase::RecvVerifyCache(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvDoActionAsync(
+    const uint64_t& aID, const uint8_t& aIndex) {
+  if (LocalAccessible* acc = IdToAccessible(aID)) {
+    Unused << acc->DoAction(aIndex);
+  }
+
+  return IPC_OK();
+}
+
 LocalAccessible* DocAccessibleChildBase::IdToAccessible(
     const uint64_t& aID) const {
   if (!aID) return mDoc;

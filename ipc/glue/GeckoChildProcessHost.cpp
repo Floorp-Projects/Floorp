@@ -89,6 +89,8 @@
 #  include "nsMacUtilsImpl.h"
 #endif
 
+#include "mozilla/ipc/UtilityProcessHost.h"
+
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsNativeCharsetUtils.h"
@@ -159,6 +161,7 @@ class BaseProcessLauncher {
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
         mAllowedFilesRead(aHost->mAllowedFilesRead),
         mSandboxLevel(aHost->mSandboxLevel),
+        mSandbox(aHost->mSandbox),
         mIsFileContent(aHost->mIsFileContent),
         mEnableSandboxLogging(aHost->mEnableSandboxLogging),
 #endif
@@ -219,6 +222,7 @@ class BaseProcessLauncher {
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   std::vector<std::wstring> mAllowedFilesRead;
   int32_t mSandboxLevel;
+  SandboxingKind mSandbox;
   bool mIsFileContent;
   bool mEnableSandboxLogging;
 #endif
@@ -842,18 +846,6 @@ void GeckoChildProcessHost::InitializeChannel(
   lock.Notify();
 }
 
-void GeckoChildProcessHost::Join() {
-  AssertIOThread();
-
-  if (!mChildProcessHandle) {
-    return;
-  }
-
-  // If this fails, there's nothing we can do.
-  base::KillProcess(mChildProcessHandle, 0, /*wait*/ true);
-  SetAlreadyDead();
-}
-
 void GeckoChildProcessHost::SetAlreadyDead() {
   if (mChildProcessHandle &&
       mChildProcessHandle != base::kInvalidProcessHandle) {
@@ -1447,6 +1439,15 @@ bool WindowsProcessLauncher::DoSetup() {
         mUseSandbox = true;
       }
       break;
+    case GeckoProcessType_Utility:
+      if (!PR_GetEnv("MOZ_DISABLE_UTILITY_SANDBOX")) {
+        if (!mResults.mSandboxBroker->SetSecurityLevelForUtilityProcess(
+                mSandbox)) {
+          return false;
+        }
+        mUseSandbox = true;
+      }
+      break;
     case GeckoProcessType_RemoteSandboxBroker:
       // We don't sandbox the sandbox launcher...
       break;
@@ -1722,9 +1723,13 @@ bool GeckoChildProcessHost::StartMacSandbox(int aArgc, char** aArgv,
     case GeckoProcessType_GMPlugin:
       sandboxType = gmp::GMPProcessParent::GetMacSandboxType();
       break;
+    case GeckoProcessType_Utility:
+      sandboxType = ipc::UtilityProcessHost::GetMacSandboxType();
+      break;
     default:
       return true;
   }
+
   return mozilla::StartMacSandboxIfEnabled(sandboxType, aArgc, aArgv,
                                            aErrorMessage);
 }

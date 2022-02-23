@@ -24,46 +24,68 @@
   var pageshowCount = 0;
   var gotBeforeUnload = false;
   var bfcacheDisabled = false;
-  var bc = new BroadcastChannel("beforeunload_and_bfcache");
-  bc.onmessage = function(event) {
-    if (event.data.type == "pageshow") {
-      ++pageshowCount;
-      if (pageshowCount == 1) {
-        bc.postMessage("nextpage");
-      } else if (pageshowCount == 2) {
-        bc.postMessage("back");
-      } else if (pageshowCount == 3) {
-        if (!event.data.persisted) {
-          ok(true, "BFCache not enabled");
-          bfcacheDisabled = true;
-          bc.postMessage("close");
-          return;
-        }
-        bc.postMessage("forward");
-      } else if (pageshowCount == 4) {
-        ok(event.data.persisted, "Should have loaded a page from bfcache.");
-        bc.postMessage("close");
-      }
-    } else if (event.data == "beforeunload") {
-      gotBeforeUnload = true;
-    } else if (event.data == "closed") {
-      isnot(bfcacheDisabled, gotBeforeUnload,
-           "Either BFCache shouldn't be enabled or a beforeunload event should have been fired.");
-      bc.close();
-      SimpleTest.finish();
-    }
-  };
 
-  function runTest() {
-   SpecialPowers.pushPrefEnv({"set": [["docshell.shistory.bfcache.allow_unload_listeners", false]]},
-     function() {
-       window.open("file_beforeunload_and_bfcache.html", "", "noopener");
-     }
-   );
+
+  function executeTest() {
+    var bc = new BroadcastChannel("beforeunload_and_bfcache");
+    bc.onmessage = function(event) {
+      if (event.data.type == "pageshow") {
+        ++pageshowCount;
+        if (pageshowCount == 1) {
+          bc.postMessage("nextpage");
+        } else if (pageshowCount == 2) {
+          bc.postMessage("back");
+        } else if (pageshowCount == 3) {
+          if (!event.data.persisted) {
+            ok(true, "BFCache not enabled");
+            bfcacheDisabled = true;
+            bc.postMessage("close");
+            return;
+          }
+          bc.postMessage("forward");
+        } else if (pageshowCount == 4) {
+          ok(event.data.persisted, "Should have loaded a page from bfcache.");
+          bc.postMessage("close");
+        }
+      } else if (event.data == "beforeunload") {
+        gotBeforeUnload = true;
+      } else if (event.data == "closed") {
+        isnot(bfcacheDisabled, gotBeforeUnload,
+             "Either BFCache shouldn't be enabled or a beforeunload event should have been fired.");
+        bc.close();
+        SimpleTest.finish();
+      }
+    };
+
+    function runTest() {
+     SpecialPowers.pushPrefEnv({"set": [["docshell.shistory.bfcache.allow_unload_listeners", false]]},
+       function() {
+         window.open("file_beforeunload_and_bfcache.html", "", "noopener");
+       }
+     );
+    }
+    runTest();
   }
+
+  if (isXOrigin) {
+    // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+    // Acquire storage access permission here so that the BroadcastChannel used to
+    // communicate with the opened windows works in xorigin tests. Otherwise,
+    // the iframe containing this page is isolated from first-party storage access,
+    // which isolates BroadcastChannel communication.
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    SpecialPowers.addPermission("storageAccessAPI", true, window.location.href).then(() => {
+      SpecialPowers.wrap(document).requestStorageAccess().then(() => {
+        executeTest();
+      });
+    });
+  } else {
+    executeTest();
+  }
+
   </script>
 </head>
-<body onload="runTest()">
+<body>
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>

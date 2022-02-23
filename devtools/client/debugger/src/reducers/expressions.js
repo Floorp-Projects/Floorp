@@ -7,9 +7,6 @@
  * @module reducers/expressions
  */
 
-import { omit } from "lodash";
-
-import { createSelector } from "reselect";
 import { prefs } from "../utils/prefs";
 
 export const initialExpressionState = () => ({
@@ -100,7 +97,11 @@ function restoreExpressions() {
 }
 
 function storeExpressions({ expressions }) {
-  prefs.expressions = expressions.map(expression => omit(expression, "value"));
+  // Return the expressions without the `value` property
+  prefs.expressions = expressions.map(({ input, updating }) => ({
+    input,
+    updating,
+  }));
 }
 
 function appendExpressionToList(state, value) {
@@ -128,33 +129,5 @@ function deleteExpression(state, input) {
   storeExpressions(newState);
   return newState;
 }
-
-const getExpressionsWrapper = state => state.expressions;
-
-export const getExpressions = createSelector(
-  getExpressionsWrapper,
-  expressions => expressions.expressions
-);
-
-export const getAutocompleteMatches = createSelector(
-  getExpressionsWrapper,
-  expressions => expressions.autocompleteMatches
-);
-
-export function getExpression(state, input) {
-  return getExpressions(state).find(exp => exp.input == input);
-}
-
-export function getAutocompleteMatchset(state) {
-  const input = state.expressions.currentAutocompleteInput;
-  if (input) {
-    return getAutocompleteMatches(state)[input];
-  }
-}
-
-export const getExpressionError = createSelector(
-  getExpressionsWrapper,
-  expressions => expressions.expressionError
-);
 
 export default update;

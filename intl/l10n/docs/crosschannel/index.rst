@@ -78,7 +78,7 @@ The last item is the easiest, as ``mozilla-*`` and ``comm-*`` don't share
 code or history. Thus, they're converted individually to disjunct directories
 and files in the target repository, and the Mercurial history of each is interleaved
 in the target history. When parents are needed for one repository, they're
-rebased over the commits for the other. 
+rebased over the commits for the other.
 
 .. toctree::
    :maxdepth: 1

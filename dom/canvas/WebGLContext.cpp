@@ -222,7 +222,7 @@ void WebGLContext::DestroyResourcesAndContext() {
 void ClientWebGLContext::MarkCanvasDirty() {
   if (!mCanvasElement && !mOffscreenCanvas) return;
 
-  mCapturedFrameInvalidated = true;
+  mFrameCaptureState = FrameCaptureState::DIRTY;
 
   if (mIsCanvasDirty) return;
   mIsCanvasDirty = true;
@@ -595,6 +595,9 @@ RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
     }
     if (kIsMacOS) {
       types[layers::SurfaceDescriptor::TSurfaceDescriptorMacIOSurface] = true;
+    }
+    if (kIsAndroid) {
+      types[layers::SurfaceDescriptor::TSurfaceTextureDescriptor] = true;
     }
     return types;
   };

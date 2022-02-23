@@ -685,7 +685,7 @@ class CodeTier {
   const UniqueModuleSegment segment_;
 
   // Lazy stubs, not serialized.
-  ExclusiveData<LazyStubTier> lazyStubs_;
+  RWExclusiveData<LazyStubTier> lazyStubs_;
 
   static const MutexId& mutexForTier(Tier tier) {
     if (tier == Tier::Baseline) {
@@ -707,7 +707,7 @@ class CodeTier {
                   const Metadata& metadata);
 
   Tier tier() const { return segment_->tier(); }
-  const ExclusiveData<LazyStubTier>& lazyStubs() const { return lazyStubs_; }
+  const RWExclusiveData<LazyStubTier>& lazyStubs() const { return lazyStubs_; }
   const MetadataTier& metadata() const { return *metadata_.get(); }
   const ModuleSegment& segment() const { return *segment_.get(); }
   const Code& code() const {

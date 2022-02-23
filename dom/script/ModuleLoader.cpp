@@ -359,7 +359,8 @@ nsresult ModuleLoader::HandleResolveFailure(
   }
 
   if (!JS::CreateError(aCx, JSEXN_TYPEERR, nullptr, filename, aLineNumber,
-                       aColumnNumber, nullptr, string, errorOut)) {
+                       aColumnNumber, nullptr, string, JS::NothingHandleValue,
+                       errorOut)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

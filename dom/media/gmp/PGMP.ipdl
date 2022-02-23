@@ -8,6 +8,8 @@ include protocol PGMPTimer;
 include protocol PGMPStorage;
 include protocol PProfiler;
 
+include "mozilla/ipc/ByteBufUtils.h";
+
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 
 namespace mozilla {
@@ -26,6 +28,11 @@ parent:
 
   async PGMPContentChildDestroyed();
 
+  // Sent from time-to-time to limit the amount of telemetry vulnerable to loss
+  // Buffer contains bincoded Rust structs.
+  // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
+  async FOGData(ByteBuf buf);
+
 child:
   async CrashPluginNow();
   [Nested=inside_sync] sync StartPlugin(nsString adapter);
@@ -34,6 +41,16 @@ child:
   async CloseActive();
   async InitGMPContentChild(Endpoint<PGMPContentChild> endpoint);
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
+
+  // Tells the GMP process to flush any pending telemetry.
+  // Used in tests and ping assembly. Buffer contains bincoded Rust structs.
+  // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
+  async FlushFOGData() returns (ByteBuf buf);
+
+  // Test-only method.
+  // Asks the GMP process to trigger test-only instrumentation.
+  // The unused returned value is to have a promise we can await.
+  async TestTriggerMetrics() returns (bool unused);
 };
 
 } // namespace gmp

@@ -214,6 +214,28 @@ namespace IOUtils {
    */
   Promise<boolean> exists(DOMString path);
 
+  /**
+   * Create a file with a unique name and return its path.
+   *
+   * @param parent An absolute path to the directory where the file is to be
+   *               created.
+   * @param prefix A prefix for the filename.
+   *
+   * @return A promise that resolves to a unique filename.
+   */
+  Promise<DOMString> createUniqueFile(DOMString parent, DOMString prefix, optional unsigned long permissions = 0644);
+
+  /**
+   * Create a directory with a unique name and return its path.
+   *
+   * @param parent An absolute path to the directory where the file is to be
+   *               created.
+   * @param prefix A prefix for the directory name.
+   *
+   * @return A promise that resolves to a unique directory name.
+   */
+  Promise<DOMString> createUniqueDirectory(DOMString parent, DOMString prefix, optional unsigned long permissions = 0755);
+
 #if defined(XP_WIN)
   /**
    * Return the Windows-specific file attributes of the file at the given path.

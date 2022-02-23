@@ -36,6 +36,6 @@
 
 bitfn_decls(void dav1d_apply_grain, const Dav1dFilmGrainDSPContext *const dsp,
                                     Dav1dPicture *const out,
-                                    Dav1dPicture *const in);
+                                    const Dav1dPicture *const in);
 
 #endif /* DAV1D_SRC_FG_APPLY_H */

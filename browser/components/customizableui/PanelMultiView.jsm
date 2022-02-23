@@ -1168,11 +1168,14 @@ var PanelMultiView = class extends AssociatedToNode {
     let anchor = this._panel.anchorNode;
     let anchorRect = anchor.getBoundingClientRect();
 
+    // Screen manager uses screen coordinates, while screenX/Y and anchorRect
+    // are in CSS pixels, so need to convert to the right coordinate space.
+    let devicePixelRatio = this.window.devicePixelRatio;
     let screen = this._screenManager.screenForRect(
-      anchor.screenX,
-      anchor.screenY,
-      anchorRect.width,
-      anchorRect.height
+      anchor.screenX * devicePixelRatio,
+      anchor.screenY * devicePixelRatio,
+      anchorRect.width * devicePixelRatio,
+      anchorRect.height * devicePixelRatio
     );
     let availTop = {},
       availHeight = {};
@@ -1614,7 +1617,6 @@ var PanelView = class extends AssociatedToNode {
         node.tagName == "toolbarbutton" ||
         node.tagName == "checkbox" ||
         node.classList.contains("text-link") ||
-        node.classList.contains("navigable") ||
         (!arrowKey && this._isNavigableWithTabOnly(node))
       ) {
         // Set the tabindex attribute to make sure the node is focusable.

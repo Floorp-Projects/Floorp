@@ -2143,6 +2143,21 @@ var BookmarkingUI = {
               isStarUpdateNeeded = true;
             }
           }
+
+          // Reset the default location if it is equal to the folder
+          // being deleted. Just check the preference directly since we
+          // do not want to do a asynchronous db lookup.
+          PlacesUIUtils.defaultParentGuid.then(parentGuid => {
+            if (
+              ev.itemType == PlacesUtils.bookmarks.TYPE_FOLDER &&
+              ev.guid == parentGuid
+            ) {
+              Services.prefs.setCharPref(
+                "browser.bookmarks.defaultLocation",
+                PlacesUtils.bookmarks.toolbarGuid
+              );
+            }
+          });
           break;
         case "bookmark-moved":
           const hasMovedInOutOtherBookmarks =

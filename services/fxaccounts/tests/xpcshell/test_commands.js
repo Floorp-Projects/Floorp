@@ -575,3 +575,149 @@ add_task(
     Assert.equal(accountState.data.device.lastCommandIndex, 12);
   }
 );
+
+add_task(async function test_send_tab_keys_regenerated_if_lost() {
+  const commands = {
+    _invokes: [],
+    invoke(cmd, device, payload) {
+      this._invokes.push({ cmd, device, payload });
+    },
+  };
+
+  // Local state.
+  const accountState = {
+    data: {
+      // Since the device object has no
+      // sendTabKeys, when we _decrypt,
+      // we will attempt to regenerate the
+      // keys.
+      device: {
+        lastCommandIndex: 10,
+      },
+      encryptedSendTabKeys: "keys",
+    },
+    getUserAccountData() {
+      return this.data;
+    },
+    updateUserAccountData(data) {
+      this.data = data;
+    },
+  };
+
+  const fxAccounts = {
+    async withCurrentAccountState(cb) {
+      await cb(accountState);
+    },
+    async getUserAccountData(data) {
+      return accountState.getUserAccountData(data);
+    },
+    telemetry: new TelemetryMock(),
+  };
+
+  const sendTab = new SendTab(commands, fxAccounts);
+  sendTab._encrypt = (bytes, device) => {
+    return bytes;
+  };
+  let generateEncryptedKeysCalled = false;
+  sendTab._generateAndPersistEncryptedSendTabKey = async () => {
+    generateEncryptedKeysCalled = true;
+  };
+  sendTab._fxai = fxAccounts;
+  const tab = { title: "tab title", url: "http://example.com" };
+  const to = [{ id: "devid", name: "The Device" }];
+  const reason = "push";
+
+  await sendTab.send(to, tab);
+  Assert.equal(commands._invokes.length, 1);
+
+  for (let { cmd, device, payload } of commands._invokes) {
+    Assert.equal(cmd, COMMAND_SENDTAB);
+    sendTab._fxai = fxAccounts;
+    try {
+      await sendTab.handle(device.id, payload, reason);
+    } catch {
+      // The `handle` function will throw an error
+      // since we are not mocking the `_decrypt`
+      // function. This is intentional, since
+      // we want to capture that `_decrypt` will
+      // call `_generateEncryptedSendTabKeys` if
+      // it fails to retrieve the keys.
+      // Receiving a send tab is covered
+      // in the above test_sendtab_receive test.
+    }
+  }
+  Assert.ok(generateEncryptedKeysCalled);
+});
+
+add_task(async function test_send_tab_keys_are_not_regenerated_if_not_lost() {
+  const commands = {
+    _invokes: [],
+    invoke(cmd, device, payload) {
+      this._invokes.push({ cmd, device, payload });
+    },
+  };
+
+  // Local state.
+  const accountState = {
+    data: {
+      // Since the device object has
+      // sendTabKeys, when we _decrypt,
+      // we will not try to regenerate them
+      device: {
+        lastCommandIndex: 10,
+        sendTabKeys: "keys",
+      },
+      encryptedSendTabKeys: "encrypted-keys",
+    },
+    getUserAccountData() {
+      return this.data;
+    },
+    updateUserAccountData(data) {
+      this.data = data;
+    },
+  };
+
+  const fxAccounts = {
+    async withCurrentAccountState(cb) {
+      await cb(accountState);
+    },
+    async getUserAccountData(data) {
+      return accountState.getUserAccountData(data);
+    },
+    telemetry: new TelemetryMock(),
+  };
+
+  const sendTab = new SendTab(commands, fxAccounts);
+  sendTab._encrypt = (bytes, device) => {
+    return bytes;
+  };
+  let generateEncryptedKeysCalled = false;
+  sendTab._generateAndPersistEncryptedSendTabKey = async () => {
+    generateEncryptedKeysCalled = true;
+  };
+  sendTab._fxai = fxAccounts;
+  const tab = { title: "tab title", url: "http://example.com" };
+  const to = [{ id: "devid", name: "The Device" }];
+  const reason = "push";
+
+  await sendTab.send(to, tab);
+  Assert.equal(commands._invokes.length, 1);
+
+  for (let { cmd, device, payload } of commands._invokes) {
+    Assert.equal(cmd, COMMAND_SENDTAB);
+    sendTab._fxai = fxAccounts;
+    try {
+      await sendTab.handle(device.id, payload, reason);
+    } catch {
+      // The `handle` function will throw an error
+      // since we are not mocking the `_decrypt`
+      // function. This is intentional, since
+      // we want to capture that `_decrypt` will
+      // not call `_generateEncryptedSendTabKeys` if
+      // it succeeds to retrieve the keys.
+      // Receiving a send tab is covered
+      // in the above test_sendtab_receive test.
+    }
+  }
+  Assert.ok(!generateEncryptedKeysCalled);
+});

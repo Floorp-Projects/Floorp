@@ -458,8 +458,10 @@ class PromiseResolver final : public PromiseNativeHandler {
   NS_DECL_ISUPPORTS
 
   explicit PromiseResolver(Promise* aPromise);
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
 
  protected:
   virtual ~PromiseResolver();
@@ -477,12 +479,14 @@ NS_IMPL_RELEASE(PromiseResolver)
 PromiseResolver::PromiseResolver(Promise* aPromise) { mPromise = aPromise; }
 
 void PromiseResolver::ResolvedCallback(JSContext* aCx,
-                                       JS::Handle<JS::Value> aValue) {
+                                       JS::Handle<JS::Value> aValue,
+                                       ErrorResult& aRv) {
   mPromise->MaybeResolveWithClone(aCx, aValue);
 }
 
 void PromiseResolver::RejectedCallback(JSContext* aCx,
-                                       JS::Handle<JS::Value> aValue) {
+                                       JS::Handle<JS::Value> aValue,
+                                       ErrorResult& aRv) {
   mPromise->MaybeRejectWithClone(aCx, aValue);
 }
 

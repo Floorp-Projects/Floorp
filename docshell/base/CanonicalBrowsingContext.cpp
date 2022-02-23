@@ -308,6 +308,11 @@ void CanonicalBrowsingContext::ReplacedBy(
   txn.SetExplicitActive(GetExplicitActive());
   txn.SetHasRestoreData(GetHasRestoreData());
   txn.SetShouldDelayMediaFromStart(GetShouldDelayMediaFromStart());
+  // As this is a different BrowsingContext, set InitialSandboxFlags to the
+  // current flags in the new context so that they also apply to any initial
+  // about:blank documents created in it.
+  txn.SetSandboxFlags(GetSandboxFlags());
+  txn.SetInitialSandboxFlags(GetSandboxFlags());
   if (aNewContext->EverAttached()) {
     MOZ_ALWAYS_SUCCEEDS(txn.Commit(aNewContext));
   } else {
@@ -535,6 +540,11 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
       return nullptr;
     }
     Unused << SetHistoryEntryCount(entry->BCHistoryLength());
+  } else if (aLoadState->LoadType() == LOAD_REFRESH &&
+             !ShouldAddEntryForRefresh(aLoadState->URI(),
+                                       aLoadState->PostDataStream()) &&
+             mActiveEntry) {
+    entry = mActiveEntry;
   } else {
     entry = new SessionHistoryEntry(aLoadState, aChannel);
     if (IsTop()) {
@@ -741,7 +751,7 @@ void CanonicalBrowsingContext::CallOnAllTopDescendants(
 
 void CanonicalBrowsingContext::SessionHistoryCommit(
     uint64_t aLoadId, const nsID& aChangeID, uint32_t aLoadType, bool aPersist,
-    bool aCloneEntryChildren, bool aChannelExpired) {
+    bool aCloneEntryChildren, bool aChannelExpired, uint32_t aCacheKey) {
   MOZ_LOG(gSHLog, LogLevel::Verbose,
           ("CanonicalBrowsingContext::SessionHistoryCommit %p %" PRIu64, this,
            aLoadId));
@@ -755,6 +765,9 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
       }
 
       RefPtr<SessionHistoryEntry> newActiveEntry = mLoadingEntries[i].mEntry;
+      if (aCacheKey != 0) {
+        newActiveEntry->SetCacheKey(aCacheKey);
+      }
 
       if (aChannelExpired) {
         newActiveEntry->SharedInfo()->mExpired = true;
@@ -825,6 +838,10 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
           // XXX Synchronize browsing context tree and session history tree?
           shistory->InternalSetRequestedIndex(indexOfHistoryLoad);
           shistory->UpdateIndex();
+
+          if (IsTop()) {
+            mActiveEntry->SetWireframe(Nothing());
+          }
         } else if (addEntry) {
           shistory->AddEntry(mActiveEntry, aPersist);
           shistory->InternalSetRequestedIndex(-1);
@@ -1015,6 +1032,10 @@ void CanonicalBrowsingContext::ReplaceActiveSessionHistoryEntry(
   }
 
   ResetSHEntryHasUserInteractionCache();
+
+  if (IsTop()) {
+    mActiveEntry->SetWireframe(Nothing());
+  }
 
   // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
 }
@@ -2421,6 +2442,21 @@ void CanonicalBrowsingContext::SetCrossGroupOpenerId(uint64_t aOpenerId) {
   MOZ_DIAGNOSTIC_ASSERT(mCrossGroupOpenerId == 0,
                         "Can only set CrossGroupOpenerId once");
   mCrossGroupOpenerId = aOpenerId;
+}
+
+void CanonicalBrowsingContext::SetCrossGroupOpener(
+    CanonicalBrowsingContext& aCrossGroupOpener, ErrorResult& aRv) {
+  if (!IsTopContent()) {
+    aRv.ThrowNotAllowedError(
+        "Can only set crossGroupOpener on toplevel content");
+    return;
+  }
+  if (mCrossGroupOpenerId != 0) {
+    aRv.ThrowNotAllowedError("Can only set crossGroupOpener once");
+    return;
+  }
+
+  SetCrossGroupOpenerId(aCrossGroupOpener.Id());
 }
 
 auto CanonicalBrowsingContext::FindUnloadingHost(uint64_t aChildID)

@@ -10,12 +10,11 @@
 @imports(_from="mozbuild.shellutil", _import="quote")
 @imports(_from="mozbuild.util", _import="ensure_unicode")
 @imports(_from="mozbuild.util", _import="system_encoding")
-@imports(_from="six", _import="itervalues")
 @imports("__sandbox__")
 def all_configure_options():
     result = []
     previous = None
-    for option in itervalues(__sandbox__._options):
+    for option in __sandbox__._options.values():
         # __sandbox__._options contains items for both option.name and
         # option.env. But it's also an OrderedDict, meaning both are
         # consecutive.
@@ -817,7 +816,6 @@ set_config("MOZ_GPSD", depends_if(system_gpsd)(lambda _: True))
 
 check_prog("TAR", ("gnutar", "gtar", "tar"))
 check_prog("UNZIP", ("unzip",))
-check_prog("ZIP", ("zip",))
 check_prog("GN", ("gn",), allow_missing=True)
 
 # Key files
@@ -1359,13 +1357,11 @@ option(env="MIDL_FLAGS", nargs=1, help="Extra flags to pass to MIDL")
 
 @depends(
     "MIDL_FLAGS",
-    c_compiler,
     target,
-    host,
     midl,
     when=depends(midl, target)(lambda m, t: m and t.kernel == "WINNT"),
 )
-def midl_flags(flags, c_compiler, target, host, midl):
+def midl_flags(flags, target, midl):
     if flags:
         flags = flags[0].split()
     else:
@@ -1377,22 +1373,7 @@ def midl_flags(flags, c_compiler, target, host, midl):
             "x86_64": "x64",
             "aarch64": "arm64",
         }[target.cpu]
-        flags += ["-env", env]
-
-        if host.os == "WINNT":
-            return flags + ["-cpp_cmd", c_compiler.compiler]
-
-        # If cross-compiling and using midl instead of widl, for now, we'll
-        # assume we can find the Windows version of clang-cl in the PATH.
-        # It is required because while Wine is able to spawn Linux
-        # processes from Windows programs(!), the calling program doesn't
-        # have access to the process output and can't wait for it to
-        # finish. Midl runs clang-cl as a preprocessor and expects to read
-        # its output...
-        clang_cl_exe = find_program("clang-cl.exe")
-        if not clang_cl_exe:
-            die("Cannot find clang-cl.exe")
-        return flags + ["-cpp_cmd", clang_cl_exe]
+        return flags + ["-nologo", "-no_cpp", "-env", env]
 
     # widl
     return flags + {
@@ -2541,15 +2522,18 @@ option(
     env="MOZ_APP_REMOTINGNAME",
     nargs=1,
     help="Used for the internal program name, which affects profile name "
-    "and remoting. If not set, defaults to MOZ_APP_NAME.",
+    "and remoting. If not set, defaults to MOZ_APP_NAME if the update channel "
+    "is release, and MOZ_APP_NAME-MOZ_UPDATE_CHANNEL otherwise.",
 )
 
 
-@depends("MOZ_APP_REMOTINGNAME", moz_app_name)
-def moz_app_remotingname(value, moz_app_name):
+@depends("MOZ_APP_REMOTINGNAME", moz_app_name, update_channel)
+def moz_app_remotingname(value, moz_app_name, update_channel):
     if value:
         return value[0]
-    return moz_app_name
+    if update_channel == "release":
+        return moz_app_name
+    return moz_app_name + "-" + update_channel
 
 
 set_config("MOZ_APP_REMOTINGNAME", moz_app_remotingname)
@@ -2577,14 +2561,6 @@ set_config("ANDROID_PACKAGE_NAME", android_package_name)
 # ==============================================================
 option(env="MOZ_WINCONSOLE", nargs="?", help="Whether we can create a console window.")
 set_define("MOZ_WINCONSOLE", True, when=depends("MOZ_WINCONSOLE")(lambda x: x))
-
-option(
-    env="MOZ_USE_NATIVE_POPUP_WINDOWS",
-    default=target_is_android,
-    help="Whether to use native popup windows",
-)
-
-set_define("MOZ_USE_NATIVE_POPUP_WINDOWS", True, when="MOZ_USE_NATIVE_POPUP_WINDOWS")
 
 
 # Alternative Crashreporter setting
@@ -2663,14 +2639,14 @@ with only_when(compile_environment):
 
 # Crash reporting
 # ==============================================================
-@depends(target, developer_options)
-def crashreporter_default(target, developer_options):
+@depends(target, developer_options, artifact_builds)
+def crashreporter_default(target, developer_options, artifacts):
     if target.kernel in ("WINNT", "Darwin"):
         return True
     if target.kernel == "Linux" and target.cpu in ("x86", "x86_64", "arm", "aarch64"):
         # The crash reporter prevents crash stacktraces to be logged in the
         # logs on Android, so we leave it out by default in developer builds.
-        return target.os != "Android" or not developer_options
+        return target.os != "Android" or not developer_options or artifacts
 
 
 option(
@@ -2979,7 +2955,7 @@ with only_when(compile_environment):
             body="pthread_cond_timedwait_monotonic_np(0, 0, 0);",
             # -Werror to catch any "implicit declaration" warning that means the function
             # is not supported.
-            flags=["-Werror"],
+            flags=["-Werror=implicit-function-declaration"],
             check_msg="for pthread_cond_timedwait_monotonic_np",
         ),
     )
@@ -3035,3 +3011,21 @@ def disable_smart_cards(build_project):
 
 set_config("MOZ_NO_SMART_CARDS", True, when=disable_smart_cards)
 set_define("MOZ_NO_SMART_CARDS", True, when=disable_smart_cards)
+
+# Checks for library functions
+# ==============================================================
+with only_when(compile_environment & depends(target.os)(lambda os: os != "WINNT")):
+    set_define("HAVE_STAT64", check_symbol("stat64"))
+    set_define("HAVE_LSTAT64", check_symbol("lstat64"))
+    set_define("HAVE_TRUNCATE64", check_symbol("truncate64"))
+    set_define("HAVE_STATVFS64", check_symbol("statvfs64"))
+    set_define("HAVE_STATVFS", check_symbol("statvfs"))
+    set_define("HAVE_STATFS64", check_symbol("statfs64"))
+    set_define("HAVE_STATFS", check_symbol("statfs"))
+    set_define("HAVE_LUTIMES", check_symbol("lutimes"))
+    set_define("HAVE_POSIX_FADVISE", check_symbol("posix_fadvise"))
+    set_define("HAVE_POSIX_FALLOCATE", check_symbol("posix_fallocate"))
+
+    set_define("HAVE_ARC4RANDOM", check_symbol("arc4random"))
+    set_define("HAVE_ARC4RANDOM_BUF", check_symbol("arc4random_buf"))
+    set_define("HAVE_MALLINFO", check_symbol("mallinfo"))

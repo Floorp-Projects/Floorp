@@ -160,8 +160,36 @@ impl<'a> Parse<'a> for Data<'a> {
             let offset = parser.parens(|parser| {
                 if parser.peek::<kw::offset>() {
                     parser.parse::<kw::offset>()?;
+                    parser.parse()
+                } else {
+                    // This is all that the spec allows, which is that if
+                    // `offset` isn't present then this is "sugar" for a
+                    // single-instruction expression.
+                    let insn = parser.parse()?;
+                    if parser.is_empty() {
+                        return Ok(ast::Expression {
+                            instrs: [insn].into(),
+                        });
+                    }
+
+                    // This is support for what is currently invalid syntax
+                    // according to the strict specification but is otherwise
+                    // present in the spec test suite:
+                    //
+                    //    (data (i32.add (i32.const 0) (i32.const 0)))
+                    //
+                    // Technically the spec says this should be:
+                    //
+                    //    (data (offset ...))
+                    //
+                    // but alas
+                    let expr: ast::Expression = parser.parse()?;
+                    let mut instrs = Vec::from(expr.instrs);
+                    instrs.push(insn);
+                    Ok(ast::Expression {
+                        instrs: instrs.into(),
+                    })
                 }
-                parser.parse()
             })?;
             DataKind::Active { memory, offset }
         };

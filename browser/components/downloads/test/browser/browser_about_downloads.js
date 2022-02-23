@@ -26,7 +26,7 @@ add_task(async function test_about_downloads() {
     BrowserTestUtils.loadURI(browser, "about:downloads");
     await downloadsLoaded;
     await SpecialPowers.spawn(browser, [], async function() {
-      let box = content.document.getElementById("downloadsRichListBox");
+      let box = content.document.getElementById("downloadsListBox");
       ok(box, "Should have list of downloads");
       is(box.children.length, 2, "Should have 2 downloads.");
       for (let kid of box.children) {

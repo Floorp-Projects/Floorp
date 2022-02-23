@@ -24,6 +24,8 @@ class MockConduit : public MediaSessionConduit {
   MockConduit() = default;
 
   MOCK_CONST_METHOD0(type, Type());
+  MOCK_CONST_METHOD0(ActiveSendPayloadType, Maybe<int>());
+  MOCK_CONST_METHOD0(ActiveRecvPayloadType, Maybe<int>());
   MOCK_METHOD1(SetTransportActive, void(bool));
   MOCK_METHOD0(SenderRtpSendEvent, MediaEventSourceExc<MediaPacket>&());
   MOCK_METHOD0(SenderRtcpSendEvent, MediaEventSourceExc<MediaPacket>&());

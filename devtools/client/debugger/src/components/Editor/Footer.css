@@ -60,7 +60,7 @@
 }
 
 .source-footer .blackboxed .img.blackBox {
-  background-color: var(--theme-icon-checked-color);
+  background-color: var(--red-40);
 }
 
 .source-footer .mapped-source,

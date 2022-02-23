@@ -210,7 +210,9 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             type={component.type}
             dispatch={this.props.dispatch}
             items={component.properties.items}
-            compact={component.properties.compact}
+            hybridLayout={component.properties.hybridLayout}
+            hideCardBackground={component.properties.hideCardBackground}
+            fourCardLayout={component.properties.fourCardLayout}
             hideDescriptions={component.properties.hideDescriptions}
             compactGrid={component.properties.compactGrid}
             compactImages={component.properties.compactImages}
@@ -221,7 +223,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             essentialReadsHeader={component.properties.essentialReadsHeader}
             editorsPicksHeader={component.properties.editorsPicksHeader}
             readTime={component.properties.readTime}
-            loadMoreEnabled={component.loadMoreEnabled}
+            loadMore={component.loadMore}
             lastCardMessageEnabled={component.lastCardMessageEnabled}
             saveToPocketCard={component.saveToPocketCard}
             cta_variant={component.cta_variant}

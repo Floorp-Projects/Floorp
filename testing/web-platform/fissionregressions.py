@@ -61,6 +61,7 @@ run_infos = {
         "sessionHistoryInParent": True,
         "swgl": False,
         "win10_2004": False,
+        "domstreams": False,
     },
     "linux-debug": {
         "os": "linux",
@@ -112,6 +113,7 @@ run_infos = {
         "sessionHistoryInParent": False,
         "swgl": False,
         "win10_2004": False,
+        "domstreams": False,
     },
     "win-opt": {
         "os": "win",
@@ -163,6 +165,7 @@ run_infos = {
         "sessionHistoryInParent": False,
         "swgl": False,
         "win10_2004": False,
+        "domstreams": False,
     },
 }
 

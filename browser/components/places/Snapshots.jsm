@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
   CommonNames: "resource:///modules/CommonNames.jsm",
   Interactions: "resource:///modules/Interactions.jsm",
+  InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PageThumbsStorage: "resource://gre/modules/PageThumbs.jsm",
@@ -149,20 +150,6 @@ const Snapshots = new (class Snapshots {
     if (!PlacesPreviews.enabled) {
       PageThumbs.addExpirationFilter(this);
     }
-  }
-
-  /**
-   * Only certain urls can be added as Snapshots, either manually or
-   * automatically.
-   * @returns {Map} A Map keyed by protocol, for each protocol an object may
-   *          define stricter requirements, like extension.
-   */
-  get urlRequirements() {
-    return new Map([
-      ["http:", {}],
-      ["https:", {}],
-      ["file:", { extension: "pdf" }],
-    ]);
   }
 
   #notify(topic, urls) {
@@ -300,31 +287,6 @@ const Snapshots = new (class Snapshots {
   }
 
   /**
-   * Whether a given URL can be added to snapshots.
-   * The rules are defined in this.urlRequirements.
-   * @param {string|URL|nsIURI} url The URL to check.
-   * @returns {boolean} whether the url can be added to snapshots.
-   */
-  canSnapshotUrl(url) {
-    let protocol, pathname;
-    if (typeof url == "string") {
-      url = new URL(url);
-    }
-    if (url instanceof Ci.nsIURI) {
-      protocol = url.scheme + ":";
-      pathname = url.filePath;
-    } else {
-      protocol = url.protocol;
-      pathname = url.pathname;
-    }
-    let requirements = this.urlRequirements.get(protocol);
-    return (
-      requirements &&
-      (!requirements.extension || pathname.endsWith(requirements.extension))
-    );
-  }
-
-  /**
    * Adds a new snapshot.
    *
    * If the snapshot already exists, and this is a user-persisted addition,
@@ -334,15 +296,17 @@ const Snapshots = new (class Snapshots {
    * @param {object} details
    * @param {string} details.url
    *   The url associated with the snapshot.
+   * @param {string} [details.title]
+   *   Optional user-provided title for the snapshot.
    * @param {Snapshots.USER_PERSISTED} [details.userPersisted]
    *   Whether the user created the snapshot and if they did, through what
    *   action, defaults to USER_PERSISTED.NO.
    */
-  async add({ url, userPersisted = this.USER_PERSISTED.NO }) {
+  async add({ url, title, userPersisted = this.USER_PERSISTED.NO }) {
     if (!url) {
       throw new Error("Missing url parameter to Snapshots.add()");
     }
-    if (!this.canSnapshotUrl(url)) {
+    if (!InteractionsBlocklist.canRecordUrl(url)) {
       throw new Error("This url cannot be added to snapshots");
     }
 
@@ -351,6 +315,18 @@ const Snapshots = new (class Snapshots {
       async db => {
         let now = Date.now();
         await this.#maybeInsertPlace(db, new URL(url));
+
+        // Title is updated only if the caller provided it.
+        let updateTitleFragment =
+          title !== undefined ? ", title = :title " : "";
+        // If the user edits the title, update userPersisted accordingly. Note
+        // that in case of an update, we'll not override higher USER_PERSISTED
+        // values like PINNED with lower ones line MANUAL, to avoid losing
+        // precious information.
+        if (title !== undefined) {
+          userPersisted = this.USER_PERSISTED.MANUAL;
+        }
+
         // When the user asks for a snapshot to be created, we may not yet have
         // a corresponding interaction. We create a snapshot with 0 as the value
         // for first_interaction_at to flag it as missing a corresponding
@@ -360,16 +336,19 @@ const Snapshots = new (class Snapshots {
         let rows = await db.executeCached(
           `
             INSERT INTO moz_places_metadata_snapshots
-              (place_id, first_interaction_at, last_interaction_at, document_type, created_at, user_persisted)
+              (place_id, first_interaction_at, last_interaction_at, document_type, created_at, user_persisted, title)
             SELECT h.id, IFNULL(min(m.created_at), CASE WHEN :userPersisted THEN 0 ELSE NULL END),
                   IFNULL(max(m.created_at), CASE WHEN :userPersisted THEN :createdAt ELSE NULL END),
                   IFNULL(first_value(m.document_type) OVER (PARTITION BY h.id ORDER BY m.created_at DESC), :documentFallback),
-                  :createdAt, :userPersisted
+                  :createdAt, :userPersisted, :title
             FROM moz_places h
             LEFT JOIN moz_places_metadata m ON m.place_id = h.id
             WHERE h.url_hash = hash(:url) AND h.url = :url
             GROUP BY h.id
-            ON CONFLICT DO UPDATE SET user_persisted = :userPersisted, removed_at = NULL WHERE :userPersisted <> 0
+            ON CONFLICT DO UPDATE SET user_persisted = MAX(:userPersisted, user_persisted),
+                                      removed_at = NULL
+                                      ${updateTitleFragment}
+                                  WHERE :userPersisted <> 0
             RETURNING place_id, created_at, user_persisted
           `,
           {
@@ -377,6 +356,7 @@ const Snapshots = new (class Snapshots {
             url,
             userPersisted,
             documentFallback: Interactions.DOCUMENT_TYPE.GENERIC,
+            title: title || null, // Store null, not an empty string.
           }
         );
 
@@ -450,8 +430,8 @@ const Snapshots = new (class Snapshots {
 
     let rows = await db.executeCached(
       `
-      SELECT h.url AS url, h.title AS title, created_at, removed_at,
-             document_type, first_interaction_at, last_interaction_at,
+      SELECT h.url AS url, IFNULL(s.title, h.title) AS title, created_at,
+             removed_at, document_type, first_interaction_at, last_interaction_at,
              user_persisted, description, site_name, preview_image_url,
              group_concat('[' || e.type || ', ' || e.data || ']') AS page_data,
              h.visit_count
@@ -478,6 +458,7 @@ const Snapshots = new (class Snapshots {
    * @param {object} [options]
    * @param {number} [options.limit]
    *   A numerical limit to the number of snapshots to retrieve, defaults to 100.
+   *   -1 may be used to get all snapshots, e.g. for use by the group builders.
    * @param {boolean} [options.includeTombstones]
    *   Whether to include tombstones in the snapshots to obtain.
    * @param {number} [options.type]
@@ -494,7 +475,8 @@ const Snapshots = new (class Snapshots {
     let db = await PlacesUtils.promiseDBConnection();
 
     let clauses = [];
-    let bindings = { limit };
+    let bindings = {};
+    let limitStatement = "";
 
     if (!includeTombstones) {
       clauses.push("removed_at IS NULL");
@@ -505,12 +487,17 @@ const Snapshots = new (class Snapshots {
       bindings.type = type;
     }
 
+    if (limit != -1) {
+      limitStatement = "LIMIT :limit";
+      bindings.limit = limit;
+    }
+
     let whereStatement = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
 
     let rows = await db.executeCached(
       `
-      SELECT h.url AS url, h.title AS title, created_at, removed_at,
-             document_type, first_interaction_at, last_interaction_at,
+      SELECT h.url AS url, IFNULL(s.title, h.title) AS title, created_at,
+             removed_at, document_type, first_interaction_at, last_interaction_at,
              user_persisted, description, site_name, preview_image_url,
              group_concat('[' || e.type || ', ' || e.data || ']') AS page_data,
              h.visit_count
@@ -520,7 +507,7 @@ const Snapshots = new (class Snapshots {
       ${whereStatement}
       GROUP BY s.place_id
       ORDER BY last_interaction_at DESC
-      LIMIT :limit
+      ${limitStatement}
     `,
       bindings
     );
@@ -577,10 +564,12 @@ const Snapshots = new (class Snapshots {
     let db = await PlacesUtils.promiseDBConnection();
 
     let rows = await db.executeCached(
-      `SELECT h.url AS url, h.title AS title, o.overlappingVisitScore, created_at, removed_at,
-      document_type, first_interaction_at, last_interaction_at,
-      user_persisted, description, site_name, preview_image_url, group_concat('[' || e.type || ', ' || e.data || ']') AS page_data,
-      h.visit_count
+      `SELECT h.url AS url, IFNULL(s.title, h.title) AS title,
+              o.overlappingVisitScore, created_at, removed_at,
+              document_type, first_interaction_at, last_interaction_at,
+              user_persisted, description, site_name, preview_image_url,
+              group_concat('[' || e.type || ', ' || e.data || ']') AS page_data,
+              h.visit_count
       FROM moz_places_metadata_snapshots s
       JOIN moz_places h ON h.id = s.place_id
       JOIN (
@@ -644,10 +633,10 @@ const Snapshots = new (class Snapshots {
 
     let rows = await db.executeCached(
       `
-      SELECT h.id, h.url AS url, h.title AS title, s.created_at,
-        removed_at, s.document_type, first_interaction_at, last_interaction_at, user_persisted,
-        description, site_name, preview_image_url, h.visit_count,
-        group_concat('[' || e.type || ', ' || e.data || ']') AS page_data
+      SELECT h.id, h.url AS url, IFNULL(s.title, h.title) AS title, s.created_at,
+             removed_at, s.document_type, first_interaction_at, last_interaction_at,
+             user_persisted, description, site_name, preview_image_url, h.visit_count,
+             group_concat('[' || e.type || ', ' || e.data || ']') AS page_data
       FROM moz_places_metadata_snapshots s
       JOIN moz_places h
       ON h.id = s.place_id
@@ -838,7 +827,7 @@ const Snapshots = new (class Snapshots {
           // likely in the future these picking rules will be replaced by some
           // ML machinery. Thus it seems not worth the added complexity.
           let filters = [];
-          for (let protocol of this.urlRequirements.keys()) {
+          for (let protocol of InteractionsBlocklist.urlRequirements.keys()) {
             filters.push(
               `(url_hash BETWEEN hash('${protocol}', 'prefix_lo') AND hash('${protocol}', 'prefix_hi'))`
             );
@@ -847,7 +836,7 @@ const Snapshots = new (class Snapshots {
         } else {
           let urlMatches = [];
           urls.forEach((url, idx) => {
-            if (!this.canSnapshotUrl(url)) {
+            if (!InteractionsBlocklist.canRecordUrl(url)) {
               logConsole.debug(`Url can't be added to snapshots: ${url}`);
               return;
             }

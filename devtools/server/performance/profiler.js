@@ -555,14 +555,6 @@ class Profiler {
     });
     return { registered: response };
   }
-
-  /**
-   * Checks whether or not the profiler module can currently run.
-   * @return boolean
-   */
-  static canProfile() {
-    return Services.profiler.CanProfile();
-  }
 }
 
 /**

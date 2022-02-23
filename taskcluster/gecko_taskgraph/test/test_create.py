@@ -5,10 +5,10 @@
 
 import unittest
 
+from taskgraph.config import GraphConfig
 from unittest import mock
 
 from gecko_taskgraph import create
-from gecko_taskgraph.config import GraphConfig
 from gecko_taskgraph.graph import Graph
 from gecko_taskgraph.taskgraph import TaskGraph
 from gecko_taskgraph.task import Task

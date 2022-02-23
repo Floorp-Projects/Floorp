@@ -44,7 +44,7 @@ pub fn new_canonical<I: Iterator<Item=char>>(iter: I) -> Recompositions<I> {
 pub fn new_compatible<I: Iterator<Item=char>>(iter: I) -> Recompositions<I> {
     Recompositions {
         iter: super::decompose::new_compatible(iter),
-        state : self::RecompositionState::Composing,
+        state: self::RecompositionState::Composing,
         buffer: VecDeque::new(),
         composee: None,
         last_ccc: None,
@@ -63,15 +63,16 @@ impl<I: Iterator<Item=char>> Iterator for Recompositions<I> {
                 Composing => {
                     for ch in self.iter.by_ref() {
                         let ch_class = super::char::canonical_combining_class(ch);
-                        if self.composee.is_none() {
-                            if ch_class != 0 {
-                                return Some(ch);
-                            }
-                            self.composee = Some(ch);
-                            continue;
-                        }
-                        let k = self.composee.clone().unwrap();
-
+                        let k = match self.composee {
+                            None => {
+                                if ch_class != 0 {
+                                    return Some(ch);
+                                }
+                                self.composee = Some(ch);
+                                continue;
+                            },
+                            Some(k) => k,
+                        };
                         match self.last_ccc {
                             None => {
                                 match super::char::compose(k, ch) {

@@ -159,28 +159,52 @@ add_task(async function testRenameOnQueryResult() {
       guid: theNode.bookmarkGuid,
       title: TEST_NEW_TITLE,
     });
+
     // As the query result is refreshed once then the node also is regenerated,
     // need to get the result node from the tree again.
-    const newNode = tree.view._getNodeForRow(0);
     Assert.equal(
-      newNode.bookmarkGuid,
+      tree.view._getNodeForRow(0).bookmarkGuid,
       theNode.bookmarkGuid,
       "GUID of node regenerated is correct"
     );
     Assert.equal(
-      newNode.uri,
+      tree.view._getNodeForRow(0).uri,
       theNode.uri,
       "URI of node regenerated is correct"
     );
     Assert.equal(
-      newNode.parentGuid,
+      tree.view._getNodeForRow(0).parentGuid,
       theNode.parentGuid,
       "parentGuid of node regenerated is correct"
     );
     Assert.equal(
-      newNode.title,
+      tree.view._getNodeForRow(0).title,
       TEST_NEW_TITLE,
       "New title is applied to the node"
+    );
+
+    info("Check the new date will be applied the item when changing it");
+    const now = new Date();
+    await PlacesUtils.bookmarks.update({
+      guid: theNode.bookmarkGuid,
+      dateAdded: now,
+      lastModified: now,
+    });
+
+    Assert.equal(
+      tree.view._getNodeForRow(0).uri,
+      theNode.uri,
+      "URI of node regenerated is correct"
+    );
+    Assert.equal(
+      tree.view._getNodeForRow(0).dateAdded,
+      now.getTime() * 1000,
+      "New dateAdded is applied to the node"
+    );
+    Assert.equal(
+      tree.view._getNodeForRow(0).lastModified,
+      now.getTime() * 1000,
+      "New lastModified is applied to the node"
     );
   });
 

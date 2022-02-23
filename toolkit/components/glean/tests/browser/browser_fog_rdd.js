@@ -3,9 +3,6 @@
 
 "use strict";
 
-// Glean's here on `window`, but eslint doesn't know that. bug 1715542.
-/* global Glean:false */
-
 /**
  * Return a web-based URL for a given file based on the testing directory.
  * @param {String} fileName

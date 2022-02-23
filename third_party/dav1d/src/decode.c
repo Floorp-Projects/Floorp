@@ -2949,14 +2949,10 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
                 goto error;
             }
         }
-        Dav1dTileState *ts_new = dav1d_alloc_aligned(sizeof(*f->ts) * n_ts, 32);
-        if (!ts_new) goto error;
-        if (f->ts) {
-            memcpy(ts_new, f->ts, sizeof(*f->ts) * imin(n_ts, f->n_ts));
-            dav1d_free_aligned(f->ts);
-        }
+        dav1d_free_aligned(f->ts);
+        f->ts = dav1d_alloc_aligned(sizeof(*f->ts) * n_ts, 32);
+        if (!f->ts) goto error;
         f->n_ts = n_ts;
-        f->ts = ts_new;
     }
 
     const int a_sz = f->sb128w * f->frame_hdr->tiling.rows * (1 + (c->n_fc > 1 && c->n_tc > 1));
@@ -3497,7 +3493,9 @@ int dav1d_submit_frame(Dav1dContext *const c) {
         if (out_delayed->p.data[0]) {
             const unsigned progress = atomic_load_explicit(&out_delayed->progress[1],
                                                            memory_order_relaxed);
-            if (out_delayed->visible && progress != FRAME_ERROR) {
+            if ((out_delayed->visible || c->output_invisible_frames) &&
+                progress != FRAME_ERROR)
+            {
                 dav1d_picture_ref(&c->out, &out_delayed->p);
                 c->event_flags |= dav1d_picture_get_event_flags(out_delayed);
             }
@@ -3671,7 +3669,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
 
     // move f->cur into output queue
     if (c->n_fc == 1) {
-        if (f->frame_hdr->show_frame) {
+        if (f->frame_hdr->show_frame || c->output_invisible_frames) {
             dav1d_picture_ref(&c->out, &f->sr_cur.p);
             c->event_flags |= dav1d_picture_get_event_flags(&f->sr_cur);
         }

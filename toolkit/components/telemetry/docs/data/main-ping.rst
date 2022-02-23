@@ -502,4 +502,3 @@ Version History
 - Firefox 80:
 
   - Stopped reporting ``GCTelemetry`` (`bug 1482089 <https://bugzilla.mozilla.org/show_bug.cgi?id=1482089>`_).
-

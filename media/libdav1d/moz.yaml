@@ -20,11 +20,11 @@ origin:
 
   # Human-readable identifier for this version/release
   # Generally "version NNN", "tag SSS", "bookmark SSS"
-  release: commit 7b99b0e17fbd86f0847684798b182f9122545580 (2021-12-03T21:51:14.000+01:00).
+  release: commit b562b7f648e26e64fae892495527b5b275d53183 (2022-01-10T14:49:11.000+00:00).
 
   # Revision to pull in
   # Must be a long or short commit SHA (long preferred)
-  revision: 7b99b0e17fbd86f0847684798b182f9122545580
+  revision: b562b7f648e26e64fae892495527b5b275d53183
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/
@@ -63,4 +63,5 @@ vendoring:
       pattern: '@VCS_TAG@'
       with: '{revision}'
       file: '{yaml_dir}/vcs_version.h'
+
 

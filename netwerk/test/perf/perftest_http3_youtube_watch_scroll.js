@@ -4,7 +4,7 @@
 /* eslint-env node */
 
 /*
-Ensure the `--firefox.preference=network.http.http3.enabled:true` is
+Ensure the `--firefox.preference=network.http.http3.enable:true` is
 set for this test.
 */
 

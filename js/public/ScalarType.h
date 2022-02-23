@@ -53,6 +53,7 @@ enum Type {
 
   /**
    * Types that don't have their own TypedArray equivalent, for now.
+   * E.g. DataView
    */
   MaxTypedArrayViewType,
 

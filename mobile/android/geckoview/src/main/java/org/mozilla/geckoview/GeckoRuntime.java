@@ -42,11 +42,13 @@ import java.util.Map;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoNetworkManager;
+import org.mozilla.gecko.GeckoScreenChangeListener;
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoScreenOrientation.ScreenOrientation;
 import org.mozilla.gecko.GeckoSystemStateListener;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.process.MemoryController;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.DebugConfig;
 import org.mozilla.gecko.util.EventCallback;
@@ -135,6 +137,8 @@ public final class GeckoRuntime implements Parcelable {
    */
   public static final String CRASHED_PROCESS_TYPE_BACKGROUND_CHILD = "BACKGROUND_CHILD";
 
+  private final MemoryController mMemoryController = new MemoryController();
+
   @Retention(RetentionPolicy.SOURCE)
   @StringDef(
       value = {
@@ -142,7 +146,7 @@ public final class GeckoRuntime implements Parcelable {
         CRASHED_PROCESS_TYPE_FOREGROUND_CHILD,
         CRASHED_PROCESS_TYPE_BACKGROUND_CHILD
       })
-  /* package */ @interface CrashedProcessType {}
+  public @interface CrashedProcessType {}
 
   private final class LifecycleListener implements LifecycleObserver {
     private boolean mPaused = false;
@@ -222,12 +226,18 @@ public final class GeckoRuntime implements Parcelable {
   private final ContentBlockingController mContentBlockingController;
   private final Autocomplete.StorageProxy mAutocompleteStorageProxy;
   private final ProfilerController mProfilerController;
+  private final GeckoScreenChangeListener mScreenChangeListener;
 
   private GeckoRuntime() {
     mWebExtensionController = new WebExtensionController(this);
     mContentBlockingController = new ContentBlockingController();
     mAutocompleteStorageProxy = new Autocomplete.StorageProxy();
     mProfilerController = new ProfilerController();
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+      mScreenChangeListener = new GeckoScreenChangeListener();
+    } else {
+      mScreenChangeListener = null;
+    }
 
     if (sRuntime != null) {
       throw new IllegalStateException("Only one GeckoRuntime instance is allowed");
@@ -454,6 +464,12 @@ public final class GeckoRuntime implements Parcelable {
 
     // Add process lifecycle listener to react to backgrounding events.
     ProcessLifecycleOwner.get().getLifecycle().addObserver(new LifecycleListener());
+
+    // Add Display Manager listener to listen screen orientation change.
+    if (mScreenChangeListener != null) {
+      mScreenChangeListener.enable();
+    }
+
     mProfilerController.addMarker(
         "GeckoView Initialization START", mProfilerController.getProfilerTime());
     return true;
@@ -552,6 +568,8 @@ public final class GeckoRuntime implements Parcelable {
       throw new IllegalStateException("Failed to initialize GeckoRuntime");
     }
 
+    context.registerComponentCallbacks(runtime.mMemoryController);
+
     return runtime;
   }
 
@@ -563,6 +581,11 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     GeckoSystemStateListener.getInstance().shutdown();
+
+    if (mScreenChangeListener != null) {
+      mScreenChangeListener.disable();
+    }
+
     GeckoThread.forceQuit();
   }
 
@@ -873,6 +896,12 @@ public final class GeckoRuntime implements Parcelable {
       return ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
     } else if (geckoOrientation == ScreenOrientation.DEFAULT.value) {
       return ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+    } else if (geckoOrientation == ScreenOrientation.PORTRAIT.value) {
+      return ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
+    } else if (geckoOrientation == ScreenOrientation.LANDSCAPE.value) {
+      return ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
+    } else if (geckoOrientation == ScreenOrientation.ANY.value) {
+      return ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR;
     }
     return ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
   }

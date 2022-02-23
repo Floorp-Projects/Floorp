@@ -14,6 +14,9 @@ const {
   WatcherRegistry,
 } = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
 const Targets = require("devtools/server/actors/targets/index");
+const {
+  getAllBrowsingContextsForContext,
+} = require("devtools/server/actors/watcher/browsing-context-helpers.jsm");
 
 const TARGET_HELPERS = {};
 loader.lazyRequireGetter(
@@ -36,6 +39,12 @@ loader.lazyRequireGetter(
   this,
   "NetworkParentActor",
   "devtools/server/actors/network-monitor/network-parent",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "BlackboxingActor",
+  "devtools/server/actors/blackboxing",
   true
 );
 loader.lazyRequireGetter(
@@ -73,22 +82,15 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    *
    * @param {DevToolsServerConnection} conn
    *        The connection to use in order to communicate back to the client.
-   * @param {Object} sessionContext
-   *        Mandatory argument to define the debugged context of this actor.
-   *        Note that as this object is passed to other processes and thread,
-   *        this should be a serializable object.
-   * @param {String} sessionContext.type: The type of debugged context.
-   *        Can be:
-   *        - "all", to debug everything in the browser.
-   *        - "browser-element", to focus on one given <browser> element
-   *          and all its children resources (workers, iframes,...)
+   * @param {object} sessionContext
+   *        The Session Context to help know what is debugged.
+   *        See devtools/server/actors/watcher/session-context.js
    * @param {Number} sessionContext.browserId: If this is a "browser-element" context type,
    *        the "browserId" of the <browser> element we would like to debug.
-   * @param {Object|null} config: Optional configuration object.
-   * @param {Boolean} config.isServerTargetSwitchingEnabled: Flag to to know if we should
+   * @param {Boolean} sessionContext.isServerTargetSwitchingEnabled: Flag to to know if we should
    *        spawn new top level targets for the debugged context.
    */
-  initialize: function(conn, sessionContext, config = {}) {
+  initialize: function(conn, sessionContext) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this._sessionContext = sessionContext;
     if (sessionContext.type == "browser-element") {
@@ -104,7 +106,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       }
       this._browserElement = browsingContext.embedderElement;
     }
-    this._config = config;
 
     // Sometimes we get iframe targets before the top-level targets
     // mostly when doing bfcache navigations, lets cache the early iframes targets and
@@ -145,6 +146,10 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     return this._browserElement;
   },
 
+  getAllBrowsingContexts(options) {
+    return getAllBrowsingContextsForContext(this.sessionContext, options);
+  },
+
   /**
    * Helper to know if the context we are debugging has been already destroyed
    */
@@ -159,10 +164,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     throw new Error(
       "Unsupported session context type: " + this.sessionContext.type
     );
-  },
-
-  get isServerTargetSwitchingEnabled() {
-    return !!this._config.isServerTargetSwitchingEnabled;
   },
 
   destroy: function() {
@@ -240,6 +241,9 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.SERVER_SENT_EVENT]: shouldEnableAllWatchers,
           [Resources.TYPES.WEBSOCKET]: shouldEnableAllWatchers,
         },
+        // @backward-compat { version 98 } Introduced the Blackboxing actor
+        //                  The traits can be removed when removing 97 support.
+        blackboxing: true,
       },
     };
   },
@@ -382,7 +386,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     // so there is no reason to delay target-destroy for remote iframes.
     if (
       documentEventWatcher &&
-      this.isServerTargetSwitchingEnabled &&
+      this.sessionContext.isServerTargetSwitchingEnabled &&
       actor.isTopLevelTarget
     ) {
       await documentEventWatcher.onceWillNavigateIsEmitted(actor.innerWindowId);
@@ -656,6 +660,20 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     }
 
     return this._networkParentActor;
+  },
+
+  /**
+   * Returns the blackboxing actor.
+   *
+   * @return {Object} actor
+   *        The blackboxing actor.
+   */
+  getBlackboxingActor() {
+    if (!this._blackboxingActor) {
+      this._blackboxingActor = new BlackboxingActor(this);
+    }
+
+    return this._blackboxingActor;
   },
 
   /**

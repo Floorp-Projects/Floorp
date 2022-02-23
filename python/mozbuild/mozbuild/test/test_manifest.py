@@ -148,6 +148,7 @@ updatebot:
                         "updatebot": {
                             "maintainer-phab": "tjr",
                             "maintainer-bz": "a@example.com",
+                            "fuzzy-query": "!linux64",
                             "tasks": [{"type": "commit-alert"}],
                         },
                     },
@@ -170,6 +171,7 @@ bugzilla:
   product: Core
   component: Graphics
 updatebot:
+  fuzzy-query: "!linux64"
   maintainer-phab: tjr
   maintainer-bz: a@example.com
   tasks:

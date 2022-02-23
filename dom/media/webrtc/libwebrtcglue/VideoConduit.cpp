@@ -1892,4 +1892,33 @@ bool WebrtcVideoConduit::HasH264Hardware() {
          status == nsIGfxInfo::FEATURE_STATUS_OK;
 }
 
+Maybe<int> WebrtcVideoConduit::ActiveSendPayloadType() const {
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+
+  if (!mSendStream) {
+    return Nothing();
+  }
+
+  if (mSendStreamConfig.rtp.payload_type == -1) {
+    return Nothing();
+  }
+
+  return Some(mSendStreamConfig.rtp.payload_type);
+}
+
+Maybe<int> WebrtcVideoConduit::ActiveRecvPayloadType() const {
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+
+  auto stats = GetReceiverStats();
+  if (!stats) {
+    return Nothing();
+  }
+
+  if (stats->current_payload_type == -1) {
+    return Nothing();
+  }
+
+  return Some(stats->current_payload_type);
+}
+
 }  // namespace mozilla

@@ -28,6 +28,8 @@
   outline: none !important;
   margin: 0;
   text-shadow: 0 0 1px hsl(0,0%,12%), 0 0 2px hsl(0,0%,12%);
+  border: none;
+  background-color: transparent;
 }
 
 .ctrlTab-preview > .button-box {

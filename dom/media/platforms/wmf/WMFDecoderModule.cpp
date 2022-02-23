@@ -177,8 +177,6 @@ nsresult WMFDecoderModule::Startup() {
 
 already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
-  ReportUsageForTelemetry();
-
   // In GPU process, only support decoding if an accelerated compositor is
   // known.
   if (XRE_IsGPUProcess() &&
@@ -215,8 +213,6 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateVideoDecoder(
 
 already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
-  ReportUsageForTelemetry();
-
   if (XRE_IsGPUProcess()) {
     // Only allow video in the GPU process.
     return nullptr;
@@ -291,8 +287,6 @@ bool WMFDecoderModule::SupportsMimeType(
 
 bool WMFDecoderModule::Supports(const SupportDecoderParams& aParams,
                                 DecoderDoctorDiagnostics* aDiagnostics) const {
-  ReportUsageForTelemetry();
-
   // In GPU process, only support decoding if video. This only gives a hint of
   // what the GPU decoder *may* support. The actual check will occur in
   // CreateVideoDecoder.
@@ -334,12 +328,6 @@ bool WMFDecoderModule::Supports(const SupportDecoderParams& aParams,
 
   // Some unsupported codec.
   return false;
-}
-
-void WMFDecoderModule::ReportUsageForTelemetry() const {
-  if (XRE_IsParentProcess() || XRE_IsContentProcess()) {
-    Telemetry::ScalarSet(Telemetry::ScalarID::MEDIA_WMF_PROCESS_USAGE, true);
-  }
 }
 
 }  // namespace mozilla

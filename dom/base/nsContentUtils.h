@@ -44,7 +44,6 @@
 #include "nsCOMPtr.h"
 #include "nsHashtablesFwd.h"
 #include "nsIContentPolicy.h"
-#include "nsID.h"
 #include "nsINode.h"
 #include "nsIScriptError.h"
 #include "nsIThread.h"
@@ -110,7 +109,6 @@ class nsIStringBundleService;
 class nsISupports;
 class nsITransferable;
 class nsIURI;
-class nsIUUIDGenerator;
 class nsIWidget;
 class nsIXPConnect;
 class nsNodeInfoManager;
@@ -1270,16 +1268,6 @@ class nsContentUtils {
    */
   static void SandboxFlagsToString(uint32_t aFlags, nsAString& aString);
 
-  /**
-   * Helper function that generates a UUID.
-   */
-  static nsresult GenerateUUIDInPlace(nsID& aUUID);
-
-  /**
-   * Infallable (with an assertion) helper function that generates a UUID.
-   */
-  static nsID GenerateUUID();
-
   static bool PrefetchPreloadEnabled(nsIDocShell* aDocShell);
 
   static void ExtractErrorValues(JSContext* aCx, JS::Handle<JS::Value> aValue,
@@ -2115,15 +2103,6 @@ class nsContentUtils {
    * Check whether an application should be allowed to use offline APIs.
    */
   static bool OfflineAppAllowed(nsIPrincipal* aPrincipal);
-
-  /**
-   * Determine whether the principal or document is allowed access to the
-   * localization system. We don't want the web to ever see this but all our UI
-   * including in content pages should pass this test.  aDocumentURI may be
-   * null.
-   */
-  static bool PrincipalAllowsL10n(nsIPrincipal& aPrincipal,
-                                  nsIURI* aDocumentURI);
 
   /**
    * Increases the count of blockers preventing scripts from running.
@@ -3311,16 +3290,12 @@ class nsContentUtils {
     bool mMustRevalidate = false;
   };
 
-  enum class SubresourceKind {
-    Style,
-    Image,
-  };
   /**
    * Gets cache validation info for subresources such as images or CSS
    * stylesheets.
    */
   static SubresourceCacheValidationInfo GetSubresourceCacheValidationInfo(
-      nsIRequest*, nsIURI*, SubresourceKind);
+      nsIRequest*, nsIURI*);
 
   static uint32_t SecondsFromPRTime(PRTime aTime) {
     return uint32_t(int64_t(aTime) / int64_t(PR_USEC_PER_SEC));
@@ -3393,7 +3368,6 @@ class nsContentUtils {
   static nsIPrincipal* sNullSubjectPrincipal;
 
   static nsIIOService* sIOService;
-  static nsIUUIDGenerator* sUUIDGenerator;
 
   static nsIConsoleService* sConsoleService;
 

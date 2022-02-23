@@ -13,50 +13,168 @@ createHTML({
   bug: "1152383"
 });
 
-const RESPONSE_WAIT_TIME_MS = 3000;
-
-async function maybeReceiveDevicechangeEvent() {
-  return Promise.race([
-    new Promise(r => navigator.mediaDevices.ondevicechange = () => r(true)),
-    wait(RESPONSE_WAIT_TIME_MS).then(() => false)
-  ]);
+async function resolveOnEvent(target, name) {
+  return new Promise(r => target.addEventListener(name, r, {once: true}));
+}
+let eventCount = 0;
+async function triggerVideoDevicechange() {
+  ++eventCount;
+  // "media.getusermedia.fake-camera-name" specifies the name of the single
+  // fake video camera.
+  // Changing the pref imitates replacing one device with another.
+  return pushPrefs(["media.getusermedia.fake-camera-name",
+                    `devicechange ${eventCount}`])
+}
+function addIframe() {
+  const iframe = document.createElement("iframe");
+  // Workaround for bug 1743933
+  iframe.loadPromise = resolveOnEvent(iframe, "load");
+  document.documentElement.appendChild(iframe);
+  return iframe;
 }
 
 runTest(async () => {
-  SimpleTest.requestCompleteLog();
+  // A toplevel Window and an iframe Windows are compared for devicechange
+  // events.
+  const iframe1 = addIframe();
+  const iframe2 = addIframe();
+  await Promise.all([
+    iframe1.loadPromise,
+    iframe2.loadPromise,
+    pushPrefs(
+      // Use the fake video backend to trigger devicechange events.
+      ["media.navigator.streams.fake", true],
+      // Loopback would override fake.
+      ["media.video_loopback_dev", ""],
+      // Make fake devices count as real, permission-wise, or devicechange
+      // events won't be exposed
+      ["media.navigator.permission.fake", true],
+      // For gUM.
+      ["media.navigator.permission.disabled", true]
+    ),
+  ]);
+  const topDevices = navigator.mediaDevices;
+  const frame1Devices = iframe1.contentWindow.navigator.mediaDevices;
+  const frame2Devices = iframe2.contentWindow.navigator.mediaDevices;
+  // Initialization of MediaDevices::mLastPhysicalDevices is triggered when
+  // ondevicechange is set but tests "media.getusermedia.fake-camera-name"
+  // asynchronously.  Wait for getUserMedia() completion to ensure that the
+  // pref has been read before doDevicechanges() changes it.
+  frame1Devices.ondevicechange = () => {};
+  const topEventPromise = resolveOnEvent(topDevices, "devicechange");
+  const frame2EventPromise = resolveOnEvent(frame2Devices, "devicechange");
+  (await frame1Devices.getUserMedia({video: true})).getTracks()[0].stop();
 
-  await pushPrefs(
-    // Ensure there are continuous fake devicechange events throughout this test
-    ["media.ondevicechange.fakeDeviceChangeEvent.enabled", true],
-    // Make fake devices count as real, permission-wise, or devicechange events
-    // won't be exposed
-    ["media.navigator.permission.fake", true],
-    // Ensure this precondition to the below tests
-    ["media.navigator.permission.disabled", true]
-  );
+  await Promise.all([
+    resolveOnEvent(frame1Devices, "devicechange"),
+    triggerVideoDevicechange(),
+  ]);
+  ok(true,
+     "devicechange event is fired when gUM has been in use");
+  // The number of devices has not changed.  Race a settled Promise to check
+  // that no devicechange event has been received in frame2.
+  const racer = {};
+  is(await Promise.race([frame2EventPromise, racer]), racer,
+     "devicechange event is NOT fired in iframe2 for replaced device when " +
+     "gUM has NOT been in use");
+  // getUserMedia() is invoked on frame2Devices after a first device list
+  // change but before returning to the previous state, in order to test that
+  // the device set is compared with the set after previous device list
+  // changes regardless of whether a "devicechange" event was previously
+  // dispatched.
+  (await frame2Devices.getUserMedia({video: true})).getTracks()[0].stop();
+  // Revert device list change.
+  await Promise.all([
+    resolveOnEvent(frame1Devices, "devicechange"),
+    resolveOnEvent(frame2Devices, "devicechange"),
+    SpecialPowers.popPrefEnv(),
+  ]);
+  ok(true,
+     "devicechange event is fired on return to previous list " +
+     "after gUM has been is use");
 
-  const stream = await getUserMedia({video: true, fake: true});
-  const [track] = stream.getVideoTracks();
-  await pushPrefs(["media.navigator.permission.disabled", false]);
-  try {
-    ok(await maybeReceiveDevicechangeEvent(),
-        "devicechange event is fired when gUM is in use without permanent " +
-        "permission granted");
-  } finally {
-    track.stop();
+  const frame1EventPromise1 = resolveOnEvent(frame1Devices, "devicechange");
+  while (true) {
+    const racePromise = Promise.race([
+      frame1EventPromise1,
+      // 100ms is half the coalescing time in MediaManager::DeviceListChanged().
+      wait(100, {type: "wait done"}),
+    ]);
+    await triggerVideoDevicechange();
+    if ((await racePromise).type == "devicechange") {
+      ok(true,
+         "devicechange event is fired even when hardware changes continue");
+      break;
+    }
   }
 
-  ok(!await maybeReceiveDevicechangeEvent(),
-     "devicechange event is NOT fired when gUM is NOT in use and " +
-     "permanent permission is NOT granted");
+  is(await Promise.race([topEventPromise, racer]), racer,
+     "devicechange event is NOT fired for device replacements when " +
+     "gUM has NOT been in use");
 
-  await pushPrefs(["media.navigator.permission.disabled", true]);
-  ok(await maybeReceiveDevicechangeEvent(),
-     "devicechange event is fired when gUM is NOT in use and permanent "+
-     "permission is granted");
+  if (navigator.userAgent.includes("Android")) {
+    todo(false, "test assumes Firefox-for-Desktop specific API and behavior");
+    return;
+  }
+  // Open a new tab, which is expected to receive focus and hide the first tab.
+  const tab = window.open();
+  SimpleTest.registerCleanupFunction(() => tab.close());
+  await Promise.all([
+    resolveOnEvent(document, 'visibilitychange'),
+    resolveOnEvent(tab, 'focus'),
+  ]);
+  ok(tab.document.hasFocus(), "tab.document.hasFocus()");
+  await Promise.all([
+    resolveOnEvent(tab, 'blur'),
+    SpecialPowers.spawnChrome([], function focusUrlBar() {
+      this.browsingContext.topChromeWindow.gURLBar.focus();
+    }),
+  ]);
+  ok(!tab.document.hasFocus(), "!tab.document.hasFocus()");
+  is(document.visibilityState, 'hidden', 'visibilityState')
+  const frame1EventPromise2 = resolveOnEvent(frame1Devices, "devicechange");
+  const tabDevices = tab.navigator.mediaDevices;
+  tabDevices.ondevicechange = () => {};
+  const tabStream = await tabDevices.getUserMedia({video: true});
+  // Trigger and await two devicechanges on tabDevices to wait long enough to
+  // provide that a devicechange on another MediaDevices would be received.
+  for (let i = 0; i < 2; ++i) {
+    await Promise.all([
+      resolveOnEvent(tabDevices, "devicechange"),
+      triggerVideoDevicechange(),
+    ]);
+  };
+  is(await Promise.race([frame1EventPromise2, racer]), racer,
+     "devicechange event is NOT fired while tab is in background");
+  tab.close();
+  await resolveOnEvent(document, 'visibilitychange');
+  is(document.visibilityState, 'visible', 'visibilityState')
+  await frame1EventPromise2;
+  ok(true, "devicechange event IS fired when tab returns to foreground");
+
+  const audioLoopbackDev =
+        SpecialPowers.getCharPref("media.audio_loopback_dev", "");
+  if (!navigator.userAgent.includes("Linux")) {
+    todo_isnot(audioLoopbackDev, "", "audio_loopback_dev");
+    return;
+  }
+  isnot(audioLoopbackDev, "", "audio_loopback_dev");
+  await Promise.all([
+    resolveOnEvent(topDevices, "devicechange"),
+    pushPrefs(["media.audio_loopback_dev", "none"]),
+  ]);
+  ok(true,
+     "devicechange event IS fired when last audio device is removed and " +
+     "gUM has NOT been in use");
+  await Promise.all([
+    resolveOnEvent(topDevices, "devicechange"),
+    pushPrefs(["media.audio_loopback_dev", audioLoopbackDev]),
+  ]);
+  ok(true,
+     "devicechange event IS fired when first audio device is added and " +
+     "gUM has NOT been in use");
 });
 
 </script>
-</pre>
 </body>
 </html>

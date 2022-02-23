@@ -999,29 +999,14 @@ already_AddRefed<GLContext> GLContextProviderEGL::CreateForCompositorWidget(
 
 EGLSurface GLContextEGL::CreateCompatibleSurface(void* aWindow) const {
   MOZ_ASSERT(aWindow);
-  if (mConfig == EGL_NO_CONFIG) {
-    MOZ_CRASH("GFX: Failed with invalid EGLConfig 2!");
-  }
+  MOZ_RELEASE_ASSERT(mConfig != EGL_NO_CONFIG);
 
-  const auto fnCreate = [&](const bool useGles) -> EGLSurface {
-    // NOTE: aWindow is an ANativeWindow
-    auto config = mConfig;
-    if (!config && !CreateConfigScreen(*mEgl, &config,
-                                       /* aEnableDepthBuffer */ false,
-                                       /* useGles */ useGles)) {
-      return nullptr;
-    }
-
-    return mEgl->fCreateWindowSurface(
-        config, reinterpret_cast<EGLNativeWindowType>(aWindow), 0);
-  };
-
-  auto surface = fnCreate(false);
+  // NOTE: aWindow is an ANativeWindow
+  EGLSurface surface = mEgl->fCreateWindowSurface(
+      mConfig, reinterpret_cast<EGLNativeWindowType>(aWindow), nullptr);
   if (!surface) {
-    surface = fnCreate(true);
-  }
-  if (!surface) {
-    MOZ_CRASH("GFX: Failed to create EGLSurface 2!");
+    gfxCriticalError() << "CreateCompatibleSurface failed: "
+                       << hexa(GetError());
   }
   return surface;
 }

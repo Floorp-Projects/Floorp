@@ -25,14 +25,15 @@ namespace gfx {
 class DataSourceSurface;
 class DrawTargetSkia;
 class DrawTargetWebgl;
+class PathSkia;
 class SourceSurfaceSkia;
 
 class TextureHandle;
 class SharedTexture;
 class SharedTextureHandle;
 class StandaloneTexture;
-class GlyphCacheEntry;
 class GlyphCache;
+class PathCache;
 
 // DrawTargetWebgl implements a subset of the DrawTarget API suitable for use
 // by CanvasRenderingContext2D. It maps these to a client WebGL context so that
@@ -55,6 +56,8 @@ class DrawTargetWebgl : public DrawTarget {
   RefPtr<DataSourceSurface> mSnapshot;
   // Whether or not the Skia target has valid contents and is being drawn to
   bool mSkiaValid = false;
+  // Whether or not Skia layering over the WebGL context is enabled
+  bool mSkiaLayer = false;
   // Whether or not the WebGL context has valid contents and is being drawn to
   bool mWebglValid = false;
 
@@ -82,6 +85,8 @@ class DrawTargetWebgl : public DrawTarget {
   UserDataKey mGlyphCacheKey = {0};
   // List of all GlyphCaches currently allocated to fonts.
   LinkedList<GlyphCache> mGlyphCaches;
+  // Cache of rasterized paths.
+  UniquePtr<PathCache> mPathCache;
   // Collection of allocated shared texture pages that may be shared amongst
   // many handles.
   std::vector<RefPtr<SharedTexture>> mSharedTextures;
@@ -220,19 +225,28 @@ class DrawTargetWebgl : public DrawTarget {
                 Maybe<DeviceColor> aMaskColor = Nothing(),
                 RefPtr<TextureHandle>* aHandle = nullptr,
                 bool aTransformed = true, bool aClipped = true,
-                bool aAccelOnly = false, bool aForceUpdate = false);
+                bool aAccelOnly = false, bool aForceUpdate = false,
+                const StrokeOptions* aStrokeOptions = nullptr);
+  void DrawPath(const Path* aPath, const Pattern& aPattern,
+                const DrawOptions& aOptions,
+                const StrokeOptions* aStrokeOptions = nullptr);
 
   void MarkChanged();
 
   void ReadIntoSkia();
+  void FlattenSkia();
   bool FlushFromSkia();
 
   void MarkSkiaChanged() {
     if (!mSkiaValid) {
       ReadIntoSkia();
+    } else if (mSkiaLayer) {
+      FlattenSkia();
     }
     mWebglValid = false;
   }
+
+  void MarkSkiaChanged(const DrawOptions& aOptions);
 
   bool ReadInto(uint8_t* aDstData, int32_t aDstStride);
 

@@ -31,17 +31,11 @@
     function doTests() {
       gQueue = new eventQueue();
 
-      // open combobox
-      gQueue.push(new synthClick("combobox",
-                                 new invokerChecker(EVENT_FOCUS, "cb1_item1")));
-      gQueue.push(new synthDownKey("cb1_item1",
-                                   selChangeSeq("cb1_item1", "cb1_item2")));
 
       // closed combobox
-      gQueue.push(new synthEscapeKey("combobox",
-                                     new invokerChecker(EVENT_FOCUS, "combobox")));
-      gQueue.push(new synthDownKey("cb1_item2",
-                                   selChangeSeq("cb1_item2", "cb1_item3")));
+      gQueue.push(new synthFocus("combobox"));
+      gQueue.push(new synthDownKey("cb1_item1",
+                                   selChangeSeq("cb1_item1", "cb1_item2")));
 
       // listbox
       gQueue.push(new synthClick("lb1_item1",

@@ -127,6 +127,8 @@ enum class ExplicitActiveStatus : uint8_t {
   FIELD(ShouldDelayMediaFromStart, bool)                                      \
   /* See nsSandboxFlags.h for the possible flags. */                          \
   FIELD(SandboxFlags, uint32_t)                                               \
+  /* The value of SandboxFlags when the BrowsingContext is first created.     \
+   * Used for sandboxing the initial about:blank document. */                 \
   FIELD(InitialSandboxFlags, uint32_t)                                        \
   /* A non-zero unique identifier for the browser element that is hosting     \
    * this                                                                     \
@@ -801,7 +803,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void SessionHistoryCommit(const LoadingSessionHistoryInfo& aInfo,
                             uint32_t aLoadType, nsIURI* aCurrentURI,
                             bool aHadActiveEntry, bool aPersist,
-                            bool aCloneEntryChildren, bool aChannelExpired);
+                            bool aCloneEntryChildren, bool aChannelExpired,
+                            uint32_t aCacheKey);
 
   // Set a new active entry on this browsing context. This is used for
   // implementing history.pushState/replaceState and same document navigations.
@@ -907,6 +910,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   static bool ShouldAddEntryForRefresh(nsIURI* aCurrentURI,
                                        const SessionHistoryInfo& aInfo);
+  static bool ShouldAddEntryForRefresh(nsIURI* aCurrentURI, nsIURI* aNewURI,
+                                       bool aHasPostData);
 
  private:
   void Attach(bool aFromIPC, ContentParent* aOriginProcess);

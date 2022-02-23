@@ -143,6 +143,43 @@ add_task(async function() {
     );
   }
 
+  // eslint-disable-next-line no-lone-blocks
+  {
+    // Bug 1731050: test hidden tabs
+    info("Starting hidden tabs test");
+    checkTabs(1);
+    await BrowserTestUtils.addTab(gBrowser);
+    await BrowserTestUtils.addTab(gBrowser);
+    await BrowserTestUtils.addTab(gBrowser);
+    await BrowserTestUtils.addTab(gBrowser);
+
+    selectTabs([1, 2, 3, 4, 3]);
+    gBrowser.hideTab(gBrowser.tabs[4]);
+    selectTabs([2]);
+    gBrowser.hideTab(gBrowser.tabs[3]);
+
+    is(gBrowser.tabs[4].hidden, true, "Tab at index 4 is hidden");
+    is(gBrowser.tabs[3].hidden, true, "Tab at index 3 is hidden");
+    is(gBrowser.tabs[2].hidden, false, "Tab at index 2 is still shown");
+    is(gBrowser.tabs[1].hidden, false, "Tab at index 1 is still shown");
+    is(gBrowser.tabs[0].hidden, false, "Tab at index 0 is still shown");
+
+    await ctrlTabTest([], 1, 1);
+    await ctrlTabTest([], 2, 0);
+    gBrowser.showTab(gBrowser.tabs[4]);
+    await ctrlTabTest([2], 3, 4);
+    await ctrlTabTest([], 5, 4);
+    gBrowser.showTab(gBrowser.tabs[3]);
+    await ctrlTabTest([], 4, 3);
+    await ctrlTabTest([], 6, 4);
+
+    await BrowserTestUtils.removeTab(gBrowser.tabs[4]);
+    await BrowserTestUtils.removeTab(gBrowser.tabs[3]);
+    await BrowserTestUtils.removeTab(gBrowser.tabs[2]);
+    await BrowserTestUtils.removeTab(gBrowser.tabs[1]);
+    info("End hidden tabs test");
+  }
+
   /* private utility functions */
 
   function pressCtrlTab(aShiftKey) {

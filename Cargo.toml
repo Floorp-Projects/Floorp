@@ -86,6 +86,9 @@ opt-level = 2
 cmake = { path = "build/rust/cmake" }
 vcpkg = { path = "build/rust/vcpkg" }
 
+# Helper crate for integration in the gecko build system.
+mozbuild = { path = "build/rust/mozbuild" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 
@@ -100,6 +103,7 @@ web-sys = { path = "build/rust/dummy-web/web-sys" }
 moz_asserts = { path = "mozglue/static/rust/moz_asserts" }
 
 # Other overrides
+async-task = { git = "https://github.com/smol-rs/async-task", rev="f6488e35beccb26eb6e85847b02aa78a42cd3d0e" }
 chardetng = { git = "https://github.com/hsivonen/chardetng", rev="3484d3e3ebdc8931493aa5df4d7ee9360a90e76b" }
 chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }
 coremidi = { git = "https://github.com/chris-zen/coremidi.git", rev="fc68464b5445caf111e41f643a2e69ccce0b4f83" }

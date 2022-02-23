@@ -7,91 +7,93 @@ import {
   AboutWelcomeUtils,
   DEFAULT_RTAMO_CONTENT,
 } from "../../lib/aboutwelcome-utils";
-import { Localized } from "./MSLocalized";
+import { MultiStageProtonScreen } from "./MultiStageProtonScreen";
+import { BASE_PARAMS } from "../../asrouter/templates/FirstRun/addUtmParams";
 
 export class ReturnToAMO extends React.PureComponent {
   constructor(props) {
     super(props);
-    this.onClickAddExtension = this.onClickAddExtension.bind(this);
-    this.handleStartBtnClick = this.handleStartBtnClick.bind(this);
+    this.fetchFlowParams = this.fetchFlowParams.bind(this);
+    this.handleAction = this.handleAction.bind(this);
   }
 
-  onClickAddExtension() {
-    const { content, message_id, url } = this.props;
-    if (!content?.primary_button?.action?.data) {
-      return;
+  async fetchFlowParams() {
+    if (this.props.metricsFlowUri) {
+      this.setState({
+        flowParams: await AboutWelcomeUtils.fetchFlowParams(
+          this.props.metricsFlowUri
+        ),
+      });
+    }
+  }
+
+  componentDidUpdate() {
+    this.fetchFlowParams();
+  }
+
+  handleAction(event) {
+    const { content, message_id, url, utm_term } = this.props;
+    let { action, source_id } = content[event.currentTarget.value];
+    let { type, data } = action;
+
+    if (type === "INSTALL_ADDON_FROM_URL") {
+      if (!data) {
+        return;
+      }
+      // Set add-on url in action.data.url property from JSON
+      data = { ...data, url };
+    } else if (type === "SHOW_FIREFOX_ACCOUNTS") {
+      let params = {
+        ...BASE_PARAMS,
+        utm_term: `aboutwelcome-${utm_term}-screen`,
+      };
+      if (action.addFlowParams && this.state.flowParams) {
+        params = {
+          ...params,
+          ...this.state.flowParams,
+        };
+      }
+      data = { ...data, extraParams: params };
     }
 
-    // Set add-on url in action.data.url property from JSON
-    content.primary_button.action.data.url = url;
-    AboutWelcomeUtils.handleUserAction(content.primary_button.action);
-    const ping = {
-      event: "INSTALL",
-      event_context: {
-        source: "ADD_EXTENSION_BUTTON",
-        page: "about:welcome",
-      },
-      message_id,
-    };
-    window.AWSendEventTelemetry(ping);
-  }
-
-  handleStartBtnClick() {
-    const { content, message_id } = this.props;
-    AboutWelcomeUtils.handleUserAction(content.startButton.action);
-    const ping = {
-      event: "CLICK_BUTTON",
-      event_context: {
-        source: content.startButton.message_id,
-        page: "about:welcome",
-      },
-      message_id,
-    };
-    window.AWSendEventTelemetry(ping);
+    AboutWelcomeUtils.handleUserAction({ type, data });
+    AboutWelcomeUtils.sendActionTelemetry(message_id, source_id);
   }
 
   render() {
-    const { content } = this.props;
+    const { content, type } = this.props;
+
     if (!content) {
       return null;
     }
+
+    if (content?.primary_button.label) {
+      content.primary_button.label.string_id = type.includes("theme")
+        ? "return-to-amo-add-theme-label"
+        : "return-to-amo-add-extension-label";
+    }
+
     // For experiments, when needed below rendered UI allows settings hard coded strings
     // directly inside JSON except for ReturnToAMOText which picks add-on name and icon from fluent string
     return (
-      <div className="outer-wrapper onboardingContainer rtamo">
-        <main className="screen">
-          <div className="brand-logo" />
-          <div className="welcome-text">
-            <Localized text={content.subtitle}>
-              <h1 />
-            </Localized>
-            <Localized text={content.text}>
-              <h2
-                data-l10n-args={
-                  this.props.name
-                    ? JSON.stringify({ "addon-name": this.props.name })
-                    : null
-                }
-              >
-                <img
-                  data-l10n-name="icon"
-                  src={this.props.iconURL}
-                  role="presentation"
-                  alt=""
-                />
-              </h2>
-            </Localized>
-            <Localized text={content.primary_button.label}>
-              <button onClick={this.onClickAddExtension} className="primary" />
-            </Localized>
-            <Localized text={content.startButton.label}>
-              <button
-                onClick={this.handleStartBtnClick}
-                className="secondary"
-              />
-            </Localized>
-          </div>
-        </main>
+      <div
+        className={"outer-wrapper onboardingContainer proton"}
+        style={{
+          backgroundImage: `url(${content.background_url})`,
+        }}
+      >
+        <MultiStageProtonScreen
+          content={content}
+          isRtamo={true}
+          id={this.props.messageId}
+          order={this.props.order}
+          totalNumberOfScreens={this.props.totalNumberOfScreens}
+          autoClose={this.props.autoClose}
+          iconURL={this.props.iconURL}
+          addonName={this.props.name}
+          handleAction={this.handleAction}
+          addExtension={this.onClickAddExtension}
+        />
       </div>
     );
   }

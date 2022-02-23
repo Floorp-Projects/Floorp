@@ -48,6 +48,9 @@ add_task(async function setup() {
 add_task(async function test_executeScript_params_validation() {
   let extension = makeExtension({
     async background() {
+      const tabs = await browser.tabs.query({ active: true });
+      const tabId = tabs[0].id;
+
       const TEST_CASES = [
         {
           title: "no files and no func",
@@ -74,9 +77,27 @@ add_task(async function test_executeScript_params_validation() {
           executeScriptParams: { func() {}, args: [window] },
           expectedError: /Unserializable arguments/,
         },
+        {
+          title: "both allFrames and frameIds are passed",
+          executeScriptParams: {
+            target: {
+              tabId,
+              allFrames: true,
+              frameIds: [1, 2, 3],
+            },
+            files: ["script.js"],
+          },
+          expectedError: /Cannot specify both 'allFrames' and 'frameIds'/,
+        },
+        {
+          title: "invalid IDs in frameIds",
+          executeScriptParams: {
+            target: { tabId, frameIds: [0, 1, 2] },
+            func: () => {},
+          },
+          expectedError: "Invalid frame IDs: [1, 2].",
+        },
       ];
-
-      const tabs = await browser.tabs.query({ active: true });
 
       for (const { title, executeScriptParams, expectedError } of TEST_CASES) {
         await browser.test.assertRejects(
@@ -111,10 +132,12 @@ add_task(async function test_executeScript_with_wrong_host_permissions() {
       await browser.test.assertRejects(
         browser.scripting.executeScript({
           target: { tabId: tabs[0].id },
-          func: () => {},
+          func: () => {
+            browser.test.fail("Unexpected execution");
+          },
         }),
-        /Missing host permission for the tab/,
-        "expected error"
+        "Missing host permission for the tab",
+        "expected host permission error"
       );
 
       browser.test.notifyPass("execute-script");
@@ -135,7 +158,9 @@ add_task(async function test_executeScript_with_invalid_tabId() {
       await browser.test.assertRejects(
         browser.scripting.executeScript({
           target: { tabId },
-          func: () => {},
+          func: () => {
+            browser.test.fail("Unexpected execution");
+          },
         }),
         `Invalid tab ID: ${tabId}`
       );
@@ -175,14 +200,10 @@ add_task(async function test_executeScript_with_func() {
         results[0].result,
         "got the expected title"
       );
-      browser.test.assertEq(
-        0,
-        results[0].frameId,
-        "got the expected frameId"
-      );
+      browser.test.assertEq(0, results[0].frameId, "got the expected frameId");
 
       browser.test.notifyPass("execute-script");
-    }
+    },
   });
 
   let tab = await AppTestDelegate.openNewForegroundTab(
@@ -226,14 +247,10 @@ add_task(async function test_executeScript_with_func_and_args() {
         results[0].result,
         "got the expected return value"
       );
-      browser.test.assertEq(
-        0,
-        results[0].frameId,
-        "got the expected frameId"
-      );
+      browser.test.assertEq(0, results[0].frameId, "got the expected frameId");
 
       browser.test.notifyPass("execute-script");
-    }
+    },
   });
 
   await extension.startup();
@@ -259,25 +276,20 @@ add_task(async function test_executeScript_returns_nothing() {
         "got expected number of results"
       );
       browser.test.assertEq(
-        null,
+        undefined,
         results[0].result,
-        "got expected null result"
+        "got expected undefined result"
       );
-      browser.test.assertEq(
-        0,
-        results[0].frameId,
-        "got the expected frameId"
-      );
+      browser.test.assertEq(0, results[0].frameId, "got the expected frameId");
 
       browser.test.notifyPass("execute-script");
-    }
+    },
   });
 
   await extension.startup();
   await extension.awaitFinish("execute-script");
   await extension.unload();
 });
-
 
 add_task(async function test_executeScript_returns_null() {
   let extension = makeExtension({
@@ -288,7 +300,9 @@ add_task(async function test_executeScript_returns_null() {
 
       const results = await browser.scripting.executeScript({
         target: { tabId: tabs[0].id },
-        func: () => { return null; },
+        func: () => {
+          return null;
+        },
       });
 
       browser.test.assertEq(
@@ -301,14 +315,10 @@ add_task(async function test_executeScript_returns_null() {
         results[0].result,
         "got expected null result"
       );
-      browser.test.assertEq(
-        0,
-        results[0].frameId,
-        "got the expected frameId"
-      );
+      browser.test.assertEq(0, results[0].frameId, "got the expected frameId");
 
       browser.test.notifyPass("execute-script");
-    }
+    },
   });
 
   await extension.startup();
@@ -335,19 +345,15 @@ add_task(async function test_executeScript_with_error_in_func() {
         results.length,
         "got expected number of results"
       );
+      browser.test.assertEq(0, results[0].frameId, "got the expected frameId");
       browser.test.assertEq(
-        null,
-        results[0].result,
-        "got the expected result"
-      );
-      browser.test.assertEq(
-        0,
-        results[0].frameId,
-        "got the expected frameId"
+        "Thrown at file_sample.html",
+        results[0].error.message,
+        "got the expected error message"
       );
 
       browser.test.notifyPass("execute-script");
-    }
+    },
   });
 
   let tab = await AppTestDelegate.openNewForegroundTab(
@@ -356,15 +362,9 @@ add_task(async function test_executeScript_with_error_in_func() {
     true
   );
 
-  consoleMonitor.start([
-    { message: /Thrown at file_sample/ },
-  ]);
-
   await extension.startup();
   await extension.awaitFinish("execute-script");
   await extension.unload();
-
-  await consoleMonitor.finished();
 
   await AppTestDelegate.removeTab(window, tab);
 });
@@ -391,17 +391,13 @@ add_task(async function test_executeScript_with_a_file() {
         results[0].result,
         "got the expected result"
       );
-      browser.test.assertEq(
-        0,
-        results[0].frameId,
-        "got the expected frameId"
-      );
+      browser.test.assertEq(0, results[0].frameId, "got the expected frameId");
 
       browser.test.notifyPass("execute-script");
     },
     files: {
-      "script.js": function () {
-        return 'value from script.js';
+      "script.js": function() {
+        return "value from script.js";
       },
     },
   });
@@ -411,7 +407,7 @@ add_task(async function test_executeScript_with_a_file() {
   await extension.unload();
 });
 
-add_task(async function test_executeScript_in_one_frameId() {
+add_task(async function test_executeScript_in_one_frame() {
   let extension = makeExtension({
     manifest: {
       permissions: ["scripting", "webNavigation"],
@@ -433,31 +429,58 @@ add_task(async function test_executeScript_in_one_frameId() {
         "expected frame URL"
       );
 
-      const results = await browser.scripting.executeScript({
-        target: { tabId, frameIds: [fileSampleFrameId] },
-        files: ["script.js"],
-      });
+      const TEST_CASES = [
+        {
+          title: "with a file and a frame ID",
+          params: {
+            target: { tabId, frameIds: [fileSampleFrameId] },
+            files: ["script.js"],
+          },
+          expectedResults: [
+            {
+              frameId: fileSampleFrameId,
+              result: "Sample text",
+            },
+          ],
+        },
+        {
+          title: "with no frame ID",
+          params: {
+            target: { tabId },
+            func: () => {
+              return 123;
+            },
+          },
+          expectedResults: [{ frameId: 0, result: 123 }],
+        },
+      ];
 
-      browser.test.assertEq(
-        1,
-        results.length,
-        "got expected number of results"
-      );
-      browser.test.assertEq(
-        "Sample text",
-        results[0].result,
-        "got the expected result"
-      );
-      browser.test.assertEq(
-        fileSampleFrameId,
-        results[0].frameId,
-        "got the expected frameId"
-      );
+      for (const { title, params, expectedResults } of TEST_CASES) {
+        const results = await browser.scripting.executeScript(params);
+
+        browser.test.assertEq(
+          expectedResults.length,
+          results.length,
+          `${title} - got expected number of results`
+        );
+        expectedResults.forEach(({ frameId, result }, index) => {
+          browser.test.assertEq(
+            result,
+            results[index].result,
+            `${title} - got the expected results[${index}].result`
+          );
+          browser.test.assertEq(
+            frameId,
+            results[index].frameId,
+            `${title} - got the expected results[${index}].frameId`
+          );
+        });
+      }
 
       browser.test.notifyPass("execute-script");
     },
     files: {
-      "script.js": function () {
+      "script.js": function() {
         return document.getElementById("test").textContent;
       },
     },
@@ -489,40 +512,52 @@ add_task(async function test_executeScript_in_multiple_frameIds() {
         return document.title;
       };
 
-      const results = await browser.scripting.executeScript({
-        target: { tabId, frameIds },
-        func: getTitle,
-      });
+      const TEST_CASES = [
+        {
+          title: "multiple frame IDs",
+          params: {
+            target: { tabId, frameIds },
+            func: getTitle,
+          },
+          expectedResults: [
+            {
+              frameId: frameIds[0],
+              result: "file contains iframe",
+            },
+            {
+              frameId: frameIds[1],
+              result: "file contains img",
+            },
+          ],
+        },
+        {
+          title: "empty list of frame IDs",
+          params: {
+            target: { tabId, frameIds: [] },
+            func: getTitle,
+          },
+          expectedResults: [],
+        },
+      ];
 
-      browser.test.assertEq(
-        2,
-        results.length,
-        "got expected number of results"
-      );
-      // Sort injection results by frameId to always assert the results in the
-      // same order.
-      results.sort((a, b) => a.frameId - b.frameId);
+      for (const { title, params, expectedResults } of TEST_CASES) {
+        const results = await browser.scripting.executeScript(params);
 
-      browser.test.assertEq(
-        "file contains iframe",
-        results[0].result,
-        "got the expected title in result 0"
-      );
-      browser.test.assertEq(
-        frameIds[0],
-        results[0].frameId,
-        "got the expected frameId in result 0"
-      );
-      browser.test.assertEq(
-        "file contains img",
-        results[1].result,
-        "got the expected title in result 1"
-      );
-      browser.test.assertEq(
-        frameIds[1],
-        results[1].frameId,
-        "got the expected frameId in result 1"
-      );
+        browser.test.assertEq(
+          expectedResults.length,
+          results.length,
+          `${title} - got expected number of results`
+        );
+        // Sort injection results by frameId to always assert the results in
+        // the same order.
+        results.sort((a, b) => a.frameId - b.frameId);
+
+        browser.test.assertEq(
+          JSON.stringify(expectedResults),
+          JSON.stringify(results),
+          `${title} - got expected results`
+        );
+      }
 
       browser.test.notifyPass("execute-script");
     },
@@ -571,9 +606,14 @@ add_task(async function test_executeScript_with_errors_in_multiple_frameIds() {
         "got expected number of results"
       );
       browser.test.assertEq(
-        2,
-        results.filter(result => result.result === null).length,
-        "got null results"
+        "Thrown at file_contains_iframe.html",
+        results[0].error.message,
+        "got expected error message in results[0]"
+      );
+      browser.test.assertEq(
+        "Thrown at file_contains_img.html",
+        results[1].error.message,
+        "got expected error message in results[1]"
       );
 
       browser.test.notifyPass("execute-script");
@@ -586,18 +626,50 @@ add_task(async function test_executeScript_with_errors_in_multiple_frameIds() {
     true
   );
 
-  consoleMonitor.start([
-    { message: /Thrown at file_contains_iframe/ },
-    { message: /Thrown at file_contains_img/ },
-  ]);
-
   await extension.startup();
   await extension.awaitFinish("execute-script");
   await extension.unload();
 
-  await consoleMonitor.finished();
-
   await AppTestDelegate.removeTab(window, tab);
+});
+
+add_task(async function test_executeScript_with_frameId_and_wrong_host_permission() {
+  let extension = makeExtension({
+    manifest: {
+      host_permissions: MOCHITEST_HOST_PERMISSIONS,
+      permissions: ["scripting", "webNavigation"],
+    },
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      const tabId = tabs[0].id;
+      const frames = await browser.webNavigation.getAllFrames({ tabId });
+      // 1. Top-level frame with the MochiTest runner
+      // 2. Frame for this file
+      // 3. Frame that loads `file_sample.html` at the top of this file
+      browser.test.assertEq(3, frames.length, "expected 3 frames");
+
+      const frameIds = frames.map(frame => frame.frameId);
+
+      await browser.test.assertRejects(
+        browser.scripting.executeScript({
+          target: { tabId, frameIds: [frameIds[2]] },
+          func: () => {
+            browser.test.fail("Unexpected execution");
+          },
+        }),
+        "Missing host permission for the tab or frames",
+        "got the expected error message"
+      );
+
+      browser.test.notifyPass("execute-script");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("execute-script");
+  await extension.unload();
 });
 
 add_task(async function test_executeScript_with_multiple_frameIds_and_wrong_host_permissions() {
@@ -619,13 +691,24 @@ add_task(async function test_executeScript_with_multiple_frameIds_and_wrong_host
 
       const frameIds = frames.map(frame => frame.frameId);
 
-      browser.test.assertRejects(
-        browser.scripting.executeScript({
-          target: { tabId, frameIds },
-          func: () => {},
-        }),
-        /Frame not found, or missing host permission/,
-        "expected error"
+      const results = await browser.scripting.executeScript({
+        target: { tabId, frameIds },
+        func: () => {},
+      });
+
+      // We get 2 results because we cannot inject into the 3rd frame.
+      browser.test.assertEq(
+        2,
+        results.length,
+        "got expected number of results"
+      );
+      browser.test.assertTrue(
+        typeof results[0].error === "undefined",
+        "expected no error in results[0]"
+      );
+      browser.test.assertTrue(
+        typeof results[1].error === "undefined",
+        "expected no error in results[1]"
       );
 
       browser.test.notifyPass("execute-script");
@@ -637,14 +720,23 @@ add_task(async function test_executeScript_with_multiple_frameIds_and_wrong_host
   await extension.unload();
 });
 
-// See: https://bugzilla.mozilla.org/show_bug.cgi?id=1739643
-add_task(async function test_executeScript_with_iframe_srcdoc() {
+add_task(async function test_executeScript_with_iframe_srcdoc_and_aboutblank() {
   let iframe = document.createElement("iframe");
   iframe.srcdoc = `<!DOCTYPE html>
     <html>
       <head><title>iframe with srcdoc</title></head>
     </html>`;
-  document.body.appendChild(iframe);
+  await new Promise(resolve => {
+    iframe.onload = resolve;
+    document.body.appendChild(iframe);
+  });
+
+  let iframeAboutBlank = document.createElement("iframe");
+  iframeAboutBlank.src = "about:blank";
+  await new Promise(resolve => {
+    iframeAboutBlank.onload = resolve;
+    document.body.appendChild(iframeAboutBlank);
+  });
 
   let extension = makeExtension({
     manifest: {
@@ -660,20 +752,214 @@ add_task(async function test_executeScript_with_iframe_srcdoc() {
       // 2. Frame for this file
       // 3. Frame that loads `file_sample.html` at the top of this file
       // 4. Frame that loads the `srcdoc`
-      browser.test.assertEq(4, frames.length, "expected 4 frames");
+      // 5. Frame for `about:blank`
+      browser.test.assertEq(5, frames.length, "expected 5 frames");
 
       const frameIds = frames.map(frame => frame.frameId);
 
-      // TODO Bug 1739643: when we support `srcdoc`, `executeScript()` should
-      // return 4 results and should not reject. It currently rejects because
-      // it cannot inject into the `srcdoc` frame.
-      browser.test.assertRejects(
+      const TEST_CASES = [
+        {
+          title: "with frameIds for all frames",
+          params: {
+            target: { tabId, frameIds },
+          },
+          expectedResults: {
+            count: 5,
+            entriesAtIndex: {
+              3: {
+                frameId: frameIds[3],
+                result: "iframe with srcdoc",
+              },
+              4: {
+                frameId: frameIds[4],
+                result: "about:blank",
+              },
+            },
+          },
+        },
+        {
+          title: "with allFrames: true",
+          params: {
+            target: { tabId, allFrames: true },
+          },
+          expectedResults: {
+            count: 5,
+            entriesAtIndex: {
+              3: {
+                frameId: frameIds[3],
+                result: "iframe with srcdoc",
+              },
+              4: {
+                frameId: frameIds[4],
+                result: "about:blank",
+              },
+            },
+          },
+        },
+        {
+          title: "with a single frame specified",
+          params: {
+            target: { tabId, frameIds: [frameIds[3]] },
+          },
+          expectedResults: {
+            count: 1,
+            entriesAtIndex: {
+              0: {
+                frameId: frameIds[3],
+                result: "iframe with srcdoc",
+              },
+            },
+          },
+        },
+      ];
+
+      for (const { title, params, expectedResults } of TEST_CASES) {
+        const results = await browser.scripting.executeScript({
+          ...params,
+          func: () => {
+            return document.title || document.URL;
+          },
+        });
+        // Sort injection results by frameId to always assert the results in
+        // the same order.
+        results.sort((a, b) => a.frameId - b.frameId);
+
+        browser.test.assertEq(
+          expectedResults.count,
+          results.length,
+          `${title} - got the expected number of results`
+        );
+        Object.keys(expectedResults.entriesAtIndex).forEach(index => {
+          browser.test.assertEq(
+            JSON.stringify(expectedResults.entriesAtIndex[index]),
+            JSON.stringify(results[index]),
+            `${title} - got expected results[${index}]`
+          );
+        });
+      }
+
+      browser.test.notifyPass("execute-script");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("execute-script");
+  await extension.unload();
+
+  iframe.remove();
+  iframeAboutBlank.remove();
+});
+
+add_task(async function test_executeScript_with_multiple_files() {
+  let extension = makeExtension({
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      const results = await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        files: ["1.js", "2.js"],
+      });
+
+      browser.test.assertEq(
+        1,
+        results.length,
+        "got expected number of results"
+      );
+      browser.test.assertEq(
+        "value from 2.js",
+        results[0].result,
+        "got the expected result"
+      );
+      browser.test.assertEq(0, results[0].frameId, "got the expected frameId");
+
+      browser.test.notifyPass("execute-script");
+    },
+    files: {
+      "1.js": function() {
+        return "value from 1.js";
+      },
+      "2.js": function() {
+        return "value from 2.js";
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("execute-script");
+  await extension.unload();
+});
+
+add_task(async function test_executeScript_with_multiple_files_and_an_error() {
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html",
+    true
+  );
+
+  let extension = makeExtension({
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      const results = await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        files: ["1.js", "2.js"],
+      });
+
+      browser.test.assertEq(
+        1,
+        results.length,
+        "got expected number of results"
+      );
+      browser.test.assertEq(0, results[0].frameId, "got the expected frameId");
+      browser.test.assertEq(
+        "Thrown at file_contains_iframe.html",
+        results[0].error.message,
+        "got the expected error message"
+      );
+
+      browser.test.notifyPass("execute-script");
+    },
+    files: {
+      "1.js": function() {
+        throw new Error(`Thrown at ${location.pathname.split("/").pop()}`);
+      },
+      "2.js": function() {
+        return "value from 2.js";
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("execute-script");
+  await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
+add_task(async function test_executeScript_with_file_not_in_extension() {
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html",
+    true
+  );
+
+  let extension = makeExtension({
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      await browser.test.assertRejects(
         browser.scripting.executeScript({
-          target: { tabId, frameIds },
-          func: () => {},
+          target: { tabId: tabs[0].id },
+          files: ["https://example.com/script.js"],
         }),
-        /Frame not found, or missing host permission/,
-        "expected error"
+        /Files to be injected must be within the extension/,
+        "got the expected error message"
       );
 
       browser.test.notifyPass("execute-script");
@@ -683,7 +969,158 @@ add_task(async function test_executeScript_with_iframe_srcdoc() {
   await extension.startup();
   await extension.awaitFinish("execute-script");
   await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
 });
+
+add_task(async function test_executeScript_allFrames() {
+  let extension = makeExtension({
+    manifest: {
+      permissions: ["scripting", "webNavigation"],
+    },
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      const tabId = tabs[0].id;
+      const frames = await browser.webNavigation.getAllFrames({ tabId });
+      // 1. Top-level frame that loads `file_contains_iframe.html`
+      // 2. Frame that loads `file_contains_img.html`
+      browser.test.assertEq(2, frames.length, "expected 2 frames");
+      const frameIds = frames.map(frame => frame.frameId);
+
+      const getTitle = () => {
+        return document.title;
+      };
+
+      const TEST_CASES = [
+        {
+          title: "allFrames set to true",
+          scriptingParams: {
+            target: { tabId, allFrames: true },
+            func: getTitle,
+          },
+          expectedResults: [
+            {
+              frameId: frameIds[0],
+              result: "file contains iframe",
+            },
+            {
+              frameId: frameIds[1],
+              result: "file contains img",
+            },
+          ],
+        },
+        {
+          title: "allFrames set to false",
+          scriptingParams: {
+            target: { tabId, allFrames: false },
+            func: getTitle,
+          },
+          expectedResults: [
+            {
+              frameId: frameIds[0],
+              result: "file contains iframe",
+            },
+          ],
+        },
+        {
+          title: "allFrames and runtime errors",
+          scriptingParams: {
+            target: { tabId, allFrames: true },
+            func: () => {
+              throw new Error(`Thrown at ${location.pathname.split("/").pop()}`);
+            },
+          },
+          expectedResults: [
+            {
+              frameId: frameIds[0],
+              error: { message: "Thrown at file_contains_iframe.html" },
+            },
+            {
+              frameId: frameIds[1],
+              error: { message: "Thrown at file_contains_img.html" },
+            },
+          ],
+        },
+      ];
+
+      for (const { title, scriptingParams, expectedResults } of TEST_CASES) {
+        const results = await browser.scripting.executeScript(scriptingParams);
+        // Sort injection results by frameId to always assert the results in
+        // the same order.
+        results.sort((a, b) => a.frameId - b.frameId);
+
+        browser.test.assertEq(
+          JSON.stringify(expectedResults),
+          JSON.stringify(results),
+          `${title} - got expected results`
+        );
+      }
+
+      browser.test.notifyPass("execute-script");
+    },
+  });
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html",
+    true
+  );
+
+  await extension.startup();
+  await extension.awaitFinish("execute-script");
+  await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
+add_task(
+  async function test_executeScript_with_allFrames_and_wrong_host_permissions() {
+    let extension = makeExtension({
+      manifest: {
+        host_permissions: MOCHITEST_HOST_PERMISSIONS,
+        permissions: ["scripting", "webNavigation"],
+      },
+      async background() {
+        const tabs = await browser.tabs.query({ active: true });
+        browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+        const tabId = tabs[0].id;
+        const frames = await browser.webNavigation.getAllFrames({ tabId });
+        // 1. Top-level frame with the MochiTest runner
+        // 2. Frame for this file
+        // 3. Frame that loads `file_sample.html` at the top of this file
+        browser.test.assertEq(3, frames.length, "expected 3 frames");
+
+        const results = await browser.scripting.executeScript({
+          target: { tabId, allFrames: true },
+          func: () => {},
+        });
+
+        browser.test.assertEq(
+          2,
+          results.length,
+          "got expected number of results"
+        );
+        browser.test.assertTrue(
+          typeof results[0].error === "undefined",
+          "expected no error in results[0]"
+        );
+        browser.test.assertTrue(
+          typeof results[1].error === "undefined",
+          "expected no error in results[1]"
+        );
+
+        browser.test.notifyPass("execute-script");
+      },
+    });
+
+    await extension.startup();
+    await extension.awaitFinish("execute-script");
+    await extension.unload();
+  }
+);
 
 </script>
 

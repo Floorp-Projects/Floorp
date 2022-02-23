@@ -5,6 +5,7 @@
 
 #include "FOGIPC.h"
 
+#include <limits>
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/dom/ContentChild.h"
@@ -13,6 +14,7 @@
 #include "mozilla/gfx/GPUChild.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/Hal.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/net/SocketProcessParent.h"
@@ -20,7 +22,12 @@
 #include "mozilla/RDDChild.h"
 #include "mozilla/RDDParent.h"
 #include "mozilla/RDDProcessManager.h"
+#include "mozilla/ipc/UtilityProcessChild.h"
+#include "mozilla/ipc/UtilityProcessManager.h"
+#include "mozilla/ipc/UtilityProcessParent.h"
 #include "mozilla/Unused.h"
+#include "GMPPlatform.h"
+#include "GMPServiceParent.h"
 #include "nsIXULRuntime.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -29,37 +36,97 @@ using mozilla::dom::ContentParent;
 using mozilla::gfx::GPUChild;
 using mozilla::gfx::GPUProcessManager;
 using mozilla::ipc::ByteBuf;
+using mozilla::ipc::UtilityProcessChild;
+using mozilla::ipc::UtilityProcessManager;
+using mozilla::ipc::UtilityProcessParent;
 using FlushFOGDataPromise = mozilla::dom::ContentParent::FlushFOGDataPromise;
 
 namespace mozilla {
 namespace glean {
 
-static void RecordPowerMetrics() {
+void RecordPowerMetrics() {
   static uint64_t previousCpuTime = 0, previousGpuTime = 0;
 
-  uint64_t cpuTime;
-  if (NS_FAILED(GetCpuTimeSinceProcessStartInMs(&cpuTime))) {
+  uint64_t cpuTime, newCpuTime = 0;
+  if (NS_SUCCEEDED(GetCpuTimeSinceProcessStartInMs(&cpuTime)) &&
+      cpuTime > previousCpuTime) {
+    newCpuTime = cpuTime - previousCpuTime;
+  }
+
+  uint64_t gpuTime, newGpuTime = 0;
+  if (NS_SUCCEEDED(GetGpuTimeSinceProcessStartInMs(&gpuTime)) &&
+      gpuTime > previousGpuTime) {
+    newGpuTime = gpuTime - previousGpuTime;
+  }
+
+  if (!newCpuTime && !newGpuTime) {
+    // Nothing to record.
     return;
   }
 
-  uint64_t newCpuTime = cpuTime - previousCpuTime;
-  previousCpuTime += newCpuTime;
+  // Compute the process type string.
+  nsAutoCString type(XRE_GetProcessTypeString());
+  if (XRE_IsContentProcess()) {
+    auto* cc = dom::ContentChild::GetSingleton();
+    if (cc) {
+      type.Assign(dom::RemoteTypePrefix(cc->GetRemoteType()));
+      if (StringBeginsWith(type, WEB_REMOTE_TYPE)) {
+        type.AssignLiteral("web");
+        switch (cc->GetProcessPriority()) {
+          case hal::PROCESS_PRIORITY_BACKGROUND:
+            type.AppendLiteral(".background");
+            break;
+          case hal::PROCESS_PRIORITY_FOREGROUND:
+            type.AppendLiteral(".foreground");
+            break;
+          case hal::PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE:
+            type.AppendLiteral(".background-perceivable");
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  } else if (XRE_IsParentProcess()) {
+    if (nsContentUtils::GetUserIsInteracting()) {
+      type.AssignLiteral("parent.active");
+    } else {
+      type.AssignLiteral("parent.inactive");
+    }
+    hal::WakeLockInformation info;
+    GetWakeLockInfo(u"video-playing"_ns, &info);
+    if (info.numLocks() != 0 && info.numHidden() < info.numLocks()) {
+      type.AppendLiteral(".playing-video");
+    } else {
+      GetWakeLockInfo(u"audio-playing"_ns, &info);
+      if (info.numLocks()) {
+        type.AppendLiteral(".playing-audio");
+      }
+    }
+  }
 
   if (newCpuTime) {
     // The counters are reset at least once a day. Assuming all cores are used
     // continuously, an int32 can hold the data for 24.85 cores.
     // This should be fine for now, but may overflow in the future.
-    power::total_cpu_time_ms.Add(int32_t(newCpuTime));
+    // Bug 1751277 tracks a newer, bigger counter.
+    int32_t nNewCpuTime = int32_t(newCpuTime);
+    if (newCpuTime > std::numeric_limits<int32_t>::max()) {
+      nNewCpuTime = std::numeric_limits<int32_t>::max();
+    }
+    power::total_cpu_time_ms.Add(nNewCpuTime);
+    power::cpu_time_per_process_type_ms.Get(type).Add(nNewCpuTime);
+    previousCpuTime += newCpuTime;
   }
 
-  uint64_t gpuTime;
-  if (NS_SUCCEEDED(GetGpuTimeSinceProcessStartInMs(&gpuTime))) {
-    uint64_t newGpuTime = gpuTime - previousGpuTime;
-    previousGpuTime += newGpuTime;
-
-    if (newGpuTime) {
-      power::total_gpu_time_ms.Add(int32_t(newGpuTime));
+  if (newGpuTime) {
+    int32_t nNewGpuTime = int32_t(newGpuTime);
+    if (newGpuTime > std::numeric_limits<int32_t>::max()) {
+      nNewGpuTime = std::numeric_limits<int32_t>::max();
     }
+    power::total_gpu_time_ms.Add(nNewGpuTime);
+    power::gpu_time_per_process_type_ms.Get(type).Add(nNewGpuTime);
+    previousGpuTime += newGpuTime;
   }
 }
 
@@ -120,6 +187,24 @@ void FlushAllChildData(
     promises.EmplaceBack(socketParent->SendFlushFOGData());
   }
 
+  {
+    RefPtr<gmp::GeckoMediaPluginServiceParent> gmps(
+        gmp::GeckoMediaPluginServiceParent::GetSingleton());
+    // There can be multiple Gecko Media Plugin processes, but iterating
+    // through them requires locking a mutex and the IPCs need to be sent
+    // from a different thread, so it's better to let the
+    // GeckoMediaPluginServiceParent code do it for us.
+    gmps->SendFlushFOGData(promises);
+  }
+
+  if (RefPtr<UtilityProcessManager> utilityManager =
+          UtilityProcessManager::GetSingleton()) {
+    if (UtilityProcessParent* utilityParent =
+            utilityManager->GetProcessParent()) {
+      promises.EmplaceBack(utilityParent->SendFlushFOGData());
+    }
+  }
+
   if (promises.Length() == 0) {
     // No child processes at the moment. Resolve synchronously.
     fog_ipc::flush_durations.Cancel(std::move(timerId));
@@ -166,6 +251,9 @@ void SendFOGData(ipc::ByteBuf&& buf) {
     case GeckoProcessType_Content:
       mozilla::dom::ContentChild::GetSingleton()->SendFOGData(std::move(buf));
       break;
+    case GeckoProcessType_GMPlugin: {
+      gmp::SendFOGData(std::move(buf));
+    } break;
     case GeckoProcessType_GPU:
       Unused << mozilla::gfx::GPUParent::GetSingleton()->SendFOGData(
           std::move(buf));
@@ -175,6 +263,10 @@ void SendFOGData(ipc::ByteBuf&& buf) {
       break;
     case GeckoProcessType_Socket:
       Unused << net::SocketProcessChild::GetSingleton()->SendFOGData(
+          std::move(buf));
+      break;
+    case GeckoProcessType_Utility:
+      Unused << ipc::UtilityProcessChild::GetSingleton()->SendFOGData(
           std::move(buf));
       break;
     default:
@@ -206,6 +298,14 @@ RefPtr<GenericPromise> FlushAndUseFOGData() {
 void TestTriggerMetrics(uint32_t aProcessType,
                         const RefPtr<dom::Promise>& promise) {
   switch (aProcessType) {
+    case nsIXULRuntime::PROCESS_TYPE_GMPLUGIN: {
+      RefPtr<gmp::GeckoMediaPluginServiceParent> gmps(
+          gmp::GeckoMediaPluginServiceParent::GetSingleton());
+      gmps->TestTriggerMetrics()->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise]() { promise->MaybeResolveWithUndefined(); },
+          [promise]() { promise->MaybeRejectWithUndefined(); });
+    } break;
     case nsIXULRuntime::PROCESS_TYPE_GPU:
       gfx::GPUProcessManager::Get()->TestTriggerMetrics()->Then(
           GetCurrentSerialEventTarget(), __func__,
@@ -220,6 +320,15 @@ void TestTriggerMetrics(uint32_t aProcessType,
       break;
     case nsIXULRuntime::PROCESS_TYPE_SOCKET:
       Unused << net::SocketProcessParent::GetSingleton()
+                    ->SendTestTriggerMetrics()
+                    ->Then(
+                        GetCurrentSerialEventTarget(), __func__,
+                        [promise]() { promise->MaybeResolveWithUndefined(); },
+                        [promise]() { promise->MaybeRejectWithUndefined(); });
+      break;
+    case nsIXULRuntime::PROCESS_TYPE_UTILITY:
+      Unused << ipc::UtilityProcessManager::GetSingleton()
+                    ->GetProcessParent()
                     ->SendTestTriggerMetrics()
                     ->Then(
                         GetCurrentSerialEventTarget(), __func__,

@@ -5,7 +5,7 @@ static WORKS: AtomicUsize = AtomicUsize::new(0);
 static INIT: Once = Once::new();
 
 pub(crate) fn inside_proc_macro() -> bool {
-    match WORKS.load(Ordering::SeqCst) {
+    match WORKS.load(Ordering::Relaxed) {
         1 => return false,
         2 => return true,
         _ => {}
@@ -16,7 +16,7 @@ pub(crate) fn inside_proc_macro() -> bool {
 }
 
 pub(crate) fn force_fallback() {
-    WORKS.store(1, Ordering::SeqCst);
+    WORKS.store(1, Ordering::Relaxed);
 }
 
 pub(crate) fn unforce_fallback() {
@@ -26,7 +26,7 @@ pub(crate) fn unforce_fallback() {
 #[cfg(not(no_is_available))]
 fn initialize() {
     let available = proc_macro::is_available();
-    WORKS.store(available as usize + 1, Ordering::SeqCst);
+    WORKS.store(available as usize + 1, Ordering::Relaxed);
 }
 
 // Swap in a null panic hook to avoid printing "thread panicked" to stderr,
@@ -65,7 +65,7 @@ fn initialize() {
     panic::set_hook(null_hook);
 
     let works = panic::catch_unwind(proc_macro::Span::call_site).is_ok();
-    WORKS.store(works as usize + 1, Ordering::SeqCst);
+    WORKS.store(works as usize + 1, Ordering::Relaxed);
 
     let hopefully_null_hook = panic::take_hook();
     panic::set_hook(original_hook);

@@ -517,8 +517,7 @@ LSRequestChild* LSObject::StartRequest(nsIEventTarget* aMainEventTarget,
 
   mozilla::ipc::PBackgroundChild* backgroundActor =
       XRE_IsParentProcess()
-          ? mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread(
-                aMainEventTarget)
+          ? mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread()
           : mozilla::ipc::BackgroundChild::GetForCurrentThread();
   if (NS_WARN_IF(!backgroundActor)) {
     return nullptr;

@@ -303,8 +303,7 @@ bool CCGCScheduler::GCRunnerFiredDoGC(TimeStamp aDeadline,
   TimeStamp startTimeStamp = TimeStamp::Now();
   TimeDuration budget = ComputeInterSliceGCBudget(aDeadline, startTimeStamp);
   TimeDuration duration = mGCUnnotifiedTotalTime;
-  nsJSContext::GarbageCollectNow(aStep.mReason, nsJSContext::IncrementalGC,
-                                 is_shrinking, budget.ToMilliseconds());
+  nsJSContext::RunIncrementalGCSlice(aStep.mReason, is_shrinking, budget);
 
   mGCUnnotifiedTotalTime = TimeDuration();
   TimeStamp now = TimeStamp::Now();
@@ -315,7 +314,10 @@ bool CCGCScheduler::GCRunnerFiredDoGC(TimeStamp aDeadline,
     if (!aDeadline.IsNull()) {
       if (aDeadline < now) {
         // This slice overflowed the idle period.
-        idleDuration = aDeadline - startTimeStamp;
+        if (aDeadline > startTimeStamp) {
+          idleDuration = aDeadline - startTimeStamp;
+        }
+        // Otherwise the whole slice was done outside the idle period.
       } else {
         // Note, we don't want to use duration here, since it may contain
         // data also from JS engine triggered GC slices.

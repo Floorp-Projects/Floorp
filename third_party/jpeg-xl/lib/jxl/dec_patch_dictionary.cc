@@ -199,11 +199,50 @@ void PatchDictionary::ComputePatchCache() {
   }
 }
 
-Status PatchDictionary::AddTo(Image3F* opsin, const Rect& opsin_rect,
-                              float* const* extra_channels,
-                              const Rect& image_rect) const {
+// Adds patches to a segment of `xsize` pixels, starting at `inout`, assumed
+// to be located at position (x0, y) in the frame.
+void PatchDictionary::AddOneRow(float* const* inout, size_t y, size_t x0,
+                                size_t xsize) const {
+  if (patch_starts_.empty()) return;
+  size_t num_ec = shared_->metadata->m.num_extra_channels;
+  std::vector<const float*> fg_ptrs(3 + num_ec);
+  if (y + 1 >= patch_starts_.size()) return;
+  for (size_t id = patch_starts_[y]; id < patch_starts_[y + 1]; id++) {
+    const PatchPosition& pos = positions_[sorted_patches_[id]];
+    size_t by = pos.y;
+    size_t bx = pos.x;
+    size_t patch_xsize = pos.ref_pos.xsize;
+    JXL_DASSERT(y >= by);
+    JXL_DASSERT(y < by + pos.ref_pos.ysize);
+    size_t iy = y - by;
+    size_t ref = pos.ref_pos.ref;
+    if (bx >= x0 + xsize) continue;
+    if (bx + patch_xsize < x0) continue;
+    size_t patch_x0 = std::max(bx, x0);
+    size_t patch_x1 = std::min(bx + patch_xsize, x0 + xsize);
+    for (size_t c = 0; c < 3; c++) {
+      fg_ptrs[c] = shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
+                       c, pos.ref_pos.y0 + iy) +
+                   pos.ref_pos.x0 + x0 - bx;
+    }
+    for (size_t i = 0; i < num_ec; i++) {
+      fg_ptrs[3 + i] =
+          shared_->reference_frames[ref].frame->extra_channels()[i].ConstRow(
+              pos.ref_pos.y0 + iy) +
+          pos.ref_pos.x0 + x0 - bx;
+    }
+    PerformBlending(inout, fg_ptrs.data(), inout, patch_x0 - x0,
+                    patch_x1 - patch_x0, pos.blending[0],
+                    pos.blending.data() + 1,
+                    shared_->metadata->m.extra_channel_info);
+  }
+}
+
+void PatchDictionary::AddTo(Image3F* opsin, const Rect& opsin_rect,
+                            float* const* extra_channels,
+                            const Rect& image_rect) const {
   JXL_CHECK(SameSize(opsin_rect, image_rect));
-  if (patch_starts_.empty()) return true;
+  if (patch_starts_.empty()) return;
   size_t num_ec = shared_->metadata->m.num_extra_channels;
   std::vector<const float*> fg_ptrs(3 + num_ec);
   std::vector<float*> bg_ptrs(3 + num_ec);
@@ -238,13 +277,11 @@ Status PatchDictionary::AddTo(Image3F* opsin, const Rect& opsin_rect,
             pos.ref_pos.x0 + x0 - bx;
         bg_ptrs[3 + i] = extra_channels[i] + x0 - image_rect.x0();
       }
-      JXL_RETURN_IF_ERROR(
-          PerformBlending(bg_ptrs.data(), fg_ptrs.data(), bg_ptrs.data(),
-                          x1 - x0, pos.blending[0], pos.blending.data() + 1,
-                          shared_->metadata->m.extra_channel_info));
+      PerformBlending(bg_ptrs.data(), fg_ptrs.data(), bg_ptrs.data(), 0,
+                      x1 - x0, pos.blending[0], pos.blending.data() + 1,
+                      shared_->metadata->m.extra_channel_info);
     }
   }
-  return true;
 }
 
 }  // namespace jxl

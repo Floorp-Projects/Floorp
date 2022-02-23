@@ -33,10 +33,7 @@ class nsCheckboxRadioFrame final : public nsAtomicContainerFrame,
   }
 
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override {
-    DO_GLOBAL_REFLOW_COUNT_DSP("nsCheckboxRadioFrame");
-    DisplayBorderBackgroundOutline(aBuilder, aLists);
-  }
+                                const nsDisplayListSet& aLists) override;
 
   /**
    * Both GetMinISize and GetPrefISize will return whatever GetIntrinsicISize

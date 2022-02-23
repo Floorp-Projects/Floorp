@@ -437,8 +437,8 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   nsISelectControlFrame* GetSelectFrame();
 
   /**
-   * Helper method for dispatching ContentReset notifications to list
-   * and combo box frames.
+   * Helper method for dispatching ContentReset notifications to list box
+   * frames.
    */
   void DispatchContentReset();
 

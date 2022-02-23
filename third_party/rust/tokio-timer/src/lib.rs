@@ -1,7 +1,13 @@
-#![doc(html_root_url = "https://docs.rs/tokio-timer/0.2.11")]
-#![deny(missing_docs, warnings, missing_debug_implementations)]
+#![doc(html_root_url = "https://docs.rs/tokio-timer/0.2.13")]
+#![deny(missing_docs, missing_debug_implementations)]
 
 //! Utilities for tracking time.
+//!
+//! > **Note:** This crate is **deprecated in tokio 0.2.x** and has been moved
+//! > into [`tokio::time`] behind the `time` [feature flag].
+//!
+//! [`tokio::time`]: https://docs.rs/tokio/latest/tokio/time/index.html
+//! [feature flag]: https://docs.rs/tokio/latest/tokio/index.html#feature-flags
 //!
 //! This crate provides a number of utilities for working with periods of time:
 //!

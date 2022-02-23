@@ -24,7 +24,7 @@ add_task(async function test_downloads_library() {
     win.close();
   });
 
-  let listbox = win.document.getElementById("downloadsRichListBox");
+  let listbox = win.document.getElementById("downloadsListBox");
   ok(listbox, "Download list box present");
 
   // Select one of the downloads.

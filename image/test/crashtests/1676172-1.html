@@ -19,6 +19,15 @@ function finish() {
 <body onload="setup();">
 <script>
 let numiframes = 30;
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+let isDebugBuild =
+  Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2).isDebugBuild;
+let isMac =
+  navigator.appVersion.toLowerCase().includes("mac") ||
+  navigator.platform.toLowerCase().includes("mac");
+
 // On some platforms too many animating and reloading gifs means we don't ever
 // get enough time to serve paints so that there is never a period of time
 // where there are no paints pending, so the reftest harness can't end the
@@ -33,6 +42,9 @@ if (navigator.platform.includes("Linux")) {
 }
 if (navigator.appVersion.includes("Android")) {
 	numiframes = 2;
+}
+if (isMac && isDebugBuild) {
+	numiframes = 20;
 }
 for (let i = 0; i < numiframes; i++) {
 	let ifr = document.createElement("iframe");

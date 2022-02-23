@@ -5,6 +5,12 @@
 /* globals chrome */
 
 Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+// Since we're not using AOM, and MV3 forces event pages, bypass
+// delayed-startup for MV3 test.  These tests do not rely on startup events.
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  false
+);
 
 async function testPermission(options) {
   function background(bgOptions) {

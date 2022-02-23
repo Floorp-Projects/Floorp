@@ -47,7 +47,10 @@ xpcshell:
             fission: []
             socketprocess_networking:
                 by-test-platform:
-                    linux.*64-qr/debug: built-projects
+                    macosx.*-64(-shippable|-devedition|-asan)?(-qr)?/.*: ['autoland', 'mozilla-central']
+                    linux1804-64(-qr)?/debug: ['autoland', 'mozilla-central']
+                    windows.*(-shippable|-devedition|-asan|.*-qr)?/.*: ['autoland', 'mozilla-central']
+                    windows10-64-2004-asan-qr/opt: []  # No XPCShell on ASAN yet
                     default: []
             default:
                 by-test-platform:

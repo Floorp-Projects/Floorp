@@ -1,5 +1,5 @@
 error: associated function in `impl` without body
-  --> $DIR/missing-body.rs:12:5
+  --> tests/ui/missing-body.rs:12:5
    |
 12 |     async fn f(&self);
    |     ^^^^^^^^^^^^^^^^^-

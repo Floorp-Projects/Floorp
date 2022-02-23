@@ -23,6 +23,9 @@ startup:
     description: >
       The outcome after the app detected that it was running from DMG and
       should offer to install and relaunch itself.
+    metadata: &metadata
+      tags:
+        - "Toolkit :: Startup and Profile System"
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1743328
     data_reviews:

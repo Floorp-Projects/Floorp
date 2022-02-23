@@ -341,29 +341,29 @@ def setup_browsertime(config, tasks):
                 "linux64-chromedriver-87",
             ],
             "linux.*": [
-                "linux64-chromedriver-94",
                 "linux64-chromedriver-95",
                 "linux64-chromedriver-96",
+                "linux64-chromedriver-97",
             ],
             "macosx.*": [
-                "mac64-chromedriver-94",
                 "mac64-chromedriver-95",
                 "mac64-chromedriver-96",
+                "mac64-chromedriver-97",
             ],
             "windows.*aarch64.*": [
-                "win32-chromedriver-94",
                 "win32-chromedriver-95",
                 "win32-chromedriver-96",
+                "win32-chromedriver-97",
             ],
             "windows.*-32.*": [
-                "win32-chromedriver-94",
                 "win32-chromedriver-95",
                 "win32-chromedriver-96",
+                "win32-chromedriver-97",
             ],
             "windows.*-64.*": [
-                "win32-chromedriver-94",
                 "win32-chromedriver-95",
                 "win32-chromedriver-96",
+                "win32-chromedriver-97",
             ],
         }
 
@@ -766,6 +766,7 @@ test_setting_description_schema = Schema(
                 "ccov",
                 "clang-trunk",
                 "devedition",
+                "domstreams",
                 "lite",
                 "mingwclang",
                 "shippable",
@@ -1052,9 +1053,6 @@ def set_schedules_components(config, tasks):
 
         schedules.add(category)
         schedules.add(platform_family(task["build-platform"]))
-
-        if task["webrender"]:
-            schedules.add("webrender")
 
         task["schedules-component"] = sorted(schedules)
         yield task

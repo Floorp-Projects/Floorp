@@ -1,0 +1,13 @@
+/**
+ * nha.chotot.com - Images from carousel are not loading
+ * Bug #1751022 - https://bugzilla.mozilla.org/show_bug.cgi?id=1751022
+ * WebCompat issue #95541 - https://webcompat.com/issues/95541
+ */
+
+.AdImage_imageWrapper__1yIxE > div > div > img {
+  min-width: 300px;
+}
+
+#branch-banner-iframe {
+  z-index: 1400;
+}

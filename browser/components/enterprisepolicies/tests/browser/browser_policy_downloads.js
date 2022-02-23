@@ -3,12 +3,6 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
-
 add_task(async function test_defaultdownload() {
   await setupPolicyEngineWithJson({
     policies: {
@@ -33,7 +27,7 @@ add_task(async function test_defaultdownload() {
       true,
       "saveTo should be disabled."
     );
-    let home = FileUtils.getFile("Home", []).path;
+    let home = Services.dirsvc.get("Home", Ci.nsIFile).path;
     is(
       Services.prefs.getStringPref("browser.download.dir"),
       home + "/Downloads",
@@ -85,7 +79,7 @@ add_task(async function test_download() {
       true,
       "chooseFolder should be disabled."
     );
-    let home = FileUtils.getFile("Home", []).path;
+    let home = Services.dirsvc.get("Home", Ci.nsIFile).path;
     is(
       Services.prefs.getStringPref("browser.download.dir"),
       home + "/Documents",

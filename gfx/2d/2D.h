@@ -136,6 +136,8 @@ struct DrawOptions {
                                      operation. */
 };
 
+struct StoredStrokeOptions;
+
 /**
  * This structure is used to send stroke options that are used in stroking
  * operations.
@@ -168,7 +170,45 @@ struct StrokeOptions {
                                   stroking begins. */
   JoinStyle mLineJoin;       //!< Join style used for joining lines.
   CapStyle mLineCap;         //!< Cap style used for capping lines.
+
+  StoredStrokeOptions* Clone() const;
+
+  bool operator==(const StrokeOptions& aOther) const {
+    return mLineWidth == aOther.mLineWidth &&
+           mMiterLimit == aOther.mMiterLimit &&
+           mDashLength == aOther.mDashLength &&
+           (!mDashLength || (mDashPattern && aOther.mDashPattern &&
+                             !memcmp(mDashPattern, aOther.mDashPattern,
+                                     mDashLength * sizeof(Float)))) &&
+           mDashOffset == aOther.mDashOffset && mLineJoin == aOther.mLineJoin &&
+           mLineCap == aOther.mLineCap;
+  }
 };
+
+/**
+ * Heap-allocated variation of StrokeOptions that ensures dash patterns are
+ * properly allocated and destroyed even if the source was stack-allocated.
+ */
+struct StoredStrokeOptions : public StrokeOptions {
+  explicit StoredStrokeOptions(const StrokeOptions& aOptions)
+      : StrokeOptions(aOptions) {
+    if (mDashLength) {
+      Float* pattern = new Float[mDashLength];
+      memcpy(pattern, mDashPattern, mDashLength * sizeof(Float));
+      mDashPattern = pattern;
+    }
+  }
+
+  ~StoredStrokeOptions() {
+    if (mDashPattern) {
+      delete[] mDashPattern;
+    }
+  }
+};
+
+inline StoredStrokeOptions* StrokeOptions::Clone() const {
+  return new StoredStrokeOptions(*this);
+}
 
 /**
  * This structure supplies additional options for calls to DrawSurface.
@@ -218,6 +258,14 @@ class Pattern {
 
   virtual PatternType GetType() const = 0;
 
+  /** Instantiate a new clone with the same pattern type and values. */
+  virtual Pattern* Clone() const { return nullptr; }
+
+  /** Determine if the pattern type and values exactly match. */
+  virtual bool operator==(const Pattern& aOther) const = 0;
+
+  bool operator!=(const Pattern& aOther) const { return !(*this == aOther); }
+
  protected:
   Pattern() = default;
 };
@@ -229,6 +277,16 @@ class ColorPattern : public Pattern {
   explicit ColorPattern(const DeviceColor& aColor) : mColor(aColor) {}
 
   PatternType GetType() const override { return PatternType::COLOR; }
+
+  Pattern* Clone() const override { return new ColorPattern(mColor); }
+
+  bool operator==(const Pattern& aOther) const override {
+    if (aOther.GetType() != PatternType::COLOR) {
+      return false;
+    }
+    const ColorPattern& other = static_cast<const ColorPattern&>(aOther);
+    return mColor == other.mColor;
+  }
 
   DeviceColor mColor;
 };
@@ -247,6 +305,20 @@ class LinearGradientPattern : public Pattern {
       : mBegin(aBegin), mEnd(aEnd), mStops(aStops), mMatrix(aMatrix) {}
 
   PatternType GetType() const override { return PatternType::LINEAR_GRADIENT; }
+
+  Pattern* Clone() const override {
+    return new LinearGradientPattern(mBegin, mEnd, do_AddRef(mStops), mMatrix);
+  }
+
+  bool operator==(const Pattern& aOther) const override {
+    if (aOther.GetType() != PatternType::LINEAR_GRADIENT) {
+      return false;
+    }
+    const LinearGradientPattern& other =
+        static_cast<const LinearGradientPattern&>(aOther);
+    return mBegin == other.mBegin && mEnd == other.mEnd &&
+           mStops == other.mStops && mMatrix.ExactlyEquals(other.mMatrix);
+  }
 
   Point mBegin;  //!< Start of the linear gradient
   Point mEnd;    /**< End of the linear gradient - NOTE: In the case
@@ -281,6 +353,22 @@ class RadialGradientPattern : public Pattern {
 
   PatternType GetType() const override { return PatternType::RADIAL_GRADIENT; }
 
+  Pattern* Clone() const override {
+    return new RadialGradientPattern(mCenter1, mCenter2, mRadius1, mRadius2,
+                                     do_AddRef(mStops), mMatrix);
+  }
+
+  bool operator==(const Pattern& aOther) const override {
+    if (aOther.GetType() != PatternType::RADIAL_GRADIENT) {
+      return false;
+    }
+    const RadialGradientPattern& other =
+        static_cast<const RadialGradientPattern&>(aOther);
+    return mCenter1 == other.mCenter1 && mCenter2 == other.mCenter2 &&
+           mRadius1 == other.mRadius1 && mRadius2 == other.mRadius2 &&
+           mStops == other.mStops && mMatrix.ExactlyEquals(other.mMatrix);
+  }
+
   Point mCenter1;  //!< Center of the inner (focal) circle.
   Point mCenter2;  //!< Center of the outer circle.
   Float mRadius1;  //!< Radius of the inner (focal) circle.
@@ -312,6 +400,23 @@ class ConicGradientPattern : public Pattern {
 
   PatternType GetType() const override { return PatternType::CONIC_GRADIENT; }
 
+  Pattern* Clone() const override {
+    return new ConicGradientPattern(mCenter, mAngle, mStartOffset, mEndOffset,
+                                    do_AddRef(mStops), mMatrix);
+  }
+
+  bool operator==(const Pattern& aOther) const override {
+    if (aOther.GetType() != PatternType::CONIC_GRADIENT) {
+      return false;
+    }
+    const ConicGradientPattern& other =
+        static_cast<const ConicGradientPattern&>(aOther);
+    return mCenter == other.mCenter && mAngle == other.mAngle &&
+           mStartOffset == other.mStartOffset &&
+           mEndOffset == other.mEndOffset && mStops == other.mStops &&
+           mMatrix.ExactlyEquals(other.mMatrix);
+  }
+
   Point mCenter;       //!< Center of the gradient
   Float mAngle;        //!< Start angle of gradient
   Float mStartOffset;  // Offset of first stop
@@ -341,6 +446,22 @@ class SurfacePattern : public Pattern {
         mSamplingRect(aSamplingRect) {}
 
   PatternType GetType() const override { return PatternType::SURFACE; }
+
+  Pattern* Clone() const override {
+    return new SurfacePattern(mSurface, mExtendMode, mMatrix, mSamplingFilter,
+                              mSamplingRect);
+  }
+
+  bool operator==(const Pattern& aOther) const override {
+    if (aOther.GetType() != PatternType::SURFACE) {
+      return false;
+    }
+    const SurfacePattern& other = static_cast<const SurfacePattern&>(aOther);
+    return mSurface == other.mSurface && mExtendMode == other.mExtendMode &&
+           mSamplingFilter == other.mSamplingFilter &&
+           mMatrix.ExactlyEquals(other.mMatrix) &&
+           mSamplingRect.IsEqualEdges(other.mSamplingRect);
+  }
 
   RefPtr<SourceSurface> mSurface;  //!< Surface to use for drawing
   ExtendMode mExtendMode; /**< This determines how the image is extended

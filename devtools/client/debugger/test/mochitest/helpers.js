@@ -25,6 +25,8 @@ const {
   resetSchemaVersion,
 } = require("devtools/client/debugger/src/utils/prefs");
 
+const { isGeneratedId } = require("devtools/client/shared/source-map/index");
+
 function log(msg, data) {
   info(`${msg} ${!data ? "" : JSON.stringify(data)}`);
 }
@@ -458,6 +460,17 @@ async function waitForPaused(dbg, url) {
   await waitForSelectedSource(dbg, url);
 }
 
+/**
+ * Waits for the debugger to resume
+ *
+ * @memberof mochitest/waits
+ * @param {Objeect} dbg
+ * @static
+ */
+function waitForResumed(dbg) {
+  return waitForState(dbg, state => !dbg.selectors.getIsCurrentThreadPaused());
+}
+
 function waitForInlinePreviews(dbg) {
   return waitForState(dbg, () => dbg.selectors.getSelectedInlinePreviews());
 }
@@ -757,9 +770,9 @@ async function stepOut(dbg) {
 async function resume(dbg) {
   const pauseLine = getVisibleSelectedFrameLine(dbg);
   info(`Resuming from ${pauseLine}`);
-  const onResumed = waitForActive(dbg);
-  await dbg.actions.resume(getThreadContext(dbg));
-  await onResumed;
+  const onResumed = waitForResumed(dbg);
+  await dbg.actions.resume();
+  return onResumed;
 }
 
 function deleteExpression(dbg, input) {
@@ -808,6 +821,26 @@ function getFirstBreakpointColumn(dbg, { line, sourceId }) {
   return getSelectedLocation(position, source).column;
 }
 
+function isMatchingLocation(location1, location2) {
+  return (
+    location1?.sourceId == location2?.sourceId &&
+    location1?.line == location2?.line &&
+    location1?.column == location2?.column
+  );
+}
+
+function getBreakpointForLocation(dbg, location) {
+  if (!location) {
+    return undefined;
+  }
+
+  const isGeneratedSource = isGeneratedId(location.sourceId);
+  return dbg.selectors.getBreakpointsList().find(bp => {
+    const loc = isGeneratedSource ? bp.generatedLocation : bp.location;
+    return isMatchingLocation(loc, location);
+  });
+}
+
 /**
  * Adds a breakpoint to a source at line/col.
  *
@@ -841,7 +874,7 @@ function disableBreakpoint(dbg, source, line, column) {
   column =
     column || getFirstBreakpointColumn(dbg, { line, sourceId: source.id });
   const location = { sourceId: source.id, sourceUrl: source.url, line, column };
-  const bp = dbg.selectors.getBreakpointForLocation(location);
+  const bp = getBreakpointForLocation(dbg, location);
   return dbg.actions.disableBreakpoint(getContext(dbg), bp);
 }
 
@@ -1005,7 +1038,7 @@ function removeBreakpoint(dbg, sourceId, line, column) {
   const source = dbg.selectors.getSource(sourceId);
   column = column || getFirstBreakpointColumn(dbg, { line, sourceId });
   const location = { sourceId, sourceUrl: source.url, line, column };
-  const bp = dbg.selectors.getBreakpointForLocation(location);
+  const bp = getBreakpointForLocation(dbg, location);
   return dbg.actions.removeBreakpoint(getContext(dbg), bp);
 }
 
@@ -1028,10 +1061,6 @@ async function togglePauseOnExceptions(
     pauseOnExceptions,
     pauseOnCaughtExceptions
   );
-}
-
-function waitForActive(dbg) {
-  return waitForState(dbg, state => !dbg.selectors.getIsCurrentThreadPaused());
 }
 
 // Helpers
@@ -2159,6 +2188,54 @@ async function setLogPoint(dbg, index, value) {
   const onBreakpointSet = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await typeInPanel(dbg, value);
   await onBreakpointSet;
+}
+
+/**
+ * Instantiate a HTTP Server that serves files from a given test folder.
+ * The test folder should be made of multiple sub folder named: v1, v2, v3,...
+ * We will serve the content from one of these sub folder
+ * and switch to the next one, each time `httpServer.switchToNextVersion()`
+ * is called.
+ *
+ * @return Object Test server with two functions:
+ *   - urlFor(path)
+ *     Returns the absolute url for a given file.
+ *   - switchToNextVersion() 
+ *     Start serving files from the next available sub folder.
+ */
+function createVersionizedHttpTestServer(testFolderName) {
+  const httpServer = createTestHTTPServer();
+
+  let currentVersion = 1;
+
+  httpServer.registerPrefixHandler("/", async (request, response) => {
+    response.processAsync();
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    if (request.path.endsWith(".js")) {
+      response.setHeader("Content-Type", "application/javascript");
+    } else if (request.path.endsWith(".js.map")) {
+      response.setHeader("Content-Type", "application/json");
+    }
+    if (request.path == "/" || request.path == "/index.html") {
+      response.setHeader("Content-Type", "text/html");
+    }
+    const url = URL_ROOT + `examples/${testFolderName}/v${currentVersion}${request.path}`;
+    info("[test-http-server] serving: " + url);
+    const content = await fetch(url);
+    const text = await content.text();
+    response.write(text);
+    response.finish();
+  });
+
+  return {
+    switchToNextVersion() {
+      currentVersion++;
+    },
+    urlFor(path) {
+      const port = httpServer.identity.primaryPort;
+      return `http://localhost:${port}/${path}`;
+    },
+  };
 }
 
 // This module is also loaded for Browser Toolbox tests, within the browser toolbox process

@@ -33,6 +33,7 @@ add_task(async function() {
     "resource://devtools/client/shared/vendor/react-dom-factories.js",
     "resource://devtools/client/shared/vendor/react-prop-types.js",
     "resource://devtools/client/shared/vendor/redux.js",
+    "resource://devtools/client/shared/vendor/fluent-react.js",
   ]);
 
   runMetricsTest({

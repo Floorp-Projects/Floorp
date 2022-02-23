@@ -94,7 +94,6 @@ set(JPEGXL_INTERNAL_SOURCES_DEC
   jxl/dec_patch_dictionary.h
   jxl/dec_reconstruct.cc
   jxl/dec_reconstruct.h
-  jxl/dec_render_pipeline.h
   jxl/dec_transforms-inl.h
   jxl/dec_upsample.cc
   jxl/dec_upsample.h
@@ -190,7 +189,36 @@ set(JPEGXL_INTERNAL_SOURCES_DEC
   jxl/quantizer.cc
   jxl/quantizer.h
   jxl/rational_polynomial-inl.h
+  jxl/render_pipeline/low_memory_render_pipeline.cc
+  jxl/render_pipeline/low_memory_render_pipeline.h
+  jxl/render_pipeline/render_pipeline.cc
+  jxl/render_pipeline/render_pipeline.h
+  jxl/render_pipeline/render_pipeline_stage.h
+  jxl/render_pipeline/simple_render_pipeline.cc
+  jxl/render_pipeline/simple_render_pipeline.h
+  jxl/render_pipeline/stage_chroma_upsampling.cc
+  jxl/render_pipeline/stage_chroma_upsampling.h
+  jxl/render_pipeline/stage_epf.cc
+  jxl/render_pipeline/stage_epf.h
+  jxl/render_pipeline/stage_gaborish.cc
+  jxl/render_pipeline/stage_gaborish.h
+  jxl/render_pipeline/stage_noise.cc
+  jxl/render_pipeline/stage_noise.h
+  jxl/render_pipeline/stage_patches.cc
+  jxl/render_pipeline/stage_patches.h
+  jxl/render_pipeline/stage_splines.cc
+  jxl/render_pipeline/stage_splines.h
+  jxl/render_pipeline/stage_upsampling.cc
+  jxl/render_pipeline/stage_upsampling.h
+  jxl/render_pipeline/stage_write_to_ib.cc
+  jxl/render_pipeline/stage_write_to_ib.h
+  jxl/render_pipeline/stage_xyb.cc
+  jxl/render_pipeline/stage_xyb.h
+  jxl/render_pipeline/stage_ycbcr.cc
+  jxl/render_pipeline/stage_ycbcr.h
+  jxl/render_pipeline/test_render_pipeline_stages.h
   jxl/sanitizers.h
+  jxl/simd_util-inl.h
   jxl/splines.cc
   jxl/splines.h
   jxl/toc.cc

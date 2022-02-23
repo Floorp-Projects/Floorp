@@ -1,5 +1,5 @@
 black==21.11b1
 typing-extensions==3.10.0.2
-typed-ast==1.4.2
+typed-ast==1.4.3
 dataclasses==0.6
 

@@ -28,11 +28,14 @@ bool GdkIsX11Display(GdkDisplay* display);
 bool GdkIsWaylandDisplay();
 bool GdkIsX11Display();
 
+GdkDevice* GdkGetPointer();
+
 bool IsRunningUnderFlatpak();
 enum class PortalKind {
   FilePicker,
   MimeHandler,
   Print,
+  Settings,
 };
 bool ShouldUsePortal(PortalKind);
 

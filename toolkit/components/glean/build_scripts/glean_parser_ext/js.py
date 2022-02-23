@@ -17,7 +17,7 @@ import jinja2
 from perfecthash import PerfectHash
 from string_table import StringTable
 
-from util import generate_metric_ids, generate_ping_ids
+from util import generate_metric_ids, generate_ping_ids, get_metrics
 from glean_parser import util
 
 """
@@ -118,10 +118,10 @@ def output_js(objs, output_fd, options={}):
 
     util.get_jinja2_template = get_local_template
 
-    if len(objs) == 1 and "pings" in objs:
-        write_pings(objs, output_fd, "js_pings.jinja2")
+    if "pings" in objs:
+        write_pings({"pings": objs["pings"]}, output_fd, "js_pings.jinja2")
     else:
-        write_metrics(objs, output_fd, "js.jinja2")
+        write_metrics(get_metrics(objs), output_fd, "js.jinja2")
 
 
 def write_metrics(objs, output_fd, template_filename):
@@ -148,7 +148,7 @@ def write_metrics(objs, output_fd, template_filename):
     # Mapping from a type name to its ID
     metric_type_ids = {}
 
-    for category_name, objs in objs.items():
+    for category_name, objs in get_metrics(objs).items():
         category_name = util.camelize(category_name)
         id = category_string_table.stringIndex(category_name)
         categories.append((category_name, id))

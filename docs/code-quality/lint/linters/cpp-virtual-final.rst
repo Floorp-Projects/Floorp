@@ -27,4 +27,3 @@ Sources
 -------
 
 * `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/cpp-virtual-final.yml>`_
-

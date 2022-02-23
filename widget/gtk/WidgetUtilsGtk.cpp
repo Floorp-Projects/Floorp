@@ -84,6 +84,12 @@ bool GdkIsX11Display() {
   return isX11Display;
 }
 
+GdkDevice* GdkGetPointer() {
+  GdkDisplay* display = gdk_display_get_default();
+  GdkDeviceManager* deviceManager = gdk_display_get_device_manager(display);
+  return gdk_device_manager_get_client_pointer(deviceManager);
+}
+
 bool IsRunningUnderFlatpak() {
   // https://gitlab.gnome.org/GNOME/gtk/-/blob/4300a5c609306ce77cbc8a3580c19201dccd8d13/gdk/gdk.c#L472
   static bool sRunning = [] {
@@ -113,6 +119,9 @@ bool ShouldUsePortal(PortalKind aPortalKind) {
         // flatpak is enabled.
         autoBehavior = IsRunningUnderFlatpak();
         return StaticPrefs::widget_use_xdg_desktop_portal_print();
+      case PortalKind::Settings:
+        autoBehavior = true;
+        return StaticPrefs::widget_use_xdg_desktop_portal_settings();
     }
     return 2;
   }();

@@ -419,7 +419,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvDefaultTextAttributes(
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvTextBounds(
     const uint64_t& aID, const int32_t& aStartOffset, const int32_t& aEndOffset,
-    const uint32_t& aCoordType, nsIntRect* aRetVal) {
+    const uint32_t& aCoordType, LayoutDeviceIntRect* aRetVal) {
   HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
   if (acc && acc->IsTextRole()) {
     *aRetVal = acc->TextBounds(aStartOffset, aEndOffset, aCoordType);
@@ -430,7 +430,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvTextBounds(
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvCharBounds(
     const uint64_t& aID, const int32_t& aOffset, const uint32_t& aCoordType,
-    nsIntRect* aRetVal) {
+    LayoutDeviceIntRect* aRetVal) {
   HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
   if (acc && acc->IsTextRole()) {
     *aRetVal = acc->CharBounds(aOffset, aCoordType);
@@ -606,7 +606,8 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvPasteText(
 }
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvImagePosition(
-    const uint64_t& aID, const uint32_t& aCoordType, nsIntPoint* aRetVal) {
+    const uint64_t& aID, const uint32_t& aCoordType,
+    LayoutDeviceIntPoint* aRetVal) {
   ImageAccessible* acc = IdToImageAccessible(aID);
   if (acc) {
     *aRetVal = acc->Position(aCoordType);
@@ -615,8 +616,8 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvImagePosition(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvImageSize(const uint64_t& aID,
-                                                          nsIntSize* aRetVal) {
+mozilla::ipc::IPCResult DocAccessibleChild::RecvImageSize(
+    const uint64_t& aID, LayoutDeviceIntSize* aRetVal) {
   ImageAccessible* acc = IdToImageAccessible(aID);
   if (acc) {
     *aRetVal = acc->Size();
@@ -1377,16 +1378,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvActionCount(const uint64_t& aID,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvActionDescriptionAt(
-    const uint64_t& aID, const uint8_t& aIndex, nsString* aDescription) {
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc) {
-    acc->ActionDescriptionAt(aIndex, *aDescription);
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvActionNameAt(
     const uint64_t& aID, const uint8_t& aIndex, nsString* aName) {
   LocalAccessible* acc = IdToAccessible(aID);
@@ -1643,10 +1634,10 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvExtents(
   *aHeight = 0;
   LocalAccessible* acc = IdToAccessible(aID);
   if (acc && !acc->IsDefunct()) {
-    nsIntRect screenRect = acc->Bounds();
+    LayoutDeviceIntRect screenRect = acc->Bounds();
     if (!screenRect.IsEmpty()) {
       if (aNeedsScreenCoords) {
-        nsIntPoint winCoords =
+        LayoutDeviceIntPoint winCoords =
             nsCoreUtils::GetScreenCoordsForWindow(acc->GetNode());
         screenRect.x -= winCoords.x;
         screenRect.y -= winCoords.y;

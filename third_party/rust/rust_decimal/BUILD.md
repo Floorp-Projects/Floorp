@@ -103,7 +103,7 @@ run by using `makers fuzz`.
 In order to ensure that Rust Decimal runs quickly, a number of benchmarks have been created and can be executed using
 `makers bench`. 
 
-When adding new benchmarking configurations please ensure that you add a corresponding `Makefile.toml` task to capture the
+When adding new benchmarking configurations, please ensure that you add a corresponding `Makefile.toml` task to capture the
 updated configuration.
 
 ## Code Coverage

@@ -1,0 +1,24 @@
+.stp_popular_topics {
+  padding: 0;
+
+  .stp_popular_topic {
+    background: #F0F0F4;
+    border-radius: 4px;
+    display: inline-block;
+    font-size: 0.77em;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1.2em;
+    margin-inline-end: 8px;
+    margin-bottom: 8px;
+    padding: 4px 8px;
+
+    .stp_popular_topic_link {
+      color: #000;
+
+      &::after {
+        content: " >";
+      }
+    }
+  }
+}

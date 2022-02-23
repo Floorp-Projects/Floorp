@@ -72,6 +72,7 @@ job-defaults:
                 default:
                     name: Firefox l10n changesets
                     path: browser/locales/l10n-changesets.json
+                    l10n-repo-url: "https://hg.mozilla.org/l10n-central/%(locale)s/json-pushes?version=2&tipsonly=1"
                     version-path: browser/config/version.txt
                     ignore-config:
                         ja:

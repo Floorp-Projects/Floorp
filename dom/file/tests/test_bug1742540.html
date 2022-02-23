@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1742540</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <script>
+
+SimpleTest.waitForExplicitFinish();
+
+add_task(function setupPrefs() {
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+    ],
+  });
+});
+
+function get_file() {
+  return new Promise(resolve => {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", "/dynamic/getMyDirectory.sjs", false);
+    xhr.send();
+    let basePath = xhr.responseText;
+
+    let script = SpecialPowers.loadChromeScript(
+      SimpleTest.getTestFileURL("create_file_objects.js")
+    );
+    script.addMessageListener("created-file-objects", files => {
+      resolve(files[0]);
+    });
+    script.sendAsyncMessage("create-file-objects", {
+      fileNames: [basePath + "file_mozfiledataurl_audio.ogg"],
+    });
+  });
+}
+
+function wait_for_message(port, expected_message) {
+  return new Promise(resolve => {
+    port.onmessage = event => {
+      port.onmessage = null;
+      ok(event.data === expected_message, event.data);
+      resolve();
+    };
+  });
+}
+
+function unregister_and_done(registration) {
+  return registration.unregister().then(() => {
+    ok(true, "Will find leaks of nsPipe in BloatView without fix.");
+    SimpleTest.finish;
+  });
+}
+
+add_task(async function send_file_to_serviceworker() {
+  let registration = await navigator.serviceWorker
+    .register("worker_bug1742540.js", { scope: "./" })
+    .then(() => {
+      return navigator.serviceWorker.ready;
+    });
+
+  ok(registration.active, "ServiceWorker is activated");
+
+  let file = await get_file();
+  ok(file.size > 100000, "File size is big enough.");
+  let message = "ServiceWorker receives a file and did not reference it.";
+  let channel = new MessageChannel();
+  let received = wait_for_message(channel.port1, message);
+  registration.active.postMessage({ port: channel.port2, message, file }, [
+    channel.port2,
+  ]);
+  await received;
+
+  let finish = await unregister_and_done(registration);
+});
+
+  </script>
+</body>
+</html>

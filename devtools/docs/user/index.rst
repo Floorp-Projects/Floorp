@@ -244,7 +244,7 @@ For information on extending the Firefox DevTools, see `Extending the developer 
 Migrating from Firebug
 **********************
 
-Firebug has come to the end of its lifespan (see `Firebug lives on in Firefox DevTools <Attach the Developer Tools to the browser itself.>`_ for details of why), and we appreciate that some people will find migrating to another less familiar set of DevTools to be challenging. To ease a transition from Firebug to the Firefox developer tools, we have written a handy guide — `Migrating from Firebug <https://developer.mozilla.org/en-US/docs/Tools/Migrating_from_Firebug>`_
+Firebug has come to the end of its lifespan (see `Firebug lives on in Firefox DevTools <https://hacks.mozilla.org/2016/12/firebug-lives-on-in-firefox-devtools/>`_ for details of why), and we appreciate that some people will find migrating to another less familiar set of DevTools to be challenging. To ease a transition from Firebug to the Firefox developer tools, we have written a handy guide — :doc:`Migrating from Firebug <./migrating_from_firebug/index>`
 
 
 Contribute

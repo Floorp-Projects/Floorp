@@ -175,6 +175,26 @@ Rect PathSkia::GetStrokedBounds(const StrokeOptions& aStrokeOptions,
   return aTransform.TransformBounds(bounds);
 }
 
+Rect PathSkia::GetFastBounds(const Matrix& aTransform,
+                             const StrokeOptions* aStrokeOptions) const {
+  if (!mPath.isFinite()) {
+    return Rect();
+  }
+  SkRect bounds = mPath.getBounds();
+  if (aStrokeOptions) {
+    // If the path is stroked, ensure that the bounds are inflated by any
+    // relevant options such as line width. Avoid using dash path effects
+    // for performance and to ensure computeFastStrokeBounds succeeds.
+    SkPaint paint;
+    if (!StrokeOptionsToPaint(paint, *aStrokeOptions, false)) {
+      return Rect();
+    }
+    SkRect outBounds = SkRect::MakeEmpty();
+    bounds = paint.computeFastStrokeBounds(bounds, &outBounds);
+  }
+  return aTransform.TransformBounds(SkRectToRect(bounds));
+}
+
 void PathSkia::StreamToSink(PathSink* aSink) const {
   SkPath::RawIter iter(mPath);
 

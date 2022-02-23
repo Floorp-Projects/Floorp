@@ -279,21 +279,22 @@ JS_PUBLIC_API void JS::NonIncrementalGC(JSContext* cx, JS::GCOptions options,
 }
 
 JS_PUBLIC_API void JS::StartIncrementalGC(JSContext* cx, JS::GCOptions options,
-                                          GCReason reason, int64_t millis) {
+                                          GCReason reason,
+                                          const js::SliceBudget& budget) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   MOZ_ASSERT(options == JS::GCOptions::Normal ||
              options == JS::GCOptions::Shrink);
 
-  cx->runtime()->gc.startGC(options, reason, millis);
+  cx->runtime()->gc.startGC(options, reason, budget);
 }
 
 JS_PUBLIC_API void JS::IncrementalGCSlice(JSContext* cx, GCReason reason,
-                                          int64_t millis) {
+                                          const js::SliceBudget& budget) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  cx->runtime()->gc.gcSlice(reason, millis);
+  cx->runtime()->gc.gcSlice(reason, budget);
 }
 
 JS_PUBLIC_API bool JS::IncrementalGCHasForegroundWork(JSContext* cx) {

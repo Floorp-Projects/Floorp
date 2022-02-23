@@ -409,7 +409,7 @@ There are two ways to work around this problem:
 
          symchk.exe /r C:\windows\SysWOW64\ /s "SRV*<your cache symbols directory>\MicrosoftPublicSymbols*http://msdl.microsoft.com/download/symbols"
 
-      | 
+      |
       | Note the "``\MicrosoftPublicSymbols``" appended to the cache
         directory configured in Visual Studio.
 
@@ -429,7 +429,7 @@ debugging the program crashes with an Access Violation, you may be
 hitting a Windows bug relating to AVX support.  For more details,
 including a work-around see `this blog
 post <http://www.os2museum.com/wp/?p=960>`__ or `this social.msdn
-thread <http://social.msdn.microsoft.com/Forums/vstudio/en-US/392ca62c-e502-42d9-adbc-b4e22d5da0c3/jit-debugging-32bit-app-crashing-with-access-violation>`__. 
+thread <http://social.msdn.microsoft.com/Forums/vstudio/en-US/392ca62c-e502-42d9-adbc-b4e22d5da0c3/jit-debugging-32bit-app-crashing-with-access-violation>`__.
 (And just in-case those links die, the work-around is to execute
 
 ::

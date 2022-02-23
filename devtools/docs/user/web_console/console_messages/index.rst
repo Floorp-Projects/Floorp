@@ -302,7 +302,7 @@ To find a suitable library for your server code, see the `Chrome Logger document
 Interpreter input/output
 ------------------------
 
-Commands sent to the browser using the `Web Console's JavaScript interpreter <https://developer.mozilla.org/en-US/docs/Tools/Web_Console/The_command_line_interpreter>`_, and the corresponding responses, are logged in the console messages.
+Commands sent to the browser using the :doc:`Web Console's JavaScript interpreter <../the_command_line_interpreter/index>`, and the corresponding responses, are logged in the console messages.
 
 For responses that contain objects or variables, the following context menu options are available:
 

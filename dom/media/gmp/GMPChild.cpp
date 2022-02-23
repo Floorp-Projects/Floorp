@@ -25,6 +25,8 @@
 #include "GMPVideoEncoderChild.h"
 #include "GMPVideoHost.h"
 #include "mozilla/Algorithm.h"
+#include "mozilla/FOGIPC.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProcessChild.h"
@@ -35,6 +37,7 @@
 #include "nsReadableUtils.h"
 #include "nsThreadManager.h"
 #include "nsXULAppAPI.h"
+#include "nsIXULRuntime.h"
 #include "prio.h"
 #ifdef XP_WIN
 #  include <stdlib.h>  // for _exit()
@@ -209,6 +212,7 @@ mozilla::ipc::IPCResult GMPChild::RecvPreloadLibs(const nsCString& aLibs) {
       u"ole32.dll",        // required for OPM
       u"psapi.dll",        // For GetMappedFileNameW, see bug 1383611
       u"softokn3.dll",     // NSS for clearkey CDM
+      u"winmm.dll",        // Dependency for widevine
   };
   constexpr static bool (*IsASCII)(const char16_t*) =
       IsAsciiNullTerminated<char16_t>;
@@ -584,6 +588,10 @@ void GMPChild::ActorDestroy(ActorDestroyReason aWhy) {
     ProcessChild::QuickExit();
   }
 
+  // Send the last bits of Glean data over to the main process.
+  glean::FlushFOGData(
+      [](ByteBuf&& aBuf) { glean::SendFOGData(std::move(aBuf)); });
+
   if (mProfilerController) {
     mProfilerController->Shutdown();
     mProfilerController = nullptr;
@@ -673,6 +681,22 @@ mozilla::ipc::IPCResult GMPChild::RecvInitGMPContentChild(
   GMPContentChild* child =
       mGMPContentChildren.AppendElement(new GMPContentChild(this))->get();
   aEndpoint.Bind(child);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GMPChild::RecvFlushFOGData(
+    FlushFOGDataResolver&& aResolver) {
+  GMP_CHILD_LOG_DEBUG("GMPChild RecvFlushFOGData");
+  glean::FlushFOGData(std::move(aResolver));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GMPChild::RecvTestTriggerMetrics(
+    TestTriggerMetricsResolver&& aResolve) {
+  GMP_CHILD_LOG_DEBUG("GMPChild RecvTestTriggerMetrics");
+  mozilla::glean::test_only_ipc::a_counter.Add(
+      nsIXULRuntime::PROCESS_TYPE_GMPLUGIN);
+  aResolve(true);
   return IPC_OK();
 }
 

@@ -99,6 +99,7 @@
 
 #include "jsapi.h"
 #include "js/Initialization.h"
+#include "mozilla/StaticPrefs_javascript.h"
 #include "XPCSelfHostedShmem.h"
 
 #include "gfxPlatform.h"
@@ -176,7 +177,7 @@ const mozilla::Module kXPCOMModule = {
     nullptr,
     nullptr,
     nullptr,
-    mozilla::Module::ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS};
+    mozilla::Module::ALLOW_IN_GPU_RDD_VR_SOCKET_AND_UTILITY_PROCESS};
 
 // gDebug will be freed during shutdown.
 static nsIDebug2* gDebug = nullptr;
@@ -248,6 +249,22 @@ mozilla::CountingAllocatorBase<OggReporter>::AmountType
     mozilla::CountingAllocatorBase<OggReporter>::sAmount(0);
 
 static bool sInitializedJS = false;
+
+static void InitializeJS() {
+#if defined(ENABLE_WASM_SIMD) && \
+    (defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86))
+  // Update static engine preferences, such as AVX, before
+  // `JS_InitWithFailureDiagnostic` is called.
+  if (mozilla::StaticPrefs::javascript_options_wasm_simd_avx()) {
+    JS::SetAVXEnabled();
+  }
+#endif
+
+  const char* jsInitFailureReason = JS_InitWithFailureDiagnostic();
+  if (jsInitFailureReason) {
+    MOZ_CRASH_UNSAFE(jsInitFailureReason);
+  }
+}
 
 // Note that on OSX, aBinDirectory will point to .app/Contents/Resources/browser
 EXPORT_XPCOM_API(nsresult)
@@ -437,10 +454,7 @@ NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
       OggReporter::CountingRealloc, OggReporter::CountingFree);
 
   // Initialize the JS engine.
-  const char* jsInitFailureReason = JS_InitWithFailureDiagnostic();
-  if (jsInitFailureReason) {
-    MOZ_CRASH_UNSAFE(jsInitFailureReason);
-  }
+  InitializeJS();
   sInitializedJS = true;
 
   rv = nsComponentManagerImpl::gComponentManager->Init();

@@ -21,6 +21,7 @@ const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
 // Steal various globals only available in JSM scope (and not Sandbox one)
 const {
+  CanonicalBrowsingContext,
   BrowsingContext,
   WindowGlobalParent,
   WindowGlobalChild,
@@ -254,6 +255,7 @@ exports.globals = {
   atob,
   Blob,
   btoa,
+  CanonicalBrowsingContext,
   BrowsingContext,
   WindowGlobalParent,
   WindowGlobalChild,

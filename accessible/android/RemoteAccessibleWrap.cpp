@@ -74,7 +74,9 @@ void RemoteAccessibleWrap::Value(nsString& aValue) const {
 
 uint64_t RemoteAccessibleWrap::State() { return Proxy()->State(); }
 
-nsIntRect RemoteAccessibleWrap::Bounds() const { return Proxy()->Bounds(); }
+mozilla::LayoutDeviceIntRect RemoteAccessibleWrap::Bounds() const {
+  return Proxy()->Bounds();
+}
 
 void RemoteAccessibleWrap::ScrollTo(uint32_t aHow) const {
   Proxy()->ScrollTo(aHow);

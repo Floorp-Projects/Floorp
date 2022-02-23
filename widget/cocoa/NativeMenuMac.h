@@ -49,8 +49,7 @@ class NativeMenuMac : public NativeMenu,
   // nsMenuX::Observer
   void OnMenuWillOpen(dom::Element* aPopupElement) override;
   void OnMenuDidOpen(dom::Element* aPopupElement) override;
-  void OnMenuWillActivateItem(dom::Element* aPopupElement,
-                              dom::Element* aMenuItemElement) override;
+  void OnMenuWillActivateItem(dom::Element* aPopupElement, dom::Element* aMenuItemElement) override;
   void OnMenuClosed(dom::Element* aPopupElement) override;
 
   NSMenu* NativeNSMenu() { return mMenu ? mMenu->NativeNSMenu() : nil; }

@@ -25,26 +25,26 @@ STEPS = {
 
 
 def test_commit(repo):
-    vcs = get_repository_object(repo.strpath)
+    vcs = get_repository_object(repo.dir)
     assert vcs.working_directory_clean()
 
     # Modify both foo and bar
-    next(repo.step)
+    repo.execute_next_step()
     assert not vcs.working_directory_clean()
 
     # Commit just bar
     vcs.commit(
-        "Modify bar\n\nbut not baz",
-        "Testing McTesterson <test@example.org>",
-        "2017-07-14 02:40:00 UTC",
-        ["bar"],
+        message="Modify bar\n\nbut not baz",
+        author="Testing McTesterson <test@example.org>",
+        date="2017-07-14 02:40:00 UTC",
+        paths=["bar"],
     )
 
     # We only committed bar, so foo is still keeping the working dir dirty
     assert not vcs.working_directory_clean()
 
     if repo.vcs == "git":
-        log_cmd = ["log", "-1", "--format=%an,%ae,%at,%B"]
+        log_cmd = ["log", "-1", "--format=%an,%ae,%aD,%B"]
         patch_cmd = ["log", "-1", "-p"]
     else:
         log_cmd = [
@@ -52,15 +52,15 @@ def test_commit(repo):
             "-l",
             "1",
             "-T",
-            '{person(author)},{email(author)},{date(localdate(date),"%s")},{desc}',
+            "{person(author)},{email(author)},{date|rfc822date},{desc}",
         ]
         patch_cmd = ["log", "-l", "1", "-p"]
 
     # Verify commit metadata (we rstrip to normalize trivial git/hg differences)
     log = vcs._run(*log_cmd).rstrip()
-    assert (
-        log
-        == "Testing McTesterson,test@example.org,1500000000,Modify bar\n\nbut not baz"
+    assert log == (
+        "Testing McTesterson,test@example.org,Fri, 14 "
+        "Jul 2017 02:40:00 +0000,Modify bar\n\nbut not baz"
     )
 
     # Verify only the intended file was added to the commit

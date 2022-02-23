@@ -10,6 +10,7 @@
 #include "mozilla/a11y/AccTypes.h"
 #include "nsString.h"
 #include "nsRect.h"
+#include "Units.h"
 
 class nsAtom;
 
@@ -157,7 +158,10 @@ class Accessible {
   virtual double MaxValue() const = 0;
   virtual double Step() const = 0;
 
-  virtual nsIntRect Bounds() const = 0;
+  /**
+   * Return boundaries in screen coordinates in device pixels.
+   */
+  virtual LayoutDeviceIntRect Bounds() const = 0;
 
   /**
    * Returns text of accessible if accessible has text role otherwise empty
@@ -196,6 +200,33 @@ class Accessible {
    * Return tag name of associated DOM node.
    */
   virtual nsAtom* TagName() const = 0;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // ActionAccessible
+
+  /**
+   * Return the number of actions that can be performed on this accessible.
+   */
+  virtual uint8_t ActionCount() const = 0;
+
+  /**
+   * Return action name at given index.
+   */
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) = 0;
+
+  /**
+   * Default to localized action name.
+   */
+  void ActionDescriptionAt(uint8_t aIndex, nsAString& aDescription) {
+    nsAutoString name;
+    ActionNameAt(aIndex, name);
+    TranslateString(name, aDescription);
+  }
+
+  /**
+   * Invoke the accessible action.
+   */
+  virtual bool DoAction(uint8_t aIndex) const = 0;
 
   // Type "is" methods
 
@@ -311,6 +342,11 @@ class Accessible {
   LocalAccessible* AsLocal();
 
   virtual HyperTextAccessibleBase* AsHyperTextBase() { return nullptr; }
+
+  /**
+   * Return the localized string for the given key.
+   */
+  static void TranslateString(const nsString& aKey, nsAString& aStringOut);
 
  protected:
   // Some abstracted group utility methods.

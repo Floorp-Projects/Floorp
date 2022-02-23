@@ -95,7 +95,7 @@ class TRR : public Runnable,
   // FailData() must be called to signal that the asynch TRR resolve is
   // completed. For failed name resolves ("no such host"), the 'error' it
   // passses on in its argument must be NS_ERROR_UNKNOWN_HOST. Other errors
-  // (if host was blacklisted, there as a bad content-type received, etc)
+  // (if host was blocklisted, there as a bad content-type received, etc)
   // other error codes must be used. This distinction is important for the
   // subsequent logic to separate the error reasons.
   nsresult FailData(nsresult error);

@@ -29,11 +29,6 @@ namespace dom {
 class BrowserChild;
 }  // namespace dom
 
-namespace webgpu {
-class PWebGPUChild;
-class WebGPUChild;
-}  // namespace webgpu
-
 namespace widget {
 class CompositorWidget;
 }  // namespace widget
@@ -102,18 +97,14 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   mozilla::ipc::IPCResult RecvParentAsyncMessages(
       nsTArray<AsyncParentMessageData>&& aMessages);
-  PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
-                               ReadLockDescriptor&& aReadLock,
-                               LayersBackend aLayersBackend,
-                               TextureFlags aFlags, uint64_t aSerial,
-                               wr::MaybeExternalImageId& aExternalImageId,
-                               nsISerialEventTarget* aTarget) override;
+  PTextureChild* CreateTexture(
+      const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
+      LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
+      wr::MaybeExternalImageId& aExternalImageId) override;
 
   already_AddRefed<CanvasChild> GetCanvasChild() final;
 
   void EndCanvasTransaction();
-
-  RefPtr<webgpu::WebGPUChild> GetWebGPUChild();
 
   // Beware that these methods don't override their super-class equivalent
   // (which are not virtual), they just overload them. All of these Send*
@@ -184,9 +175,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
       const WindowKind&);
   bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor);
 
-  webgpu::PWebGPUChild* AllocPWebGPUChild();
-  bool DeallocPWebGPUChild(webgpu::PWebGPUChild* aActor);
-
   wr::MaybeExternalImageId GetNextExternalImageId() override;
 
   wr::PipelineId GetNextPipelineId();
@@ -235,7 +223,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   /**
    * Transaction id of ShadowLayerForwarder.
-   * It is incrementaed by UpdateFwdTransactionId() in each BeginTransaction()
+   * It is incremented by UpdateFwdTransactionId() in each BeginTransaction()
    * call.
    */
   uint64_t mFwdTransactionId;
@@ -259,27 +247,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   // is only accessed on the main thread.
   nsTArray<RefPtr<TextureClient>> mTextureClientsForAsyncPaint;
 
-  // Off-Main-Thread Painting state. This covers access to the OMTP-related
-  // state below.
-  Monitor mPaintLock;
-
-  // Contains the number of asynchronous paints that were queued since the
-  // beginning of the last async transaction, and the time stamp of when
-  // that was
-  size_t mTotalAsyncPaints;
-  TimeStamp mAsyncTransactionBegin;
-
-  // True if this CompositorBridge is currently delaying its messages until the
-  // paint thread completes. This is R/W on both the main and paint threads, and
-  // must be accessed within the paint lock.
-  bool mIsDelayingForAsyncPaints;
-
-  uintptr_t mSlowFlushCount;
-  uintptr_t mTotalFlushCount;
-
   RefPtr<CanvasChild> mCanvasChild;
-
-  RefPtr<webgpu::WebGPUChild> mWebGPUChild;
 };
 
 }  // namespace layers

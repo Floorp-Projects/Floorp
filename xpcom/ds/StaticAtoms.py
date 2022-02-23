@@ -554,6 +554,7 @@ STATIC_ATOMS = [
     Atom("insertion", "insertion"),
     Atom("integer", "integer"),
     Atom("integrity", "integrity"),
+    Atom("internal", "internal"),
     Atom("internals", "internals"),
     Atom("intersection", "intersection"),
     Atom("intersectionobserverlist", "intersectionobserverlist"),
@@ -2201,6 +2202,8 @@ STATIC_ATOMS = [
     Atom("DisplayPortMargins", "_displayportmargins"),
     Atom("DisplayPortBase", "_displayportbase"),
     Atom("MinimalDisplayPort", "_minimaldisplayport"),
+    Atom("forceMousewheelAutodir", "_force_mousewheel_autodir"),
+    Atom("forceMousewheelAutodirHonourRoot", "_force_mousewheel_autodir_honourroot"),
     Atom("forcemessagemanager", "forcemessagemanager"),
     Atom("initialBrowsingContextGroupId", "initialBrowsingContextGroupId"),
     Atom("initiallyactive", "initiallyactive"),
@@ -2459,7 +2462,7 @@ STATIC_ATOMS = [
     PseudoElementAtom("PseudoElement_mozColorSwatch", ":-moz-color-swatch"),
     PseudoElementAtom("PseudoElement_mozTextControlEditingRoot", ":-moz-text-control-editing-root"),
     PseudoElementAtom("PseudoElement_mozTextControlPreview", ":-moz-text-control-preview"),
-    PseudoElementAtom("PseudoElement_mozTextControlShowPasswordButton", ":-moz-text-control-show-password-button"),
+    PseudoElementAtom("PseudoElement_mozReveal", ":-moz-reveal"),
     PseudoElementAtom("PseudoElement_fileSelectorButton", ":file-selector-button"),
     # CSS anonymous boxes -- these must appear in the same order as
     # in nsCSSAnonBoxList.h

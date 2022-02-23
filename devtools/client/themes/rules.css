@@ -148,10 +148,6 @@
   padding: 0;
 }
 
-.ruleview-code {
-  direction: ltr;
-}
-
 .ruleview-property:not(:hover) > .ruleview-enableproperty {
   pointer-events: none;
 }
@@ -267,6 +263,7 @@
 .ruleview-rule {
   border-bottom: 1px solid var(--theme-splitter-color);
   padding: 2px 4px;
+  direction: ltr;
 }
 
 #ruleview-container-focusable > .ruleview-rule:last-child {
@@ -682,7 +679,8 @@
 .ruleview-highlight > .ruleview-namecontainer,
 .ruleview-highlight > .ruleview-propertyvaluecontainer,
 .ruleview-highlight > .ruleview-rule-source-label,
-.ruleview-highlight > .ruleview-selector {
+.ruleview-highlight > .ruleview-selector,
+.ruleview-rule-ancestor-data li.ruleview-highlight {
   background-color: var(--rule-highlight-background-color);
 }
 
@@ -694,6 +692,24 @@
 .ruleview-namecontainer:hover > .ruleview-propertyname,
 .ruleview-propertyvaluecontainer:hover > .ruleview-propertyvalue {
   border-bottom-color: hsl(0,0%,50%);
+}
+
+/* @media and @layer rule info element */
+ul.ruleview-rule-ancestor-data {
+  max-width: 100%;
+  display: inline-block;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ruleview-rule-ancestor-data li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* When there's a search and this element is highlighted, this prevents the background
+     color to be applied to the whole width of the parent ul block */
+  max-width: max-content;
 }
 
 .ruleview-selectorcontainer {

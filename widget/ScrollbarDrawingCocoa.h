@@ -10,7 +10,6 @@
 #include "ScrollbarDrawing.h"
 
 #include "mozilla/Array.h"
-#include "nsNativeBasicTheme.h"
 
 namespace mozilla::widget {
 

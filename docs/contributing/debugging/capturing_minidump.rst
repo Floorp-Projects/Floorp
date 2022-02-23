@@ -74,7 +74,7 @@ Capture a minidump in a graphical way
 
    |WinDbg in Start Menu|
 
-#. Connect Firefox to the debugger. 
+#. Connect Firefox to the debugger.
 
    a. If Firefox is not already running, open the **"File"** menu on WinDbg
       and choose **"Open Executable..."**.  In the file chooser window that
@@ -257,4 +257,3 @@ of "Application Binary".
 
 .. |WinDbg in Start Menu| image:: img/windbg-in-startmenu.png
                           :width: 50%
-

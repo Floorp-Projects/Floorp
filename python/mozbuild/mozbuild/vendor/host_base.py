@@ -16,6 +16,7 @@ class BaseHost:
     def upstream_tag(self, revision):
         """Temporarily clone the repo to get the latest tag and timestamp"""
         with tempfile.TemporaryDirectory() as temp_repo_clone:
+            starting_directory = os.getcwd()
             os.chdir(temp_repo_clone)
             subprocess.run(
                 [
@@ -51,6 +52,7 @@ class BaseHost:
                 universal_newlines=True,
                 check=True,
             ).stdout.splitlines()[-1]
+            os.chdir(starting_directory)
             return (latest_tag, latest_tag_timestamp)
 
     def upstream_snapshot(self, revision):

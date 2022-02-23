@@ -6,7 +6,7 @@
 
 use crate::client_events::{Http3ClientEvent, Http3ClientEvents};
 use crate::connection::{Http3Connection, Http3State, RequestDescription};
-use crate::hframe::HFrame;
+use crate::frames::HFrame;
 use crate::push_controller::{PushController, RecvPushEvents};
 use crate::recv_message::{RecvMessage, RecvMessageInfo};
 use crate::request_target::AsRequestTarget;
@@ -166,15 +166,25 @@ impl Http3Client {
         self.conn.odcid().expect("Client always has odcid")
     }
 
-    /// A resumption token encodes transport and settings parameter as well.
-    fn create_resumption_token(&mut self, token: &ResumptionToken) {
-        if let Some(settings) = self.base_handler.get_settings() {
+    fn encode_resumption_token(&self, token: &ResumptionToken) -> Option<ResumptionToken> {
+        self.base_handler.get_settings().map(|settings| {
             let mut enc = Encoder::default();
             settings.encode_frame_contents(&mut enc);
             enc.encode(token.as_ref());
-            self.events
-                .resumption_token(ResumptionToken::new(enc.into(), token.expiration_time()));
-        }
+            ResumptionToken::new(enc.into(), token.expiration_time())
+        })
+    }
+
+    /// Get a resumption token.  The correct way to obtain a resumption token is
+    /// waiting for the `Http3ClientEvent::ResumptionToken` event.  However, some
+    /// servers don't send `NEW_TOKEN` frames and so that event might be slow in
+    /// arriving.  This is especially a problem for short-lived connections, where
+    /// the connection is closed before any events are released.  This retrieves
+    /// the token, without waiting for the `NEW_TOKEN` frame to arrive.
+    pub fn take_resumption_token(&mut self, now: Instant) -> Option<ResumptionToken> {
+        self.conn
+            .take_resumption_token(now)
+            .and_then(|t| self.encode_resumption_token(&t))
     }
 
     /// This may be call if an application has a resumption token. This must be called before connection starts.
@@ -269,7 +279,6 @@ impl Http3Client {
     {
         let output = self.base_handler.fetch(
             &mut self.conn,
-            Http3StreamType::Http,
             Box::new(self.events.clone()),
             Box::new(self.events.clone()),
             Some(Rc::clone(&self.push_handler)),
@@ -289,8 +298,8 @@ impl Http3Client {
         output
     }
 
-    /// Send an [`PRIORITY_UPDATE`-frame][1] on next [Http3Client::process_output()]-call,
-    /// returns if the priority got changed
+    /// Send an [`PRIORITY_UPDATE`-frame][1] on next `Http3Client::process_output()` call.
+    /// Returns if the priority got changed.
     /// # Errors
     /// `InvalidStreamId` if the stream does not exist
     ///
@@ -336,7 +345,7 @@ impl Http3Client {
 
     /// To supply a request body this function is called (headers are supplied through the `fetch` function.)
     /// # Errors
-    /// `InvalidStreamId` if thee stream does not exist,
+    /// `InvalidStreamId` if the stream does not exist,
     /// `AlreadyClosed` if the stream has already been closed.
     /// `TransportStreamDoesNotExist` if the transport stream does not exist (this may happen if `process_output`
     /// has not been called when needed, and HTTP3 layer has not picked up the info that the stream has been closed.)
@@ -434,6 +443,22 @@ impl Http3Client {
             }
         }
         output
+    }
+
+    /// Close `WebTransport` cleanly
+    /// # Errors
+    /// `InvalidStreamId` if the stream does not exist,
+    /// `TransportStreamDoesNotExist` if the transport stream does not exist (this may happen if `process_output`
+    /// has not been called when needed, and HTTP3 layer has not picked up the info that the stream has been closed.)
+    /// `InvalidInput` if an empty buffer has been supplied.
+    pub fn webtransport_close_session(
+        &mut self,
+        session_id: StreamId,
+        error: u32,
+        message: &str,
+    ) -> Res<()> {
+        self.base_handler
+            .webtransport_close_session(&mut self.conn, session_id, error, message)
     }
 
     /// # Errors
@@ -588,7 +613,9 @@ impl Http3Client {
                     self.push_handler.borrow_mut().handle_zero_rtt_rejected();
                 }
                 ConnectionEvent::ResumptionToken(token) => {
-                    self.create_resumption_token(&token);
+                    if let Some(t) = self.encode_resumption_token(&token) {
+                        self.events.resumption_token(t);
+                    }
                 }
                 ConnectionEvent::SendStreamComplete { .. }
                 | ConnectionEvent::Datagram { .. }
@@ -800,7 +827,7 @@ mod tests {
         AuthenticationStatus, Connection, Error, HSettings, Header, Http3Client, Http3ClientEvent,
         Http3Parameters, Http3State, Rc, RefCell,
     };
-    use crate::hframe::{HFrame, H3_FRAME_TYPE_SETTINGS, H3_RESERVED_FRAME_TYPES};
+    use crate::frames::{HFrame, H3_FRAME_TYPE_SETTINGS, H3_RESERVED_FRAME_TYPES};
     use crate::qpack_encoder_receiver::EncoderRecvStream;
     use crate::settings::{HSetting, HSettingType, H3_RESERVED_SETTINGS};
     use crate::{Http3Server, Priority, RecvStream};
@@ -1067,7 +1094,8 @@ mod tests {
                         }
                     }
                     ConnectionEvent::StateChange(State::Connected) => connected = true,
-                    ConnectionEvent::StateChange(_) => {}
+                    ConnectionEvent::StateChange(_)
+                    | ConnectionEvent::SendStreamCreatable { .. } => {}
                     _ => panic!("unexpected event"),
                 }
             }
@@ -6218,7 +6246,7 @@ mod tests {
         let push_stream_id = server.conn.stream_create(StreamType::UniDi).unwrap();
 
         let mut d = Encoder::default();
-        let headers1xx: &[Header] = &[Header::new(":status", "101")];
+        let headers1xx: &[Header] = &[Header::new(":status", "100")];
         server.encode_headers(push_stream_id, headers1xx, &mut d);
 
         let headers200: &[Header] = &[
@@ -6712,5 +6740,36 @@ mod tests {
 
         let reset_event = |e| matches!(e, Http3ClientEvent::Reset { stream_id, .. } if stream_id == request_stream_id);
         assert!(client.events().any(reset_event));
+    }
+
+    #[test]
+    fn response_w_101() {
+        let (mut client, mut server, request_stream_id) = connect_and_send_request(true);
+
+        setup_server_side_encoder(&mut client, &mut server);
+
+        let mut d = Encoder::default();
+        let headers1xx = &[Header::new(":status", "101")];
+        server.encode_headers(request_stream_id, headers1xx, &mut d);
+
+        // Send 101 response.
+        server_send_response_and_exchange_packet(
+            &mut client,
+            &mut server,
+            request_stream_id,
+            &d,
+            false,
+        );
+
+        // Stream has been reset because of the 101 response.
+        let e = client.events().next().unwrap();
+        assert_eq!(
+            e,
+            Http3ClientEvent::Reset {
+                stream_id: request_stream_id,
+                error: Error::InvalidHeader.code(),
+                local: true,
+            }
+        );
     }
 }

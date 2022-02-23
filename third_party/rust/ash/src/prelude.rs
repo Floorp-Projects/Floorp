@@ -1,13 +1,9 @@
 use std::convert::TryInto;
+#[cfg(feature = "debug")]
+use std::fmt;
 
 use crate::vk;
 pub type VkResult<T> = Result<T, vk::Result>;
-
-impl From<vk::Result> for VkResult<()> {
-    fn from(err_code: vk::Result) -> Self {
-        err_code.result()
-    }
-}
 
 impl vk::Result {
     pub fn result(self) -> VkResult<()> {
@@ -16,7 +12,7 @@ impl vk::Result {
 
     pub fn result_with_success<T>(self, v: T) -> VkResult<T> {
         match self {
-            vk::Result::SUCCESS => Ok(v),
+            Self::SUCCESS => Ok(v),
             _ => Err(self),
         }
     }
@@ -86,4 +82,32 @@ where
             break err_code.result_with_success(data);
         }
     }
+}
+
+#[cfg(feature = "debug")]
+pub(crate) fn debug_flags<Value: Into<u64> + Copy>(
+    f: &mut fmt::Formatter,
+    known: &[(Value, &'static str)],
+    value: Value,
+) -> fmt::Result {
+    let mut first = true;
+    let mut accum = value.into();
+    for &(bit, name) in known {
+        let bit = bit.into();
+        if bit != 0 && accum & bit == bit {
+            if !first {
+                f.write_str(" | ")?;
+            }
+            f.write_str(name)?;
+            first = false;
+            accum &= !bit;
+        }
+    }
+    if accum != 0 {
+        if !first {
+            f.write_str(" | ")?;
+        }
+        write!(f, "{:b}", accum)?;
+    }
+    Ok(())
 }

@@ -29,9 +29,6 @@ lazy_static! {
         // Note: Possible update tests could reset or flip the value to allow
         // updates to be downloaded and applied.
         ("app.update.disabledForTesting", Pref::new(true)),
-        // !!! For backward compatibility up to Firefox 64. Only remove
-        // when this Firefox version is no longer supported by geckodriver !!!
-        ("app.update.auto", Pref::new(false)),
 
         // Enable the dump function, which sends messages to the system
         // console
@@ -57,14 +54,6 @@ lazy_static! {
 
         // Start with a blank page (about:blank)
         ("browser.startup.page", Pref::new(0)),
-
-        // Do not close the window when the last tab gets closed
-        // TODO: Remove once minimum supported Firefox release is 61.
-        ("browser.tabs.closeWindowWithLastTab", Pref::new(false)),
-
-        // Do not warn when closing all open tabs
-        // TODO: Remove once minimum supported Firefox release is 61.
-        ("browser.tabs.warnOnClose", Pref::new(false)),
 
         // Disable the UI tour
         ("browser.uitour.enabled", Pref::new(false)),
@@ -125,10 +114,6 @@ lazy_static! {
 
         // Disable the GFX sanity window
         ("media.sanity-test.disabled", Pref::new(true)),
-
-        // Do not prompt with long usernames or passwords in URLs
-        // TODO: Remove once minimum supported Firefox release is 61.
-        ("network.http.phishy-userpass-length", Pref::new(255)),
 
         // Do not automatically switch between offline and online
         ("network.manage-offline-status", Pref::new(false)),

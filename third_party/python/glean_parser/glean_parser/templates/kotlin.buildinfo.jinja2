@@ -14,14 +14,18 @@ Jinja2 template is not. Please file bugs! #}
 
 package {{ namespace }}
 
+import java.util.Calendar
+import java.util.TimeZone
 import {{ glean_namespace }}.BuildInfo
 import {{ namespace_package }}.BuildConfig
 
+@Suppress("MagicNumber")
 internal object GleanBuildInfo {
     val buildInfo: BuildInfo by lazy {
         BuildInfo(
             versionCode = BuildConfig.VERSION_CODE.toString(),
-            versionName = BuildConfig.VERSION_NAME
+            versionName = BuildConfig.VERSION_NAME,
+            buildDate = {{ build_date }}
         )
     }
 }

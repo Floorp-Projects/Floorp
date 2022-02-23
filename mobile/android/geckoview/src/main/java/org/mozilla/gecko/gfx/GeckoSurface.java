@@ -20,6 +20,7 @@ public final class GeckoSurface extends Surface {
   private boolean mIsSingleBuffer;
   private volatile boolean mIsAvailable;
   private boolean mOwned = true;
+  private volatile boolean mIsReleased = false;
 
   private int mMyPid;
   // Locally allocated surface/texture. Do not pass it over IPC.
@@ -83,6 +84,11 @@ public final class GeckoSurface extends Surface {
 
   @Override
   public void release() {
+    if (mIsReleased) {
+      return;
+    }
+    mIsReleased = true;
+
     if (mSyncSurface != null) {
       mSyncSurface.release();
       final GeckoSurfaceTexture gst = GeckoSurfaceTexture.lookup(mSyncSurface.getHandle());
@@ -105,6 +111,11 @@ public final class GeckoSurface extends Surface {
   @WrapForJNI
   public boolean getAvailable() {
     return mIsAvailable;
+  }
+
+  @WrapForJNI
+  public boolean isReleased() {
+    return mIsReleased;
   }
 
   @WrapForJNI

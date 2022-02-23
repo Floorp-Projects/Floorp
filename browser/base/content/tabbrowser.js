@@ -2541,6 +2541,12 @@
       return this.addTab(aURI, params);
     },
 
+    /**
+     * @returns {object}
+     *    The new tab. The return value will be null if the tab couldn't be
+     *    created; this shouldn't normally happen, and an error will be logged
+     *    to the console if it does.
+     */
     // eslint-disable-next-line complexity
     addTab(
       aURI,
@@ -2820,6 +2826,14 @@
           });
         } else {
           this._insertBrowser(t, true);
+          // If we were called by frontend and don't have openWindowInfo,
+          // but we were opened from another browser, set the cross group
+          // opener ID:
+          if (openerBrowser && !openWindowInfo) {
+            b.browsingContext.setCrossGroupOpener(
+              openerBrowser.browsingContext
+            );
+          }
         }
       } catch (e) {
         Cu.reportError("Failed to create tab");
@@ -2830,7 +2844,7 @@
           this._tabListeners.delete(t);
           this.getPanel(t.linkedBrowser).remove();
         }
-        throw e;
+        return null;
       }
 
       // Hack to ensure that the about:newtab, and about:welcome favicon is loaded
@@ -7025,6 +7039,10 @@ var TabContextMenu = {
     // Session store
     document.getElementById("context_undoCloseTab").disabled =
       SessionStore.getClosedTabCount(window) == 0;
+
+    // Show/hide fullscreen context menu items and set the
+    // autohide item's checked state to mirror the autohide pref.
+    showFullScreenViewContextMenuItems(aPopupMenu);
 
     // Only one of Reload_Tab/Reload_Selected_Tabs should be visible.
     document.getElementById("context_reloadTab").hidden = multiselectionContext;

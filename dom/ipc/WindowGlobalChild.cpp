@@ -73,7 +73,8 @@ WindowGlobalChild::WindowGlobalChild(dom::WindowContext* aWindowContext,
   }
   profiler_register_page(BrowsingContext()->BrowserId(), InnerWindowId(),
                          aDocumentURI->GetSpecOrDefault(),
-                         embedderInnerWindowID);
+                         embedderInnerWindowID,
+                         BrowsingContext()->UsePrivateBrowsing());
 }
 
 already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
@@ -602,7 +603,8 @@ void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
   }
   profiler_register_page(BrowsingContext()->BrowserId(), InnerWindowId(),
                          aDocumentURI->GetSpecOrDefault(),
-                         embedderInnerWindowID);
+                         embedderInnerWindowID,
+                         BrowsingContext()->UsePrivateBrowsing());
   mDocumentURI = aDocumentURI;
   SendUpdateDocumentURI(aDocumentURI);
 }

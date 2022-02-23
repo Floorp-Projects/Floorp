@@ -874,9 +874,33 @@ uint32_t Navigator::MaxTouchPoints(CallerType aCallerType) {
 // https://html.spec.whatwg.org/multipage/system-state.html#custom-handlers
 // If you change this list, please also update the copy in E10SUtils.jsm.
 static const char* const kSafeSchemes[] = {
-    "bitcoin", "geo", "im",   "irc",  "ircs",        "magnet", "mailto",
-    "matrix",  "mms", "news", "nntp", "openpgp4fpr", "sip",    "sms",
-    "smsto",   "ssh", "tel",  "urn",  "webcal",      "wtai",   "xmpp"};
+    // clang-format off
+    "bitcoin",
+    "ftp",
+    "ftps",
+    "geo",
+    "im",
+    "irc",
+    "ircs",
+    "magnet",
+    "mailto",
+    "matrix",
+    "mms",
+    "news",
+    "nntp",
+    "openpgp4fpr",
+    "sftp",
+    "sip",
+    "sms",
+    "smsto",
+    "ssh",
+    "tel",
+    "urn",
+    "webcal",
+    "wtai",
+    "xmpp",
+    // clang-format on
+};
 
 void Navigator::CheckProtocolHandlerAllowed(const nsAString& aScheme,
                                             nsIURI* aHandlerURI,

@@ -61,8 +61,7 @@ class IPCServerCertVerificationResult final
                                   VerifySSLServerCertParent* aParent)
       : mTarget(aTarget), mParent(aParent) {}
 
-  void Dispatch(nsNSSCertificate* aCert,
-                nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
+  void Dispatch(nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
                 nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                 uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
                 bool aSucceeded, PRErrorCode aFinalError,
@@ -78,7 +77,7 @@ class IPCServerCertVerificationResult final
 };
 
 void IPCServerCertVerificationResult::Dispatch(
-    nsNSSCertificate* aCert, nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
+    nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
     bool aSucceeded, PRErrorCode aFinalError, uint32_t aCollectedErrors,
@@ -120,9 +119,8 @@ void IPCServerCertVerificationResult::Dispatch(
 }  // anonymous namespace
 
 bool VerifySSLServerCertParent::Dispatch(
-    const ByteArray& aServerCert, nsTArray<ByteArray>&& aPeerCertChain,
-    const nsCString& aHostName, const int32_t& aPort,
-    const OriginAttributes& aOriginAttributes,
+    nsTArray<ByteArray>&& aPeerCertChain, const nsCString& aHostName,
+    const int32_t& aPort, const OriginAttributes& aOriginAttributes,
     const Maybe<ByteArray>& aStapledOCSPResponse,
     const Maybe<ByteArray>& aSctsFromTLSExtension,
     const Maybe<DelegatedCredentialInfoArg>& aDcInfo,
@@ -131,19 +129,6 @@ bool VerifySSLServerCertParent::Dispatch(
   AssertIsOnBackgroundThread();
 
   mBackgroundThread = NS_GetCurrentThread();
-
-  SECItem serverCertItem = {
-      siBuffer, const_cast<uint8_t*>(aServerCert.data().Elements()),
-      static_cast<unsigned int>(aServerCert.data().Length())};
-  UniqueCERTCertificate serverCert(CERT_NewTempCertificate(
-      CERT_GetDefaultCertDB(), &serverCertItem, nullptr, false, true));
-  if (!serverCert) {
-    MOZ_LOG(
-        gPIPNSSLog, LogLevel::Debug,
-        ("VerifySSLServerCertParent::Dispatch - CERT_NewTempCertificate cert "
-         "failed."));
-    return false;
-  }
 
   nsTArray<nsTArray<uint8_t>> peerCertBytes;
   for (auto& certBytes : aPeerCertChain) {
@@ -171,9 +156,9 @@ bool VerifySSLServerCertParent::Dispatch(
   RefPtr<IPCServerCertVerificationResult> resultTask =
       new IPCServerCertVerificationResult(mBackgroundThread, this);
   SECStatus status = SSLServerCertVerificationJob::Dispatch(
-      0, nullptr, serverCert, std::move(peerCertBytes), aHostName, aPort,
-      aOriginAttributes, stapledOCSPResponse, sctsFromTLSExtension, dcInfo,
-      aProviderFlags, Now(), PR_Now(), aCertVerifierFlags, resultTask);
+      0, nullptr, std::move(peerCertBytes), aHostName, aPort, aOriginAttributes,
+      stapledOCSPResponse, sctsFromTLSExtension, dcInfo, aProviderFlags, Now(),
+      aCertVerifierFlags, resultTask);
 
   if (status != SECWouldBlock) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,

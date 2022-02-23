@@ -245,7 +245,7 @@ var DownloadsPanel = {
    * initialized the first time this method is called, and the panel is shown
    * only when data is ready.
    */
-  showPanel(openedManually = false) {
+  showPanel(openedManually = false, isKeyPress = false) {
     Services.telemetry.scalarAdd("downloads.panel_shown", 1);
     DownloadsCommon.log("Opening the downloads panel.");
 
@@ -263,7 +263,7 @@ var DownloadsPanel = {
     // called while another window is closing (like the window for selecting
     // whether to save or open the file), and that would cause the panel to
     // close immediately.
-    setTimeout(() => this._openPopupIfDataReady(openedManually), 0);
+    setTimeout(() => this._openPopupIfDataReady(openedManually, isKeyPress), 0);
 
     DownloadsCommon.log("Waiting for the downloads panel to appear.");
     this._state = this.kStateWaitingData;
@@ -369,7 +369,8 @@ var DownloadsPanel = {
     this._state = this.kStateShown;
 
     // Since at most one popup is open at any given time, we can set globally.
-    DownloadsCommon.getIndicatorData(window).attentionSuppressed = true;
+    DownloadsCommon.getIndicatorData(window).attentionSuppressed |=
+      DownloadsCommon.SUPPRESS_PANEL_OPEN;
 
     // Ensure that the first item is selected when the panel is focused.
     if (DownloadsView.richListBox.itemCount > 0) {
@@ -399,7 +400,9 @@ var DownloadsPanel = {
     this.keyFocusing = false;
 
     // Since at most one popup is open at any given time, we can set globally.
-    DownloadsCommon.getIndicatorData(window).attentionSuppressed = false;
+    DownloadsCommon.getIndicatorData(
+      window
+    ).attentionSuppressed &= ~DownloadsCommon.SUPPRESS_PANEL_OPEN;
 
     // Allow the anchor to be hidden.
     DownloadsButton.releaseAnchor();
@@ -633,7 +636,7 @@ var DownloadsPanel = {
   /**
    * Opens the downloads panel when data is ready to be displayed.
    */
-  _openPopupIfDataReady(openedManually) {
+  _openPopupIfDataReady(openedManually, isKeyPress) {
     // We don't want to open the popup if we already displayed it, or if we are
     // still loading data.
     if (this._state != this.kStateWaitingData || DownloadsView.loading) {
@@ -671,6 +674,11 @@ var DownloadsPanel = {
     }
 
     DownloadsCommon.log("Opening downloads panel popup.");
+
+    if (isKeyPress) {
+      // If the panel was opened via a keypress, enable focus indicators.
+      this.keyFocusing = true;
+    }
 
     // Delay displaying the panel because this function will sometimes be
     // called while another window is closing (like the window for selecting
@@ -1071,6 +1079,13 @@ var DownloadsView = {
     DownloadsViewController.updateCommands();
 
     DownloadsViewUI.updateContextMenuForElement(this.contextMenu, element);
+    // Hide the copy location item if there is somehow no URL. We have to do
+    // this here instead of in DownloadsViewUI because DownloadsPlacesView
+    // allows selecting multiple downloads, so in that view the menuitem will be
+    // shown according to whether at least one of the selected items has a URL.
+    this.contextMenu.querySelector(
+      ".downloadCopyLocationMenuItem"
+    ).hidden = !element._shell.download.source?.url;
   },
 
   onDownloadDragStart(aEvent) {
@@ -1166,8 +1181,13 @@ class DownloadsViewItem extends DownloadsViewUI.DownloadElementShell {
         let partFile = new FileUtils.File(this.download.target.partFilePath);
         return partFile.exists();
       }
-      case "cmd_delete":
+      case "downloadsCmd_deleteFile": {
+        let { target } = this.download;
+        return target.exists || target.partFileExists;
+      }
       case "downloadsCmd_copyLocation":
+        return !!this.download.source?.url;
+      case "cmd_delete":
       case "downloadsCmd_doDefault":
         return true;
       case "downloadsCmd_showBlockedInfo":
@@ -1254,6 +1274,22 @@ class DownloadsViewItem extends DownloadsViewUI.DownloadElementShell {
     // window to open before the panel closed. This also helps to prevent the
     // user from opening the containing folder several times.
     DownloadsPanel.hidePanel();
+  }
+
+  async downloadsCmd_deleteFile() {
+    await super.downloadsCmd_deleteFile();
+    // Protects against an unusual edge case where the user:
+    // 1) downloads a file with Firefox; 2) deletes the file from outside of Firefox, e.g., a file manager;
+    // 3) downloads the same file from the same source; 4) opens the downloads panel and uses the menuitem to delete one of those 2 files;
+    // Under those conditions, Firefox will make 2 view items even though there's only 1 file.
+    // Using this method will only delete the view item it was called on, because this instance is not aware of other view items with identical targets.
+    // So the remaining view item needs to be refreshed to hide the "Delete" option.
+    // That example only concerns 2 duplicate view items but you can have an arbitrary number, so iterate over all items...
+    for (let viewItem of DownloadsView._visibleViewItems.values()) {
+      viewItem.download.refresh().catch(Cu.reportError);
+    }
+    // Don't use DownloadsPanel.hidePanel for this method because it will remove
+    // the view item from the list, which is already sufficient feedback.
   }
 
   downloadsCmd_showBlockedInfo() {

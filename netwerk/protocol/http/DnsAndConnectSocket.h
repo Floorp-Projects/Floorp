@@ -19,6 +19,8 @@
 #include "nsITransport.h"
 #include "nsWeakReference.h"
 
+class nsIHttpActivityObserver;
+
 namespace mozilla {
 namespace net {
 
@@ -175,6 +177,7 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
     void CloseAll();
     nsresult SetupConn(nsAHttpTransaction* transaction, ConnectionEntry* ent,
                        nsresult status, uint32_t cap,
+                       DnsAndConnectSocket* dnsAndSock,
                        HttpConnectionBase** connection);
     [[nodiscard]] nsresult SetupStreams(DnsAndConnectSocket* dnsAndSock);
     nsresult ResolveHost(DnsAndConnectSocket* dnsAndSock);
@@ -263,6 +266,7 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
   bool mSkipDnsResolution = false;
   bool mProxyNotTransparent = false;
   bool mProxyTransparentResolvesHost = false;
+  nsCOMPtr<nsIHttpActivityObserver> mActivityDistributor;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DnsAndConnectSocket, NS_DNSANDCONNECTSOCKET_IID)

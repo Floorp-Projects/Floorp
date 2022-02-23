@@ -19,7 +19,7 @@ linux64-llvm-symbolizer:
             - linux64-clang
 
 macosx64-llvm-symbolizer:
-    description: "llvm-symbolizer for Linux"
+    description: "llvm-symbolizer for macOS x64"
     treeherder:
         symbol: TM(llvm-symbolizer)
     fetches:
@@ -27,7 +27,7 @@ macosx64-llvm-symbolizer:
             - macosx64-clang
 
 win64-llvm-symbolizer:
-    description: "llvm-symbolizer for Linux"
+    description: "llvm-symbolizer for Windows"
     treeherder:
         symbol: TW64(llvm-symbolizer)
     fetches:

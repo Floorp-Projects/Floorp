@@ -65,7 +65,7 @@ static inline constexpr uint64_t EnumBits(ExtraChannel /*unused*/) {
   using EC = ExtraChannel;
   return MakeBit(EC::kAlpha) | MakeBit(EC::kDepth) | MakeBit(EC::kSpotColor) |
          MakeBit(EC::kSelectionMask) | MakeBit(EC::kBlack) | MakeBit(EC::kCFA) |
-         MakeBit(EC::kUnknown) | MakeBit(EC::kOptional);
+         MakeBit(EC::kThermal) | MakeBit(EC::kUnknown) | MakeBit(EC::kOptional);
 }
 
 // Used in ImageMetadata and ExtraChannelInfo.

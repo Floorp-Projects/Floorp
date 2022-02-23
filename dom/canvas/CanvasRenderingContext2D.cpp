@@ -154,7 +154,7 @@ const Float SIGMA_MAX = 100;
 const size_t MAX_STYLE_STACK_SIZE = 1024;
 
 /* Memory reporter stuff */
-static int64_t gCanvasAzureMemoryUsed = 0;
+static Atomic<int64_t> gCanvasAzureMemoryUsed(0);
 
 // Adds Save() / Restore() calls to the scope.
 class MOZ_RAII AutoSaveRestore {
@@ -817,6 +817,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CanvasRenderingContext2D)
   // Make sure we remove ourselves from the list of demotable contexts (raw
   // pointers), since we're logically destructed at this point.
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCanvasElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOffscreenCanvas)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
   for (uint32_t i = 0; i < tmp->mStyleStack.Length(); i++) {
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].patternStyles[Style::STROKE]);
@@ -845,6 +846,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CanvasRenderingContext2D)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCanvasElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOffscreenCanvas)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
   for (uint32_t i = 0; i < tmp->mStyleStack.Length(); i++) {
     ImplCycleCollectionTraverse(
@@ -960,7 +962,7 @@ void CanvasRenderingContext2D::ContextState::SetGradientStyle(
  **/
 
 // Initialize our static variables.
-uintptr_t CanvasRenderingContext2D::sNumLivingContexts = 0;
+Atomic<uintptr_t> CanvasRenderingContext2D::sNumLivingContexts(0);
 DrawTarget* CanvasRenderingContext2D::sErrorTarget = nullptr;
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(
@@ -977,14 +979,12 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(
       mHasPendingStableStateCallback(false),
       mIsEntireFrameInvalid(false),
       mPredictManyRedrawCalls(false),
-      mIsCapturedFrameInvalid(false),
+      mFrameCaptureState(FrameCaptureState::CLEAN,
+                         "CanvasRenderingContext2D::mFrameCaptureState"),
       mPathTransformWillUpdate(false),
       mInvalidateCount(0),
       mWriteOnly(false) {
   sNumLivingContexts++;
-
-  mShutdownObserver = new CanvasShutdownObserver(this);
-  nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D() {
@@ -997,6 +997,8 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D() {
     NS_IF_RELEASE(sErrorTarget);
   }
 }
+
+void CanvasRenderingContext2D::Initialize() { AddShutdownObserver(); }
 
 JSObject* CanvasRenderingContext2D::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -1054,7 +1056,7 @@ nsresult CanvasRenderingContext2D::Reset() {
   // no longer be valid.
   mIsEntireFrameInvalid = false;
   mPredictManyRedrawCalls = false;
-  mIsCapturedFrameInvalid = false;
+  mFrameCaptureState = FrameCaptureState::CLEAN;
 
   return NS_OK;
 }
@@ -1069,6 +1071,14 @@ void CanvasRenderingContext2D::OnShutdown() {
   if (provider) {
     provider->OnShutdown();
   }
+}
+
+void CanvasRenderingContext2D::AddShutdownObserver() {
+  MOZ_ASSERT(!mShutdownObserver);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mShutdownObserver = new CanvasShutdownObserver(this);
+  nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 }
 
 void CanvasRenderingContext2D::RemoveShutdownObserver() {
@@ -1122,7 +1132,7 @@ void CanvasRenderingContext2D::StyleColorToString(const nscolor& aColor,
 }
 
 nsresult CanvasRenderingContext2D::Redraw() {
-  mIsCapturedFrameInvalid = true;
+  mFrameCaptureState = FrameCaptureState::DIRTY;
 
   if (mIsEntireFrameInvalid) {
     return NS_OK;
@@ -1130,20 +1140,20 @@ nsresult CanvasRenderingContext2D::Redraw() {
 
   mIsEntireFrameInvalid = true;
 
-  if (!mCanvasElement) {
+  if (mCanvasElement) {
+    SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
+    mCanvasElement->InvalidateCanvasContent(nullptr);
+  } else if (mOffscreenCanvas) {
+    mOffscreenCanvas->QueueCommitToCompositor();
+  } else {
     NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
-    return NS_OK;
   }
-
-  SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
-
-  mCanvasElement->InvalidateCanvasContent(nullptr);
 
   return NS_OK;
 }
 
 void CanvasRenderingContext2D::Redraw(const gfx::Rect& aR) {
-  mIsCapturedFrameInvalid = true;
+  mFrameCaptureState = FrameCaptureState::DIRTY;
 
   ++mInvalidateCount;
 
@@ -1156,20 +1166,20 @@ void CanvasRenderingContext2D::Redraw(const gfx::Rect& aR) {
     return;
   }
 
-  if (!mCanvasElement) {
+  if (mCanvasElement) {
+    SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
+    mCanvasElement->InvalidateCanvasContent(&aR);
+  } else if (mOffscreenCanvas) {
+    mOffscreenCanvas->QueueCommitToCompositor();
+  } else {
     NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
-    return;
   }
-
-  SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
-
-  mCanvasElement->InvalidateCanvasContent(&aR);
 }
 
 void CanvasRenderingContext2D::DidRefresh() {}
 
 void CanvasRenderingContext2D::RedrawUser(const gfxRect& aR) {
-  mIsCapturedFrameInvalid = true;
+  mFrameCaptureState = FrameCaptureState::DIRTY;
 
   if (mIsEntireFrameInvalid) {
     ++mInvalidateCount;
@@ -1352,6 +1362,7 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   mBufferProvider = std::move(newProvider);
 
   RegisterAllocation();
+  AddZoneWaitingForGC();
 
   RestoreClipsAndTransformToTarget();
 
@@ -1360,12 +1371,12 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   if (mCanvasElement) {
     mCanvasElement->InvalidateCanvas();
   }
-  // EnsureTarget hasn't drawn anything. Preserve mIsCapturedFrameInvalid.
-  bool capturedFrameInvalid = mIsCapturedFrameInvalid;
+  // EnsureTarget hasn't drawn anything. Preserve mFrameCaptureState.
+  FrameCaptureState captureState = mFrameCaptureState;
   // Calling Redraw() tells our invalidation machinery that the entire
   // canvas is already invalid, which can speed up future drawing.
   Redraw();
-  mIsCapturedFrameInvalid = capturedFrameInvalid;
+  mFrameCaptureState = captureState;
 
   return true;
 }
@@ -1409,7 +1420,9 @@ void CanvasRenderingContext2D::RegisterAllocation() {
     registered = true;
     RegisterStrongMemoryReporter(new Canvas2dPixelsReporter());
   }
+}
 
+void CanvasRenderingContext2D::AddZoneWaitingForGC() {
   JSObject* wrapper = GetWrapperPreserveColor();
   if (wrapper) {
     CycleCollectedJSRuntime::Get()->AddZoneWaitingForGC(
@@ -1526,6 +1539,22 @@ CanvasRenderingContext2D::SetDimensions(int32_t aWidth, int32_t aHeight) {
   return NS_OK;
 }
 
+void CanvasRenderingContext2D::AddAssociatedMemory() {
+  JSObject* wrapper = GetWrapperMaybeDead();
+  if (wrapper) {
+    JS::AddAssociatedMemory(wrapper, BindingJSObjectMallocBytes(this),
+                            JS::MemoryUse::DOMBinding);
+  }
+}
+
+void CanvasRenderingContext2D::RemoveAssociatedMemory() {
+  JSObject* wrapper = GetWrapperMaybeDead();
+  if (wrapper) {
+    JS::RemoveAssociatedMemory(wrapper, BindingJSObjectMallocBytes(this),
+                               JS::MemoryUse::DOMBinding);
+  }
+}
+
 void CanvasRenderingContext2D::ClearTarget(int32_t aWidth, int32_t aHeight) {
   Reset();
 
@@ -1538,19 +1567,18 @@ void CanvasRenderingContext2D::ClearTarget(int32_t aWidth, int32_t aHeight) {
     // Update the memory size associated with the wrapper object when we change
     // the dimensions. Note that we need to keep updating dying wrappers before
     // they are finalized so that the memory accounting balances out.
-    JSObject* wrapper = GetWrapperMaybeDead();
-    if (wrapper) {
-      JS::RemoveAssociatedMemory(wrapper, BindingJSObjectMallocBytes(this),
-                                 JS::MemoryUse::DOMBinding);
-    }
-
+    RemoveAssociatedMemory();
     mWidth = aWidth;
     mHeight = aHeight;
+    AddAssociatedMemory();
+  }
 
-    if (wrapper) {
-      JS::AddAssociatedMemory(wrapper, BindingJSObjectMallocBytes(this),
-                              JS::MemoryUse::DOMBinding);
-    }
+  if (mOffscreenCanvas) {
+    OffscreenCanvasDisplayData data;
+    data.mSize = {mWidth, mHeight};
+    data.mIsOpaque = mOpaque;
+    data.mIsAlphaPremult = true;
+    mOffscreenCanvas->UpdateDisplayData(data);
   }
 
   if (!mCanvasElement || !mCanvasElement->IsInComposedDoc()) {
@@ -4261,6 +4289,12 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, double aX,
                                              double aY,
                                              const CanvasWindingRule& aWinding,
                                              nsIPrincipal& aSubjectPrincipal) {
+  return IsPointInPath(aCx, aX, aY, aWinding, Some(&aSubjectPrincipal));
+}
+
+bool CanvasRenderingContext2D::IsPointInPath(
+    JSContext* aCx, double aX, double aY, const CanvasWindingRule& aWinding,
+    Maybe<nsIPrincipal*> aSubjectPrincipal) {
   if (!FloatValidate(aX, aY)) {
     return false;
   }
@@ -4272,6 +4306,9 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, double aX,
                                                aSubjectPrincipal)) {
       return false;
     }
+  } else if (mOffscreenCanvas &&
+             mOffscreenCanvas->ShouldResistFingerprinting()) {
+    return false;
   }
 
   EnsureUserSpacePath(aWinding);
@@ -4290,7 +4327,15 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx,
                                              const CanvasPath& aPath, double aX,
                                              double aY,
                                              const CanvasWindingRule& aWinding,
-                                             nsIPrincipal&) {
+                                             nsIPrincipal& aSubjectPrincipal) {
+  return IsPointInPath(aCx, aPath, aX, aY, aWinding, Some(&aSubjectPrincipal));
+}
+
+bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx,
+                                             const CanvasPath& aPath, double aX,
+                                             double aY,
+                                             const CanvasWindingRule& aWinding,
+                                             Maybe<nsIPrincipal*>) {
   if (!FloatValidate(aX, aY)) {
     return false;
   }
@@ -4307,6 +4352,12 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx,
 
 bool CanvasRenderingContext2D::IsPointInStroke(
     JSContext* aCx, double aX, double aY, nsIPrincipal& aSubjectPrincipal) {
+  return IsPointInStroke(aCx, aX, aY, Some(&aSubjectPrincipal));
+}
+
+bool CanvasRenderingContext2D::IsPointInStroke(
+    JSContext* aCx, double aX, double aY,
+    Maybe<nsIPrincipal*> aSubjectPrincipal) {
   if (!FloatValidate(aX, aY)) {
     return false;
   }
@@ -4318,6 +4369,9 @@ bool CanvasRenderingContext2D::IsPointInStroke(
                                                aSubjectPrincipal)) {
       return false;
     }
+  } else if (mOffscreenCanvas &&
+             mOffscreenCanvas->ShouldResistFingerprinting()) {
+    return false;
   }
 
   EnsureUserSpacePath();
@@ -4338,10 +4392,16 @@ bool CanvasRenderingContext2D::IsPointInStroke(
                                     mTarget->GetTransform());
 }
 
+bool CanvasRenderingContext2D::IsPointInStroke(
+    JSContext* aCx, const CanvasPath& aPath, double aX, double aY,
+    nsIPrincipal& aSubjectPrincipal) {
+  return IsPointInStroke(aCx, aPath, aX, aY, Some(&aSubjectPrincipal));
+}
+
 bool CanvasRenderingContext2D::IsPointInStroke(JSContext* aCx,
                                                const CanvasPath& aPath,
                                                double aX, double aY,
-                                               nsIPrincipal&) {
+                                               Maybe<nsIPrincipal*>) {
   if (!FloatValidate(aX, aY)) {
     return false;
   }
@@ -5040,7 +5100,14 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
 already_AddRefed<ImageData> CanvasRenderingContext2D::GetImageData(
     JSContext* aCx, int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
     nsIPrincipal& aSubjectPrincipal, ErrorResult& aError) {
-  if (!mCanvasElement && !mDocShell) {
+  return GetImageData(aCx, aSx, aSy, aSw, aSh, Some(&aSubjectPrincipal),
+                      aError);
+}
+
+already_AddRefed<ImageData> CanvasRenderingContext2D::GetImageData(
+    JSContext* aCx, int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
+    Maybe<nsIPrincipal*> aSubjectPrincipal, ErrorResult& aError) {
+  if (!mCanvasElement && !mDocShell && !mOffscreenCanvas) {
     NS_ERROR("No canvas element and no docshell in GetImageData!!!");
     aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
@@ -5048,6 +5115,7 @@ already_AddRefed<ImageData> CanvasRenderingContext2D::GetImageData(
 
   // Check only if we have a canvas element; if we were created with a docshell,
   // then it's special internal use.
+  // FIXME(aosmond): OffscreenCanvas security check??!
   if (IsWriteOnly() ||
       (mCanvasElement && !mCanvasElement->CallerCanRead(aCx))) {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
@@ -5095,7 +5163,7 @@ already_AddRefed<ImageData> CanvasRenderingContext2D::GetImageData(
 
 nsresult CanvasRenderingContext2D::GetImageDataArray(
     JSContext* aCx, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight,
-    nsIPrincipal& aSubjectPrincipal, JSObject** aRetval) {
+    Maybe<nsIPrincipal*> aSubjectPrincipal, JSObject** aRetval) {
   MOZ_ASSERT(aWidth && aHeight);
 
   // Restrict the typed array length to INT32_MAX because that's all we support
@@ -5160,6 +5228,8 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
     nsCOMPtr<Document> ownerDoc = mCanvasElement->OwnerDoc();
     usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx,
                                                             aSubjectPrincipal);
+  } else if (mOffscreenCanvas) {
+    usePlaceholder = mOffscreenCanvas->ShouldResistFingerprinting();
   }
 
   do {
@@ -5506,14 +5576,6 @@ void CanvasRenderingContext2D::MarkContextClean() {
   mInvalidateCount = 0;
 }
 
-void CanvasRenderingContext2D::MarkContextCleanForFrameCapture() {
-  mIsCapturedFrameInvalid = false;
-}
-
-bool CanvasRenderingContext2D::IsContextCleanForFrameCapture() {
-  return !mIsCapturedFrameInvalid;
-}
-
 void CanvasRenderingContext2D::GetAppUnitsValues(int32_t* aPerDevPixel,
                                                  int32_t* aPerCSSPixel) {
   // If we don't have a canvas element, we just return something generic.
@@ -5821,14 +5883,14 @@ void CanvasPath::EnsurePathBuilder() const {
 }
 
 size_t BindingJSObjectMallocBytes(CanvasRenderingContext2D* aContext) {
-  int32_t width = aContext->GetWidth();
-  int32_t height = aContext->GetHeight();
+  IntSize size = aContext->GetSize();
 
   // TODO: Bug 1552137: No memory will be allocated if either dimension is
   // greater than gfxPrefs::gfx_canvas_max_size(). We should check this here
   // too.
 
-  CheckedInt<uint32_t> bytes = CheckedInt<uint32_t>(width) * height * 4;
+  CheckedInt<uint32_t> bytes =
+      CheckedInt<uint32_t>(size.width) * size.height * 4;
   if (!bytes.isValid()) {
     return 0;
   }

@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%filter substitution
-%define glassActiveBorderColor rgb(37, 44, 51)
-%define glassInactiveBorderColor rgb(102, 102, 102)
+:root {
+  --glass-active-border-color: rgb(37, 44, 51);
+  --glass-inactive-border-color: rgb(102, 102, 102);
+  --glass-shadow-color: hsla(240,5%,5%,0.3);
+}
 
 @media (-moz-os-version: windows-win7),
        (-moz-os-version: windows-win8) {
@@ -270,7 +272,7 @@
      * Borders for win7 are below, win10 only needs something like this when
      * drawing in the titlebar (-moz-windows-accent-color-in-titlebar). */
     #main-window[sizemode="normal"] #navigator-toolbox:-moz-lwtheme {
-      border-top: 1px solid @glassShadowColor@;
+      border-top: 1px solid var(--glass-shadow-color);
     }
   }
 
@@ -298,13 +300,13 @@
    * We use a different border for win8, and this win10+ only needs this if
    * drawing in the titlebar (-moz-windows-accent-color-in-titlebar). */
   #main-window[sizemode="normal"] #navigator-toolbox:-moz-lwtheme {
-    border-top: 1px solid @glassActiveBorderColor@;
+    border-top: 1px solid var(--glass-active-border-color);
     padding-top: 1px;
     box-shadow: 0 1px 0 rgba(255,255,255,.6) inset;
   }
 
   #main-window[sizemode="normal"] #navigator-toolbox:-moz-lwtheme:-moz-window-inactive {
-    border-top-color: @glassInactiveBorderColor@;
+    border-top-color: var(--glass-inactive-border-color);
   }
 }
 
@@ -321,13 +323,13 @@
     /* Render a window top border for lwthemes: */
     #main-window[tabsintitlebar][sizemode="normal"] #navigator-toolbox:-moz-lwtheme {
       background-image: linear-gradient(to bottom,
-            @glassActiveBorderColor@ 0, @glassActiveBorderColor@ 1px,
+            var(--glass-active-border-color) 0, var(--glass-active-border-color) 1px,
             rgba(255,255,255,.6) 1px, rgba(255,255,255,.6) 2px, transparent 2px);
     }
 
     #main-window[tabsintitlebar][sizemode="normal"] #navigator-toolbox:-moz-lwtheme:-moz-window-inactive {
       background-image: linear-gradient(to bottom,
-            @glassInactiveBorderColor@ 0, @glassInactiveBorderColor@ 1px,
+            var(--glass-inactive-border-color) 0, var(--glass-inactive-border-color) 1px,
             rgba(255,255,255,.6) 1px, rgba(255,255,255,.6) 2px, transparent 2px);
     }
   }

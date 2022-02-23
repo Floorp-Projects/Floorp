@@ -58,11 +58,6 @@ interface nsIURIClassifier : nsISupports
    * @param aPrincipal
    *        The principal that should be checked by the URI classifier.
    *
-   * @param nsISerialEventTarget
-   *        Event target for constructing actor in content process.
-   *        The event target should be tied to Docgroup/Tabgroup by
-   *        using EventTargetFor
-   *
    * @param aCallback
    *        The URI classifier will call this callback when the URI has been
    *        classified.
@@ -73,7 +68,6 @@ interface nsIURIClassifier : nsISupports
    *         callback will be called.
    */
   boolean classify(in nsIPrincipal aPrincipal,
-                   in nsISerialEventTarget aEventTarget,
                    in nsIURIClassifierCallback aCallback);
 
   /**

@@ -1,0 +1,15 @@
+<!DOCTYPE html><meta charset=utf-8>
+<body class="reftest-wait">
+<canvas style="width: 200px;" id="canvas"></canvas>
+<script>
+const ctx1 = document.getElementById("canvas").getContext("2d");
+const img1 = new Image();
+img1.onload = () => {
+	ctx1.canvas.width = img1.width;
+	ctx1.canvas.height = 200;
+	ctx1.drawImage(img1, 0, 0);
+	document.body.classList.remove("reftest-wait");
+};
+img1.src = "red_tall.png";
+</script>
+</body>

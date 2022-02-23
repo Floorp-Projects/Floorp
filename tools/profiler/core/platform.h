@@ -31,10 +31,13 @@
 
 #include "PlatformMacros.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ProfileBufferEntrySerialization.h"
+#include "mozilla/ProfileJSONWriter.h"
 #include "mozilla/ProfilerUtils.h"
+#include "mozilla/ProgressLogger.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
@@ -57,7 +60,7 @@ extern mozilla::LazyLogModule gProfilerLog;
 #define LOG_TEST MOZ_LOG_TEST(gProfilerLog, mozilla::LogLevel::Info)
 #define LOG(arg, ...)                            \
   MOZ_LOG(gProfilerLog, mozilla::LogLevel::Info, \
-          ("[%" PRIu64 "d] " arg,                \
+          ("[%" PRIu64 "] " arg,                 \
            uint64_t(profiler_current_process_id().ToNumber()), ##__VA_ARGS__))
 
 // These are for MOZ_LOG="prof:4" or higher. It should be used for logging that
@@ -73,9 +76,15 @@ typedef uint8_t* Address;
 // ----------------------------------------------------------------------------
 // Miscellaneous
 
-namespace mozilla {
-class JSONWriter;
-}
+// If positive, skip stack-sampling in the sampler thread loop.
+// Users should increment it atomically when samplings should be avoided, and
+// later decrement it back. Multiple uses can overlap.
+// There could be a sampling in progress when this is first incremented, so if
+// it is critical to prevent any sampling, lock the profiler mutex instead.
+// Relaxed ordering, because it's used to request that the profiler pause
+// future sampling; this is not time critical, nor dependent on anything else.
+extern mozilla::Atomic<int, mozilla::MemoryOrdering::Relaxed> gSkipSampling;
+
 void AppendSharedLibraries(mozilla::JSONWriter& aWriter);
 
 // Convert the array of strings to a bitfield.
@@ -83,9 +92,14 @@ uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
                                       uint32_t aFeatureCount,
                                       bool aIsStartup = false);
 
+bool profiler_get_profile_json(
+    SpliceableChunkedJSONWriter& aSpliceableChunkedJSONWriter,
+    double aSinceTime, bool aIsShuttingDown,
+    mozilla::ProgressLogger aProgressLogger);
+
 void profiler_get_profile_json_into_lazily_allocated_buffer(
     const std::function<char*(size_t)>& aAllocator, double aSinceTime,
-    bool aIsShuttingDown);
+    bool aIsShuttingDown, mozilla::ProgressLogger aProgressLogger);
 
 // Flags to conveniently track various JS instrumentations.
 enum class JSInstrumentationFlags {

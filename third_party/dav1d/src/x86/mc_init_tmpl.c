@@ -152,7 +152,7 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     init_mct_fn(FILTER_2D_8TAP_SHARP,          8tap_sharp,          ssse3);
     init_mct_fn(FILTER_2D_BILINEAR,            bilin,               ssse3);
 
-#if BITDEPTH == 8 && ARCH_X86_64
+#if BITDEPTH == 8
     init_mc_scaled_fn(FILTER_2D_8TAP_REGULAR,        8tap_scaled_regular,        ssse3);
     init_mc_scaled_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_scaled_regular_smooth, ssse3);
     init_mc_scaled_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_scaled_regular_sharp,  ssse3);

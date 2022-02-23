@@ -20,6 +20,7 @@ browser.jar:
     content/browser/places/historySidebar.js             (content/historySidebar.js)
 *   content/browser/places/bookmarksSidebar.xhtml        (content/bookmarksSidebar.xhtml)
     content/browser/places/bookmarksSidebar.js           (content/bookmarksSidebar.js)
+    content/browser/places/instantEditBookmark.js        (content/instantEditBookmark.js)
     content/browser/places/editBookmark.js               (content/editBookmark.js)
 #ifdef NIGHTLY_BUILD
     content/browser/places/interactionsViewer.css        (metadataViewer/interactionsViewer.css)

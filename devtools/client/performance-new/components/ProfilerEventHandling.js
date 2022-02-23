@@ -4,6 +4,14 @@
 // @ts-check
 
 /**
+ * @typedef {import("../@types/perf").PerfFront} PerfFront
+ * @typedef {import("../@types/perf").RecordingState} RecordingState
+ * @typedef {import("../@types/perf").State} StoreState
+ * @typedef {import("../@types/perf").RootTraits} RootTraits
+ * @typedef {import("../@types/perf").PanelWindow} PanelWindow
+ */
+
+/**
  * @template P
  * @typedef {import("react-redux").ResolveThunks<P>} ResolveThunks<P>
  */
@@ -26,18 +34,12 @@
 /**
  * @typedef {Object} OwnProps
  * @property {PerfFront} perfFront
+ * @property {RootTraits} traits
  */
 
 /**
  * @typedef {ResolveThunks<ThunkDispatchProps>} DispatchProps
  * @typedef {StateProps & DispatchProps & OwnProps} Props
- * @typedef {import("../@types/perf").PerfFront} PerfFront
- * @typedef {import("../@types/perf").RecordingState} RecordingState
- * @typedef {import("../@types/perf").State} StoreState
- */
-
-/**
- * @typedef {import("../@types/perf").PanelWindow} PanelWindow
  */
 
 "use strict";
@@ -64,6 +66,7 @@ class ProfilerEventHandling extends PureComponent {
       reportProfilerStopped,
       reportPrivateBrowsingStarted,
       reportPrivateBrowsingStopped,
+      traits: { noDisablingOnPrivateBrowsing },
     } = this.props;
 
     if (!isSupportedPlatform) {
@@ -73,7 +76,9 @@ class ProfilerEventHandling extends PureComponent {
     // Ask for the initial state of the profiler.
     Promise.all([
       perfFront.isActive(),
-      perfFront.isLockedForPrivateBrowsing(),
+      noDisablingOnPrivateBrowsing
+        ? false
+        : perfFront.isLockedForPrivateBrowsing(),
     ]).then(([isActive, isLockedForPrivateBrowsing]) => {
       reportProfilerReady(isActive, isLockedForPrivateBrowsing);
     });
@@ -81,14 +86,20 @@ class ProfilerEventHandling extends PureComponent {
     // Handle when the profiler changes state. It might be us, it might be someone else.
     this.props.perfFront.on("profiler-started", reportProfilerStarted);
     this.props.perfFront.on("profiler-stopped", reportProfilerStopped);
-    this.props.perfFront.on(
-      "profile-locked-by-private-browsing",
-      reportPrivateBrowsingStarted
-    );
-    this.props.perfFront.on(
-      "profile-unlocked-from-private-browsing",
-      reportPrivateBrowsingStopped
-    );
+
+    if (!noDisablingOnPrivateBrowsing) {
+      // @backward-compat { version 98 }
+      // These events are not used anymore in Firefox 98 and above. They can be
+      // removed along with the rest of the functionality once 98 hits release.
+      this.props.perfFront.on(
+        "profile-locked-by-private-browsing",
+        reportPrivateBrowsingStarted
+      );
+      this.props.perfFront.on(
+        "profile-unlocked-from-private-browsing",
+        reportPrivateBrowsingStopped
+      );
+    }
   }
 
   componentWillUnmount() {

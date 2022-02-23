@@ -36,9 +36,14 @@ void TimespanMetric::Stop() const {
     auto lock = GetTimesToStartsLock();
     auto optStart = lock.ref()->Extract(scalarId);
     if (!NS_WARN_IF(!optStart)) {
-      uint32_t delta = static_cast<uint32_t>(
-          (TimeStamp::Now() - optStart.extract()).ToMilliseconds());
-      Telemetry::ScalarSet(scalarId, delta);
+      double delta = (TimeStamp::Now() - optStart.extract()).ToMilliseconds();
+      uint32_t theDelta = static_cast<uint32_t>(delta);
+      if (delta > std::numeric_limits<uint32_t>::max()) {
+        theDelta = std::numeric_limits<uint32_t>::max();
+      } else if (MOZ_UNLIKELY(delta < 0)) {
+        theDelta = 0;
+      }
+      Telemetry::ScalarSet(scalarId, theDelta);
     }
   }
   fog_timespan_stop(mId);

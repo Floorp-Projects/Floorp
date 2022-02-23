@@ -13,6 +13,9 @@ background_update:
     type: uuid
     description: >
       The Telemetry client ID of the default profile.
+    metadata: &metadata
+      tags:
+        - "Toolkit :: Application Update"
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
@@ -30,6 +33,7 @@ background_update:
     type: string
     description: >
       String description of the final state the update state machine reached.
+    metadata: *metadata
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
@@ -47,6 +51,7 @@ background_update:
     description: >
       Ordered list of string descriptions of the states that the update state
       machine reached.
+    metadata: *metadata
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
@@ -63,6 +68,7 @@ background_update:
     type: string_list
     description: >
       List of reasons that the background update task did not run.
+    metadata: *metadata
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
@@ -80,6 +86,7 @@ background_update:
     description: >
       True if the exit code/status of the background update task is 0, which
       means success.
+    metadata: *metadata
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
@@ -97,6 +104,7 @@ background_update:
     description: >
       True if the exit code/status of the background update task is 3, which
       means an exception was thrown.
+    metadata: *metadata
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
@@ -115,6 +123,7 @@ update:
     description: >
       Preference "app.update.service.enabled": whether the Mozilla Maintenance
       Service is enabled.
+    metadata: *metadata
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
@@ -133,6 +142,7 @@ update:
     description: >
       Per-installation preference "app.update.auto": whether to fetch and
       install updates without user intervention.
+    metadata: *metadata
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
@@ -151,6 +161,7 @@ update:
     description: >
       Per-installation preference "app.update.background.enabled": whether to
       fetch and install updates in the background when Firefox is not running.
+    metadata: *metadata
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
@@ -169,6 +180,7 @@ update:
     description: >
       True when policies are disabled or when the "DisableAppUpdate" is not in
       effect.
+    metadata: *metadata
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
@@ -186,6 +198,7 @@ update:
     type: string
     description: >
       The update channel.
+    metadata: *metadata
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
@@ -206,6 +219,7 @@ update:
       updates.
       See `canUsuallyApplyUpdates` in
       https://searchfox.org/mozilla-central/source/toolkit/mozapps/update/nsIUpdateService.idl.
+    metadata: *metadata
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
@@ -225,6 +239,7 @@ update:
       Whether or not the Update Service can usually check for updates.
       See `canUsuallyCheckForUpdates` in
       https://searchfox.org/mozilla-central/source/toolkit/mozapps/update/nsIUpdateService.idl.
+    metadata: *metadata
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
@@ -244,6 +259,7 @@ update:
       Whether the Update Service is usually able to stage updates.
       See `canUsuallyStageUpdates` in
       https://searchfox.org/mozilla-central/source/toolkit/mozapps/update/nsIUpdateService.idl.
+    metadata: *metadata
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
@@ -263,6 +279,7 @@ update:
       On Windows, whether the Update Service can usually use BITS.
       See `canUsuallyUseBits` in
       https://searchfox.org/mozilla-central/source/toolkit/mozapps/update/nsIUpdateService.idl.
+    metadata: *metadata
     lifetime: application
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318

@@ -459,33 +459,37 @@ s! {
         pub kve_path: [[::c_char; 32]; 32],
     }
 
+    pub struct __c_anonymous_filestat {
+        pub stqe_next: *mut filestat,
+    }
+
     pub struct filestat {
-        fs_type: ::c_int,
-        fs_flags: ::c_int,
-        fs_fflags: ::c_int,
-        fs_uflags: ::c_int,
-        fs_fd: ::c_int,
-        fs_ref_count: ::c_int,
-        fs_offset: ::off_t,
-        fs_typedep: *mut ::c_void,
-        fs_path: *mut ::c_char,
-        next: *mut filestat,
-        fs_cap_rights: cap_rights_t,
+        pub fs_type: ::c_int,
+        pub fs_flags: ::c_int,
+        pub fs_fflags: ::c_int,
+        pub fs_uflags: ::c_int,
+        pub fs_fd: ::c_int,
+        pub fs_ref_count: ::c_int,
+        pub fs_offset: ::off_t,
+        pub fs_typedep: *mut ::c_void,
+        pub fs_path: *mut ::c_char,
+        pub next: __c_anonymous_filestat,
+        pub fs_cap_rights: cap_rights_t,
     }
 
     pub struct filestat_list {
-        stqh_first: *mut filestat,
-        stqh_last: *mut *mut filestat,
+        pub stqh_first: *mut filestat,
+        pub stqh_last: *mut *mut filestat,
     }
 
     pub struct procstat {
-        tpe: ::c_int,
-        kd: ::uintptr_t,
-        vmentries: *mut ::c_void,
-        files: *mut ::c_void,
-        argv: *mut ::c_void,
-        envv: *mut ::c_void,
-        core: ::uintptr_t,
+        pub tpe: ::c_int,
+        pub kd: ::uintptr_t,
+        pub vmentries: *mut ::c_void,
+        pub files: *mut ::c_void,
+        pub argv: *mut ::c_void,
+        pub envv: *mut ::c_void,
+        pub core: ::uintptr_t,
     }
 
     pub struct itimerspec {
@@ -944,6 +948,17 @@ s! {
         pub mem_ptr: *mut u8,
         pub generation: ::c_long,
         pub numdevs: ::c_int,
+    }
+
+    pub struct sockcred2 {
+        pub sc_version: ::c_int,
+        pub sc_pid: ::pid_t,
+        pub sc_uid: ::uid_t,
+        pub sc_euid: ::uid_t,
+        pub sc_gid: ::gid_t,
+        pub sc_egid: ::gid_t,
+        pub sc_ngroups: ::c_int,
+        pub sc_groups: [::gid_t; 1],
     }
 }
 
@@ -3701,6 +3716,15 @@ f! {
         let (idx, offset) = (cpu / bitset_bits, cpu % bitset_bits);
         0 != cpuset.__bits[idx] & (1 << offset)
     }
+
+    pub fn SOCKCRED2SIZE(ngrps: usize) -> usize {
+        let ngrps = if ngrps > 0 {
+            ngrps - 1
+        } else {
+            0
+        };
+        ::mem::size_of::<sockcred2>() + ::mem::size_of::<::gid_t>() * ngrps
+    }
 }
 
 safe_f! {
@@ -3840,8 +3864,6 @@ extern "C" {
         sevp: *mut sigevent,
     ) -> ::c_int;
 
-    pub fn posix_fallocate(fd: ::c_int, offset: ::off_t, len: ::off_t) -> ::c_int;
-    pub fn posix_fadvise(fd: ::c_int, offset: ::off_t, len: ::off_t, advise: ::c_int) -> ::c_int;
     pub fn mkostemp(template: *mut ::c_char, flags: ::c_int) -> ::c_int;
     pub fn mkostemps(template: *mut ::c_char, suffixlen: ::c_int, flags: ::c_int) -> ::c_int;
 
@@ -3976,6 +3998,16 @@ extern "C" {
         cpusetp: *const cpuset_t,
     ) -> ::c_int;
 
+    // sched.h linux compatibility api
+    pub fn sched_getaffinity(pid: ::pid_t, cpusetsz: ::size_t, cpuset: *mut ::cpuset_t) -> ::c_int;
+    // FIXME: the first argument's type might not be correct, fix later if that changes.
+    pub fn sched_setaffinity(
+        pid: ::c_int,
+        cpusetsz: ::size_t,
+        cpuset: *const ::cpuset_t,
+    ) -> ::c_int;
+    pub fn sched_getcpu() -> ::c_int;
+
     pub fn pthread_mutex_consistent(mutex: *mut ::pthread_mutex_t) -> ::c_int;
 
     pub fn pthread_mutexattr_getrobust(
@@ -4027,6 +4059,10 @@ extern "C" {
     pub fn getfh(path: *const ::c_char, fhp: *mut fhandle_t) -> ::c_int;
     pub fn lgetfh(path: *const ::c_char, fhp: *mut fhandle_t) -> ::c_int;
     pub fn getfsstat(buf: *mut ::statfs, bufsize: ::c_long, mode: ::c_int) -> ::c_int;
+    #[cfg_attr(
+        all(target_os = "freebsd", freebsd11),
+        link_name = "getmntinfo@FBSD_1.0"
+    )]
     pub fn getmntinfo(mntbufp: *mut *mut ::statfs, mode: ::c_int) -> ::c_int;
     pub fn mount(
         type_: *const ::c_char,
@@ -4392,6 +4428,9 @@ cfg_if! {
     } else if #[cfg(target_arch = "powerpc")] {
         mod powerpc;
         pub use self::powerpc::*;
+    } else if #[cfg(target_arch = "riscv64")] {
+        mod riscv64;
+        pub use self::riscv64::*;
     } else {
         // Unknown target_arch
     }

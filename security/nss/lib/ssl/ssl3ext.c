@@ -55,7 +55,6 @@ static const ssl3ExtensionHandler clientHelloHandlers[] = {
     { ssl_tls13_psk_key_exchange_modes_xtn, &tls13_ServerHandlePskModesXtn },
     { ssl_tls13_cookie_xtn, &tls13_ServerHandleCookieXtn },
     { ssl_tls13_post_handshake_auth_xtn, &tls13_ServerHandlePostHandshakeAuthXtn },
-    { ssl_tls13_ech_is_inner_xtn, &tls13_ServerHandleEchIsInnerXtn },
     { ssl_record_size_limit_xtn, &ssl_HandleRecordSizeLimitXtn },
     { 0, NULL }
 };
@@ -83,6 +82,7 @@ static const ssl3ExtensionHandler serverHelloHandlersTLS[] = {
 static const ssl3ExtensionHandler helloRetryRequestHandlers[] = {
     { ssl_tls13_key_share_xtn, tls13_ClientHandleKeyShareXtnHrr },
     { ssl_tls13_cookie_xtn, tls13_ClientHandleHrrCookie },
+    { ssl_tls13_encrypted_client_hello_xtn, tls13_ClientHandleHrrEchXtn },
     { 0, NULL }
 };
 
@@ -167,6 +167,7 @@ static const sslExtensionBuilder tls13_hrr_senders[] = {
     { ssl_tls13_key_share_xtn, &tls13_ServerSendHrrKeyShareXtn },
     { ssl_tls13_cookie_xtn, &tls13_ServerSendHrrCookieXtn },
     { ssl_tls13_supported_versions_xtn, &tls13_ServerSendSupportedVersionsXtn },
+    { ssl_tls13_encrypted_client_hello_xtn, &tls13_ServerSendHrrEchXtn },
     { 0, NULL }
 };
 
@@ -277,7 +278,7 @@ SSLExp_InstallExtensionHooks(PRFileDesc *fd, PRUint16 extension,
     return SECSuccess;
 }
 
-static sslCustomExtensionHooks *
+sslCustomExtensionHooks *
 ssl_FindCustomExtensionHooks(sslSocket *ss, PRUint16 extension)
 {
     PRCList *cursor;
@@ -322,6 +323,14 @@ ssl3_ExtensionAdvertised(const sslSocket *ss, PRUint16 ex_type)
     const TLSExtensionData *xtnData = &ss->xtnData;
     return arrayContainsExtension(xtnData->advertised,
                                   xtnData->numAdvertised, ex_type);
+}
+
+PRBool
+ssl3_ExtensionAdvertisedClientHelloInner(const sslSocket *ss, PRUint16 ex_type)
+{
+    const TLSExtensionData *xtnData = &ss->xtnData;
+    return arrayContainsExtension(xtnData->echAdvertised,
+                                  xtnData->echNumAdvertised, ex_type);
 }
 
 /* Go through hello extensions in |b| and deserialize
@@ -514,11 +523,21 @@ ssl3_HandleParsedExtensions(sslSocket *ss, SSLHandshakeType message)
          * do not have any response, so we rely on
          * ssl3_ExtensionAdvertised to return false on the server.  That
          * results in the server only rejecting any extension. */
-        if (!allowNotOffered && (extension->type != ssl_tls13_cookie_xtn) &&
-            !ssl3_ExtensionAdvertised(ss, extension->type)) {
-            (void)SSL3_SendAlert(ss, alert_fatal, unsupported_extension);
-            PORT_SetError(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
-            return SECFailure;
+        if (!allowNotOffered && (extension->type != ssl_tls13_cookie_xtn)) {
+            if (!ssl3_ExtensionAdvertised(ss, extension->type)) {
+                SSL_TRC(10, ("Server sent xtn type=%d which is invalid for the CHO", extension->type));
+                (void)SSL3_SendAlert(ss, alert_fatal, unsupported_extension);
+                PORT_SetError(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
+                return SECFailure;
+            }
+            /* If we offered ECH, we also check whether the extension is compatible with
+            * the Client Hello Inner. We don't yet know whether the server accepted ECH,
+            * so we only store this for now. If we later accept, we check this boolean
+            * and reject with an unsupported_extension alert if it is set. */
+            if (ss->ssl3.hs.echHpkeCtx && !ssl3_ExtensionAdvertisedClientHelloInner(ss, extension->type)) {
+                SSL_TRC(10, ("Server sent xtn type=%d which is invalid for the CHI", extension->type));
+                ss->ssl3.hs.echInvalidExtension = PR_TRUE;
+            }
         }
 
         /* Check that this is a legal extension in TLS 1.3 */
@@ -631,7 +650,7 @@ ssl3_RegisterExtensionSender(const sslSocket *ss,
     return SECFailure;
 }
 
-static SECStatus
+SECStatus
 ssl_CallCustomExtensionSenders(sslSocket *ss, sslBuffer *buf,
                                SSLHandshakeType message)
 {
@@ -690,6 +709,7 @@ ssl_CallCustomExtensionSenders(sslSocket *ss, sslBuffer *buf,
         buf->len += len;
 
         if (message == ssl_hs_client_hello ||
+            message == ssl_hs_ech_outer_client_hello ||
             message == ssl_hs_certificate_request) {
             ss->xtnData.advertised[ss->xtnData.numAdvertised++] = hook->type;
         }
@@ -719,6 +739,7 @@ ssl_ConstructExtensions(sslSocket *ss, sslBuffer *buf, SSLHandshakeType message)
 
     /* Clear out any extensions previously advertised */
     ss->xtnData.numAdvertised = 0;
+    ss->xtnData.echNumAdvertised = 0;
 
     switch (message) {
         case ssl_hs_client_hello:
@@ -803,6 +824,9 @@ ssl_ConstructExtensions(sslSocket *ss, sslBuffer *buf, SSLHandshakeType message)
     }
 
     if (!PR_CLIST_IS_EMPTY(&ss->extensionHooks)) {
+        if (message == ssl_hs_client_hello && ss->opt.callExtensionWriterOnEchInner) {
+            message = ssl_hs_ech_outer_client_hello;
+        }
         rv = ssl_CallCustomExtensionSenders(ss, buf, message);
         if (rv != SECSuccess) {
             goto loser;
@@ -890,7 +914,9 @@ ssl3_EmplaceExtension(sslSocket *ss, sslBuffer *buf, PRUint16 exType,
     } else {
         tailLen = 0;
     }
-
+    if (exType == ssl_tls13_encrypted_client_hello_xtn) {
+        ss->xtnData.echXtnOffset = buf->len;
+    }
     rv = sslBuffer_AppendNumber(buf, exType, 2);
     if (rv != SECSuccess) {
         return SECFailure; /* Code already set. */
@@ -952,7 +978,7 @@ ssl3_MoveRemoteExtensions(PRCList *dst, PRCList *src)
     while (!PR_CLIST_IS_EMPTY(src)) {
         cur_p = PR_LIST_TAIL(src);
         PR_REMOVE_LINK(cur_p);
-        PR_APPEND_LINK(cur_p, dst);
+        PR_INSERT_LINK(cur_p, dst);
     }
 }
 
@@ -995,6 +1021,8 @@ ssl3_InitExtensionData(TLSExtensionData *xtnData, const sslSocket *ss)
         ++advertisedMax;
     }
     xtnData->advertised = PORT_ZNewArray(PRUint16, advertisedMax);
+    xtnData->echAdvertised = PORT_ZNewArray(PRUint16, advertisedMax);
+
     xtnData->peerDelegCred = NULL;
     xtnData->peerRequestedDelegCred = PR_FALSE;
     xtnData->sendingDelegCredToPeer = PR_FALSE;
@@ -1017,6 +1045,7 @@ ssl3_DestroyExtensionData(TLSExtensionData *xtnData)
         xtnData->certReqAuthorities.arena = NULL;
     }
     PORT_Free(xtnData->advertised);
+    PORT_Free(xtnData->echAdvertised);
     tls13_DestroyDelegatedCredential(xtnData->peerDelegCred);
 
     tls13_DestroyEchXtnState(xtnData->ech);

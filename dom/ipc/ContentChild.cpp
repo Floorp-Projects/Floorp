@@ -115,7 +115,6 @@
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/DocumentChannelChild.h"
 #include "mozilla/net/HttpChannelChild.h"
-#include "mozilla/net/NeckoChild.h"
 #include "mozilla/widget/RemoteLookAndFeel.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
@@ -2003,8 +2002,6 @@ mozilla::ipc::IPCResult ContentChild::RecvPScriptCacheConstructor(
   return IPC_OK();
 }
 
-PNeckoChild* ContentChild::AllocPNeckoChild() { return new NeckoChild(); }
-
 mozilla::ipc::IPCResult ContentChild::RecvNetworkLinkTypeChange(
     const uint32_t& aType) {
   mNetworkLinkType = aType;
@@ -2014,11 +2011,6 @@ mozilla::ipc::IPCResult ContentChild::RecvNetworkLinkTypeChange(
                          nullptr);
   }
   return IPC_OK();
-}
-
-bool ContentChild::DeallocPNeckoChild(PNeckoChild* necko) {
-  delete necko;
-  return true;
 }
 
 PPrintingChild* ContentChild::AllocPPrintingChild() {
@@ -2364,8 +2356,6 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyAlertsObserver(
   return IPC_OK();
 }
 
-// NOTE: This method is being run in the SystemGroup, and thus cannot directly
-// touch pages. See GetSpecificMessageEventTarget.
 mozilla::ipc::IPCResult ContentChild::RecvNotifyVisited(
     nsTArray<VisitedQueryResult>&& aURIs) {
   nsCOMPtr<IHistory> history = components::History::Service();
@@ -2841,6 +2831,12 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyProcessPriorityChanged(
                       ProcessPriorityToString(mProcessPriority)),
                   ProfilerString8View::WrapNullTerminatedString(
                       ProcessPriorityToString(aPriority)));
+
+  // Record FOG data before the priority change.
+  // Ignore the change if it's the first time we set the process priority.
+  if (mProcessPriority != hal::PROCESS_PRIORITY_UNKNOWN) {
+    glean::RecordPowerMetrics();
+  }
   mProcessPriority = aPriority;
 
   os->NotifyObservers(static_cast<nsIPropertyBag2*>(props),

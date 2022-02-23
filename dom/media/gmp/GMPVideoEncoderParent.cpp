@@ -234,26 +234,18 @@ void GMPVideoEncoderParent::ActorDestroy(ActorDestroyReason aWhy) {
 mozilla::ipc::IPCResult GMPVideoEncoderParent::RecvEncoded(
     const GMPVideoEncodedFrameData& aEncodedFrame,
     nsTArray<uint8_t>&& aCodecSpecificInfo) {
-  if (!mCallback) {
-    return IPC_FAIL_NO_REASON(this);
+  if (mCallback) {
+    auto f = new GMPVideoEncodedFrameImpl(aEncodedFrame, &mVideoHost);
+    mCallback->Encoded(f, aCodecSpecificInfo);
+    f->Destroy();
   }
-
-  auto f = new GMPVideoEncodedFrameImpl(aEncodedFrame, &mVideoHost);
-  // Ignore any return code. It is OK for this to fail without killing the
-  // process. This can be called on any thread (or more than one)
-  mCallback->Encoded(f, aCodecSpecificInfo);
-  f->Destroy();
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult GMPVideoEncoderParent::RecvError(const GMPErr& aError) {
-  if (!mCallback) {
-    return IPC_FAIL_NO_REASON(this);
+  if (mCallback) {
+    mCallback->Error(aError);
   }
-
-  // Ignore any return code. It is OK for this to fail without killing the
-  // process.
-  mCallback->Error(aError);
 
   return IPC_OK();
 }
@@ -294,7 +286,7 @@ mozilla::ipc::IPCResult GMPVideoEncoderParent::RecvNeedShmem(
     GMP_LOG_ERROR(
         "%s::%s: Failed to get a shared mem buffer for Child! size %u",
         __CLASS__, __FUNCTION__, aEncodedBufferSize);
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Failed to get a shared mem buffer for Child!");
   }
   *aMem = mem;
   mem = ipc::Shmem();

@@ -812,6 +812,11 @@ this.FormAutofillUtils = {
    * @returns {DOMElement}
    */
   findAddressSelectOption(selectEl, address, fieldName) {
+    if (selectEl.options.length > 512) {
+      // Allow enough space for all countries (roughly 300 distinct values) and all
+      // timezones (roughly 400 distinct values), plus some extra wiggle room.
+      return null;
+    }
     let value = address[fieldName];
     if (!value) {
       return null;

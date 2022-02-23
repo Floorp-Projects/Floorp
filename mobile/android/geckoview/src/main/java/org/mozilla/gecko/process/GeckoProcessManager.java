@@ -26,6 +26,8 @@ import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.TelemetryUtils;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.CompositorSurfaceManager;
+import org.mozilla.gecko.gfx.ISurfaceAllocator;
+import org.mozilla.gecko.gfx.RemoteSurfaceAllocator;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.process.ServiceAllocator.PriorityLevel;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -62,6 +64,37 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
   public void getEditableParent(
       final IGeckoEditableChild child, final long contentId, final long tabId) {
     nativeGetEditableParent(child, contentId, tabId);
+  }
+
+  /**
+   * Returns the surface allocator interface to be used by child processes to allocate Surfaces. The
+   * service bound to the returned interface may live in either the GPU process or parent process.
+   */
+  @Override // IProcessManager
+  public ISurfaceAllocator getSurfaceAllocator() {
+    final GeckoResult<Boolean> gpuReady = GeckoAppShell.ensureGpuProcessReady();
+
+    try {
+      final GeckoResult<ISurfaceAllocator> allocator = new GeckoResult<>();
+      if (gpuReady.poll(1000)) {
+        // The GPU process is enabled and ready, so ask it for its surface allocator.
+        XPCOMEventTarget.runOnLauncherThread(
+            () -> {
+              final Selector selector = new Selector(GeckoProcessType.GPU);
+              final GpuProcessConnection conn =
+                  (GpuProcessConnection) INSTANCE.mConnections.getExistingConnection(selector);
+
+              allocator.complete(conn.getSurfaceAllocator());
+            });
+      } else {
+        // The GPU process is disabled, so return the parent process allocator instance.
+        allocator.complete(RemoteSurfaceAllocator.getInstance());
+      }
+      return allocator.poll(100);
+    } catch (final Throwable e) {
+      Log.e(LOGTAG, "Error in getSurfaceAllocator", e);
+      return null;
+    }
   }
 
   @WrapForJNI
@@ -280,6 +313,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
   private static final class GpuProcessConnection extends NonContentConnection {
     private CompositorSurfaceManager mCompositorSurfaceManager;
+    private ISurfaceAllocator mSurfaceAllocator;
 
     public GpuProcessConnection(@NonNull final ServiceAllocator allocator) {
       super(allocator, GeckoProcessType.GPU);
@@ -288,10 +322,15 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     @Override
     protected void onBinderConnected(@NonNull final IChildProcess child) throws RemoteException {
       mCompositorSurfaceManager = new CompositorSurfaceManager(child.getCompositorSurfaceManager());
+      mSurfaceAllocator = child.getSurfaceAllocator();
     }
 
     public CompositorSurfaceManager getCompositorSurfaceManager() {
       return mCompositorSurfaceManager;
+    }
+
+    public ISurfaceAllocator getSurfaceAllocator() {
+      return mSurfaceAllocator;
     }
   }
 

@@ -9,7 +9,7 @@ application window that are outside the window's content area. Toolbars,
 menu bars, progress bars, and window title bars are all examples of
 elements that are typically part of the chrome.
 
-``chrome.manifest`` files are used to register XPCOM components and sources for the chrome protocol. 
+``chrome.manifest`` files are used to register XPCOM components and sources for the chrome protocol.
 Every application supplies a root ``chrome.manifest`` file that Mozilla reads on startup.
 
 Chrome providers
@@ -152,7 +152,7 @@ locale
 
 A locale package is registered with the line:
 
-.. code::  
+.. code::
 
    locale packagename localename uri/to/files/ [flags]
 
@@ -167,7 +167,7 @@ skin
 
 A skin package is registered with the line:
 
-.. code::  
+.. code::
 
    skin packagename skinname uri/to/files/ [flags]
 
@@ -183,7 +183,7 @@ style
 Style overlays (custom CSS which will be applied to a chrome page) are
 registered with the following syntax:
 
-.. code::  
+.. code::
 
    style chrome://URI-to-style chrome://stylesheet-URI [flags]
 
@@ -195,7 +195,7 @@ file provided by the application or XULRunner. In order to allow for
 this, the chrome registration manifest allows for "override"
 instructions:
 
-.. code::  
+.. code::
 
    override chrome://package/type/original-uri.whatever new-resolved-URI [flags]
 
@@ -210,7 +210,7 @@ resource
 
 Aliases can be created using the ``resource`` instruction:
 
-.. code::  
+.. code::
 
    resource aliasname uri/to/files/ [flags]
 
@@ -237,7 +237,7 @@ Extensions may install into multiple applications. There may be chrome
 registration lines which only apply to one particular application. The
 flag
 
-.. code::  
+.. code::
 
    application=app-ID
 
@@ -262,7 +262,7 @@ Extensions may install into multiple versions of an application. There
 may be chrome registration lines which only apply to a particular
 application version. The flag
 
-.. code::  
+.. code::
 
    appversion=version
    appversion<version
@@ -285,7 +285,7 @@ This is particularly true for binary components. If there are chrome
 registration lines which only apply to a particular Gecko version, the
 flag
 
-.. code::  
+.. code::
 
    platformversion=version
    platformversion<version
@@ -343,7 +343,7 @@ An extension or theme may need to operate differently depending on which
 version of an operating system is running. For example, a theme may wish
 to adopt a different look on Mac OS X 10.5 than 10.4:
 
-.. code::  
+.. code::
 
    osversion>=10.5
 
@@ -358,7 +358,7 @@ XPCOMABI values (concatenated with an underscore). For example:
 ::
 
    binary-component component/myLib.dll abi=WINNT_x86-MSVC
-   binary-component component/myLib.so abi=Linux_x86-gcc3 
+   binary-component component/myLib.so abi=Linux_x86-gcc3
 
 platform (Platform-specific packages)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -423,39 +423,39 @@ Example chrome manifest
       - engine
       - language
       - url
-   *  - content       
+   *  - content
       - branding
-      - browser/content/branding/              
+      - browser/content/branding/
       - contentaccessible=yes
-   *  - content        
-      - browser       
+   *  - content
+      - browser
       - browser/content/browser/
       - contentaccessible=yes
-   *  - override       
-      - 
-      - chrome://global/content/license.html             
+   *  - override
+      -
+      - chrome://global/content/license.html
       - chrome://browser/content/license.html
-   *  - override       
-      - 
+   *  - override
+      -
       - chrome://global/content/netError.xhtml
       - chrome://browser/content/certerror/aboutNetError.xhtml
-   *  - resource        
-      - payments 
+   *  - resource
+      - payments
       - browser/res/payments/
-      - 
-   *  - skin 
-      - browser   
+      -
+   *  - skin
+      - browser
       - classic/1.0 browser/skin/classic/browser/
-      - 
-   *  - locale 
+      -
+   *  - locale
       - branding
       - en-US
       - en-US/locale/branding/
-   *  - locale 
+   *  - locale
       - browser
       - en-US
       - en-US/locale/browser/
-   *  - locale  
-      - browser-region                  
+   *  - locale
+      - browser-region
       - en-US
       - en-US/locale/browser-region/

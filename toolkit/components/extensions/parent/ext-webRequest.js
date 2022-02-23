@@ -104,18 +104,15 @@ function registerEvent(
   };
 }
 
-function makeWebRequestEvent(context, name) {
+function makeWebRequestEvent(context, event) {
   return new EventManager({
     context,
-    name: `webRequest.${name}`,
-    persistent: {
-      module: "webRequest",
-      event: name,
-    },
+    module: "webRequest",
+    event,
     register: (fire, filter, info) => {
       return registerEvent(
         context.extension,
-        name,
+        event,
         fire,
         filter,
         info,
@@ -126,8 +123,11 @@ function makeWebRequestEvent(context, name) {
 }
 
 this.webRequest = class extends ExtensionAPI {
-  primeListener(extension, event, fire, params) {
-    return registerEvent(extension, event, fire, ...params);
+  primeListener(extension, event, fire, params, isInStartup) {
+    // During early startup if the listener does not use blocking we do not prime it.
+    if (!isInStartup || params[1]?.includes("blocking")) {
+      return registerEvent(extension, event, fire, ...params);
+    }
   }
 
   getAPI(context) {

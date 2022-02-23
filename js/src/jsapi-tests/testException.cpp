@@ -26,3 +26,67 @@ BEGIN_TEST(testException_bug860435) {
   return true;
 }
 END_TEST(testException_bug860435)
+
+BEGIN_TEST(testException_getCause) {
+  JS::RootedValue err(cx);
+  EVAL("new Error('message', { cause: new Error('message 2') })", &err);
+  CHECK(err.isObject());
+
+  JS::RootedString msg(cx, JS::ToString(cx, err));
+  CHECK(msg);
+  // Check that we have the outer error
+  bool match;
+  CHECK(JS_StringEqualsLiteral(cx, msg, "Error: message", &match));
+  CHECK(match);
+
+  JS::Rooted<mozilla::Maybe<JS::Value>> maybeCause(
+      cx, JS::GetExceptionCause(&err.toObject()));
+  CHECK(maybeCause.isSome());
+  JS::RootedValue cause(cx, *maybeCause);
+  CHECK(cause.isObject());
+
+  msg = JS::ToString(cx, cause);
+  CHECK(msg);
+  // Check that we have the inner error
+  CHECK(JS_StringEqualsLiteral(cx, msg, "Error: message 2", &match));
+  CHECK(match);
+
+  maybeCause = JS::GetExceptionCause(&cause.toObject());
+  CHECK(maybeCause.isNothing());
+
+  return true;
+}
+END_TEST(testException_getCause)
+
+BEGIN_TEST(testException_getCausePlainObject) {
+  JS::RootedObject plain(cx, JS_NewPlainObject(cx));
+  CHECK(plain);
+  JS::Rooted<mozilla::Maybe<JS::Value>> maybeCause(
+      cx, JS::GetExceptionCause(plain));
+  CHECK(maybeCause.isNothing());
+  return true;
+}
+END_TEST(testException_getCausePlainObject)
+
+BEGIN_TEST(testException_createErrorWithCause) {
+  JS::RootedString empty(cx, JS_GetEmptyString(cx));
+  JS::Rooted<mozilla::Maybe<JS::Value>> cause(
+      cx, mozilla::Some(JS::Int32Value(-1)));
+  JS::RootedValue err(cx);
+  CHECK(JS::CreateError(cx, JSEXN_ERR, nullptr, empty, 1, 1, nullptr, empty,
+                        cause, &err));
+  CHECK(err.isObject());
+  JS::Rooted<mozilla::Maybe<JS::Value>> maybeCause(
+      cx, JS::GetExceptionCause(&err.toObject()));
+  CHECK(maybeCause.isSome());
+  CHECK_SAME(*cause, *maybeCause);
+
+  CHECK(JS::CreateError(cx, JSEXN_ERR, nullptr, empty, 1, 1, nullptr, empty,
+                        JS::NothingHandleValue, &err));
+  CHECK(err.isObject());
+  maybeCause = JS::GetExceptionCause(&err.toObject());
+  CHECK(maybeCause.isNothing());
+
+  return true;
+}
+END_TEST(testException_createErrorWithCause)

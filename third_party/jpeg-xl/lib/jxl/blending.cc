@@ -338,11 +338,11 @@ ImageBlender::RectBlender ImageBlender::PrepareRect(
   return blender;
 }
 
-Status PerformBlending(
-    const float* const* bg, const float* const* fg, float* const* out,
-    size_t xsize, const PatchBlending& color_blending,
-    const PatchBlending* ec_blending,
-    const std::vector<ExtraChannelInfo>& extra_channel_info) {
+void PerformBlending(const float* const* bg, const float* const* fg,
+                     float* const* out, size_t x0, size_t xsize,
+                     const PatchBlending& color_blending,
+                     const PatchBlending* ec_blending,
+                     const std::vector<ExtraChannelInfo>& extra_channel_info) {
   bool has_alpha = false;
   size_t num_ec = extra_channel_info.size();
   for (size_t i = 0; i < num_ec; i++) {
@@ -356,35 +356,37 @@ Status PerformBlending(
   for (size_t i = 0; i < num_ec; i++) {
     if (ec_blending[i].mode == PatchBlendMode::kAdd) {
       for (size_t x = 0; x < xsize; x++) {
-        tmp.Row(3 + i)[x] = bg[3 + i][x] + fg[3 + i][x];
+        tmp.Row(3 + i)[x] = bg[3 + i][x + x0] + fg[3 + i][x + x0];
       }
     } else if (ec_blending[i].mode == PatchBlendMode::kBlendAbove) {
       size_t alpha = ec_blending[i].alpha_channel;
       bool is_premultiplied = extra_channel_info[alpha].alpha_associated;
-      PerformAlphaBlending(bg[3 + i], bg[3 + alpha], fg[3 + i], fg[3 + alpha],
-                           tmp.Row(3 + i), xsize, is_premultiplied,
-                           ec_blending[i].clamp);
+      PerformAlphaBlending(bg[3 + i] + x0, bg[3 + alpha] + x0, fg[3 + i] + x0,
+                           fg[3 + alpha] + x0, tmp.Row(3 + i), xsize,
+                           is_premultiplied, ec_blending[i].clamp);
     } else if (ec_blending[i].mode == PatchBlendMode::kBlendBelow) {
       size_t alpha = ec_blending[i].alpha_channel;
       bool is_premultiplied = extra_channel_info[alpha].alpha_associated;
-      PerformAlphaBlending(fg[3 + i], fg[3 + alpha], bg[3 + i], bg[3 + alpha],
-                           tmp.Row(3 + i), xsize, is_premultiplied,
-                           ec_blending[i].clamp);
+      PerformAlphaBlending(fg[3 + i] + x0, fg[3 + alpha] + x0, bg[3 + i] + x0,
+                           bg[3 + alpha] + x0, tmp.Row(3 + i), xsize,
+                           is_premultiplied, ec_blending[i].clamp);
     } else if (ec_blending[i].mode == PatchBlendMode::kAlphaWeightedAddAbove) {
       size_t alpha = ec_blending[i].alpha_channel;
-      PerformAlphaWeightedAdd(bg[3 + i], fg[3 + i], fg[3 + alpha],
-                              tmp.Row(3 + i), xsize, ec_blending[i].clamp);
+      PerformAlphaWeightedAdd(bg[3 + i] + x0, fg[3 + i] + x0,
+                              fg[3 + alpha] + x0, tmp.Row(3 + i), xsize,
+                              ec_blending[i].clamp);
     } else if (ec_blending[i].mode == PatchBlendMode::kAlphaWeightedAddBelow) {
       size_t alpha = ec_blending[i].alpha_channel;
-      PerformAlphaWeightedAdd(fg[3 + i], bg[3 + i], bg[3 + alpha],
-                              tmp.Row(3 + i), xsize, ec_blending[i].clamp);
+      PerformAlphaWeightedAdd(fg[3 + i] + x0, bg[3 + i] + x0,
+                              bg[3 + alpha] + x0, tmp.Row(3 + i), xsize,
+                              ec_blending[i].clamp);
     } else if (ec_blending[i].mode == PatchBlendMode::kMul) {
-      PerformMulBlending(bg[3 + i], fg[3 + i], tmp.Row(3 + i), xsize,
+      PerformMulBlending(bg[3 + i] + x0, fg[3 + i] + x0, tmp.Row(3 + i), xsize,
                          ec_blending[i].clamp);
     } else if (ec_blending[i].mode == PatchBlendMode::kReplace) {
-      memcpy(tmp.Row(3 + i), fg[3 + i], xsize * sizeof(**fg));
+      memcpy(tmp.Row(3 + i), fg[3 + i] + x0, xsize * sizeof(**fg));
     } else if (ec_blending[i].mode == PatchBlendMode::kNone) {
-      memcpy(tmp.Row(3 + i), bg[3 + i], xsize * sizeof(**fg));
+      memcpy(tmp.Row(3 + i), bg[3 + i] + x0, xsize * sizeof(**fg));
     } else {
       JXL_ABORT("Unreachable");
     }
@@ -399,7 +401,7 @@ Status PerformBlending(
     for (int p = 0; p < 3; p++) {
       float* out = tmp.Row(p);
       for (size_t x = 0; x < xsize; x++) {
-        out[x] = bg[p][x] + fg[p][x];
+        out[x] = bg[p][x + x0] + fg[p][x + x0];
       }
     }
   } else if (color_blending.mode == PatchBlendMode::kBlendAbove
@@ -407,8 +409,8 @@ Status PerformBlending(
              && has_alpha) {
     bool is_premultiplied = extra_channel_info[alpha].alpha_associated;
     PerformAlphaBlending(
-        {bg[0], bg[1], bg[2], bg[3 + alpha]},
-        {fg[0], fg[1], fg[2], fg[3 + alpha]},
+        {bg[0] + x0, bg[1] + x0, bg[2] + x0, bg[3 + alpha] + x0},
+        {fg[0] + x0, fg[1] + x0, fg[2] + x0, fg[3 + alpha] + x0},
         {tmp.Row(0), tmp.Row(1), tmp.Row(2), tmp.Row(3 + alpha)}, xsize,
         is_premultiplied, color_blending.clamp);
   } else if (color_blending.mode == PatchBlendMode::kBlendBelow
@@ -416,43 +418,43 @@ Status PerformBlending(
              && has_alpha) {
     bool is_premultiplied = extra_channel_info[alpha].alpha_associated;
     PerformAlphaBlending(
-        {fg[0], fg[1], fg[2], fg[3 + alpha]},
-        {bg[0], bg[1], bg[2], bg[3 + alpha]},
+        {fg[0] + x0, fg[1] + x0, fg[2] + x0, fg[3 + alpha] + x0},
+        {bg[0] + x0, bg[1] + x0, bg[2] + x0, bg[3 + alpha] + x0},
         {tmp.Row(0), tmp.Row(1), tmp.Row(2), tmp.Row(3 + alpha)}, xsize,
         is_premultiplied, color_blending.clamp);
   } else if (color_blending.mode == PatchBlendMode::kAlphaWeightedAddAbove) {
     JXL_DASSERT(has_alpha);
     for (size_t c = 0; c < 3; c++) {
-      PerformAlphaWeightedAdd(bg[c], fg[c], fg[3 + alpha], tmp.Row(c), xsize,
-                              color_blending.clamp);
+      PerformAlphaWeightedAdd(bg[c] + x0, fg[c] + x0, fg[3 + alpha] + x0,
+                              tmp.Row(c), xsize, color_blending.clamp);
     }
   } else if (color_blending.mode == PatchBlendMode::kAlphaWeightedAddBelow) {
     JXL_DASSERT(has_alpha);
     for (size_t c = 0; c < 3; c++) {
-      PerformAlphaWeightedAdd(fg[c], bg[c], bg[3 + alpha], tmp.Row(c), xsize,
-                              color_blending.clamp);
+      PerformAlphaWeightedAdd(fg[c] + x0, bg[c] + x0, bg[3 + alpha] + x0,
+                              tmp.Row(c), xsize, color_blending.clamp);
     }
   } else if (color_blending.mode == PatchBlendMode::kMul) {
     for (int p = 0; p < 3; p++) {
-      PerformMulBlending(bg[p], fg[p], tmp.Row(p), xsize, color_blending.clamp);
+      PerformMulBlending(bg[p] + x0, fg[p] + x0, tmp.Row(p), xsize,
+                         color_blending.clamp);
     }
   } else if (color_blending.mode == PatchBlendMode::kReplace ||
              color_blending.mode == PatchBlendMode::kBlendAbove ||
              color_blending.mode == PatchBlendMode::kBlendBelow) {  // kReplace
     for (size_t p = 0; p < 3; p++) {
-      memcpy(tmp.Row(p), fg[p], xsize * sizeof(**fg));
+      memcpy(tmp.Row(p), fg[p] + x0, xsize * sizeof(**fg));
     }
   } else if (color_blending.mode == PatchBlendMode::kNone) {
     for (size_t p = 0; p < 3; p++) {
-      memcpy(tmp.Row(p), bg[p], xsize * sizeof(**fg));
+      memcpy(tmp.Row(p), bg[p] + x0, xsize * sizeof(**fg));
     }
   } else {
     JXL_ABORT("Unreachable");
   }
   for (size_t i = 0; i < 3 + num_ec; i++) {
-    memcpy(out[i], tmp.Row(i), xsize * sizeof(**out));
+    memcpy(out[i] + x0, tmp.Row(i), xsize * sizeof(**out));
   }
-  return true;
 }
 
 Status ImageBlender::RectBlender::DoBlending(size_t y) {
@@ -469,10 +471,11 @@ Status ImageBlender::RectBlender::DoBlending(size_t y) {
     bg_row_ptrs_[c] = bg_ptrs_[c] + y * bg_strides_[c];
     out_row_ptrs_[c] = out_ptrs_[c] + y * out_strides_[c];
   }
-  return PerformBlending(bg_row_ptrs_.data(), fg_row_ptrs_.data(),
-                         out_row_ptrs_.data(), current_overlap_.xsize(),
-                         blending_info_[0], blending_info_.data() + 1,
-                         *extra_channel_info_);
+  PerformBlending(bg_row_ptrs_.data(), fg_row_ptrs_.data(),
+                  out_row_ptrs_.data(), 0, current_overlap_.xsize(),
+                  blending_info_[0], blending_info_.data() + 1,
+                  *extra_channel_info_);
+  return true;
 }
 
 }  // namespace jxl

@@ -71,6 +71,41 @@ add_task(async function test_unenroll_opt_out() {
   Services.prefs.clearUserPref(STUDIES_OPT_OUT_PREF);
 });
 
+add_task(async function test_unenroll_rollout_opt_out() {
+  globalSandbox.reset();
+  Services.prefs.setBoolPref(STUDIES_OPT_OUT_PREF, true);
+  const manager = ExperimentFakes.manager();
+  const rollout = ExperimentFakes.rollout("foo");
+
+  await manager.onStartup();
+  await manager.store.addEnrollment(rollout);
+
+  Services.prefs.setBoolPref(STUDIES_OPT_OUT_PREF, false);
+
+  Assert.equal(
+    manager.store.get(rollout.slug).active,
+    false,
+    "should set .active to false"
+  );
+  Assert.ok(TelemetryEvents.sendEvent.calledOnce);
+  Assert.deepEqual(
+    TelemetryEvents.sendEvent.firstCall.args,
+    [
+      "unenroll",
+      "nimbus_experiment",
+      rollout.slug,
+      {
+        reason: "studies-opt-out",
+        branch: rollout.branch.slug,
+        enrollmentId: rollout.enrollmentId,
+      },
+    ],
+    "should send an unenrollment ping with the slug, reason, branch slug, and enrollmentId"
+  );
+  // reset pref
+  Services.prefs.clearUserPref(STUDIES_OPT_OUT_PREF);
+});
+
 add_task(async function test_setExperimentInactive_called() {
   globalSandbox.reset();
   const manager = ExperimentFakes.manager();

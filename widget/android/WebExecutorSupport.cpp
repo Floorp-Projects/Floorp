@@ -350,9 +350,10 @@ static nsresult SetupHttpChannel(nsIHttpChannel* aHttpChannel,
   rv = internalChannel->SetFetchCacheMode(cacheMode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // TODO: Bug 1750231 - make this configurable
-  rv = internalChannel->SetBeConservative(true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (req->BeConservative()) {
+    rv = internalChannel->SetBeConservative(true);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // We don't have any UI
   rv = internalChannel->SetBlockAuthPrompt(true);

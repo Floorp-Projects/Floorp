@@ -65,6 +65,11 @@ let whitelist = [
     errorMessage: /Unknown property ‘text-size-adjust’\. {2}Declaration dropped\./i,
     isFromDevTools: false,
   },
+  {
+    sourceName: /overlay\.css$/i,
+    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
+    isFromDevTools: false,
+  },
 ];
 
 if (!Services.prefs.getBoolPref("layout.css.color-mix.enabled")) {

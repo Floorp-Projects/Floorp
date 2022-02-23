@@ -329,6 +329,8 @@ impl crate::Device<super::Api> for super::Device {
             conv::map_texture_view_dimension(desc.dimension)
         };
 
+        //Note: this doesn't check properly if the mipmap level count or array layer count
+        // is explicitly set to 1.
         let raw = if raw_format == texture.raw_format
             && raw_type == texture.raw_type
             && desc.range == wgt::ImageSubresourceRange::default()
@@ -471,6 +473,7 @@ impl crate::Device<super::Api> for super::Device {
         let mut bind_group_infos = arrayvec::ArrayVec::new();
 
         // First, place the push constants
+        let mut total_push_constants = 0;
         for info in stage_data.iter_mut() {
             for pcr in desc.push_constant_ranges {
                 if pcr.stages.contains(map_naga_stage(info.stage)) {
@@ -492,6 +495,8 @@ impl crate::Device<super::Api> for super::Device {
                 info.pc_buffer = Some(info.counters.buffers);
                 info.counters.buffers += 1;
             }
+
+            total_push_constants = total_push_constants.max(info.pc_limit);
         }
 
         // Second, place the described resources
@@ -641,6 +646,7 @@ impl crate::Device<super::Api> for super::Device {
                     image: naga::proc::BoundsCheckPolicy::ReadZeroSkipWrite,
                 },
             },
+            total_push_constants,
         })
     }
     unsafe fn destroy_pipeline_layout(&self, _pipeline_layout: super::PipelineLayout) {}

@@ -231,6 +231,16 @@ If you wrote several patches on top of each other:
 `More
 information <https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html>`__
 
+To update the working directory
+-------------------------------
+
+If you're finished with a patch and would like to return to the tip to make a new patch:
+
+.. code-block:: shell
+
+    $ hg pull central
+    $ hg up central
+
 To update a submitted patch
 ---------------------------
 
@@ -238,11 +248,17 @@ It is rare that a reviewer will accept the first version of patch. Moreover,
 as the code review bot might suggest some improvements, changes to your patch
 may be required.
 
-Run:
+If your patch is not loaded in your working directory, you first need to re-apply it:
 
 .. code-block:: shell
 
-   # Mercurial
+    $ moz-phab patch D<revision_id>
+
+Make your changes in the working folder and run:
+
+.. code-block:: shell
+
+   # Or, if you need to pass arguments, e.g., changing the commit message:
    $ hg commit --amend
 
    # Git
@@ -321,3 +337,5 @@ More documentation about contribution
 https://mozilla-version-control-tools.readthedocs.io/en/latest/devguide/contributing.html
 
 https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html
+
+https://mikeconley.github.io/documents/How_mconley_uses_Mercurial_for_Mozilla_code

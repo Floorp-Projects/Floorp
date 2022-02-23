@@ -4,7 +4,12 @@
 
 add_task(async function testTabSwitchActionContext() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.manifestV3.enabled", true]],
+    set: [
+      ["extensions.manifestV3.enabled", true],
+      // Since we're not using AOM, and MV3 forces event pages, bypass
+      // delayed-startup for MV3 test.  These tests do not rely on startup events.
+      ["extensions.webextensions.background-delayed-startup", false],
+    ],
   });
 });
 

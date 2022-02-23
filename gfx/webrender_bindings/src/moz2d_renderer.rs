@@ -683,10 +683,10 @@ impl BlobImageHandler for Moz2dBlobImageHandler {
                     *visible_rect,
                 ));
                 command.visible_rect = *visible_rect;
-            }
+            },
             _ => {
                 panic!("missing image key");
-            }
+            },
         }
     }
 
@@ -815,7 +815,7 @@ impl Moz2dBlobImageHandler {
                                 },
                                 FontTemplate::Native(ref handle) => {
                                     process_native_font_handle(instance.font_key, handle);
-                                }
+                                },
                             }
                         }
                     }

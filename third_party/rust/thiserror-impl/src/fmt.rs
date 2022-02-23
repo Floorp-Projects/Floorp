@@ -1,8 +1,8 @@
 use crate::ast::Field;
-use crate::attr::Display;
+use crate::attr::{Display, Trait};
 use proc_macro2::TokenTree;
 use quote::{format_ident, quote_spanned};
-use std::collections::HashSet as Set;
+use std::collections::{BTreeSet as Set, HashMap as Map};
 use syn::ext::IdentExt;
 use syn::parse::{ParseStream, Parser};
 use syn::{Ident, Index, LitStr, Member, Result, Token};
@@ -12,7 +12,10 @@ impl Display<'_> {
     pub fn expand_shorthand(&mut self, fields: &[Field]) {
         let raw_args = self.args.clone();
         let mut named_args = explicit_named_args.parse2(raw_args).unwrap();
-        let fields: Set<Member> = fields.iter().map(|f| f.member.clone()).collect();
+        let mut member_index = Map::new();
+        for (i, field) in fields.iter().enumerate() {
+            member_index.insert(&field.member, i);
+        }
 
         let span = self.fmt.span();
         let fmt = self.fmt.value();
@@ -20,6 +23,7 @@ impl Display<'_> {
         let mut out = String::new();
         let mut args = self.args.clone();
         let mut has_bonus_display = false;
+        let mut implied_bounds = Set::new();
 
         let mut has_trailing_comma = false;
         if let Some(TokenTree::Punct(punct)) = args.clone().into_iter().last() {
@@ -47,7 +51,7 @@ impl Display<'_> {
                         Ok(index) => Member::Unnamed(Index { index, span }),
                         Err(_) => return,
                     };
-                    if !fields.contains(&member) {
+                    if !member_index.contains_key(&member) {
                         out += &int;
                         continue;
                     }
@@ -60,6 +64,24 @@ impl Display<'_> {
                 }
                 _ => continue,
             };
+            if let Some(&field) = member_index.get(&member) {
+                let end_spec = match read.find('}') {
+                    Some(end_spec) => end_spec,
+                    None => return,
+                };
+                let bound = match read[..end_spec].chars().next_back() {
+                    Some('?') => Trait::Debug,
+                    Some('o') => Trait::Octal,
+                    Some('x') => Trait::LowerHex,
+                    Some('X') => Trait::UpperHex,
+                    Some('p') => Trait::Pointer,
+                    Some('b') => Trait::Binary,
+                    Some('e') => Trait::LowerExp,
+                    Some('E') => Trait::UpperExp,
+                    Some(_) | None => Trait::Display,
+                };
+                implied_bounds.insert((field, bound));
+            }
             let local = match &member {
                 Member::Unnamed(index) => format_ident!("_{}", index),
                 Member::Named(ident) => ident.clone(),
@@ -82,7 +104,7 @@ impl Display<'_> {
                 args.extend(quote_spanned!(span=> ,));
             }
             args.extend(quote_spanned!(span=> #formatvar = #local));
-            if read.starts_with('}') && fields.contains(&member) {
+            if read.starts_with('}') && member_index.contains_key(&member) {
                 has_bonus_display = true;
                 args.extend(quote_spanned!(span=> .as_display()));
             }
@@ -93,6 +115,7 @@ impl Display<'_> {
         self.fmt = LitStr::new(&out, self.fmt.span());
         self.args = args;
         self.has_bonus_display = has_bonus_display;
+        self.implied_bounds = implied_bounds;
     }
 }
 

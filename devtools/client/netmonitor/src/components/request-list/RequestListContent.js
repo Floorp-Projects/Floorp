@@ -25,6 +25,7 @@ const {
   getDisplayedRequests,
   getColumns,
   getSelectedRequest,
+  getClickedRequest,
 } = require("devtools/client/netmonitor/src/selectors/index");
 
 loader.lazyRequireGetter(
@@ -77,7 +78,8 @@ class RequestListContent extends Component {
       cloneRequest: PropTypes.func.isRequired,
       clickedRequest: PropTypes.object,
       openDetailsPanelTab: PropTypes.func.isRequired,
-      openDetailsHTTPCustomRequestTab: PropTypes.func.isRequired,
+      openHTTPCustomRequestTab: PropTypes.func.isRequired,
+      closeHTTPCustomRequestTab: PropTypes.func.isRequired,
       sendCustomRequest: PropTypes.func.isRequired,
       displayedRequests: PropTypes.array.isRequired,
       firstRequestStartedMs: PropTypes.number.isRequired,
@@ -341,7 +343,8 @@ class RequestListContent extends Component {
         connector,
         cloneRequest,
         openDetailsPanelTab,
-        openDetailsHTTPCustomRequestTab,
+        openHTTPCustomRequestTab,
+        closeHTTPCustomRequestTab,
         sendCustomRequest,
         openStatistics,
         openRequestBlockingAndAddUrl,
@@ -352,7 +355,8 @@ class RequestListContent extends Component {
         connector,
         cloneRequest,
         openDetailsPanelTab,
-        openDetailsHTTPCustomRequestTab,
+        openHTTPCustomRequestTab,
+        closeHTTPCustomRequestTab,
         sendCustomRequest,
         openStatistics,
         openRequestBlockingAndAddUrl,
@@ -453,7 +457,7 @@ module.exports = connect(
     networkDetailsOpen: state.ui.networkDetailsOpen,
     networkDetailsWidth: state.ui.networkDetailsWidth,
     networkDetailsHeight: state.ui.networkDetailsHeight,
-    clickedRequest: state.requests.clickedRequest,
+    clickedRequest: getClickedRequest(state),
     displayedRequests: getDisplayedRequests(state),
     firstRequestStartedMs: state.requests.firstStartedMs,
     selectedActionBarTabId: state.ui.selectedActionBarTabId,
@@ -463,8 +467,10 @@ module.exports = connect(
   (dispatch, props) => ({
     cloneRequest: id => dispatch(Actions.cloneRequest(id)),
     openDetailsPanelTab: () => dispatch(Actions.openNetworkDetails(true)),
-    openDetailsHTTPCustomRequestTab: () =>
+    openHTTPCustomRequestTab: () =>
       dispatch(Actions.openHTTPCustomRequest(true)),
+    closeHTTPCustomRequestTab: () =>
+      dispatch(Actions.openHTTPCustomRequest(false)),
     sendCustomRequest: () =>
       dispatch(Actions.sendCustomRequest(props.connector)),
     openStatistics: open =>

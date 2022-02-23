@@ -28,6 +28,10 @@
 #include "FetchStreamReader.h"
 #include "InternalResponse.h"
 
+#ifdef MOZ_DOM_STREAMS
+#  include "mozilla/dom/ReadableStreamDefaultReader.h"
+#endif
+
 namespace mozilla::dom {
 
 NS_IMPL_ADDREF_INHERITED(Response, FetchBody<Response>)
@@ -36,29 +40,36 @@ NS_IMPL_RELEASE_INHERITED(Response, FetchBody<Response>)
 NS_IMPL_CYCLE_COLLECTION_CLASS(Response)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Response, FetchBody<Response>)
-  AbortFollower::Unlink(static_cast<AbortFollower*>(tmp));
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHeaders)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchStreamReader)
-
+#ifdef MOZ_DOM_STREAMS
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadableStreamBody)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadableStreamReader)
+#else
   tmp->mReadableStreamBody = nullptr;
   tmp->mReadableStreamReader = nullptr;
-
+#endif
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Response, FetchBody<Response>)
-  AbortFollower::Traverse(static_cast<AbortFollower*>(tmp), cb);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHeaders)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchStreamReader)
+#ifdef MOZ_DOM_STREAMS
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReadableStreamBody)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReadableStreamReader)
+#endif
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(Response, FetchBody<Response>)
+#ifndef MOZ_DOM_STREAMS
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReadableStreamBody)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReadableStreamReader)
+#endif
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -281,12 +292,35 @@ already_AddRefed<Response> Response::Constructor(
 
     const fetch::ResponseBodyInit& body = aBody.Value();
     if (body.IsReadableStream()) {
+      JSContext* cx = aGlobal.Context();
 #ifdef MOZ_DOM_STREAMS
-      MOZ_CRASH("MOZ_DOM_STREAMS:NYI");
+      aRv.MightThrowJSException();
+
+      ReadableStream& readableStream = body.GetAsReadableStream();
+
+      if (readableStream.Locked() || readableStream.Disturbed()) {
+        aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
+        return nullptr;
+      }
+
+      r->SetReadableStreamBody(cx, &readableStream);
+
+      // If this is a DOM generated ReadableStream, we can extract the
+      // inputStream directly.
+      if (readableStream.HasNativeUnderlyingSource()) {
+        BodyStreamHolder* underlyingSource =
+            readableStream.GetNativeUnderlyingSource();
+        MOZ_ASSERT(underlyingSource);
+
+        aRv = BodyStream::RetrieveInputStream(underlyingSource,
+                                              getter_AddRefs(bodyStream));
+
+        if (NS_WARN_IF(aRv.Failed())) {
+          return nullptr;
+        }
 #else
       aRv.MightThrowJSException();
 
-      JSContext* cx = aGlobal.Context();
       const ReadableStream& readableStream = body.GetAsReadableStream();
 
       JS::Rooted<JSObject*> readableStreamObj(cx, readableStream.Obj());
@@ -335,6 +369,7 @@ already_AddRefed<Response> Response::Constructor(
         if (NS_WARN_IF(aRv.Failed())) {
           return nullptr;
         }
+#endif
       } else {
         // If this is a JS-created ReadableStream, let's create a
         // FetchStreamReader.
@@ -345,7 +380,6 @@ already_AddRefed<Response> Response::Constructor(
           return nullptr;
         }
       }
-#endif
     } else {
       uint64_t size = 0;
       aRv = ExtractByteStreamFromBody(body, getter_AddRefs(bodyStream),
@@ -383,6 +417,9 @@ already_AddRefed<Response> Response::Clone(JSContext* aCx, ErrorResult& aRv) {
   }
 
   if (!bodyUsed && mReadableStreamBody) {
+#ifdef MOZ_DOM_STREAMS
+    bool locked = mReadableStreamBody->Locked();
+#else
     aRv.MightThrowJSException();
 
     AutoJSAPI jsapi;
@@ -400,7 +437,7 @@ already_AddRefed<Response> Response::Clone(JSContext* aCx, ErrorResult& aRv) {
       aRv.StealExceptionFromJSContext(cx);
       return nullptr;
     }
-
+#endif
     bodyUsed = locked;
   }
 
@@ -412,9 +449,16 @@ already_AddRefed<Response> Response::Clone(JSContext* aCx, ErrorResult& aRv) {
   RefPtr<FetchStreamReader> streamReader;
   nsCOMPtr<nsIInputStream> inputStream;
 
+#ifdef MOZ_DOM_STREAMS
+  RefPtr<ReadableStream> body;
+  MaybeTeeReadableStreamBody(aCx, getter_AddRefs(body),
+                             getter_AddRefs(streamReader),
+                             getter_AddRefs(inputStream), aRv);
+#else
   JS::Rooted<JSObject*> body(aCx);
   MaybeTeeReadableStreamBody(aCx, &body, getter_AddRefs(streamReader),
                              getter_AddRefs(inputStream), aRv);
+#endif
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -452,9 +496,16 @@ already_AddRefed<Response> Response::CloneUnfiltered(JSContext* aCx,
   RefPtr<FetchStreamReader> streamReader;
   nsCOMPtr<nsIInputStream> inputStream;
 
+#ifdef MOZ_DOM_STREAMS
+  RefPtr<ReadableStream> body;
+  MaybeTeeReadableStreamBody(aCx, getter_AddRefs(body),
+                             getter_AddRefs(streamReader),
+                             getter_AddRefs(inputStream), aRv);
+#else
   JS::Rooted<JSObject*> body(aCx);
   MaybeTeeReadableStreamBody(aCx, &body, getter_AddRefs(streamReader),
                              getter_AddRefs(inputStream), aRv);
+#endif
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

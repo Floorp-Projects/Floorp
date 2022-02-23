@@ -84,17 +84,6 @@
 #define JXL_UNLIKELY(expr) __builtin_expect(!!(expr), 0)
 #endif
 
-#if JXL_COMPILER_MSVC
-#include <intrin.h>
-
-#pragma intrinsic(_ReadWriteBarrier)
-#define JXL_COMPILER_FENCE _ReadWriteBarrier()
-#elif JXL_COMPILER_GCC || JXL_COMPILER_CLANG
-#define JXL_COMPILER_FENCE asm volatile("" : : : "memory")
-#else
-#define JXL_COMPILER_FENCE
-#endif
-
 // Returns a void* pointer which the compiler then assumes is N-byte aligned.
 // Example: float* JXL_RESTRICT aligned = (float*)JXL_ASSUME_ALIGNED(in, 32);
 //

@@ -333,7 +333,6 @@ pub type RemoteConnectionIdEntry = ConnectionIdEntry<[u8; 16]>;
 #[derive(Debug, Default)]
 pub struct ConnectionIdStore<SRT: Clone + PartialEq> {
     cids: SmallVec<[ConnectionIdEntry<SRT>; 8]>,
-    retired: Vec<[ConnectionIdEntry<SRT>; 8]>,
 }
 
 impl<SRT: Clone + PartialEq> ConnectionIdStore<SRT> {
@@ -446,7 +445,7 @@ impl ConnectionIdManager {
             // won't be sent until until after the handshake completes, because this initial
             // value remains until the connection completes and transport parameters are handled.
             limit: 2,
-            next_seqno: 2, // A different value.
+            next_seqno: 1,
             lost_new_connection_id: Vec::new(),
         }
     }
@@ -464,11 +463,10 @@ impl ConnectionIdManager {
         }
         if let Some(cid) = self.generator.borrow_mut().generate_cid() {
             assert_ne!(cid.len(), 0);
-            self.connection_ids.add_local(ConnectionIdEntry::new(
-                CONNECTION_ID_SEQNO_PREFERRED,
-                cid.clone(),
-                (),
-            ));
+            debug_assert_eq!(self.next_seqno, CONNECTION_ID_SEQNO_PREFERRED);
+            self.connection_ids
+                .add_local(ConnectionIdEntry::new(self.next_seqno, cid.clone(), ()));
+            self.next_seqno += 1;
 
             let srt = <[u8; 16]>::try_from(&random(16)[..]).unwrap();
             Ok((cid, srt))

@@ -382,8 +382,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
       nsIScrollableFrame::ScrollbarSizesOptions aOptions =
           nsIScrollableFrame::ScrollbarSizesOptions::NONE) const;
   nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
-  nscoord GetNondisappearingScrollbarWidth(nsBoxLayoutState* aState,
-                                           mozilla::WritingMode aVerticalWM);
   bool IsPhysicalLTR() const {
     return mOuter->GetWritingMode().IsPhysicalLTR();
   }
@@ -415,7 +413,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
  public:
   bool IsScrollbarOnRight() const;
   bool IsScrollingActive() const;
-  bool IsScrollingActiveNotMinimalDisplayPort() const;
   bool IsMaybeAsynchronouslyScrolled() const {
     // If this is true, then we'll build an ASR, and that's what we want
     // to know I think.
@@ -499,7 +496,12 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool IsApzAnimationInProgress() const {
     return mCurrentAPZScrollAnimationType != APZScrollAnimationType::No;
   }
-  ScrollGeneration CurrentScrollGeneration() const { return mScrollGeneration; }
+  MainThreadScrollGeneration CurrentScrollGeneration() const {
+    return mScrollGeneration;
+  }
+  APZScrollGeneration ScrollGenerationOnApz() const {
+    return mScrollGenerationOnApz;
+  }
   nsPoint LastScrollDestination() const { return mDestination; }
   nsTArray<ScrollPositionUpdate> GetScrollUpdates() const;
   bool HasScrollUpdates() const { return !mScrollUpdates.IsEmpty(); }
@@ -508,7 +510,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   using IncludeApzAnimation = nsIScrollableFrame::IncludeApzAnimation;
   bool IsScrollAnimating(IncludeApzAnimation = IncludeApzAnimation::Yes) const;
 
-  void ResetScrollInfoIfNeeded(const ScrollGeneration& aGeneration,
+  void ResetScrollInfoIfNeeded(const MainThreadScrollGeneration& aGeneration,
+                               const APZScrollGeneration& aGenerationOnApz,
                                APZScrollAnimationType aAPZScrollAnimationType);
   bool WantAsyncScroll() const;
   Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
@@ -595,7 +598,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsTArray<nsIScrollPositionListener*> mListeners;
   ScrollOrigin mLastScrollOrigin;
   Maybe<nsPoint> mApzSmoothScrollDestination;
-  ScrollGeneration mScrollGeneration;
+  MainThreadScrollGeneration mScrollGeneration;
+  APZScrollGeneration mScrollGenerationOnApz;
 
   nsTArray<ScrollPositionUpdate> mScrollUpdates;
 
@@ -988,12 +992,6 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     nsBoxLayoutState bls(aPresContext, aRC, 0);
     return GetDesiredScrollbarSizes(&bls);
   }
-  nscoord GetNondisappearingScrollbarWidth(nsPresContext* aPresContext,
-                                           gfxContext* aRC,
-                                           mozilla::WritingMode aWM) final {
-    nsBoxLayoutState bls(aPresContext, aRC, 0);
-    return mHelper.GetNondisappearingScrollbarWidth(&bls, aWM);
-  }
   nsSize GetLayoutSize() const final { return mHelper.GetLayoutSize(); }
   nsRect GetScrolledRect() const final { return mHelper.GetScrolledRect(); }
   nsRect GetScrollPortRect() const final { return mHelper.GetScrollPortRect(); }
@@ -1094,9 +1092,6 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     return NS_OK;
   }
   bool IsScrollingActive() final { return mHelper.IsScrollingActive(); }
-  bool IsScrollingActiveNotMinimalDisplayPort() final {
-    return mHelper.IsScrollingActiveNotMinimalDisplayPort();
-  }
   bool IsMaybeAsynchronouslyScrolled() final {
     return mHelper.IsMaybeAsynchronouslyScrolled();
   }
@@ -1113,8 +1108,11 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   bool IsScrollAnimating(IncludeApzAnimation aIncludeApz) final {
     return mHelper.IsScrollAnimating(aIncludeApz);
   }
-  mozilla::ScrollGeneration CurrentScrollGeneration() const final {
+  mozilla::MainThreadScrollGeneration CurrentScrollGeneration() const final {
     return mHelper.CurrentScrollGeneration();
+  }
+  mozilla::APZScrollGeneration ScrollGenerationOnApz() const final {
+    return mHelper.ScrollGenerationOnApz();
   }
   nsPoint LastScrollDestination() final {
     return mHelper.LastScrollDestination();
@@ -1124,9 +1122,11 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   }
   bool HasScrollUpdates() const final { return mHelper.HasScrollUpdates(); }
   void ResetScrollInfoIfNeeded(
-      const mozilla::ScrollGeneration& aGeneration,
+      const mozilla::MainThreadScrollGeneration& aGeneration,
+      const mozilla::APZScrollGeneration& aGenerationOnApz,
       mozilla::APZScrollAnimationType aAPZScrollAnimationType) final {
-    mHelper.ResetScrollInfoIfNeeded(aGeneration, aAPZScrollAnimationType);
+    mHelper.ResetScrollInfoIfNeeded(aGeneration, aGenerationOnApz,
+                                    aAPZScrollAnimationType);
   }
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
@@ -1462,12 +1462,6 @@ class nsXULScrollFrame final : public nsBoxFrame,
     nsBoxLayoutState bls(aPresContext, aRC, 0);
     return GetDesiredScrollbarSizes(&bls);
   }
-  nscoord GetNondisappearingScrollbarWidth(nsPresContext* aPresContext,
-                                           gfxContext* aRC,
-                                           mozilla::WritingMode aWM) final {
-    nsBoxLayoutState bls(aPresContext, aRC, 0);
-    return mHelper.GetNondisappearingScrollbarWidth(&bls, aWM);
-  }
   nsSize GetLayoutSize() const final { return mHelper.GetLayoutSize(); }
   nsRect GetScrolledRect() const final { return mHelper.GetScrolledRect(); }
   nsRect GetScrollPortRect() const final { return mHelper.GetScrollPortRect(); }
@@ -1564,9 +1558,6 @@ class nsXULScrollFrame final : public nsBoxFrame,
     return NS_OK;
   }
   bool IsScrollingActive() final { return mHelper.IsScrollingActive(); }
-  bool IsScrollingActiveNotMinimalDisplayPort() final {
-    return mHelper.IsScrollingActiveNotMinimalDisplayPort();
-  }
   bool IsMaybeAsynchronouslyScrolled() final {
     return mHelper.IsMaybeAsynchronouslyScrolled();
   }
@@ -1583,8 +1574,11 @@ class nsXULScrollFrame final : public nsBoxFrame,
   bool IsScrollAnimating(IncludeApzAnimation aIncludeApz) final {
     return mHelper.IsScrollAnimating(aIncludeApz);
   }
-  mozilla::ScrollGeneration CurrentScrollGeneration() const final {
+  mozilla::MainThreadScrollGeneration CurrentScrollGeneration() const final {
     return mHelper.CurrentScrollGeneration();
+  }
+  mozilla::APZScrollGeneration ScrollGenerationOnApz() const final {
+    return mHelper.ScrollGenerationOnApz();
   }
   nsPoint LastScrollDestination() final {
     return mHelper.LastScrollDestination();
@@ -1594,9 +1588,11 @@ class nsXULScrollFrame final : public nsBoxFrame,
   }
   bool HasScrollUpdates() const final { return mHelper.HasScrollUpdates(); }
   void ResetScrollInfoIfNeeded(
-      const mozilla::ScrollGeneration& aGeneration,
+      const mozilla::MainThreadScrollGeneration& aGeneration,
+      const mozilla::APZScrollGeneration& aGenerationOnApz,
       mozilla::APZScrollAnimationType aAPZScrollAnimationType) final {
-    mHelper.ResetScrollInfoIfNeeded(aGeneration, aAPZScrollAnimationType);
+    mHelper.ResetScrollInfoIfNeeded(aGeneration, aGenerationOnApz,
+                                    aAPZScrollAnimationType);
   }
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(

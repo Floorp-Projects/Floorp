@@ -118,12 +118,16 @@ macosx64-asan-fuzzing/opt:
     description: "MacOS X x64 Cross-compile Fuzzing ASAN"
     index:
         job-name: macosx64-fuzzing-asan-opt
+    attributes:
+        # The gtest libxul contains libFuzzer targets
+        skip-verify-test-packaging: true
     treeherder:
         platform: osx-cross/asan
         symbol: Bof
     worker:
         max-run-time: 5400
         env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
     run:
         config:
@@ -149,12 +153,15 @@ macosx64-fuzzing/debug:
         job-name: macosx64-fuzzing-debug
     attributes:
         enable-full-crashsymbols: true
+        # The gtest libxul contains libFuzzer targets
+        skip-verify-test-packaging: true
     treeherder:
         platform: osx-cross/debug
         symbol: Bf
     worker:
         max-run-time: 5400
         env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
             PERFHERDER_EXTRA_OPTIONS: fuzzing
     run:
         config:
@@ -411,6 +418,37 @@ macosx64-noopt/debug:
             - linux64-clang-macosx-cross
             - linux64-sccache
             - macosx64-sdk-10.12
+            - sysroot-wasm32-wasi
+
+macosx64-aarch64-noopt/debug:
+    description: "MacOS X aarch64 No-optimize Debug"
+    index:
+        job-name: macosx64-aarch64-noopt-debug
+    treeherder:
+        platform: osx-cross-noopt/debug
+        symbol: Baarch64
+        tier: 2
+    worker:
+        max-run-time: 3600
+        env:
+            PERFHERDER_EXTRA_OPTIONS: aarch64
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        custom-build-variant-cfg: cross-noopt-debug
+        mozconfig-variant: cross-noopt-debug
+        keep-artifacts: false
+        extra-config:
+            mozconfig_platform: macosx64-aarch64
+    run-on-projects: ['mozilla-central']
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-sccache
+            - macosx64-sdk-11.0
             - sysroot-wasm32-wasi
 
 macosx64-add-on-devel/opt:

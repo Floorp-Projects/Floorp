@@ -106,7 +106,7 @@ def get_taskgraph_generator(root, parameters):
 
 def format_taskgraph(options, parameters, logfile=None):
     import gecko_taskgraph
-    from gecko_taskgraph.parameters import parameters_loader
+    from taskgraph.parameters import parameters_loader
 
     if logfile:
         oldhandler = logging.root.handlers[-1]
@@ -135,7 +135,7 @@ def format_taskgraph(options, parameters, logfile=None):
 
 
 def dump_output(out, path=None, params_spec=None):
-    from gecko_taskgraph.parameters import Parameters
+    from taskgraph.parameters import Parameters
 
     params_name = Parameters.format_spec(params_spec)
     fh = None
@@ -157,7 +157,7 @@ def dump_output(out, path=None, params_spec=None):
 
 
 def generate_taskgraph(options, parameters, logdir):
-    from gecko_taskgraph.parameters import Parameters
+    from taskgraph.parameters import Parameters
 
     def logfile(spec):
         """Determine logfile given a parameters specification."""
@@ -315,7 +315,7 @@ def generate_taskgraph(options, parameters, logdir):
 )
 def show_taskgraph(options):
     from mozversioncontrol import get_repository_object as get_repository
-    from gecko_taskgraph.parameters import Parameters
+    from taskgraph.parameters import Parameters, parameters_loader
 
     if options.pop("verbose", False):
         logging.root.setLevel(logging.DEBUG)
@@ -352,10 +352,12 @@ def show_taskgraph(options):
 
     parameters: List[Any[str, Parameters]] = options.pop("parameters")
     if not parameters:
-        kwargs = {
+        overrides = {
             "target-kind": options.get("target_kind"),
         }
-        parameters = [Parameters(strict=False, **kwargs)]  # will use default values
+        parameters = [
+            parameters_loader(None, strict=False, overrides=overrides)
+        ]  # will use default values
 
     for param in parameters[:]:
         if isinstance(param, str) and os.path.isdir(param):
@@ -429,17 +431,20 @@ def show_taskgraph(options):
                 base_path += f"_{params_name}"
                 cur_path += f"_{params_name}"
 
-            # We only capture errors when the 'base' generation fails. This is
-            # because if the 'current' generation passed, the failure is likely
-            # due to a difference in the set of revisions being tested and
-            # harmless. We'll still log a warning to notify that the diff is
-            # not available. But if the current generation failed, the error
-            # needs to be addressed.
-            if not os.path.isfile(base_path):
+            # If the base or cur files are missing it means that generation
+            # failed. If one of them failed but not the other, the failure is
+            # likely due to the patch making changes to taskgraph in modules
+            # that don't get reloaded (safe to ignore). If both generations
+            # failed, there's likely a real issue.
+            base_missing = not os.path.isfile(base_path)
+            cur_missing = not os.path.isfile(cur_path)
+            if base_missing != cur_missing:  # != is equivalent to XOR for booleans
                 non_fatal_failures.append(os.path.basename(base_path))
                 continue
 
             try:
+                # If the output file(s) are missing, this command will raise
+                # CalledProcessError with a returncode > 1.
                 proc = subprocess.run(
                     diffcmd + [base_path, cur_path],
                     stdout=subprocess.PIPE,
@@ -668,7 +673,7 @@ def action_callback(options):
 @argument("--input", default=None, help="Action input (.yml or .json)")
 @argument("callback", default=None, help="Action callback name (Python function name)")
 def test_action_callback(options):
-    import gecko_taskgraph.parameters
+    import taskgraph.parameters
     import gecko_taskgraph.actions
     from taskgraph.util import yaml
     from gecko_taskgraph.config import load_graph_config
@@ -695,7 +700,7 @@ def test_action_callback(options):
         trust_domain = graph_config["trust-domain"]
         graph_config.register()
 
-        parameters = gecko_taskgraph.parameters.load_parameters_file(
+        parameters = taskgraph.parameters.load_parameters_file(
             options["parameters"], strict=False, trust_domain=trust_domain
         )
         parameters.check()

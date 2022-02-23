@@ -1,0 +1,20 @@
+# Test that an scroll frame having an invalid scroll generation on the
+# main-thread. The least scroll generation offset should be used, in this case
+# it's 10th generation.
+root:
+  items:
+    - type: scroll-frame
+      bounds: [0, 0, 100, 100]
+      content-size: [100, 1000]
+      scroll-offsets:
+        - offset: [0, -10]
+          generation: 10
+        - offset: [0, -100]
+          generation: 11
+      external-scroll-offset: [0, 50]
+      scroll-generation: 0
+      has-scroll-linked-effect: true
+      items:
+        - type: rect
+          color: green
+          bounds: [0, 50, 100, 100]

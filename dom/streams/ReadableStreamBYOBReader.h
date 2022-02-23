@@ -44,12 +44,10 @@ class ReadableStreamBYOBReader final : public ReadableStreamGenericReader,
   bool IsDefault() override { return false; };
   bool IsBYOB() override { return true; }
   ReadableStreamDefaultReader* AsDefault() override {
-    MOZ_CRASH("Should have verified IsDefaultFirst");
+    MOZ_CRASH("Should have verified IsDefault first");
     return nullptr;
   }
   ReadableStreamBYOBReader* AsBYOB() override { return this; }
-
-  nsIGlobalObject* GetParentObject() const { return nullptr; }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -78,6 +76,14 @@ already_AddRefed<ReadableStreamBYOBReader> AcquireReadableStreamBYOBReader(
 MOZ_CAN_RUN_SCRIPT void ReadableStreamBYOBReaderRead(
     JSContext* aCx, ReadableStreamBYOBReader* aReader, JS::HandleObject aView,
     ReadIntoRequest* aReadIntoRequest, ErrorResult& aRv);
+
+void ReadableStreamBYOBReaderErrorReadIntoRequests(
+    JSContext* aCx, ReadableStreamBYOBReader* aReader,
+    JS::Handle<JS::Value> aError, ErrorResult& aRv);
+
+void ReadableStreamBYOBReaderRelease(JSContext* aCx,
+                                     ReadableStreamBYOBReader* aReader,
+                                     ErrorResult& aRv);
 
 }  // namespace dom
 }  // namespace mozilla

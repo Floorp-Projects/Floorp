@@ -38,7 +38,6 @@
 
 // #include "memory_hooks.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/AutoProfilerLabel.h"
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/DoubleConversion.h"
@@ -93,10 +92,11 @@
 #  define USE_MOZ_STACK_WALK
 #endif
 
-// Mac builds only have frame pointers when MOZ_PROFILING is specified, so
-// FramePointerStackWalk() only works in that case. We don't use MozStackWalk()
-// on Mac.
-#if defined(GP_OS_darwin) && defined(MOZ_PROFILING)
+// Mac builds use FramePointerStackWalk(). Even if we build without
+// frame pointers, we'll still get useful stacks in system libraries
+// because those always have frame pointers.
+// We don't use MozStackWalk() on Mac.
+#if defined(GP_OS_darwin)
 #  define HAVE_NATIVE_UNWIND
 #  define USE_FRAME_POINTER_STACK_WALK
 #endif
@@ -182,6 +182,8 @@ void PrintToConsole(const char* aFmt, ...) {
   va_end(args);
 }
 
+Atomic<int, MemoryOrdering::Relaxed> gSkipSampling;
+
 constexpr static bool ValidateFeatures() {
   int expectedFeatureNumber = 0;
 
@@ -231,7 +233,8 @@ static uint32_t AvailableFeatures() {
 // Default features common to all contexts (even if not available).
 static constexpr uint32_t DefaultFeatures() {
   return ProfilerFeature::Java | ProfilerFeature::JS | ProfilerFeature::Leaf |
-         ProfilerFeature::StackWalk | ProfilerFeature::CPUUtilization;
+         ProfilerFeature::StackWalk | ProfilerFeature::CPUUtilization |
+         ProfilerFeature::ProcessCPU;
 }
 
 // Extra default features when MOZ_PROFILER_STARTUP is set (even if not
@@ -634,12 +637,7 @@ class ActivePS {
         mSamplerThread(
             NewSamplerThread(aLock, mGeneration, aInterval, aFeatures)),
         mIsPaused(false),
-        mIsSamplingPaused(false)
-#if defined(GP_OS_linux) || defined(GP_OS_freebsd)
-        ,
-        mWasSamplingPaused(false)
-#endif
-  {
+        mIsSamplingPaused(false) {
     // Deep copy and lower-case aFilters.
     MOZ_ALWAYS_TRUE(mFilters.resize(aFilterCount));
     MOZ_ALWAYS_TRUE(mFiltersLowered.resize(aFilterCount));
@@ -896,10 +894,6 @@ class ActivePS {
     sInstance->mIsSamplingPaused = aIsSamplingPaused;
   }
 
-#if defined(GP_OS_linux) || defined(GP_OS_freebsd)
-  PS_GET_AND_SET(bool, WasSamplingPaused)
-#endif
-
   static void DiscardExpiredDeadProfiledThreads(PSLockRef) {
     MOZ_ASSERT(sInstance);
     uint64_t bufferRangeStart = sInstance->mProfileBuffer.BufferRangeStart();
@@ -1054,12 +1048,6 @@ class ActivePS {
 
   // Is the profiler periodic sampling paused?
   bool mIsSamplingPaused;
-
-#if defined(GP_OS_linux) || defined(GP_OS_freebsd)
-  // Used to record whether the sampler was paused just before forking. False
-  // at all times except just before/after forking.
-  bool mWasSamplingPaused;
-#endif
 
   struct ExitProfile {
     std::string mJSON;
@@ -1805,7 +1793,7 @@ static void StreamMetaJSCustomObject(PSLockRef aLock,
                                      bool aIsShuttingDown) {
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
-  aWriter.IntProperty("version", 24);
+  aWriter.IntProperty("version", 25);
 
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
@@ -1985,7 +1973,7 @@ static char FeatureCategory(uint32_t aFeature) {
   return 'x';
 }
 
-static void PrintUsageThenExit(int aExitCode) {
+static void PrintUsage() {
   PrintToConsole(
       "\n"
       "Profiler environment variable usage:\n"
@@ -2088,8 +2076,6 @@ static void PrintUsageThenExit(int aExitCode) {
       "does not support"
 #endif
   );
-
-  exit(aExitCode);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -2273,7 +2259,7 @@ void SamplerThread::Run() {
 
       TimeStamp expiredMarkersCleaned = TimeStamp::Now();
 
-      if (!ActivePS::IsSamplingPaused(lock)) {
+      if (int(gSkipSampling) <= 0 && !ActivePS::IsSamplingPaused(lock)) {
         TimeDuration delta = sampleStart - CorePS::ProcessStartTime();
         ProfileBuffer& buffer = ActivePS::Buffer(lock);
 
@@ -2461,8 +2447,8 @@ static uint32_t ParseFeature(const char* aFeature, bool aIsStartup) {
 #undef PARSE_FEATURE_BIT
 
   PrintToConsole("\nUnrecognized feature \"%s\".\n\n", aFeature);
-  // Since we may have an old feature we don't implement anymore, don't exit
-  PrintUsageThenExit(0);
+  // Since we may have an old feature we don't implement anymore, don't exit.
+  PrintUsage();
   return 0;
 }
 
@@ -2576,7 +2562,8 @@ void profiler_init(void* aStackTop) {
   MOZ_RELEASE_ASSERT(!CorePS::Exists());
 
   if (getenv("MOZ_BASE_PROFILER_HELP")) {
-    PrintUsageThenExit(0);  // terminates execution
+    PrintUsage();
+    exit(0);
   }
 
   SharedLibraryInfo::Initialize();
@@ -2652,7 +2639,8 @@ void profiler_init(void* aStackTop) {
         PrintToConsole(
             "- MOZ_PROFILER_STARTUP_ENTRIES unit must be one of the "
             "following: KB, KiB, MB, MiB, GB, GiB");
-        PrintUsageThenExit(1);
+        PrintUsage();
+        exit(1);
       }
 
       // `long` could be 32 or 64 bits, so we force a 64-bit comparison with
@@ -2667,7 +2655,8 @@ void profiler_init(void* aStackTop) {
       } else {
         PrintToConsole("- MOZ_PROFILER_STARTUP_ENTRIES not a valid integer: %s",
                        startupCapacity);
-        PrintUsageThenExit(1);
+        PrintUsage();
+        exit(1);
       }
     }
 
@@ -2685,7 +2674,8 @@ void profiler_init(void* aStackTop) {
       } else {
         PrintToConsole("- MOZ_PROFILER_STARTUP_DURATION not a valid float: %s",
                        startupDuration);
-        PrintUsageThenExit(1);
+        PrintUsage();
+        exit(1);
       }
     }
 
@@ -2701,7 +2691,8 @@ void profiler_init(void* aStackTop) {
       } else {
         PrintToConsole("- MOZ_PROFILER_STARTUP_INTERVAL not a valid float: %s",
                        startupInterval);
-        PrintUsageThenExit(1);
+        PrintUsage();
+        exit(1);
       }
     }
 
@@ -2718,7 +2709,8 @@ void profiler_init(void* aStackTop) {
         PrintToConsole(
             "- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD not a valid integer: %s",
             startupFeaturesBitfield);
-        PrintUsageThenExit(1);
+        PrintUsage();
+        exit(1);
       }
     } else {
       const char* startupFeatures = getenv("MOZ_PROFILER_STARTUP_FEATURES");

@@ -1,6 +1,6 @@
 use std::fmt;
 
-use error::Error;
+use crate::error::Error;
 
 type DeriveInputShape = String;
 type FieldName = String;
@@ -10,7 +10,7 @@ type MetaFormat = String;
 // Don't want to publicly commit to ErrorKind supporting equality yet, but
 // not having it makes testing very difficult.
 #[cfg_attr(test, derive(Clone, PartialEq, Eq))]
-pub(in error) enum ErrorKind {
+pub(in crate::error) enum ErrorKind {
     /// An arbitrary error message.
     Custom(String),
     DuplicateField(FieldName),
@@ -108,7 +108,7 @@ impl From<ErrorUnknownField> for ErrorKind {
 // Don't want to publicly commit to ErrorKind supporting equality yet, but
 // not having it makes testing very difficult.
 #[cfg_attr(test, derive(Clone, PartialEq, Eq))]
-pub(in error) struct ErrorUnknownField {
+pub(in crate::error) struct ErrorUnknownField {
     name: String,
     did_you_mean: Option<String>,
 }
@@ -130,7 +130,7 @@ impl ErrorUnknownField {
     }
 
     #[cfg(feature = "diagnostics")]
-    pub fn to_diagnostic(self, span: Option<::proc_macro2::Span>) -> ::proc_macro::Diagnostic {
+    pub fn into_diagnostic(self, span: Option<::proc_macro2::Span>) -> ::proc_macro::Diagnostic {
         let base = span
             .unwrap_or_else(::proc_macro2::Span::call_site)
             .unwrap()
@@ -185,10 +185,7 @@ where
             candidate = Some((confidence, pv.as_ref()));
         }
     }
-    match candidate {
-        None => None,
-        Some((_, candidate)) => Some(candidate.into()),
-    }
+    candidate.map(|(_, candidate)| candidate.into())
 }
 
 #[cfg(not(feature = "suggestions"))]

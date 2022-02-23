@@ -29,4 +29,3 @@ The color picker includes an eyedropper icon: clicking this icon enables you to 
   <iframe width="560" height="315" src="https://www.youtube.com/embed/0Zx1TN21QOo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
   <br/>
   <br/>
-

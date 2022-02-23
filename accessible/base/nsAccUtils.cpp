@@ -244,10 +244,10 @@ HyperTextAccessible* nsAccUtils::GetTextContainer(nsINode* aNode) {
   return nullptr;
 }
 
-nsIntPoint nsAccUtils::ConvertToScreenCoords(int32_t aX, int32_t aY,
-                                             uint32_t aCoordinateType,
-                                             LocalAccessible* aAccessible) {
-  nsIntPoint coords(aX, aY);
+LayoutDeviceIntPoint nsAccUtils::ConvertToScreenCoords(
+    int32_t aX, int32_t aY, uint32_t aCoordinateType,
+    LocalAccessible* aAccessible) {
+  LayoutDeviceIntPoint coords(aX, aY);
 
   switch (aCoordinateType) {
     case nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE:
@@ -278,7 +278,7 @@ void nsAccUtils::ConvertScreenCoordsTo(int32_t* aX, int32_t* aY,
       break;
 
     case nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE: {
-      nsIntPoint coords =
+      LayoutDeviceIntPoint coords =
           nsCoreUtils::GetScreenCoordsForWindow(aAccessible->GetNode());
       *aX -= coords.x;
       *aY -= coords.y;
@@ -286,7 +286,7 @@ void nsAccUtils::ConvertScreenCoordsTo(int32_t* aX, int32_t* aY,
     }
 
     case nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE: {
-      nsIntPoint coords = GetScreenCoordsForParent(aAccessible);
+      LayoutDeviceIntPoint coords = GetScreenCoordsForParent(aAccessible);
       *aX -= coords.x;
       *aY -= coords.y;
       break;
@@ -297,16 +297,18 @@ void nsAccUtils::ConvertScreenCoordsTo(int32_t* aX, int32_t* aY,
   }
 }
 
-nsIntPoint nsAccUtils::GetScreenCoordsForParent(LocalAccessible* aAccessible) {
+LayoutDeviceIntPoint nsAccUtils::GetScreenCoordsForParent(
+    LocalAccessible* aAccessible) {
   LocalAccessible* parent = aAccessible->LocalParent();
-  if (!parent) return nsIntPoint(0, 0);
+  if (!parent) return LayoutDeviceIntPoint(0, 0);
 
   nsIFrame* parentFrame = parent->GetFrame();
-  if (!parentFrame) return nsIntPoint(0, 0);
+  if (!parentFrame) return LayoutDeviceIntPoint(0, 0);
 
   nsRect rect = parentFrame->GetScreenRectInAppUnits();
-  return nsPoint(rect.X(), rect.Y())
-      .ToNearestPixels(parentFrame->PresContext()->AppUnitsPerDevPixel());
+  nscoord appUnitsRatio = parentFrame->PresContext()->AppUnitsPerDevPixel();
+  return LayoutDeviceIntPoint::FromAppUnitsToNearest(
+      nsPoint(rect.X(), rect.Y()), appUnitsRatio);
 }
 
 bool nsAccUtils::GetLiveAttrValue(uint32_t aRule, nsAString& aValue) {

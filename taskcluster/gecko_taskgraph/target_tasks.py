@@ -8,8 +8,9 @@ import os
 import re
 
 from redo import retry
+from taskgraph.parameters import Parameters
+
 from gecko_taskgraph import try_option_syntax
-from gecko_taskgraph.parameters import Parameters
 from gecko_taskgraph.util.attributes import (
     match_run_on_projects,
     match_run_on_hg_branches,
@@ -42,7 +43,7 @@ UNCOMMON_TRY_TASK_LABELS = [
     r"-profiling-",  # talos/raptor profiling jobs are run too often
     # Hide shippable versions of tests we have opt versions of because the non-shippable
     # versions are faster to run. This is mostly perf tests.
-    r"-shippable(?!.*(awsy|browsertime|marionette-headless|mochitest-devtools-chrome-fis|raptor|talos|web-platform-tests-wdspec-headless))",  # noqa - too long
+    r"-shippable(?!.*(awsy|browsertime|marionette-headless|mochitest-devtools-chrome-fis|raptor|talos|web-platform-tests-wdspec-headless|mochitest-plain-headless))",  # noqa - too long
 ]
 
 
@@ -705,6 +706,18 @@ def target_tasks_ship_geckoview(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to ship geckoview nightly. The
     nightly build process involves a pipeline of builds and an upload to
     maven.mozilla.org."""
+    index_path = (
+        f"{graph_config['trust-domain']}.v2.{parameters['project']}.revision."
+        f"{parameters['head_rev']}.taskgraph.decision-ship-geckoview"
+    )
+    if os.environ.get("MOZ_AUTOMATION") and retry(
+        index_exists,
+        args=(index_path,),
+        kwargs={
+            "reason": "to avoid triggering multiple nightlies off the same revision",
+        },
+    ):
+        return []
 
     def filter(task):
         # XXX Starting 69, we don't ship Fennec Nightly anymore. We just want geckoview to be

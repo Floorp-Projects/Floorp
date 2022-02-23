@@ -6,12 +6,15 @@
 
 use super::super::{Connection, ConnectionParameters, Output, State};
 use super::{
-    assert_full_cwnd, connect, connect_force_idle, connect_rtt_idle, connect_with_rtt,
-    default_client, default_server, fill_cwnd, maybe_authenticate, send_and_receive,
-    send_something, AT_LEAST_PTO, DEFAULT_RTT, POST_HANDSHAKE_CWND,
+    assert_full_cwnd, connect, connect_force_idle, connect_rtt_idle, connect_with_rtt, cwnd,
+    default_client, default_server, fill_cwnd, maybe_authenticate, new_client, send_and_receive,
+    send_something, AT_LEAST_PTO, DEFAULT_RTT, DEFAULT_STREAM_DATA, POST_HANDSHAKE_CWND,
 };
+use crate::cc::CWND_MIN;
 use crate::path::PATH_MTU_V6;
-use crate::recovery::{MAX_OUTSTANDING_UNACK, MIN_OUTSTANDING_UNACK, PTO_PACKET_COUNT};
+use crate::recovery::{
+    FAST_PTO_SCALE, MAX_OUTSTANDING_UNACK, MIN_OUTSTANDING_UNACK, PTO_PACKET_COUNT,
+};
 use crate::rtt::GRANULARITY;
 use crate::stats::MAX_PTO_COUNTS;
 use crate::tparams::TransportParameter;
@@ -716,4 +719,92 @@ fn ping_with_ack_min() {
     now += receiver.pto() * 3 + Duration::from_micros(1);
     trickle(&mut sender, &mut receiver, 1, now);
     assert_eq!(receiver.stats().frame_tx.ping, 0);
+}
+
+/// This calculates the PTO timer immediately after connection establishment.
+/// It depends on there only being 2 RTT samples in the handshake.
+fn expected_pto(rtt: Duration) -> Duration {
+    // PTO calculation is rtt + 4rttvar + ack delay.
+    // rttvar should be (rtt + 4 * (rtt / 2) * (3/4)^n + 25ms)/2
+    // where n is the number of round trips
+    // This uses a 25ms ack delay as the ACK delay extension
+    // is negotiated and no ACK_DELAY frame has been received.
+    rtt + rtt * 9 / 8 + Duration::from_millis(25)
+}
+
+#[test]
+fn fast_pto() {
+    let mut client = new_client(ConnectionParameters::default().fast_pto(FAST_PTO_SCALE / 2));
+    let mut server = default_server();
+    let mut now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
+
+    let res = client.process(None, now);
+    let idle_timeout = ConnectionParameters::default().get_idle_timeout() - (DEFAULT_RTT / 2);
+    assert_eq!(res, Output::Callback(idle_timeout));
+
+    // Send data on two streams
+    let stream = client.stream_create(StreamType::UniDi).unwrap();
+    assert_eq!(
+        client.stream_send(stream, DEFAULT_STREAM_DATA).unwrap(),
+        DEFAULT_STREAM_DATA.len()
+    );
+
+    // Send a packet after some time.
+    now += idle_timeout / 2;
+    let dgram = client.process_output(now).dgram();
+    assert!(dgram.is_some());
+
+    // Nothing to do, should return a callback.
+    let cb = client.process_output(now).callback();
+    assert_eq!(expected_pto(DEFAULT_RTT) / 2, cb);
+
+    // Once the PTO timer expires, a PTO packet should be sent should want to send PTO packet.
+    now += cb;
+    let dgram = client.process(None, now).dgram();
+
+    let stream_before = server.stats().frame_rx.stream;
+    server.process_input(dgram.unwrap(), now);
+    assert_eq!(server.stats().frame_rx.stream, stream_before + 1);
+}
+
+/// Even if the PTO timer is slowed right down, persistent congestion is declared
+/// based on the "true" value of the timer.
+#[test]
+fn fast_pto_persistent_congestion() {
+    let mut client = new_client(ConnectionParameters::default().fast_pto(FAST_PTO_SCALE * 2));
+    let mut server = default_server();
+    let mut now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
+
+    let res = client.process(None, now);
+    let idle_timeout = ConnectionParameters::default().get_idle_timeout() - (DEFAULT_RTT / 2);
+    assert_eq!(res, Output::Callback(idle_timeout));
+
+    // Send packets spaced by the PTO timer.  And lose them.
+    // Note: This timing is a tiny bit higher than the client will use
+    // to determine persistent congestion. The ACK below adds another RTT
+    // estimate, which will reduce rttvar by 3/4, so persistent congestion
+    // will occur at `rtt + rtt*27/32 + 25ms`.
+    // That is OK as we're still showing that this interval is less than
+    // six times the PTO, which is what would be used if the scaling
+    // applied to the PTO used to determine persistent congestion.
+    let pc_interval = expected_pto(DEFAULT_RTT) * 3;
+    println!("pc_interval {:?}", pc_interval);
+    let _drop1 = send_something(&mut client, now);
+
+    // Check that the PTO matches expectations.
+    let cb = client.process_output(now).callback();
+    assert_eq!(expected_pto(DEFAULT_RTT) * 2, cb);
+
+    now += pc_interval;
+    let _drop2 = send_something(&mut client, now);
+    let _drop3 = send_something(&mut client, now);
+    let _drop4 = send_something(&mut client, now);
+    let dgram = send_something(&mut client, now);
+
+    // Now acknowledge the tail packet and enter persistent congestion.
+    now += DEFAULT_RTT / 2;
+    let ack = server.process(Some(dgram), now).dgram();
+    now += DEFAULT_RTT / 2;
+    client.process_input(ack.unwrap(), now);
+    assert_eq!(cwnd(&client), CWND_MIN);
 }

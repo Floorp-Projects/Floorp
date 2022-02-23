@@ -1,16 +1,8 @@
 //! When input is split across multiple attributes on one element,
 //! darling should collapse that into one struct.
 
-#[macro_use]
-extern crate darling;
-#[macro_use]
-extern crate syn;
-#[macro_use]
-extern crate quote;
-
-use std::string::ToString;
-
 use darling::{Error, FromDeriveInput};
+use syn::parse_quote;
 
 #[derive(Debug, FromDeriveInput, PartialEq, Eq)]
 #[darling(attributes(split))]
@@ -47,10 +39,7 @@ fn duplicates_across_split_attrs_error() {
 
     let pr = Lorem::from_derive_input(&di).unwrap_err();
     assert!(pr.has_span());
-    assert_eq!(
-        pr.to_string(),
-        Error::duplicate_field("foo").to_string()
-    );
+    assert_eq!(pr.to_string(), Error::duplicate_field("foo").to_string());
 }
 
 #[test]

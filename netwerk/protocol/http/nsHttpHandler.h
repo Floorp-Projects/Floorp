@@ -312,7 +312,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
     TickleWifi(callbacks);
     RefPtr<nsHttpConnectionInfo> clone = ci->Clone();
     return mConnMgr->SpeculativeConnect(clone, callbacks, caps, nullptr,
-                                        aFetchHTTPSRR);
+                                        aFetchHTTPSRR | EchConfigEnabled());
   }
 
   [[nodiscard]] nsresult SpeculativeConnect(nsHttpConnectionInfo* ci,
@@ -444,7 +444,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   bool IsHttp3VersionSupported(const nsACString& version);
 
   static bool IsHttp3SupportedByServer(nsHttpResponseHead* aResponseHead);
-  bool IsHttp3Enabled() const { return mHttp3Enabled; }
   uint32_t DefaultQpackTableSize() const { return mQpackTableSize; }
   uint16_t DefaultHttp3MaxBlockedStreams() const {
     return (uint16_t)mHttp3MaxBlockedStreams;
@@ -495,8 +494,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // In the case an HTTPS RRSet contains some RRs with echConfig and some
   // without, we always fallback to the origin one.
   bool FallbackToOriginIfConfigsAreECHAndAllFailed() const;
-
-  bool UseHTTPSRRForSpeculativeConnection() const;
 
   // So we can ensure that this is done during process preallocation to
   // avoid first-use overhead
@@ -738,7 +735,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // The default size (in bytes) of the HPACK decompressor table.
   uint32_t mDefaultHpackBuffer{4096};
 
-  Atomic<bool, Relaxed> mHttp3Enabled{true};
   // Http3 parameters
   Atomic<uint32_t, Relaxed> mQpackTableSize{4096};
   // uint16_t is enough here, but Atomic only supports uint32_t or uint64_t.

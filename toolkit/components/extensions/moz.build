@@ -126,7 +126,12 @@ XPCSHELL_TESTS_MANIFESTS += [
 # Only include tests that requires the WebExtensions WebIDL API bindings
 # in builds where they are enabled (currently only on Nightly builds).
 if CONFIG["MOZ_WEBEXT_WEBIDL_ENABLED"]:
-    XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/webidl-api/xpcshell.ini"]
+    XPCSHELL_TESTS_MANIFESTS += [
+        "test/xpcshell/webidl-api/xpcshell.ini",
+        "test/xpcshell/xpcshell-serviceworker.ini",
+    ]
+    MOCHITEST_MANIFESTS += ["test/mochitest/mochitest-serviceworker.ini"]
+
 
 SPHINX_TREES["webextensions"] = "docs"
 

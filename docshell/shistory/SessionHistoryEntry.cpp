@@ -23,6 +23,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/CSPMessageUtils.h"
+#include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
@@ -1057,6 +1058,10 @@ SessionHistoryEntry::IsDynamicallyAdded() {
   return SharedInfo()->mDynamicallyCreated;
 }
 
+void SessionHistoryEntry::SetWireframe(const Maybe<Wireframe>& aWireframe) {
+  mWireframe = aWireframe;
+}
+
 void SessionHistoryEntry::SetIsDynamicallyAdded(bool aDynamic) {
   MOZ_ASSERT_IF(SharedInfo()->mDynamicallyCreated, aDynamic);
   SharedInfo()->mDynamicallyCreated = aDynamic;
@@ -1345,6 +1350,16 @@ SessionHistoryEntry::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
 NS_IMETHODIMP
 SessionHistoryEntry::GetBfcacheID(uint64_t* aBfcacheID) {
   *aBfcacheID = SharedInfo()->mId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::GetWireframe(JSContext* aCx, JS::MutableHandleValue aOut) {
+  if (mWireframe.isNothing()) {
+    aOut.set(JS::NullValue());
+  } else if (NS_WARN_IF(!mWireframe->ToObjectInternal(aCx, aOut))) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
@@ -1673,6 +1688,58 @@ bool IPDLParamTraits<nsILayoutHistoryState*>::Read(
   return true;
 }
 
-}  // namespace ipc
+void IPDLParamTraits<mozilla::dom::Wireframe>::Write(
+    IPC::Message* aMsg, IProtocol* aActor,
+    const mozilla::dom::Wireframe& aParam) {
+  WriteParam(aMsg, aParam.mCanvasBackground);
+  WriteParam(aMsg, aParam.mRects);
+}
 
+bool IPDLParamTraits<mozilla::dom::Wireframe>::Read(
+    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
+    mozilla::dom::Wireframe* aResult) {
+  return ReadParam(aMsg, aIter, &aResult->mCanvasBackground) &&
+         ReadParam(aMsg, aIter, &aResult->mRects);
+}
+
+}  // namespace ipc
 }  // namespace mozilla
+
+namespace IPC {
+// Allow sending mozilla::dom::WireframeRectType enums over IPC.
+template <>
+struct ParamTraits<mozilla::dom::WireframeRectType>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::WireframeRectType,
+          mozilla::dom::WireframeRectType::Image,
+          mozilla::dom::WireframeRectType::EndGuard_> {};
+
+template <>
+struct ParamTraits<mozilla::dom::WireframeTaggedRect> {
+  static void Write(Message* aMsg,
+                    const mozilla::dom::WireframeTaggedRect& aParam);
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   mozilla::dom::WireframeTaggedRect* aResult);
+};
+
+void ParamTraits<mozilla::dom::WireframeTaggedRect>::Write(
+    Message* aMsg, const mozilla::dom::WireframeTaggedRect& aParam) {
+  WriteParam(aMsg, aParam.mColor);
+  WriteParam(aMsg, aParam.mType);
+  WriteParam(aMsg, aParam.mX);
+  WriteParam(aMsg, aParam.mY);
+  WriteParam(aMsg, aParam.mWidth);
+  WriteParam(aMsg, aParam.mHeight);
+}
+
+bool ParamTraits<mozilla::dom::WireframeTaggedRect>::Read(
+    const IPC::Message* aMsg, PickleIterator* aIter,
+    mozilla::dom::WireframeTaggedRect* aResult) {
+  return ReadParam(aMsg, aIter, &aResult->mColor) &&
+         ReadParam(aMsg, aIter, &aResult->mType) &&
+         ReadParam(aMsg, aIter, &aResult->mX) &&
+         ReadParam(aMsg, aIter, &aResult->mY) &&
+         ReadParam(aMsg, aIter, &aResult->mWidth) &&
+         ReadParam(aMsg, aIter, &aResult->mHeight);
+}
+}  // namespace IPC

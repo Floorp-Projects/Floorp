@@ -106,4 +106,3 @@ Watermark:
   sha256:c8dd4bb69972b58e59fcbe6870499206463a5e330fda25f1214893595a1c01d0
 Changeset:
   `ffa775dd5bd4 <https://hg.mozilla.org/mozilla-central/rev/ffa775dd5bd4>`_
-

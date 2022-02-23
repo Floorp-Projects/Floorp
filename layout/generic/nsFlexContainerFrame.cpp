@@ -2514,6 +2514,14 @@ bool FlexItem::NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const {
           aAvailableBSizeForItem > 0,
       "We can only handle unconstrained or positive available block-size.");
 
+  if (!StaticPrefs::layout_flexbox_item_final_reflow_optimization_enabled()) {
+    FLEX_LOG(
+        "[perf] Flex item %p needed a final reflow due to optimization being "
+        "disabled via the preference",
+        mFrame);
+    return true;
+  }
+
   // NOTE: even if aAvailableBSizeForItem == NS_UNCONSTRAINEDSIZE we can still
   // have continuations from an earlier constrained reflow.
   if (mFrame->GetPrevInFlow() || mFrame->GetNextInFlow()) {
@@ -2650,6 +2658,7 @@ bool FlexItem::NeedsFinalReflow(const nscoord aAvailableBSizeForItem) const {
   // dirty, and our current conditions are sufficiently similar to the most
   // recent "final reflow" that it should have left our subtree in the correct
   // state.)
+  FLEX_LOG("[perf] Flex item %p didn't need a final reflow", mFrame);
   return false;
 }
 

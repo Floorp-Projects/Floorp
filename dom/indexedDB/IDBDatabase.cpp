@@ -623,8 +623,6 @@ RefPtr<IDBTransaction> IDBDatabase::Transaction(
 
   MOZ_ALWAYS_TRUE(mBackgroundActor->SendPBackgroundIDBTransactionConstructor(
       actor, sortedStoreNames, mode));
-  MOZ_ASSERT(actor->GetActorEventTarget(),
-             "The event target shall be inherited from it manager actor.");
 
   transaction->SetBackgroundActor(actor);
 
@@ -681,9 +679,6 @@ RefPtr<IDBRequest> IDBDatabase::CreateMutableFile(
       IDB_LOG_STRINGIFY(this), NS_ConvertUTF16toUTF8(aName).get());
 
   mBackgroundActor->SendPBackgroundIDBDatabaseRequestConstructor(actor, params);
-
-  MOZ_ASSERT(actor->GetActorEventTarget(),
-             "The event target shall be inherited from its manager actor.");
 
   return request;
 }
@@ -814,8 +809,6 @@ PBackgroundIDBDatabaseFileChild* IDBDatabase::GetOrCreateFileActorForBlob(
       return nullptr;
     }
 
-    MOZ_ASSERT(actor->GetActorEventTarget(),
-               "The event target shall be inherited from its manager actor.");
     mFileActors.InsertOrUpdate(weakRef, actor);
   }
 

@@ -354,7 +354,7 @@ fn the_accumulate_raw_samples_api_correctly_stores_timing_values() {
     let seconds_to_nanos = 1000 * 1000 * 1000;
     metric.accumulate_raw_samples_nanos(
         &glean,
-        &[seconds_to_nanos, 2 * seconds_to_nanos, 3 * seconds_to_nanos].to_vec(),
+        [seconds_to_nanos, 2 * seconds_to_nanos, 3 * seconds_to_nanos].as_ref(),
     );
 
     let snapshot = metric

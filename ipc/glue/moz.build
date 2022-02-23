@@ -13,6 +13,8 @@ EXPORTS.mozilla.ipc += [
     "AutoTransportDescriptor.h",
     "BackgroundChild.h",
     "BackgroundParent.h",
+    "BackgroundStarterChild.h",
+    "BackgroundStarterParent.h",
     "BackgroundUtils.h",
     "BrowserProcessSubThread.h",
     "ByteBuf.h",
@@ -64,6 +66,12 @@ EXPORTS.mozilla.ipc += [
     "Transport.h",
     "TransportSecurityInfoUtils.h",
     "URIUtils.h",
+    "UtilityProcessChild.h",
+    "UtilityProcessHost.h",
+    "UtilityProcessImpl.h",
+    "UtilityProcessManager.h",
+    "UtilityProcessParent.h",
+    "UtilityProcessSandboxing.h",
     "WindowsMessageLoop.h",
 ]
 
@@ -190,6 +198,11 @@ UNIFIED_SOURCES += [
     "StringUtil.cpp",
     "TransportSecurityInfoUtils.cpp",
     "URIUtils.cpp",
+    "UtilityProcessChild.cpp",
+    "UtilityProcessHost.cpp",
+    "UtilityProcessImpl.cpp",
+    "UtilityProcessManager.cpp",
+    "UtilityProcessParent.cpp",
 ]
 
 SOURCES += [
@@ -221,11 +234,16 @@ LOCAL_INCLUDES += [
     "/xpcom/build",
 ]
 
+PREPROCESSED_IPDL_SOURCES = [
+    "PUtilityProcess.ipdl",
+]
+
 IPDL_SOURCES = [
     "InputStreamParams.ipdlh",
     "IPCStream.ipdlh",
     "PBackground.ipdl",
     "PBackgroundSharedTypes.ipdlh",
+    "PBackgroundStarter.ipdl",
     "PBackgroundTest.ipdl",
     "PChildToParentStream.ipdl",
     "PFileDescriptorSet.ipdl",
@@ -273,6 +291,13 @@ if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "WINNT":
         "/security/sandbox/chromium",
         "/security/sandbox/chromium-shim",
         "/security/sandbox/win/src/sandboxbroker",
+    ]
+
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += [
+        "test/gtest",
+        "test/utility_process_xpcom",
+        "test/browser",
     ]
 
 # Add libFuzzer configuration directives

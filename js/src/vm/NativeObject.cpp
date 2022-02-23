@@ -2662,11 +2662,6 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
                                   HandleNativeObject from,
                                   Handle<PlainObject*> excludedItems,
                                   bool* optimized) {
-  MOZ_ASSERT(
-      !target->isUsedAsPrototype(),
-      "CopyDataPropertiesNative should only be called during object literal "
-      "construction"
-      "which precludes that |target| is the prototype of any other object");
 #ifdef ENABLE_RECORD_TUPLE
   MOZ_ASSERT(!js::IsExtendedPrimitive(*target));
 #endif

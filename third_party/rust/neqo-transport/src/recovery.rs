@@ -10,6 +10,7 @@
 
 use std::cmp::{max, min};
 use std::collections::BTreeMap;
+use std::convert::TryFrom;
 use std::mem;
 use std::ops::RangeInclusive;
 use std::time::{Duration, Instant};
@@ -44,6 +45,8 @@ pub const PTO_PACKET_COUNT: usize = 2;
 pub(crate) const MAX_OUTSTANDING_UNACK: usize = 200;
 /// Disable PING until this many packets are outstanding.
 pub(crate) const MIN_OUTSTANDING_UNACK: usize = 16;
+/// The scale we use for the fast PTO feature.
+pub const FAST_PTO_SCALE: u8 = 100;
 
 #[derive(Debug, Clone)]
 #[allow(clippy::module_name_repetitions)]
@@ -562,16 +565,20 @@ pub(crate) struct LossRecovery {
     spaces: LossRecoverySpaces,
     qlog: NeqoQlog,
     stats: StatsCell,
+    /// The factor by which the PTO period is reduced.
+    /// This enables faster probing at a cost in additional lost packets.
+    fast_pto: u8,
 }
 
 impl LossRecovery {
-    pub fn new(stats: StatsCell) -> Self {
+    pub fn new(stats: StatsCell, fast_pto: u8) -> Self {
         Self {
             confirmed_time: None,
             pto_state: None,
             spaces: LossRecoverySpaces::default(),
             qlog: NeqoQlog::default(),
             stats,
+            fast_pto,
         }
     }
 
@@ -818,16 +825,25 @@ impl LossRecovery {
         rtt: &RttEstimate,
         pto_state: Option<&PtoState>,
         pn_space: PacketNumberSpace,
+        fast_pto: u8,
     ) -> Duration {
+        // This is a complicated (but safe) way of calculating:
+        //   base_pto * F * 2^pto_count
+        // where F = fast_pto / FAST_PTO_SCALE (== 1 by default)
+        let pto_count = pto_state.map_or(0, |p| u32::try_from(p.count).unwrap_or(0));
         rtt.pto(pn_space)
-            .checked_mul(1 << pto_state.map_or(0, |p| p.count))
-            .unwrap_or_else(|| Duration::from_secs(3600))
+            .checked_mul(
+                u32::from(fast_pto)
+                    .checked_shl(pto_count)
+                    .unwrap_or(u32::MAX),
+            )
+            .map_or(Duration::from_secs(3600), |p| p / u32::from(FAST_PTO_SCALE))
     }
 
     /// Get the current PTO period for the given packet number space.
     /// Unlike calling `RttEstimate::pto` directly, this includes exponential backoff.
     fn pto_period(&self, rtt: &RttEstimate, pn_space: PacketNumberSpace) -> Duration {
-        Self::pto_period_inner(rtt, self.pto_state.as_ref(), pn_space)
+        Self::pto_period_inner(rtt, self.pto_state.as_ref(), pn_space, self.fast_pto)
     }
 
     // Calculate PTO time for the given space.
@@ -918,6 +934,7 @@ impl LossRecovery {
                 primary_path.borrow().rtt(),
                 self.pto_state.as_ref(),
                 space.space(),
+                self.fast_pto,
             );
             space.detect_lost_packets(now, loss_delay, pto, &mut lost_packets);
 
@@ -978,7 +995,9 @@ impl ::std::fmt::Display for LossRecovery {
 
 #[cfg(test)]
 mod tests {
-    use super::{LossRecovery, LossRecoverySpace, PacketNumberSpace, SendProfile, SentPacket};
+    use super::{
+        LossRecovery, LossRecoverySpace, PacketNumberSpace, SendProfile, SentPacket, FAST_PTO_SCALE,
+    };
     use crate::cc::CongestionControlAlgorithm;
     use crate::cid::{ConnectionId, ConnectionIdEntry};
     use crate::packet::PacketType;
@@ -1064,7 +1083,7 @@ mod tests {
             );
             path.set_primary(true);
             Self {
-                lr: LossRecovery::new(StatsCell::default()),
+                lr: LossRecovery::new(StatsCell::default(), FAST_PTO_SCALE),
                 path: Rc::new(RefCell::new(path)),
             }
         }

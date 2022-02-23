@@ -513,7 +513,7 @@ var Sanitizer = {
           Ci.nsIClearDataService.CLEAR_PERMISSIONS |
             Ci.nsIClearDataService.CLEAR_CONTENT_PREFERENCES |
             Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
-            Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
+            Ci.nsIClearDataService.CLEAR_CLIENT_AUTH_REMEMBER_SERVICE |
             Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS
         );
         TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS", refObj);
@@ -985,7 +985,6 @@ async function sanitizeSessionPrincipal(progress, principal) {
       Ci.nsIClearDataService.CLEAR_ALL_CACHES |
         Ci.nsIClearDataService.CLEAR_COOKIES |
         Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-        Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
         Ci.nsIClearDataService.CLEAR_EME,
       resolve
     );

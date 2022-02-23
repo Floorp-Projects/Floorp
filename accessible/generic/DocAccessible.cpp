@@ -131,6 +131,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAccessibleCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchorJumpElm)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInvalidationList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingUpdates)
   for (const auto& ar : tmp->mARIAOwnsHash.Values()) {
     for (uint32_t i = 0; i < ar->Length(); i++) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mARIAOwnsHash entry item");
@@ -148,6 +149,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocAccessible, LocalAccessible)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccessibleCache)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnchorJumpElm)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mInvalidationList)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingUpdates)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
   tmp->mARIAOwnsHash.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -355,6 +357,14 @@ void DocAccessible::DocType(nsAString& aType) const {
   if (docType) docType->GetPublicId(aType);
 }
 
+void DocAccessible::QueueCacheUpdate(LocalAccessible* aAcc,
+                                     uint64_t aNewDomain) {
+  uint64_t& domain = mQueuedCacheUpdates.LookupOrInsert(aAcc, 0);
+  domain |= aNewDomain;
+
+  Controller()->ScheduleProcessing();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // LocalAccessible
 
@@ -457,6 +467,7 @@ void DocAccessible::Shutdown() {
 
   mAnchorJumpElm = nullptr;
   mInvalidationList.Clear();
+  mPendingUpdates.Clear();
 
   for (auto iter = mAccessibleCache.Iter(); !iter.Done(); iter.Next()) {
     LocalAccessible* accessible = iter.Data();
@@ -930,10 +941,6 @@ void DocAccessible::ContentRemoved(nsIContent* aChildNode,
   ContentRemoved(aChildNode);
 }
 
-void DocAccessible::MarkForBoundsProcessing(LocalAccessible* aAcc) {
-  mMaybeBoundsChanged.EnsureInserted(aAcc);
-}
-
 void DocAccessible::ParentChainChanged(nsIContent* aContent) {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1091,7 +1098,7 @@ void DocAccessible::BindToDocument(LocalAccessible* aAccessible,
     }
   }
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIPCDoc) {
     mInsertedAccessibles.EnsureInserted(aAccessible);
   }
 }
@@ -1164,6 +1171,25 @@ void DocAccessible::ContentInserted(nsIContent* aStartChildNode,
   mNotificationController->ScheduleContentInsertion(container, list);
 }
 
+void DocAccessible::ScheduleTreeUpdate(nsIContent* aContent) {
+  if (mPendingUpdates.Contains(aContent)) {
+    return;
+  }
+  mPendingUpdates.AppendElement(aContent);
+  mNotificationController->ScheduleProcessing();
+}
+
+void DocAccessible::ProcessPendingUpdates() {
+  auto updates = std::move(mPendingUpdates);
+  for (auto update : updates) {
+    if (update->GetComposedDoc() != mDocumentNode) {
+      continue;
+    }
+    // The pruning logic will take care of avoiding unnecessary notifications.
+    ContentInserted(update, update->GetNextSibling());
+  }
+}
+
 bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
   bool insert = false;
 
@@ -1178,7 +1204,7 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
     // then remove their accessibles and subtrees.
     while (nsIContent* childNode = iter.GetNextChild()) {
       if (!childNode->GetPrimaryFrame() &&
-          !nsCoreUtils::IsDisplayContents(childNode)) {
+          !nsCoreUtils::CanCreateAccessibleWithoutFrame(childNode)) {
         ContentRemoved(childNode);
       }
     }
@@ -1189,7 +1215,7 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
       for (nsIContent* childNode = aRoot->GetFirstChild(); childNode;
            childNode = childNode->GetNextSibling()) {
         if (!childNode->GetPrimaryFrame() &&
-            !nsCoreUtils::IsDisplayContents(childNode)) {
+            !nsCoreUtils::CanCreateAccessibleWithoutFrame(childNode)) {
           ContentRemoved(childNode);
         }
       }
@@ -1218,7 +1244,7 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
     // As well as removing the a11y subtree, we must also remove Accessibles
     // for DOM descendants, since some of these might be relocated Accessibles
     // and their DOM nodes are now hidden as well.
-    if (!frame && !nsCoreUtils::IsDisplayContents(aRoot)) {
+    if (!frame && !nsCoreUtils::CanCreateAccessibleWithoutFrame(aRoot)) {
       ContentRemoved(aRoot);
       return false;
     }
@@ -1280,7 +1306,8 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
   } else {
     // If there is no current accessible, and the node has a frame, or is
     // display:contents, schedule it for insertion.
-    if (aRoot->GetPrimaryFrame() || nsCoreUtils::IsDisplayContents(aRoot)) {
+    if (aRoot->GetPrimaryFrame() ||
+        nsCoreUtils::CanCreateAccessibleWithoutFrame(aRoot)) {
       // This may be a new subtree, the insertion process will recurse through
       // its descendants.
       if (!GetAccessibleOrDescendant(aRoot)) {
@@ -1365,16 +1392,19 @@ void DocAccessible::ProcessInvalidationList() {
   mInvalidationList.Clear();
 }
 
-void DocAccessible::ProcessBoundsChanged() {
+void DocAccessible::ProcessQueuedCacheUpdates() {
   if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return;
   }
 
   nsTArray<CacheData> data;
-  for (auto* acc : mMaybeBoundsChanged) {
+  for (auto iter = mQueuedCacheUpdates.Iter(); !iter.Done(); iter.Next()) {
+    LocalAccessible* acc = iter.Key();
+    uint64_t domain = iter.UserData();
     if (!acc->IsDefunct()) {
-      RefPtr<AccAttributes> fields = acc->BundleFieldsForCache(
-          CacheDomain::Bounds, CacheUpdateType::Update);
+      RefPtr<AccAttributes> fields =
+          acc->BundleFieldsForCache(domain, CacheUpdateType::Update);
+
       if (fields->Count()) {
         data.AppendElement(CacheData(
             acc->IsDoc() ? 0 : reinterpret_cast<uint64_t>(acc->UniqueID()),
@@ -1383,7 +1413,7 @@ void DocAccessible::ProcessBoundsChanged() {
     }
   }
 
-  mMaybeBoundsChanged.Clear();
+  mQueuedCacheUpdates.Clear();
 
   if (data.Length()) {
     IPCDoc()->SendCache(CacheUpdateType::Update, data, true);
@@ -1391,7 +1421,7 @@ void DocAccessible::ProcessBoundsChanged() {
 }
 
 void DocAccessible::SendAccessiblesWillMove() {
-  if (!mIPCDoc || !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (!mIPCDoc) {
     return;
   }
   nsTArray<uint64_t> ids;
@@ -2322,7 +2352,7 @@ bool DocAccessible::MoveChild(LocalAccessible* aChild,
   if (curParent == aNewParent) {
     MOZ_ASSERT(aChild->IndexInParent() != aIdxInParent, "No move case");
     curParent->RelocateChild(aIdxInParent, aChild);
-    if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    if (mIPCDoc) {
       TrackMovedAccessible(aChild);
     }
 
@@ -2351,7 +2381,7 @@ bool DocAccessible::MoveChild(LocalAccessible* aChild,
 
   TreeMutation imut(aNewParent);
   aNewParent->InsertChildAt(aIdxInParent, aChild);
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIPCDoc) {
     TrackMovedAccessible(aChild);
   }
   imut.AfterInsertion(aChild);

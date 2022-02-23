@@ -19,8 +19,22 @@ function onStorageEvent(event)
 }
 */
 
-function doNextTest()
+async function doNextTest()
 {
+  // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+  // Acquire storage access permission here so that the sessionStorage object is
+  // shared between this window and the slave in xorigin tests. Without this,
+  // our storage would be isolated as a xorigin iframe.
+  if (isXOrigin) {
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    await SpecialPowers.addPermission(
+      "storageAccessAPI",
+      true,
+      window.location.href
+     );
+    await SpecialPowers.wrap(document).requestStorageAccess();
+  }
+
   // We must perform the first step of the test
   // to prepare the land.
   currentStep = 1;

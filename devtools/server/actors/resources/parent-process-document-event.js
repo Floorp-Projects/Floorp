@@ -15,8 +15,8 @@ const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
   false
 );
 const {
-  getAllRemoteBrowsingContexts,
-} = require("devtools/server/actors/watcher/target-helpers/utils.js");
+  getAllBrowsingContextsForContext,
+} = require("devtools/server/actors/watcher/browsing-context-helpers.jsm");
 const {
   WILL_NAVIGATE_TIME_SHIFT,
 } = require("devtools/server/actors/webconsole/listeners/document-events");
@@ -54,9 +54,9 @@ class ParentProcessDocumentEventWatcher {
     this._onceWillNavigate = new Map();
 
     // Filter browsing contexts to only have the top BrowsingContext of each tree of BrowsingContexts…
-    const topLevelBrowsingContexts = this.getAllBrowsingContexts().filter(
-      browsingContext => browsingContext.top == browsingContext
-    );
+    const topLevelBrowsingContexts = getAllBrowsingContextsForContext(
+      this.watcherActor.sessionContext
+    ).filter(browsingContext => browsingContext.top == browsingContext);
 
     // Only register one WebProgressListener per BrowsingContext tree.
     // We will be notified about children BrowsingContext navigations/state changes via the top level BrowsingContextWebProgressListener,
@@ -77,29 +77,6 @@ class ParentProcessDocumentEventWatcher {
         Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
       );
     });
-  }
-
-  getAllBrowsingContexts() {
-    if (this.watcherActor.sessionContext.type == "browser-element") {
-      const browsingContext = this.watcherActor.browserElement.browsingContext;
-      return browsingContext.getAllBrowsingContextsInSubtree();
-    }
-
-    if (this.watcherActor.sessionContext.type == "all") {
-      return getAllRemoteBrowsingContexts();
-    }
-
-    if (this.watcherActor.sessionContext.type == "webextension") {
-      return getAllRemoteBrowsingContexts().filter(
-        bc =>
-          bc.currentWindowGlobal.documentPrincipal.addonId ==
-          this.watcherActor.sessionContext.addonId
-      );
-    }
-    throw new Error(
-      "Unsupported session context type=" +
-        this.watcherActor.sessionContext.type
-    );
   }
 
   /**

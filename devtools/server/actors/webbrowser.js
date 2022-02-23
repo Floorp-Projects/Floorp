@@ -519,8 +519,8 @@ BrowserTabList.prototype._listenForEventsIf = function(
 BrowserTabList.prototype._onPageTitleChangedEvent = function(event) {
   switch (event.type) {
     case "pagetitlechanged": {
-      const window = event.currentTarget.ownerGlobal;
-      this._onDOMTitleChanged(window.browser);
+      const browser = event.target;
+      this._onDOMTitleChanged(browser);
       break;
     }
   }

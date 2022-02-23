@@ -281,12 +281,17 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
 }
 
 ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
-    RawId aSelfId, const ipc::ByteBuf& aByteBuf, RawId aNewId) {
+    RawId aSelfId, const ipc::ByteBuf& aByteBuf, RawId aNewId,
+    AdapterRequestDeviceResolver&& resolver) {
   ErrorBuffer error;
   ffi::wgpu_server_adapter_request_device(mContext, aSelfId, ToFFI(&aByteBuf),
                                           aNewId, error.ToFFI());
-  mErrorScopeMap.insert({aSelfId, ErrorScopeStack()});
-  ForwardError(0, error);
+  if (ForwardError(0, error)) {
+    resolver(false);
+  } else {
+    mErrorScopeMap.insert({aSelfId, ErrorScopeStack()});
+    resolver(true);
+  }
   return IPC_OK();
 }
 
@@ -733,7 +738,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvShutdown() {
+void WebGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
   mTimer.Stop();
   for (const auto& p : mCanvasMap) {
     const wr::ExternalImageId extId = {p.first};
@@ -742,7 +747,6 @@ ipc::IPCResult WebGPUParent::RecvShutdown() {
   mCanvasMap.clear();
   ffi::wgpu_server_poll_all_devices(mContext, true);
   ffi::wgpu_server_delete(const_cast<ffi::WGPUGlobal*>(mContext));
-  return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvDeviceAction(RawId aSelf,
@@ -752,6 +756,18 @@ ipc::IPCResult WebGPUParent::RecvDeviceAction(RawId aSelf,
                                  error.ToFFI());
 
   ForwardError(aSelf, error);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvDeviceActionWithAck(
+    RawId aSelf, const ipc::ByteBuf& aByteBuf,
+    DeviceActionWithAckResolver&& aResolver) {
+  ErrorBuffer error;
+  ffi::wgpu_server_device_action(mContext, aSelf, ToFFI(&aByteBuf),
+                                 error.ToFFI());
+
+  ForwardError(aSelf, error);
+  aResolver(true);
   return IPC_OK();
 }
 

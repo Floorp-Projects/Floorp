@@ -114,6 +114,10 @@ RefPtr<MozPromise<bool, bool, false>> LockScreenOrientation(
     case eScreenOrientation_LandscapeSecondary:
     case eScreenOrientation_LandscapePrimary |
         eScreenOrientation_LandscapeSecondary:
+    case eScreenOrientation_PortraitPrimary |
+        eScreenOrientation_PortraitSecondary |
+        eScreenOrientation_LandscapePrimary |
+        eScreenOrientation_LandscapeSecondary:
     case eScreenOrientation_Default: {
       java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
       if (runtime != NULL) {
@@ -128,7 +132,8 @@ RefPtr<MozPromise<bool, bool, false>> LockScreenOrientation(
       }
     }
     default:
-      return nullptr;
+      NS_WARNING("Unsupported screen orientation type");
+      return MozPromise<bool, bool, false>::CreateAndReject(false, __func__);
   }
 }
 

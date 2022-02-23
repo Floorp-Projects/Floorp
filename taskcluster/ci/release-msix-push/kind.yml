@@ -33,6 +33,10 @@ job-defaults:
                 beta: beta
                 release: release
                 default: mock
+        publish-mode:
+            by-release-type:
+                beta: Immediate
+                default: Manual
 
 jobs:
     firefox:

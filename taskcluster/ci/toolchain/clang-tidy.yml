@@ -59,7 +59,7 @@ macosx64-clang-tidy:
         - trunk
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-13
+            - linux64-cctools-port
             - linux64-clang-13-macosx-cross
             - macosx64-sdk-11.0
 
@@ -82,7 +82,7 @@ macosx64-arch64-clang-tidy:
         - trunk
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-13
+            - linux64-cctools-port
             - linux64-clang-13-macosx-cross
             - macosx64-sdk-11.0
 

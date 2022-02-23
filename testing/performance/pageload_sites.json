@@ -200,16 +200,31 @@
       "login": false,
       "name": "expedia",
       "test_url": "https://expedia.com/Hotel-Search?destination=New+York%2C+New+York&latLong=40.756680%2C-73.986470&regionId=178293&startDate=&endDate=&rooms=1&_xpid=11905%7C1&adults=2",
-      "secondary_url": "https://www.expedia.com/Activities"
+      "secondary_url": "https://groups.expedia.com/Group-Rate/?locale=en_US&ol=1"
     },
     {
-      "login": false,
+      "login": true,
       "name": "facebook",
       "test_url": "https://www.facebook.com",
       "secondary_url": "https://www.facebook.com/marketplace/?ref=bookmark",
       "test_cmds":  [
         ["click.byXpathAndWait", "/html/body/div[3]/div[2]/div/div/div/div/div[3]/button[1]"],
         ["click.byXpathAndWait", "/html/body/div[3]/div[2]/div/div/div/div/div[3]/button[1]"]
+      ]
+    },
+    {
+      "login": true,
+      "login-test": true,
+      "name": "facebook-login",
+      "test_url": "https://www.facebook.com",
+      "type": "interactive",
+      "test_cmds": [
+        ["setup_login", "https://www.facebook.com"],
+        ["wait.byTime", 1000],
+        ["login", ""],
+        ["measure.start", "marketplace"],
+        ["navigate", "https://www.facebook.com/marketplace"],
+        ["measure.stop", ""]
       ]
     },
     {
@@ -258,8 +273,7 @@
     {
       "login": false,
       "name": "imdb",
-      "test_url": "https://www.imdb.com/title/tt0084967/?ref_=nv_sr_2",
-      "secondary_url": "https://www.imdb.com/title/tt0084967/episodes/?ref_=tt_ov_epl"
+      "test_url": "https://www.imdb.com/title/tt0084967/?ref_=nv_sr_2"
     },
     {
       "login": false,
@@ -269,7 +283,16 @@
       "test_cmds":  [
         ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[2]/div/button[2]"],
         ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[3]/div[2]/button"]
-      ]
+      ],
+      "secondary_url": "https://imgur.com/gallery/L13Ci",
+      "preferences": {
+         "media.autoplay.default": 5,
+         "media.autoplay.ask-permission": true,
+         "media.autoplay.blocking_policy": 1,
+         "media.autoplay.block-webaudio": true,
+         "media.allowed-to-play.enabled": false,
+         "media.block-autoplay-until-in-foreground": true
+       }
     },
     {
       "login": true,
@@ -314,7 +337,7 @@
     {
       "login": true,
       "name": "office",
-      "test_url": "https://www.office.com/launch/word",
+      "test_url": "https://www.office.com/launch/powerpoint/",
       "secondary_url": "https://www.office.com/"
     },
     {

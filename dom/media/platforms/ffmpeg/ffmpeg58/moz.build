@@ -12,6 +12,7 @@ UNIFIED_SOURCES += [
 ]
 LOCAL_INCLUDES += [
     '..',
+    '/media/mozva',
     'include',
 ]
 
@@ -31,5 +32,8 @@ if CONFIG['MOZ_WAYLAND']:
   UNIFIED_SOURCES += [
     '../FFmpegVideoFramePool.cpp',
   ]
+  USE_LIBS += ['mozva']
+
+include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = 'xul'

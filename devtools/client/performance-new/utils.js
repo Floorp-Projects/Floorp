@@ -487,6 +487,18 @@ const featureDescriptions = [
       "CPU utilization as markers in the main thread -- Beware: expensive!",
     experimental: true,
   },
+  {
+    name: "Process CPU Utilization",
+    value: "processcpu",
+    title:
+      "Record how much CPU has been used between samples by each process. " +
+      "To see graphs: Before profiling, set " +
+      "pref devtools.performance.recording.ui-base-url to " +
+      "https://deploy-preview-3759--perf-html.netlify.app, and after " +
+      "capturing, open the JS console and run: " +
+      "experimental.enableProcessCPUTracks()",
+    experimental: true,
+  },
 ];
 
 module.exports = {

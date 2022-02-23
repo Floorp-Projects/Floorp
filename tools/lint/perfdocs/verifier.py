@@ -50,6 +50,7 @@ CONFIG_SCHEMA = {
                             "properties": {"test_name": {"type": "string"}},
                         },
                         "description": {"type": "string"},
+                        "owner": {"type": "string"},
                     },
                     "required": ["description"],
                 }

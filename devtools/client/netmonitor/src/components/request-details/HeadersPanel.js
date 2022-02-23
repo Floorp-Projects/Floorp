@@ -73,6 +73,12 @@ loader.lazyRequireGetter(
   "devtools/client/shared/components/menu/utils",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "openContentLink",
+  "devtools/client/shared/link",
+  true
+);
 
 const { div, input, label, span, textarea, tr, td, button } = dom;
 
@@ -455,6 +461,7 @@ class HeadersPanel extends Component {
           member: Object.assign({}, member, { open: false }),
           mode: MODE.TINY,
           noGrip: true,
+          openLink: openContentLink,
         })
       ),
       headerDocURL ? MDNLink({ url: headerDocURL }) : null

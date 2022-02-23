@@ -27,6 +27,12 @@ template <>
 struct RefPtrTraits<GdkDragContext>
     : public GObjectRefPtrTraits<GdkDragContext> {};
 
+template <>
+struct RefPtrTraits<GVariant> {
+  static void AddRef(GVariant* aVariant) { g_variant_ref(aVariant); }
+  static void Release(GVariant* aVariant) { g_variant_unref(aVariant); }
+};
+
 }  // namespace mozilla
 
 #endif

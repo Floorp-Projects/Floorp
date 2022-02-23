@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<script>
+"use strict";
+
+createHTML({
+  // This pref exists only for a partner testing framework without WebDriver
+  // switch-to-window nor SpecialPowers to set the active window.
+  // Prefer "focusmanager.testmode".
+  title: "Test media.devices.unfocused.enabled",
+  bug: "1740824"
+});
+
+const blank_url = "/tests/docshell/test/navigation/blank.html";
+
+async function resolveOnEvent(target, name) {
+  return new Promise(r => target.addEventListener(name, r, {once: true}));
+}
+
+runTest(async () => {
+  ok(document.hasFocus(), "This test expects initial focus on the document.");
+  // 'resizable' is requested for a separate OS window on relevant platforms
+  // so that this test tests OS focus changes rather than document visibility.
+  const other = window.open(blank_url, "", "resizable");
+  SimpleTest.registerCleanupFunction(() => {
+    other.close();
+    return SimpleTest.promiseFocus(window);
+  });
+  await Promise.all([
+    resolveOnEvent(window, 'blur'),
+    SimpleTest.promiseFocus(other),
+    pushPrefs(["media.devices.unfocused.enabled", true]),
+  ]);
+  ok(!document.hasFocus(), "!document.hasFocus()");
+  await navigator.mediaDevices.enumerateDevices();
+  ok(true, "enumerateDevices() completes without focus.");
+  // The focus requirement with media.devices.unfocused.enabled false
+  // (default) is tested in
+  // testing/web-platform/mozilla/tests/mediacapture-streams/enumerateDevices-without-focus.https.html
+});
+
+</script>
+</body>
+</html>

@@ -3839,6 +3839,10 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_FN("forEach", "ArrayForEach", 1, 0),
     JS_SELF_HOSTED_FN("map", "ArrayMap", 1, 0),
     JS_SELF_HOSTED_FN("filter", "ArrayFilter", 1, 0),
+#ifdef NIGHTLY_BUILD
+    JS_SELF_HOSTED_FN("groupBy", "ArrayGroupBy", 1, 0),
+    JS_SELF_HOSTED_FN("groupByToMap", "ArrayGroupByToMap", 1, 0),
+#endif
     JS_SELF_HOSTED_FN("reduce", "ArrayReduce", 1, 0),
     JS_SELF_HOSTED_FN("reduceRight", "ArrayReduceRight", 1, 0),
     JS_SELF_HOSTED_FN("some", "ArraySome", 1, 0),
@@ -4123,6 +4127,15 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
       !DefineDataProperty(cx, unscopables, cx->names().values, value)) {
     return false;
   }
+
+#ifdef NIGHTLY_BUILD
+  if (cx->realm()->creationOptions().getArrayGroupingEnabled()) {
+    if (!DefineDataProperty(cx, unscopables, cx->names().groupBy, value) ||
+        !DefineDataProperty(cx, unscopables, cx->names().groupByToMap, value)) {
+      return false;
+    }
+  }
+#endif
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   if (cx->options().changeArrayByCopy()) {

@@ -8,6 +8,7 @@
 
 add_task(async function() {
   const dbg = await initDebugger("doc-inline-script-offset.html");
+  await selectSource(dbg, "doc-inline-script-offset.html");
   await addBreakpoint(dbg, "doc-inline-script-offset.html", 6, 66);
   await reload(dbg);
   await waitForPaused(dbg);

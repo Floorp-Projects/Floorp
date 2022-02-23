@@ -31,14 +31,6 @@ pub fn as_c_void<T: Unpin>(pin: &mut Pin<Box<T>>) -> *mut c_void {
     (Pin::into_inner(pin.as_mut()) as *mut T).cast()
 }
 
-// This holds the length of the slice, not the slice itself.
-#[derive(Default, Debug)]
-struct RecordLength {
-    epoch: Epoch,
-    ct: ContentType,
-    len: usize,
-}
-
 /// A slice of the output.
 #[derive(Default)]
 pub struct Record {

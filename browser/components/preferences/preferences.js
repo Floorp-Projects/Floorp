@@ -12,8 +12,8 @@
 /* import-globals-from experimental.js */
 /* import-globals-from moreFromMozilla.js */
 /* import-globals-from findInPage.js */
-/* import-globals-from ../../base/content/utilityOverlay.js */
-/* import-globals-from ../../../toolkit/content/preferencesBindings.js */
+/* import-globals-from /browser/base/content/utilityOverlay.js */
+/* import-globals-from /toolkit/content/preferencesBindings.js */
 
 "use strict";
 
@@ -237,6 +237,10 @@ function init_all() {
   maybeDisplayPoliciesNotice();
 
   window.addEventListener("hashchange", onHashChange);
+
+  document.getElementById("focusSearch1").addEventListener("command", () => {
+    gSearchResultsPane.searchInput.focus();
+  });
 
   gotoPref().then(() => {
     let helpButton = document.getElementById("helpButton");

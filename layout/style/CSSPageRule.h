@@ -71,6 +71,9 @@ class CSSPageRule final : public css::Rule {
   void GetCssText(nsACString& aCssText) const final;
   nsICSSDeclaration* Style();
 
+  void GetSelectorText(nsACString& aSelectorText) const;
+  void SetSelectorText(const nsACString& aSelectorText);
+
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
 
 #ifdef DEBUG

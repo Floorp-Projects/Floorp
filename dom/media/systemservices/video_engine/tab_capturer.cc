@@ -110,7 +110,8 @@ class TabCapturedHandler final : public dom::PromiseNativeHandler {
     aPromise->AppendNativeHandler(handler);
   }
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     MOZ_ASSERT(NS_IsMainThread());
     MonitorAutoLock monitor(mEngine->mMonitor);
     if (NS_WARN_IF(!aValue.isObject())) {
@@ -131,7 +132,8 @@ class TabCapturedHandler final : public dom::PromiseNativeHandler {
     monitor.Notify();
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     MOZ_ASSERT(NS_IsMainThread());
     MonitorAutoLock monitor(mEngine->mMonitor);
     mEngine->mCapturing = false;

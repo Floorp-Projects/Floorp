@@ -69,6 +69,14 @@ impl From<vec256_storage> for [u64; 4] {
         [a, b, c, d]
     }
 }
+impl From<[u64; 4]> for vec256_storage {
+    #[inline(always)]
+    fn from([a, b, c, d]: [u64; 4]) -> Self {
+        Self {
+            v128: [[a, b].into(), [c, d].into()],
+        }
+    }
+}
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct vec512_storage {
     v128: [vec128_storage; 4],
@@ -623,10 +631,10 @@ impl Vector<[u32; 16]> for u32x4x4_generic {
         let c = c.0;
         let d = d.0;
         [
-            a[0], a[1], a[2], a[3],
-            b[0], b[1], b[2], b[3],
-            c[0], c[1], c[2], c[3],
-            d[0], d[1], d[2], d[3],
+            a[0], a[1], a[2], a[3], //
+            b[0], b[1], b[2], b[3], //
+            c[0], c[1], c[2], c[3], //
+            d[0], d[1], d[2], d[3], //
         ]
     }
 }

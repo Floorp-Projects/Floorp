@@ -39,20 +39,20 @@ Build Platforms
    OS X Cross Compiled DevEdition, ,
    OS X 10.14, ,
    OS X 10.14 WebRender, Jeff Muizelaar, Build with WebRender
-   OS X 10.14 Shippable, , 
+   OS X 10.14 Shippable, ,
    OS X 10.14 WebRender Shippable, Jeff Muizelaar, Build with WebRender
-   OS X 10.14 DevEdition, , 
+   OS X 10.14 DevEdition, ,
    Windows 2012, ,
    Windows 2012 shippable, , What we ship to our users
-   Windows 2012 addon, , 
+   Windows 2012 addon, ,
    Windows 2012 NoOpt, , "| Developer build - Disable optimizations, enable debug options
    | Only runs on m-c"
-   Windows 2012 DevEdition, , 
+   Windows 2012 DevEdition, ,
    Windows 2012 x64, ,
-   Windows 2012 x64 shippable, , 
+   Windows 2012 x64 shippable, ,
    Windows 2012 AArch64, ,
-   Windows 2012 AArch64 Shippable, , 
-   Windows 2012 AArch64 DevEdition, , 
+   Windows 2012 AArch64 Shippable, ,
+   Windows 2012 AArch64 DevEdition, ,
    Windows 2012 x64 addon, ,
    Windows 2012 x64 NoOpt, , "| Developer build - Disable optimizations, enable debug options
    | Only runs on m-c"
@@ -65,15 +65,15 @@ Build Platforms
    Android 4.1 API16+ Release, , To ship/test Android 4.1 on arm v7 CPU
    Android 4.1 API16+ GeckoView multi-arch fat AAR, ,
    Android 5.0 AArch64, ,
-   Android 5.0 AArch64 Beta, , 
-   Android 5.0 AArch64 Release, , 
-   Android 5.0 x86-64, , 
-   Android 5.0 x86-64 Beta, , 
-   Android 5.0 x86-64 Release, , 
-   Android 7.0 x86, , 
-   Android 7.0 x86 Beta, , 
-   Android 7.0 x86 Release, , 
-   Android 7.0 x86-64, , 
+   Android 5.0 AArch64 Beta, ,
+   Android 5.0 AArch64 Release, ,
+   Android 5.0 x86-64, ,
+   Android 5.0 x86-64 Beta, ,
+   Android 5.0 x86-64 Release, ,
+   Android 7.0 x86, ,
+   Android 7.0 x86 Beta, ,
+   Android 7.0 x86 Release, ,
+   Android 7.0 x86-64, ,
    Android 7.0 x86-64 WebRender, Kris Taeleman, Build and test GeckoView with WebRender
    Android 7.0 x86-64 Beta, ,
    Android 7.0 x86-64 Release, ,

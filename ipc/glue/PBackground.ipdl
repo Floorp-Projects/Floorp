@@ -271,8 +271,7 @@ parent:
 
   async PMediaTransport();
 
-  async PVerifySSLServerCert(ByteArray aServerCert,
-                             ByteArray[] aPeerCertChain,
+  async PVerifySSLServerCert(ByteArray[] aPeerCertChain,
                              nsCString aHostName,
                              int32_t aPort,
                              OriginAttributes aOriginAttributes,

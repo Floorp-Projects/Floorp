@@ -8,6 +8,10 @@ add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
   await SearchTestUtils.useTestEngines("data1");
   Assert.ok(!Services.search.isInitialized);
+  Services.prefs.setBoolPref(
+    "browser.search.removeEngineInfobar.enabled",
+    false
+  );
 });
 
 // Check that the default engine matches the defaultenginename pref

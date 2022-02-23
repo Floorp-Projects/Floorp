@@ -160,7 +160,7 @@ def api_lint(config, **lintargs):
                 "path": mozpath.relpath(r["file"], topsrcdir),
                 "lineno": int(r["line"]),
                 "column": int(r.get("column") or 0),
-                "message": "Unexpected api change. Please run ./gradlew {} for more "
+                "message": "Unexpected api change. Please run ./mach gradle {} for more "
                 "information".format(
                     " ".join(lintargs["substs"]["GRADLE_ANDROID_API_LINT_TASKS"])
                 ),
@@ -194,7 +194,10 @@ def javadoc(config, **lintargs):
             for issue in issues:
                 issue["path"] = issue["path"].replace(lintargs["root"], "")
                 # We want warnings to be errors for linting purposes.
-                issue["level"] = "error"
+                # TODO: Bug 1316188 - resolve missing javadoc comments
+                issue["level"] = (
+                    "error" if issue["message"] != ": no comment" else "warning"
+                )
                 results.append(result.from_config(config, **issue))
 
     return results
@@ -229,6 +232,10 @@ def lint(config, **lintargs):
 
     for issue in root.findall("issue"):
         location = issue[0]
+        if "third_party" in location.get("file") or "thirdparty" in location.get(
+            "file"
+        ):
+            continue
         err = {
             "level": issue.get("severity").lower(),
             "rule": issue.get("id"),

@@ -157,6 +157,7 @@ media/libvorbis/.*
 media/libvpx/.*
 media/libwebp/.*
 media/libyuv/.*
+media/mozva/va/.*
 media/openmax_dl/.*
 media/openmax_il/.*
 media/webrtc/signaling/src/sdp/sipcc/.*

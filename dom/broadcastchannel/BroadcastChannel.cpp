@@ -15,7 +15,6 @@
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/dom/RefMessageBodyService.h"
 #include "mozilla/dom/SharedMessageBody.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
@@ -23,7 +22,6 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/StorageAccess.h"
-#include "nsContentUtils.h"
 
 #include "nsICookieJarSettings.h"
 #include "mozilla/dom/Document.h"
@@ -150,7 +148,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
   }
 
   nsID portUUID = {};
-  aRv = nsContentUtils::GenerateUUIDInPlace(portUUID);
+  aRv = nsID::GenerateUUIDInPlace(portUUID);
   if (aRv.Failed()) {
     return nullptr;
   }

@@ -47,8 +47,8 @@ static const char ss_name[][4] = {
 };
 
 static void check_gen_grny(const Dav1dFilmGrainDSPContext *const dsp) {
-    entry grain_lut_c[GRAIN_HEIGHT][GRAIN_WIDTH];
-    entry grain_lut_a[GRAIN_HEIGHT + 1][GRAIN_WIDTH];
+    ALIGN_STK_16(entry, grain_lut_c, GRAIN_HEIGHT,[GRAIN_WIDTH]);
+    ALIGN_STK_16(entry, grain_lut_a, GRAIN_HEIGHT + 1,[GRAIN_WIDTH]);
 
     declare_func(void, entry grain_lut[][GRAIN_WIDTH],
                  const Dav1dFilmGrainData *data HIGHBD_DECL_SUFFIX);

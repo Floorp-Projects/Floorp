@@ -50,7 +50,7 @@ namespace layers {
 
 [Comparable] struct SurfaceDescriptorDMABuf {
   uint32_t bufferType;
-  uint64_t modifier;
+  uint64_t[] modifier;
   uint32_t flags;
   FileDescriptor[] fds;
   uint32_t[] width;

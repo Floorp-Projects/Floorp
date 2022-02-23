@@ -4,13 +4,21 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org).
 
+<!--
+NOTE: In this file, do not use the hard wrap in the middle of a sentence for compatibility with GitHub comment style markdown rendering.
+-->
+
 ## [Unreleased]
+
+## [0.4.29] - 2021-12-26
+
+- [Fix compile error with `syn` 1.0.84 and later.](https://github.com/taiki-e/pin-project/pull/335)
 
 ## [0.4.28] - 2021-03-28
 
 - [Fix `unused_must_use` warning on unused borrows, which will be added to rustc in the future.](https://github.com/taiki-e/pin-project/pull/322) See [#322](https://github.com/taiki-e/pin-project/pull/322) for more details.
 
-  (Note: 1.0 does not have this problem.)
+  (NOTE: 1.0 does not have this problem.)
 
 ## [0.4.27] - 2020-10-11
 
@@ -24,13 +32,13 @@ This project adheres to [Semantic Versioning](https://semver.org).
 
 - [Suppress `drop_bounds` lint, which will be added to rustc in the future.](https://github.com/taiki-e/pin-project/pull/273) See [#272](https://github.com/taiki-e/pin-project/issues/272) for more details.
 
-  (Note: 1.0.0-alpha.1 already contains this change.)
+  (NOTE: 1.0.0-alpha.1 already contains this change.)
 
 ## [0.4.24] - 2020-09-26
 
 - [Fix compatibility of generated code with `forbid(future_incompatible)`.](https://github.com/taiki-e/pin-project/pull/282)
 
-  Note: This does not guarantee compatibility with `forbid(future_incompatible)` in the future.
+  NOTE: This does not guarantee compatibility with `forbid(future_incompatible)` in the future.
   If rustc adds a new lint, we may not be able to keep this.
 
 ## [0.4.23] - 2020-07-27
@@ -161,7 +169,7 @@ This project adheres to [Semantic Versioning](https://semver.org).
   }
   ```
 
-  *[Note: This raises the minimum supported Rust version of this crate from Rust 1.33 to Rust 1.34.](https://github.com/taiki-e/pin-project/pull/219#pullrequestreview-408644187)*
+  *[NOTE: This raises the minimum supported Rust version of this crate from Rust 1.33 to Rust 1.34.](https://github.com/taiki-e/pin-project/pull/219#pullrequestreview-408644187)*
 
 - [Fix an issue where duplicate `#[project]` attributes were ignored.](https://github.com/taiki-e/pin-project/pull/218)
 
@@ -195,7 +203,7 @@ This project adheres to [Semantic Versioning](https://semver.org).
 
 ## [0.4.11] - 2020-05-07
 
-**Note: This release has been yanked.** See [#206](https://github.com/taiki-e/pin-project/issues/206) for details.
+**NOTE:** This release has been yanked. See [#206](https://github.com/taiki-e/pin-project/issues/206) for details.
 
 - [Fix an issue that `#[project]` on non-statement expression does not work without unstable features.](https://github.com/taiki-e/pin-project/pull/197)
 
@@ -249,7 +257,7 @@ This project adheres to [Semantic Versioning](https://semver.org).
 
 ## [0.4.3] - 2019-10-15
 
-**Note: This release has been yanked.** See [#148](https://github.com/taiki-e/pin-project/pull/148) for details.
+**NOTE:** This release has been yanked. See [#148](https://github.com/taiki-e/pin-project/pull/148) for details.
 
 - [`#[pin_project]` can now interoperate with `#[cfg_attr()]`.](https://github.com/taiki-e/pin-project/pull/135)
 
@@ -261,19 +269,19 @@ This project adheres to [Semantic Versioning](https://semver.org).
 
 ## [0.4.2] - 2019-09-29
 
-**Note: This release has been yanked.** See [#148](https://github.com/taiki-e/pin-project/pull/148) for details.
+**NOTE:** This release has been yanked. See [#148](https://github.com/taiki-e/pin-project/pull/148) for details.
 
 - [Fix support for DSTs(Dynamically Sized Types).](https://github.com/taiki-e/pin-project/pull/113)
 
 ## [0.4.1] - 2019-09-26
 
-**Note: This release has been yanked.** See [#148](https://github.com/taiki-e/pin-project/pull/148) for details.
+**NOTE:** This release has been yanked. See [#148](https://github.com/taiki-e/pin-project/pull/148) for details.
 
 - [Fix an issue that caused an error when using `#[pin_project]` on a type that has `#[pin]` + `!Unpin` field with no generics or lifetime.](https://github.com/taiki-e/pin-project/pull/111)
 
 ## [0.4.0] - 2019-09-25
 
-**Note: This release has been yanked.** See [#148](https://github.com/taiki-e/pin-project/pull/148) for details.
+**NOTE:** This release has been yanked. See [#148](https://github.com/taiki-e/pin-project/pull/148) for details.
 
 - [**Pin projection has become a safe operation.**](https://github.com/taiki-e/pin-project/pull/18) In the absence of other unsafe code that you write, it is impossible to cause undefined behavior.
 
@@ -402,7 +410,7 @@ Changes since the 0.4.0-beta.1 release:
 
 - `Unpin` impls must be specified with an impl of `UnsafeUnpin`, instead of implementing the normal `Unpin` trait.
 
-- Made `#[project]` attribute disabled by default.
+- Make `#[project]` attribute disabled by default.
 
 See also [tracking issue for 0.4 release](https://github.com/taiki-e/pin-project/issues/21).
 
@@ -416,7 +424,7 @@ See also [tracking issue for 0.4 release](https://github.com/taiki-e/pin-project
 
 ## [0.3.3] - 2019-07-15
 
-**Note: This release has been yanked.** See [#16](https://github.com/taiki-e/pin-project/issues/16) for details.
+**NOTE:** This release has been yanked. See [#16](https://github.com/taiki-e/pin-project/issues/16) for details.
 
 - Diagnostic improvements.
 
@@ -490,11 +498,12 @@ See also [tracking issue for 0.4 release](https://github.com/taiki-e/pin-project
 
 ## [0.1.0] - 2019-01-08
 
-**Note: This release has been yanked.**
+**NOTE:** This release has been yanked.
 
 Initial release
 
-[Unreleased]: https://github.com/taiki-e/pin-project/compare/v0.4.28...HEAD
+[Unreleased]: https://github.com/taiki-e/pin-project/compare/v0.4.29...v0.4
+[0.4.29]: https://github.com/taiki-e/pin-project/compare/v0.4.28...v0.4.29
 [0.4.28]: https://github.com/taiki-e/pin-project/compare/v0.4.27...v0.4.28
 [0.4.27]: https://github.com/taiki-e/pin-project/compare/v0.4.26...v0.4.27
 [0.4.26]: https://github.com/taiki-e/pin-project/compare/v0.4.25...v0.4.26

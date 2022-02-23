@@ -285,4 +285,3 @@ When the list of supported numbering systems needs to be updated, run ``make_int
    $ # make_intl_data.py requires yaml.
    $ export PYTHONPATH="$topsrcdir/third_party/python/PyYAML/lib3/"
    $ python3 ./make_intl_data.py numbering
-

@@ -10,6 +10,7 @@
 #include "nsTHashSet.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -77,7 +78,7 @@ class WebGPUChild;
 
 using MappingPromise = MozPromise<ipc::Shmem, ipc::ResponseRejectReason, true>;
 
-class Device final : public DOMEventTargetHelper {
+class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Device, DOMEventTargetHelper)
@@ -104,6 +105,8 @@ class Device final : public DOMEventTargetHelper {
       wr::ExternalImageId aExternalImageId, gfx::SurfaceFormat aFormat,
       gfx::IntSize* aDefaultSize);
   bool CheckNewWarning(const nsACString& aMessage);
+
+  void CleanupUnregisteredInParent();
 
  private:
   ~Device();
@@ -149,6 +152,10 @@ class Device final : public DOMEventTargetHelper {
       const dom::GPUComputePipelineDescriptor& aDesc);
   already_AddRefed<RenderPipeline> CreateRenderPipeline(
       const dom::GPURenderPipelineDescriptor& aDesc);
+  already_AddRefed<dom::Promise> CreateComputePipelineAsync(
+      const dom::GPUComputePipelineDescriptor& aDesc, ErrorResult& aRv);
+  already_AddRefed<dom::Promise> CreateRenderPipelineAsync(
+      const dom::GPURenderPipelineDescriptor& aDesc, ErrorResult& aRv);
 
   void PushErrorScope(const dom::GPUErrorFilter& aFilter);
   already_AddRefed<dom::Promise> PopErrorScope(ErrorResult& aRv);

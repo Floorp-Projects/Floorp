@@ -1,0 +1,33 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include("../js-config.mozbuild")
+include("../js-cxxflags.mozbuild")
+
+FINAL_LIBRARY = "js"
+
+with Files("*"):
+    BUG_COMPONENT = ("Core", "JavaScript: WebAssembly")
+
+LOCAL_INCLUDES += [
+    "!..",
+    "..",
+    "/third_party/intgemm/intgemm",
+]
+
+SOURCES += [
+    "/third_party/intgemm/intgemm/intgemm.cc",
+    "IntegerGemmIntrinsic.cpp",
+]
+
+GeneratedFile(
+    "intgemm/intgemm_config.h",
+    script="enable_intel_extensions.py",
+    inputs=["/third_party/intgemm/intgemm/intgemm_config.h.in"],
+)
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()

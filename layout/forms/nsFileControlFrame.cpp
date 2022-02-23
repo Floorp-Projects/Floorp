@@ -21,6 +21,8 @@
 #include "mozilla/dom/HTMLButtonElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
+#include "mozilla/EventStates.h"
+#include "mozilla/intl/Segmenter.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -29,8 +31,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsIFile.h"
-#include "nsUnicodeProperties.h"
-#include "mozilla/EventStates.h"
+#include "nsLayoutUtils.h"
 #include "nsTextNode.h"
 #include "nsTextFrame.h"
 
@@ -68,9 +69,9 @@ bool nsFileControlFrame::CropTextToWidth(gfxContext& aRenderingContext,
       nsLayoutUtils::GetFontMetricsForFrame(aFrame, 1.0f);
 
   // see if the text will completely fit in the width given
-  nscoord textWidth = nsLayoutUtils::AppUnitWidthOfStringBidi(
-      aText, aFrame, *fm, aRenderingContext);
-  if (textWidth <= aWidth) {
+  if (const nscoord textWidth = nsLayoutUtils::AppUnitWidthOfStringBidi(
+          aText, aFrame, *fm, aRenderingContext);
+      textWidth <= aWidth) {
     return false;
   }
 
@@ -79,54 +80,49 @@ bool nsFileControlFrame::CropTextToWidth(gfxContext& aRenderingContext,
 
   // see if the width is even smaller than the ellipsis
   fm->SetTextRunRTL(false);
-  textWidth = nsLayoutUtils::AppUnitWidthOfString(kEllipsis, *fm, drawTarget);
-  if (textWidth >= aWidth) {
+  const nscoord ellipsisWidth =
+      nsLayoutUtils::AppUnitWidthOfString(kEllipsis, *fm, drawTarget);
+  if (ellipsisWidth >= aWidth) {
     aText = kEllipsis;
     return true;
   }
 
   // determine how much of the string will fit in the max width
-  nscoord totalWidth = textWidth;
-  using mozilla::unicode::ClusterIterator;
-  using mozilla::unicode::ClusterReverseIterator;
-  ClusterIterator leftIter(aText.Data(), aText.Length());
-  ClusterReverseIterator rightIter(aText.Data(), aText.Length());
-  const char16_t* leftPos = leftIter;
-  const char16_t* rightPos = rightIter;
-  const char16_t* pos;
-  ptrdiff_t length;
+  nscoord totalWidth = ellipsisWidth;
+  const Span text(aText);
+  intl::GraphemeClusterBreakIteratorUtf16 leftIter(text);
+  intl::GraphemeClusterBreakReverseIteratorUtf16 rightIter(text);
+  uint32_t leftPos = 0;
+  uint32_t rightPos = aText.Length();
   nsAutoString leftString, rightString;
 
   while (leftPos < rightPos) {
-    leftIter.Next();
-    pos = leftIter;
-    length = pos - leftPos;
-    textWidth =
-        nsLayoutUtils::AppUnitWidthOfString(leftPos, length, *fm, drawTarget);
-    if (totalWidth + textWidth > aWidth) {
+    Maybe<uint32_t> pos = leftIter.Next();
+    Span chars = text.FromTo(leftPos, *pos);
+    nscoord charWidth =
+        nsLayoutUtils::AppUnitWidthOfString(chars, *fm, drawTarget);
+    if (totalWidth + charWidth > aWidth) {
       break;
     }
 
-    leftString.Append(leftPos, length);
-    leftPos = pos;
-    totalWidth += textWidth;
+    leftString.Append(chars);
+    leftPos = *pos;
+    totalWidth += charWidth;
 
     if (leftPos >= rightPos) {
       break;
     }
 
-    rightIter.Next();
-    pos = rightIter;
-    length = rightPos - pos;
-    textWidth =
-        nsLayoutUtils::AppUnitWidthOfString(pos, length, *fm, drawTarget);
-    if (totalWidth + textWidth > aWidth) {
+    pos = rightIter.Next();
+    chars = text.FromTo(*pos, rightPos);
+    charWidth = nsLayoutUtils::AppUnitWidthOfString(chars, *fm, drawTarget);
+    if (totalWidth + charWidth > aWidth) {
       break;
     }
 
-    rightString.Insert(pos, 0, length);
-    rightPos = pos;
-    totalWidth += textWidth;
+    rightString.Insert(chars, 0);
+    rightPos = *pos;
+    totalWidth += charWidth;
   }
 
   aText = leftString + kEllipsis + rightString;

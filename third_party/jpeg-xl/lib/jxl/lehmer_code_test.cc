@@ -50,7 +50,7 @@ void Roundtrip(size_t n, WorkingSet<PermutationT>* ws) {
   std::iota(ws->permutation.begin(), ws->permutation.begin() + n, 0);
 
   // For various random permutations:
-  for (size_t rep = 0; rep < 100; ++rep) {
+  for (size_t rep = 0; rep < 3; ++rep) {
     rng.Shuffle(ws->permutation.data(), n);
 
     // Must decode to the same permutation
@@ -71,18 +71,18 @@ void RoundtripSizeRange(ThreadPool* pool, uint32_t begin, uint32_t end) {
   ASSERT_NE(0u, begin);  // n = 0 not allowed.
   std::vector<WorkingSet<PermutationT>> working_sets;
 
-  RunOnPool(
+  JXL_CHECK(RunOnPool(
       pool, begin, end,
-      [&working_sets, end](size_t num_threads) {
+      [&working_sets, end](const size_t num_threads) {
         for (size_t i = 0; i < num_threads; i++) {
           working_sets.emplace_back(end - 1);
         }
         return true;
       },
-      [&working_sets](int n, int thread) {
+      [&working_sets](const uint32_t n, const size_t thread) {
         Roundtrip(n, &working_sets[thread]);
       },
-      "lehmer test");
+      "lehmer test"));
 }
 
 TEST(LehmerCodeTest, TestRoundtrips) {

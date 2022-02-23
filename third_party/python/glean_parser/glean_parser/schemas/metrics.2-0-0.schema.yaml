@@ -434,10 +434,14 @@ definitions:
       unit:
         title: Unit
         description: |
-          The unit of the metric, for metrics that don't already require a
-          meaningful unit, such as `time_unit`.
+          The unit of the metric.
+          This is only required for metrics
+          that don't already require a meaningful unit, e.g. `quantity`
           This is provided for informational purposes only and doesn't have any
           effect on data collection.
+
+          Metric types like `timespan`, `datetime`
+          and `timing_distribution` take a `time_unit` instead.
         type: string
 
       no_lint:
@@ -538,7 +542,7 @@ propertyNames:
         - not:
             description: "'tags' is reserved as a category name."
             const: tags
-    - enum: ['$schema']
+    - enum: ['$schema', '$tags']
 
 properties:
   $schema:
@@ -549,6 +553,14 @@ properties:
     title: Lint checks to skip globally
     description: |
       This parameter lists any lint checks to skip for this whole file.
+    type: array
+    items:
+      type: string
+
+  $tags:
+    title: Tags that apply to the whole file
+    description: |
+      This denotes the list of tags that apply to all metrics in this file.
     type: array
     items:
       type: string
@@ -685,3 +697,27 @@ additionalProperties:
                         Built-in pings are not allowed."
                       pattern:
                         "^(metrics|baseline|events|deletion-request|default|glean_.*)$"
+
+      -
+        if:
+          # This is a schema check:
+          # This is true when the checked YAML passes the schema validation.
+          #
+          # If it has a datetime/timing_distribution/timespan type
+          # AND has a `unit` property, then...
+          properties:
+            type:
+              enum:
+                - datetime
+                - timing_distribution
+                - timespan
+          required:
+            - unit
+        # ... then `time_unit` is required,
+        # because that's the only way we can force this to fail.
+        then:
+          required:
+            - time_unit
+          description: |
+            This metric type uses the (optional) `time_unit` parameter,
+            not `unit`.

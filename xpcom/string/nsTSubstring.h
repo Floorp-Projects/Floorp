@@ -992,6 +992,10 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
                   aSpan.Length(), aFallible);
   }
 
+  void Insert(mozilla::Span<const char_type> aSpan, index_type aPos) {
+    Insert(aSpan.Elements(), aPos, aSpan.Length());
+  }
+
   /**
    * string data is never null, but can be marked void.  if true, the
    * string will be truncated.  @see nsTSubstring::IsVoid

@@ -18,8 +18,6 @@ from mach.decorators import CommandArgument, Command
 from manifestparser import TestManifest
 from manifestparser import filters as mpf
 
-here = os.path.abspath(os.path.dirname(__file__))
-
 
 @Command("python", category="devenv", description="Run Python.")
 @CommandArgument(

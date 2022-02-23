@@ -11,7 +11,7 @@ protocol:
 Delay server startup until a modal dialogue has been clicked to
 allow time for user to set breakpoints in the [Browser Toolbox].
 
-[Browser Toolbox]: https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox
+[Browser Toolbox]: /devtools-user/browser_toolbox/index.rst
 
 
 `marionette.log.level` (deprecated)
@@ -42,5 +42,5 @@ on the same system.  The effective port is written to the user
 preference file when the server has started and is also logged to
 stdout.
 
-[Remote Agent Preferences]: ../../remote/Prefs.html
+[Remote Agent Preferences]: /remote/Prefs.md
 

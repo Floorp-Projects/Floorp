@@ -33,7 +33,14 @@
                   src="chrome://browser/locale/places/bookmarkProperties.properties"/>
   </stringbundleset>
 
-  <script src="chrome://browser/content/places/editBookmark.js"/>
+  <script>
+    var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    if (Services.prefs.getBoolPref("browser.bookmarks.editDialog.delayedApply.enabled", false)) {
+      Services.scriptloader.loadSubScript("chrome://browser/content/places/editBookmark.js", this);
+    } else {
+      Services.scriptloader.loadSubScript("chrome://browser/content/places/instantEditBookmark.js", this);
+    }
+  </script>
   <script src="chrome://browser/content/places/bookmarkProperties.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
   <script src="chrome://global/content/editMenuOverlay.js"/>

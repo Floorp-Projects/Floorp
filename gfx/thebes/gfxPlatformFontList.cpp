@@ -1993,7 +1993,7 @@ eFontPrefLang gfxPlatformFontList::GetFontPrefLangFor(const char* aLang) {
     return eFontPrefLang_Others;
   }
   for (uint32_t i = 0; i < ArrayLength(gPrefLangNames); ++i) {
-    if (!PL_strcasecmp(gPrefLangNames[i], aLang)) {
+    if (!nsCRT::strcasecmp(gPrefLangNames[i], aLang)) {
       return eFontPrefLang(i);
     }
   }

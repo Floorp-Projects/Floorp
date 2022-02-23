@@ -58,9 +58,10 @@ add_task(async function() {
   );
 
   await waitFor(() => divHasDarkSchemeStyling());
-  ok(
-    true,
-    "The rules view was updated with the rule view from the dark scheme media query"
+  is(
+    getRuleViewAncestorRulesDataTextByIndex(view, 1),
+    "@media (prefers-color-scheme: dark)",
+    "The rules view was updated with the rule from the dark scheme media query"
   );
 
   info("Select the node from the remote iframe");
@@ -69,6 +70,11 @@ add_task(async function() {
   ok(
     iframeHasDarkSchemeStyling(),
     "The simulation is also applied on the remote iframe"
+  );
+  is(
+    getRuleViewAncestorRulesDataTextByIndex(view, 1),
+    "@media (prefers-color-scheme: dark)",
+    "The prefers-color-scheme media query is displayed"
   );
 
   info("Select the top level div again");
@@ -113,10 +119,20 @@ add_task(async function() {
     divHasDarkSchemeStyling(),
     "dark mode is still simulated after reloading the page"
   );
+  is(
+    getRuleViewAncestorRulesDataTextByIndex(view, 1),
+    "@media (prefers-color-scheme: dark)",
+    "The prefers-color-scheme media query is displayed on the rule after reloading"
+  );
 
   await selectNodeInFrames(["iframe", "html"], inspector);
   await waitFor(() => iframeHasDarkSchemeStyling());
   ok(true, "simulation is still applied to the iframe after reloading");
+  is(
+    getRuleViewAncestorRulesDataTextByIndex(view, 1),
+    "@media (prefers-color-scheme: dark)",
+    "The prefers-color-scheme media query is still displayed on the rule for the element in iframe after reloading"
+  );
 
   info("Check that closing DevTools reset the simulation");
   await toolbox.destroy();

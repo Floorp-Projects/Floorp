@@ -294,7 +294,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             "--log-wptreport=%s"
             % os.path.join(dirs["abs_blob_upload_dir"], "wptreport.json"),
             "--log-errorsummary=%s" % error_summary_file,
-            "--binary=%s" % self.binary_path,
             "--symbols-path=%s" % self.symbols_path,
             "--stackwalk-binary=%s" % self.query_minidump_stackwalk(),
             "--stackfix-dir=%s" % os.path.join(dirs["abs_test_install_dir"], "bin"),
@@ -330,6 +329,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                 "--device-serial=%s" % self.device_serial,
                 "--package-name=%s" % self.query_package_name(),
             ]
+        else:
+            cmd.append("--binary=%s" % self.binary_path)
 
         if is_windows_7:
             # On Windows 7 --install-fonts fails, so fall back to a Firefox-specific codepath

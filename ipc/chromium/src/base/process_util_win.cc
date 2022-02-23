@@ -395,7 +395,7 @@ bool LaunchApp(const CommandLine& cl, const LaunchOptions& options,
   return LaunchApp(cl.command_line_string(), options, process_handle);
 }
 
-bool KillProcess(ProcessHandle process, int exit_code, bool wait) {
+bool KillProcess(ProcessHandle process, int exit_code) {
   // INVALID_HANDLE_VALUE is not actually an invalid handle value, but
   // instead is the value returned by GetCurrentProcess().  nullptr,
   // in contrast, *is* an invalid handle value.  Both values are too
@@ -407,11 +407,7 @@ bool KillProcess(ProcessHandle process, int exit_code, bool wait) {
     return false;
   }
   bool result = (TerminateProcess(process, exit_code) != FALSE);
-  if (result && wait) {
-    // The process may not end immediately due to pending I/O
-    if (WAIT_OBJECT_0 != WaitForSingleObject(process, 60 * 1000))
-      DLOG(ERROR) << "Error waiting for process exit: " << GetLastError();
-  } else if (!result) {
+  if (!result) {
     DLOG(ERROR) << "Unable to terminate process: " << GetLastError();
   }
   return result;

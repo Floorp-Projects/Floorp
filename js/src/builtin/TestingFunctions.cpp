@@ -108,6 +108,7 @@
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/HelperThreads.h"
+#include "vm/HelperThreadState.h"
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
@@ -206,6 +207,14 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
                       importAssertions ? TrueHandleValue : FalseHandleValue)) {
     return false;
   }
+
+#ifdef NIGHTLY_BUILD
+  bool arrayGrouping = cx->options().arrayGrouping();
+  if (!JS_SetProperty(cx, info, "enableArrayGrouping",
+                      arrayGrouping ? TrueHandleValue : FalseHandleValue)) {
+    return false;
+  }
+#endif
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool changeArrayByCopy = cx->options().changeArrayByCopy();
@@ -2070,6 +2079,85 @@ static bool IsRelazifiableFunction(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool IsInStencilCache(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (args.length() != 1) {
+    JS_ReportErrorASCII(cx, "The function takes exactly one argument.");
+    return false;
+  }
+
+  if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+    JS_ReportErrorASCII(cx, "The first argument should be a function.");
+    return false;
+  }
+
+  if (fuzzingSafe) {
+    // When running code concurrently to fill-up the stencil cache, the content
+    // is not garanteed to be present.
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  JSFunction* fun = &args[0].toObject().as<JSFunction>();
+  BaseScript* script = fun->baseScript();
+  RefPtr<ScriptSource> ss = script->scriptSource();
+  StencilCache& cache = cx->runtime()->caches().delazificationCache;
+  auto guard = cache.isSourceCached(ss);
+  if (!guard) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  StencilContext key(ss, script->extent());
+  frontend::CompilationStencil* stencil = cache.lookup(guard, key);
+  args.rval().setBoolean(bool(stencil));
+  return true;
+}
+
+static bool WaitForStencilCache(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (args.length() != 1) {
+    JS_ReportErrorASCII(cx, "The function takes exactly one argument.");
+    return false;
+  }
+
+  if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+    JS_ReportErrorASCII(cx, "The first argument should be a function.");
+    return false;
+  }
+  args.rval().setUndefined();
+
+  JSFunction* fun = &args[0].toObject().as<JSFunction>();
+  BaseScript* script = fun->baseScript();
+  RefPtr<ScriptSource> ss = script->scriptSource();
+  StencilCache& cache = cx->runtime()->caches().delazificationCache;
+  StencilContext key(ss, script->extent());
+
+  AutoLockHelperThreadState lock;
+  if (!HelperThreadState().isInitialized(lock)) {
+    return true;
+  }
+
+  while (true) {
+    {
+      // This capture a Mutex that we have to release before using the wait
+      // function.
+      auto guard = cache.isSourceCached(ss);
+      if (!guard) {
+        return true;
+      }
+
+      frontend::CompilationStencil* stencil = cache.lookup(guard, key);
+      if (stencil) {
+        break;
+      }
+    }
+
+    HelperThreadState().wait(lock);
+  }
+  return true;
+}
+
 static bool HasSameBytecodeData(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 2) {
@@ -2860,15 +2948,6 @@ static bool SetTestFilenameValidationCallback(JSContext* cx, unsigned argc,
       return true;
     }
 
-    const char* utf8Filename;
-    if (mozilla::IsUtf8(mozilla::MakeStringSpan(filename))) {
-      utf8Filename = filename;
-    } else {
-      utf8Filename = "(invalid UTF-8 filename)";
-    }
-    JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
-                             JSMSG_UNSAFE_FILENAME, utf8Filename);
-
     return false;
   };
   JS::SetFilenameValidationCallback(testCb);
@@ -2945,6 +3024,38 @@ static bool NewObjectWithAddPropertyHook(JSContext* cx, unsigned argc,
   }
 
   args.rval().setObject(*obj);
+  return true;
+}
+
+static bool SetWatchtowerCallback(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  JSFunction* fun = nullptr;
+  if (args.length() != 1 || !IsFunctionObject(args[0], &fun)) {
+    JS_ReportErrorASCII(cx, "Expected a single function argument.");
+    return false;
+  }
+
+  cx->watchtowerTestingCallbackRef() = fun;
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool AddWatchtowerTarget(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1 || !args[0].isObject()) {
+    JS_ReportErrorASCII(cx, "Expected a single object argument.");
+    return false;
+  }
+
+  RootedObject obj(cx, &args[0].toObject());
+  if (!JSObject::setUseWatchtowerTestingCallback(cx, obj)) {
+    return false;
+  }
+
+  args.rval().setUndefined();
   return true;
 }
 
@@ -4044,10 +4155,20 @@ static bool DisplayName(JSContext* cx, unsigned argc, Value* vp) {
 static bool IsAvxPresent(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-  args.rval().setBoolean(jit::Assembler::HasAVX());
-#else
-  args.rval().setBoolean(false);
+  int minVersion = 1;
+  if (argc > 0 && args.get(0).isNumber()) {
+    minVersion = std::max(1, int(args[0].toNumber()));
+  }
+  switch (minVersion) {
+    case 1:
+      args.rval().setBoolean(jit::Assembler::HasAVX());
+      return true;
+    case 2:
+      args.rval().setBoolean(jit::Assembler::HasAVX2());
+      return true;
+  }
 #endif
+  args.rval().setBoolean(false);
   return true;
 }
 
@@ -4091,7 +4212,7 @@ JSObject* ShellAllocationMetadataBuilder::build(
     if (iter.isFunctionFrame() && iter.compartment() == cx->compartment()) {
       id = INT_TO_JSID(stackIndex);
       RootedObject callee(cx, iter.callee(cx));
-      if (!JS_DefinePropertyById(cx, stack, id, callee, 0)) {
+      if (!JS_DefinePropertyById(cx, stack, id, callee, JSPROP_ENUMERATE)) {
         oomUnsafe.crash("ShellAllocationMetadataBuilder::build");
       }
       stackIndex++;
@@ -5711,21 +5832,21 @@ static bool ShortestPaths(JSContext* cx, unsigned argc, Value* vp) {
   Vector<Vector<Vector<JS::ubi::EdgeName>>> names(cx);
 
   {
-    mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
     JS::ubi::Node root;
 
-    JS::ubi::RootList rootList(cx, maybeNoGC, true);
+    JS::ubi::RootList rootList(cx, true);
     if (start.isNull()) {
-      if (!rootList.init()) {
+      auto [ok, nogc] = rootList.init();
+      (void)nogc;  // Old compilers get anxious about nogc being unused.
+      if (!ok) {
         ReportOutOfMemory(cx);
         return false;
       }
       root = JS::ubi::Node(&rootList);
     } else {
-      maybeNoGC.emplace(cx);
       root = JS::ubi::Node(start);
     }
-    JS::AutoCheckCannotGC& noGC = maybeNoGC.ref();
+    JS::AutoCheckCannotGC noGC(cx);
 
     JS::ubi::NodeSet targets;
 
@@ -6170,6 +6291,7 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
 
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
+  bool fillRuntimeCache = false;
   if (args.length() == 2) {
     if (!args[1].isObject()) {
       JS_ReportErrorASCII(
@@ -6181,6 +6303,16 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
 
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
+    }
+
+    // fillRuntimeCache is currently unique to this function, as this is not yet
+    // a generic method used for parsing inner functions.
+    RootedValue v(cx);
+    if (!JS_GetProperty(cx, opts, "fillRuntimeCache", &v)) {
+      return false;
+    }
+    if (v.isBoolean() && v.toBoolean()) {
+      fillRuntimeCache = true;
     }
   }
   if (options.forceFullParse()) {
@@ -6201,6 +6333,38 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
                                              scopeKind);
   if (!topLevelStencil) {
     return false;
+  }
+
+  Rooted<js::StencilObject*> stencilObj(cx);
+  if (fillRuntimeCache) {
+    StencilCache& cache = cx->runtime()->caches().delazificationCache;
+    RefPtr<ScriptSource> source(input.get().source);
+    if (!cache.startCaching(std::move(source))) {
+      return false;
+    }
+
+    // We clone the topLevelStencil, as a extensible stencil, as we will need
+    // one for delazifying all inner functions.
+    UniquePtr<ExtensibleCompilationStencil> tempResult =
+        cx->make_unique<ExtensibleCompilationStencil>(cx, input.get());
+    if (!tempResult) {
+      return false;
+    }
+    if (!tempResult->cloneFrom(cx, *topLevelStencil)) {
+      return false;
+    }
+
+    // Move it to a CompilationStencil for storage.
+    RefPtr<CompilationStencil> result =
+        cx->new_<CompilationStencil>(std::move(tempResult));
+    if (!result) {
+      return false;
+    }
+
+    stencilObj = js::StencilObject::create(cx, result);
+    if (!stencilObj) {
+      return false;
+    }
   }
 
   // Iterate over all inner functions and compile them to stencil as well.
@@ -6230,6 +6394,16 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
       if (!innerStencil) {
         return false;
       }
+
+      if (fillRuntimeCache) {
+        StencilCache& cache = cx->runtime()->caches().delazificationCache;
+        StencilContext key(input.get().source, scriptRef.scriptExtra().extent);
+        if (auto guard = cache.isSourceCached(input.get().source)) {
+          if (!cache.putNew(guard, key, innerStencil.get())) {
+            return false;
+          }
+        }
+      }
     }
 
     if (!merger.addDelazification(cx, *innerStencil)) {
@@ -6237,16 +6411,17 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
     }
   }
 
-  RefPtr<CompilationStencil> result =
-      cx->new_<CompilationStencil>(merger.takeResult());
-  if (!result) {
-    return false;
-  }
+  if (!fillRuntimeCache) {
+    RefPtr<CompilationStencil> result =
+        cx->new_<CompilationStencil>(merger.takeResult());
+    if (!result) {
+      return false;
+    }
 
-  Rooted<js::StencilObject*> stencilObj(cx,
-                                        js::StencilObject::create(cx, result));
-  if (!stencilObj) {
-    return false;
+    stencilObj = js::StencilObject::create(cx, result);
+    if (!stencilObj) {
+      return false;
+    }
   }
 
   args.rval().setObject(*stencilObj);
@@ -7846,6 +8021,21 @@ static bool PCCountProfiling_ScriptContents(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool NukeCCW(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1 || !args[0].isObject() ||
+      !IsCrossCompartmentWrapper(&args[0].toObject())) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_ARGS,
+                              "nukeCCW");
+    return false;
+  }
+
+  NukeCrossCompartmentWrapper(cx, &args[0].toObject());
+  args.rval().setUndefined();
+  return true;
+}
+
 // clang-format off
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
@@ -7965,6 +8155,18 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Returns a new object with an addProperty JSClass hook. This hook\n"
 "  increments the value of the _propertiesAdded data property on the object\n"
 "  when a new property is added."),
+
+    JS_FN_HELP("setWatchtowerCallback", SetWatchtowerCallback, 1, 0,
+"setWatchtowerCallback(function)",
+"  Use the given function as callback for objects added to Watchtower by\n"
+"  addWatchtowerTarget. The callback is called with the following arguments:\n"
+"  - kind: a string describing the kind of mutation, for example \"add-prop\"\n"
+"  - object: the object being mutated\n"
+"  - extra: an extra value, for example the name of the property being added"),
+
+    JS_FN_HELP("addWatchtowerTarget", AddWatchtowerTarget, 1, 0,
+"addWatchtowerTarget(object)",
+"  Invoke the watchtower callback for changes to this object."),
 
     JS_FN_HELP("newString", NewString, 2, 0,
 "newString(str[, options])",
@@ -8241,8 +8443,9 @@ gc::ZealModeHelpText),
 "  both compile- and link-time validated."),
 
     JS_FN_HELP("isAvxPresent", IsAvxPresent, 0, 0,
-"isAvxPresent(fn)",
-"  Returns whether AVX is present and enabled."),
+"isAvxPresent([minVersion])",
+"  Returns whether AVX is present and enabled. If minVersion specified,\n"
+"  use 1 - to check if AVX is enabled (default), 2 - if AVX2 is enabled."),
 
     JS_FN_HELP("wasmIsSupported", WasmIsSupported, 0, 0,
 "wasmIsSupported()",
@@ -8844,6 +9047,10 @@ JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
 "  Calls the given function and returns information about the exception it"
 "  throws. Returns null if the function didn't throw an exception."),
 
+    JS_FN_HELP("nukeCCW", NukeCCW, 1, 0,
+"nukeCCW(wrapper)",
+"  Nuke a CrossCompartmentWrapper, which turns it into a DeadProxyObject."),
+
     JS_FS_HELP_END
 };
 // clang-format on
@@ -8865,6 +9072,14 @@ JS_FN_HELP("setDefaultLocale", SetDefaultLocale, 1, 0,
 "  Set the runtime default locale to the given value.\n"
 "  An empty string or undefined resets the runtime locale to its default value.\n"
 "  NOTE: The input string is not fully validated, it must be a valid BCP-47 language tag."),
+
+JS_FN_HELP("isInStencilCache", IsInStencilCache, 1, 0,
+"isInStencilCache(fun)",
+"  True if fun is available in the stencil cache."),
+
+JS_FN_HELP("waitForStencilCache", WaitForStencilCache, 1, 0,
+"waitForStencilCache(fun)",
+"  Block main thread execution until the function is made available in the cache."),
 
     JS_FS_HELP_END
 };

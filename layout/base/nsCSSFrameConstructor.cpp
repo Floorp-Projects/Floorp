@@ -42,6 +42,7 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCheckboxRadioFrame.h"
+#include "nsCRT.h"
 #include "nsAtom.h"
 #include "nsIFrameInlines.h"
 #include "nsGkAtoms.h"
@@ -1435,7 +1436,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(Document* aDocument,
         FrameCtorDebugFlags* flag = gFlags;
         FrameCtorDebugFlags* limit = gFlags + NUM_DEBUG_FLAGS;
         while (flag < limit) {
-          if (PL_strcasecmp(flag->name, flags) == 0) {
+          if (nsCRT::strcasecmp(flag->name, flags) == 0) {
             *(flag->on) = true;
             printf("nsCSSFrameConstructor: setting %s debug flag on\n",
                    flag->name);
@@ -2911,33 +2912,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
         mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
             PseudoStyleType::dropDownList, computedStyle);
 
-    // Create a listbox
-    nsListControlFrame* listFrame =
-        NS_NewListControlFrame(mPresShell, listStyle);
-
-    // Notify the listbox that it is being used as a dropdown list.
-    listFrame->SetComboboxFrame(comboboxFrame);
-
-    // Notify combobox that it should use the listbox as it's popup
-    comboboxFrame->SetDropDown(listFrame);
-
-    NS_ASSERTION(!listFrame->IsAbsPosContainingBlock(),
-                 "Ended up with positioned dropdown list somehow.");
-    NS_ASSERTION(!listFrame->IsFloating(),
-                 "Ended up with floating dropdown list somehow.");
-
     // child frames of combobox frame
     nsFrameList childList;
-
-    // Initialize the scroll frame positioned. Note that it is NOT
-    // initialized as absolutely positioned.
-    nsContainerFrame* scrolledFrame =
-        NS_NewSelectsAreaFrame(mPresShell, computedStyle, flags);
-
-    InitializeSelectFrame(aState, listFrame, scrolledFrame, content,
-                          comboboxFrame, listStyle, true, childList);
-
-    NS_ASSERTION(listFrame->GetView(), "ListFrame's view is nullptr");
 
     // Create display and button frames from the combobox's anonymous content.
     // The anonymous content is appended to existing anonymous content for this
@@ -2973,12 +2949,6 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
 
     comboboxFrame->SetInitialChildList(kPrincipalList, childList);
 
-    // Initialize the additional popup child list which contains the
-    // dropdown list frame.
-    nsFrameList popupList;
-    popupList.AppendFrame(nullptr, listFrame);
-    comboboxFrame->SetInitialChildList(nsIFrame::kSelectPopupList, popupList);
-
     aState.mFrameState = historyState;
     if (aState.mFrameState) {
       // Restore frame state for the entire subtree of |comboboxFrame|.
@@ -2997,22 +2967,17 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
   // ******* this code stolen from Initialze ScrollFrame ********
   // please adjust this code to use BuildScrollFrame.
 
-  InitializeSelectFrame(aState, listFrame, scrolledFrame, content, aParentFrame,
-                        computedStyle, false, aFrameList);
+  InitializeListboxSelect(aState, listFrame, scrolledFrame, content,
+                          aParentFrame, computedStyle, aFrameList);
 
   return listFrame;
 }
 
-/**
- * Used to be InitializeScrollFrame but now it's only used for the select tag
- * But the select tag should really be fixed to use GFX scrollbars that can
- * be create with BuildScrollFrame.
- */
-void nsCSSFrameConstructor::InitializeSelectFrame(
+void nsCSSFrameConstructor::InitializeListboxSelect(
     nsFrameConstructorState& aState, nsContainerFrame* scrollFrame,
     nsContainerFrame* scrolledFrame, nsIContent* aContent,
     nsContainerFrame* aParentFrame, ComputedStyle* aComputedStyle,
-    bool aBuildCombobox, nsFrameList& aFrameList) {
+    nsFrameList& aFrameList) {
   // Initialize it
   nsContainerFrame* geometricParent =
       aState.GetGeometricParent(*aComputedStyle->StyleDisplay(), aParentFrame);
@@ -3022,14 +2987,9 @@ void nsCSSFrameConstructor::InitializeSelectFrame(
   // the scrollable view). So we have to split Init and Restore.
 
   scrollFrame->Init(aContent, geometricParent, nullptr);
-
-  if (!aBuildCombobox) {
-    aState.AddChild(scrollFrame, aFrameList, aContent, aParentFrame);
-  }
-
+  aState.AddChild(scrollFrame, aFrameList, aContent, aParentFrame);
   BuildScrollFrame(aState, aContent, aComputedStyle, scrolledFrame,
                    geometricParent, scrollFrame);
-
   if (aState.mFrameState) {
     // Restore frame state for the scroll frame
     RestoreFrameStateFor(scrollFrame, aState.mFrameState);
@@ -6438,7 +6398,10 @@ void nsCSSFrameConstructor::IssueSingleInsertNofications(
     InsertionKind aInsertionKind) {
   for (nsIContent* child = aStartChild; child != aEndChild;
        child = child->GetNextSibling()) {
-    MOZ_ASSERT(!child->GetPrimaryFrame());
+    // XXX the GetContent() != child check is needed due to bug 135040.
+    // Remove it once that's fixed.
+    MOZ_ASSERT(!child->GetPrimaryFrame() ||
+               child->GetPrimaryFrame()->GetContent() != child);
 
     // Call ContentRangeInserted with this node.
     ContentRangeInserted(child, child->GetNextSibling(), aInsertionKind);

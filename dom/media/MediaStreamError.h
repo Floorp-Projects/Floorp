@@ -71,7 +71,7 @@ class MediaMgrError final : public nsISupports, public BaseMediaMgrError {
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  void Reject(dom::Promise* aPromise);
+  void Reject(dom::Promise* aPromise) const;
 
  private:
   ~MediaMgrError() = default;

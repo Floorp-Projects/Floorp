@@ -507,7 +507,10 @@ impl FontContext {
                 } else {
                     (x_scale, y_scale / x_scale)
                 };
-                let extra_strikes = font.get_extra_strikes(strike_scale);
+                let extra_strikes = font.get_extra_strikes(
+                    FontInstanceFlags::SYNTHETIC_BOLD | FontInstanceFlags::MULTISTRIKE_BOLD,
+                    strike_scale,
+                );
                 let metrics = get_glyph_metrics(
                     &ct_font,
                     transform.as_ref(),
@@ -552,7 +555,7 @@ impl FontContext {
     #[allow(dead_code)]
     fn print_glyph_data(&mut self, data: &[u8], width: usize, height: usize) {
         // Rust doesn't have step_by support on stable :(
-        println!("Width is: {:?} height: {:?}", width, height);
+        debug!("Width is: {:?} height: {:?}", width, height);
         for i in 0 .. height {
             let current_height = i * width * 4;
 
@@ -561,9 +564,8 @@ impl FontContext {
                 let g = pixel[1];
                 let r = pixel[2];
                 let a = pixel[3];
-                print!("({}, {}, {}, {}) ", r, g, b, a);
+                debug!("({}, {}, {}, {}) ", r, g, b, a);
             }
-            println!();
         }
     }
 
@@ -674,8 +676,10 @@ impl FontContext {
         } else {
             (x_scale, y_scale / x_scale)
         };
-
-        let extra_strikes = font.get_extra_strikes(strike_scale);
+        let extra_strikes = font.get_extra_strikes(
+            FontInstanceFlags::SYNTHETIC_BOLD | FontInstanceFlags::MULTISTRIKE_BOLD,
+            strike_scale,
+        );
         let metrics = get_glyph_metrics(
             &ct_font,
             transform.as_ref(),

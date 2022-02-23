@@ -12,58 +12,6 @@ apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
 // :annotations project.
 evaluationDependsOn(':annotations')
 
-// Non-official versions are like "61.0a1", where "a1" is the milestone.
-// This simply strips that off, leaving "61.0" in this example.
-def getAppVersionWithoutMilestone() {
-    return mozconfig.substs.MOZ_APP_VERSION.replaceFirst(/a[0-9]/, "")
-}
-
-// This converts MOZ_APP_VERSION into an integer
-// version code.
-//
-// We take something like 58.1.2a1 and come out with 5800102
-// This gives us 3 digits for the major number, and 2 digits
-// each for the minor and build number. Beta and Release
-//
-// This must be synchronized with _compute_gecko_version(...) in /taskcluster/gecko_taskgraph/transforms/task.py
-def computeVersionCode() {
-    String appVersion = getAppVersionWithoutMilestone()
-
-    // Split on the dot delimiter, e.g. 58.1.1a1 -> ["58, "1", "1a1"]
-    String[] parts = appVersion.split('\\.')
-
-    assert parts.size() == 2 || parts.size() == 3
-
-    // Major
-    int code = Integer.parseInt(parts[0]) * 100000
-
-    // Minor
-    code += Integer.parseInt(parts[1]) * 100
-
-    // Build
-    if (parts.size() == 3) {
-        code += Integer.parseInt(parts[2])
-    }
-
-    return code;
-}
-
-def getVersionNumber() {
-    def appVersion = getAppVersionWithoutMilestone()
-    def parts = appVersion.split('\\.')
-    def version = parts[0] + "." + parts[1] + "." + getBuildId()
-    if (!mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
-        // Use -SNAPSHOT versions locally to enable the local GeckoView substitution flow.
-        version += "-SNAPSHOT"
-    }
-    return version
-}
-
-// Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
-def getBuildId() {
-    return file("${topobjdir}/buildid.h").getText('utf-8').split()[2]
-}
-
 android {
     buildToolsVersion project.ext.buildToolsVersion
     compileSdkVersion project.ext.compileSdkVersion
@@ -78,8 +26,8 @@ android {
         manifestPlaceholders = project.ext.manifestPlaceholders
         multiDexEnabled true
 
-        versionCode computeVersionCode()
-        versionName "${mozconfig.substs.MOZ_APP_VERSION}-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
+        versionCode project.ext.versionCode
+        versionName project.ext.versionName
         consumerProguardFiles 'proguard-rules.txt'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -90,7 +38,7 @@ android {
         // For the benefit of future archaeologists:
         // GRE_BUILDID is exactly the same as MOZ_APP_BUILDID unless you're running
         // on XULRunner, which is never the case on Android.
-        buildConfigField 'String', "MOZ_APP_BUILDID", "\"${getBuildId()}\"";
+        buildConfigField 'String', "MOZ_APP_BUILDID", "\"${project.ext.buildId}\"";
         buildConfigField 'String', "MOZ_APP_ID", "\"${mozconfig.substs.MOZ_APP_ID}\"";
         buildConfigField 'String', "MOZ_APP_NAME", "\"${mozconfig.substs.MOZ_APP_NAME}\"";
         buildConfigField 'String', "MOZ_APP_VENDOR", "\"${mozconfig.substs.MOZ_APP_VENDOR}\"";
@@ -137,8 +85,8 @@ android {
     project.configureProductFlavors()
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     dexOptions {
@@ -152,10 +100,7 @@ android {
     sourceSets {
         main {
             java {
-                srcDir "${topsrcdir}/mobile/android/geckoview/src/thirdparty/java"
-
                 if (!mozconfig.substs.MOZ_ANDROID_HLS_SUPPORT) {
-                    exclude 'com/google/android/exoplayer2/**'
                     exclude 'org/mozilla/gecko/media/GeckoHlsAudioRenderer.java'
                     exclude 'org/mozilla/gecko/media/GeckoHlsPlayer.java'
                     exclude 'org/mozilla/gecko/media/GeckoHlsRendererBase.java'
@@ -224,6 +169,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
 
     kotlinOptions {
         allWarningsAsErrors = true
+        jvmTarget = JavaVersion.VERSION_11
     }
 
     doFirst {
@@ -243,7 +189,7 @@ configurations {
             }
             afterEvaluate {
                 // Implicit capability
-                capability("org.mozilla.geckoview:${getArtifactId()}:${getVersionNumber()}")
+                capability("org.mozilla.geckoview:${getArtifactId()}:${project.ext.versionNumber}")
             }
         }
     }
@@ -255,43 +201,41 @@ configurations {
         outgoing {
             afterEvaluate {
                 // Implicit capability
-                capability("org.mozilla.geckoview:geckoview:${getVersionNumber()}")
+                capability("org.mozilla.geckoview:geckoview:${project.ext.versionNumber}")
             }
         }
     }
 }
 
 dependencies {
-    // For exoplayer.
-    compileOnly "com.google.code.findbugs:jsr305:3.0.2"
-    compileOnly "org.checkerframework:checker-compat-qual:2.5.0"
-    compileOnly "org.checkerframework:checker-qual:2.5.0"
-    compileOnly "org.jetbrains.kotlin:kotlin-annotations-jvm:1.3.70"
-
-    implementation "androidx.annotation:annotation:1.1.0"
+    implementation "androidx.annotation:annotation:1.3.0"
     implementation "androidx.legacy:legacy-support-v4:1.0.0"
 
     implementation "com.google.android.gms:play-services-fido:18.1.0"
     implementation "org.yaml:snakeyaml:1.24:android"
 
-    implementation "androidx.lifecycle:lifecycle-extensions:2.0.0"
-    implementation "androidx.lifecycle:lifecycle-common-java8:2.0.0"
+    implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
+    implementation "androidx.lifecycle:lifecycle-common-java8:2.4.0"
+
+    if (mozconfig.substs.MOZ_ANDROID_HLS_SUPPORT) {
+        implementation project(":exoplayer2")
+    }
 
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    testImplementation 'junit:junit:4.12'
-    testImplementation 'org.robolectric:robolectric:4.3'
-    testImplementation 'org.mockito:mockito-core:1.10.19'
+    testImplementation 'junit:junit:4.13.1'
+    testImplementation 'org.robolectric:robolectric:4.7.3'
+    testImplementation 'org.mockito:mockito-core:3.11.2'
 
     androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.2"
-    androidTestImplementation 'androidx.test:runner:1.1.0'
-    androidTestImplementation 'androidx.test:rules:1.1.0'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+    androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2"
+    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'androidx.test:rules:1.4.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     androidTestImplementation 'com.koushikdutta.async:androidasync:3.1.0'
 
-    androidTestImplementation 'androidx.multidex:multidex:2.0.0'
+    androidTestImplementation 'androidx.multidex:multidex:2.0.1'
 }
 
 apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"
@@ -328,7 +272,7 @@ android.libraryVariants.all { variant ->
 
         def results = []
         def listener = {
-            if (!it.toLowerCase().contains("warning") && !it.toLowerCase().contains("error")) {
+            if (!it.toLowerCase().contains("warning:") && !it.toLowerCase().contains("error:")) {
               // Likely not an error or a warning
               return
             }
@@ -366,45 +310,42 @@ android.libraryVariants.all { variant ->
              variant.generateBuildConfigProvider.get().sourceOutputDir.asFile.get() +
              variant.aidlCompileProvider.get().sourceOutputDir.asFile.get()
         )
+        options.addStringOption("Xmaxwarns", "1000")
 
         classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
         classpath += variant.javaCompileProvider.get().classpath
 
-        // javadoc 8 has a bug that requires the rt.jar file from the JRE to be
-        // in the bootclasspath (https://stackoverflow.com/a/30458820).
-        options.bootClasspath = [
-            file("${System.properties['java.home']}/lib/rt.jar")] + android.bootClasspath
         options.memberLevel = JavadocMemberLevel.PROTECTED
-        options.source = 8
-        options.links("https://d.android.com/reference/")
+        options.source = 11
+        options.links("https://developer.android.com/reference")
 
         options.docTitle = "GeckoView ${mozconfig.substs.MOZ_APP_VERSION} API"
         options.header = "GeckoView ${mozconfig.substs.MOZ_APP_VERSION} API"
         options.noTimestamp = true
-        options.noIndex = true
         options.noQualifiers = ['java.lang']
         options.tags = ['hide:a:']
     }
 
     def javadocJar = task("javadocJar${name.capitalize()}", type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
+        archiveClassifier = 'javadoc'
         from javadoc.destinationDir
     }
 
     // This task is used by `mach android geckoview-docs`.
     task("javadocCopyJar${name.capitalize()}", type: Copy) {
-        from(javadocJar.destinationDir) {
+        from(javadocJar.destinationDirectory) {
             include 'geckoview-*-javadoc.jar'
             rename { _ -> 'geckoview-javadoc.jar' }
         }
-        into javadocJar.destinationDir
+        into javadocJar.destinationDirectory
         dependsOn javadocJar
     }
 
     def sourcesJar = task("sourcesJar${name.capitalize()}", type: Jar) {
         classifier 'sources'
         description = "Generate Javadoc for build variant $name"
-        destinationDir = new File(destinationDir, variant.baseName)
+        destinationDirectory =
+            file("${topobjdir}/mobile/android/geckoview/sources/${variant.baseName}")
         from files(variant.sourceSets.collect({ it.java.srcDirs }).flatten())
     }
 
@@ -449,11 +390,7 @@ version = getVersionNumber()
 group = 'org.mozilla.geckoview'
 
 def getArtifactId() {
-    def id = "geckoview"
-    // Release artifacts don't specify the channel, for the sake of simplicity.
-    if (mozconfig.substs.MOZ_UPDATE_CHANNEL != 'release') {
-        id += "-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
-    }
+    def id = "geckoview" + project.ext.artifactSuffix
 
     if (!mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
         id += "-omni"
@@ -515,7 +452,7 @@ publishing {
     }
     repositories {
         maven {
-            url = "${project.buildDir}/maven"
+            url = "${topobjdir}/gradle/maven"
         }
     }
 }
@@ -561,6 +498,7 @@ android.libraryVariants.all configureVariantDebugLevel
 task("generateSDKBindings", type: JavaExec) {
     classpath project(':annotations').jar.archivePath
     classpath project(':annotations').compileJava.classpath
+    classpath project(':annotations').sourceSets.main.runtimeClasspath
 
     // To use the lint APIs: "Lint must be invoked with the System property
     // com.android.tools.lint.bindir pointing to the ANDROID_SDK tools
@@ -569,7 +507,7 @@ task("generateSDKBindings", type: JavaExec) {
         'com.android.tools.lint.bindir': "${android.sdkDirectory}/tools",
     ]
 
-    main = 'org.mozilla.gecko.annotationProcessors.SDKProcessor'
+    mainClass = 'org.mozilla.gecko.annotationProcessors.SDKProcessor'
     // We only want to generate bindings for the main framework JAR,
     // but not any of the additional android.test libraries.
     args android.bootClasspath.findAll { it.getName().startsWith('android.jar') }
@@ -596,7 +534,10 @@ apiLint {
     // TODO: Change this to `org` after hiding org.mozilla.gecko
     packageFilter = 'org.mozilla.geckoview'
     changelogFileName = 'src/main/java/org/mozilla/geckoview/doc-files/CHANGELOG.md'
-    skipClassesRegex = ['^org.mozilla.geckoview.BuildConfig$']
+    skipClassesRegex = [
+        '^org.mozilla.geckoview.BuildConfig$',
+        '^org.mozilla.geckoview.R$',
+    ]
     lintFilters = ['GV']
     deprecationAnnotation = 'org.mozilla.geckoview.DeprecationSchedule'
     libraryVersion = mozconfig.substs.MOZILLA_VERSION.split('\\.')[0] as Integer

@@ -1439,12 +1439,9 @@ MsaaAccessible::get_accDefaultAction(
   if (accessible) {
     return accessible->get_accDefaultAction(kVarChildIdSelf, pszDefaultAction);
   }
-  if (mAcc->IsRemote()) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
-  }
 
   nsAutoString defaultAction;
-  LocalAcc()->ActionNameAt(0, defaultAction);
+  mAcc->ActionNameAt(0, defaultAction);
 
   *pszDefaultAction =
       ::SysAllocStringLen(defaultAction.get(), defaultAction.Length());
@@ -1528,7 +1525,7 @@ MsaaAccessible::accLocation(
                                    kVarChildIdSelf);
   }
 
-  nsIntRect rect = Acc()->Bounds();
+  LayoutDeviceIntRect rect = Acc()->Bounds();
   *pxLeft = rect.X();
   *pyTop = rect.Y();
   *pcxWidth = rect.Width();
@@ -1659,7 +1656,7 @@ MsaaAccessible::accHitTest(
       // This is an OOP iframe. ChildAtPoint can't traverse inside it. If the
       // coordinates are inside this iframe, return the COM proxy for the
       // OOP document.
-      nsIntRect docRect = mAcc->AsLocal()->Bounds();
+      LayoutDeviceIntRect docRect = mAcc->AsLocal()->Bounds();
       if (docRect.Contains(xLeft, yTop)) {
         pvarChild->vt = VT_DISPATCH;
         disp.forget(&pvarChild->pdispVal);
@@ -1684,11 +1681,8 @@ MsaaAccessible::accDoDefaultAction(
   if (accessible) {
     return accessible->accDoDefaultAction(kVarChildIdSelf);
   }
-  if (mAcc->IsRemote()) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
-  }
 
-  return LocalAcc()->DoAction(0) ? S_OK : E_INVALIDARG;
+  return mAcc->DoAction(0) ? S_OK : E_INVALIDARG;
 }
 
 STDMETHODIMP

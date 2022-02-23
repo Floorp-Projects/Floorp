@@ -570,6 +570,13 @@ TextLeafPoint TextLeafPoint::FindPrevWordStartSameAcc(
   nsAutoString text;
   mAcc->AppendTextTo(text);
   TextLeafPoint lineStart = *this;
+  if (!aIncludeOrigin || (lineStart.mOffset == 1 && text.Length() == 1 &&
+                          text.CharAt(0) == '\n')) {
+    // We're not interested in a line that starts here, either because
+    // aIncludeOrigin is false or because we're at the end of a line break
+    // node.
+    --lineStart.mOffset;
+  }
   // A word never starts with a line feed character. If there are multiple
   // consecutive line feed characters and we're after the first of them, the
   // previous line start will be a line feed character. Skip this and any prior
@@ -581,7 +588,8 @@ TextLeafPoint TextLeafPoint::FindPrevWordStartSameAcc(
     // There's no line start for our purposes.
     lineStart = TextLeafPoint();
   } else {
-    lineStart = lineStart.FindLineStartSameAcc(eDirPrevious, aIncludeOrigin);
+    lineStart =
+        lineStart.FindLineStartSameAcc(eDirPrevious, /* aIncludeOrigin */ true);
   }
   // Keep walking backward until we find an acceptable word start.
   intl::WordRange word;

@@ -255,12 +255,12 @@ nsresult nsCoreUtils::ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
 
 void nsCoreUtils::ScrollFrameToPoint(nsIFrame* aScrollableFrame,
                                      nsIFrame* aFrame,
-                                     const nsIntPoint& aPoint) {
+                                     const LayoutDeviceIntPoint& aPoint) {
   nsIScrollableFrame* scrollableFrame = do_QueryFrame(aScrollableFrame);
   if (!scrollableFrame) return;
 
-  nsPoint point =
-      ToAppUnits(aPoint, aFrame->PresContext()->AppUnitsPerDevPixel());
+  nsPoint point = LayoutDeviceIntPoint::ToAppUnits(
+      aPoint, aFrame->PresContext()->AppUnitsPerDevPixel());
   nsRect frameRect = aFrame->GetScreenRectInAppUnits();
   nsPoint deltaPoint = point - frameRect.TopLeft();
 
@@ -322,8 +322,8 @@ void nsCoreUtils::ConvertScrollTypeToPercents(uint32_t aScrollType,
   *aHorizontal = ScrollAxis(whereX, whenX);
 }
 
-nsIntPoint nsCoreUtils::GetScreenCoordsForWindow(nsINode* aNode) {
-  nsIntPoint coords(0, 0);
+LayoutDeviceIntPoint nsCoreUtils::GetScreenCoordsForWindow(nsINode* aNode) {
+  LayoutDeviceIntPoint coords(0, 0);
   nsCOMPtr<nsIDocShellTreeItem> treeItem(GetDocShellFor(aNode));
   if (!treeItem) return coords;
 
@@ -580,8 +580,26 @@ void nsCoreUtils::DispatchAccEvent(RefPtr<nsIAccessibleEvent> event) {
 }
 
 bool nsCoreUtils::IsDisplayContents(nsIContent* aContent) {
-  return aContent && aContent->IsElement() &&
-         aContent->AsElement()->IsDisplayContents();
+  auto* element = Element::FromNodeOrNull(aContent);
+  return element && element->IsDisplayContents();
+}
+
+bool nsCoreUtils::CanCreateAccessibleWithoutFrame(nsIContent* aContent) {
+  auto* element = Element::FromNodeOrNull(aContent);
+  if (!element) {
+    return false;
+  }
+  if (!element->HasServoData() || Servo_Element_IsDisplayNone(element)) {
+    // Out of the flat tree or in a display: none subtree.
+    return false;
+  }
+  if (element->IsDisplayContents()) {
+    return true;
+  }
+  // We don't have a frame, but we're not display: contents either.
+  // For now, only create accessibles for <option>/<optgroup> as our combobox
+  // select code depends on it.
+  return element->IsAnyOfHTMLElements(nsGkAtoms::option, nsGkAtoms::optgroup);
 }
 
 bool nsCoreUtils::IsDocumentVisibleConsideringInProcessAncestors(

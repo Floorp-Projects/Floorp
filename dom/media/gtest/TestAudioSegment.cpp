@@ -372,4 +372,73 @@ TEST(AudioSegment, AppendAndConsumeNonEmptyZeroDurationChunk)
   EXPECT_FALSE(c.mBuffer->IsShared());
 }
 
+TEST(AudioSegment, CombineChunksInAppendAndConsumeChunk)
+{
+  AudioChunk source;
+  fillChunk<float, 2>(&source, 10);
+
+  auto checkChunks = [&](const AudioSegment& aSegement,
+                         const nsTArray<TrackTime>& aDurations) {
+    size_t i = 0;
+    for (AudioSegment::ConstChunkIterator iter(aSegement); !iter.IsEnded();
+         iter.Next()) {
+      EXPECT_EQ(iter->GetDuration(), aDurations[i++]);
+    }
+    EXPECT_EQ(i, aDurations.Length());
+  };
+
+  // The chunks can be merged if their duration are adjacent.
+  {
+    AudioChunk c1(source);
+    c1.SliceTo(2, 5);
+
+    AudioChunk c2(source);
+    c2.SliceTo(5, 9);
+
+    AudioSegment s;
+    s.AppendAndConsumeChunk(std::move(c1));
+    EXPECT_EQ(s.GetDuration(), 3);
+
+    s.AppendAndConsumeChunk(std::move(c2));
+    EXPECT_EQ(s.GetDuration(), 7);
+
+    checkChunks(s, {7});
+  }
+  // Otherwise, they cannot be merged.
+  {
+    // If durations of chunks are overlapped, they cannot be merged.
+    AudioChunk c1(source);
+    c1.SliceTo(2, 5);
+
+    AudioChunk c2(source);
+    c2.SliceTo(4, 9);
+
+    AudioSegment s;
+    s.AppendAndConsumeChunk(std::move(c1));
+    EXPECT_EQ(s.GetDuration(), 3);
+
+    s.AppendAndConsumeChunk(std::move(c2));
+    EXPECT_EQ(s.GetDuration(), 8);
+
+    checkChunks(s, {3, 5});
+  }
+  {
+    // If durations of chunks are discontinuous, they cannot be merged.
+    AudioChunk c1(source);
+    c1.SliceTo(2, 4);
+
+    AudioChunk c2(source);
+    c2.SliceTo(5, 9);
+
+    AudioSegment s;
+    s.AppendAndConsumeChunk(std::move(c1));
+    EXPECT_EQ(s.GetDuration(), 2);
+
+    s.AppendAndConsumeChunk(std::move(c2));
+    EXPECT_EQ(s.GetDuration(), 6);
+
+    checkChunks(s, {2, 4});
+  }
+}
+
 }  // namespace audio_segment

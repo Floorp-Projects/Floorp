@@ -600,8 +600,8 @@ cmd_gbench() {
 }
 
 cmd_asanfuzz() {
-  CMAKE_CXX_FLAGS+=" -fsanitize=fuzzer-no-link"
-  CMAKE_C_FLAGS+=" -fsanitize=fuzzer-no-link"
+  CMAKE_CXX_FLAGS+=" -fsanitize=fuzzer-no-link -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=1"
+  CMAKE_C_FLAGS+=" -fsanitize=fuzzer-no-link -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=1"
   cmd_asan -DJPEGXL_ENABLE_FUZZERS=ON "$@"
 }
 
@@ -615,8 +615,8 @@ cmd_msanfuzz() {
     cmd_msan_install
   fi
 
-  CMAKE_CXX_FLAGS+=" -fsanitize=fuzzer-no-link"
-  CMAKE_C_FLAGS+=" -fsanitize=fuzzer-no-link"
+  CMAKE_CXX_FLAGS+=" -fsanitize=fuzzer-no-link -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=1"
+  CMAKE_C_FLAGS+=" -fsanitize=fuzzer-no-link -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=1"
   cmd_msan -DJPEGXL_ENABLE_FUZZERS=ON "$@"
 }
 
@@ -697,7 +697,7 @@ cmd_msan() {
   strip_dead_code
   cmake_configure "$@" \
     -DCMAKE_CROSSCOMPILING=1 -DRUN_HAVE_STD_REGEX=0 -DRUN_HAVE_POSIX_REGEX=0 \
-    -DJPEGXL_ENABLE_TCMALLOC=OFF
+    -DJPEGXL_ENABLE_TCMALLOC=OFF -DJPEGXL_WARNINGS_AS_ERRORS=OFF
   cmake_build_and_test
 }
 

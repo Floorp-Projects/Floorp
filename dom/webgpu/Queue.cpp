@@ -116,34 +116,13 @@ void Queue::WriteTexture(const dom::GPUImageCopyTexture& aDestination,
   }
   MOZ_ASSERT(data != nullptr);
 
-  const auto bpb = aDestination.mTexture->mBytesPerBlock;
-  if (!bpb) {
-    aRv.ThrowAbortError(nsPrintfCString("Invalid texture format"));
-    return;
-  }
-  if (extent.width == 0 || extent.height == 0 ||
-      extent.depth_or_array_layers == 0) {
-    aRv.ThrowAbortError(nsPrintfCString("Invalid copy size"));
-    return;
-  }
-
-  // TODO: support block-compressed formats
-  const auto fullRows = (CheckedInt<size_t>(extent.depth_or_array_layers - 1) *
-                             aDataLayout.mRowsPerImage +
-                         extent.height - 1);
-  const auto checkedSize = fullRows * aDataLayout.mBytesPerRow +
-                           CheckedInt<size_t>(extent.width) * bpb.value();
+  const auto checkedSize =
+      CheckedInt<size_t>(availableSize) - aDataLayout.mOffset;
   if (!checkedSize.isValid()) {
-    aRv.ThrowRangeError("Mapped size is too large");
+    aRv.ThrowAbortError(nsPrintfCString("Offset is higher than the size"));
     return;
   }
-
-  const auto& size = checkedSize.value();
-  if (availableSize < aDataLayout.mOffset ||
-      size > (availableSize - aDataLayout.mOffset)) {
-    aRv.ThrowAbortError(nsPrintfCString("Wrong data size %" PRIuPTR, size));
-    return;
-  }
+  const auto size = checkedSize.value();
 
   ipc::Shmem shmem;
   if (!mBridge->AllocShmem(size, ipc::Shmem::SharedMemory::TYPE_BASIC,

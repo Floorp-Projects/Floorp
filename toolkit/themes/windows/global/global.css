@@ -28,7 +28,7 @@
 
     /* Declare menu colors for dark themes, but don't override anything yet. */
     --dark-menuitem-hover-background-color: #52525e;
-    --dark-menu-background-color: #414141;
+    --dark-menu-background-color: #2b2a33;
     --dark-menu-color: #fbfbfe;
     --dark-menuitem-disabled-hover-background-color: rgba(82, 82, 94, 0.4);
     --dark-menu-disabled-color: rgba(251, 251, 254, 0.4);

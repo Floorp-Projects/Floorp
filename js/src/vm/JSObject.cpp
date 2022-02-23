@@ -2162,6 +2162,15 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
     return true;
   }
 
+#ifdef NIGHTLY_BUILD
+  if (key == JSProto_Array &&
+      !cx->realm()->creationOptions().getArrayGroupingEnabled() &&
+      (id == NameToId(cx->names().groupBy) ||
+       id == NameToId(cx->names().groupByToMap))) {
+    return true;
+  }
+#endif
+
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   if (key == JSProto_Array && !cx->options().changeArrayByCopy() &&
       (id == NameToId(cx->names().withAt) ||
@@ -3492,7 +3501,7 @@ bool js::Unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp) {
   } else if (obj->is<RecordObject>()) {
     vp.setExtendedPrimitive(*obj->as<RecordObject>().unbox());
   } else if (obj->is<TupleObject>()) {
-    vp.setExtendedPrimitive(*obj->as<TupleObject>().unbox());
+    vp.setExtendedPrimitive(obj->as<TupleObject>().unbox());
 #endif
   } else {
     vp.setUndefined();

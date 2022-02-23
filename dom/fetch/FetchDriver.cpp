@@ -909,6 +909,7 @@ void FetchDriver::FailWithNetworkError(nsresult rv) {
   }
 
   mChannel = nullptr;
+  Unfollow();
 }
 
 NS_IMETHODIMP
@@ -1438,6 +1439,7 @@ void FetchDriver::FinishOnStopRequest(
   }
 
   mChannel = nullptr;
+  Unfollow();
 }
 
 NS_IMETHODIMP

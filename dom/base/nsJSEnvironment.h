@@ -57,17 +57,17 @@ class nsJSContext : public nsIScriptContext {
 
   enum IsShrinking { ShrinkingGC, NonShrinkingGC };
 
-  enum IsIncremental { IncrementalGC, NonIncrementalGC };
-
   // Setup all the statics etc - safe to call multiple times after Startup().
   static void EnsureStatics();
 
   static void SetLowMemoryState(bool aState);
 
   static void GarbageCollectNow(JS::GCReason reason,
-                                IsIncremental aIncremental = NonIncrementalGC,
-                                IsShrinking aShrinking = NonShrinkingGC,
-                                int64_t aSliceMillis = 0);
+                                IsShrinking aShrinking = NonShrinkingGC);
+
+  static void RunIncrementalGCSlice(JS::GCReason aReason,
+                                    IsShrinking aShrinking,
+                                    mozilla::TimeDuration aBudget);
 
   static void CycleCollectNow(mozilla::CCReason aReason,
                               nsICycleCollectorListener* aListener = nullptr);

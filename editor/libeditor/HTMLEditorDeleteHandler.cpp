@@ -3125,10 +3125,12 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   mRightContent = HTMLEditUtils::GetInclusiveAncestorElement(
       *aRangesToDelete.FirstRangeRef()->GetEndContainer()->AsContent(),
       HTMLEditUtils::ClosestEditableBlockElement);
-  // Note that mLeftContent and mRightContent can be nullptr if editing host
-  // is an inline element.
-  if (mLeftContent == mRightContent) {
-    MOZ_ASSERT_IF(!mLeftContent,
+  // Note that mLeftContent and/or mRightContent can be nullptr if editing host
+  // is an inline element.  If both editable ancestor block is exactly same
+  // one or one reaches an inline editing host, we can just delete the content
+  // in ranges.
+  if (mLeftContent == mRightContent || !mLeftContent || !mRightContent) {
+    MOZ_ASSERT_IF(!mLeftContent || !mRightContent,
                   aRangesToDelete.FirstRangeRef()
                           ->GetStartContainer()
                           ->AsContent()
@@ -3139,12 +3141,6 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     mMode = Mode::DeleteContentInRanges;
     return true;
   }
-  if (NS_WARN_IF(!mLeftContent) || NS_WARN_IF(!mRightContent)) {
-    return false;
-  }
-  NS_ASSERTION(
-      mLeftContent->GetEditingHost() == mRightContent->GetEditingHost(),
-      "Trying to delete across editing host boundaries");
 
   // If left block and right block are adjuscent siblings and they are same
   // type of elements, we can merge them after deleting the selected contents.
@@ -3229,7 +3225,6 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
                                            ->GetEndContainer()
                                            ->AsContent()
                                            ->GetEditingHost());
-  MOZ_ASSERT(mLeftContent == mRightContent);
   MOZ_ASSERT_IF(mLeftContent, mLeftContent->IsElement());
   MOZ_ASSERT_IF(mLeftContent, aRangesToDelete.FirstRangeRef()
                                   ->GetStartContainer()
@@ -4615,10 +4610,13 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 template <typename PT, typename CT>
 Result<bool, nsresult> HTMLEditor::CanMoveOrDeleteSomethingInHardLine(
     const EditorDOMPointBase<PT, CT>& aPointInHardLine) const {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!aPointInHardLine.IsSet()) ||
+                   NS_WARN_IF(aPointInHardLine.IsInNativeAnonymousSubtree()))) {
+    return Err(NS_ERROR_INVALID_ARG);
+  }
+
   RefPtr<nsRange> oneLineRange = CreateRangeExtendedToHardLineStartAndEnd(
-      aPointInHardLine.ToRawRangeBoundary(),
-      aPointInHardLine.ToRawRangeBoundary(),
-      EditSubAction::eMergeBlockContents);
+      aPointInHardLine, aPointInHardLine, EditSubAction::eMergeBlockContents);
   if (!oneLineRange || oneLineRange->Collapsed() ||
       !oneLineRange->IsPositioned() ||
       !oneLineRange->GetStartContainer()->IsContent() ||

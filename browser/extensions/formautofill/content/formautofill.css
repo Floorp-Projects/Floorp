@@ -42,12 +42,12 @@
 #autofill-credit-card-notification popupnotificationcontent > .desc-message-box > image {
   -moz-context-properties: fill;
   fill: currentColor;
-  margin-inline-start: 6px;
-  width: 16px;
-  height: 16px;
+  width: auto;
+  height: auto;
   list-style-image: url(chrome://formautofill/content/icon-credit-card-generic.svg);
 }
 #autofill-address-notification popupnotificationcontent > .desc-message-box > description,
 #autofill-credit-card-notification popupnotificationcontent > .desc-message-box > description {
   font-style: italic;
+  margin-inline-start: 4px;
 }

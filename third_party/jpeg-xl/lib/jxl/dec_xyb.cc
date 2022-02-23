@@ -35,9 +35,9 @@ void OpsinToLinearInplace(Image3F* JXL_RESTRICT inout, ThreadPool* pool,
   JXL_CHECK_IMAGE_INITIALIZED(*inout, Rect(*inout));
 
   const size_t xsize = inout->xsize();  // not padded
-  RunOnPool(
-      pool, 0, inout->ysize(), ThreadPool::SkipInit(),
-      [&](const int task, const int thread) {
+  JXL_CHECK(RunOnPool(
+      pool, 0, inout->ysize(), ThreadPool::NoInit,
+      [&](const uint32_t task, size_t /* thread */) {
         const size_t y = task;
 
         // Faster than adding via ByteOffset at end of loop.
@@ -51,7 +51,6 @@ void OpsinToLinearInplace(Image3F* JXL_RESTRICT inout, ThreadPool* pool,
           const auto in_opsin_x = Load(d, row0 + x);
           const auto in_opsin_y = Load(d, row1 + x);
           const auto in_opsin_b = Load(d, row2 + x);
-          JXL_COMPILER_FENCE;
           auto linear_r = Undefined(d);
           auto linear_g = Undefined(d);
           auto linear_b = Undefined(d);
@@ -63,7 +62,7 @@ void OpsinToLinearInplace(Image3F* JXL_RESTRICT inout, ThreadPool* pool,
           Store(linear_b, d, row2 + x);
         }
       },
-      "OpsinToLinear");
+      "OpsinToLinear"));
 }
 
 // Same, but not in-place.
@@ -75,9 +74,9 @@ void OpsinToLinear(const Image3F& opsin, const Rect& rect, ThreadPool* pool,
   JXL_ASSERT(SameSize(rect, *linear));
   JXL_CHECK_IMAGE_INITIALIZED(opsin, rect);
 
-  RunOnPool(
-      pool, 0, static_cast<int>(rect.ysize()), ThreadPool::SkipInit(),
-      [&](const int task, int /*thread*/) {
+  JXL_CHECK(RunOnPool(
+      pool, 0, static_cast<int>(rect.ysize()), ThreadPool::NoInit,
+      [&](const uint32_t task, size_t /*thread*/) {
         const size_t y = static_cast<size_t>(task);
 
         // Faster than adding via ByteOffset at end of loop.
@@ -94,7 +93,6 @@ void OpsinToLinear(const Image3F& opsin, const Rect& rect, ThreadPool* pool,
           const auto in_opsin_x = Load(d, row_opsin_0 + x);
           const auto in_opsin_y = Load(d, row_opsin_1 + x);
           const auto in_opsin_b = Load(d, row_opsin_2 + x);
-          JXL_COMPILER_FENCE;
           auto linear_r = Undefined(d);
           auto linear_g = Undefined(d);
           auto linear_b = Undefined(d);
@@ -106,7 +104,7 @@ void OpsinToLinear(const Image3F& opsin, const Rect& rect, ThreadPool* pool,
           Store(linear_b, d, row_linear_2 + x);
         }
       },
-      "OpsinToLinear(Rect)");
+      "OpsinToLinear(Rect)"));
   JXL_CHECK_IMAGE_INITIALIZED(*linear, rect);
 }
 
@@ -208,7 +206,7 @@ Status OutputEncodingInfo::Set(const CodecMetadata& metadata,
   const auto& im = metadata.transform_data.opsin_inverse_matrix;
   float inverse_matrix[9];
   memcpy(inverse_matrix, im.inverse_matrix, sizeof(inverse_matrix));
-  float intensity_target = metadata.m.IntensityTarget();
+  intensity_target = metadata.m.IntensityTarget();
   if (metadata.m.xyb_encoded) {
     const auto& orig_color_encoding = metadata.m.color_encoding;
     color_encoding = default_enc;
@@ -246,8 +244,8 @@ Status OutputEncodingInfo::Set(const CodecMetadata& metadata,
             srgb.GetPrimaries().g.x, srgb.GetPrimaries().g.y,
             srgb.GetPrimaries().b.x, srgb.GetPrimaries().b.y,
             srgb.GetWhitePoint().x, srgb.GetWhitePoint().y, srgb_to_xyzd50));
-        float xyzd50_to_original[9];
-        JXL_RETURN_IF_ERROR(PrimariesToXYZD50(
+        float original_to_xyz[3][3];
+        JXL_RETURN_IF_ERROR(PrimariesToXYZ(
             orig_color_encoding.GetPrimaries().r.x,
             orig_color_encoding.GetPrimaries().r.y,
             orig_color_encoding.GetPrimaries().g.x,
@@ -255,7 +253,15 @@ Status OutputEncodingInfo::Set(const CodecMetadata& metadata,
             orig_color_encoding.GetPrimaries().b.x,
             orig_color_encoding.GetPrimaries().b.y,
             orig_color_encoding.GetWhitePoint().x,
-            orig_color_encoding.GetWhitePoint().y, xyzd50_to_original));
+            orig_color_encoding.GetWhitePoint().y, &original_to_xyz[0][0]));
+        memcpy(luminances, original_to_xyz[1], sizeof luminances);
+        float adapt_to_d50[9];
+        JXL_RETURN_IF_ERROR(AdaptToXYZD50(orig_color_encoding.GetWhitePoint().x,
+                                          orig_color_encoding.GetWhitePoint().y,
+                                          adapt_to_d50));
+        float xyzd50_to_original[9];
+        MatMul(adapt_to_d50, &original_to_xyz[0][0], 3, 3, 3,
+               xyzd50_to_original);
         JXL_RETURN_IF_ERROR(Inv3x3Matrix(xyzd50_to_original));
         float srgb_to_original[9];
         MatMul(xyzd50_to_original, srgb_to_xyzd50, 3, 3, 3, srgb_to_original);

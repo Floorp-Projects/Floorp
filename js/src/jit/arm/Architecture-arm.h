@@ -714,10 +714,11 @@ inline bool hasMultiAlias() { return true; }
 // instead; see ParseARMHwCapFlags.
 void InitARMFlags();
 
-// Parse a string denoting ARM hardware flags and unconditionally set the flags.
-// Doing this after the flags have been observed is likely to cause problems, as
-// code is allowed to assume that the flags are stable.
-bool ParseARMHwCapFlags(const char* armHwCap);
+// Register a string denoting ARM hardware flags. During engine initialization,
+// these flags will then be used instead of the actual hardware capabilities.
+// This must be called before JS_Init and the passed string's buffer must
+// outlive the JS_Init call.
+void SetARMHwCapFlagsString(const char* armHwCap);
 
 // Retrive the ARM hardware flags at a bitmask.  They must have been set.
 uint32_t GetARMFlags();

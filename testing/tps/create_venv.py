@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -9,15 +9,11 @@ It's probably best to specify a path NOT inside the repo, otherwise
 all the virtualenv files will show up in e.g. hg status.
 """
 
-from __future__ import absolute_import, print_function
-
-import six
 import optparse
 import os
-import shutil
 import subprocess
 import sys
-import zipfile
+import venv
 
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -38,58 +34,18 @@ See runtps --help for all options
 ***********************************************************************
 """
 
-# Link to the folder, which contains the zip archives of virtualenv
-URL_VIRTUALENV = "https://codeload.github.com/pypa/virtualenv/zip/"
-VERSION_VIRTUALENV = "15.0.0"
-
-
 if sys.platform == "win32":
     bin_name = os.path.join("Scripts", "activate.bat")
-    activate_env = os.path.join("Scripts", "activate_this.py")
     python_env = os.path.join("Scripts", "python.exe")
 else:
     bin_name = os.path.join("bin", "activate")
-    activate_env = os.path.join("bin", "activate_this.py")
     python_env = os.path.join("bin", "python")
 
 
-def download(url, target):
-    """Downloads the specified url to the given target."""
-    response = six.moves.urllib.request.urlopen(url)
-    with open(target, "wb") as f:
-        f.write(response.read())
-
-    return target
-
-
-def setup_virtualenv(target, python_bin=None):
-    script_path = os.path.join(
-        here, "virtualenv-%s" % VERSION_VIRTUALENV, "virtualenv.py"
-    )
-
-    print("Downloading virtualenv {}".format(VERSION_VIRTUALENV))
-    zip_path = download(
-        URL_VIRTUALENV + VERSION_VIRTUALENV, os.path.join(here, "virtualenv.zip")
-    )
-
-    try:
-        with zipfile.ZipFile(zip_path, "r") as f:
-            f.extractall(here)
-
-        print("Creating new virtual environment")
-        cmd_args = [sys.executable, script_path, target]
-
-        if python_bin:
-            cmd_args.extend(["-p", python_bin])
-
-        subprocess.check_call(cmd_args)
-    finally:
-        try:
-            os.remove(zip_path)
-        except OSError:
-            pass
-
-        shutil.rmtree(os.path.dirname(script_path), ignore_errors=True)
+def setup_virtualenv(target):
+    print("Creating new virtual environment:", os.path.abspath(target))
+    # system_site_packages=True so we have access to setuptools.
+    venv.create(target, system_site_packages=True)
 
 
 def update_configfile(source, target, replacements):
@@ -97,7 +53,7 @@ def update_configfile(source, target, replacements):
 
     with open(source) as config:
         for line in config:
-            for source_string, target_string in six.iteritems(replacements):
+            for source_string, target_string in replacements.items():
                 if target_string:
                     line = line.replace(source_string, target_string)
             lines.append(line)
@@ -172,11 +128,10 @@ def main():
     target = args[0]
     assert target
 
-    setup_virtualenv(target, python_bin=options.python)
+    setup_virtualenv(target)
 
     # Activate tps environment
-    tps_env = os.path.join(target, activate_env)
-    exec(open(tps_env).read(), dict(__file__=tps_env))
+    activate(target)
 
     # Install TPS in environment
     subprocess.check_call(
@@ -215,6 +170,35 @@ def main():
 
     # Print the user instructions
     print(usage_message.format(TARGET=target, BIN_NAME=bin_name))
+
+
+def activate(target):
+    # This is a lightly modified copy of `activate_this.py`, which existed when
+    # venv was an external package, but doesn't come with the builtin venv support.
+    old_os_path = os.environ.get("PATH", "")
+    os.environ["PATH"] = (
+        os.path.dirname(os.path.abspath(__file__)) + os.pathsep + old_os_path
+    )
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if sys.platform == "win32":
+        site_packages = os.path.join(base, "Lib", "site-packages")
+    else:
+        site_packages = os.path.join(
+            base, "lib", "python%s" % sys.version[:3], "site-packages"
+        )
+    prev_sys_path = list(sys.path)
+    import site
+
+    site.addsitedir(site_packages)
+    sys.real_prefix = sys.prefix
+    sys.prefix = base
+    # Move the added items to the front of the path:
+    new_sys_path = []
+    for item in list(sys.path):
+        if item not in prev_sys_path:
+            new_sys_path.append(item)
+            sys.path.remove(item)
+    sys.path[:0] = new_sys_path
 
 
 if __name__ == "__main__":

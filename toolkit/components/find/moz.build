@@ -24,6 +24,8 @@ SOURCES += [
     "nsFindService.cpp",
 ]
 
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+
 FINAL_LIBRARY = "xul"
 
 REQUIRES_UNIFIED_BUILD = True

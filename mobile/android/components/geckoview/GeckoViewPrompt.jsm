@@ -27,6 +27,10 @@ class PromptFactory {
 
   handleEvent(aEvent) {
     switch (aEvent.type) {
+      case "mozshowdropdown":
+      case "mozshowdropdown-sourcetouch":
+        this._handleSelect(aEvent.composedTarget, /* aIsDropDown = */ true);
+        break;
       case "click":
         this._handleClick(aEvent);
         break;
@@ -39,8 +43,15 @@ class PromptFactory {
     }
   }
 
+  // TODO(emilio): We should listen to MozOpenDateTimePicker instead, except
+  // the Gecko widget isn't supported for stuff like <input type=week>
   _handleClick(aEvent) {
     const target = aEvent.composedTarget;
+    const className = ChromeUtils.getClassName(target);
+    if (className !== "HTMLInputElement" && className !== "HTMLSelectElement") {
+      return;
+    }
+
     if (
       target.isContentEditable ||
       target.disabled ||
@@ -52,26 +63,29 @@ class PromptFactory {
       return;
     }
 
-    const win = target.ownerGlobal;
-    if (target instanceof win.HTMLSelectElement) {
-      this._handleSelect(target);
-      aEvent.preventDefault();
-    } else if (target instanceof win.HTMLInputElement) {
-      const type = target.type;
-      if (
-        type === "date" ||
-        type === "month" ||
-        type === "week" ||
-        type === "time" ||
-        type === "datetime-local"
-      ) {
-        this._handleDateTime(target, type);
-        aEvent.preventDefault();
+    if (className === "HTMLSelectElement") {
+      if (!target.isCombobox) {
+        this._handleSelect(target, /* aIsDropDown = */ false);
+        return;
       }
+      // combobox select is handled by mozshowdropdown.
+      return;
+    }
+
+    const type = target.type;
+    if (
+      type === "date" ||
+      type === "month" ||
+      type === "week" ||
+      type === "time" ||
+      type === "datetime-local"
+    ) {
+      this._handleDateTime(target, type);
+      aEvent.preventDefault();
     }
   }
 
-  _handleSelect(aElement) {
+  _handleSelect(aElement, aIsDropDown) {
     const win = aElement.ownerGlobal;
     let id = 0;
     const map = {};
@@ -103,6 +117,9 @@ class PromptFactory {
       return items;
     })(aElement);
 
+    if (aIsDropDown) {
+      aElement.openInParentProcess = true;
+    }
     const prompt = new GeckoViewPrompter(win);
     prompt.asyncShowPrompt(
       {
@@ -111,6 +128,9 @@ class PromptFactory {
         choices: items,
       },
       result => {
+        if (aIsDropDown) {
+          aElement.openInParentProcess = false;
+        }
         // OK: result
         // Cancel: !result
         if (!result || result.choices === undefined) {
@@ -189,7 +209,7 @@ class PromptFactory {
     // Fire both "input" and "change" events for <select> and <input> for
     // date/time.
     aElement.dispatchEvent(
-      new aElement.ownerGlobal.Event("input", { bubbles: true })
+      new aElement.ownerGlobal.Event("input", { bubbles: true, composed: true })
     );
     aElement.dispatchEvent(
       new aElement.ownerGlobal.Event("change", { bubbles: true })

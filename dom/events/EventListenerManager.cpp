@@ -31,6 +31,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/EventTimelineMarker.h"
@@ -2143,13 +2144,11 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(EventListenerManager::ListenerSignalFollower)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(
     EventListenerManager::ListenerSignalFollower)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListener)
-  AbortFollower::Traverse(static_cast<AbortFollower*>(tmp), cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(
     EventListenerManager::ListenerSignalFollower)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mListener)
-  AbortFollower::Unlink(static_cast<AbortFollower*>(tmp));
   tmp->mListenerManager = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 

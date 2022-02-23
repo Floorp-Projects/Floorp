@@ -549,6 +549,15 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
   ScreenMargin GetCompositorFixedLayerMargins() const;
 
+  APZScrollGeneration NewAPZScrollGeneration() {
+    // In the production code this function gets only called from the sampler
+    // thread but in tests using nsIDOMWindowUtils.setAsyncScrollOffset this
+    // function gets called from the controller thread so we need to lock the
+    // mutex for this counter.
+    MutexAutoLock lock(mScrollGenerationLock);
+    return mScrollGenerationCounter.NewAPZGeneration();
+  }
+
  private:
   using GuidComparator = ScrollableLayerGuid::Comparator;
   using ScrollNode = WebRenderScrollDataWrapper;
@@ -985,6 +994,12 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
   friend class IAPZHitTester;
   UniquePtr<IAPZHitTester> mHitTester;
+
+  // NOTE: This ScrollGenerationCounter needs to be per APZCTreeManager since
+  // the generation is bumped up on the sampler theread which is per
+  // APZCTreeManager.
+  ScrollGenerationCounter mScrollGenerationCounter;
+  mozilla::Mutex mScrollGenerationLock;
 
 #if defined(MOZ_WIDGET_ANDROID)
  private:

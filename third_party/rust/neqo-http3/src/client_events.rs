@@ -9,7 +9,7 @@
 use crate::connection::Http3State;
 use crate::settings::HSettingType;
 use crate::{
-    features::extended_connect::{ExtendedConnectEvents, ExtendedConnectType},
+    features::extended_connect::{ExtendedConnectEvents, ExtendedConnectType, SessionCloseReason},
     CloseType, Http3StreamInfo, HttpRecvStreamEvents, RecvStreamEvents, SendStreamEvents,
 };
 use neqo_common::{event::Provider as EventProvider, Header};
@@ -23,10 +23,13 @@ use std::rc::Rc;
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum WebTransportEvent {
     Negotiated(bool),
-    Session(StreamId),
+    Session {
+        stream_id: StreamId,
+        status: u16,
+    },
     SessionClosed {
         stream_id: StreamId,
-        error: Option<AppError>,
+        reason: SessionCloseReason,
     },
     NewStream {
         stream_id: StreamId,
@@ -174,11 +177,12 @@ impl SendStreamEvents for Http3ClientEvents {
 }
 
 impl ExtendedConnectEvents for Http3ClientEvents {
-    fn session_start(&self, connect_type: ExtendedConnectType, stream_id: StreamId) {
+    fn session_start(&self, connect_type: ExtendedConnectType, stream_id: StreamId, status: u16) {
         if connect_type == ExtendedConnectType::WebTransport {
-            self.insert(Http3ClientEvent::WebTransport(WebTransportEvent::Session(
+            self.insert(Http3ClientEvent::WebTransport(WebTransportEvent::Session {
                 stream_id,
-            )));
+                status,
+            }));
         } else {
             unreachable!("There is only ExtendedConnectType::WebTransport.");
         }
@@ -188,11 +192,11 @@ impl ExtendedConnectEvents for Http3ClientEvents {
         &self,
         connect_type: ExtendedConnectType,
         stream_id: StreamId,
-        error: Option<AppError>,
+        reason: SessionCloseReason,
     ) {
         if connect_type == ExtendedConnectType::WebTransport {
             self.insert(Http3ClientEvent::WebTransport(
-                WebTransportEvent::SessionClosed { stream_id, error },
+                WebTransportEvent::SessionClosed { stream_id, reason },
             ));
         } else {
             unreachable!("There are no other types.");
@@ -325,10 +329,10 @@ impl Http3ClientEvents {
         });
     }
 
-    pub fn negotiation_done(&self, feature_type: HSettingType, negotiated: bool) {
+    pub fn negotiation_done(&self, feature_type: HSettingType, succeeded: bool) {
         if feature_type == HSettingType::EnableWebTransport {
             self.insert(Http3ClientEvent::WebTransport(
-                WebTransportEvent::Negotiated(negotiated),
+                WebTransportEvent::Negotiated(succeeded),
             ));
         }
     }

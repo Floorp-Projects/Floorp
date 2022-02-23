@@ -5,11 +5,22 @@
 
 @import url("resource://content-accessible/viewsource.css");
 
+:host {
+  color-scheme: light dark;
+}
+
 #header {
   background-color: #ccc;
   border-bottom: 3px solid black;
   padding: 0.5em;
   margin-bottom: 1em;
+}
+
+@media (prefers-color-scheme: dark) {
+  #header {
+    background-color: #333;
+    border-color: #555;
+  }
 }
 
 #tree,
@@ -37,7 +48,7 @@
   cursor: pointer;
   padding-inline-end: 2px;
   /* Don't want to inherit the styling from pi and comment elements */
-  color: initial;
+  color: buttontext;
   font: initial;
 }
 

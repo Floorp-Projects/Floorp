@@ -19,3 +19,13 @@ interface CountQueuingStrategy {
   [Throws]
   readonly attribute Function size;
 };
+
+[Exposed=(Window,Worker,Worklet)]
+interface ByteLengthQueuingStrategy {
+  constructor(QueuingStrategyInit init);
+
+  readonly attribute unrestricted double highWaterMark;
+
+  [Throws]
+  readonly attribute Function size;
+};

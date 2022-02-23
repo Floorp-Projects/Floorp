@@ -33,6 +33,10 @@ urlbar:
     Exposure is sent once per browsing session after the first urlbar query is
     made.
   variables:
+    bestMatchEnabled:
+      type: boolean
+      fallbackPref: browser.urlbar.bestMatch.enabled
+      description: Whether best match results are enabled
     merinoClientVariants:
       type: string
       fallbackPref: browser.urlbar.merino.clientVariants
@@ -174,6 +178,10 @@ newtab:
     prefsButtonIcon:
       type: string
       description: Icon url to use for the preferences button
+    topSitesContileEnabled:
+      type: boolean
+      fallbackPref: browser.topsites.contile.enabled
+      description: Enable the Contile integration for Sponsored Top Sites
 pocketNewtab:
   description: The Pocket section in newtab
   hasExposure: false
@@ -187,6 +195,18 @@ pocketNewtab:
       type: boolean
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.compactLayout.enabled
       description: Enable compact cards on newtab grid
+    hybridLayout:
+      type: boolean
+      fallbackPref: browser.newtabpage.activity-stream.discoverystream.hybridLayout.enabled
+      description: Enable compact cards on newtab grid only for specific breakpoints 
+    hideCardBackground:
+      type: boolean
+      fallbackPref: browser.newtabpage.activity-stream.discoverystream.hideCardBackground.enabled
+      description: Removes Pocket card background and borders.
+    fourCardLayout:
+      type: boolean
+      fallbackPref: browser.newtabpage.activity-stream.discoverystream.fourCardLayout.enabled
+      description: Enable four Pocket cards per row.
     loadMore:
       type: boolean
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.loadMore.enabled
@@ -273,6 +293,18 @@ pocketNewtab:
         browser.newtabpage.activity-stream.discoverystream.newSponsoredLabel.enabled
       description: >-
         Updates the sponsored label position to below the image for Pocket cards on newtab.
+    recsPersonalized:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.recs.personalized
+      description: >-
+        Enables Pocket stories personalization.
+    spocsPersonalized:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.spocs.personalized
+      description: >-
+        Enables Pocket sponsored content personalization.
 saveToPocket:
   description: The save to Pocket feature
   hasExposure: false
@@ -443,4 +475,13 @@ spotlight:
   isEarlyStartup: false
   schema: >-
     "browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/Spotlight.schema.json"
+  variables: {}
+pbNewtab:
+  description: Message shown on the PB newtab for Messaging System
+  hasExposure: true
+  exposureDescription: >-
+    Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched.
+  isEarlyStartup: false
+  schema: >-
+    browser/components/newtab/content-src/asrouter/templates/PBNewtab/NewtabPromoMessage.schema.json
   variables: {}

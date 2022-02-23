@@ -19,7 +19,8 @@ public enum GeckoProcessType {
   RDD("rdd"),
   SOCKET("socket"),
   REMOTESANDBOXBROKER("sandboxbroker"),
-  FORKSERVER("forkserver");
+  FORKSERVER("forkserver"),
+  UTILITY("utility");
 
   private final String mGeckoName;
 

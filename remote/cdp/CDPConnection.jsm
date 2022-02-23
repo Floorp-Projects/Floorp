@@ -11,6 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
   Log: "chrome://remote/content/shared/Log.jsm",
   truncate: "chrome://remote/content/shared/Format.jsm",
   UnknownMethodError: "chrome://remote/content/cdp/Error.jsm",
@@ -44,6 +46,18 @@ class CDPConnection extends WebSocketConnection {
    *     The session to register.
    */
   registerSession(session) {
+    // CDP is not compatible with Fission by default, check the appropriate
+    // preferences are set to ensure compatibility.
+    if (
+      Services.prefs.getIntPref("fission.webContentIsolationStrategy") !== 0 ||
+      Services.prefs.getBoolPref("fission.bfcacheInParent")
+    ) {
+      logger.error(
+        `Invalid browser preferences for CDP. Set "fission.webContentIsolationStrategy"` +
+          `to 0 and "fission.bfcacheInParent" to false before Firefox starts.`
+      );
+    }
+
     if (!session.id) {
       if (this.defaultSession) {
         throw new Error(

@@ -241,6 +241,9 @@ with Files("OfflineAudio*"):
 with Files("OffscreenCanvas.webidl"):
     BUG_COMPONENT = ("Core", "Canvas: 2D")
 
+with Files("OffscreenCanvasRenderingContext2D.webidl"):
+    BUG_COMPONENT = ("Core", "Canvas: 2D")
+
 with Files("OscillatorNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
@@ -388,6 +391,7 @@ GENERATED_WEBIDL_FILES = [
 
 PREPROCESSED_WEBIDL_FILES = [
     "Animation.webidl",
+    "FileSystemFileHandle.webidl",
     "Node.webidl",
     "Window.webidl",
 ]
@@ -545,9 +549,13 @@ WEBIDL_FILES = [
     "FileReaderSync.webidl",
     "FileSystem.webidl",
     "FileSystemDirectoryEntry.webidl",
+    "FileSystemDirectoryHandle.webidl",
+    "FileSystemDirectoryIterator.webidl",
     "FileSystemDirectoryReader.webidl",
     "FileSystemEntry.webidl",
     "FileSystemFileEntry.webidl",
+    "FileSystemHandle.webidl",
+    "FileSystemSyncAccessHandle.webidl",
     "FinalizationRegistry.webidl",
     "FocusEvent.webidl",
     "FontFace.webidl",
@@ -747,6 +755,7 @@ WEBIDL_FILES = [
     "OfflineAudioContext.webidl",
     "OfflineResourceList.webidl",
     "OffscreenCanvas.webidl",
+    "OffscreenCanvasRenderingContext2D.webidl",
     "OscillatorNode.webidl",
     "PaintRequest.webidl",
     "PaintRequestList.webidl",
@@ -933,6 +942,7 @@ WEBIDL_FILES = [
     "TCPSocket.webidl",
     "TCPSocketErrorEvent.webidl",
     "TCPSocketEvent.webidl",
+    "TestUtils.webidl",
     "Text.webidl",
     "TextClause.webidl",
     "TextDecoder.webidl",
@@ -1004,6 +1014,7 @@ WEBIDL_FILES = [
 
 if CONFIG["MOZ_DOM_STREAMS"]:
     WEBIDL_FILES += [
+        "FileSystemWritableFileStream.webidl",
         "QueuingStrategy.webidl",
         "ReadableByteStreamController.webidl",
         "ReadableStream.webidl",

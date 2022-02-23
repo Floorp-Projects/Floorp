@@ -10,7 +10,6 @@
   background-color: var(--sidebar-background-color);
   color: var(--sidebar-text-color);
   text-shadow: none;
-  min-width: 34px !important;
 }
 
 #sidebar-header {
@@ -81,7 +80,7 @@
 
 #sidebar-switcher-target:-moz-focusring:not(:hover, [open]),
 #sidebar-close:-moz-focusring:not(:hover, [open]) {
-  outline: 1px dotted;
+  outline: var(--default-focusring);
 }
 
 #sidebar-switcher-target:hover:active,

@@ -43,6 +43,13 @@ class HTMLLinkAccessible : public HyperTextAccessibleWrap {
  protected:
   virtual ~HTMLLinkAccessible() {}
 
+  virtual bool AttributeChangesState(nsAtom* aAttribute) override;
+
+  virtual void DOMAttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                   int32_t aModType,
+                                   const nsAttrValue* aOldValue,
+                                   uint64_t aOldState) override;
+
   enum { eAction_Jump = 0 };
 };
 

@@ -85,7 +85,7 @@ ProfilerThreadId ProfilerBacktrace::StreamJSON(
         ""_ns, aProcessStartTime,
         /* aRegisterTime */ mozilla::TimeStamp(),
         /* aUnregisterTime */ mozilla::TimeStamp(),
-        /* aSinceTime */ 0, aUniqueStacks);
+        /* aSinceTime */ 0, aUniqueStacks, mozilla::ProgressLogger{});
   } else if (mProfileChunkedBuffer) {
     ProfileBuffer profileBuffer(*mProfileChunkedBuffer);
     processedThreadId = StreamSamplesAndMarkers(
@@ -93,7 +93,7 @@ ProfilerThreadId ProfilerBacktrace::StreamJSON(
         aProcessStartTime,
         /* aRegisterTime */ mozilla::TimeStamp(),
         /* aUnregisterTime */ mozilla::TimeStamp(),
-        /* aSinceTime */ 0, aUniqueStacks);
+        /* aSinceTime */ 0, aUniqueStacks, mozilla::ProgressLogger{});
   }
   // If there are no buffers, the backtrace is empty and nothing is streamed.
 

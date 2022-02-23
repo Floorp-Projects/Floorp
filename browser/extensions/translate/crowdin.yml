@@ -1,3 +1,0 @@
-files:
-  - source: /_locales/en/messages.json
-    translation: /_locales/%two_letters_code%/messages.json

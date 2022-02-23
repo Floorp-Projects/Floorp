@@ -17,7 +17,7 @@ use crate::{Http3Parameters, Http3StreamInfo, Res};
 use neqo_common::{qtrace, Datagram};
 use neqo_crypto::{AntiReplay, Cipher, PrivateKey, PublicKey, ZeroRttChecker};
 use neqo_transport::server::{ActiveConnectionRef, Server, ValidateAddress};
-use neqo_transport::{tparams::PreferredAddress, ConnectionIdGenerator, Output};
+use neqo_transport::{ConnectionIdGenerator, Output};
 use std::cell::RefCell;
 use std::cell::RefMut;
 use std::collections::HashMap;
@@ -82,10 +82,6 @@ impl Http3Server {
 
     pub fn set_ciphers(&mut self, ciphers: impl AsRef<[Cipher]>) {
         self.server.set_ciphers(ciphers);
-    }
-
-    pub fn set_preferred_address(&mut self, spa: PreferredAddress) {
-        self.server.set_preferred_address(spa);
     }
 
     /// Enable encrypted client hello (ECH).
@@ -219,10 +215,10 @@ impl Http3Server {
                         );
                     }
                     Http3ServerConnEvent::ExtendedConnectClosed {
-                        stream_id, error, ..
+                        stream_id, reason, ..
                     } => self.events.webtransport_session_closed(
                         WebTransportRequest::new(conn.clone(), handler.clone(), stream_id),
-                        error,
+                        reason,
                     ),
                     Http3ServerConnEvent::ExtendedConnectNewStream(stream_info) => self
                         .events
@@ -470,7 +466,7 @@ mod tests {
                     );
                 }
                 ConnectionEvent::StateChange(State::Connected) => connected = true,
-                ConnectionEvent::StateChange(_) => (),
+                ConnectionEvent::StateChange(_) | ConnectionEvent::SendStreamCreatable { .. } => (),
                 _ => panic!("unexpected event"),
             }
         }

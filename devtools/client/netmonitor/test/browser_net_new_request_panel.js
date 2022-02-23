@@ -115,3 +115,50 @@ add_task(async function() {
 
   await teardown(monitor);
 });
+
+/**
+ * Test if the content it is not connected to the current selection.
+ */
+
+add_task(async function() {
+  const { tab, monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
+    requestCount: 1,
+  });
+  info("Starting test... ");
+
+  const { document, store, windowRequire } = monitor.panelWin;
+
+  // Action should be processed synchronously in tests.
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  store.dispatch(Actions.batchEnable(false));
+
+  await performRequests(monitor, tab, 2);
+
+  await pushPref("devtools.netmonitor.features.newEditAndResend", true);
+
+  info("selecting first request");
+  const firstRequestItem = document.querySelectorAll(".request-list-item")[0];
+  EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequestItem);
+  EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequestItem);
+
+  info("opening the new request panel");
+  const waitForPanels = waitForDOM(
+    document,
+    ".monitor-panel .network-action-bar"
+  );
+  getContextMenuItem(monitor, "request-list-context-resend").click();
+  await waitForPanels;
+
+  const urlValue = document.querySelector("http-custom-url-value");
+  const request = document.querySelectorAll(".request-list-item")[1];
+  EventUtils.sendMouseEvent({ type: "mousedown" }, request);
+
+  const urlValueChanged = document.querySelector("http-custom-url-value");
+
+  is(
+    urlValue,
+    urlValueChanged,
+    "The url should not change when click on a new request"
+  );
+  await teardown(monitor);
+});

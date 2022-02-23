@@ -3,7 +3,7 @@ Remotely debugging Firefox <36 for Android
 ==========================================
 
 .. note::
-  This guide is for Firefox version 36 and earlier. To debug in Firefox 68 and later, follow the instructions on `about:debugging <https://developer.mozilla.org/en-US/docs/Tools/about:debugging>`_.
+  This guide is for Firefox version 36 and earlier. To debug in Firefox 68 and later, follow the instructions on :doc:`about:debugging <../../about_colon_debugging/index>`.
 
   For Firefox between 37 and 67, please use the :doc:`WebIDE <../debugging_firefox_for_android_with_webide/index>` guide.
 
@@ -193,4 +193,3 @@ The Toolbox, and the tools it hosts, work in just the same way as they do when a
 
 .. image:: remote-debugging-debugger.png
   :class: center
-

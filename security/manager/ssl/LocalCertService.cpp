@@ -268,7 +268,7 @@ class LocalCertGetTask final : public LocalCertTask {
     if (!cert) {
       return NS_ERROR_FAILURE;
     }
-    mCert = nsNSSCertificate::Create(cert.get());
+    mCert = new nsNSSCertificate(cert.get());
     return NS_OK;
   }
 

@@ -144,6 +144,15 @@ JS_PUBLIC_API bool InitSelfHostedCode(JSContext* cx,
                                       SelfHostedCache cache = nullptr,
                                       SelfHostedWriter writer = nullptr);
 
+/*
+ * Permanently disable the JIT backend for this process. This disables the JS
+ * Baseline Interpreter, JIT compilers, regular expression JIT and support for
+ * WebAssembly.
+ *
+ * If called, this *must* be called before JS_Init.
+ */
+JS_PUBLIC_API void DisableJitBackend();
+
 }  // namespace JS
 
 /**
@@ -164,5 +173,14 @@ JS_PUBLIC_API bool InitSelfHostedCode(JSContext* cx,
  * again).  This restriction may eventually be lifted.
  */
 extern JS_PUBLIC_API void JS_ShutDown(void);
+
+#if defined(ENABLE_WASM_SIMD) && \
+    (defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86))
+namespace JS {
+// Enable support for AVX instructions in the JIT/Wasm backend on x86/x64
+// platforms. Must be called before JS_Init*.
+void SetAVXEnabled();
+}  // namespace JS
+#endif
 
 #endif /* js_Initialization_h */

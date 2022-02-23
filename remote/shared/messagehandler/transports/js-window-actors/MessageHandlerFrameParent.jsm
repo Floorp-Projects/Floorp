@@ -25,14 +25,13 @@ class MessageHandlerFrameParent extends JSWindowActorParent {
   receiveMessage(message) {
     switch (message.name) {
       case "MessageHandlerFrameChild:messageHandlerEvent":
-        const { method, params, sessionId } = message.data;
+        const { name, data, isProtocolEvent, sessionId } = message.data;
 
+        // Re-emit the event on the RootMessageHandler.
         const messageHandler = RootMessageHandlerRegistry.getExistingMessageHandler(
           sessionId
         );
-
-        // Re-emit the event on the RootMessageHandler.
-        messageHandler.emitMessageHandlerEvent(method, params);
+        messageHandler.emitEvent(name, data, { isProtocolEvent });
 
         break;
       default:

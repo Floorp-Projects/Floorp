@@ -82,6 +82,9 @@ endif()  # BUILD_TESTING
 
 # Highway
 set(HWY_SYSTEM_GTEST ON CACHE INTERNAL "")
+if((SANITIZER STREQUAL "asan") OR (SANITIZER STREQUAL "msan"))
+  set(HWY_EXAMPLES_TESTS_INSTALL OFF CACHE INTERNAL "")
+endif()
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/highway/CMakeLists.txt" AND
     NOT JPEGXL_FORCE_SYSTEM_HWY)
   add_subdirectory(highway)
@@ -102,61 +105,11 @@ else()
   endif()  # JPEGXL_DEP_LICENSE_DIR
 endif()
 
-# lodepng
-if( NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/lodepng/lodepng.h" )
-  message(FATAL_ERROR "Please run ${PROJECT_SOURCE_DIR}/deps.sh to fetch the "
-          "build dependencies.")
-endif()
-include(lodepng.cmake)
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/lodepng/LICENSE"
-               ${PROJECT_BINARY_DIR}/LICENSE.lodepng COPYONLY)
-
 # brotli
 if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/brotli/c/include/brotli/decode.h" OR
     JPEGXL_FORCE_SYSTEM_BROTLI)
-  # Create the libbrotli* and libbrotli*-static targets.
-  foreach(brlib IN ITEMS brotlienc brotlidec brotlicommon)
-    # Use uppercase like "BROTLIENC" for the cmake variables
-    string(TOUPPER "${brlib}" BRPREFIX)
-    pkg_check_modules(${BRPREFIX} lib${brlib})
-    if (${BRPREFIX}_FOUND)
-      if(${CMAKE_VERSION} VERSION_LESS "3.13.5")
-        add_library(${brlib} INTERFACE IMPORTED GLOBAL)
-        set_property(TARGET ${brlib} PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${${BRPREFIX}_INCLUDE_DIR})
-        target_link_libraries(${brlib} INTERFACE ${${BRPREFIX}_LDFLAGS})
-        set_property(TARGET ${brlib} PROPERTY INTERFACE_COMPILE_OPTIONS ${${BRPREFIX}_CFLAGS_OTHER})
-
-        add_library(${brlib}-static INTERFACE IMPORTED GLOBAL)
-        set_property(TARGET ${brlib}-static PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${${BRPREFIX}_INCLUDE_DIR})
-        target_link_libraries(${brlib}-static INTERFACE ${${BRPREFIX}_LDFLAGS})
-        set_property(TARGET ${brlib}-static PROPERTY INTERFACE_COMPILE_OPTIONS ${${BRPREFIX}_CFLAGS_OTHER})
-      else()
-        add_library(${brlib} INTERFACE IMPORTED GLOBAL)
-        target_include_directories(${brlib}
-            INTERFACE ${${BRPREFIX}_INCLUDE_DIRS})
-        target_link_libraries(${brlib}
-            INTERFACE ${${BRPREFIX}_LINK_LIBRARIES})
-        target_link_options(${brlib}
-            INTERFACE ${${BRPREFIX}_LDFLAGS_OTHER})
-        target_compile_options(${brlib}
-            INTERFACE ${${BRPREFIX}_CFLAGS_OTHER})
-
-        # TODO(deymo): Remove the -static library versions, this target is
-        # currently needed by brunsli.cmake. When importing it this way, the
-        # brotli*-static target is just an alias.
-        add_library(${brlib}-static ALIAS ${brlib})
-      endif()
-    endif()
-    unset(BRPREFIX)
-  endforeach()
-
-  if (BROTLIENC_FOUND AND BROTLIDEC_FOUND AND BROTLICOMMON_FOUND)
-    set(BROTLI_FOUND 1)
-  else()
-    set(BROTLI_FOUND 0)
-  endif()
-
-  if (NOT BROTLI_FOUND)
+  find_package(Brotli)
+  if (NOT Brotli_FOUND)
     message(FATAL_ERROR
         "Brotli not found, install brotli-dev or download brotli source code to"
         " third_party/brotli from https://github.com/google/brotli. You can use"
@@ -201,6 +154,50 @@ if (JPEGXL_ENABLE_VIEWERS OR NOT JPEGXL_ENABLE_SKCMS)
     configure_file("${CMAKE_CURRENT_SOURCE_DIR}/lcms/COPYING"
                    ${PROJECT_BINARY_DIR}/LICENSE.lcms COPYONLY)
   endif()
+endif()
+
+# libpng
+if (JPEGXL_EMSCRIPTEN)
+  if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/libpng/CMakeLists.txt")
+  message(FATAL_ERROR "Please run ${PROJECT_SOURCE_DIR}/deps.sh to fetch the "
+          "build dependencies.")
+  endif()
+  file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/libpng/scripts/pnglibconf.h.prebuilt" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/libpng")
+  file(RENAME "${CMAKE_CURRENT_SOURCE_DIR}/libpng/pnglibconf.h.prebuilt" "${CMAKE_CURRENT_SOURCE_DIR}/libpng/pnglibconf.h")
+  set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/zlib/")
+  set(ZLIB_LIBRARY "")
+  set(PNG_FOUND YES PARENT_SCOPE)
+  set(PNG_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/libpng/" PARENT_SCOPE)
+  set(PNG_LIBRARIES "" PARENT_SCOPE)
+elseif (JPEGXL_BUNDLE_LIBPNG)
+  if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/libpng/CMakeLists.txt")
+    message(FATAL_ERROR "Please run ${PROJECT_SOURCE_DIR}/deps.sh to fetch the "
+            "build dependencies.")
+  endif()
+  add_subdirectory(zlib)
+  set(PNG_STATIC ON CACHE BOOL "")
+  set(PNG_EXECUTABLES OFF CACHE BOOL "")
+  set(PNG_BUILD_ZLIB ON CACHE BOOL "")
+  set(PNG_TESTS OFF CACHE BOOL "")
+  set(SKIP_INSTALL_ALL ON CACHE BOOL "")
+  set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/zlib/")
+  set(ZLIB_LIBRARY zlibstatic)
+  add_subdirectory(libpng EXCLUDE_FROM_ALL)
+  set(PNG_FOUND YES PARENT_SCOPE)
+  set(PNG_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/libpng/" PARENT_SCOPE)
+  set(PNG_LIBRARIES png_static PARENT_SCOPE)
+  if(JPEGXL_DEP_LICENSE_DIR)
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/libpng/LICENSE"
+                   ${PROJECT_BINARY_DIR}/LICENSE.libpng COPYONLY)
+  endif()
+else()
+  find_package(PNG)
+  if(PNG_FOUND AND JPEGXL_DEP_LICENSE_DIR)
+    configure_file("${JPEGXL_DEP_LICENSE_DIR}/zlib1g-dev/copyright"
+                   ${PROJECT_BINARY_DIR}/LICENSE.zlib COPYONLY)
+    configure_file("${JPEGXL_DEP_LICENSE_DIR}/libpng-dev/copyright"
+                   ${PROJECT_BINARY_DIR}/LICENSE.libpng COPYONLY)
+  endif()  # JPEGXL_DEP_LICENSE_DIR
 endif()
 
 # sjpeg

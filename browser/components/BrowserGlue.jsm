@@ -84,6 +84,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
+  SnapshotMonitor: "resource:///modules/SnapshotMonitor.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TabUnloader: "resource:///modules/TabUnloader.jsm",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
@@ -269,6 +270,7 @@ let JSWINDOWACTORS = {
       "about:pocket-saved*",
       "about:pocket-signup*",
       "about:pocket-home*",
+      "about:pocket-style-guide*",
     ],
   },
 
@@ -392,10 +394,30 @@ let JSWINDOWACTORS = {
     child: {
       moduleURI: "resource:///actors/ClickHandlerChild.jsm",
       events: {
-        click: { capture: true, mozSystemGroup: true, wantUntrusted: true },
-        auxclick: { capture: true, mozSystemGroup: true, wantUntrusted: true },
+        chromelinkclick: { capture: true, mozSystemGroup: true },
       },
     },
+
+    allFrames: true,
+  },
+
+  /* Note: this uses the same JSMs as ClickHandler, but because it
+   * relies on "normal" click events anywhere on the page (not just
+   * links) and is expensive, and only does something for the
+   * small group of people who have the feature enabled, it is its
+   * own actor which is only registered if the pref is enabled.
+   */
+  MiddleMousePasteHandler: {
+    parent: {
+      moduleURI: "resource:///actors/ClickHandlerParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/ClickHandlerChild.jsm",
+      events: {
+        auxclick: { capture: true, mozSystemGroup: true },
+      },
+    },
+    enablePreference: "middlemouse.contentLoadURL",
 
     allFrames: true,
   },
@@ -645,6 +667,9 @@ let JSWINDOWACTORS = {
   },
 
   ScreenshotsComponent: {
+    parent: {
+      moduleURI: "resource:///modules/ScreenshotsUtils.jsm",
+    },
     child: {
       moduleURI: "resource:///actors/ScreenshotsComponentChild.jsm",
     },
@@ -694,7 +719,12 @@ let JSWINDOWACTORS = {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["about:home*", "about:newtab*", "about:welcome*"],
+    matches: [
+      "about:home*",
+      "about:newtab*",
+      "about:welcome*",
+      "about:privatebrowsing",
+    ],
     remoteTypes: ["privilegedabout"],
   },
 
@@ -1653,6 +1683,8 @@ BrowserGlue.prototype = {
 
     DoHController.init();
 
+    SnapshotMonitor.init();
+
     this._firstWindowTelemetry(aWindow);
     this._firstWindowLoaded();
 
@@ -2241,6 +2273,23 @@ BrowserGlue.prototype = {
     _checkGPCPref();
   },
 
+  _monitorPrivacySegmentationPref() {
+    const PREF_ENABLED = "browser.privacySegmentation.enabled";
+    const EVENT_CATEGORY = "privacy_segmentation";
+
+    let checkPrivacySegmentationPref = () => {
+      let isEnabled = Services.prefs.getBoolPref(PREF_ENABLED, false);
+      Services.telemetry.recordEvent(
+        EVENT_CATEGORY,
+        isEnabled ? "enable" : "disable",
+        "pref"
+      );
+    };
+
+    Services.telemetry.setEventRecordingEnabled(EVENT_CATEGORY, true);
+    Services.prefs.addObserver(PREF_ENABLED, checkPrivacySegmentationPref);
+  },
+
   // All initial windows have opened.
   _onWindowsRestored: function BG__onWindowsRestored() {
     if (this._windowsWereRestored) {
@@ -2321,6 +2370,7 @@ BrowserGlue.prototype = {
       this._monitorTranslationsPref();
     }
     this._monitorGPCPref();
+    this._monitorPrivacySegmentationPref();
   },
 
   /**
@@ -2707,6 +2757,12 @@ BrowserGlue.prototype = {
             "@mozilla.org/login-detection-service;1"
           ].createInstance(Ci.nsILoginDetectionService);
           loginDetection.init();
+        },
+      },
+
+      {
+        task: () => {
+          this._collectTelemetryPiPEnabled();
         },
       },
 
@@ -3175,8 +3231,9 @@ BrowserGlue.prototype = {
         // An import operation is about to run.
         let bookmarksUrl = null;
         if (restoreDefaultBookmarks) {
-          // User wants to restore bookmarks.html file from default profile folder
-          bookmarksUrl = "chrome://browser/locale/bookmarks.html";
+          // User wants to restore the default set of bookmarks shipped with the
+          // browser, those that new profiles start with.
+          bookmarksUrl = "chrome://browser/content/default-bookmarks.html";
         } else if (await IOUtils.exists(BookmarkHTMLUtils.defaultPath)) {
           bookmarksUrl = PathUtils.toFileURI(BookmarkHTMLUtils.defaultPath);
         }
@@ -4066,6 +4123,9 @@ BrowserGlue.prototype = {
       } catch (ex) {}
     }
 
+    // Bug 1745248: Due to multiple backouts, do not use UI Version 123
+    // as this version is most likely set for the Nightly channel
+
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
@@ -4556,6 +4616,41 @@ BrowserGlue.prototype = {
       badge?.classList.remove("feature-callout");
       AppMenuNotifications.removeNotification("fxa-needs-authentication");
     }
+  },
+
+  _collectTelemetryPiPEnabled() {
+    Services.telemetry.setEventRecordingEnabled(
+      "pictureinpicture.settings",
+      true
+    );
+
+    const TOGGLE_ENABLED_PREF =
+      "media.videocontrols.picture-in-picture.video-toggle.enabled";
+
+    const observe = (subject, topic, data) => {
+      const enabled = Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF, false);
+      Services.telemetry.scalarSet("pictureinpicture.toggle_enabled", enabled);
+
+      // Record events when preferences change
+      if (topic === "nsPref:changed") {
+        if (enabled) {
+          Services.telemetry.recordEvent(
+            "pictureinpicture.settings",
+            "enable",
+            "player"
+          );
+        } else {
+          Services.telemetry.recordEvent(
+            "pictureinpicture.settings",
+            "disable",
+            "player"
+          );
+        }
+      }
+    };
+
+    Services.prefs.addObserver(TOGGLE_ENABLED_PREF, observe);
+    observe();
   },
 
   QueryInterface: ChromeUtils.generateQI([

@@ -54,7 +54,7 @@ toolbar[brighttext]:-moz-lwtheme {
 }
 
 /* Ensure we have contrast in selected download items */
-#downloadsRichListBox richlistitem[selected] .downloadProgress::-moz-progress-bar {
+#downloadsListBox.allDownloadsListBox richlistitem[selected] .downloadProgress::-moz-progress-bar {
   --download-progress-fill-color: currentColor;
   --download-progress-flare-color: -moz-accent-color;
 }

@@ -48,6 +48,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   registerCommandsActor:
     "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm",
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
+  TabManager: "chrome://remote/content/shared/TabManager.jsm",
   TimedPromise: "chrome://remote/content/marionette/sync.js",
   Timeouts: "chrome://remote/content/shared/webdriver/Capabilities.jsm",
   UnhandledPromptBehavior:
@@ -442,11 +443,11 @@ GeckoDriver.prototype.newSession = async function(cmd) {
     this.dialogObserver.add(this.handleModalDialog.bind(this));
 
     for (let win of windowManager.windows) {
-      const tabBrowser = browser.getTabBrowser(win);
+      const tabBrowser = TabManager.getTabBrowser(win);
 
       if (tabBrowser) {
         for (const tab of tabBrowser.tabs) {
-          const contentBrowser = browser.getBrowserForTab(tab);
+          const contentBrowser = TabManager.getBrowserForTab(tab);
           this.registerBrowser(contentBrowser);
         }
       }
@@ -463,7 +464,7 @@ GeckoDriver.prototype.newSession = async function(cmd) {
       const browsingContext = this.curBrowser.contentBrowser.browsingContext;
       this.currentSession.contentBrowsingContext = browsingContext;
 
-      await waitForInitialNavigationCompleted(browsingContext);
+      await waitForInitialNavigationCompleted(browsingContext.webProgress);
 
       this.curBrowser.contentBrowser.focus();
     }
@@ -489,7 +490,7 @@ GeckoDriver.prototype.newSession = async function(cmd) {
  *     Chrome window to register event listeners for.
  */
 GeckoDriver.prototype.registerListenersForWindow = function(win) {
-  const tabBrowser = browser.getTabBrowser(win);
+  const tabBrowser = TabManager.getTabBrowser(win);
 
   // Listen for any kind of top-level process switch
   tabBrowser?.addEventListener("XULFrameLoaderCreated", this);
@@ -502,7 +503,7 @@ GeckoDriver.prototype.registerListenersForWindow = function(win) {
  *     Chrome window to unregister event listeners for.
  */
 GeckoDriver.prototype.unregisterListenersForWindow = function(win) {
-  const tabBrowser = browser.getTabBrowser(win);
+  const tabBrowser = TabManager.getTabBrowser(win);
 
   tabBrowser?.removeEventListener("XULFrameLoaderCreated", this);
 };
@@ -984,7 +985,7 @@ GeckoDriver.prototype.getWindowHandle = function() {
   if (this.context == Context.Chrome) {
     return windowManager.getIdForWindow(this.curBrowser.window);
   }
-  return windowManager.getIdForBrowser(this.curBrowser.contentBrowser);
+  return TabManager.getIdForBrowser(this.curBrowser.contentBrowser);
 };
 
 /**
@@ -1005,7 +1006,7 @@ GeckoDriver.prototype.getWindowHandles = function() {
   if (this.context == Context.Chrome) {
     return windowManager.chromeWindowHandles.map(String);
   }
-  return windowManager.windowHandles.map(String);
+  return TabManager.allBrowserUniqueIds.map(String);
 };
 
 /**
@@ -1062,7 +1063,7 @@ GeckoDriver.prototype.getWindowRect = async function() {
  *     Not applicable to application.
  */
 GeckoDriver.prototype.setWindowRect = async function(cmd) {
-  assert.firefox();
+  assert.desktop();
   assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
@@ -1171,7 +1172,7 @@ GeckoDriver.prototype.setWindowHandle = async function(
     if (!winProperties.hasTabBrowser) {
       this.currentSession.contentBrowsingContext = null;
     } else {
-      const tabBrowser = browser.getTabBrowser(winProperties.win);
+      const tabBrowser = TabManager.getTabBrowser(winProperties.win);
 
       // For chrome windows such as a reftest window, `getTabBrowser` is not
       // a tabbrowser, it is the content browser which should be used here.
@@ -2010,21 +2011,23 @@ GeckoDriver.prototype.newWindow = async function(cmd) {
   switch (type) {
     case "window":
       let win = await this.curBrowser.openBrowserWindow(focus, isPrivate);
-      contentBrowser = browser.getTabBrowser(win).selectedBrowser;
+      contentBrowser = TabManager.getTabBrowser(win).selectedBrowser;
       break;
 
     default:
       // To not fail if a new type gets added in the future, make opening
       // a new tab the default action.
       let tab = await this.curBrowser.openTab(focus);
-      contentBrowser = browser.getBrowserForTab(tab);
+      contentBrowser = TabManager.getBrowserForTab(tab);
   }
 
   // Actors need the new window to be loaded to safely execute queries.
   // Wait until the initial page load has been finished.
-  await waitForInitialNavigationCompleted(contentBrowser.browsingContext);
+  await waitForInitialNavigationCompleted(
+    contentBrowser.browsingContext.webProgress
+  );
 
-  const id = windowManager.getIdForBrowser(contentBrowser);
+  const id = TabManager.getIdForBrowser(contentBrowser);
 
   return { handle: id.toString(), type };
 };
@@ -2050,29 +2053,17 @@ GeckoDriver.prototype.close = async function() {
   assert.open(this.getBrowsingContext({ context: Context.Content, top: true }));
   await this._handleUserPrompts();
 
-  let nwins = 0;
-
-  for (let win of windowManager.windows) {
-    // For browser windows count the tabs. Otherwise take the window itself.
-    let tabbrowser = browser.getTabBrowser(win);
-    if (tabbrowser && tabbrowser.tabs) {
-      nwins += tabbrowser.tabs.length;
-    } else {
-      nwins += 1;
-    }
-  }
-
   // If there is only one window left, do not close it. Instead return
   // a faked empty array of window handles.  This will instruct geckodriver
   // to terminate the application.
-  if (nwins === 1) {
+  if (TabManager.getTabCount() === 1) {
     return [];
   }
 
   await this.curBrowser.closeTab();
   this.currentSession.contentBrowsingContext = null;
 
-  return windowManager.windowHandles.map(String);
+  return TabManager.allBrowserUniqueIds.map(String);
 };
 
 /**
@@ -2089,7 +2080,7 @@ GeckoDriver.prototype.close = async function() {
  *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.closeChromeWindow = async function() {
-  assert.firefox();
+  assert.desktop();
   assert.open(this.getBrowsingContext({ context: Context.Chrome, top: true }));
 
   let nwins = 0;
@@ -2281,7 +2272,7 @@ GeckoDriver.prototype.setScreenOrientation = function(cmd) {
  *     Not available for current application.
  */
 GeckoDriver.prototype.minimizeWindow = async function() {
-  assert.firefox();
+  assert.desktop();
   assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
@@ -2334,7 +2325,7 @@ GeckoDriver.prototype.minimizeWindow = async function() {
  *     Not available for current application.
  */
 GeckoDriver.prototype.maximizeWindow = async function() {
-  assert.firefox();
+  assert.desktop();
   assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
@@ -2386,7 +2377,7 @@ GeckoDriver.prototype.maximizeWindow = async function() {
  *     Not available for current application.
  */
 GeckoDriver.prototype.fullscreenWindow = async function() {
-  assert.firefox();
+  assert.desktop();
   assert.open(this.getBrowsingContext({ top: true }));
   await this._handleUserPrompts();
 
@@ -2703,7 +2694,7 @@ GeckoDriver.prototype.installAddon = function(cmd) {
 };
 
 GeckoDriver.prototype.uninstallAddon = function(cmd) {
-  assert.firefox();
+  assert.desktop();
 
   let id = cmd.parameters.id;
   if (typeof id == "undefined" || typeof id != "string") {

@@ -287,7 +287,7 @@ add_task(async function testExecuteScript() {
             },
             error => {
               browser.test.assertEq(
-                `Frame not found, or missing host permission`,
+                `Invalid frame IDs: [${Number.MAX_SAFE_INTEGER}].`,
                 error.message,
                 "Got expected error"
               );

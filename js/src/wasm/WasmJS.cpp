@@ -382,15 +382,15 @@ bool wasm::ThreadsAvailable(JSContext* cx) {
 }
 
 bool wasm::HasPlatformSupport(JSContext* cx) {
-#if !MOZ_LITTLE_ENDIAN() || defined(JS_CODEGEN_NONE) || defined(__wasi__)
+#if !MOZ_LITTLE_ENDIAN()
   return false;
 #else
 
-  if (gc::SystemPageSize() > wasm::PageSize) {
+  if (!HasJitBackend()) {
     return false;
   }
 
-  if (!JitOptions.supportsFloatingPoint) {
+  if (gc::SystemPageSize() > wasm::PageSize) {
     return false;
   }
 
@@ -5321,8 +5321,15 @@ static bool WebAssembly_mozIntGemm(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   RootedWasmModuleObject module(cx);
-  if (!wasm::CompileIntrinsicModule(cx, mozilla::Span<IntrinsicOp>(),
-                                    Shareable::True, &module)) {
+  wasm::IntrinsicOp ops[] = {
+      wasm::IntrinsicOp::I8PrepareB,
+      wasm::IntrinsicOp::I8PrepareBFromTransposed,
+      wasm::IntrinsicOp::I8PrepareBFromQuantizedTransposed,
+      wasm::IntrinsicOp::I8PrepareA,
+      wasm::IntrinsicOp::I8PrepareBias,
+      wasm::IntrinsicOp::I8MultiplyAndAddBias,
+      wasm::IntrinsicOp::I8SelectColumnsOfB};
+  if (!wasm::CompileIntrinsicModule(cx, ops, Shareable::False, &module)) {
     ReportOutOfMemory(cx);
     return false;
   }

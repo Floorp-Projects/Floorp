@@ -25,8 +25,12 @@ class TupleType final : public js::NativeObject {
                            const Value* elements);
 
   static TupleType* createUninitialized(JSContext* cx, uint32_t initialLength);
+
+  static TupleType* createUnchecked(JSContext* cx, js::HandleArrayObject aObj);
+
   bool initializeNextElement(JSContext* cx, HandleValue elt);
   void finishInitialization(JSContext* cx);
+  static js::Shape* getInitialShape(JSContext* cx);
 
   bool getOwnProperty(HandleId id, MutableHandleValue vp) const;
   inline uint32_t length() const { return getElementsHeader()->length; }
@@ -50,6 +54,8 @@ class TupleType final : public js::NativeObject {
   // This can be used to compare atomized tuples.
   static bool sameValueZero(TupleType* lhs, TupleType* rhs);
 
+  static TupleType& thisTupleValue(const Value& val);
+
  private:
   template <bool Comparator(JSContext*, HandleValue, HandleValue, bool*)>
   static bool sameValueWith(JSContext* cx, TupleType* lhs, TupleType* rhs,
@@ -60,7 +66,18 @@ class TupleType final : public js::NativeObject {
 
 namespace js {
 
-extern JSString* TupleToSource(JSContext* cx, TupleType* tup);
-}
+extern JSString* TupleToSource(JSContext* cx, Handle<TupleType*> tup);
+
+bool IsTuple(const Value& v);
+
+extern bool tuple_toReversed(JSContext* cx, unsigned argc, Value* vp);
+extern bool tuple_with(JSContext* cx, unsigned argc, Value* vp);
+extern bool tuple_slice(JSContext* cx, unsigned argc, Value* vp);
+extern bool tuple_is_tuple(JSContext* cx, unsigned argc, Value* vp);
+extern bool tuple_value_of(JSContext* cx, unsigned argc, Value* vp);
+extern bool tuple_of(JSContext* cx, unsigned argc, Value* vp);
+extern bool tuple_construct(JSContext* cx, unsigned argc, Value* vp);
+
+}  // namespace js
 
 #endif

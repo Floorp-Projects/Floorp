@@ -286,4 +286,3 @@ See also
 - `Understanding WCAG <https://developer.mozilla.org/en-US/docs/Web/Accessibility/Understanding_WCAG>`_
 - `WAI-ARIA basics <https://developer.mozilla.org/en-US/docs/Learn/Accessibility/WAI-ARIA_basics>`_
 - `Accessibility APIs: A Key To Web Accessibility <https://www.smashingmagazine.com/2015/03/web-accessibility-with-accessibility-api/>`_ by Léonie Watson
-

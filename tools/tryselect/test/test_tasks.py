@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
+import os
 
 import mozunit
 import pytest
@@ -23,37 +23,56 @@ def test_filter_tasks_by_paths(patch_resolver):
     ]
 
 
-def test_resolve_tests_by_suite(patch_resolver):
-    patch_resolver([], [{"flavor": "xpcshell", "srcdir_relpath": "xpcshell.js"}])
-    assert resolve_tests_by_suite(["xpcshell.js"]) == {
-        "xpcshell": ["xpcshell.js"],
-    }
-
-    patch_resolver(
-        [],
-        [
+@pytest.mark.parametrize(
+    "input, tests, expected",
+    (
+        pytest.param(
+            ["xpcshell.js"],
+            [{"flavor": "xpcshell", "srcdir_relpath": "xpcshell.js"}],
+            {"xpcshell": ["xpcshell.js"]},
+            id="single test",
+        ),
+        pytest.param(
+            ["xpcshell.ini"],
+            [
+                {
+                    "flavor": "xpcshell",
+                    "srcdir_relpath": "xpcshell.js",
+                    "manifest_relpath": "xpcshell.ini",
+                },
+            ],
+            {"xpcshell": ["xpcshell.ini"]},
+            id="single manifest",
+        ),
+        pytest.param(
+            ["xpcshell.js", "mochitest.js"],
+            [
+                {"flavor": "xpcshell", "srcdir_relpath": "xpcshell.js"},
+                {"flavor": "mochitest", "srcdir_relpath": "mochitest.js"},
+            ],
             {
-                "flavor": "xpcshell",
-                "srcdir_relpath": "xpcshell.js",
-                "manifest_relpath": "xpcshell.ini",
+                "xpcshell": ["xpcshell.js"],
+                "mochitest-plain": ["mochitest.js"],
             },
-        ],
-    )
-    assert resolve_tests_by_suite(["xpcshell.ini"]) == {
-        "xpcshell": ["xpcshell.ini"],
-    }
-
-    patch_resolver(
-        [],
-        [
-            {"flavor": "xpcshell", "srcdir_relpath": "xpcshell.js"},
-            {"flavor": "mochitest", "srcdir_relpath": "mochitest.js"},
-        ],
-    )
-    assert resolve_tests_by_suite(["xpcshell.js", "mochitest.js"]) == {
-        "xpcshell": ["xpcshell.js"],
-        "mochitest-plain": ["mochitest.js"],
-    }
+            id="two tests",
+        ),
+        pytest.param(
+            ["test/xpcshell.ini"],
+            [
+                {
+                    "flavor": "xpcshell",
+                    "srcdir_relpath": "test/xpcshell.js",
+                    "manifest_relpath": os.path.join("test", "xpcshell.ini"),
+                },
+            ],
+            {"xpcshell": ["test/xpcshell.ini"]},
+            id="mismatched path separators",
+        ),
+    ),
+)
+def test_resolve_tests_by_suite(patch_resolver, input, tests, expected):
+    patch_resolver([], tests)
+    assert resolve_tests_by_suite(input) == expected
 
 
 @pytest.mark.parametrize(

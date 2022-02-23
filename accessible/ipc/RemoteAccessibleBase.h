@@ -176,13 +176,19 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   virtual double MaxValue() const override;
   virtual double Step() const override;
 
-  virtual nsIntRect Bounds() const override;
+  virtual LayoutDeviceIntRect Bounds() const override;
 
   virtual uint64_t State() override;
 
   virtual already_AddRefed<AccAttributes> Attributes() override;
 
   virtual nsAtom* TagName() const override;
+
+  virtual uint8_t ActionCount() const override;
+
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+
+  virtual bool DoAction(uint8_t aIndex) const override;
 
   // Methods that interact with content.
 

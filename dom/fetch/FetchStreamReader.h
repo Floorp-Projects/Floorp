@@ -9,6 +9,7 @@
 
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/FetchBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "nsIAsyncOutputStream.h"
@@ -17,6 +18,8 @@
 namespace mozilla {
 namespace dom {
 
+class ReadableStream;
+class ReadableStreamDefaultReader;
 class WeakWorkerRef;
 
 class FetchStreamReader final : public nsIOutputStreamCallback,
@@ -33,18 +36,30 @@ class FetchStreamReader final : public nsIOutputStreamCallback,
                          FetchStreamReader** aStreamReader,
                          nsIInputStream** aInputStream);
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
 
   // Idempotently close the output stream and null out all state. If aCx is
   // provided, the reader will also be canceled.  aStatus must be a DOM error
   // as understood by DOMException because it will be provided as the
   // cancellation reason.
+  //
+  // This is a script boundary minimize annotation changes required while
+  // we figure out how to handle some more tricky annotation cases (for
+  // example, the destructor of this class. Tracking under Bug 1750656)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void CloseAndRelease(JSContext* aCx, nsresult aStatus);
 
+#ifdef MOZ_DOM_STREAMS
+  void StartConsuming(JSContext* aCx, ReadableStream* aStream,
+                      ReadableStreamDefaultReader** aReader, ErrorResult& aRv);
+#else
   void StartConsuming(JSContext* aCx, JS::HandleObject aStream,
                       JS::MutableHandle<JSObject*> aReader, ErrorResult& aRv);
+#endif
 
  private:
   explicit FetchStreamReader(nsIGlobalObject* aGlobal);
@@ -61,7 +76,11 @@ class FetchStreamReader final : public nsIOutputStreamCallback,
 
   RefPtr<WeakWorkerRef> mWorkerRef;
 
+#ifdef MOZ_DOM_STREAMS
+  RefPtr<ReadableStreamDefaultReader> mReader;
+#else
   JS::Heap<JSObject*> mReader;
+#endif
 
   nsTArray<uint8_t> mBuffer;
   uint32_t mBufferRemaining;

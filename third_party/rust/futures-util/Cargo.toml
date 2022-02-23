@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.45"
 name = "futures-util"
-version = "0.3.18"
+version = "0.3.19"
 description = "Common utilities and extension traits for the futures-rs library.\n"
 homepage = "https://rust-lang.github.io/futures-rs"
 license = "MIT OR Apache-2.0"
@@ -22,33 +22,33 @@ repository = "https://github.com/rust-lang/futures-rs"
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 [dependencies.futures-channel]
-version = "0.3.18"
+version = "0.3.19"
 features = ["std"]
 optional = true
 default-features = false
 
 [dependencies.futures-core]
-version = "0.3.18"
+version = "0.3.19"
 default-features = false
 
 [dependencies.futures-io]
-version = "0.3.18"
+version = "0.3.19"
 features = ["std"]
 optional = true
 default-features = false
 
 [dependencies.futures-macro]
-version = "=0.3.18"
+version = "=0.3.19"
 optional = true
 default-features = false
 
 [dependencies.futures-sink]
-version = "0.3.18"
+version = "0.3.19"
 optional = true
 default-features = false
 
 [dependencies.futures-task]
-version = "0.3.18"
+version = "0.3.19"
 default-features = false
 
 [dependencies.futures_01]
@@ -87,7 +87,6 @@ compat = ["std", "futures_01"]
 default = ["std", "async-await", "async-await-macro"]
 io = ["std", "futures-io", "memchr"]
 io-compat = ["io", "compat", "tokio-io"]
-read-initializer = ["io", "futures-io/read-initializer", "futures-io/unstable"]
 sink = ["futures-sink"]
 std = ["alloc", "futures-core/std", "futures-task/std", "slab"]
 unstable = ["futures-core/unstable", "futures-task/unstable"]

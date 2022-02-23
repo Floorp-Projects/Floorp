@@ -421,7 +421,7 @@ fn ech_retry() {
     let mut cfg = Vec::from(server.ech_config());
     // Ensure that the version and config_id is correct.
     assert_eq!(cfg[2], 0xfe);
-    assert_eq!(cfg[3], 0x0a);
+    assert_eq!(cfg[3], 0x0d);
     assert_eq!(cfg[6], CONFIG_ID);
     // Change the config_id so that the server doesn't recognize this.
     cfg[6] ^= 0x94;

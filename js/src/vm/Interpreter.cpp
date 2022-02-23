@@ -5203,7 +5203,7 @@ static bool OptimizeArgumentsSpreadCall(JSContext* cx, HandleObject obj,
   }
 
   Handle<ArgumentsObject*> args = obj.as<ArgumentsObject>();
-  if (args->isAnyElementDeleted() || args->hasOverriddenLength() ||
+  if (args->hasOverriddenElement() || args->hasOverriddenLength() ||
       args->hasOverriddenIterator()) {
     return true;
   }
@@ -5261,7 +5261,7 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg,
 ArrayObject* js::ArrayFromArgumentsObject(JSContext* cx,
                                           Handle<ArgumentsObject*> args) {
   MOZ_ASSERT(!args->hasOverriddenLength());
-  MOZ_ASSERT(!args->isAnyElementDeleted());
+  MOZ_ASSERT(!args->hasOverriddenElement());
 
   uint32_t length = args->initialLength();
   auto* array = NewDenseFullyAllocatedArray(cx, length);

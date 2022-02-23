@@ -171,6 +171,7 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
   // Do this as early as possible to get the parent process to initialize the
   // background thread since we'll likely need database information very soon.
   mozilla::ipc::BackgroundChild::Startup();
+  mozilla::ipc::BackgroundChild::InitContentStarter(&mContent);
 
   return true;
 }

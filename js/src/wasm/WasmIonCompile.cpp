@@ -1607,7 +1607,14 @@ class FunctionCompiler {
                             bytecodeIfNotAsmJS());
 
     // Generate better code (on x86)
-    if (viewType == Scalar::Float64) {
+    // If AVX2 is enabled, more broadcast operators are available.
+    if (viewType == Scalar::Float64
+#  if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+        || (js::jit::CPUInfo::IsAVX2Present() &&
+            (viewType == Scalar::Uint8 || viewType == Scalar::Uint16 ||
+             viewType == Scalar::Float32))
+#  endif
+    ) {
       access.setSplatSimd128Load();
       return load(addr.base, &access, ValType::V128);
     }
@@ -2474,6 +2481,24 @@ class FunctionCompiler {
     if (loopBody) {
       fixupRedundantPhis(loopBody);
     }
+
+    // Pending jumps to an enclosing try-catch may reference the recycled phis.
+    // We have to search above all enclosing try blocks, as a delegate may move
+    // patches around.
+#ifdef ENABLE_WASM_EXCEPTIONS
+    for (uint32_t depth = 0; depth < iter().controlStackDepth(); depth++) {
+      if (iter().controlKind(depth) != LabelKind::Try) {
+        continue;
+      }
+      Control& control = iter().controlItem(depth);
+      for (MControlInstruction* patch : control.tryPadPatches) {
+        MBasicBlock* block = patch->block();
+        if (block->loopDepth() >= loopEntry->loopDepth()) {
+          fixupRedundantPhis(block);
+        }
+      }
+    }
+#endif
 
     // Discard redundant phis and add to the free list.
     for (MPhiIterator phi = loopEntry->phisBegin();

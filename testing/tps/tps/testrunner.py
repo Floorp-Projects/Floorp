@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, division, print_function
 
 import json
 import yaml
@@ -12,7 +11,7 @@ import tempfile
 import time
 import traceback
 
-from mozhttpd import MozHttpd
+from wptserve import server
 import mozinfo
 from mozprofile import Profile
 import mozversion
@@ -341,7 +340,7 @@ class TPSTestRunner(object):
         tmplogfile = None
         if logdata:
             tmplogfile = TempFile(prefix="tps_log_")
-            tmplogfile.write(logdata)
+            tmplogfile.write(logdata.encode("utf-8"))
             tmplogfile.close()
             self.errorlogs[testname] = tmplogfile
 
@@ -477,8 +476,8 @@ class TPSTestRunner(object):
             testlist = [os.path.basename(self.testfile)]
         testdir = os.path.dirname(self.testfile)
 
-        self.mozhttpd = MozHttpd(port=4567, docroot=testdir)
-        self.mozhttpd.start()
+        self.server = server.WebTestHttpd(port=4567, doc_root=testdir)
+        self.server.start()
 
         # run each test, and save the results
         for test in testlist:
@@ -508,7 +507,7 @@ class TPSTestRunner(object):
                     )
                     break
 
-        self.mozhttpd.stop()
+        self.server.stop()
 
         # generate the postdata we'll use to post the results to the db
         self.postdata = {

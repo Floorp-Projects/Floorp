@@ -64,7 +64,7 @@ add_task(async function init() {
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", true],
       ["extensions.screenshots.disabled", false],
-      ["layout.forms.input-type-show-password-button.enabled", false],
+      ["layout.forms.reveal-password-context-menu.enabled", true],
     ],
   });
 });

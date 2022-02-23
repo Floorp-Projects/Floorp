@@ -21,6 +21,9 @@ namespace jxl {
 // 4 * (sqrt(0.5)-1), so that Weight(sigma) = 0.5.
 static constexpr float kInvSigmaNum = -1.1715728752538099024f;
 
+// kInvSigmaNum / 0.3
+constexpr float kMinSigma = -3.90524291751269967465540850526868f;
+
 // Fills the `state->filter_weights.sigma` image with the precomputed sigma
 // values in the area inside `block_rect`. Accesses the AC strategy, quant field
 // and epf_sharpness fields in the corresponding positions.

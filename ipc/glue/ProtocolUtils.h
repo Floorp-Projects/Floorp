@@ -177,7 +177,6 @@ class IProtocol : public HasResultCodes {
 
   typedef base::ProcessId ProcessId;
   typedef IPC::Message Message;
-  typedef IPC::MessageInfo MessageInfo;
 
   IProtocol(ProtocolId aProtoId, Side aSide)
       : mId(0),
@@ -208,23 +207,10 @@ class IProtocol : public HasResultCodes {
   MessageChannel* GetIPCChannel();
   const MessageChannel* GetIPCChannel() const;
 
-  // Sets an event target to which all messages for aActor will be
-  // dispatched. This method must be called before right before the SendPFoo
-  // message for aActor is sent. And SendPFoo *must* be called if
-  // SetEventTargetForActor is called. The receiver when calling
-  // SetEventTargetForActor must be the actor that will be the manager for
-  // aActor.
-  void SetEventTargetForActor(IProtocol* aActor,
-                              nsISerialEventTarget* aEventTarget);
-
-  // Replace the event target for the messages of aActor. There must not be
-  // any messages of aActor in the task queue, or we might run into some
-  // unexpected behavior.
-  void ReplaceEventTargetForActor(IProtocol* aActor,
-                                  nsISerialEventTarget* aEventTarget);
-
+  // Get the nsISerialEventTarget which all messages sent to this actor will be
+  // processed on. Unless stated otherwise, all operations on IProtocol which
+  // don't occur on this `nsISerialEventTarget` are unsafe.
   nsISerialEventTarget* GetActorEventTarget();
-  already_AddRefed<nsISerialEventTarget> GetActorEventTarget(IProtocol* aActor);
 
   // Actor lifecycle and other properties.
   ProtocolId GetProtocolId() const { return mProtocolId; }
@@ -289,7 +275,6 @@ class IProtocol : public HasResultCodes {
   // Helpers for calling `Send` on our underlying IPC channel.
   bool ChannelSend(IPC::Message* aMsg);
   bool ChannelSend(IPC::Message* aMsg, IPC::Message* aReply);
-  bool ChannelCall(IPC::Message* aMsg, IPC::Message* aReply);
   template <typename Value>
   void ChannelSend(IPC::Message* aMsg, ResolveCallback<Value>&& aResolve,
                    RejectCallback&& aReject) {
@@ -424,14 +409,6 @@ class IToplevelProtocol : public IProtocol {
   MessageChannel* GetIPCChannel() { return &mChannel; }
   const MessageChannel* GetIPCChannel() const { return &mChannel; }
 
-  // NOTE: The target actor's Manager must already be set.
-  void SetEventTargetForActorInternal(IProtocol* aActor,
-                                      nsISerialEventTarget* aEventTarget);
-  void ReplaceEventTargetForActor(IProtocol* aActor,
-                                  nsISerialEventTarget* aEventTarget);
-  nsISerialEventTarget* GetActorEventTarget();
-  already_AddRefed<nsISerialEventTarget> GetActorEventTarget(IProtocol* aActor);
-
   void SetOtherProcessId(base::ProcessId aOtherPid);
 
   virtual void OnChannelClose() = 0;
@@ -494,17 +471,7 @@ class IToplevelProtocol : public IProtocol {
   void ArtificialSleep() {}
 #endif
 
-  virtual void EnteredCxxStack() {}
-  virtual void ExitedCxxStack() {}
-  virtual void EnteredCall() {}
-  virtual void ExitedCall() {}
-
   bool IsOnCxxStack() const;
-
-  virtual RacyInterruptPolicy MediateInterruptRace(const MessageInfo& parent,
-                                                   const MessageInfo& child) {
-    return RIPChildWins;
-  }
 
   /**
    * Return true if windows messages can be handled while waiting for a reply
@@ -512,17 +479,11 @@ class IToplevelProtocol : public IProtocol {
    */
   virtual bool HandleWindowsMessages(const Message& aMsg) const { return true; }
 
-  virtual void OnEnteredSyncSend() {}
-  virtual void OnExitedSyncSend() {}
-
   virtual void ProcessRemoteNativeEventsInInterruptCall() {}
 
   virtual void OnChannelReceivedMessage(const Message& aMsg) {}
 
   void OnIPCChannelOpened() { ActorConnected(); }
-
-  already_AddRefed<nsISerialEventTarget> GetMessageEventTarget(
-      const Message& aMsg);
 
   base::ProcessId OtherPidMaybeInvalid() const { return mOtherPid; }
 
@@ -539,12 +500,6 @@ class IToplevelProtocol : public IProtocol {
   int32_t mLastLocalId;
   IDMap<IProtocol*> mActorMap;
   IDMap<Shmem::SharedMemory*> mShmemMap;
-
-  // XXX: We no longer need mEventTargetMap for Quantum DOM, so it may be
-  // worthwhile to remove it before people start depending on it for other weird
-  // things.
-  Mutex mEventTargetMutex;
-  IDMap<nsCOMPtr<nsISerialEventTarget>> mEventTargetMap;
 
   MessageChannel mChannel;
 };

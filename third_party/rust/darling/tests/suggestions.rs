@@ -1,13 +1,8 @@
+#![allow(dead_code)]
 #![cfg(feature = "suggestions")]
 
-#[macro_use]
-extern crate darling;
-#[macro_use]
-extern crate syn;
-#[macro_use]
-extern crate quote;
-
-use darling::FromDeriveInput;
+use darling::{FromDeriveInput, FromMeta};
+use syn::parse_quote;
 
 #[derive(Debug, FromDeriveInput)]
 #[darling(attributes(suggest))]

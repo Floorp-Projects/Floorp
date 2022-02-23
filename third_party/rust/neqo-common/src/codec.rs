@@ -261,9 +261,7 @@ impl Encoder {
     #[must_use]
     pub fn from_hex(s: impl AsRef<str>) -> Self {
         let s = s.as_ref();
-        if s.len() % 2 != 0 {
-            panic!("Needs to be even length");
-        }
+        assert_eq!(s.len() % 2, 0, "Needs to be even length");
 
         let cap = s.len() / 2;
         let mut enc = Self::with_capacity(cap);

@@ -53,26 +53,49 @@ export const AboutWelcomeUtils = {
 
 export const DEFAULT_RTAMO_CONTENT = {
   template: "return_to_amo",
+  utm_term: "rtamo",
+  totalNumberOfScreens: 1,
+  order: 0,
   content: {
-    header: { string_id: "onboarding-welcome-header" },
-    subtitle: { string_id: "return-to-amo-subtitle" },
-    text: {
+    hero_text: { string_id: "mr1-welcome-screen-hero-text" },
+    title: { string_id: "return-to-amo-subtitle" },
+    subtitle: {
       string_id: "return-to-amo-addon-title",
     },
+    help_text: {
+      text: { string_id: "mr1-onboarding-welcome-image-caption" },
+    },
+    hideLogo: true,
+    background_url:
+      "chrome://activity-stream/content/data/content/assets/proton-bkg.avif",
     primary_button: {
       label: { string_id: "return-to-amo-add-extension-label" },
+      source_id: "ADD_EXTENSION_BUTTON",
       action: {
         type: "INSTALL_ADDON_FROM_URL",
         data: { url: null, telemetrySource: "rtamo" },
       },
     },
-    startButton: {
+    secondary_button: {
       label: {
         string_id: "onboarding-not-now-button-label",
       },
-      message_id: "RTAMO_START_BROWSING_BUTTON",
+      source_id: "RTAMO_START_BROWSING_BUTTON",
       action: {
         type: "OPEN_AWESOME_BAR",
+      },
+    },
+    secondary_button_top: {
+      label: {
+        string_id: "mr1-onboarding-sign-in-button-label",
+      },
+      source_id: "RTAMO_FXA_SIGNIN_BUTTON",
+      action: {
+        data: {
+          entrypoint: "activity-stream-firstrun",
+        },
+        type: "SHOW_FIREFOX_ACCOUNTS",
+        addFlowParams: true,
       },
     },
   },

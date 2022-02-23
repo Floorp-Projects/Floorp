@@ -13,6 +13,7 @@
 
 #include <vector>
 
+#include "jxl/cms_interface.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
@@ -22,48 +23,65 @@
 
 namespace jxl {
 
-// Run is thread-safe.
+// Internal C++ wrapper for a JxlCmsInterface.
 class ColorSpaceTransform {
  public:
-  ColorSpaceTransform();
-  ~ColorSpaceTransform();
+  explicit ColorSpaceTransform(const JxlCmsInterface& cms) : cms_(cms) {}
+  ~ColorSpaceTransform() {
+    if (cms_data_ != nullptr) {
+      cms_.destroy(cms_data_);
+    }
+  }
 
-  // Cannot copy (transforms_ holds pointers).
+  // Cannot copy.
   ColorSpaceTransform(const ColorSpaceTransform&) = delete;
   ColorSpaceTransform& operator=(const ColorSpaceTransform&) = delete;
 
-  // "Constructor"; allocates for up to `num_threads`, or returns false.
-  // `intensity_target` is used for conversion to and from PQ, which is absolute
-  // (1 always represents 10000 cd/m²) and thus needs scaling in linear space if
-  // 1 is to represent another luminance level instead.
   Status Init(const ColorEncoding& c_src, const ColorEncoding& c_dst,
-              float intensity_target, size_t xsize, size_t num_threads);
+              float intensity_target, size_t xsize, size_t num_threads) {
+    xsize_ = xsize;
+    JxlColorProfile input_profile;
+    icc_src_ = c_src.ICC();
+    input_profile.icc.data = icc_src_.data();
+    input_profile.icc.size = icc_src_.size();
+    ConvertInternalToExternalColorEncoding(c_src,
+                                           &input_profile.color_encoding);
+    input_profile.num_channels = c_src.Channels();
+    JxlColorProfile output_profile;
+    icc_dst_ = c_dst.ICC();
+    output_profile.icc.data = icc_dst_.data();
+    output_profile.icc.size = icc_dst_.size();
+    ConvertInternalToExternalColorEncoding(c_dst,
+                                           &output_profile.color_encoding);
+    output_profile.num_channels = c_dst.Channels();
+    cms_data_ = cms_.init(cms_.init_data, num_threads, xsize, &input_profile,
+                          &output_profile, intensity_target);
+    JXL_RETURN_IF_ERROR(cms_data_ != nullptr);
+    return true;
+  }
 
-  float* BufSrc(const size_t thread) { return buf_src_.Row(thread); }
+  float* BufSrc(const size_t thread) const {
+    return cms_.get_src_buf(cms_data_, thread);
+  }
 
-  float* BufDst(const size_t thread) { return buf_dst_.Row(thread); }
+  float* BufDst(const size_t thread) const {
+    return cms_.get_dst_buf(cms_data_, thread);
+  }
 
-#if JPEGXL_ENABLE_SKCMS
-  struct SkcmsICC;
-  std::unique_ptr<SkcmsICC> skcms_icc_;
-#else
-  void* lcms_transform_;
-#endif
+  Status Run(const size_t thread, const float* buf_src, float* buf_dst) {
+    return cms_.run(cms_data_, thread, buf_src, buf_dst, xsize_);
+  }
 
-  ImageF buf_src_;
-  ImageF buf_dst_;
-  float intensity_target_;
+ private:
+  JxlCmsInterface cms_;
+  void* cms_data_ = nullptr;
+  // The interface may retain pointers into these.
+  PaddedBytes icc_src_;
+  PaddedBytes icc_dst_;
   size_t xsize_;
-  bool skip_lcms_ = false;
-  ExtraTF preprocess_ = ExtraTF::kNone;
-  ExtraTF postprocess_ = ExtraTF::kNone;
 };
 
-// buf_X can either be from BufX() or caller-allocated, interleaved storage.
-// `thread` must be less than the `num_threads` passed to Init.
-// `t` is non-const because buf_* may be modified.
-void DoColorSpaceTransform(ColorSpaceTransform* t, size_t thread,
-                           const float* buf_src, float* buf_dst);
+const JxlCmsInterface& GetJxlCms();
 
 }  // namespace jxl
 

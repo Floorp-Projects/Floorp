@@ -206,9 +206,18 @@ impl<'a> ElemPayload<'a> {
         }
         let mut exprs = Vec::new();
         while !parser.is_empty() {
-            let expr = parser.parens(|p| {
-                p.parse::<Option<kw::item>>()?;
-                p.parse()
+            let expr = parser.parens(|parser| {
+                if parser.peek::<kw::item>() {
+                    parser.parse::<kw::item>()?;
+                    parser.parse()
+                } else {
+                    // Without `item` this is "sugar" for a single-instruction
+                    // expression.
+                    let insn = parser.parse()?;
+                    Ok(ast::Expression {
+                        instrs: [insn].into(),
+                    })
+                }
             })?;
             exprs.push(expr);
         }

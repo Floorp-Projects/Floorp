@@ -386,7 +386,7 @@ void nsHtml5StreamParser::SetViewSourceTitle(nsIURI* aURL) {
     mURIToSendToDevtools = aURL;
 
     nsID uuid;
-    nsresult rv = nsContentUtils::GenerateUUIDInPlace(uuid);
+    nsresult rv = nsID::GenerateUUIDInPlace(uuid);
     if (!NS_FAILED(rv)) {
       char buffer[NSID_LENGTH];
       uuid.ToProvidedString(buffer);

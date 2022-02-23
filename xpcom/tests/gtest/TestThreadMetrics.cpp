@@ -159,6 +159,8 @@ class ThreadMetrics : public ::testing::Test {
   uint32_t mDispatchCount;
 };
 
+// Disabled on Windows x64 due to high failure rate in bug 1745116
+#if !defined(_WIN64)
 TEST_F(ThreadMetrics, CollectMetrics) {
   nsresult rv;
   initScheduler();
@@ -185,6 +187,7 @@ TEST_F(ThreadMetrics, CollectMetrics) {
   uint64_t duration = mCounter->GetExecutionDuration();
   ASSERT_GE(duration, 50000u);
 }
+#endif
 
 TEST_F(ThreadMetrics, CollectRecursiveMetrics) {
   nsresult rv;

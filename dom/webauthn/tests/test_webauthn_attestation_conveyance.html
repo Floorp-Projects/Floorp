@@ -93,9 +93,16 @@
         .then(verifyAnonymizedCertificate)
         .catch(arrivingHereIsBad);
 
-      // Request indirect attestation, which is the same as none.
+      // Request indirect attestation, which is the same as direct.
       await requestMakeCredential("indirect")
-        .then(verifyAnonymizedCertificate)
+        .then((x) => {
+          if (AppConstants.platform === "android") {
+            // If this is Android, the result will be anonymized (Bug 1551229)
+            return verifyAnonymizedCertificate(x);
+          } else {
+            return verifyDirectCertificate(x);
+          }
+        })
         .catch(arrivingHereIsBad);
 
       // Request direct attestation, which will prompt for user intervention.

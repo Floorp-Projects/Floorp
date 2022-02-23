@@ -5,8 +5,13 @@
 // except according to those terms.
 
 use super::{connect, default_http3_client, default_http3_server, exchange_packets};
-use neqo_common::event::Provider;
-use neqo_http3::{Http3Client, Http3ClientEvent, Http3State, WebTransportEvent};
+use neqo_common::{event::Provider, Encoder};
+use neqo_crypto::AuthenticationStatus;
+use neqo_http3::{
+    settings::{HSetting, HSettingType, HSettings},
+    Error, HFrame, Http3Client, Http3ClientEvent, Http3State, WebTransportEvent,
+};
+use neqo_transport::{Connection, ConnectionError, StreamType};
 use std::time::Duration;
 use test_fixture::*;
 
@@ -102,4 +107,50 @@ fn zero_rtt_wt_settings() {
     zero_rtt(false, true, false, false);
     zero_rtt(false, true, true, false);
     zero_rtt(false, true, true, true);
+}
+
+fn exchange_packets2(client: &mut Http3Client, server: &mut Connection) {
+    let mut out = None;
+    loop {
+        out = client.process(out, now()).dgram();
+        out = server.process(out, now()).dgram();
+        if out.is_none() {
+            break;
+        }
+    }
+}
+
+#[test]
+fn wrong_setting_value() {
+    const CONTROL_STREAM_TYPE: &[u8] = &[0x0];
+    let mut client = default_http3_client(false);
+    let mut server = default_server_h3();
+
+    exchange_packets2(&mut client, &mut server);
+    client.authenticated(AuthenticationStatus::Ok, now());
+    exchange_packets2(&mut client, &mut server);
+
+    let control = server.stream_create(StreamType::UniDi).unwrap();
+    server.stream_send(control, CONTROL_STREAM_TYPE).unwrap();
+    // Encode a settings frame and send it.
+    let mut enc = Encoder::default();
+    let settings = HFrame::Settings {
+        settings: HSettings::new(&[HSetting::new(HSettingType::EnableWebTransport, 2)]),
+    };
+    settings.encode(&mut enc);
+    assert_eq!(
+        server.stream_send(control, &enc[..]).unwrap(),
+        enc[..].len()
+    );
+
+    exchange_packets2(&mut client, &mut server);
+    match client.state() {
+        Http3State::Closing(err) | Http3State::Closed(err) => {
+            assert_eq!(
+                err,
+                ConnectionError::Application(Error::HttpSettings.code())
+            );
+        }
+        _ => panic!("Wrong state {:?}", client.state()),
+    };
 }

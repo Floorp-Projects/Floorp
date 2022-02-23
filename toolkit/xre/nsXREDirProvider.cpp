@@ -78,7 +78,7 @@
 
 #if defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
-#  include "nsIUUIDGenerator.h"
+#  include "nsID.h"
 #  include "mozilla/Unused.h"
 #  if defined(XP_WIN)
 #    include "sandboxBroker.h"
@@ -721,15 +721,10 @@ static already_AddRefed<nsIFile> CreateProcessSandboxTempDir(
   nsresult rv;
   nsAutoString tempDirSuffix;
   mozilla::Preferences::GetString(pref, tempDirSuffix);
-  if (tempDirSuffix.IsEmpty()) {
-    nsCOMPtr<nsIUUIDGenerator> uuidgen =
-        do_GetService("@mozilla.org/uuid-generator;1", &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
 
+  if (tempDirSuffix.IsEmpty()) {
     nsID uuid;
-    rv = uuidgen->GenerateUUIDInPlace(&uuid);
+    rv = nsID::GenerateUUIDInPlace(uuid);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }

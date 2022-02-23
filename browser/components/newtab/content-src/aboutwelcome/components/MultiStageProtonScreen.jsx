@@ -14,7 +14,12 @@ export class MultiStageProtonScreen extends React.PureComponent {
   }
 
   render() {
-    const { autoClose, content, totalNumberOfScreens: total } = this.props;
+    const {
+      autoClose,
+      content,
+      isRtamo,
+      totalNumberOfScreens: total,
+    } = this.props;
     const windowObj = this.props.windowObj || window;
     const isWelcomeScreen = this.props.order === 0;
     const isLastScreen = this.props.order === total;
@@ -55,7 +60,7 @@ export class MultiStageProtonScreen extends React.PureComponent {
           <div className="section-left">
             <div className="message-text">
               <div className="spacer-top" />
-              <Localized text={content.subtitle}>
+              <Localized text={content.hero_text}>
                 <h1 />
               </Localized>
               <div className="spacer-bottom" />
@@ -86,6 +91,9 @@ export class MultiStageProtonScreen extends React.PureComponent {
             }`}
           >
             <div className={`brand-logo ${content.hideLogo ? "hide" : ""}`} />
+            <div className={`${isRtamo ? "rtamo-icon" : "hide-rtamo-icon"}`}>
+              <img src={this.props.iconURL} role="presentation" alt="" />
+            </div>
             {isLastScreen && content.hasFancyTitle ? (
               <div className="confetti" />
             ) : null}
@@ -98,9 +106,13 @@ export class MultiStageProtonScreen extends React.PureComponent {
                 <Localized text={content.title}>
                   <h1 id="mainContentHeader" />
                 </Localized>
-                {!isWelcomeScreen ? (
+                {content.subtitle ? (
                   <Localized text={content.subtitle}>
-                    <h2 />
+                    <h2
+                      data-l10n-args={JSON.stringify({
+                        "addon-name": this.props.addonName,
+                      })}
+                    />
                   </Localized>
                 ) : null}
               </div>

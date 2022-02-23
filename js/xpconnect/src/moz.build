@@ -8,7 +8,6 @@ EXPORTS += [
     "BackstagePass.h",
     "XPCJSMemoryReporter.h",
     "xpcObjectHelper.h",
-    "XPCPrefableContextOptions.h",
     "xpcpublic.h",
     "XPCSelfHostedShmem.h",
 ]

@@ -8,12 +8,16 @@
 // A command in a menu.
 
 const {
+  createFactory,
   createRef,
   PureComponent,
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { button, li, span } = dom;
+loader.lazyGetter(this, "Localized", () =>
+  createFactory(require("devtools/client/shared/vendor/fluent-react").Localized)
+);
 
 class MenuItem extends PureComponent {
   static get propTypes() {
@@ -46,8 +50,11 @@ class MenuItem extends PureComponent {
       // An optional ID to be assigned to the item.
       id: PropTypes.string,
 
-      // The item label.
-      label: PropTypes.string.isRequired,
+      // The item label for use with legacy localization systems.
+      label: PropTypes.string,
+
+      // The Fluent ID for localizing the label.
+      l10nID: PropTypes.string,
 
       // An optional callback to be invoked when the item is selected.
       onClick: PropTypes.func,
@@ -153,11 +160,32 @@ class MenuItem extends PureComponent {
       attr["aria-checked"] = true;
     }
 
-    const textLabel = span(
-      { key: "label", className: "label", ref: this.labelRef },
-      this.props.label
-    );
-    const children = [textLabel];
+    const children = [];
+    const className = "label";
+
+    // Add the text label.
+    if (this.props.l10nID) {
+      // Fluent localized label.
+      children.push(
+        Localized(
+          { id: this.props.l10nID, key: "label" },
+          span({ className, ref: this.labelRef })
+        )
+      );
+    } else {
+      children.push(
+        span({ key: "label", className, ref: this.labelRef }, this.props.label)
+      );
+    }
+
+    if (this.props.l10nID && this.props.label) {
+      console.warn(
+        "<MenuItem> should only take either an l10nID or a label, not both"
+      );
+    }
+    if (!this.props.l10nID && !this.props.label) {
+      console.warn("<MenuItem> requires either an l10nID, or a label prop.");
+    }
 
     if (typeof this.props.accelerator !== "undefined") {
       const acceleratorLabel = span(

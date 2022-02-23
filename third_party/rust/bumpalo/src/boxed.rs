@@ -647,39 +647,25 @@ impl<'a, F: ?Sized + Future + Unpin> Future for Box<'a, F> {
     }
 }
 
-macro_rules! array_impls {
-    ($($N: expr)+) => {
-        $(
-            /// This impl replaces unsize coercion.
-            impl<'a, T> From<Box<'a, [T; $N]>> for Box<'a, [T]> {
-                fn from(mut arr: Box<'a, [T; $N]>) -> Box<'a, [T]> {
-                    let ptr = core::ptr::slice_from_raw_parts_mut(arr.as_mut_ptr(), $N);
-                    mem::forget(arr);
-                    unsafe { Box::from_raw(ptr) }
-                }
-            }
-
-
-            /// This impl replaces unsize coercion.
-            impl<'a, T> TryFrom<Box<'a, [T]>> for Box<'a, [T; $N]> {
-                type Error = Box<'a, [T]>;
-                fn try_from(mut slice: Box<'a, [T]>) -> Result<Box<'a, [T; $N]>, Box<'a, [T]>> {
-                    if slice.len() == $N {
-                        let ptr = slice.as_mut_ptr() as *mut [T; $N];
-                        mem::forget(slice);
-                        Ok(unsafe { Box::from_raw(ptr) })
-                    } else {
-                        Err(slice)
-                    }
-                }
-            }
-        )+
+/// This impl replaces unsize coercion.
+impl<'a, T, const N: usize> From<Box<'a, [T; N]>> for Box<'a, [T]> {
+    fn from(mut arr: Box<'a, [T; N]>) -> Box<'a, [T]> {
+        let ptr = core::ptr::slice_from_raw_parts_mut(arr.as_mut_ptr(), N);
+        mem::forget(arr);
+        unsafe { Box::from_raw(ptr) }
     }
 }
 
-array_impls! {
-     0  1  2  3  4  5  6  7  8  9
-    10 11 12 13 14 15 16 17 18 19
-    20 21 22 23 24 25 26 27 28 29
-    30 31 32
+/// This impl replaces unsize coercion.
+impl<'a, T, const N: usize> TryFrom<Box<'a, [T]>> for Box<'a, [T; N]> {
+    type Error = Box<'a, [T]>;
+    fn try_from(mut slice: Box<'a, [T]>) -> Result<Box<'a, [T; N]>, Box<'a, [T]>> {
+        if slice.len() == N {
+            let ptr = slice.as_mut_ptr() as *mut [T; N];
+            mem::forget(slice);
+            Ok(unsafe { Box::from_raw(ptr) })
+        } else {
+            Err(slice)
+        }
+    }
 }

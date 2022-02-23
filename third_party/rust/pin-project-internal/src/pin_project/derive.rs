@@ -2,9 +2,13 @@ use proc_macro2::{Delimiter, Group, Span, TokenStream};
 use quote::{format_ident, quote, quote_spanned, ToTokens};
 use syn::{
     parse::{Parse, ParseStream},
+    parse_quote,
     spanned::Spanned,
+    token,
     visit_mut::VisitMut,
-    *,
+    Attribute, Data, DataEnum, DataStruct, DeriveInput, Error, Field, Fields, FieldsNamed,
+    FieldsUnnamed, Generics, Ident, Index, Lifetime, LifetimeDef, Meta, MetaList, NestedMeta,
+    Result, Token, Type, Variant, Visibility, WhereClause,
 };
 
 use super::PIN;

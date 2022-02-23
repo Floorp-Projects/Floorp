@@ -21,7 +21,7 @@ struct ErrorScopeStack {
 };
 
 class WebGPUParent final : public PWebGPUParent {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGPUParent)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGPUParent, override)
 
  public:
   explicit WebGPUParent();
@@ -30,9 +30,9 @@ class WebGPUParent final : public PWebGPUParent {
       const dom::GPURequestAdapterOptions& aOptions,
       const nsTArray<RawId>& aTargetIds,
       InstanceRequestAdapterResolver&& resolver);
-  ipc::IPCResult RecvAdapterRequestDevice(RawId aSelfId,
-                                          const ipc::ByteBuf& aByteBuf,
-                                          RawId aNewId);
+  ipc::IPCResult RecvAdapterRequestDevice(
+      RawId aSelfId, const ipc::ByteBuf& aByteBuf, RawId aNewId,
+      AdapterRequestDeviceResolver&& resolver);
   ipc::IPCResult RecvAdapterDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceDestroy(RawId aSelfId);
   ipc::IPCResult RecvBufferReturnShmem(RawId aSelfId, Shmem&& aShmem);
@@ -74,6 +74,9 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvSwapChainDestroy(wr::ExternalImageId aExternalId);
 
   ipc::IPCResult RecvDeviceAction(RawId aSelf, const ipc::ByteBuf& aByteBuf);
+  ipc::IPCResult RecvDeviceActionWithAck(
+      RawId aSelf, const ipc::ByteBuf& aByteBuf,
+      DeviceActionWithAckResolver&& aResolver);
   ipc::IPCResult RecvTextureAction(RawId aSelf, RawId aDevice,
                                    const ipc::ByteBuf& aByteBuf);
   ipc::IPCResult RecvCommandEncoderAction(RawId aSelf, RawId aDevice,
@@ -87,7 +90,7 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvDevicePopErrorScope(
       RawId aSelfId, DevicePopErrorScopeResolver&& aResolver);
 
-  ipc::IPCResult RecvShutdown();
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
   virtual ~WebGPUParent();

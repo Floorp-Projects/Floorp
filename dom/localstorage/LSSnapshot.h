@@ -91,7 +91,7 @@ class LSSnapshot final : public nsIRunnable {
 
   RefPtr<LSDatabase> mDatabase;
 
-  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsITimer> mIdleTimer;
 
   LSSnapshotChild* mActor;
 
@@ -111,7 +111,7 @@ class LSSnapshot final : public nsIRunnable {
   bool mHasOtherProcessObservers;
   bool mExplicit;
   bool mHasPendingStableStateCallback;
-  bool mHasPendingTimerCallback;
+  bool mHasPendingIdleTimerCallback;
   bool mDirty;
 
 #ifdef DEBUG
@@ -176,9 +176,9 @@ class LSSnapshot final : public nsIRunnable {
 
   nsresult Finish();
 
-  void CancelTimer();
+  void CancelIdleTimer();
 
-  static void TimerCallback(nsITimer* aTimer, void* aClosure);
+  static void IdleTimerCallback(nsITimer* aTimer, void* aClosure);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE

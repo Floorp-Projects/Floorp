@@ -70,13 +70,13 @@ function defaultQuery(conditions = "") {
                               IFNULL(btitle, h.title), tags,
                               h.visit_count, h.typed,
                               1, t.open_count,
-                              :matchBehavior, :searchBehavior)
+                              :matchBehavior, :searchBehavior, NULL)
          ELSE
            AUTOCOMPLETE_MATCH(:searchString, h.url,
                               h.title, '',
                               h.visit_count, h.typed,
                               0, t.open_count,
-                              :matchBehavior, :searchBehavior)
+                              :matchBehavior, :searchBehavior, NULL)
          END
        ${conditions ? "AND" : ""} ${conditions}
      ORDER BY h.frecency DESC, h.id DESC
@@ -92,7 +92,7 @@ const SQL_SWITCHTAB_QUERY = `SELECT :query_type, t.url, t.url, NULL, NULL, NULL,
      AND t.userContextId = :userContextId
      AND AUTOCOMPLETE_MATCH(:searchString, t.url, t.url, NULL,
                             NULL, NULL, NULL, t.open_count,
-                            :matchBehavior, :searchBehavior)
+                            :matchBehavior, :searchBehavior, NULL)
    ORDER BY t.ROWID DESC
    LIMIT :maxResults`;
 

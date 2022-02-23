@@ -9,6 +9,7 @@
 
 #include "mozilla/intl/UnicodeProperties.h"
 
+#include "mozilla/Span.h"
 #include "nsBidiUtils.h"
 #include "nsUGenCategory.h"
 #include "harfbuzz/hb.h"
@@ -158,36 +159,8 @@ inline bool IsClusterExtender(uint32_t aCh) {
   return IsClusterExtender(aCh, GetGeneralCategory(aCh));
 }
 
-// A simple iterator for a string of char16_t codepoints that advances
-// by Unicode grapheme clusters
-class ClusterIterator {
- public:
-  ClusterIterator(const char16_t* aText, uint32_t aLength)
-      : mPos(aText),
-        mLimit(aText + aLength)
-#ifdef DEBUG
-        ,
-        mText(aText)
-#endif
-  {
-  }
-
-  operator const char16_t*() const { return mPos; }
-
-  bool AtEnd() const { return mPos >= mLimit; }
-
-  void Next();
-
- private:
-  const char16_t* mPos;
-  const char16_t* mLimit;
-#ifdef DEBUG
-  const char16_t* mText;
-#endif
-};
-
 // Count the number of grapheme clusters in the given string
-uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength);
+uint32_t CountGraphemeClusters(Span<const char16_t> aText);
 
 // Determine whether a character is a "combining diacritic" for the purpose
 // of diacritic-insensitive text search. Examples of such characters include
@@ -209,24 +182,6 @@ bool IsCombiningDiacritic(uint32_t aCh);
 
 // Remove diacritics from a character
 uint32_t GetNaked(uint32_t aCh);
-
-// A simple reverse iterator for a string of char16_t codepoints that
-// advances by Unicode grapheme clusters
-class ClusterReverseIterator {
- public:
-  ClusterReverseIterator(const char16_t* aText, uint32_t aLength)
-      : mPos(aText + aLength), mLimit(aText) {}
-
-  operator const char16_t*() const { return mPos; }
-
-  bool AtEnd() const { return mPos <= mLimit; }
-
-  void Next();
-
- private:
-  const char16_t* mPos;
-  const char16_t* mLimit;
-};
 
 }  // end namespace unicode
 

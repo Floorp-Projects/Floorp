@@ -27,7 +27,6 @@ std::ostream& operator<<(std::ostream& aStream, const FrameMetrics& aMetrics) {
     aStream << "] [vd=" << aMetrics.GetVisualDestination();
   }
   aStream << "] [dp=" << aMetrics.GetDisplayPort()
-          << "] [cdp=" << aMetrics.GetCriticalDisplayPort()
           << "] [rcs=" << aMetrics.GetBoundingCompositionSize()
           << "] [v=" << aMetrics.GetLayoutViewport()
           << nsPrintfCString("] [z=(ld=%.3f r=%.3f",

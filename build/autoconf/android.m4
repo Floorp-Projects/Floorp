@@ -7,7 +7,7 @@ AC_DEFUN([MOZ_ANDROID_NDK],
 
 case "$target" in
 *-android*|*-linuxandroid*)
-    dnl $android_platform will be set for us by Python configure.
+    dnl $android_* will be set for us by Python configure.
     directory_include_args="-isystem $android_system -isystem $android_sysroot/usr/include"
 
     # clang will do any number of interesting things with host tools unless we tell
@@ -21,34 +21,9 @@ case "$target" in
     CFLAGS="-fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-fno-short-enums -fno-exceptions $CXXFLAGS $stlport_cppflags"
     ASFLAGS="$directory_include_args -DANDROID $ASFLAGS"
-
-    LDFLAGS="-L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform $LDFLAGS"
     ;;
 esac
 
-])
-
-AC_DEFUN([MOZ_ANDROID_CPU_ARCH],
-[
-
-if test "$OS_TARGET" = "Android"; then
-    case "${CPU_ARCH}" in
-    arm)
-        ANDROID_CPU_ARCH=armeabi-v7a
-        ;;
-    x86)
-        ANDROID_CPU_ARCH=x86
-        ;;
-    x86_64)
-        ANDROID_CPU_ARCH=x86_64
-        ;;
-    aarch64)
-        ANDROID_CPU_ARCH=arm64-v8a
-        ;;
-    esac
-
-    AC_SUBST(ANDROID_CPU_ARCH)
-fi
 ])
 
 AC_DEFUN([MOZ_ANDROID_STLPORT],

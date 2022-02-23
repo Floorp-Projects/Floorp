@@ -16,7 +16,7 @@ impl StaticFn {
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        StaticFn {
+        Self {
             get_instance_proc_addr: unsafe {
                 unsafe extern "system" fn get_instance_proc_addr(
                     _instance: Instance,
@@ -77,7 +77,7 @@ impl EntryFnV1_0 {
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        EntryFnV1_0 {
+        Self {
             create_instance: unsafe {
                 unsafe extern "system" fn create_instance(
                     _p_create_info: *const InstanceCreateInfo,
@@ -268,7 +268,7 @@ impl InstanceFnV1_0 {
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        InstanceFnV1_0 {
+        Self {
             destroy_instance: unsafe {
                 unsafe extern "system" fn destroy_instance(
                     _instance: Instance,
@@ -1605,7 +1605,7 @@ impl DeviceFnV1_0 {
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        DeviceFnV1_0 {
+        Self {
             destroy_device: unsafe {
                 unsafe extern "system" fn destroy_device(
                     _device: Device,
@@ -5163,7 +5163,7 @@ impl EntryFnV1_1 {
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        EntryFnV1_1 {
+        Self {
             enumerate_instance_version: unsafe {
                 unsafe extern "system" fn enumerate_instance_version(
                     _p_api_version: *mut u32,
@@ -5217,7 +5217,7 @@ impl InstanceFnV1_1 {
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        InstanceFnV1_1 {
+        Self {
             enumerate_physical_device_groups: unsafe {
                 unsafe extern "system" fn enumerate_physical_device_groups(
                     _instance: Instance,
@@ -5608,7 +5608,7 @@ impl DeviceFnV1_1 {
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        DeviceFnV1_1 {
+        Self {
             bind_buffer_memory2: unsafe {
                 unsafe extern "system" fn bind_buffer_memory2(
                     _device: Device,
@@ -6122,7 +6122,7 @@ impl EntryFnV1_2 {
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        EntryFnV1_2 {}
+        Self {}
     }
 }
 #[derive(Clone)]
@@ -6134,7 +6134,7 @@ impl InstanceFnV1_2 {
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        InstanceFnV1_2 {}
+        Self {}
     }
 }
 #[derive(Clone)]
@@ -6161,7 +6161,7 @@ impl DeviceFnV1_2 {
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        DeviceFnV1_2 {
+        Self {
             cmd_draw_indirect_count: unsafe {
                 unsafe extern "system" fn cmd_draw_indirect_count(
                     _command_buffer: CommandBuffer,

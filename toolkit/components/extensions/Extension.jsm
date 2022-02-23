@@ -117,6 +117,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "[]"
 );
 
+// This pref modifies behavior for MV2.  MV3 is enabled regardless.
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "eventPagesEnabled",
+  "extensions.eventPages.enabled"
+);
+
 var {
   GlobalManager,
   ParentAPIManager,
@@ -331,6 +338,28 @@ var UUIDMap = {
   },
 };
 
+function clearCacheForExtensionPrincipal(principal, clearAll = false) {
+  if (!principal.schemeIs("moz-extension")) {
+    return Promise.reject(new Error("Unexpected non extension principal"));
+  }
+
+  // TODO(Bug 1750053): replace the two specific flags with a "clear all caches one"
+  // (along with covering the other kind of cached data with tests).
+  const clearDataFlags = clearAll
+    ? Ci.nsIClearDataService.CLEAR_ALL_CACHES
+    : Ci.nsIClearDataService.CLEAR_IMAGE_CACHE |
+      Ci.nsIClearDataService.CLEAR_CSS_CACHE;
+
+  return new Promise(resolve =>
+    Services.clearData.deleteDataFromPrincipal(
+      principal,
+      false,
+      clearDataFlags,
+      () => resolve()
+    )
+  );
+}
+
 /**
  * Observer AddonManager events and translate them into extension events,
  * as well as handle any last cleanup after uninstalling an extension.
@@ -397,6 +426,12 @@ var ExtensionAddonObserver = {
     let principal = Services.scriptSecurityManager.createContentPrincipal(
       baseURI,
       {}
+    );
+
+    // Clear all cached resources (e.g. CSS and images);
+    AsyncShutdown.profileChangeTeardown.addBlocker(
+      `Clear cache for ${addon.id}`,
+      clearCacheForExtensionPrincipal(principal, /* clearAll */ true)
     );
 
     // Clear all the registered service workers for the extension
@@ -515,6 +550,7 @@ class ExtensionData {
 
     this.errors = [];
     this.warnings = [];
+    this.eventPagesEnabled = eventPagesEnabled;
   }
 
   get builtinMessages() {
@@ -912,6 +948,24 @@ class ExtensionData {
 
   get manifestVersion() {
     return this.manifest.manifest_version;
+  }
+
+  get persistentBackground() {
+    let { manifest } = this;
+    if (
+      !manifest.background ||
+      manifest.background.service_worker ||
+      this.manifestVersion > 2
+    ) {
+      return false;
+    }
+    // V2 addons can only use event pages if the pref is also flipped and
+    // persistent is explicilty set to false.
+    let { persistent } = manifest.background;
+    if (!this.eventPagesEnabled && !persistent) {
+      this.logWarning("Event pages are not currently supported.");
+    }
+    return !this.eventPagesEnabled || persistent;
   }
 
   async getExtensionVersionWithoutValidation() {
@@ -2545,6 +2599,30 @@ class Extension extends ExtensionData {
   }
 
   /**
+   * Clear cached resources associated to the extension principal
+   * when an extension is installed (in case we were unable to do that at
+   * uninstall time) or when it is being upgraded or downgraded.
+   *
+   * @param {string|undefined} reason
+   *        BOOTSTRAP_REASON string, if provided. The value is expected to be
+   *        `undefined` for extension objects without a corresponding AddonManager
+   *        addon wrapper (e.g. test extensions created using `ExtensionTestUtils`
+   *        without `useAddonManager` optional property).
+   *
+   * @returns {Promise<void>}
+   *        Promise resolved when the nsIClearDataService async method call
+   *        has been completed.
+   */
+  async clearCache(reason) {
+    switch (reason) {
+      case "ADDON_INSTALL":
+      case "ADDON_UPGRADE":
+      case "ADDON_DOWNGRADE":
+        return clearCacheForExtensionPrincipal(this.principal);
+    }
+  }
+
+  /**
    * Update site permissions as necessary.
    *
    * @param {string|undefined} reason
@@ -2679,6 +2757,8 @@ class Extension extends ExtensionData {
         // the extension and running cleanup logic.
         return;
       }
+
+      await this.clearCache(this.startupReason);
 
       // We automatically add permissions to system/built-in extensions.
       // Extensions expliticy stating not_allowed will never get permission.

@@ -186,8 +186,8 @@ bool Module::finishTier2(const LinkData& linkData2,
 
     const MetadataTier& metadataTier1 = metadata(Tier::Baseline);
 
-    auto stubs1 = code().codeTier(Tier::Baseline).lazyStubs().lock();
-    auto stubs2 = borrowedTier2->lazyStubs().lock();
+    auto stubs1 = code().codeTier(Tier::Baseline).lazyStubs().readLock();
+    auto stubs2 = borrowedTier2->lazyStubs().writeLock();
 
     MOZ_ASSERT(stubs2->entryStubsEmpty());
 

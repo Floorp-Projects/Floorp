@@ -797,14 +797,17 @@ struct ImplicitEdgeHolderType<BaseScript*> {
   using Type = BaseScript*;
 };
 
-void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges) {
+void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges,
+                                  gc::CellColor srcColor) {
   DebugOnly<size_t> initialLength = edges.length();
 
   for (auto& edge : edges) {
-    gc::AutoSetMarkColor autoColor(*this,
-                                   std::min(edge.color, CellColor(color)));
-    ApplyGCThingTyped(edge.target, edge.target->getTraceKind(),
-                      [this](auto t) { markAndTraverse(t); });
+    CellColor targetColor = std::min(srcColor, edge.color);
+    MOZ_ASSERT(CellColor(markColor()) >= targetColor);
+    if (targetColor == markColor()) {
+      ApplyGCThingTyped(edge.target, edge.target->getTraceKind(),
+                        [this](auto t) { markAndTraverse(t); });
+    }
   }
 
   // The above marking always goes through markAndPush, which will not cause
@@ -816,7 +819,7 @@ void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges) {
   // that induces a sweep group edge. As a result, it is possible for the
   // delegate zone to get marked later, look up an edge in this table, and
   // then try to mark something in a Zone that is no longer marking.
-  if (color == CellColor::Black) {
+  if (srcColor == CellColor::Black && markColor() == MarkColor::Black) {
     edges.eraseIf([](auto& edge) { return edge.color == MarkColor::Black; });
   }
 }
@@ -861,8 +864,8 @@ void GCMarker::severWeakDelegate(JSObject* key, JSObject* delegate) {
   // target objects will be re-inserted anywhere as a result of this action.
 
   EphemeronEdgeVector& edges = p->value;
-  gc::AutoSetMarkColor autoColor(*this, MarkColor::Black);
-  markEphemeronEdges(edges);
+  MOZ_ASSERT(markColor() == MarkColor::Black);
+  markEphemeronEdges(edges, MarkColor::Black);
 }
 
 // 'delegate' is now the delegate of 'key'. Update weakmap marking state.
@@ -909,8 +912,8 @@ void GCMarker::restoreWeakDelegate(JSObject* key, JSObject* delegate) {
 
   // Similar to severWeakDelegate above, mark through the key -> value edge.
   EphemeronEdgeVector& edges = p->value;
-  gc::AutoSetMarkColor autoColor(*this, MarkColor::Black);
-  markEphemeronEdges(edges);
+  MOZ_ASSERT(markColor() == MarkColor::Black);
+  markEphemeronEdges(edges, MarkColor::Black);
 }
 
 template <typename T>
@@ -934,8 +937,7 @@ void GCMarker::markImplicitEdgesHelper(T markedThing) {
   AutoClearTracingSource acts(this);
 
   CellColor thingColor = gc::detail::GetEffectiveColor(runtime(), markedThing);
-  gc::AutoSetMarkColor autoColor(*this, thingColor);
-  markEphemeronEdges(edges);
+  markEphemeronEdges(edges, thingColor);
 }
 
 template <>
@@ -1385,7 +1387,6 @@ inline void js::GCMarker::eagerlyMarkChildren(JSRope* rope) {
   // users of the stack. This also assumes that a rope can only point to
   // other ropes or linear strings, it cannot refer to GC things of other
   // types.
-  gc::MarkStack& stack = currentStack();
   size_t savedPos = stack.position();
   MOZ_DIAGNOSTIC_ASSERT(rope->getTraceKind() == JS::TraceKind::String);
   while (true) {
@@ -1920,8 +1921,6 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
   size_t index;              // Index of the next slot to mark.
   size_t end;                // End of slot range to mark.
 
-  gc::MarkStack& stack = currentStack();
-
   switch (stack.peekTag()) {
     case MarkStack::SlotsOrElementsRangeTag: {
       auto range = stack.popSlotsOrElementsRange();
@@ -2194,17 +2193,14 @@ MarkStack::~MarkStack() {
   MOZ_ASSERT(iteratorCount_ == 0);
 }
 
-bool MarkStack::init(StackType which, bool incrementalGCEnabled) {
+bool MarkStack::init(bool incrementalGCEnabled) {
   MOZ_ASSERT(isEmpty());
-  return setStackCapacity(which, incrementalGCEnabled);
+  return setStackCapacity(incrementalGCEnabled);
 }
 
-bool MarkStack::setStackCapacity(StackType which, bool incrementalGCEnabled) {
+bool MarkStack::setStackCapacity(bool incrementalGCEnabled) {
   size_t capacity;
-
-  if (which == AuxiliaryStack) {
-    capacity = SMALL_MARK_STACK_BASE_CAPACITY;
-  } else if (incrementalGCEnabled) {
+  if (incrementalGCEnabled) {
     capacity = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
   } else {
     capacity = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
@@ -2392,8 +2388,8 @@ GCMarker::GCMarker(JSRuntime* rt)
                JS::TraceOptions(JS::WeakMapTraceAction::Expand,
                                 JS::WeakEdgeTraceAction::Skip)),
       stack(),
-      auxStack(),
-      mainStackColor(MarkColor::Black),
+      grayPosition(0),
+      color(MarkColor::Black),
       delayedMarkingList(nullptr),
       delayedMarkingWorkAdded(false),
       state(MarkingState::NotActive),
@@ -2408,13 +2404,11 @@ GCMarker::GCMarker(JSRuntime* rt)
       queuePos(0)
 #endif
 {
-  setMarkColorUnchecked(MarkColor::Black);
 }
 
 bool GCMarker::init() {
   bool incrementalGCEnabled = runtime()->gc.isIncrementalGCEnabled();
-  return stack.init(gc::MarkStack::MainStack, incrementalGCEnabled) &&
-         auxStack.init(gc::MarkStack::AuxiliaryStack, incrementalGCEnabled);
+  return stack.init(incrementalGCEnabled);
 }
 
 bool GCMarker::isDrained() {
@@ -2459,8 +2453,6 @@ void GCMarker::stop() {
 
   barrierBuffer().clearAndFree();
   stack.clear();
-  auxStack.clear();
-  setMainStackColor(MarkColor::Black);
   ClearEphemeronEdges(runtime());
 }
 
@@ -2480,8 +2472,6 @@ void GCMarker::reset() {
 
   barrierBuffer().clearAndFree();
   stack.clear();
-  auxStack.clear();
-  setMainStackColor(MarkColor::Black);
   ClearEphemeronEdges(runtime());
   MOZ_ASSERT(isMarkStackEmpty());
 
@@ -2500,31 +2490,25 @@ void GCMarker::reset() {
 }
 
 void GCMarker::setMarkColor(gc::MarkColor newColor) {
-  if (color != newColor) {
-    MOZ_ASSERT(runtime()->gc.state() == State::Sweep);
-    setMarkColorUnchecked(newColor);
+  if (color == newColor) {
+    return;
   }
-}
 
-void GCMarker::setMarkColorUnchecked(gc::MarkColor newColor) {
+  MOZ_ASSERT(runtime()->gc.state() == State::Sweep);
+  MOZ_ASSERT(!hasBlackEntries());
+
   color = newColor;
-  currentStackPtr = &getStack(color);
-}
-
-void GCMarker::setMainStackColor(gc::MarkColor newColor) {
-  MOZ_ASSERT(isMarkStackEmpty());
-  if (newColor != mainStackColor) {
-    mainStackColor = newColor;
-
-    // Update currentStackPtr without changing the mark color.
-    setMarkColorUnchecked(color);
+  if (color == MarkColor::Black) {
+    grayPosition = stack.position();
+  } else {
+    grayPosition = SIZE_MAX;
   }
 }
 
 template <typename T>
 inline void GCMarker::pushTaggedPtr(T* ptr) {
   checkZone(ptr);
-  if (!currentStack().push(ptr)) {
+  if (!stack.push(ptr)) {
     delayMarkingChildrenOnOOM(ptr);
   }
 }
@@ -2539,7 +2523,7 @@ void GCMarker::pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
     return;
   }
 
-  if (!currentStack().push(obj, kind, start)) {
+  if (!stack.push(obj, kind, start)) {
     delayMarkingChildrenOnOOM(obj);
   }
 }
@@ -2607,26 +2591,20 @@ IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
   // An OrderedHashMap::Range stays valid even when the underlying table
   // (zone->gcEphemeronEdges) is mutated, which is useful here since we may add
   // additional entries while iterating over the Range.
-  gc::EphemeronEdgeTable::Range r = gcEphemeronEdges().all();
+  EphemeronEdgeTable::Range r = gcEphemeronEdges().all();
   while (!r.empty()) {
-    gc::Cell* src = r.front().key;
-    gc::CellColor srcColor =
-        gc::detail::GetEffectiveColor(marker->runtime(), src);
-    if (srcColor) {
-      MOZ_ASSERT(src == r.front().key);
-      auto& edges = r.front().value;
-      r.popFront();  // Pop before any mutations happen.
-      if (edges.length() > 0) {
-        gc::AutoSetMarkColor autoColor(*marker, srcColor);
-        uint32_t steps = edges.length();
-        marker->markEphemeronEdges(edges);
-        budget.step(steps);
-        if (budget.isOverBudget()) {
-          return NotFinished;
-        }
+    Cell* src = r.front().key;
+    CellColor srcColor = gc::detail::GetEffectiveColor(marker->runtime(), src);
+    auto& edges = r.front().value;
+    r.popFront();  // Pop before any mutations happen.
+
+    if (edges.length() > 0) {
+      uint32_t steps = edges.length();
+      marker->markEphemeronEdges(edges, srcColor);
+      budget.step(steps);
+      if (budget.isOverBudget()) {
+        return NotFinished;
       }
-    } else {
-      r.popFront();
     }
   }
 
@@ -2783,7 +2761,6 @@ void GCMarker::checkZone(void* p) {
 
 size_t GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
   size_t size = stack.sizeOfExcludingThis(mallocSizeOf);
-  size += auxStack.sizeOfExcludingThis(mallocSizeOf);
   size += barrierBuffer_.ref().sizeOfExcludingThis(mallocSizeOf);
   return size;
 }

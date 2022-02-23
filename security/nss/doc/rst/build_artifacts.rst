@@ -1,8 +1,5 @@
 .. _mozilla_projects_nss_build_artifacts:
 
-.. warning::
-   This NSS documentation was just imported from our legacy MDN repository. It currently is very deprecated and likely incorrect or broken in many places.
-
 Build artifacts
 ===============
 
@@ -62,7 +59,8 @@ Build artifacts
 
 .. container::
 
-   Windows and Unix use different naming conventions for static and dynamic libraries:
+   Windows and Unix use different naming conventions for static and dynamic
+   libraries:
 
    ======= ======== ===============================
            Windows  Unix
@@ -70,8 +68,8 @@ Build artifacts
    dynamic ``.dll`` ``.so`` or ``.dylib`` or ``.sl``
    ======= ======== ===============================
 
-   In addition, Windows has "import" libraries that bind to dynamic libraries. So the NSS library
-   has the following forms:
+   In addition, Windows has "import" libraries that bind to dynamic
+   libraries. So the NSS library has the following forms:
 
    -  ``libnss3.so`` - Linux shared library
    -  ``libnss3.dylib`` - MacOS shared library
@@ -88,18 +86,21 @@ Build artifacts
    -  ``libcrmf.a``/``crmf.lib`` provides an API for CRMF operations.
    -  ``libjar.a``/``jar.lib`` provides an API for creating JAR files.
 
-   The following static libraries are included only in external loadable PKCS #11 modules:
+   The following static libraries are included only in external loadable PKCS
+   #11 modules:
 
    -  ``libnssckfw.a``/``nssckfw.lib`` provides an API for writing PKCS #11 modules.
-   -  ``libswfci.a``/``swfci.lib`` provides support for software FORTEZZA.
+   ..
+      -  ``libswfci.a``/``swfci.lib`` provides support for software FORTEZZA.
 
-   The following shared libraries are standalone loadable modules, not meant to be linked with
-   directly:
+   The following shared libraries are standalone loadable modules, not meant to
+   be linked with directly:
 
-   -  ``libfort.so``/``libfort.sl``/``fort32.dll`` provides support for hardware FORTEZZA.
-   -  ``libswft.so``/``libswft.sl``/``swft32.dll`` provides support for software FORTEZZA.
-   -  ``libnssckbi.so``/``libnssckbi.sl``/``nssckbi.dll`` defines the default set of trusted root
-      certificates.
+   ..
+      -  ``libfort.so``/``libfort.sl``/``fort32.dll`` provides support for hardware FORTEZZA.
+      -  ``libswft.so``/``libswft.sl``/``swft32.dll`` provides support for software FORTEZZA.
+   -  ``libnssckbi.so``/``libnssckbi.sl``/``nssckbi.dll`` defines the default set
+      of trusted root certificates.
 
 ..
    .. _support_for_ilp32:

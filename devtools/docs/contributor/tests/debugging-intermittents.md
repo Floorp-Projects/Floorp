@@ -36,7 +36,7 @@ The first step to fix an intermittent is to reproduce it.
 
 Sometimes reproducing the failure can only be done in automation, but it's worth trying locally, because this makes it much simpler to debug.
 
-First, try running the test in isolation.  You can use the `--repeat` and `--run-until-failure` flags to `mach mochitest` to automate this a bit.  It's nice to do this sort of thing in headless mode (`--headless`) or in a VM (or using Xnest on Linux) to avoid locking up your machine.  Mozilla provides an [easy-to-use VM](https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Using_the_VM).
+First, try running the test in isolation.  You can use the `--repeat` and `--run-until-failure` flags to `mach mochitest` to automate this a bit.  It's nice to do this sort of thing in headless mode (`--headless`) or in a VM (or using Xnest on Linux) to avoid locking up your machine.
 
 Sometimes, though, a test will only fail if it is run in conjunction with one or more other tests.  You can use the `--start-at` and `--end-at` flags with `mach mochitest` to run a group of tests together.
 

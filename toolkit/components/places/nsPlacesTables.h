@@ -316,6 +316,7 @@
       "  last_interaction_at INTEGER NOT NULL, "                              \
       "  document_type INTEGER NOT NULL DEFAULT 0, "                          \
       "  user_persisted INTEGER NOT NULL DEFAULT 0, "                         \
+      "  title TEXT, "                                                        \
       "  FOREIGN KEY (place_id) REFERENCES moz_places(id) ON DELETE CASCADE " \
       ")")
 
@@ -334,7 +335,9 @@
   nsLiteralCString(                                                        \
       "CREATE TABLE IF NOT EXISTS moz_places_metadata_snapshots_groups ( " \
       "  id INTEGER PRIMARY KEY, "                                         \
-      "  title TEXT NOT NULL "                                             \
+      "  title TEXT NOT NULL, "                                            \
+      "  builder TEXT NOT NULL, "                                          \
+      "  builder_data TEXT "                                               \
       ")")
 
 #define CREATE_MOZ_PLACES_METADATA_GROUPS_TO_SNAPSHOTS                        \

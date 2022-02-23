@@ -97,6 +97,7 @@ suites:
             ares6: "FF, CH, CU"
             assorted-dom: "FF, CH, CU"
             jetstream2: "FF, CH, CU"
+            matrix-react-bench: "FF, CH, CU"
             motionmark-animometer: "FF, CH, CU"
             motionmark-htmlsuite: "FF, CH, CU"
             raptor-speedometer-geckoview: "GV"

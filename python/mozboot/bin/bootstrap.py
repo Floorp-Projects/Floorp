@@ -30,6 +30,7 @@ import subprocess
 import tempfile
 import zipfile
 
+from pathlib import Path
 from optparse import OptionParser
 from urllib.request import urlopen
 
@@ -60,65 +61,64 @@ def which(name):
     search_dirs = os.environ["PATH"].split(os.pathsep)
 
     for path in search_dirs:
-        test = os.path.join(path, name)
-        if os.path.isfile(test) and os.access(test, os.X_OK):
+        test = Path(path) / name
+        if test.is_file() and os.access(test, os.X_OK):
             return test
 
     return None
 
 
-def validate_clone_dest(dest):
-    dest = os.path.abspath(dest)
+def validate_clone_dest(dest: Path):
+    dest = dest.resolve()
 
-    if not os.path.exists(dest):
+    if not dest.exists():
         return dest
 
-    if not os.path.isdir(dest):
-        print("ERROR! Destination %s exists but is not a directory." % dest)
+    if not dest.is_dir():
+        print(f"ERROR! Destination {dest} exists but is not a directory.")
         return None
 
-    if not os.listdir(dest):
+    if not any(dest.iterdir()):
         return dest
     else:
-        print("ERROR! Destination directory %s exists but is nonempty." % dest)
+        print(f"ERROR! Destination directory {dest} exists but is nonempty.")
         print(
-            "To re-bootstrap the existing checkout, go into '%s' and run './mach bootstrap'."
-            % dest
+            f"To re-bootstrap the existing checkout, go into '{dest}' and run './mach bootstrap'."
         )
         return None
 
 
 def input_clone_dest(vcs, no_interactive):
     repo_name = "mozilla-unified"
-    print("Cloning into %s using %s..." % (repo_name, VCS_HUMAN_READABLE[vcs]))
+    print(f"Cloning into {repo_name} using {VCS_HUMAN_READABLE[vcs]}...")
     while True:
         dest = None
         if not no_interactive:
             dest = input(
-                "Destination directory for clone (leave empty to use "
-                "default destination of %s): " % repo_name
+                f"Destination directory for clone (leave empty to use "
+                f"default destination of {repo_name}): "
             ).strip()
         if not dest:
             dest = repo_name
-        dest = validate_clone_dest(os.path.expanduser(dest))
+        dest = validate_clone_dest(Path(dest).expanduser())
         if dest:
             return dest
         if no_interactive:
             return None
 
 
-def hg_clone_firefox(hg, dest):
+def hg_clone_firefox(hg: Path, dest: Path):
     # We create an empty repo then modify the config before adding data.
     # This is necessary to ensure storage settings are optimally
     # configured.
     args = [
-        hg,
+        str(hg),
         # The unified repo is generaldelta, so ensure the client is as
         # well.
         "--config",
         "format.generaldelta=true",
         "init",
-        dest,
+        str(dest),
     ]
     res = subprocess.call(args)
     if res:
@@ -128,7 +128,7 @@ def hg_clone_firefox(hg, dest):
     # Strictly speaking, this could overwrite a config based on a template
     # the user has installed. Let's pretend this problem doesn't exist
     # unless someone complains about it.
-    with open(os.path.join(dest, ".hg", "hgrc"), "a") as fh:
+    with open(dest / ".hg" / "hgrc", "a") as fh:
         fh.write("[paths]\n")
         fh.write("default = https://hg.mozilla.org/mozilla-unified\n")
         fh.write("\n")
@@ -142,7 +142,7 @@ def hg_clone_firefox(hg, dest):
         fh.write("maxchainlen = 10000\n")
 
     res = subprocess.call(
-        [hg, "pull", "https://hg.mozilla.org/mozilla-unified"], cwd=dest
+        [str(hg), "pull", "https://hg.mozilla.org/mozilla-unified"], cwd=str(dest)
     )
     print("")
     if res:
@@ -150,16 +150,16 @@ def hg_clone_firefox(hg, dest):
         return None
 
     print('updating to "central" - the development head of Gecko and Firefox')
-    res = subprocess.call([hg, "update", "-r", "central"], cwd=dest)
+    res = subprocess.call([str(hg), "update", "-r", "central"], cwd=str(dest))
     if res:
         print(
-            "error updating; you will need to `cd %s && hg update -r central` "
-            "manually" % dest
+            f"error updating; you will need to `cd {dest} && hg update -r central` "
+            "manually"
         )
     return dest
 
 
-def git_clone_firefox(git, dest, watchman):
+def git_clone_firefox(git: Path, dest: Path, watchman: Path):
     tempdir = None
     cinnabar = None
     env = dict(os.environ)
@@ -173,25 +173,23 @@ def git_clone_firefox(git, dest, watchman):
             # download a temporary copy. `mach bootstrap` will clone a full copy
             # of the repo in the state dir; we don't want to copy all that logic
             # to this tiny bootstrapping script.
-            tempdir = tempfile.mkdtemp()
-            with open(os.path.join(tempdir, "git-cinnabar.zip"), mode="w+b") as archive:
+            tempdir = Path(tempfile.mkdtemp())
+            with open(tempdir / "git-cinnabar.zip", mode="w+b") as archive:
                 with urlopen(cinnabar_url) as repo:
                     shutil.copyfileobj(repo, archive)
                 archive.seek(0)
                 with zipfile.ZipFile(archive) as zipf:
                     zipf.extractall(path=tempdir)
-            cinnabar_dir = os.path.join(tempdir, "git-cinnabar-master")
-            cinnabar = os.path.join(cinnabar_dir, "git-cinnabar")
+            cinnabar_dir = tempdir / "git-cinnabar-master"
+            cinnabar = cinnabar_dir / "git-cinnabar"
             # Make git-cinnabar and git-remote-hg executable.
             st = os.stat(cinnabar)
-            os.chmod(cinnabar, st.st_mode | stat.S_IEXEC)
-            st = os.stat(os.path.join(cinnabar_dir, "git-remote-hg"))
-            os.chmod(
-                os.path.join(cinnabar_dir, "git-remote-hg"), st.st_mode | stat.S_IEXEC
-            )
-            env["PATH"] = cinnabar_dir + os.pathsep + env["PATH"]
+            cinnabar.chmod(st.st_mode | stat.S_IEXEC)
+            st = os.stat(cinnabar_dir / "git-remote-hg")
+            (cinnabar_dir / "git-remote-hg").chmod(st.st_mode | stat.S_IEXEC)
+            env["PATH"] = str(cinnabar_dir) + os.pathsep + env["PATH"]
             subprocess.check_call(
-                ["git", "cinnabar", "download"], cwd=cinnabar_dir, env=env
+                ["git", "cinnabar", "download"], cwd=str(cinnabar_dir), env=env
             )
             print(
                 "WARNING! git-cinnabar is required for Firefox development  "
@@ -205,34 +203,43 @@ def git_clone_firefox(git, dest, watchman):
         # Configure git per the git-cinnabar requirements.
         subprocess.check_call(
             [
-                git,
+                str(git),
                 "clone",
                 "-b",
                 "bookmarks/central",
                 "hg::https://hg.mozilla.org/mozilla-unified",
-                dest,
+                str(dest),
             ],
             env=env,
         )
-        subprocess.check_call([git, "config", "fetch.prune", "true"], cwd=dest, env=env)
-        subprocess.check_call([git, "config", "pull.ff", "only"], cwd=dest, env=env)
+        subprocess.check_call(
+            [str(git), "config", "fetch.prune", "true"], cwd=str(dest), env=env
+        )
+        subprocess.check_call(
+            [str(git), "config", "pull.ff", "only"], cwd=str(dest), env=env
+        )
 
-        watchman_sample = os.path.join(dest, ".git/hooks/fsmonitor-watchman.sample")
+        watchman_sample = dest / ".git/hooks/fsmonitor-watchman.sample"
         # Older versions of git didn't include fsmonitor-watchman.sample.
-        if watchman and os.path.exists(watchman_sample):
+        if watchman and watchman_sample.exists():
             print("Configuring watchman")
-            watchman_config = os.path.join(dest, ".git/hooks/query-watchman")
-            if not os.path.exists(watchman_config):
-                print("Copying %s to %s" % (watchman_sample, watchman_config))
+            watchman_config = dest / ".git/hooks/query-watchman"
+            if not watchman_config.exists():
+                print(f"Copying {watchman_sample} to {watchman_config}")
                 copy_args = [
                     "cp",
                     ".git/hooks/fsmonitor-watchman.sample",
                     ".git/hooks/query-watchman",
                 ]
-                subprocess.check_call(copy_args, cwd=dest)
+                subprocess.check_call(copy_args, cwd=str(dest))
 
-            config_args = [git, "config", "core.fsmonitor", ".git/hooks/query-watchman"]
-            subprocess.check_call(config_args, cwd=dest, env=env)
+            config_args = [
+                str(git),
+                "config",
+                "core.fsmonitor",
+                ".git/hooks/query-watchman",
+            ]
+            subprocess.check_call(config_args, cwd=str(dest), env=env)
         return dest
     finally:
         if not cinnabar:
@@ -242,7 +249,7 @@ def git_clone_firefox(git, dest, watchman):
                 "Mozilla:-A-git-workflow-for-Gecko-development"
             )
         if tempdir:
-            shutil.rmtree(tempdir)
+            shutil.rmtree(str(tempdir))
 
 
 def clone(vcs, no_interactive):
@@ -280,7 +287,7 @@ def clone(vcs, no_interactive):
     if not dest:
         return None
 
-    print("Cloning Firefox %s repository to %s" % (VCS_HUMAN_READABLE[vcs], dest))
+    print(f"Cloning Firefox {VCS_HUMAN_READABLE[vcs]} repository to {dest}")
     if vcs == "hg":
         return hg_clone_firefox(binary, dest)
     else:
@@ -288,8 +295,8 @@ def clone(vcs, no_interactive):
         return git_clone_firefox(binary, dest, watchman)
 
 
-def bootstrap(srcdir, application_choice, no_interactive, no_system_changes):
-    args = [sys.executable, os.path.join(srcdir, "mach")]
+def bootstrap(srcdir: Path, application_choice, no_interactive, no_system_changes):
+    args = [sys.executable, str(srcdir / "mach")]
 
     if no_interactive:
         # --no-interactive is a global argument, not a command argument,
@@ -304,7 +311,7 @@ def bootstrap(srcdir, application_choice, no_interactive, no_system_changes):
         args += ["--no-system-changes"]
 
     print("Running `%s`" % " ".join(args))
-    return subprocess.call(args, cwd=srcdir)
+    return subprocess.call(args, cwd=str(srcdir))
 
 
 def main(args):
@@ -357,7 +364,7 @@ def main(args):
                 remove_bootstrap_file = "y"
         if options.no_interactive or remove_bootstrap_file == "y":
             try:
-                os.remove(sys.argv[0])
+                Path(sys.argv[0]).unlink()
             except FileNotFoundError:
                 print("File could not be found !")
         return bootstrap(

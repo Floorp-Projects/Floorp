@@ -108,7 +108,8 @@ static inline SkPaint::Join JoinStyleToSkiaJoin(JoinStyle aJoin) {
 }
 
 static inline bool StrokeOptionsToPaint(SkPaint& aPaint,
-                                        const StrokeOptions& aOptions) {
+                                        const StrokeOptions& aOptions,
+                                        bool aUsePathEffects = true) {
   // Skia renders 0 width strokes with a width of 1 (and in black),
   // so we should just skip the draw call entirely.
   // Skia does not handle non-finite line widths.
@@ -120,7 +121,7 @@ static inline bool StrokeOptionsToPaint(SkPaint& aPaint,
   aPaint.setStrokeCap(CapStyleToSkiaCap(aOptions.mLineCap));
   aPaint.setStrokeJoin(JoinStyleToSkiaJoin(aOptions.mLineJoin));
 
-  if (aOptions.mDashLength > 0) {
+  if (aOptions.mDashLength > 0 && aUsePathEffects) {
     // Skia only supports dash arrays that are multiples of 2.
     uint32_t dashCount;
 

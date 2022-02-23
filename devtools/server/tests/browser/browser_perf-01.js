@@ -22,11 +22,6 @@ add_task(async function() {
     true,
     "This test only runs on supported platforms."
   );
-  is(
-    await front.isLockedForPrivateBrowsing(),
-    false,
-    "The browser is not in private browsing mode."
-  );
   is(await front.isActive(), false, "The profiler is not active yet.");
 
   // Start the profiler.

@@ -81,7 +81,7 @@
 //! ```
 
 // Quote types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/quote/1.0.10")]
+#![doc(html_root_url = "https://docs.rs/quote/1.0.14")]
 #![allow(
     clippy::doc_markdown,
     clippy::missing_errors_doc,
@@ -1066,6 +1066,14 @@ macro_rules! quote_token {
         $crate::__private::push_ident(&mut $tokens, stringify!($ident));
     };
 
+    ($tokens:ident $lifetime:lifetime) => {
+        $crate::__private::push_lifetime(&mut $tokens, stringify!($lifetime));
+    };
+
+    ($tokens:ident _) => {
+        $crate::__private::push_underscore(&mut $tokens);
+    };
+
     ($tokens:ident $other:tt) => {
         $crate::__private::parse(&mut $tokens, stringify!($other));
     };
@@ -1279,6 +1287,14 @@ macro_rules! quote_token_spanned {
 
     ($tokens:ident $span:ident $ident:ident) => {
         $crate::__private::push_ident_spanned(&mut $tokens, $span, stringify!($ident));
+    };
+
+    ($tokens:ident $span:ident $lifetime:lifetime) => {
+        $crate::__private::push_lifetime_spanned(&mut $tokens, $span, stringify!($lifetime));
+    };
+
+    ($tokens:ident $span:ident _) => {
+        $crate::__private::push_underscore_spanned(&mut $tokens, $span);
     };
 
     ($tokens:ident $span:ident $other:tt) => {

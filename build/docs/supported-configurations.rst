@@ -162,5 +162,3 @@ proper solution. If you can provide a patch, a regression range or
 assist in verifying that the developer's patches work for your platform,
 that would help a lot towards getting your bugs fixed and checked into
 the tree.
-
-

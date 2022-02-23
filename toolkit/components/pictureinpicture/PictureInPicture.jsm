@@ -16,6 +16,13 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+XPCOMUtils.defineLazyServiceGetters(this, {
+  WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
+});
+
 const PLAYER_URI = "chrome://global/content/pictureinpicture/player.xhtml";
 var PLAYER_FEATURES =
   "chrome,titlebar=yes,alwaysontop,lockaspectratio,resizable";
@@ -409,6 +416,10 @@ var PictureInPicture = {
       features,
       null
     );
+
+    if (Services.appinfo.OS == "WINNT") {
+      WindowsUIUtils.setWindowIconNoData(pipWindow);
+    }
 
     return new Promise(resolve => {
       pipWindow.addEventListener(

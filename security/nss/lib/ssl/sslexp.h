@@ -503,19 +503,47 @@ typedef SECStatus(PR_CALLBACK *SSLResumptionTokenCallback)(
                          (PRFileDesc * _fd, PRUint32 _size), \
                          (fd, size))
 
-/* If |enabled|, a GREASE ECH extension will be sent in every ClientHello,
+/* Client:
+ * If |enabled|, a GREASE ECH extension will be sent in every ClientHello,
  * unless a valid and supported ECHConfig is configured to the socket
- * (in which case real ECH takes precedence). If |!enabled|, it is not sent.*/
+ * (in which case real ECH takes precedence). If |!enabled|, it is not sent.
+ *
+ * Server:
+ * If |enabled|, a GREASE ECH extensions will be sent in every HelloRetryRequest,
+ * provided that the corresponding ClientHello contained an ECH extension. If ECH
+ * is enabled, the real ECH HRR extension takes precedence.
+ */
 #define SSL_EnableTls13GreaseEch(fd, enabled)        \
     SSL_EXPERIMENTAL_API("SSL_EnableTls13GreaseEch", \
                          (PRFileDesc * _fd, PRBool _enabled), (fd, enabled))
 
-/* If |enabled|, a server receiving a Client Hello containing the ech_is_inner
- * (and not encrypted_client_hello) extension will respond with the ECH
+/* If |enabled|, a server receiving a Client Hello containing an encrypted_client_hello
+ * of type inner will respond with the ECH
  * acceptance signal. This signals the client to continue with the inner
  * transcript rather than outer. */
 #define SSL_EnableTls13BackendEch(fd, enabled)        \
     SSL_EXPERIMENTAL_API("SSL_EnableTls13BackendEch", \
+                         (PRFileDesc * _fd, PRBool _enabled), (fd, enabled))
+
+/* This allows an extension writer to supply different values for inner and
+ * outer ClientHello when using encrypted ClientHello.
+ *
+ * When enabled, each extension writer can be called more than once for the same
+ * message; it must provide the same response when called for the same message
+ * type.  When calling the writer to construct the outer ClientHello, the
+ * function will be called with ssl_hs_ech_outer_client_hello as the message
+ * type (a value from outside the range of valid TLS handshake messages).
+ *
+ * When disabled, the extension writer is called once for the outer ClientHello
+ * and the value is copied to the inner ClientHello.
+ *
+ * Enabling this affects all extension writers.  The order in which extension
+ * writers are added is also important.  Any extension writer that writes
+ * different values for inner and outer ClientHello will prevent later
+ * extensions from being compressed.
+ */
+#define SSL_CallExtensionWriterOnEchInner(fd, enabled)        \
+    SSL_EXPERIMENTAL_API("SSL_CallExtensionWriterOnEchInner", \
                          (PRFileDesc * _fd, PRBool _enabled), (fd, enabled))
 
 /* Called by the client after an initial ECH connection fails with

@@ -187,4 +187,3 @@ See also
 - `labs.jensimmons.com <https://labs.jensimmons.com/>`_ — lots of interesting grid examples.
 - `Grid by Example <https://gridbyexample.com/>`_ — CSS Grid learning resources from Rachel Andrew.
 - `CSS Grid Layout <https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout>`_ — MDN CSS Grid Layout references and tutorials.
-

@@ -633,5 +633,16 @@ var AUSTLMY = {
   pingMoveResult: function UT_pingMoveResult(aResult) {
     Services.telemetry.keyedScalarAdd("update.move_result", aResult, 1);
   },
+
+  pingSuppressPrompts: function UT_pingSuppressPrompts() {
+    try {
+      let val = Services.prefs.getBoolPref("app.update.suppressPrompts", false);
+      if (val === true) {
+        Services.telemetry.scalarSet("update.suppress_prompts", true);
+      }
+    } catch (e) {
+      Cu.reportError(e);
+    }
+  },
 };
 Object.freeze(AUSTLMY);

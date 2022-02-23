@@ -399,23 +399,46 @@ class nsWSAdmissionManager {
       }
     }
 
-    if (aChannel->mConnecting) {
-      MOZ_ASSERT(NS_IsMainThread(), "not main thread");
+    if (NS_IsMainThread()) {
+      ContinueOnStopSession(aChannel, aReason);
+    } else {
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "nsWSAdmissionManager::ContinueOnStopSession",
+          [channel = RefPtr{aChannel}, reason = aReason]() {
+            StaticMutexAutoLock lock(sLock);
+            if (!sManager) {
+              return;
+            }
 
-      // Only way a connecting channel may get here w/o failing is if it was
-      // closed with GOING_AWAY (1001) because of navigation, tab close, etc.
-      MOZ_ASSERT(
-          NS_FAILED(aReason) || aChannel->mScriptCloseCode == CLOSE_GOING_AWAY,
-          "websocket closed while connecting w/o failing?");
+            nsWSAdmissionManager::ContinueOnStopSession(channel, reason);
+          }));
+    }
+  }
 
-      sManager->RemoveFromQueue(aChannel);
+  static void ContinueOnStopSession(WebSocketChannel* aChannel,
+                                    nsresult aReason) {
+    sLock.AssertCurrentThreadOwns();
+    MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
-      bool wasNotQueued = (aChannel->mConnecting != CONNECTING_QUEUED);
-      LOG(("Websocket: changing state to NOT_CONNECTING"));
-      aChannel->mConnecting = NOT_CONNECTING;
-      if (wasNotQueued) {
-        sManager->ConnectNext(aChannel->mAddress, aChannel->mOriginSuffix);
-      }
+    if (!aChannel->mConnecting) {
+      return;
+    }
+
+    // Only way a connecting channel may get here w/o failing is if it
+    // was closed with GOING_AWAY (1001) because of navigation, tab
+    // close, etc.
+    MOZ_ASSERT(
+        NS_FAILED(aReason) || aChannel->mScriptCloseCode == CLOSE_GOING_AWAY,
+        "websocket closed while connecting w/o failing?");
+    Unused << aReason;
+
+    sManager->RemoveFromQueue(aChannel);
+
+    bool wasNotQueued = (aChannel->mConnecting != CONNECTING_QUEUED);
+    LOG(("Websocket: changing state to NOT_CONNECTING"));
+    aChannel->mConnecting = NOT_CONNECTING;
+    if (wasNotQueued) {
+      sManager->ConnectNext(aChannel->mAddress, aChannel->mOriginSuffix);
     }
   }
 

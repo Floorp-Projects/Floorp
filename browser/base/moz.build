@@ -61,6 +61,7 @@ BROWSER_CHROME_MANIFESTS += [
     "content/test/tabPrompts/browser.ini",
     "content/test/tabs/browser.ini",
     "content/test/touch/browser.ini",
+    "content/test/utilityOverlay/browser.ini",
     "content/test/webextensions/browser.ini",
     "content/test/webrtc/browser.ini",
     "content/test/webrtc/gracePeriod/browser.ini",

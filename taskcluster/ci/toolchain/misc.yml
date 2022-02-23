@@ -39,6 +39,23 @@ linux64-binutils:
         toolchain:
             - linux64-toolchain-sysroot
 
+linux64-cctools-port:
+    description: "cctools-port toolchain build"
+    treeherder:
+        symbol: TL(cctools-clang)
+    run:
+        script: build-cctools-port.sh
+        toolchain-artifact: public/build/cctools.tar.zst
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-binutils
+            - linux64-toolchain-sysroot
+        fetch:
+            - cctools-port
+            - libtapi
+            - ldid
+
 linux64-hfsplus:
     description: "hfsplus toolchain build"
     treeherder:
@@ -52,7 +69,7 @@ linux64-hfsplus:
         fetch:
             - hfsplus-tools
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-toolchain
 
 linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"
@@ -65,7 +82,7 @@ linux64-libdmg:
         fetch:
             - libdmg-hfsplus
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - linux64-toolchain-sysroot
 
 linux64-mar-tools:
@@ -74,7 +91,7 @@ linux64-mar-tools:
         symbol: TL(mar-tools)
     fetches:
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - linux64-binutils
     run:
         script: build-mar-tools.sh
@@ -110,7 +127,7 @@ linux64-msix-packaging:
         fetch:
             - msix-packaging
         toolchain:
-            - linux64-clang
+            - linux64-clang-toolchain
             - linux64-toolchain-sysroot
 
 linux64-custom-v8:
@@ -261,7 +278,7 @@ win64-winchecksec:
         fetch:
             - winchecksec
         toolchain:
-            - linux64-clang-win-cross
+            - linux64-clang-toolchain
             - linux64-liblowercase
 
 linux64-makecab:
@@ -311,5 +328,5 @@ nsis:
             - nsis-3.07
             - nsis-3.07-win
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - sysroot-x86_64-linux-gnu

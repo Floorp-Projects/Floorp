@@ -16,6 +16,138 @@
  * limitations under the License.
  */
 
+/* [SMDOC] The WASM ABIs
+ *
+ * Wasm-internal ABI.
+ *
+ * This section pertains to calls from one wasm function to another, and to
+ * wasm's view of the situation when calling into wasm from JS and C++.  Calls
+ * to JS and to C++ have other conventions.
+ *
+ * We pass the first function arguments in registers (GPR and FPU both) and the
+ * rest on the stack, generally according to platform ABI conventions (which can
+ * be hairy).  On x86-32 there are no register arguments.
+ *
+ * We have no callee-saves registers in the wasm-internal ABI, regardless of the
+ * platform ABI conventions, though see below about TlsReg or HeapReg.
+ *
+ * We return the last return value in the first return register, according to
+ * platform ABI conventions.  If there is more than one return value, an area is
+ * allocated in the caller's frame to receive the other return values, and the
+ * address of this area is passed to the callee as the last argument.  Return
+ * values except the last are stored in ascending order within this area.  Also
+ * see below about alignment of this area and the values in it.
+ *
+ * When a function is entered, there are two incoming register values in
+ * addition to the function's declared parameters: TlsReg must have the correct
+ * TLS pointer, and HeapReg the correct memoryBase, for the function.  (On
+ * x86-32 there is no HeapReg.)  From the TLS we can get to the JSContext, the
+ * instance, the MemoryBase, and many other things.  The TLS maps one-to-one
+ * with an instance.
+ *
+ * HeapReg and TlsReg are not parameters in the usual sense, nor are they
+ * callee-saves registers.  Instead they constitute global register state, the
+ * purpose of which is to bias the call ABI in favor of intra-instance calls,
+ * the predominant case where the caller and the callee have the same TlsReg and
+ * HeapReg values.
+ *
+ * With this global register state, literally no work needs to take place to
+ * save and restore the TLS and MemoryBase values across intra-instance call
+ * boundaries.
+ *
+ * For inter-instance calls, in contrast, there must be an instance switch at
+ * the call boundary: Before the call, the callee's TLS must be loaded (from a
+ * closure or from the import table), and from the TLS we load the callee's
+ * MemoryBase, the realm, and the JSContext.  The caller's and callee's TLS
+ * values must be stored into the frame (to aid unwinding), the callee's realm
+ * must be stored into the JSContext, and the callee's TLS and MemoryBase values
+ * must be moved to appropriate registers.  After the call, the caller's TLS
+ * must be loaded, and from it the caller's MemoryBase and realm, and the
+ * JSContext.  The realm must be stored into the JSContext and the caller's TLS
+ * and MemoryBase values must be moved to appropriate registers.
+ *
+ * Direct calls to functions within the same module are always intra-instance,
+ * while direct calls to imported functions are always inter-instance.  Indirect
+ * calls -- call_indirect in the MVP, future call_ref and call_funcref -- may or
+ * may not be intra-instance.
+ *
+ * call_indirect, and future call_funcref, also pass a signature value in a
+ * register (even on x86-32), this is a small integer or a pointer value
+ * denoting the caller's expected function signature.  The callee must compare
+ * it to the value or pointer that denotes its actual signature, and trap on
+ * mismatch.
+ *
+ * This is what the stack looks like during a call, after the callee has
+ * completed the prologue:
+ *
+ *     |                                   |
+ *     +-----------------------------------+ <-+
+ *     |               ...                 |   |
+ *     |      Caller's private frame       |   |
+ *     +-----------------------------------+   |
+ *     |   Multi-value return (optional)   |   |
+ *     |               ...                 |   |
+ *     +-----------------------------------+   |
+ *     |       Stack args (optional)       |   |
+ *     |               ...                 |   |
+ *     +-----------------------------------+ -+|
+ *     |          Caller TLS slot          |   \
+ *     |          Callee TLS slot          |   | \
+ *     +-----------------------------------+   |  \
+ *     |       Shadowstack area (Win64)    |   |  wasm::FrameWithTls
+ *     |            (32 bytes)             |   |  /
+ *     +-----------------------------------+   | /  <= SP "Before call"
+ *     |          Return address           |   //   <= SP "After call"
+ *     |             Saved FP          ----|--+/
+ *     +-----------------------------------+ -+ <=  FP (a wasm::Frame*)
+ *     |  DebugFrame, Locals, spills, etc  |
+ *     |   (i.e., callee's private frame)  |
+ *     |             ....                  |
+ *     +-----------------------------------+    <=  SP
+ *
+ * The FrameWithTls is a struct with four fields: the saved FP, the return
+ * address, and the two TLS slots; the shadow stack area is there only on Win64
+ * and is unused by wasm but is part of the native ABI, with which the wasm ABI
+ * is mostly compatible.  The slots for caller and callee TLS are only populated
+ * by the instance switching code in inter-instance calls so that stack
+ * unwinding can keep track of the correct TLS value for each frame, the TLS not
+ * being obtainable from anywhere else.  Nothing in the frame itself indicates
+ * directly whether the TLS slots are valid - for that, the return address must
+ * be used to look up a CallSite structure that carries that information.
+ *
+ * The stack area above the return address is owned by the caller, which may
+ * deallocate the area on return or choose to reuse it for subsequent calls.
+ * (The baseline compiler allocates and frees the stack args area and the
+ * multi-value result area per call.  Ion reuses the areas and allocates them as
+ * part of the overall activation frame when the procedure is entered; indeed,
+ * the multi-value return area can be anywhere within the caller's private
+ * frame, not necessarily directly above the stack args.)
+ *
+ * If the stack args area contain references, it is up to the callee's stack map
+ * to name the locations where those references exist, and the caller's stack
+ * map must not (redundantly) name those locations.  (The callee's ownership of
+ * this area will be crucial for making tail calls work, as the types of the
+ * locations can change if the callee makes a tail call.)  If pointer values are
+ * spilled by anyone into the Shadowstack area they will not be traced.
+ *
+ * References in the multi-return area are covered by the caller's map, as these
+ * slots outlive the call.
+ *
+ * The address "Before call", ie the part of the FrameWithTls above the Frame,
+ * must be aligned to WasmStackAlignment, and everything follows from that, with
+ * padding inserted for alignment as required for stack arguments.  In turn
+ * WasmStackAlignment is at least as large as the largest parameter type.
+ *
+ * The address of the multiple-results area is currently 8-byte aligned by Ion
+ * and its alignment in baseline is uncertain, see bug 1747787.  Result values
+ * are stored packed within the area in fields whose size is given by
+ * ResultStackSize(ValType), this breaks alignment too.  This all seems
+ * underdeveloped.
+ *
+ * In the wasm-internal ABI, the ARM64 PseudoStackPointer (PSP) is garbage on
+ * entry but must be synced with the real SP at the point the function returns.
+ */
+
 #ifndef wasm_frame_h
 #define wasm_frame_h
 

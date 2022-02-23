@@ -29,6 +29,7 @@ child:
   async DestroyReleasedChunksAtOrBefore(TimeStamp timeStamp);
 
   async GatherProfile() returns (Shmem profile);
+  async GetGatherProfileProgress() returns (GatherProfileProgress progress);
 
   async ClearAllPages();
 };

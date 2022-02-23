@@ -1973,11 +1973,17 @@ JS_PUBLIC_API bool js::ToNumberSlow(JSContext* cx, HandleValue v_,
     *out = 0.0;
     return true;
   }
-
   if (v.isUndefined()) {
     *out = GenericNaN();
     return true;
   }
+#ifdef ENABLE_RECORD_TUPLE
+  if (v.isExtendedPrimitive()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_RECORD_TUPLE_TO_NUMBER);
+    return false;
+  }
+#endif
 
   MOZ_ASSERT(v.isSymbol() || v.isBigInt());
   if (!cx->isHelperThreadContext()) {

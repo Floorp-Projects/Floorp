@@ -7,6 +7,9 @@
 var EXPORTED_SYMBOLS = ["UpdateListener"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { clearTimeout, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
@@ -27,21 +30,101 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIApplicationUpdateService"
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "UpdateManager",
+  "@mozilla.org/updates/update-manager;1",
+  "nsIUpdateManager"
+);
+
 const PREF_APP_UPDATE_UNSUPPORTED_URL = "app.update.unsupported.url";
+const PREF_APP_UPDATE_SUPPRESS_PROMPTS = "app.update.suppressPrompts";
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "SUPPRESS_PROMPTS",
+  PREF_APP_UPDATE_SUPPRESS_PROMPTS,
+  false
+);
 
 // Setup the hamburger button badges for updates.
 var UpdateListener = {
   timeouts: [],
 
   restartDoorhangerShown: false,
+
   // Once a restart badge/doorhanger is scheduled, these store the time that
   // they were scheduled at (as milliseconds elapsed since the UNIX epoch). This
   // allows us to resume the badge/doorhanger timers rather than restarting
   // them from the beginning when a new update comes along.
   updateFirstReadyTime: null,
 
+  // If PREF_APP_UPDATE_SUPPRESS_PROMPTS is true, we'll dispatch a notification
+  // prompt 14 days from the last build time, or 7 days from the last update
+  // time; whichever is sooner. It's hardcoded here to make sure update prompts
+  // can't be suppressed permanently without knowledge of the consequences.
+  promptDelayMsFromBuild: 14 * 24 * 60 * 60 * 1000, // 14 days
+
+  promptDelayMsFromUpdate: 7 * 24 * 60 * 60 * 1000, // 7 days
+
+  // If the last update time or current build time is more than 1 day in the
+  // future, it has probably been manipulated and should be distrusted.
+  promptMaxFutureVariation: 24 * 60 * 60 * 1000, // 1 day
+
+  latestUpdate: null,
+
+  availablePromptScheduled: false,
+
   get badgeWaitTime() {
     return Services.prefs.getIntPref("app.update.badgeWaitTime", 4 * 24 * 3600); // 4 days
+  },
+
+  get suppressedPromptDelay() {
+    // Return the time (in milliseconds) after which a suppressed prompt should
+    // be shown. Either 14 days from the last build time, or 7 days from the
+    // last update time; whichever comes sooner. If build time is not available
+    // and valid, schedule according to update time instead. If neither is
+    // available and valid, schedule the prompt for right now. Times are checked
+    // against the current time, since if the OS time is correct and nothing has
+    // been manipulated, the build time and update time will always be in the
+    // past. If the build time or update time is an hour in the future, it could
+    // just be a timezone issue. But if it is more than 24 hours in the future,
+    // it's probably due to attempted manipulation.
+    let now = Date.now();
+    let buildId = AppConstants.MOZ_BUILDID;
+    let buildTime =
+      new Date(
+        buildId.slice(0, 4),
+        buildId.slice(4, 6) - 1,
+        buildId.slice(6, 8),
+        buildId.slice(8, 10),
+        buildId.slice(10, 12),
+        buildId.slice(12, 14)
+      ).getTime() ?? 0;
+    let updateTime = UpdateManager.getUpdateAt(0)?.installDate ?? 0;
+    // Check that update/build times are at most 24 hours after now.
+    if (buildTime - now > this.promptMaxFutureVariation) {
+      buildTime = 0;
+    }
+    if (updateTime - now > this.promptMaxFutureVariation) {
+      updateTime = 0;
+    }
+    let promptTime = now;
+    // If both times are available, choose the sooner.
+    if (updateTime && buildTime) {
+      promptTime = Math.min(
+        buildTime + this.promptDelayMsFromBuild,
+        updateTime + this.promptDelayMsFromUpdate
+      );
+    } else if (updateTime || buildTime) {
+      // When the update time is missing, this installation was probably just
+      // installed and hasn't been updated yet. Ideally, we would instead set
+      // promptTime to installTime + this.promptDelayMsFromUpdate. But it's
+      // easier to get the build time than the install time. And on Nightly, the
+      // times ought to be fairly close together anyways.
+      promptTime = (updateTime || buildTime) + this.promptDelayMsFromUpdate;
+    }
+    return promptTime - now;
   },
 
   init() {
@@ -73,6 +156,7 @@ var UpdateListener = {
   clearCallbacks() {
     this.timeouts.forEach(t => clearTimeout(t));
     this.timeouts = [];
+    this.availablePromptScheduled = false;
   },
 
   addTimeout(time, callback) {
@@ -210,6 +294,32 @@ var UpdateListener = {
     });
   },
 
+  scheduleUpdateAvailableNotification(update) {
+    // Show a badge/banner-only notification immediately.
+    this.showUpdateAvailableNotification(update, true);
+    // Track the latest update, since we will almost certainly have a new update
+    // 7 days from now. In a common scenario, update 1 triggers the timer.
+    // Updates 2, 3, 4, and 5 come without opening a prompt, since one is
+    // already scheduled. Then, the timer ends and the prompt that was triggered
+    // by update 1 is opened. But rather than downloading update 1, of course,
+    // it will download update 5, the latest update.
+    this.latestUpdate = update;
+    // Only schedule one doorhanger at a time. If we don't, then a new
+    // doorhanger would be scheduled at least once per day. If the user
+    // downloads the first update, we don't want to keep alerting them.
+    if (!this.availablePromptScheduled) {
+      this.addTimeout(Math.max(0, this.suppressedPromptDelay), () => {
+        // If we downloaded or installed an update via the badge or banner
+        // while the timer was running, bail out of showing the doorhanger.
+        if (UpdateManager.downloadingUpdate || UpdateManager.readyUpdate) {
+          return;
+        }
+        this.showUpdateAvailableNotification(this.latestUpdate, false);
+      });
+      this.availablePromptScheduled = true;
+    }
+  },
+
   handleUpdateError(update, status) {
     switch (status) {
       case "download-attempt-failed":
@@ -266,7 +376,11 @@ var UpdateListener = {
           this.updateFirstReadyTime + initialDoorhangerWaitTimeMs - now
         );
 
-        if (badgeWaitTimeMs < doorhangerWaitTimeMs) {
+        // On Nightly only, permit disabling doorhangers for update restart
+        // notifications by setting PREF_APP_UPDATE_SUPPRESS_PROMPTS
+        if (AppConstants.NIGHTLY_BUILD && SUPPRESS_PROMPTS) {
+          this.showRestartNotification(update, true);
+        } else if (badgeWaitTimeMs < doorhangerWaitTimeMs) {
           this.addTimeout(badgeWaitTimeMs, () => {
             // Skip the badge if we're waiting for another instance.
             if (!AppUpdateService.isOtherInstanceHandlingUpdates) {
@@ -295,9 +409,13 @@ var UpdateListener = {
   handleUpdateAvailable(update, status) {
     switch (status) {
       case "show-prompt":
-        // If an update is available and the app.update.auto preference is
-        // false, then show an update available doorhanger.
-        this.showUpdateAvailableNotification(update, false);
+        // If an update is available, show an update available doorhanger unless
+        // PREF_APP_UPDATE_SUPPRESS_PROMPTS is true (only on Nightly).
+        if (AppConstants.NIGHTLY_BUILD && SUPPRESS_PROMPTS) {
+          this.scheduleUpdateAvailableNotification(update);
+        } else {
+          this.showUpdateAvailableNotification(update, false);
+        }
         break;
       case "cant-apply":
         this.clearCallbacks();

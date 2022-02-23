@@ -6,7 +6,7 @@
 
 /*** Panel and outer controls ***/
 
-@keyfocus@ #downloadsSummary:focus {
+#downloadsPanel[keyfocus] #downloadsSummary:focus {
   outline: 2px -moz-mac-focusring solid;
   outline-offset: -2px;
 }
@@ -27,7 +27,7 @@
 
 /*** Highlighted list items ***/
 
-@keyfocus@ @itemFocused@ {
+#downloadsPanel[keyfocus] #downloadsListBox:focus > richlistitem[selected] {
   outline: 2px -moz-mac-focusring solid;
   outline-offset: -2px;
 }

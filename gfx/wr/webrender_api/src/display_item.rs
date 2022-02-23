@@ -7,7 +7,7 @@ use peek_poke::PeekPoke;
 use std::ops::Not;
 // local imports
 use crate::font;
-use crate::{PipelineId, PropertyBinding};
+use crate::{APZScrollGeneration, HasScrollLinkedEffect, PipelineId, PropertyBinding};
 use crate::color::ColorF;
 use crate::image::{ColorDepth, ImageKey};
 use crate::units::*;
@@ -334,6 +334,10 @@ pub struct ScrollFrameDescriptor {
     /// should be added to those display item coordinates in order to get a
     /// normalized value that is consistent across display lists.
     pub external_scroll_offset: LayoutVector2D,
+    /// The generation of the external_scroll_offset.
+    pub scroll_offset_generation: APZScrollGeneration,
+    /// Whether this scrollframe document has any scroll-linked effect or not.
+    pub has_scroll_linked_effect: HasScrollLinkedEffect,
     /// A unique (per-pipeline) key for this spatial that is stable across display lists.
     pub key: SpatialTreeItemKey,
 }
@@ -774,6 +778,10 @@ pub enum ReferenceFrameKind {
         /// Marks that the transform should be snapped. Used for transforms which animate in
         /// response to scrolling, eg for zooming or dynamic toolbar fixed-positioning.
         should_snap: bool,
+        /// Marks the transform being a part of the CSS stacking context that also has
+        /// a perspective. In this case, backface visibility takes this perspective into
+        /// account.
+        paired_with_perspective: bool,
     },
     /// A perspective transform, that optionally scrolls relative to a specific scroll node
     Perspective {
@@ -825,6 +833,11 @@ pub enum ReferenceTransformBinding {
     /// Computed reference frame which dynamically calculates the transform
     /// based on the given parameters. The reference is the content size of
     /// the parent iframe, which is affected by snapping.
+    ///
+    /// This is used when a transform depends on the layout size of an
+    /// element, otherwise the difference between the unsnapped size
+    /// used in the transform, and the snapped size calculated during scene
+    /// building can cause seaming.
     Computed {
         scale_from: Option<LayoutSize>,
         vertical_flip: bool,
@@ -1772,6 +1785,7 @@ impl_default_for_enums! {
     ReferenceFrameKind => Transform {
         is_2d_scale_translation: false,
         should_snap: false,
+        paired_with_perspective: false,
     },
     Rotation => Degree0,
     TransformStyle => Flat,

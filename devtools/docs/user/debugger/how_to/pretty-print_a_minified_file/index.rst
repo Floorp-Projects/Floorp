@@ -20,4 +20,3 @@ The **Pretty print source** icon is available only if the source file is minifie
 .. note::
 
   Currently Firefox `does not support <https://bugzilla.mozilla.org/show_bug.cgi?id=1010150>`_ pretty printing inline Javascript.
-

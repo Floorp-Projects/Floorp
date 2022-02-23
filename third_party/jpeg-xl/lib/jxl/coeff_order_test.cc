@@ -40,7 +40,6 @@ void RoundtripPermutation(coeff_order_t* perm, coeff_order_t* out, size_t len,
 
 enum Permutation { kIdentity, kFewSwaps, kFewSlides, kRandom };
 
-constexpr size_t kNumReps = 128;
 constexpr size_t kSwaps = 32;
 
 void TestPermutation(Permutation kind, size_t len) {
@@ -72,11 +71,9 @@ void TestPermutation(Permutation kind, size_t len) {
   }
   std::vector<coeff_order_t> out(len);
   size_t size = 0;
-  for (size_t i = 0; i < kNumReps; i++) {
-    RoundtripPermutation(perm.data(), out.data(), len, &size);
-    for (size_t idx = 0; idx < len; idx++) {
-      EXPECT_EQ(perm[idx], out[idx]);
-    }
+  RoundtripPermutation(perm.data(), out.data(), len, &size);
+  for (size_t idx = 0; idx < len; idx++) {
+    EXPECT_EQ(perm[idx], out[idx]);
   }
   printf("Encoded size: %" PRIuS "\n", size);
 }

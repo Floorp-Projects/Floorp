@@ -19,7 +19,6 @@ from mozpack.chrome.manifest import (
     ManifestContent,
 )
 from mozpack.copier import FileRegistry
-from mozpack.packager.formats import FlatFormatter
 
 
 class TestL10NRepack(unittest.TestCase):
@@ -63,6 +62,10 @@ class TestL10NRepack(unittest.TestCase):
                 "app/chrome/bar/search/foo.xml": foo,
                 "app/chrome/bar/search/bar.xml": bar,
                 "app/chrome/bar/search/lst.txt": lst,
+                "META-INF/foo": foo,  # Stripped.
+                "inner/META-INF/foo": foo,  # Not stripped.
+                "app/META-INF/foo": foo,  # Stripped.
+                "app/inner/META-INF/foo": foo,  # Not stripped.
             }
         )
         app_finder.jarlogs = {}
@@ -103,7 +106,7 @@ class TestL10NRepack(unittest.TestCase):
         )
         l10n_finder.base = "l10n"
         copier = FileRegistry()
-        formatter = FlatFormatter(copier)
+        formatter = l10n.FlatFormatter(copier)
 
         l10n._repack(
             app_finder,
@@ -143,6 +146,8 @@ class TestL10NRepack(unittest.TestCase):
             "app/chrome/bar-l10n/search/foo.xml": foo_l10n,
             "app/chrome/bar-l10n/search/qux.xml": qux_l10n,
             "app/chrome/bar-l10n/search/lst.txt": lst_l10n,
+            "inner/META-INF/foo": foo,
+            "app/inner/META-INF/foo": foo,
         }
 
         self.assertEqual(

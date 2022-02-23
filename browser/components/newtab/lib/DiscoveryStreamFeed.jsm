@@ -66,8 +66,6 @@ const PREF_REC_IMPRESSIONS = "discoverystream.rec.impressions";
 const PREF_COLLECTIONS_ENABLED =
   "discoverystream.sponsored-collections.enabled";
 const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
-const PREF_RECS_PERSONALIZED = "discoverystream.recs.personalized";
-const PREF_SPOCS_PERSONALIZED = "discoverystream.spocs.personalized";
 const PREF_PERSONALIZATION = "discoverystream.personalization.enabled";
 const PREF_PERSONALIZATION_OVERRIDE =
   "discoverystream.personalization.override";
@@ -169,12 +167,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
   get personalized() {
     // If both spocs and recs are not personalized, we might as well return false here.
-    const spocsPersonalized = this.store.getState().Prefs.values[
-      PREF_SPOCS_PERSONALIZED
-    ];
-    const recsPersonalized = this.store.getState().Prefs.values[
-      PREF_RECS_PERSONALIZED
-    ];
+    const spocsPersonalized = this.store.getState().Prefs.values?.pocketConfig
+      ?.spocsPersonalized;
+    const recsPersonalized = this.store.getState().Prefs.values?.pocketConfig
+      ?.recsPersonalized;
     const personalization = this.store.getState().Prefs.values[
       PREF_PERSONALIZATION
     ];
@@ -463,7 +459,11 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         this.store.getState().Prefs.values?.pocketConfig || {};
 
       let items = isBasicLayout ? 3 : 21;
-      if (pocketConfig.compactLayout) {
+      if (
+        pocketConfig.compactLayout ||
+        pocketConfig.fourCardLayout ||
+        pocketConfig.hybridLayout
+      ) {
         items = isBasicLayout ? 4 : 24;
       }
 
@@ -476,6 +476,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           pocketConfig.spocPositions?.split(`,`)
         ),
         compactLayout: pocketConfig.compactLayout,
+        hybridLayout: pocketConfig.hybridLayout,
+        hideCardBackground: pocketConfig.hideCardBackground,
+        fourCardLayout: pocketConfig.fourCardLayout,
         loadMore: pocketConfig.loadMore,
         lastCardMessageEnabled: pocketConfig.lastCardMessageEnabled,
         saveToPocketCard: pocketConfig.saveToPocketCard,
@@ -1033,12 +1036,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   async scoreItems(items, type) {
-    const spocsPersonalized = this.store.getState().Prefs.values[
-      PREF_SPOCS_PERSONALIZED
-    ];
-    const recsPersonalized = this.store.getState().Prefs.values[
-      PREF_RECS_PERSONALIZED
-    ];
+    const spocsPersonalized = this.store.getState().Prefs.values?.pocketConfig
+      ?.spocsPersonalized;
+    const recsPersonalized = this.store.getState().Prefs.values?.pocketConfig
+      ?.recsPersonalized;
     const personalizedByType =
       type === "feed" ? recsPersonalized : spocsPersonalized;
 
@@ -1263,12 +1264,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       options.isStartup
     );
 
-    const spocsPersonalized = this.store.getState().Prefs.values[
-      PREF_SPOCS_PERSONALIZED
-    ];
-    const recsPersonalized = this.store.getState().Prefs.values[
-      PREF_RECS_PERSONALIZED
-    ];
+    const spocsPersonalized = this.store.getState().Prefs.values?.pocketConfig
+      ?.spocsPersonalized;
+    const recsPersonalized = this.store.getState().Prefs.values?.pocketConfig
+      ?.recsPersonalized;
 
     let expirationPerComponent = {};
     if (this.personalized) {
@@ -1868,6 +1867,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
      `spocPositions` Changes the position of spoc cards.
      `sponsoredCollectionsEnabled` Tuns on and off the sponsored collection section.
      `compactLayout` Changes cards to smaller more compact cards.
+     `hybridLayout` Changes cards to smaller more compact cards only for specific breakpoints.
+     `hideCardBackground` Removes Pocket card background and borders.
+     `fourCardLayout` Enable four Pocket cards per row.
      `loadMore` Hide half the Pocket stories behind a load more button.
      `lastCardMessageEnabled` Shows a message card at the end of the feed.
      `newFooterSection` Changes the layout of the topics section.
@@ -1887,6 +1889,9 @@ getHardcodedLayout = ({
   spocPositions = [2, 4, 11, 20],
   sponsoredCollectionsEnabled = false,
   compactLayout = false,
+  hybridLayout = false,
+  hideCardBackground = false,
+  fourCardLayout = false,
   loadMore = false,
   lastCardMessageEnabled = false,
   newFooterSection = false,
@@ -1976,12 +1981,14 @@ getHardcodedLayout = ({
           type: "CardGrid",
           properties: {
             items,
-            compact: compactLayout,
+            hybridLayout,
+            hideCardBackground: hideCardBackground || compactLayout,
+            fourCardLayout: fourCardLayout || compactLayout,
             hideDescriptions: hideDescriptions || compactLayout,
             compactImages,
             imageGradient,
             newSponsoredLabel: newSponsoredLabel || compactLayout,
-            titleLines,
+            titleLines: (compactLayout && 3) || titleLines,
             descLines,
             compactGrid,
             essentialReadsHeader,

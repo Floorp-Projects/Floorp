@@ -467,6 +467,13 @@ impl Streams {
                 .remote()
                 .get_integer(tparams::INITIAL_MAX_DATA),
         );
+
+        if self.local_stream_limits[StreamType::BiDi].available() > 0 {
+            self.events.send_stream_creatable(StreamType::BiDi);
+        }
+        if self.local_stream_limits[StreamType::UniDi].available() > 0 {
+            self.events.send_stream_creatable(StreamType::UniDi);
+        }
     }
 
     pub fn handle_max_streams(&mut self, stream_type: StreamType, maximum_streams: u64) {

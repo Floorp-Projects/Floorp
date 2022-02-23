@@ -7,6 +7,8 @@
 #ifndef vm_SharedMem_h
 #define vm_SharedMem_h
 
+#include "mozilla/Assertions.h"
+
 #include <type_traits>
 
 template <typename T>

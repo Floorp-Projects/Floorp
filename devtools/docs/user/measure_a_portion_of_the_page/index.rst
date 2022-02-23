@@ -28,4 +28,3 @@ When you stop holding the mouse down, the rectangle that was displayed on screen
 
 .. image:: resizable_measuring_area.png
   :class: border
-

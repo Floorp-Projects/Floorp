@@ -330,6 +330,12 @@ BrowsingContextWebProgress::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+BrowsingContextWebProgress::GetDocumentRequest(nsIRequest** aRequest) {
+  NS_IF_ADDREF(*aRequest = mLoadingDocumentRequest);
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Helper methods for notification logging
 

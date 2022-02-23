@@ -31,12 +31,7 @@ using namespace mozilla::a11y;
 }
 
 - (id)moxValue {
-  GroupPos groupPos;
-  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-    groupPos = acc->GroupPosition();
-  } else if (RemoteAccessible* proxy = mGeckoAccessible->AsRemote()) {
-    groupPos = proxy->GroupPosition();
-  }
+  GroupPos groupPos = mGeckoAccessible->GroupPosition();
 
   return [NSNumber numberWithInt:groupPos.level];
 }

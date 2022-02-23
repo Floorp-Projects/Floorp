@@ -339,7 +339,11 @@ add_task(async function test_navigate_by_window_location() {
 
             browser.test.fail("executeScript should have failed on navigated frame");
           } catch (err) {
-            browser.test.assertEq("Frame not found, or missing host permission", err.message);
+            browser.test.assertEq(
+              "Missing host permission for the tab or frames",
+              err.message,
+              "got expected error message"
+            );
           }
 
           nframes++;

@@ -125,7 +125,6 @@ using mozilla::dom::ContentParent;
 
 BackgroundParentImpl::BackgroundParentImpl() {
   AssertIsInMainOrSocketProcess();
-  AssertIsOnMainThread();
 
   MOZ_COUNT_CTOR(mozilla::ipc::BackgroundParentImpl);
 }
@@ -794,9 +793,8 @@ bool BackgroundParentImpl::DeallocPUDPSocketParent(PUDPSocketParent* actor) {
 
 already_AddRefed<mozilla::psm::PVerifySSLServerCertParent>
 BackgroundParentImpl::AllocPVerifySSLServerCertParent(
-    const ByteArray& aServerCert, const nsTArray<ByteArray>& aPeerCertChain,
-    const nsCString& aHostName, const int32_t& aPort,
-    const OriginAttributes& aOriginAttributes,
+    const nsTArray<ByteArray>& aPeerCertChain, const nsCString& aHostName,
+    const int32_t& aPort, const OriginAttributes& aOriginAttributes,
     const Maybe<ByteArray>& aStapledOCSPResponse,
     const Maybe<ByteArray>& aSctsFromTLSExtension,
     const Maybe<DelegatedCredentialInfoArg>& aDcInfo,
@@ -808,17 +806,17 @@ BackgroundParentImpl::AllocPVerifySSLServerCertParent(
 
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPVerifySSLServerCertConstructor(
-    PVerifySSLServerCertParent* aActor, const ByteArray& aServerCert,
-    nsTArray<ByteArray>&& aPeerCertChain, const nsCString& aHostName,
-    const int32_t& aPort, const OriginAttributes& aOriginAttributes,
+    PVerifySSLServerCertParent* aActor, nsTArray<ByteArray>&& aPeerCertChain,
+    const nsCString& aHostName, const int32_t& aPort,
+    const OriginAttributes& aOriginAttributes,
     const Maybe<ByteArray>& aStapledOCSPResponse,
     const Maybe<ByteArray>& aSctsFromTLSExtension,
     const Maybe<DelegatedCredentialInfoArg>& aDcInfo,
     const uint32_t& aProviderFlags, const uint32_t& aCertVerifierFlags) {
   mozilla::psm::VerifySSLServerCertParent* authCert =
       static_cast<mozilla::psm::VerifySSLServerCertParent*>(aActor);
-  if (!authCert->Dispatch(aServerCert, std::move(aPeerCertChain), aHostName,
-                          aPort, aOriginAttributes, aStapledOCSPResponse,
+  if (!authCert->Dispatch(std::move(aPeerCertChain), aHostName, aPort,
+                          aOriginAttributes, aStapledOCSPResponse,
                           aSctsFromTLSExtension, aDcInfo, aProviderFlags,
                           aCertVerifierFlags)) {
     return IPC_FAIL_NO_REASON(this);

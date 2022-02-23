@@ -627,13 +627,13 @@ class ShareHandler final : public PromiseNativeHandler {
   NS_DECL_ISUPPORTS
 
  public:
-  virtual void ResolvedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override {
+  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override {
     mResolver(NS_OK);
   }
 
-  virtual void RejectedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override {
+  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override {
     if (NS_WARN_IF(!aValue.isObject())) {
       mResolver(NS_ERROR_FAILURE);
       return;
@@ -844,13 +844,15 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
     mState = State::REPLIED;
   }
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     MOZ_ASSERT(mState == State::PROMPTING);
 
     SendReply(JS::ToBoolean(aValue));
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     MOZ_ASSERT(mState == State::PROMPTING);
 
     SendReply(false);

@@ -12,6 +12,7 @@ from mozprocess import ProcessHandler
 
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
+from mach.site import InstallPipRequirementsException
 
 here = os.path.abspath(os.path.dirname(__file__))
 PYLINT_REQUIREMENTS_PATH = os.path.join(here, "pylint_requirements.txt")
@@ -54,7 +55,7 @@ def setup(root, **lintargs):
             PYLINT_REQUIREMENTS_PATH,
             quiet=True,
         )
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, InstallPipRequirementsException):
         print(PYLINT_INSTALL_ERROR)
         return 1
 

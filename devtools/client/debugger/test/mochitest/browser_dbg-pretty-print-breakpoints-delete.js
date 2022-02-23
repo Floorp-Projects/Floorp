@@ -32,12 +32,12 @@ add_task(async function() {
   await addBreakpointToPrettyPrintedFile();
   await closeTab(dbg, "pretty.js:formatted");
   info(`Remove the breakpoint from pretty.js`);
-  clickGutter(dbg, 4);
+  await clickGutter(dbg, 4);
   await checkBreakpointRemoved();
 
   await addBreakpointToPrettyPrintedFile();
   await closeTab(dbg, "pretty.js");
   info(`Remove the breakpoint from pretty.js:formatted`);
-  clickGutter(dbg, 5);
+  await clickGutter(dbg, 5);
   await checkBreakpointRemoved();
 });

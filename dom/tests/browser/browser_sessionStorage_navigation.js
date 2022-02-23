@@ -114,6 +114,18 @@ add_task(async function() {
               `Navigate to ${ORIGIN} as expected`
             );
 
+            // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+            // Acquire storage access permission here so that the iframe has
+            // first-party access to the sessionStorage. Without this, it is
+            // isolated and this test will always fail
+            SpecialPowers.wrap(content.document).notifyUserGestureActivation();
+            await SpecialPowers.addPermission(
+              "storageAccessAPI",
+              true,
+              content.window.location.href
+            );
+            await SpecialPowers.wrap(content.document).requestStorageAccess();
+
             let value1 = content.window.sessionStorage.getItem(key);
             is(
               value1,

@@ -58,8 +58,8 @@ def android_sdk_version(geckoview_lite):
     # If you think you can't handle the whole set of changes, please reach out to the Release
     # Engineering team.
     return namespace(
-        build_tools_version="30.0.2",
-        target_sdk_version="30",
+        build_tools_version="31.0.0",
+        target_sdk_version="31",
         min_sdk_version="16" if geckoview_lite else "21",
     )
 

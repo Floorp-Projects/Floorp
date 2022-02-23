@@ -42,6 +42,12 @@ pub trait YamlHelper {
     fn as_filter_primitive(&self) -> Option<FilterPrimitive>;
     fn as_vec_filter_primitive(&self) -> Option<Vec<FilterPrimitive>>;
     fn as_color_space(&self) -> Option<ColorSpace>;
+    fn as_complex_clip_region(&self) -> ComplexClipRegion;
+    fn as_sticky_offset_bounds(&self) -> StickyOffsetBounds;
+    fn as_gradient(&self, dl: &mut DisplayListBuilder) -> Gradient;
+    fn as_radial_gradient(&self, dl: &mut DisplayListBuilder) -> RadialGradient;
+    fn as_conic_gradient(&self, dl: &mut DisplayListBuilder) -> ConicGradient;
+    fn as_complex_clip_regions(&self) -> Vec<ComplexClipRegion>;
 }
 
 fn string_to_color(color: &str) -> Option<ColorF> {
@@ -224,7 +230,7 @@ impl YamlHelper for Yaml {
     fn as_vec_f32(&self) -> Option<Vec<f32>> {
         match *self {
             Yaml::String(ref s) | Yaml::Real(ref s) => s.split_whitespace()
-                .map(|v| f32::from_str(v))
+                .map(f32::from_str)
                 .collect::<Result<Vec<_>, _>>()
                 .ok(),
             Yaml::Array(ref v) => v.iter()
@@ -241,19 +247,11 @@ impl YamlHelper for Yaml {
     }
 
     fn as_vec_u32(&self) -> Option<Vec<u32>> {
-        if let Some(v) = self.as_vec() {
-            Some(v.iter().map(|v| v.as_i64().unwrap() as u32).collect())
-        } else {
-            None
-        }
+        self.as_vec().map(|v| v.iter().map(|v| v.as_i64().unwrap() as u32).collect())
     }
 
     fn as_vec_u64(&self) -> Option<Vec<u64>> {
-        if let Some(v) = self.as_vec() {
-            Some(v.iter().map(|v| v.as_i64().unwrap() as u64).collect())
-        } else {
-            None
-        }
+        self.as_vec().map(|v| v.iter().map(|v| v.as_i64().unwrap() as u64).collect())
     }
 
     fn as_pipeline_id(&self) -> Option<PipelineId> {
@@ -278,20 +276,13 @@ impl YamlHelper for Yaml {
     }
 
     fn as_rect(&self) -> Option<LayoutRect> {
-        if self.is_badvalue() {
-            return None;
-        }
-
-        if let Some(nums) = self.as_vec_f32() {
-            if nums.len() == 4 {
-                return Some(LayoutRect::from_origin_and_size(
-                    LayoutPoint::new(nums[0], nums[1]),
-                    LayoutSize::new(nums[2], nums[3]),
-                ));
-            }
-        }
-
-        None
+        self.as_vec_f32().and_then(|v| match v.as_slice() {
+            &[x, y, width, height] => Some(LayoutRect::from_origin_and_size(
+                LayoutPoint::new(x, y),
+                LayoutSize::new(width, height),
+            )),
+            _ => None,
+        })
     }
 
     fn as_size(&self) -> Option<LayoutSize> {
@@ -370,7 +361,7 @@ impl YamlHelper for Yaml {
                         "rotate-y" if args.len() == 1 => {
                             make_rotation(transform_origin, args[0].parse().unwrap(), 0.0, 1.0, 0.0)
                         }
-                        "scale" if args.len() >= 1 => {
+                        "scale" if !args.is_empty() => {
                             let x = args[0].parse().unwrap();
                             // Default to uniform X/Y scale if Y unspecified.
                             let y = args.get(1).and_then(|a| a.parse().ok()).unwrap_or(x);
@@ -387,7 +378,7 @@ impl YamlHelper for Yaml {
                         "scale-z" if args.len() == 1 => {
                             LayoutTransform::scale(1.0, 1.0, args[0].parse().unwrap())
                         }
-                        "skew" if args.len() >= 1 => {
+                        "skew" if !args.is_empty() => {
                             // Default to no Y skew if unspecified.
                             let skew_y = args.get(1).and_then(|a| a.parse().ok()).unwrap_or(0.0);
                             make_skew(args[0].parse().unwrap(), skew_y)
@@ -413,9 +404,10 @@ impl YamlHelper for Yaml {
             Yaml::Array(ref array) => {
                 let transform = array.iter().fold(
                     LayoutTransform::identity(),
-                    |u, yaml| match yaml.as_transform(transform_origin) {
-                        Some(ref transform) => transform.then(&u),
-                        None => u,
+                    |u, yaml| if let Some(transform) = yaml.as_transform(transform_origin) {
+                        transform.then(&u)
+                    } else {
+                        u
                     },
                 );
                 Some(transform)
@@ -428,29 +420,26 @@ impl YamlHelper for Yaml {
         }
     }
 
+    /// Inputs for r, g, b channels are floats or ints in the range [0, 255].
+    /// If included, the alpha channel is in the range [0, 1].
+    /// This matches CSS-style, but requires conversion for `ColorF`.
     fn as_colorf(&self) -> Option<ColorF> {
-        if let Some(mut nums) = self.as_vec_f32() {
-            assert!(
-                nums.len() == 3 || nums.len() == 4,
-                "color expected a color name, or 3-4 floats; got '{:?}'",
-                self
-            );
+        if let Some(nums) = self.as_vec_f32() {
+            assert!(nums.iter().take(3).all(|x| (0.0 ..= 255.0).contains(x)),
+                "r, g, b values should be in the 0-255 range, got {:?}", nums);
 
-            if nums.len() == 3 {
-                nums.push(1.0);
-            }
-            assert!(nums[3] >= 0.0 && nums[3] <= 1.0,
+            let color: ColorF = match *nums.as_slice() {
+                [r, g, b] => ColorF { r, g, b, a: 1.0 },
+                [r, g, b, a] => ColorF { r, g, b, a },
+                _ => panic!("color expected a color name, or 3-4 floats; got '{:?}'", self),
+            }.scale_rgb(1.0 / 255.0);
+
+            assert!((0.0 ..= 1.0).contains(&color.a),
                     "alpha value should be in the 0-1 range, got {:?}",
-                    nums[3]);
-            return Some(ColorF::new(
-                nums[0] / 255.0,
-                nums[1] / 255.0,
-                nums[2] / 255.0,
-                nums[3],
-            ));
-        }
+                    color.a);
 
-        if let Some(s) = self.as_str() {
+            Some(color)
+        } else if let Some(s) = self.as_str() {
             string_to_color(s)
         } else {
             None
@@ -460,28 +449,20 @@ impl YamlHelper for Yaml {
     fn as_vec_colorf(&self) -> Option<Vec<ColorF>> {
         if let Some(v) = self.as_vec() {
             Some(v.iter().map(|v| v.as_colorf().unwrap()).collect())
-        } else if let Some(color) = self.as_colorf() {
-            Some(vec![color])
-        } else {
-            None
-        }
+        } else { self.as_colorf().map(|color| vec![color]) }
     }
 
     fn as_vec_string(&self) -> Option<Vec<String>> {
         if let Some(v) = self.as_vec() {
             Some(v.iter().map(|v| v.as_str().unwrap().to_owned()).collect())
-        } else if let Some(s) = self.as_str() {
-            Some(vec![s.to_owned()])
-        } else {
-            None
-        }
+        } else { self.as_str().map(|s| vec![s.to_owned()]) }
     }
 
     fn as_border_radius_component(&self) -> LayoutSize {
         if let Yaml::Integer(integer) = *self {
             return LayoutSize::new(integer as f32, integer as f32);
         }
-        self.as_size().unwrap_or(Size2D::zero())
+        self.as_size().unwrap_or_else(Size2D::zero)
     }
 
     fn as_border_radius(&self) -> Option<BorderRadius> {
@@ -527,17 +508,17 @@ impl YamlHelper for Yaml {
     }
 
     fn as_transform_style(&self) -> Option<TransformStyle> {
-        self.as_str().and_then(|x| StringEnum::from_str(x))
+        self.as_str().and_then(StringEnum::from_str)
     }
 
     fn as_raster_space(&self) -> Option<RasterSpace> {
-        self.as_str().and_then(|s| {
+        self.as_str().map(|s| {
             match parse_function(s) {
                 ("screen", _, _) => {
-                    Some(RasterSpace::Screen)
+                    RasterSpace::Screen
                 }
                 ("local", ref args, _) if args.len() == 1 => {
-                    Some(RasterSpace::Local(args[0].parse().unwrap()))
+                    RasterSpace::Local(args[0].parse().unwrap())
                 }
                 f => {
                     panic!("error parsing raster space {:?}", f);
@@ -547,11 +528,11 @@ impl YamlHelper for Yaml {
     }
 
     fn as_mix_blend_mode(&self) -> Option<MixBlendMode> {
-        self.as_str().and_then(|x| StringEnum::from_str(x))
+        self.as_str().and_then(StringEnum::from_str)
     }
 
     fn as_clip_mode(&self) -> Option<ClipMode> {
-        self.as_str().and_then(|x| StringEnum::from_str(x))
+        self.as_str().and_then(StringEnum::from_str)
     }
 
     fn as_filter_op(&self) -> Option<FilterOp> {
@@ -642,10 +623,10 @@ impl YamlHelper for Yaml {
                     panic!("Invalid filter data specified, func type array doesn't have five entries: {:?}", self);
                 }
                 let func_types: Vec<ComponentTransferFuncType> =
-                    func_types_p.into_iter().map(|x| { match StringEnum::from_str(&x) {
-                        Some(y) => y,
-                        None => panic!("Invalid filter data specified, invalid func type name: {:?}", self),
-                    }}).collect();
+                    func_types_p.into_iter().map(|x|
+                        StringEnum::from_str(&x).unwrap_or_else(||
+                            panic!("Invalid filter data specified, invalid func type name: {:?}", self))
+                    ).collect();
                 if let Some(r_values_p) = array[1].as_vec_f32() {
                     if let Some(g_values_p) = array[2].as_vec_f32() {
                         if let Some(b_values_p) = array[3].as_vec_f32() {
@@ -803,6 +784,124 @@ impl YamlHelper for Yaml {
     }
 
     fn as_color_space(&self) -> Option<ColorSpace> {
-        self.as_str().and_then(|x| StringEnum::from_str(x))
+        self.as_str().and_then(StringEnum::from_str)
+    }
+
+    fn as_complex_clip_region(&self) -> ComplexClipRegion {
+        let rect = self["rect"]
+            .as_rect()
+            .expect("Complex clip entry must have rect");
+        let radius = self["radius"]
+            .as_border_radius()
+            .unwrap_or_else(BorderRadius::zero);
+        let mode = self["clip-mode"]
+            .as_clip_mode()
+            .unwrap_or(ClipMode::Clip);
+        ComplexClipRegion::new(rect, radius, mode)
+    }
+
+    fn as_sticky_offset_bounds(&self) -> StickyOffsetBounds {
+        match *self {
+            Yaml::Array(ref array) => StickyOffsetBounds::new(
+                array[0].as_f32().unwrap_or(0.0),
+                array[1].as_f32().unwrap_or(0.0),
+            ),
+            _ => StickyOffsetBounds::new(0.0, 0.0),
+        }
+    }
+
+    fn as_gradient(&self, dl: &mut DisplayListBuilder) -> Gradient {
+        let start = self["start"].as_point().expect("gradient must have start");
+        let end = self["end"].as_point().expect("gradient must have end");
+        let stops = self["stops"]
+            .as_vec()
+            .expect("gradient must have stops")
+            .chunks(2)
+            .map(|chunk| {
+                GradientStop {
+                    offset: chunk[0]
+                        .as_force_f32()
+                        .expect("gradient stop offset is not f32"),
+                    color: chunk[1]
+                        .as_colorf()
+                        .expect("gradient stop color is not color"),
+                }
+            })
+            .collect::<Vec<_>>();
+        let extend_mode = if self["repeat"].as_bool().unwrap_or(false) {
+            ExtendMode::Repeat
+        } else {
+            ExtendMode::Clamp
+        };
+
+        dl.create_gradient(start, end, stops, extend_mode)
+    }
+
+    fn as_radial_gradient(&self, dl: &mut DisplayListBuilder) -> RadialGradient {
+        let center = self["center"].as_point().expect("radial gradient must have center");
+        let radius = self["radius"].as_size().expect("radial gradient must have a radius");
+        let stops = self["stops"]
+            .as_vec()
+            .expect("radial gradient must have stops")
+            .chunks(2)
+            .map(|chunk| {
+                GradientStop {
+                    offset: chunk[0]
+                        .as_force_f32()
+                        .expect("gradient stop offset is not f32"),
+                    color: chunk[1]
+                        .as_colorf()
+                        .expect("gradient stop color is not color"),
+                }
+            })
+            .collect::<Vec<_>>();
+        let extend_mode = if self["repeat"].as_bool().unwrap_or(false) {
+            ExtendMode::Repeat
+        } else {
+            ExtendMode::Clamp
+        };
+
+        dl.create_radial_gradient(center, radius, stops, extend_mode)
+    }
+
+    fn as_conic_gradient(&self, dl: &mut DisplayListBuilder) -> ConicGradient {
+        let center = self["center"].as_point().expect("conic gradient must have center");
+        let angle = self["angle"].as_force_f32().expect("conic gradient must have an angle");
+        let stops = self["stops"]
+            .as_vec()
+            .expect("conic gradient must have stops")
+            .chunks(2)
+            .map(|chunk| {
+                GradientStop {
+                    offset: chunk[0]
+                        .as_force_f32()
+                        .expect("gradient stop offset is not f32"),
+                    color: chunk[1]
+                        .as_colorf()
+                        .expect("gradient stop color is not color"),
+                }
+            })
+            .collect::<Vec<_>>();
+        let extend_mode = if self["repeat"].as_bool().unwrap_or(false) {
+            ExtendMode::Repeat
+        } else {
+            ExtendMode::Clamp
+        };
+
+        dl.create_conic_gradient(center, angle, stops, extend_mode)
+    }
+
+    fn as_complex_clip_regions(&self) -> Vec<ComplexClipRegion> {
+        match *self {
+            Yaml::Array(ref array) => array
+                .iter()
+                .map(Yaml::as_complex_clip_region)
+                .collect(),
+            Yaml::BadValue => vec![],
+            _ => {
+                println!("Unable to parse complex clip region {:?}", self);
+                vec![]
+            }
+        }
     }
 }

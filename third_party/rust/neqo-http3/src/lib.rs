@@ -16,8 +16,8 @@ mod connection_server;
 mod control_stream_local;
 mod control_stream_remote;
 pub mod features;
+pub mod frames;
 mod headers_checks;
-pub mod hframe;
 mod priority;
 mod push_controller;
 mod qlog;
@@ -29,7 +29,7 @@ mod send_message;
 pub mod server;
 mod server_connection_events;
 mod server_events;
-mod settings;
+pub mod settings;
 mod stream_type_reader;
 
 use neqo_qpack::Error as QpackError;
@@ -43,7 +43,8 @@ pub use client_events::{Http3ClientEvent, WebTransportEvent};
 pub use conn_params::Http3Parameters;
 pub use connection::Http3State;
 pub use connection_client::Http3Client;
-pub use hframe::{HFrame, HFrameReader};
+use features::extended_connect::WebTransportSession;
+pub use frames::HFrame;
 pub use neqo_common::{Header, MessageType};
 pub use priority::Priority;
 pub use server::Http3Server;
@@ -51,6 +52,9 @@ pub use server_events::{
     Http3OrWebTransportStream, Http3ServerEvent, WebTransportRequest, WebTransportServerEvent,
 };
 pub use settings::HttpZeroRttChecker;
+use std::any::Any;
+use std::cell::RefCell;
+use std::rc::Rc;
 pub use stream_type_reader::NewStreamType;
 
 type Res<T> = Result<T, Error>;
@@ -81,6 +85,7 @@ pub enum Error {
     HttpRequestIncomplete,
     HttpConnect,
     HttpVersionFallback,
+    HttpMessageError,
     QpackError(neqo_qpack::Error),
 
     // Internal errors from here.
@@ -125,6 +130,7 @@ impl Error {
             Self::HttpRequestRejected => 0x10b,
             Self::HttpRequestCancelled => 0x10c,
             Self::HttpRequestIncomplete => 0x10d,
+            Self::HttpMessageError => 0x10e,
             Self::HttpConnect => 0x10f,
             Self::HttpVersionFallback => 0x110,
             Self::QpackError(e) => e.code(),
@@ -191,15 +197,15 @@ impl Error {
     /// # Panics
     /// On unexpected errors, in debug mode.
     #[must_use]
-    pub fn map_stream_recv_errors(err: &TransportError) -> Self {
+    pub fn map_stream_recv_errors(err: &Error) -> Self {
         match err {
-            TransportError::NoMoreData => {
+            Self::TransportError(TransportError::NoMoreData) => {
                 debug_assert!(
                     false,
                     "Do not call stream_recv if FIN has been previously read"
                 );
             }
-            TransportError::InvalidStreamId => {}
+            Self::TransportError(TransportError::InvalidStreamId) => {}
             _ => {
                 debug_assert!(false, "Unexpected error");
             }
@@ -340,6 +346,10 @@ pub trait RecvStream: Stream {
     fn http_stream(&mut self) -> Option<&mut dyn HttpRecvStream> {
         None
     }
+
+    fn webtransport(&self) -> Option<Rc<RefCell<WebTransportSession>>> {
+        None
+    }
 }
 
 pub trait HttpRecvStream: RecvStream {
@@ -350,12 +360,16 @@ pub trait HttpRecvStream: RecvStream {
     /// An error may happen while reading a stream, e.g. early close, protocol error, etc.
     fn header_unblocked(&mut self, conn: &mut Connection) -> Res<(ReceiveOutput, bool)>;
 
-    fn priority_handler_mut(&mut self) -> &mut PriorityHandler;
+    fn maybe_update_priority(&mut self, priority: Priority) -> bool;
+    fn priority_update_frame(&mut self) -> Option<HFrame>;
+    fn priority_update_sent(&mut self);
 
     fn set_new_listener(&mut self, _conn_events: Box<dyn HttpRecvStreamEvents>) {}
     fn extended_connect_wait_for_response(&self) -> bool {
         false
     }
+
+    fn any(&self) -> &dyn Any;
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -394,7 +408,7 @@ impl Http3StreamInfo {
 }
 
 pub trait RecvStreamEvents: Debug {
-    fn data_readable(&self, stream_info: Http3StreamInfo);
+    fn data_readable(&self, _stream_info: Http3StreamInfo) {}
     fn recv_closed(&self, _stream_info: Http3StreamInfo, _close_type: CloseType) {}
 }
 
@@ -419,14 +433,31 @@ pub trait SendStream: Stream {
     /// # Errors
     /// Error my occure during sending data, e.g. protocol error, etc.
     fn send_data(&mut self, _conn: &mut Connection, _buf: &[u8]) -> Res<usize>;
+
     /// # Errors
     /// It may happen that the transport stream is already close. This is unlikely.
     fn close(&mut self, conn: &mut Connection) -> Res<()>;
+    /// # Errors
+    /// It may happen that the transport stream is already close. This is unlikely.
+    fn close_with_message(
+        &mut self,
+        _conn: &mut Connection,
+        _error: u32,
+        _message: &str,
+    ) -> Res<()> {
+        Err(Error::InvalidStreamId)
+    }
     /// This function is called when sending side is closed abruptly by the peer or
     /// the application.
     fn handle_stop_sending(&mut self, close_type: CloseType);
     fn http_stream(&mut self) -> Option<&mut dyn HttpSendStream> {
         None
+    }
+
+    /// # Errors
+    /// It may happen that the transport stream is already close. This is unlikely.
+    fn send_data_atomic(&mut self, _conn: &mut Connection, _buf: &[u8]) -> Res<()> {
+        Err(Error::InvalidStreamId)
     }
 }
 
@@ -438,6 +469,7 @@ pub trait HttpSendStream: SendStream {
     /// This can also return an error if the underlying stream is closed.
     fn send_headers(&mut self, headers: &[Header], conn: &mut Connection) -> Res<()>;
     fn set_new_listener(&mut self, _conn_events: Box<dyn SendStreamEvents>) {}
+    fn any(&self) -> &dyn Any;
 }
 
 pub trait SendStreamEvents: Debug {

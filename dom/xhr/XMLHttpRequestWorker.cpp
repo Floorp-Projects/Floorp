@@ -30,7 +30,6 @@
 #include "mozilla/dom/UnionConversions.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/WorkerScope.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
@@ -406,10 +405,12 @@ class LoadStartDetectionRunnable final : public Runnable,
     }
 
     nsresult Cancel() override {
-      // This must run!
+      // We need to check first if cancel is called twice
       nsresult rv = MainThreadProxyRunnable::Cancel();
-      nsresult rv2 = Run();
-      return NS_FAILED(rv) ? rv : rv2;
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // On the first cancel, this must run!
+      return Run();
     }
   };
 
@@ -1267,9 +1268,8 @@ void OpenRunnable::MainThreadRunInternal(ErrorResult& aRv) {
 }
 
 void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
-  nsresult rv = mProxy->mXHR->CheckCurrentGlobalCorrectness();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv = rv;
+  // Before we change any state let's check if we can send.
+  if (!mProxy->mXHR->CanSend(aRv)) {
     return;
   }
 
@@ -1883,6 +1883,11 @@ void XMLHttpRequestWorker::Send(
 
   if (mCanceled) {
     aRv.ThrowUncatchableException();
+    return;
+  }
+
+  if (mStateData->mReadyState != XMLHttpRequest_Binding::OPENED) {
+    aRv.ThrowInvalidStateError("XMLHttpRequest state must be OPENED.");
     return;
   }
 

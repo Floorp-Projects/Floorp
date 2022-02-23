@@ -21,9 +21,20 @@
 static bool sInitializedOurData = false;
 StaticRefPtr<nsIFile> sOurAppFile;
 
-static already_AddRefed<nsIFile> GetCanonicalExecutable(nsIFile* aFile) {
+/* static */
+already_AddRefed<nsIFile> nsMIMEInfoBase::GetCanonicalExecutable(
+    nsIFile* aFile) {
   nsCOMPtr<nsIFile> binary = aFile;
 #ifdef XP_MACOSX
+  nsAutoString path;
+  if (binary) {
+    binary->GetPath(path);
+  }
+  if (!StringEndsWith(path, u".app"_ns) && path.RFind(u".app/"_ns) == -1) {
+    // This shouldn't ever happen with Firefox's own binary, tracked in
+    // sOurAppFile, but might happen when called with other files.
+    return binary.forget();
+  }
   nsAutoString leafName;
   if (binary) {
     binary->GetLeafName(leafName);
@@ -31,7 +42,7 @@ static already_AddRefed<nsIFile> GetCanonicalExecutable(nsIFile* aFile) {
   while (binary && !StringEndsWith(leafName, u".app"_ns)) {
     nsCOMPtr<nsIFile> parent;
     binary->GetParent(getter_AddRefs(parent));
-    binary = parent;
+    binary = std::move(parent);
     if (binary) {
       binary->GetLeafName(leafName);
     }
@@ -47,7 +58,7 @@ static void EnsureAppDetailsAvailable() {
   sInitializedOurData = true;
   nsCOMPtr<nsIFile> binary;
   XRE_GetBinaryPath(getter_AddRefs(binary));
-  sOurAppFile = GetCanonicalExecutable(binary);
+  sOurAppFile = nsMIMEInfoBase::GetCanonicalExecutable(binary);
   ClearOnShutdown(&sOurAppFile);
 }
 

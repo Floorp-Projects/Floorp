@@ -3029,34 +3029,34 @@
   "TLS_EARLY_DATA_NEGOTIATED": {
     "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "99",
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 3,
     "description": "Sending TLS early data was possible: 0 - not possible, 1 - possible but not used, 2 - possible and used.",
-    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
-    "bug_numbers": [1296288, 1654309],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com", "vgosu@mozilla.com"],
+    "bug_numbers": [1296288, 1654309, 1749881],
     "releaseChannelCollection": "opt-out"
   },
   "TLS_EARLY_DATA_ACCEPTED": {
     "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "99",
+    "expires_in_version": "never",
     "kind": "boolean",
     "description": "TLS early data was used and it was accepted (true) or rejected (false) by the remote host.",
-    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
-    "bug_numbers": [1296288, 1654309],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com", "vgosu@mozilla.com"],
+    "bug_numbers": [1296288, 1654309, 1749881],
     "releaseChannelCollection": "opt-out"
   },
   "TLS_EARLY_DATA_BYTES_WRITTEN": {
     "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "99",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 100,
     "description": "Amount of bytes sent using TLS early data at the start of a TLS connection for a given channel.",
-    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
-    "bug_numbers": [1296288, 1654309],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com", "vgosu@mozilla.com"],
+    "bug_numbers": [1296288, 1654309, 1749881],
     "releaseChannelCollection": "opt-out"
   },
   "SSL_HANDSHAKE_VERSION": {
@@ -8238,9 +8238,9 @@
   "PWMGR_IMPORT_LOGINS_FROM_FILE_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "bug_numbers": [1688653],
+    "bug_numbers": [1688653, 1749882],
     "alert_emails": ["sfoster@mozilla.com", "passwords-dev@mozilla.org"],
-    "expires_in_version": "99",
+    "expires_in_version": "105",
     "kind": "exponential",
     "n_buckets": 70,
     "high": 100000,
@@ -8289,9 +8289,9 @@
   "PWMGR_IMPORT_LOGINS_FROM_FILE_JANK_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "bug_numbers": [1338522, 1584261, 1643431, 1678204],
+    "bug_numbers": [1338522, 1584261, 1643431, 1678204, 1749883],
     "alert_emails": ["sfoster@mozilla.com", "passwords-dev@mozilla.org"],
-    "expires_in_version": "99",
+    "expires_in_version": "105",
     "kind": "exponential",
     "n_buckets": 20,
     "high": 60000,
@@ -8340,9 +8340,9 @@
   "PWMGR_IMPORT_LOGINS_FROM_FILE_CATEGORICAL": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "bug_numbers": [1688653],
+    "bug_numbers": [1688653, 1749882],
     "alert_emails": ["sfoster@mozilla.com", "passwords-dev@mozilla.org"],
-    "expires_in_version": "99",
+    "expires_in_version": "105",
     "kind": "categorical",
     "labels": ["added", "modified", "error", "no_change"],
     "releaseChannelCollection": "opt-out",
@@ -10526,25 +10526,25 @@
     "record_in_processes": ["main"],
     "products": ["firefox"],
     "alert_emails": ["jwatt@jwatt.org", "emilio@mozilla.com"],
-    "expires_in_version": "98",
+    "expires_in_version": "105",
     "description": "Milliseconds taken from when a print is initiated (typically by the user) to when the platform code is sent the print settings to create the initial print preview document.",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1663733, 1714261]
+    "bug_numbers": [1663733, 1714261, 1745270]
   },
   "PRINT_INIT_TO_PREVIEW_DOC_SHOWN_MS" : {
     "record_in_processes": ["main"],
     "products": ["firefox"],
     "alert_emails": ["jwatt@jwatt.org", "emilio@mozilla.com"],
-    "expires_in_version": "98",
+    "expires_in_version": "105",
     "description": "Milliseconds taken from when a print is initiated (typically by the user) to when the initial print preview document is shown.",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1663733, 1714261]
+    "bug_numbers": [1663733, 1714261, 1745270]
   },
   "DEVTOOLS_COLD_TOOLBOX_OPEN_DELAY_MS": {
     "record_in_processes": ["main"],
@@ -12731,15 +12731,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Verification status of Signed Certificate Timestamps received (0=Decoding error, 1=Valid SCT, 2=SCT from unknown log, 3=Invalid SCT signature, 4=SCT timestamp is in the future, 5=Valid SCT from a disqualified log)"
   },
-  "SSL_SERVER_AUTH_EKU": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Presence of of the Server Authenticaton EKU in accepted SSL server certificates (0=No EKU, 1=EKU present and has id_kp_serverAuth, 2=EKU present and has id_kp_serverAuth as well as some other EKU, 3=EKU present but does not contain id_kp_serverAuth)"
-  },
   "TLS_ERROR_REPORT_UI": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -13416,7 +13407,9 @@
       "rdd-crash",
       "rdd-hang",
       "socket-crash",
-      "socket-hang"
+      "socket-hang",
+      "utility-crash",
+      "utility-hang"
     ],
     "releaseChannelCollection": "opt-out",
     "description": "An attempt to submit a crash. Keyed on the CrashManager Crash.type."
@@ -14025,18 +14018,7 @@
     "keys": ["All", "Fetch"],
     "bug_numbers": [1740335],
     "alert_emails": ["sw-telemetry@mozilla.com", "rjesup@mozilla.com", "echuang@mozilla.com"],
-    "description": "The sampled number of simultaneous running ServiceWorkers in a session, sampled once each minute"
-  },
-  "SERVICE_WORKER_FETCH_RUNNING": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "102",
-    "kind": "linear",
-    "high": 31,
-    "n_buckets": 30,
-    "bug_numbers": [1740335],
-    "alert_emails": ["sw-telemetry@mozilla.com", "rjesup@mozilla.com", "echuang@mozilla.com"],
-    "description": "The sampled number of simultaneous running ServiceWorkers handling Fetch in a session, sampled every minute"
+    "description": "The sampled number of simultaneous running ServiceWorkers in a session, sampled once each 10 seconds (lazily on state change)"
   },
   "GRAPHICS_SANITY_TEST": {
     "record_in_processes": ["main", "content"],
@@ -14522,6 +14504,18 @@
     "n_buckets": 50,
     "bug_numbers": [1238433, 1570634],
     "description": "Percentage of frames decoded frames dropped in an HTMLVideoElement"
+  },
+  "VIDEO_DROPPED_FRAMES_PROPORTION_EXPONENTIAL" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["bryce@mozilla.com", "padenot@mozila.com", "alwu@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "bug_numbers": [1238433, 1570634, 1752207, 1755363],
+    "description": "Frames of of 10,000 decoded frames dropped in an HTMLVideoElement"
   },
   "MEDIA_DECODER_BACKEND_USED": {
     "record_in_processes": ["main", "content", "gpu"],

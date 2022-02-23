@@ -60,7 +60,7 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
 
   Nullable<double> GetDesiredSize();
 
-  void Close(JSContext* aCx, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Close(JSContext* aCx, ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT void Enqueue(JSContext* aCx, JS::Handle<JS::Value> aChunk,
                                   ErrorResult& aRv);
@@ -72,6 +72,8 @@ class ReadableStreamDefaultController final : public ReadableStreamController,
   MOZ_CAN_RUN_SCRIPT virtual void PullSteps(JSContext* aCx,
                                             ReadRequest* aReadRequest,
                                             ErrorResult& aRv) override;
+
+  virtual void ReleaseSteps() override;
 
   // Internal Slot Accessors
   UnderlyingSourceCancelCallbackHelper* GetCancelAlgorithm() const {
@@ -158,7 +160,7 @@ MOZ_CAN_RUN_SCRIPT extern void ReadableStreamDefaultControllerEnqueue(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
 
-extern void ReadableStreamDefaultControllerClose(
+MOZ_CAN_RUN_SCRIPT extern void ReadableStreamDefaultControllerClose(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     ErrorResult& aRv);
 
@@ -169,6 +171,9 @@ MOZ_CAN_RUN_SCRIPT extern void ReadableStreamDefaultReaderRead(
 extern void ReadableStreamDefaultControllerError(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aValue, ErrorResult& aRv);
+
+extern void ReadableStreamDefaultControllerClearAlgorithms(
+    ReadableStreamDefaultController* aController);
 
 }  // namespace dom
 }  // namespace mozilla

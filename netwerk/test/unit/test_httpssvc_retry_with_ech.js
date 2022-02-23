@@ -26,6 +26,7 @@ function setup() {
   Services.prefs.setBoolPref("network.dns.use_https_rr_as_altsvc", true);
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
   Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", true);
+  Services.prefs.setIntPref("network.http.speculative-parallel-limit", 6);
 
   add_tls_server_setup(
     "EncryptedClientHelloServer",
@@ -52,6 +53,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.echconfig.enabled");
   Services.prefs.clearUserPref("network.dns.http3_echconfig.enabled");
   Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
+  Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
   if (trrServer) {
     await trrServer.stop();
   }
@@ -83,11 +85,46 @@ function channelOpenPromise(chan, flags) {
   });
 }
 
+function ActivityObserver() {}
+
+ActivityObserver.prototype = {
+  activites: [],
+  observeConnectionActivity(
+    aHost,
+    aPort,
+    aSSL,
+    aHasECH,
+    aIsHttp3,
+    aActivityType,
+    aActivitySubtype,
+    aTimestamp,
+    aExtraStringData
+  ) {
+    dump(
+      "*** Connection Activity 0x" +
+        aActivityType.toString(16) +
+        " 0x" +
+        aActivitySubtype.toString(16) +
+        " " +
+        aExtraStringData +
+        "\n"
+    );
+    this.activites.push({ host: aHost, subType: aActivitySubtype });
+  },
+};
+
 add_task(async function testConnectWithECH() {
   const ECH_CONFIG_FIXED =
-    "AEv+CgBHTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAEAAwBkABZlY2gtcHVibGljLmV4YW1wbGUuY29tAAA=";
+    "AEn+DQBFTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAEAA2QWZWNoLXB1YmxpYy5leGFtcGxlLmNvbQAA";
   trrServer = new TRRServer();
   await trrServer.start();
+
+  let observerService = Cc[
+    "@mozilla.org/network/http-activity-distributor;1"
+  ].getService(Ci.nsIHttpActivityDistributor);
+  let observer = new ActivityObserver();
+  observerService.addObserver(observer);
+  observerService.observeConnection = true;
 
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
@@ -144,13 +181,39 @@ add_task(async function testConnectWithECH() {
   Assert.ok(securityInfo.isAcceptedEch, "This host should have accepted ECH");
 
   await trrServer.stop();
+  observerService.removeObserver(observer);
+  observerService.observeConnection = false;
+
+  let filtered = observer.activites.filter(
+    activity => activity.host === "ech-private.example.com"
+  );
+  Assert.equal(filtered.length, 3);
+  Assert.equal(
+    filtered[0].subType,
+    Ci.nsIHttpActivityObserver
+      .ACTIVITY_SUBTYPE_SPECULATIVE_DNSANDSOCKET_CREATED,
+    "Should have only one speculative DnsAndSock created"
+  );
+  Assert.equal(
+    filtered[1].subType,
+    Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_ECH_SET,
+    "Should have echConfig"
+  );
+  Assert.equal(
+    filtered[2].subType,
+    Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_CONNECTION_CREATED,
+    "Should have one connection created"
+  );
 });
 
 add_task(async function testEchRetry() {
+  Services.obs.notifyObservers(null, "net:cancel-all-connections");
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
   dns.clearCache(true);
 
   const ECH_CONFIG_TRUSTED_RETRY =
-    "AEv+CgBHTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAEAAQBkABZlY2gtcHVibGljLmV4YW1wbGUuY29tAAA=";
+    "AEn+DQBFTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAMAA2QWZWNoLXB1YmxpYy5leGFtcGxlLmNvbQAA";
   trrServer = new TRRServer();
   await trrServer.start();
 

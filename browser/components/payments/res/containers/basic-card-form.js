@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* import-globals-from ../../../../../browser/extensions/formautofill/content/autofillEditForms.js*/
+/* import-globals-from /browser/extensions/formautofill/content/autofillEditForms.js*/
 import AcceptedCards from "../components/accepted-cards.js";
 import BillingAddressPicker from "./billing-address-picker.js";
 import CscInput from "../components/csc-input.js";

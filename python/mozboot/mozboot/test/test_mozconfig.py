@@ -6,7 +6,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import unittest
+import sys
+import pytest
 
+from pathlib import Path
 from shutil import rmtree
 
 from tempfile import (
@@ -37,14 +40,14 @@ class TestFindMozconfig(unittest.TestCase):
         os.environ.clear()
         os.environ.update(self._old_env)
 
-        for d in self._temp_dirs:
-            rmtree(d)
+        for temp_dir in self._temp_dirs:
+            rmtree(str(temp_dir))
 
     def get_temp_dir(self):
-        d = mkdtemp()
-        self._temp_dirs.add(d)
+        new_temp_dir = Path(mkdtemp())
+        self._temp_dirs.add(new_temp_dir)
 
-        return d
+        return new_temp_dir
 
     def test_find_legacy_env(self):
         """Ensure legacy mozconfig path definitions result in error."""
@@ -61,47 +64,45 @@ class TestFindMozconfig(unittest.TestCase):
         relative_mozconfig = ".mconfig"
         os.environ["MOZCONFIG"] = relative_mozconfig
 
-        srcdir = self.get_temp_dir()
-        curdir = self.get_temp_dir()
-        dirs = [srcdir, curdir]
-        for d in dirs:
-            path = os.path.join(d, relative_mozconfig)
-            with open(path, "w") as f:
-                f.write(path)
+        src_dir = self.get_temp_dir()
+        cur_dir = self.get_temp_dir()
+        dirs = [src_dir, cur_dir]
+        for iter_dir in dirs:
+            path = iter_dir / relative_mozconfig
+            with open(path, "w") as file:
+                file.write(str(path))
 
-        orig_dir = os.getcwd()
+        orig_dir = Path.cwd()
         try:
-            os.chdir(curdir)
+            os.chdir(cur_dir)
             with self.assertRaises(MozconfigFindException) as e:
-                find_mozconfig(srcdir)
+                find_mozconfig(src_dir)
         finally:
             os.chdir(orig_dir)
 
         self.assertIn("exists in more than one of", str(e.exception))
-        for d in dirs:
-            self.assertIn(d, str(e.exception))
+        for iter_dir in dirs:
+            self.assertIn(str(iter_dir.resolve()), str(e.exception))
 
     def test_find_multiple_but_identical_configs(self):
         """Ensure multiple relative-path MOZCONFIGs pointing at the same file are OK."""
         relative_mozconfig = "../src/.mconfig"
         os.environ["MOZCONFIG"] = relative_mozconfig
 
-        topdir = self.get_temp_dir()
-        srcdir = os.path.join(topdir, "src")
-        os.mkdir(srcdir)
-        curdir = os.path.join(topdir, "obj")
-        os.mkdir(curdir)
+        top_dir = self.get_temp_dir()
+        src_dir = top_dir / "src"
+        src_dir.mkdir()
+        cur_dir = top_dir / "obj"
+        cur_dir.mkdir()
 
-        path = os.path.join(srcdir, relative_mozconfig)
+        path = src_dir / relative_mozconfig
         with open(path, "w"):
             pass
 
-        orig_dir = os.getcwd()
+        orig_dir = Path.cwd()
         try:
-            os.chdir(curdir)
-            self.assertEqual(
-                os.path.realpath(find_mozconfig(srcdir)), os.path.realpath(path)
-            )
+            os.chdir(cur_dir)
+            self.assertEqual(Path(find_mozconfig(src_dir)).resolve(), path.resolve())
         finally:
             os.chdir(orig_dir)
 
@@ -110,43 +111,49 @@ class TestFindMozconfig(unittest.TestCase):
         relative_mozconfig = ".mconfig"
         os.environ["MOZCONFIG"] = relative_mozconfig
 
-        srcdir = self.get_temp_dir()
-        curdir = self.get_temp_dir()
-        dirs = [srcdir, curdir]
+        src_dir = self.get_temp_dir()
+        cur_dir = self.get_temp_dir()
+        dirs = [src_dir, cur_dir]
 
-        orig_dir = os.getcwd()
+        orig_dir = Path.cwd()
         try:
-            os.chdir(curdir)
+            os.chdir(cur_dir)
             with self.assertRaises(MozconfigFindException) as e:
-                find_mozconfig(srcdir)
+                find_mozconfig(src_dir)
         finally:
             os.chdir(orig_dir)
 
         self.assertIn("does not exist in any of", str(e.exception))
-        for d in dirs:
-            self.assertIn(d, str(e.exception))
+        for iter_dir in dirs:
+            self.assertIn(str(iter_dir.resolve()), str(e.exception))
 
     def test_find_relative_mozconfig(self):
         """Ensure a relative MOZCONFIG can be found in the srcdir."""
         relative_mozconfig = ".mconfig"
         os.environ["MOZCONFIG"] = relative_mozconfig
 
-        srcdir = self.get_temp_dir()
-        curdir = self.get_temp_dir()
+        src_dir = Path(self.get_temp_dir())
+        cur_dir = Path(self.get_temp_dir())
 
-        path = os.path.join(srcdir, relative_mozconfig)
+        path = src_dir / relative_mozconfig
         with open(path, "w"):
             pass
 
-        orig_dir = os.getcwd()
+        orig_dir = Path.cwd()
         try:
-            os.chdir(curdir)
+            os.chdir(cur_dir)
             self.assertEqual(
-                os.path.normpath(find_mozconfig(srcdir)), os.path.normpath(path)
+                str(Path(find_mozconfig(src_dir)).resolve()), str(path.resolve())
             )
         finally:
             os.chdir(orig_dir)
 
+    @pytest.mark.skipif(
+        sys.platform.startswith("win"),
+        reason="This test uses unix-style absolute paths, since we now use Pathlib, and "
+        "`is_absolute()` always returns `False` on Windows if there isn't a drive"
+        " letter, this test is invalid for Windows.",
+    )
     def test_find_abs_path_not_exist(self):
         """Ensure a missing absolute path is detected."""
         os.environ["MOZCONFIG"] = "/foo/bar/does/not/exist"
@@ -155,7 +162,7 @@ class TestFindMozconfig(unittest.TestCase):
             find_mozconfig(self.get_temp_dir())
 
         self.assertIn("path that does not exist", str(e.exception))
-        self.assertTrue(str(e.exception).endswith("/foo/bar/does/not/exist"))
+        self.assertIn("/foo/bar/does/not/exist", str(e.exception))
 
     def test_find_path_not_file(self):
         """Ensure non-file paths are detected."""
@@ -170,49 +177,49 @@ class TestFindMozconfig(unittest.TestCase):
 
     def test_find_default_files(self):
         """Ensure default paths are used when present."""
-        for p in DEFAULT_TOPSRCDIR_PATHS:
-            d = self.get_temp_dir()
-            path = os.path.join(d, p)
+        for default_dir in DEFAULT_TOPSRCDIR_PATHS:
+            temp_dir = self.get_temp_dir()
+            path = temp_dir / default_dir
 
             with open(path, "w"):
                 pass
 
-            self.assertEqual(find_mozconfig(d), path)
+            self.assertEqual(Path(find_mozconfig(temp_dir)), path)
 
     def test_find_multiple_defaults(self):
         """Ensure we error when multiple default files are present."""
         self.assertGreater(len(DEFAULT_TOPSRCDIR_PATHS), 1)
 
-        d = self.get_temp_dir()
-        for p in DEFAULT_TOPSRCDIR_PATHS:
-            with open(os.path.join(d, p), "w"):
+        temp_dir = self.get_temp_dir()
+        for default_dir in DEFAULT_TOPSRCDIR_PATHS:
+            with open(temp_dir / default_dir, "w"):
                 pass
 
         with self.assertRaises(MozconfigFindException) as e:
-            find_mozconfig(d)
+            find_mozconfig(temp_dir)
 
         self.assertIn("Multiple default mozconfig files present", str(e.exception))
 
     def test_find_deprecated_path_srcdir(self):
         """Ensure we error when deprecated path locations are present."""
-        for p in DEPRECATED_TOPSRCDIR_PATHS:
-            d = self.get_temp_dir()
-            with open(os.path.join(d, p), "w"):
+        for deprecated_dir in DEPRECATED_TOPSRCDIR_PATHS:
+            temp_dir = self.get_temp_dir()
+            with open(temp_dir / deprecated_dir, "w"):
                 pass
 
             with self.assertRaises(MozconfigFindException) as e:
-                find_mozconfig(d)
+                find_mozconfig(temp_dir)
 
             self.assertIn("This implicit location is no longer", str(e.exception))
-            self.assertIn(d, str(e.exception))
+            self.assertIn(str(temp_dir), str(e.exception))
 
     def test_find_deprecated_home_paths(self):
         """Ensure we error when deprecated home directory paths are present."""
 
-        for p in DEPRECATED_HOME_PATHS:
+        for deprecated_path in DEPRECATED_HOME_PATHS:
             home = self.get_temp_dir()
-            os.environ["HOME"] = home
-            path = os.path.join(home, p)
+            os.environ["HOME"] = str(home)
+            path = home / deprecated_path
 
             with open(path, "w"):
                 pass
@@ -221,7 +228,7 @@ class TestFindMozconfig(unittest.TestCase):
                 find_mozconfig(self.get_temp_dir())
 
             self.assertIn("This implicit location is no longer", str(e.exception))
-            self.assertIn(path, str(e.exception))
+            self.assertIn(str(path), str(e.exception))
 
 
 if __name__ == "__main__":

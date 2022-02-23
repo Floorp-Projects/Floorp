@@ -27,15 +27,4 @@ function update(state = initialPreviewState(), action) {
   return state;
 }
 
-// NOTE: we'd like to have the app state fully typed
-// https://github.com/firefox-devtools/debugger/blob/master/src/reducers/sources.js#L179-L185
-
-export function getPreview(state) {
-  return state.preview.preview;
-}
-
-export function getPreviewCount(state) {
-  return state.preview.previewCount;
-}
-
 export default update;

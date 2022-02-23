@@ -1262,8 +1262,6 @@ BackgroundFactoryChild::RecvPBackgroundIDBDatabaseConstructor(
     PBackgroundIDBFactoryRequestChild* aRequest) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
-  MOZ_ASSERT(aActor->GetActorEventTarget(),
-             "The event target shall be inherited from its manager actor.");
 
   return IPC_OK();
 }
@@ -1709,8 +1707,6 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
     const int64_t& aNextObjectStoreId, const int64_t& aNextIndexId) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
-  MOZ_ASSERT(aActor->GetActorEventTarget(),
-             "The event target shall be inherited from its manager actor.");
   MOZ_ASSERT(mOpenRequestActor);
 
   MaybeCollectGarbageOnIPCMessage();

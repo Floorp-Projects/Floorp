@@ -9,7 +9,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "nsLayoutUtils.h"
-#include "nsNativeBasicTheme.h"
+#include "Theme.h"
 #include "nsNativeTheme.h"
 
 using mozilla::gfx::sRGBColor;

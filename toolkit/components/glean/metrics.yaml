@@ -19,6 +19,9 @@ fog:
     time_unit: nanosecond
     description: |
       Time the FOG initialization takes.
+    metadata: &metadata
+      tags:
+        - "Toolkit :: Telemetry"
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1662123
     data_reviews:
@@ -37,6 +40,7 @@ fog:
       True if we failed to register with the idle service. Absent otherwise.
       Means IPC probably isn't working well.
       Child-process data will likely be absent, or incomplete.
+    metadata: *metadata
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739
     data_reviews:
@@ -54,6 +58,7 @@ fog.ipc:
     description: |
       The number of times the ipc buffer failed to be replayed in the
       parent process.
+    metadata: *metadata
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1664461
     data_reviews:
@@ -70,6 +75,7 @@ fog.ipc:
     memory_unit: byte
     description: |
       The number and size of the IPC buffers being received over FOG IPC.
+    metadata: *metadata
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739
     data_reviews:
@@ -87,6 +93,7 @@ fog.ipc:
     description: |
       The length of time between asking the child processes for their
       IPC buffers and all of them being received by the parent.
+    metadata: *metadata
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1694739
     data_reviews:
@@ -105,6 +112,7 @@ fog.ipc:
       throwing even partial results into the trash.
       If this number is high, we might consider writing custom `MozPromise`-
       handling code instead of using `MozPromise::All`.
+    metadata: *metadata
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1729026
     data_reviews:

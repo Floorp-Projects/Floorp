@@ -176,6 +176,7 @@ class TlsHkdfTest : public ::testing::Test,
                        const uint8_t* session_hash, size_t session_hash_len,
                        const char* label, size_t label_len,
                        const DataBuffer& expected) {
+    ASSERT_NE(nullptr, prk);
     std::cerr << "Hash = " << kHashName[base_hash] << std::endl;
 
     std::vector<uint8_t> output(expected.len());
@@ -194,7 +195,7 @@ class TlsHkdfTest : public ::testing::Test,
                              session_hash, session_hash_len, label, label_len,
                              &secret);
     EXPECT_EQ(SECSuccess, rv);
-    ASSERT_NE(nullptr, prk);
+    ASSERT_NE(nullptr, secret);
     VerifyKey(ScopedPK11SymKey(secret), CKM_HKDF_DERIVE, expected);
 
     // Verify that a key can be created with a different key type and size.
@@ -202,7 +203,7 @@ class TlsHkdfTest : public ::testing::Test,
         SSL_LIBRARY_VERSION_TLS_1_3, cs, prk->get(), session_hash,
         session_hash_len, label, label_len, CKM_DES3_CBC_PAD, 24, &secret);
     EXPECT_EQ(SECSuccess, rv);
-    ASSERT_NE(nullptr, prk);
+    ASSERT_NE(nullptr, secret);
     ScopedPK11SymKey with_mech(secret);
     EXPECT_EQ(static_cast<CK_MECHANISM_TYPE>(CKM_DES3_CBC_PAD),
               PK11_GetMechanism(with_mech.get()));

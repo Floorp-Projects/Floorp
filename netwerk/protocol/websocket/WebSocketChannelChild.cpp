@@ -453,11 +453,6 @@ void WebSocketChannelChild::OnServerClose(const uint16_t& aCode,
 void WebSocketChannelChild::SetupNeckoTarget() {
   mNeckoTarget = nsContentUtils::GetEventTargetByLoadInfo(
       mLoadInfo, TaskCategory::Network);
-  if (!mNeckoTarget) {
-    return;
-  }
-
-  gNeckoChild->SetEventTargetForActor(this, mNeckoTarget);
 }
 
 NS_IMETHODIMP

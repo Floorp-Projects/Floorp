@@ -160,14 +160,6 @@ exports.rule = {
   // An object containing information about the CSS rule's selector.
   selector: PropTypes.shape(selector),
 
-  // An object containing information about the CSS rule's stylesheet source.
-  sourceLink: PropTypes.shape({
-    // The label used for the stylesheet source
-    label: PropTypes.string,
-    // The title used for the stylesheet source.
-    title: PropTypes.string,
-  }),
-
   // The CSS rule type.
   type: PropTypes.number,
 };

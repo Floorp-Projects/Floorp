@@ -122,7 +122,7 @@ Third-party crate dependencies
 Third-party dependencies for in-tree Rust crates are *vendored* into the
 ``third_party/rust`` directory of mozilla-central. This means that a copy of
 each third-party crate's code is committed into mozilla-central. As a result,
-building Firefox does not involve downloading any third-party crates. 
+building Firefox does not involve downloading any third-party crates.
 
 If you add a dependency on a new crate you must run ``mach vendor rust`` to
 vendor the dependencies into that directory. (Note that ``mach vendor rust``

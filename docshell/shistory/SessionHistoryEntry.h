@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_SessionHistoryEntry_h
 #define mozilla_dom_SessionHistoryEntry_h
 
+#include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "nsILayoutHistoryState.h"
@@ -390,6 +391,8 @@ class SessionHistoryEntry : public nsISHEntry {
 
   void SetIsDynamicallyAdded(bool aDynamic);
 
+  void SetWireframe(const Maybe<Wireframe>& aWireframe);
+
   // Get an entry based on LoadingSessionHistoryInfo's mLoadId. Parent process
   // only.
   static SessionHistoryEntry* GetByLoadId(uint64_t aLoadId);
@@ -406,6 +409,7 @@ class SessionHistoryEntry : public nsISHEntry {
   nsISHEntry* mParent = nullptr;
   uint32_t mID;
   nsTArray<RefPtr<SessionHistoryEntry>> mChildren;
+  Maybe<Wireframe> mWireframe;
 
   bool mForInitialLoad = false;
 
@@ -447,6 +451,15 @@ struct IPDLParamTraits<nsILayoutHistoryState*> {
                     nsILayoutHistoryState* aParam);
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
                    IProtocol* aActor, RefPtr<nsILayoutHistoryState>* aResult);
+};
+
+// Allow sending dom::Wireframe objects over IPC.
+template <>
+struct IPDLParamTraits<mozilla::dom::Wireframe> {
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const mozilla::dom::Wireframe& aParam);
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, mozilla::dom::Wireframe* aResult);
 };
 
 }  // namespace ipc

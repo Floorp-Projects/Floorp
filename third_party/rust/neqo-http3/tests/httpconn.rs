@@ -6,7 +6,7 @@
 
 #![allow(unused_assignments)]
 
-use neqo_common::{event::Provider, qtrace, Datagram};
+use neqo_common::{event::Provider, Datagram};
 use neqo_crypto::{AuthenticationStatus, ResumptionToken};
 use neqo_http3::{
     Header, Http3Client, Http3ClientEvent, Http3OrWebTransportStream, Http3Parameters, Http3Server,

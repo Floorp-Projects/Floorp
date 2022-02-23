@@ -419,7 +419,7 @@ var gSync = {
         targets.push(d);
       }
     }
-    return targets.sort((a, b) => a.name.localeCompare(b.name));
+    return targets.sort((a, b) => b.lastAccessTime - a.lastAccessTime);
   },
 
   _definePrefGetters() {

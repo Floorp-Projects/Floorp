@@ -800,14 +800,23 @@
       for (let i = 0; i < nodesToOpen.length; i++) {
         nodesToOpen[i].containerOpen = true;
       }
+      let firstValidTreeIndex = -1;
       for (let i = 0; i < nodes.length; i++) {
         var index = resultview.treeIndexForNode(nodes[i]);
         if (index == -1) {
           continue;
         }
+        if (firstValidTreeIndex < 0 && index >= 0) {
+          firstValidTreeIndex = index;
+        }
         selection.rangedSelect(index, index, true);
       }
       selection.selectEventsSuppressed = false;
+
+      // Bring the first valid node into view if necessary
+      if (firstValidTreeIndex >= 0) {
+        this.ensureRowIsVisible(firstValidTreeIndex);
+      }
     }
 
     buildContextMenu(aPopup) {

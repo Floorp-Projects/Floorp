@@ -38,6 +38,7 @@ typedef struct sslBufferStr {
 #define SSL_BUFFER_SPACE(b) ((b)->space - (b)->len)
 
 SECStatus sslBuffer_Grow(sslBuffer *b, unsigned int newLen);
+SECStatus sslBuffer_Fill(sslBuffer *b, PRUint8 c, size_t len);
 SECStatus sslBuffer_Append(sslBuffer *b, const void *data, unsigned int len);
 SECStatus sslBuffer_AppendNumber(sslBuffer *b, PRUint64 v, unsigned int size);
 SECStatus sslBuffer_AppendVariable(sslBuffer *b, const PRUint8 *data,

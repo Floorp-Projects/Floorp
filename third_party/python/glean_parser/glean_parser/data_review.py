@@ -56,7 +56,7 @@ def generate(
             one_line_desc = metric.description.replace("\n", " ")
             sensitivity = ", ".join([s.name for s in metric.data_sensitivity])
             last_bug = metric.bugs[-1]
-            metrics_table += f"{category_name}.{metric_name} | "
+            metrics_table += f"`{category_name}.{metric_name}` | "
             metrics_table += f"{one_line_desc} | {sensitivity} | {last_bug}\n"
 
             durations.add(metric.expires)

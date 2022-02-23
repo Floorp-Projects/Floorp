@@ -32,13 +32,6 @@ add_task(async function setup() {
   );
 
   await AddonTestUtils.promiseStartupManager();
-  // Ensure that the profile-after-change message has been notified,
-  // so that ServiceWokerRegistrar is going to be initialized.
-  Services.obs.notifyObservers(
-    null,
-    "profile-after-change",
-    "force-serviceworkerrestart-init"
-  );
 
   // Make sure background-delayed-startup is set to true (in some builds,
   // in particular Thunderbird, it is set to false) otherwise the extension

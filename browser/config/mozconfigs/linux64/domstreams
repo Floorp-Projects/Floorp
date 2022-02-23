@@ -1,0 +1,6 @@
+. "$topsrcdir/browser/config/mozconfigs/linux64/common-opt"
+
+ac_add_options --enable-dom-streams
+ac_add_options --enable-debug
+
+. "$topsrcdir/build/mozconfig.common.override"

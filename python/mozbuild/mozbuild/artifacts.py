@@ -50,7 +50,7 @@ import stat
 import subprocess
 import tarfile
 import tempfile
-import six.moves.urllib_parse as urlparse
+from urllib.parse import urlparse
 import zipfile
 from contextlib import contextmanager
 from io import BufferedReader
@@ -153,11 +153,11 @@ class ArtifactJob(object):
         self._tests_re = None
         if download_tests:
             self._tests_re = re.compile(
-                r"public/build/(en-US/)?target\.common\.tests\.(zip|tar\.gz)"
+                r"public/build/(en-US/)?target\.common\.tests\.(zip|tar\.gz)$"
             )
         self._maven_zip_re = None
         if download_maven_zip:
-            self._maven_zip_re = re.compile(r"public/build/target\.maven\.zip")
+            self._maven_zip_re = re.compile(r"public/build/target\.maven\.zip$")
         self._log = log
         self._substs = substs
         self._symbols_archive_suffix = None
@@ -418,7 +418,7 @@ class ArtifactJob(object):
 
 
 class AndroidArtifactJob(ArtifactJob):
-    package_re = r"public/build/geckoview_example\.apk"
+    package_re = r"public/build/geckoview_example\.apk$"
     product = "mobile"
 
     package_artifact_patterns = {"**/*.so"}
@@ -483,7 +483,7 @@ class AndroidArtifactJob(ArtifactJob):
 
 
 class LinuxArtifactJob(ArtifactJob):
-    package_re = r"public/build/target\.tar\.bz2"
+    package_re = r"public/build/target\.tar\.bz2$"
     product = "firefox"
 
     _package_artifact_patterns = {
@@ -496,6 +496,8 @@ class LinuxArtifactJob(ArtifactJob):
         "{product}/plugin-container",
         "{product}/updater",
         "{product}/**/*.so",
+        # Preserve signatures when present.
+        "{product}/**/*.sig",
     }
 
     @property
@@ -556,7 +558,10 @@ class ResignJarWriter(JarWriter):
                     shutil.copyfileobj(data, tmp)
                     tmp.close()
                     self._job.log(
-                        logging.DEBUG, "artifact", {"path": name}, "Re-signing {path}"
+                        logging.DEBUG,
+                        "artifact",
+                        {"path": name.decode("utf-8")},
+                        "Re-signing {path}",
                     )
                     subprocess.check_call(
                         ["codesign", "-s", "-", "-f", tmp.name],
@@ -570,7 +575,7 @@ class ResignJarWriter(JarWriter):
 
 
 class MacArtifactJob(ArtifactJob):
-    package_re = r"public/build/target\.dmg"
+    package_re = r"public/build/target\.dmg$"
     product = "firefox"
 
     # These get copied into dist/bin without the path, so "root/a/b/c" -> "dist/bin/c".
@@ -694,7 +699,7 @@ class MacArtifactJob(ArtifactJob):
 
 
 class WinArtifactJob(ArtifactJob):
-    package_re = r"public/build/target\.(zip|tar\.gz)"
+    package_re = r"public/build/target\.(zip|tar\.gz)$"
     product = "firefox"
 
     _package_artifact_patterns = {
@@ -1546,25 +1551,34 @@ https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html
 
     def install_from(self, source, distdir):
         """Install artifacts from a ``source`` into the given ``distdir``."""
-        if source and os.path.isfile(source):
-            return self.install_from_file(source, distdir)
-        elif source and urlparse(source).scheme:
-            return self.install_from_url(source, distdir)
-        else:
-            if source is None and "MOZ_ARTIFACT_REVISION" in os.environ:
-                source = os.environ["MOZ_ARTIFACT_REVISION"]
+        if (source and os.path.isfile(source)) or "MOZ_ARTIFACT_FILE" in os.environ:
+            source = source or os.environ["MOZ_ARTIFACT_FILE"]
+            for source in source.split(os.pathsep):
+                ret = self.install_from_file(source, distdir)
+                if ret:
+                    return ret
+            return 0
 
-            if source:
-                return self.install_from_revset(source, distdir)
+        if (source and urlparse(source).scheme) or "MOZ_ARTIFACT_URL" in os.environ:
+            source = source or os.environ["MOZ_ARTIFACT_URL"]
+            for source in source.split():
+                ret = self.install_from_url(source, distdir)
+                if ret:
+                    return ret
+            return 0
 
-            for var in (
-                "MOZ_ARTIFACT_TASK_%s" % self._job.upper().replace("-", "_"),
-                "MOZ_ARTIFACT_TASK",
-            ):
-                if var in os.environ:
-                    return self.install_from_task(os.environ[var], distdir)
+        if source or "MOZ_ARTIFACT_REVISION" in os.environ:
+            source = source or os.environ["MOZ_ARTIFACT_REVISION"]
+            return self.install_from_revset(source, distdir)
 
-            return self.install_from_recent(distdir)
+        for var in (
+            "MOZ_ARTIFACT_TASK_%s" % self._job.upper().replace("-", "_"),
+            "MOZ_ARTIFACT_TASK",
+        ):
+            if var in os.environ:
+                return self.install_from_task(os.environ[var], distdir)
+
+        return self.install_from_recent(distdir)
 
     def clear_cache(self):
         self.log(logging.INFO, "artifact", {}, "Deleting cached artifacts and caches.")

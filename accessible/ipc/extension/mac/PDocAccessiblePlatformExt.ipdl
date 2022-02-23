@@ -11,7 +11,7 @@ include "mozilla/GfxMessageUtils.h";
 using mozilla::a11y::EWhichRange from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::EWhichPostFilter from "mozilla/a11y/IPCTypes.h";
 [RefCounted] using mozilla::a11y::AccAttributes from "mozilla/a11y/IPCTypes.h";
-using nsIntRect from "nsRect.h";
+using mozilla::LayoutDeviceIntRect from "Units.h";
 
 namespace mozilla {
 namespace a11y {
@@ -43,7 +43,7 @@ child:
       returns(nsString aText);
 
   [Nested=inside_sync] sync BoundsForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
-      returns(nsIntRect aRetVal);
+      returns(LayoutDeviceIntRect aRetVal);
 
   [Nested=inside_sync] sync LengthForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
       returns(int32_t aLength);

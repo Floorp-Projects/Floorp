@@ -295,7 +295,7 @@ bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
       return false;
     }
     if (!JS::CreateError(aCx, mExnType, stack, filename, mLineNumber, mColumn,
-                         nullptr, message, aResult)) {
+                         nullptr, message, JS::NothingHandleValue, aResult)) {
       return false;
     }
 
@@ -311,7 +311,7 @@ bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
         if (mTokenOffset >= sourceLine.Length()) {
           // Corrupt data, leave linebuf unset.
         } else if (JS::UniqueTwoByteChars buffer =
-                ToNullTerminatedJSStringBuffer(aCx, sourceLine)) {
+                       ToNullTerminatedJSStringBuffer(aCx, sourceLine)) {
           err->initOwnedLinebuf(buffer.release(), sourceLine.Length(),
                                 mTokenOffset);
         } else {

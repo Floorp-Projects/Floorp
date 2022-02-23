@@ -54,13 +54,13 @@ uint32_t wasm::ObservedCPUFeatures() {
   };
 
 #if defined(JS_CODEGEN_X86)
-  MOZ_ASSERT(uint32_t(jit::CPUInfo::GetSSEVersion()) <=
+  MOZ_ASSERT(uint32_t(jit::CPUInfo::GetFingerprint()) <=
              (UINT32_MAX >> ARCH_BITS));
-  return X86 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
+  return X86 | (uint32_t(jit::CPUInfo::GetFingerprint()) << ARCH_BITS);
 #elif defined(JS_CODEGEN_X64)
-  MOZ_ASSERT(uint32_t(jit::CPUInfo::GetSSEVersion()) <=
+  MOZ_ASSERT(uint32_t(jit::CPUInfo::GetFingerprint()) <=
              (UINT32_MAX >> ARCH_BITS));
-  return X64 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
+  return X64 | (uint32_t(jit::CPUInfo::GetFingerprint()) << ARCH_BITS);
 #elif defined(JS_CODEGEN_ARM)
   MOZ_ASSERT(jit::GetARMFlags() <= (UINT32_MAX >> ARCH_BITS));
   return ARM | (jit::GetARMFlags() << ARCH_BITS);

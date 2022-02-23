@@ -1251,6 +1251,8 @@ void nsCocoaWindow::SetSizeMode(nsSizeMode aMode) {
       [mWindow deminiaturize:nil];
     else if (previousMode == nsSizeMode_Maximized && [mWindow isZoomed])
       [mWindow zoom:nil];
+    else if (previousMode == nsSizeMode_Fullscreen)
+      MakeFullScreen(false);
   } else if (aMode == nsSizeMode_Minimized) {
     if (![mWindow isMiniaturized]) [mWindow miniaturize:nil];
   } else if (aMode == nsSizeMode_Maximized) {
@@ -1672,12 +1674,11 @@ inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen,
   return aFullScreen;
 }
 
-nsresult nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
+nsresult nsCocoaWindow::MakeFullScreen(bool aFullScreen) {
   return DoMakeFullScreen(aFullScreen, AlwaysUsesNativeFullScreen());
 }
 
-nsresult nsCocoaWindow::MakeFullScreenWithNativeTransition(bool aFullScreen,
-                                                           nsIScreen* aTargetScreen) {
+nsresult nsCocoaWindow::MakeFullScreenWithNativeTransition(bool aFullScreen) {
   return DoMakeFullScreen(aFullScreen, true);
 }
 

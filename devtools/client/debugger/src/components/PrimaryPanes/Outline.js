@@ -23,7 +23,6 @@ import {
 import OutlineFilter from "./OutlineFilter";
 import "./Outline.css";
 import PreviewFunction from "../shared/PreviewFunction";
-import { sortBy } from "lodash";
 
 // Set higher to make the fuzzaldrin filter more specific
 const FUZZALDRIN_FILTER_THRESHOLD = 15000;
@@ -246,19 +245,20 @@ export class Outline extends Component {
   renderFunctions(functions) {
     const { filter } = this.state;
     let classes = [...new Set(functions.map(({ klass }) => klass))];
-    let namedFunctions = functions.filter(
+    const namedFunctions = functions.filter(
       ({ name, klass }) =>
         filterOutlineItem(name, filter) && !klass && !classes.includes(name)
     );
 
-    let classFunctions = functions.filter(
+    const classFunctions = functions.filter(
       ({ name, klass }) => filterOutlineItem(name, filter) && !!klass
     );
 
     if (this.props.alphabetizeOutline) {
-      namedFunctions = sortBy(namedFunctions, "name");
+      const sortByName = (a, b) => (a.name < b.name ? -1 : 1);
+      namedFunctions.sort(sortByName);
       classes = classes.sort();
-      classFunctions = sortBy(classFunctions, "name");
+      classFunctions.sort(sortByName);
     }
 
     return (

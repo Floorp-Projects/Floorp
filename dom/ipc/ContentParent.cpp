@@ -3738,8 +3738,8 @@ ContentParent::GetInterface(const nsIID& aIID, void** aResult) {
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvInitBackground(
-    Endpoint<PBackgroundParent>&& aEndpoint) {
-  if (!BackgroundParent::Alloc(this, std::move(aEndpoint))) {
+    Endpoint<PBackgroundStarterParent>&& aEndpoint) {
+  if (!BackgroundParent::AllocStarter(this, std::move(aEndpoint))) {
     NS_WARNING("BackgroundParent::Alloc failed");
   }
 
@@ -4070,8 +4070,7 @@ void ContentParent::KillHard(const char* aReason) {
     return;
   }
 
-  if (!KillProcess(otherProcessHandle, base::PROCESS_END_KILLED_BY_USER,
-                   false)) {
+  if (!KillProcess(otherProcessHandle, base::PROCESS_END_KILLED_BY_USER)) {
     NS_WARNING("failed to kill subprocess!");
   }
 
@@ -4207,11 +4206,9 @@ bool ContentParent::DeallocPScriptCacheParent(PScriptCacheParent* cache) {
   return true;
 }
 
-PNeckoParent* ContentParent::AllocPNeckoParent() { return new NeckoParent(); }
-
-bool ContentParent::DeallocPNeckoParent(PNeckoParent* necko) {
-  delete necko;
-  return true;
+already_AddRefed<PNeckoParent> ContentParent::AllocPNeckoParent() {
+  RefPtr<NeckoParent> actor = new NeckoParent();
+  return actor.forget();
 }
 
 PPrintingParent* ContentParent::AllocPPrintingParent() {
@@ -5927,7 +5924,9 @@ nsresult ContentParent::AboutToLoadHttpFtpDocumentForChild(
   }
 
   nsCOMPtr<nsIPrincipal> principal;
-  rv = ssm->GetChannelResultPrincipal(aChannel, getter_AddRefs(principal));
+  nsCOMPtr<nsIPrincipal> partitionedPrincipal;
+  rv = ssm->GetChannelResultPrincipals(aChannel, getter_AddRefs(principal),
+                                       getter_AddRefs(partitionedPrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Let the caller know we're going to send main thread IPC for updating
@@ -5938,7 +5937,13 @@ nsresult ContentParent::AboutToLoadHttpFtpDocumentForChild(
 
   TransmitBlobURLsForPrincipal(principal);
 
+  // Tranmit permissions for both regular and partitioned principal so that the
+  // content process can get permissions for the partitioned principal. For
+  // example, the desk-notification permission for a partitioned service worker.
   rv = TransmitPermissionsForPrincipal(principal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TransmitPermissionsForPrincipal(partitionedPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsLoadFlags newLoadFlags;
@@ -7221,11 +7226,12 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyOnHistoryReload(
 mozilla::ipc::IPCResult ContentParent::RecvHistoryCommit(
     const MaybeDiscarded<BrowsingContext>& aContext, const uint64_t& aLoadID,
     const nsID& aChangeID, const uint32_t& aLoadType, const bool& aPersist,
-    const bool& aCloneEntryChildren, const bool& aChannelExpired) {
+    const bool& aCloneEntryChildren, const bool& aChannelExpired,
+    const uint32_t& aCacheKey) {
   if (!aContext.IsDiscarded()) {
     aContext.get_canonical()->SessionHistoryCommit(
         aLoadID, aChangeID, aLoadType, aPersist, aCloneEntryChildren,
-        aChannelExpired);
+        aChannelExpired, aCacheKey);
   }
 
   return IPC_OK();
@@ -7336,6 +7342,21 @@ mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryCacheKey(
       aContext.get_canonical()->GetActiveSessionHistoryEntry();
   if (entry) {
     entry->SetCacheKey(aCacheKey);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryWireframe(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const Wireframe& aWireframe) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  SessionHistoryEntry* entry =
+      aContext.get_canonical()->GetActiveSessionHistoryEntry();
+  if (entry) {
+    entry->SetWireframe(Some(aWireframe));
   }
   return IPC_OK();
 }

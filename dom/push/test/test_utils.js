@@ -172,9 +172,30 @@ SimpleTest.registerCleanupFunction(async function() {
 });
 
 function setPushPermission(allow) {
-  return SpecialPowers.pushPermissions([
+  let permissions = [
     { type: "desktop-notification", allow, context: document },
-  ]);
+  ];
+
+  if (isXOrigin) {
+    // We need to add permission for the xorigin tests. In xorigin tests, the
+    // test page will be run under third-party context, so we need to use
+    // partitioned principal to add the permission.
+    let partitionedPrincipal = SpecialPowers.wrap(document)
+      .partitionedPrincipal;
+
+    permissions.push({
+      type: "desktop-notification",
+      allow,
+      context: {
+        url: partitionedPrincipal.originNoSuffix,
+        originAttributes: {
+          partitionKey: partitionedPrincipal.originAttributes.partitionKey,
+        },
+      },
+    });
+  }
+
+  return SpecialPowers.pushPermissions(permissions);
 }
 
 function setupPrefs() {

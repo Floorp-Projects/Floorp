@@ -216,7 +216,7 @@ lazy_static! {
     /// the form of a `HashMap` from interface names to their descriptions.
     static ref IFACES: HashMap<&'static str, &'static Interface> = {
         let lists: &[&[Interface]] =
-            include!(concat!(env!("MOZ_TOPOBJDIR"), "/dist/xpcrs/bt/all.rs"));
+            include!(mozbuild::objdir_path!("dist/xpcrs/bt/all.rs"));
 
         let mut hm = HashMap::new();
         for &list in lists {

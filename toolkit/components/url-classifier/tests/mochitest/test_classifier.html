@@ -94,7 +94,7 @@ function testService() {
       let tables = "test-malware-simple,test-unwanted-simple,test-phish-simple,test-block-simple,test-harmful-simple";
       let uri = SpecialPowers.Services.io.newURI(test.url);
       let prin = SpecialPowers.Services.scriptSecurityManager.createContentPrincipal(uri, {});
-      SpecialPowers.doUrlClassify(prin, null, function(errorCode) {
+      SpecialPowers.doUrlClassify(prin, function(errorCode) {
         is(errorCode, test.result,
            `Successful asynchronous classification of ${test.url}`);
         SpecialPowers.doUrlClassifyLocal(uri, tables, function(results) {

@@ -3,11 +3,11 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { createSelector } from "reselect";
-import { getBreakpointsList, getSelectedSource } from "../selectors";
+import { getSelectedSource, getSourceFromId } from "../selectors/sources";
+import { getBreakpointsList } from "../selectors/breakpoints";
 import { getFilename } from "../utils/source";
 import { getSelectedLocation } from "../utils/selected-location";
 import { sortSelectedBreakpoints } from "../utils/breakpoint";
-import { getSourceFromId } from "../reducers/sources";
 
 function getBreakpointsForSource(source, selectedSource, breakpoints) {
   return sortSelectedBreakpoints(breakpoints, selectedSource)

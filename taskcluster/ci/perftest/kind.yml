@@ -21,6 +21,8 @@ jobs-from:
     - windows.yml
 
 job-defaults:
+    attributes:
+        retrigger: true
     run-on-projects: []
     treeherder:
         kind: other

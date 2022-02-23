@@ -12,7 +12,11 @@ It complements the existing Firefox Developer Tools :ref:`Remote Debugging
 Protocol <Remote Debugging Protocol>` (RDP) by implementing a subset of the
 `Chrome DevTools Protocol`_ (CDP).
 
+To use Firefox remote protocol with Fission, CDP client authors should read the
+`Required Preferences`_ page.
+
 .. _Chrome DevTools Protocol: https://chromedevtools.github.io/devtools-protocol/
+.. _Required Preferences: /remote/cdp/RequiredPreferences.html
 
 .. toctree::
   :maxdepth: 1
@@ -20,4 +24,4 @@ Protocol <Remote Debugging Protocol>` (RDP) by implementing a subset of the
   Usage.md
   Architecture.md
   PuppeteerVendor.md
-
+  RequiredPreferences.md

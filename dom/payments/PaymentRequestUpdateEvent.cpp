@@ -50,7 +50,8 @@ PaymentRequestUpdateEvent::PaymentRequestUpdateEvent(EventTarget* aOwner)
 }
 
 void PaymentRequestUpdateEvent::ResolvedCallback(JSContext* aCx,
-                                                 JS::Handle<JS::Value> aValue) {
+                                                 JS::Handle<JS::Value> aValue,
+                                                 ErrorResult& aRv) {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(mRequest);
   if (!mRequest->InFullyActiveDocument()) {
@@ -93,7 +94,8 @@ void PaymentRequestUpdateEvent::ResolvedCallback(JSContext* aCx,
 }
 
 void PaymentRequestUpdateEvent::RejectedCallback(JSContext* aCx,
-                                                 JS::Handle<JS::Value> aValue) {
+                                                 JS::Handle<JS::Value> aValue,
+                                                 ErrorResult& aRv) {
   MOZ_ASSERT(mRequest);
   if (!mRequest->InFullyActiveDocument()) {
     return;

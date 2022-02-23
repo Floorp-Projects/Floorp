@@ -91,11 +91,11 @@ static void generate_scaling(const int bitdepth,
 #ifndef UNIT_TEST
 void bitfn(dav1d_apply_grain)(const Dav1dFilmGrainDSPContext *const dsp,
                               Dav1dPicture *const out,
-                              Dav1dPicture *const in)
+                              const Dav1dPicture *const in)
 {
     const Dav1dFilmGrainData *const data = &out->frame_hdr->film_grain.data;
 
-    entry grain_lut[3][GRAIN_HEIGHT + 1][GRAIN_WIDTH];
+    ALIGN_STK_16(entry, grain_lut, 3,[GRAIN_HEIGHT + 1][GRAIN_WIDTH]);
     uint8_t scaling[3][SCALING_SIZE];
 #if BITDEPTH != 8
     const int bitdepth_max = (1 << out->p.bpc) - 1;

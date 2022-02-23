@@ -35,21 +35,35 @@ treeherder:
         'Fetch': 'Fetch and store content'
         'Fxfn-l': 'Firefox functional tests (local)'
         'Fxfn-r': 'Firefox functional tests (remote)'
+        'Fxfn-l-fis': 'Firefox functional tests (local) with fission enabled'
+        'Fxfn-r-fis': 'Firefox functional tests (remote) with fission enabled'
         'iris': 'Iris testing suite'
         'l10n-bump': 'L10n Bumper'
         'M': 'Mochitests'
+        'M-headless': 'Headless Mochitests'
+        'M-headless-fis': 'Headless Mochitests with fission.'
+        'M-headless-spi-nw': 'Headless Mochitests with fission and socketprocess networking.'
+        'M-headless-spi-nw-fis': 'Headless Mochitests with fission and socketprocess networking and fission enabled.'
         'M-aab': 'Mochitests with AAB test_runner.'
         'M-1proc': 'Mochitests without e10s'
         'M-a11y-checks': 'Mochitests with accessibility checks enabled'
+        'M-a11y-checks-fis': 'Mochitests with accessibility checks enabled and fission enabled'
+        'M-dfpi': 'Mochitests with dFPI enabled'
+        'M-dfpi-fis': 'Mochitests with dFPI and Fission enabled'
+        'M-dfpi-fis-xorig': 'Mochitests with dFPI, cross-origin and fission enabled'
         'M-fis': 'Mochitests with fission enabled'
         'M-fis-xorig': 'Mochitests with cross-origin and fission enabled'
         'M-fis-gli': 'Mochitests with fission and WebGL IPC enabled'
         'M-gli': 'Mochitests with WebGL over IPC'
+        'M-gli-fis': 'Mochitests with WebGL over IPC with fission enabled'
         'M-spi': 'Mochitests with socket process'
+        'M-spi-fis': 'Mochitests with socket process with fission enabled'
         'M-spi-nw': 'Mochitests with networking on socket process'
+        'M-spi-nw-fis': 'Mochitests with networking on socket process with fission enabled'
         'M-spi-nw-1proc': 'Mochitests with networking on socket process without e10s'
         'M-swr': 'Mochitests with software webrender enabled'
         'M-swr-a11y-checks': 'Mochitests with software webrender and accessibility checks enabled'
+        'M-swr-a11y-checks-fis': 'Mochitests with software webrender and accessibility checks enabled and fission'
         'M-swr-1proc': 'Mochitests with software webrender enabled without e10s'
         'M-swr-fis': 'Mochitests with software webrender and fission enabled'
         'M-swr-wayland': 'Mochitests with software webrender and Wayland backend enabled'
@@ -75,6 +89,7 @@ treeherder:
         'R': 'Reftests'
         'R-fis': 'Reftests with fission enabled'
         'R-swr': 'Reftests with software webrender enabled'
+        'R-swr-fis': 'Reftests with software webrender and fission enabled'
         'R-wayland': 'Reftests with Wayland backend enabled'
         'Rap': 'Raptor performance tests on Firefox'
         'Rap-live': 'Raptor performance tests on Firefox with live sites'
@@ -87,19 +102,25 @@ treeherder:
         'remote': 'Remote debugging protocol tests'
         'T': 'Talos performance tests'
         'T-fis': 'Talos performance tests with fission enabled'
-        'T-fis-swr': 'Talos performance tests with fission enabled and software webrender'
         'T-gli': 'Talos performance tests with WebGL over IPC'
+        'T-gli-fis': 'Talos performance tests with WebGL over IPC with fission enabled'
         'T-Prof': 'Talos performance tests on Firefox with Gecko Profiling'
         'T-Prof-fis': 'Talos performance tests on Firefox with fission and Gecko Profiling'
         'T-Prof-gli': 'Talos performance tests with WebGL over IPC and Gecko Profiling'
+        'T-Prof-gli-fis': 'Talos performance tests with WebGL over IPC and Gecko Profiling and fission enabled'
         'T-swr': 'Talos performance tests with software webrender enabled'
+        'T-swr-fis': 'Talos performance tests with software webrender enabled'
         'tt': 'Telemetry tests'
         'tt-fis': 'Telemetry tests with fission enabled'
         'SY': 'Are we slim yet tests by TaskCluster'
         'SY-fis': 'Are we slim yet tests by TaskCluster, fission enabled'
         'W': 'Web platform tests'
+        'W-dfpi-fis': 'Web platform tests with dFPI and Fission enabled'
         'W-fis': 'Web platform tests with fission enabled'
+        'W-headless': 'Headless web platform tests'
+        'W-headless-fis': 'Headless web platform tests with fission enabled'
         'W-swr': 'Web platform tests with software webrender enabled'
+        'W-swr-fis': 'Web platform tests with software webrender enabled'
         'W-b': 'Web platform tests (backlog)'
         'W-b-fis': 'Web platform tests (backlog) with fission enabled'
         'X': 'Xpcshell tests'
@@ -423,7 +444,8 @@ task-priority:
         'mozilla-inbound': 'low'
         'default': 'very-low'
 
-taskgraph: {}
+taskgraph:
+    register: gecko_taskgraph:register
 
 workers:
     aliases:
@@ -619,4 +641,8 @@ mac-notarization:
                 by-release-level:
                     production: security/mac/hardenedruntime/production.entitlements.xml
                     default: security/mac/hardenedruntime/developer.entitlements.xml
+            default: ''
+    mac-requirements:
+        by-platform:
+            macosx64.*: build/package/mac_osx/requirements.plist
             default: ''

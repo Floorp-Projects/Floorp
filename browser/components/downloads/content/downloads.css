@@ -29,7 +29,7 @@
 
 /*** Downloads View ***/
 
-#downloadsRichListBox > richlistitem button {
+#downloadsListBox.allDownloadsListBox > richlistitem button {
   /* These buttons should never get focus, as that would "disable"
      the downloads view controller (it's only used when the richlistbox
      is focused). */

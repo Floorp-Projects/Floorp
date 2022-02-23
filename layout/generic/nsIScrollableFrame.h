@@ -143,9 +143,8 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   /**
    * Return the width for non-disappearing scrollbars.
    */
-  virtual nscoord GetNondisappearingScrollbarWidth(
-      nsPresContext* aPresContext, gfxContext* aRC,
-      mozilla::WritingMode aWM) = 0;
+  static nscoord GetNondisappearingScrollbarWidth(nsPresContext*,
+                                                  mozilla::WritingMode);
   /**
    * Get the layout size of this frame.
    * Note that this is a value which is not expanded by the minimum scale size.
@@ -374,12 +373,6 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual bool IsScrollingActive() = 0;
 
   /**
-   * The same as IsScrollingActive but minimal display ports are not considered
-   * active.
-   */
-  virtual bool IsScrollingActiveNotMinimalDisplayPort() = 0;
-
-  /**
    * Returns true if this scroll frame might be scrolled
    * asynchronously by the compositor.
    */
@@ -433,7 +426,13 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * Returns the current generation counter for the scrollframe. This counter
    * increments every time the scroll position is set.
    */
-  virtual mozilla::ScrollGeneration CurrentScrollGeneration() const = 0;
+  virtual mozilla::MainThreadScrollGeneration CurrentScrollGeneration()
+      const = 0;
+  /**
+   * The APZ scroll generation associated with the last APZ scroll offset for
+   * which we processed a repaint request.
+   */
+  virtual mozilla::APZScrollGeneration ScrollGenerationOnApz() const = 0;
   /**
    * LastScrollDestination returns the destination of the most recently
    * requested smooth scroll animation.
@@ -457,7 +456,8 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * animation.
    */
   virtual void ResetScrollInfoIfNeeded(
-      const mozilla::ScrollGeneration& aGeneration,
+      const mozilla::MainThreadScrollGeneration& aGeneration,
+      const mozilla::APZScrollGeneration& aGenerationOnApz,
       mozilla::APZScrollAnimationType aAPZScrollAnimationType) = 0;
   /**
    * Determine whether it is desirable to be able to asynchronously scroll this

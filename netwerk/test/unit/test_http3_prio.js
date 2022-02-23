@@ -77,7 +77,7 @@ async function test_flag_priority(context, flag, expected_priority) {
 }
 
 add_task(async function test_http3_prio() {
-  Services.prefs.setBoolPref("network.http.http3.priorization", false);
+  Services.prefs.setBoolPref("network.http.http3.priority", false);
   await test_flag_priority("disabled (none)", null, null);
   await test_flag_priority(
     "disabled (urgent_start)",
@@ -117,7 +117,7 @@ add_task(async function test_http3_prio() {
 });
 
 add_task(async function test_http3_prio_enabled() {
-  Services.prefs.setBoolPref("network.http.http3.priorization", true);
+  Services.prefs.setBoolPref("network.http.http3.priority", true);
   await test_flag_priority("enabled (none)", null, "u=4");
   await test_flag_priority(
     "enabled (urgent_start)",

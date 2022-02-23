@@ -14,7 +14,7 @@ privileges.  API implementations do not directly interact with
 extensions' Javascript environments, that is handled by the WebExtensions
 framework.  Each API includes a schema that describes all the functions,
 events, and other properties that the API might inject into an
-extension's Javascript environment.  
+extension's Javascript environment.
 Among other things, the schema specifies the namespace into which
 an API should be injected, what permissions (if any) are required to
 use it, and in which contexts (e.g., extension pages, content scripts, etc)
@@ -243,7 +243,7 @@ all API scripts look to the following source:
 - Only available in the Desktop builds:
   `browser/components/extensions/parent/ext-browser.js <https://searchfox.org/mozilla-central/source/browser/components/extensions/parent/ext-browser.js>`_
 - Only available in the Android builds:
-  `mobile/android/components/extensions/ext-android.js <https://searchfox.org/mozilla-central/source/mobile/android/components/extensions/ext-android.js>`_ 
+  `mobile/android/components/extensions/ext-android.js <https://searchfox.org/mozilla-central/source/mobile/android/components/extensions/ext-android.js>`_
 
 .. warning::
    The extension API authors should never redefine these globals to avoid introducing potential
@@ -253,7 +253,7 @@ all API scripts look to the following source:
 WebIDL Bindings
 ---------------
 
-In ``manifest_version: 3`` the extension will be able to declare a background service worker 
+In ``manifest_version: 3`` the extension will be able to declare a background service worker
 instead of a background page, and the existing WebExtensions API bindings can't be injected into this
 new extension global, because it lives off the main thread.
 

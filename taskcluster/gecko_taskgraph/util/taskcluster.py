@@ -39,7 +39,7 @@ def get_root_url(use_proxy):
     is not set."""
     if use_proxy:
         try:
-            return os.environ["TASKCLUSTER_PROXY_URL"]
+            return liburls.normalize_root_url(os.environ["TASKCLUSTER_PROXY_URL"])
         except KeyError:
             if "TASK_ID" not in os.environ:
                 raise RuntimeError(
@@ -55,14 +55,14 @@ def get_root_url(use_proxy):
             )
         else:
             logger.debug("Using default TASKCLUSTER_ROOT_URL (Firefox CI production)")
-            return PRODUCTION_TASKCLUSTER_ROOT_URL
+            return liburls.normalize_root_url(PRODUCTION_TASKCLUSTER_ROOT_URL)
     logger.debug(
         "Running in Taskcluster instance {}{}".format(
             os.environ["TASKCLUSTER_ROOT_URL"],
             " with taskcluster-proxy" if "TASKCLUSTER_PROXY_URL" in os.environ else "",
         )
     )
-    return os.environ["TASKCLUSTER_ROOT_URL"]
+    return liburls.normalize_root_url(os.environ["TASKCLUSTER_ROOT_URL"])
 
 
 def requests_retry_session(

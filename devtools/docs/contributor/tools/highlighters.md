@@ -17,7 +17,7 @@ But there can be a wide variety of highlighters. In particular, highlighters are
 
 ## Using highlighters
 
-Highlighters run on the debuggee side, not on the toolbox side. This is so that it's possible to highlight elements on a remote device for instance. This means you need to go through the [Remote Debugging Protocol](protocol.md) to use a highlighter.
+Highlighters run on the debuggee side, not on the toolbox side. This is so that it's possible to highlight elements on a remote device for instance. This means you need to go through the [Remote Debugging Protocol](../backend/protocol.md) to use a highlighter.
 
 The InspectorFront provides the following method:
 

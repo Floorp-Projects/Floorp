@@ -1,4 +1,5 @@
 #![cfg(not(syn_disable_nightly_tests))]
+#![cfg(not(miri))]
 #![recursion_limit = "1024"]
 #![feature(rustc_private)]
 #![allow(
@@ -134,16 +135,16 @@ fn test_rustc_precedence() {
                 l_failed
             );
 
-            passed.fetch_add(l_passed, Ordering::SeqCst);
-            let prev_failed = failed.fetch_add(l_failed, Ordering::SeqCst);
+            passed.fetch_add(l_passed, Ordering::Relaxed);
+            let prev_failed = failed.fetch_add(l_failed, Ordering::Relaxed);
 
             if prev_failed + l_failed >= abort_after {
                 process::exit(1);
             }
         });
 
-    let passed = passed.load(Ordering::SeqCst);
-    let failed = failed.load(Ordering::SeqCst);
+    let passed = passed.load(Ordering::Relaxed);
+    let failed = failed.load(Ordering::Relaxed);
 
     errorf!("\n===== Precedence Test Results =====\n");
     errorf!("{} passed | {} failed\n", passed, failed);

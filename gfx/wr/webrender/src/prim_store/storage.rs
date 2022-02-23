@@ -35,6 +35,11 @@ impl<T> Index<T> {
 }
 
 #[derive(Debug)]
+pub struct OpenRange<T> {
+    start: Index<T>,
+}
+
+#[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct Range<T> {
     pub start: Index<T>,
@@ -91,15 +96,32 @@ impl<T> Storage<T> {
         Index(index as u32, PhantomData)
     }
 
+    pub fn reserve(&mut self, count: usize) {
+        self.data.reserve(count);
+    }
+
     pub fn recycle(&mut self, recycler: &mut Recycler) {
         recycler.recycle_vec(&mut self.data);
     }
 
     pub fn extend<II: IntoIterator<Item=T>>(&mut self, iter: II) -> Range<T> {
-        let start = Index::new(self.data.len());
+        let range = self.open_range();
         self.data.extend(iter);
-        let end = Index::new(self.data.len());
-        Range { start, end }
+
+        self.close_range(range)
+    }
+
+    pub fn open_range(&self) -> OpenRange<T> {
+        OpenRange {
+            start: Index::new(self.data.len())
+        }
+    }
+
+    pub fn close_range(&self, range: OpenRange<T>) -> Range<T> {
+        Range {
+            start: range.start,
+            end: Index::new(self.data.len()),
+        }
     }
 }
 

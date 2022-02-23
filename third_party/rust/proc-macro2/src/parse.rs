@@ -168,7 +168,7 @@ pub(crate) fn token_stream(mut input: Cursor) -> Result<TokenStream, LexError> {
         let first = match input.bytes().next() {
             Some(first) => first,
             None => match stack.last() {
-                None => return Ok(TokenStream { inner: trees }),
+                None => return Ok(TokenStream::from(trees)),
                 #[cfg(span_locations)]
                 Some((lo, _frame)) => {
                     return Err(LexError {
@@ -209,7 +209,7 @@ pub(crate) fn token_stream(mut input: Cursor) -> Result<TokenStream, LexError> {
                 return Err(lex_error(input));
             }
             input = input.advance(1);
-            let mut g = Group::new(open_delimiter, TokenStream { inner: trees });
+            let mut g = Group::new(open_delimiter, TokenStream::from(trees));
             g.set_span(Span {
                 #[cfg(span_locations)]
                 lo,
@@ -819,7 +819,7 @@ fn doc_comment(input: Cursor) -> PResult<Vec<TokenTree>> {
     for tt in &mut stream {
         tt.set_span(span);
     }
-    let group = Group::new(Delimiter::Bracket, stream.into_iter().collect());
+    let group = Group::new(Delimiter::Bracket, TokenStream::from(stream));
     trees.push(crate::Group::_new_stable(group).into());
     for tt in &mut trees {
         tt.set_span(span);

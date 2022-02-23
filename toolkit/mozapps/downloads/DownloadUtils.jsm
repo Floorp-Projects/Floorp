@@ -572,7 +572,7 @@ var DownloadUtils = {
   getFormattedTimeStatus: function DU_getFormattedTimeStatus(aSeconds) {
     aSeconds = Math.floor(aSeconds);
     let l10n;
-    if (!isFinite(aSeconds)) {
+    if (!isFinite(aSeconds) || aSeconds < 0) {
       l10n = {
         id: "downloading-file-opens-in-some-time",
       };

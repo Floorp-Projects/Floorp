@@ -11924,7 +11924,6 @@ nsresult Document::CloneDocHelper(Document* clone) const {
     }
 
     clone->mIsSrcdocDocument = mIsSrcdocDocument;
-
     clone->SetContainer(mDocumentContainer);
 
     // Setup the navigation time. This will be needed by any animations in the
@@ -11949,7 +11948,11 @@ nsresult Document::CloneDocHelper(Document* clone) const {
   clone->SetChromeXHRDocURI(mChromeXHRDocURI);
   clone->SetPrincipals(NodePrincipal(), mPartitionedPrincipal);
   clone->mActiveStoragePrincipal = mActiveStoragePrincipal;
-  clone->mDocumentBaseURI = mDocumentBaseURI;
+  // NOTE(emilio): Intentionally setting this to the GetDocBaseURI rather than
+  // just mDocumentBaseURI, so that srcdoc iframes get the right base URI even
+  // when printed standalone via window.print() (where there won't be a parent
+  // document to grab the URI from).
+  clone->mDocumentBaseURI = GetDocBaseURI();
   clone->SetChromeXHRDocBaseURI(mChromeXHRDocBaseURI);
   clone->mReferrerInfo =
       static_cast<dom::ReferrerInfo*>(mReferrerInfo.get())->Clone();
@@ -13564,13 +13567,15 @@ class UnblockParsingPromiseHandler final : public PromiseNativeHandler {
     }
   }
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     MaybeUnblockParser();
 
     mPromise->MaybeResolve(aValue);
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     MaybeUnblockParser();
 
     mPromise->MaybeReject(aValue);
@@ -14564,9 +14569,14 @@ Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicateFunc) {
 
 void Document::GetWireframe(bool aIncludeNodes,
                             Nullable<Wireframe>& aWireframe) {
+  FlushPendingNotifications(FlushType::Layout);
+  GetWireframeWithoutFlushing(aIncludeNodes, aWireframe);
+}
+
+void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
+                                           Nullable<Wireframe>& aWireframe) {
   using FrameForPointOptions = nsLayoutUtils::FrameForPointOptions;
   using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
-  FlushPendingNotifications(FlushType::Layout);
 
   PresShell* shell = GetPresShell();
   if (!shell) {
@@ -14600,7 +14610,7 @@ void Document::GetWireframe(bool aIncludeNodes,
   if (!rects.SetCapacity(frames.Length(), fallible)) {
     return;
   }
-  for (nsIFrame* frame : frames) {
+  for (nsIFrame* frame : Reversed(frames)) {
     // Can't really fail because SetCapacity succeeded.
     auto& taggedRect = *rects.AppendElement(fallible);
     const auto r =
@@ -14611,8 +14621,10 @@ void Document::GetWireframe(bool aIncludeNodes,
         taggedRect.mNode.Construct(c);
       }
     }
-    taggedRect.mRect.Construct(MakeRefPtr<DOMRectReadOnly>(
-        ToSupports(this), r.x, r.y, r.width, r.height));
+    taggedRect.mX = r.x;
+    taggedRect.mY = r.y;
+    taggedRect.mWidth = r.width;
+    taggedRect.mHeight = r.height;
     taggedRect.mType.Construct() = [&] {
       if (frame->IsTextFrame()) {
         nsStyleUtil::GetSerializedColorValue(

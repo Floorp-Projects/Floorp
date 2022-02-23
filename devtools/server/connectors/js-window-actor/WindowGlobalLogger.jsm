@@ -44,20 +44,28 @@ const WindowGlobalLogger = {
     const { browsingContext } = windowGlobal;
     const { parent } = browsingContext;
     const windowGlobalUri = getWindowGlobalUri(windowGlobal);
+    const isInitialDocument =
+      "isInitialDocument" in windowGlobal
+        ? windowGlobal.isInitialDocument
+        : windowGlobal.browsingContext.window?.document.isInitialDocument;
 
     const details = [];
     details.push(
       "BrowsingContext.browserId: " + browsingContext.browserId,
       "BrowsingContext.id: " + browsingContext.id,
       "innerWindowId: " + windowGlobal.innerWindowId,
+      "opener.id: " + browsingContext.opener?.id,
       "pid: " + windowGlobal.osPid,
       "isClosed: " + windowGlobal.isClosed,
       "isInProcess: " + windowGlobal.isInProcess,
       "isCurrentGlobal: " + windowGlobal.isCurrentGlobal,
+      "isProcessRoot: " + windowGlobal.isProcessRoot,
       "currentRemoteType: " + browsingContext.currentRemoteType,
       "hasParent: " + (parent ? parent.id : "no"),
       "uri: " + (windowGlobalUri ? windowGlobalUri : "no uri"),
-      "isProcessRoot: " + windowGlobal.isProcessRoot
+      "isProcessRoot: " + windowGlobal.isProcessRoot,
+      "BrowsingContext.isContent: " + windowGlobal.browsingContext.isContent,
+      "isInitialDocument: " + isInitialDocument
     );
 
     const header = "[WindowGlobalLogger] " + message;

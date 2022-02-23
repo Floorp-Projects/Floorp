@@ -32,33 +32,5 @@ exports[`Footer component renders 1`] = `
       </Localized>
     </button>
   </Localized>
-  <Localized
-    attrs={
-      Object {
-        "title": true,
-      }
-    }
-    id="compatibility-feedback-button-title"
-  >
-    <button
-      className="compatibility-footer__button"
-      onClick={[Function]}
-      title="compatibility-feedback-button-title"
-    >
-      <img
-        className="compatibility-footer__icon"
-        src="chrome://devtools/skin/images/report.svg"
-      />
-      <Localized
-        id="compatibility-feedback-button-label"
-      >
-        <label
-          className="compatibility-footer__label"
-        >
-          compatibility-feedback-button-label
-        </label>
-      </Localized>
-    </button>
-  </Localized>
 </footer>
 `;

@@ -809,7 +809,11 @@ var DownloadIntegration = {
         (mimeInfo &&
           this.shouldViewDownloadInternally(mimeInfo.type, fileExtension) &&
           !mimeInfo.alwaysAskBeforeHandling &&
-          mimeInfo.preferredAction === Ci.nsIHandlerInfo.handleInternally &&
+          (mimeInfo.preferredAction === Ci.nsIHandlerInfo.handleInternally ||
+            (["image/svg+xml", "text/xml", "application/xml"].includes(
+              mimeInfo.type
+            ) &&
+              mimeInfo.preferredAction === Ci.nsIHandlerInfo.saveToDisk)) &&
           !aDownload.launchWhenSucceeded)
       ) {
         DownloadUIHelper.loadFileIn(file, {

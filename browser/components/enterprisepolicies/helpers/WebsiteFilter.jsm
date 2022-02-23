@@ -101,6 +101,9 @@ let WebsiteFilter = {
         true
       );
     }
+    // We have to do this to catch 30X redirects.
+    // See bug 456957.
+    Services.obs.addObserver(this, "http-on-examine-response", true);
   },
 
   shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
@@ -131,10 +134,42 @@ let WebsiteFilter = {
   shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
     return Ci.nsIContentPolicy.ACCEPT;
   },
+  observe(subject, topic, data) {
+    try {
+      let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+      if (
+        !channel.isDocument ||
+        channel.responseStatus < 300 ||
+        channel.responseStatus >= 400
+      ) {
+        return;
+      }
+      let location = channel.getResponseHeader("location");
+      // location might not be a fully qualified URL
+      let url;
+      try {
+        url = new URL(location);
+      } catch (e) {
+        url = new URL(location, channel.URI.spec);
+      }
+      if (this._blockPatterns.matches(url.href.toLowerCase())) {
+        if (
+          !this._exceptionsPatterns ||
+          !this._exceptionsPatterns.matches(url.href.toLowerCase())
+        ) {
+          channel.cancel(Cr.NS_ERROR_BLOCKED_BY_POLICY);
+        }
+      }
+    } catch (e) {}
+  },
   classDescription: "Policy Engine File Content Policy",
   contractID: "@mozilla-org/policy-engine-file-content-policy-service;1",
   classID: Components.ID("{c0bbb557-813e-4e25-809d-b46a531a258f}"),
-  QueryInterface: ChromeUtils.generateQI(["nsIContentPolicy"]),
+  QueryInterface: ChromeUtils.generateQI([
+    "nsIContentPolicy",
+    "nsIObserver",
+    "nsISupportsWeakReference",
+  ]),
   createInstance(outer, iid) {
     return this.QueryInterface(iid);
   },

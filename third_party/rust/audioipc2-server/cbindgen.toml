@@ -7,7 +7,7 @@ braces = "SameLine"
 line_length = 100
 tab_width = 2
 language = "C++"
-namespaces = ["mozilla", "audioipc"]
+namespaces = ["mozilla", "audioipc2"]
 
 [export]
 item_types = ["globals", "enums", "structs", "unions", "typedefs", "opaque", "functions", "constants"]

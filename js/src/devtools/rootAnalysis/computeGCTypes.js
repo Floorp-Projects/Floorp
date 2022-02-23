@@ -9,8 +9,10 @@
 loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
 
-var gcTypes_filename = scriptArgs[0] || "gcTypes.txt";
-var typeInfo_filename = scriptArgs[1] || "typeInfo.txt";
+var options = parse_options([
+    { name: "gcTypes", default: "gcTypes.txt" },
+    { name: "typeInfo", default: "typeInfo.txt" }
+]);
 
 var typeInfo = {
     'GCPointers': [],
@@ -488,7 +490,7 @@ function explain(csu, indent, seen) {
     }
 }
 
-var origOut = os.file.redirect(gcTypes_filename);
+var origOut = os.file.redirect(options.gcTypes);
 
 for (var csu in gcTypes) {
     print("GCThing: " + csu);
@@ -500,7 +502,7 @@ for (var csu in gcPointers) {
 }
 
 // Redirect output to the typeInfo file and close the gcTypes file.
-os.file.close(os.file.redirect(typeInfo_filename));
+os.file.close(os.file.redirect(options.typeInfo));
 
 // Compute the set of types that suppress GC within their RAII scopes (eg
 // AutoSuppressGC, AutoSuppressGCForAnalysis).

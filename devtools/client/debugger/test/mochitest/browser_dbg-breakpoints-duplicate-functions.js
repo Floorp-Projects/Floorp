@@ -2,21 +2,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// tests to make sure we do not accidentally slide the breakpoint up to the first
+// Tests to make sure we do not accidentally slide the breakpoint up to the first
 // function with the same name in the file.
+// TODO: Likely to remove this test when removing the breakpoint sliding functionality
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-duplicate-functions.html",
     "doc-duplicate-functions"
   );
-  const source = findSource(dbg, "doc-duplicate-functions");
+  let source = findSource(dbg, "doc-duplicate-functions");
 
   await selectSource(dbg, source.url);
-  await addBreakpoint(dbg, source.url, 19);
+  await addBreakpoint(dbg, source.url, 21);
 
-  await reload(dbg, source.url);
+  await reload(dbg, "doc-duplicate-functions");
+
   await waitForState(dbg, state => dbg.selectors.getBreakpointCount() == 1);
 
   const firstBreakpoint = dbg.selectors.getBreakpointsList()[0];
-  is(firstBreakpoint.location.line, 19, "Breakpoint is on line 19");
+  is(firstBreakpoint.location.line, 21, "Breakpoint is on line 21");
+
+  // Make sure the breakpoint set on line 19 gets hit
+  await invokeInTab("b");
+  invokeInTab("func");
+  await waitForPaused(dbg);
+
+  source = findSource(dbg, "doc-duplicate-functions");
+  assertPausedAtSourceAndLine(dbg, source.id, 21);
+  await assertBreakpoint(dbg, 21);
+
+  await resume(dbg);
 });

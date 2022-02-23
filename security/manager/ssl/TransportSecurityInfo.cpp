@@ -956,8 +956,8 @@ void RememberCertErrorsTable::LookupCertErrorBits(
   infoObject->mIsUntrusted = bits.mIsUntrusted;
 }
 
-void TransportSecurityInfo::SetStatusErrorBits(nsNSSCertificate* cert,
-                                               uint32_t collected_errors) {
+void TransportSecurityInfo::SetStatusErrorBits(
+    const nsCOMPtr<nsIX509Cert>& cert, uint32_t collected_errors) {
   SetServerCert(cert, EVStatus::NotEV);
 
   mHaveCertErrorBits = true;
@@ -985,11 +985,7 @@ static nsresult CreateCertChain(nsTArray<RefPtr<nsIX509Cert>>& aOutput,
   nsTArray<nsTArray<uint8_t>> certList = std::move(aCertList);
   aOutput.Clear();
   for (auto& certBytes : certList) {
-    RefPtr<nsIX509Cert> cert = nsNSSCertificate::ConstructFromDER(
-        BitwiseCast<char*, uint8_t*>(certBytes.Elements()), certBytes.Length());
-    if (!cert) {
-      return NS_ERROR_FAILURE;
-    }
+    RefPtr<nsIX509Cert> cert = new nsNSSCertificate(std::move(certBytes));
     aOutput.AppendElement(cert);
   }
   return NS_OK;
@@ -1011,8 +1007,8 @@ NS_IMETHODIMP TransportSecurityInfo::GetServerCert(nsIX509Cert** aServerCert) {
   return NS_OK;
 }
 
-void TransportSecurityInfo::SetServerCert(nsNSSCertificate* aServerCert,
-                                          EVStatus aEVStatus) {
+void TransportSecurityInfo::SetServerCert(
+    const nsCOMPtr<nsIX509Cert>& aServerCert, EVStatus aEVStatus) {
   MOZ_ASSERT(aServerCert);
   MutexAutoLock lock(mMutex);
 

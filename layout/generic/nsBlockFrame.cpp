@@ -23,6 +23,7 @@
 #include "mozilla/ToString.h"
 #include "mozilla/UniquePtr.h"
 
+#include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -43,7 +44,6 @@
 #include "mozilla/Sprintf.h"
 #include "nsFloatManager.h"
 #include "prenv.h"
-#include "plstr.h"
 #include "nsError.h"
 #include "nsIScrollableFrame.h"
 #include <algorithm>
@@ -327,7 +327,7 @@ void nsBlockFrame::InitDebugFlags() {
         const BlockDebugFlags* bdf = gFlags;
         const BlockDebugFlags* end = gFlags + NUM_DEBUG_FLAGS;
         for (; bdf < end; bdf++) {
-          if (PL_strcasecmp(bdf->name, flags) == 0) {
+          if (nsCRT::strcasecmp(bdf->name, flags) == 0) {
             *(bdf->on) = true;
             printf("nsBlockFrame: setting %s debug flag on\n", bdf->name);
             gNoisy = true;

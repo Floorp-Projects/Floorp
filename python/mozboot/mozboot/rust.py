@@ -4,9 +4,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
 import platform as platform_mod
 import sys
+
 
 # Base url for pulling the rustup installer.
 # Use the no-CNAME host for compatibilty with Python 2.7
@@ -150,14 +150,6 @@ def make_checksums(version, validate=False):
 
 if __name__ == "__main__":
     """Allow invoking the module as a utility to update checksums."""
-
-    # Hook the requests module from the greater source tree. We can't import
-    # this at the module level since we might be imported into the bootstrap
-    # script in standalone mode.
-    #
-    # This module is necessary for correct https certificate verification.
-    mod_path = os.path.dirname(__file__)
-    sys.path.insert(0, os.path.join(mod_path, "..", "..", "requests"))
 
     update = False
     if len(sys.argv) > 1:

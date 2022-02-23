@@ -454,8 +454,6 @@ void GIOChannelChild::SetupNeckoTarget() {
   if (!mNeckoTarget) {
     return;
   }
-
-  gNeckoChild->SetEventTargetForActor(this, mNeckoTarget);
 }
 
 }  // namespace net

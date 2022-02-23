@@ -618,7 +618,7 @@ pub unsafe extern "C" fn wgpu_server_queue_write_action(
             gfx_select!(self_id => global.queue_write_buffer(self_id, dst, offset, data))
         }
         QueueWriteAction::Texture { dst, layout, size } => {
-            gfx_select!(self_id => global.queue_write_texture(self_id, &dst, &data, &layout, &size))
+            gfx_select!(self_id => global.queue_write_texture(self_id, &dst, data, &layout, &size))
         }
     };
     if let Err(err) = result {

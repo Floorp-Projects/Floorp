@@ -555,12 +555,10 @@ struct BaseRect {
   void Scale(T aScale) { Scale(aScale, aScale); }
   // Scale 'this' by aXScale and aYScale, without doing any rounding.
   void Scale(T aXScale, T aYScale) {
-    T right = XMost() * aXScale;
-    T bottom = YMost() * aYScale;
     x = x * aXScale;
     y = y * aYScale;
-    width = right - x;
-    height = bottom - y;
+    width = width * aXScale;
+    height = height * aYScale;
   }
   // Scale 'this' by aScale, converting coordinates to integers so that the
   // result is the smallest integer-coordinate rectangle containing the

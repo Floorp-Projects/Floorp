@@ -266,9 +266,7 @@ class UniqueBuffer final {
 
   UniqueBuffer() = default;
 
-  ~UniqueBuffer() {
-    reset();
-  }
+  ~UniqueBuffer() { reset(); }
 
   UniqueBuffer(UniqueBuffer&& rhs) { *this = std::move(rhs); }
 
@@ -935,6 +933,7 @@ namespace dom {
 class Element;
 class ImageBitmap;
 class ImageData;
+class OffscreenCanvas;
 }  // namespace dom
 
 struct TexImageSource {
@@ -946,6 +945,8 @@ struct TexImageSource {
 
   const dom::ImageBitmap* mImageBitmap = nullptr;
   const dom::ImageData* mImageData = nullptr;
+
+  const dom::OffscreenCanvas* mOffscreenCanvas = nullptr;
 
   const dom::Element* mDomElem = nullptr;
   ErrorResult* mOut_error = nullptr;

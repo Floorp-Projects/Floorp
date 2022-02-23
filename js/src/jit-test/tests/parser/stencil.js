@@ -9,6 +9,12 @@ const optionsLazy = {
   lineNumber: 1,
 };
 
+const optionsLazyCache = {
+  fileName: "compileToStencil-DATA.js",
+  lineNumber: 1,
+  fillRuntimeCache: true,
+};
+
 function testMainThread(script_str) {
   const eval_f = eval;
   const stencil = compileToStencil(script_str, optionsFull);
@@ -24,6 +30,18 @@ function testMainThreadDelazifyAll(script_str) {
   }
   const eval_f = eval;
   const stencil = compileAndDelazifyAllToStencil(script_str, optionsLazy);
+  const result = evalStencil(stencil, optionsLazy);
+  assertEq(result, eval_f(script_str));
+}
+
+function testMainThreadCacheAll(script_str) {
+  if (isLcovEnabled()) {
+    // Code-coverage implies forceFullParse = true, and as such it cannot be
+    // used while testing to incrementally delazify.
+    return;
+  }
+  const eval_f = eval;
+  const stencil = compileAndDelazifyAllToStencil(script_str, optionsLazyCache);
   const result = evalStencil(stencil, optionsLazy);
   assertEq(result, eval_f(script_str));
 }
@@ -60,6 +78,22 @@ function f1() {
   return a1 + b1 + c1 + d1;
 }
 f1();
+`);
+
+testMainThreadCacheAll(`
+var a3 = 10;
+let b3 = 20, c3 = 30;
+const d3 = 40;
+function g3() {
+  function h3() {
+    return a3 + b3;
+  }
+  return h3() + c3;
+}
+function f3() {
+  return a3 + b3 + c3 + d3;
+}
+f3();
 `);
 
 if (helperThreadCount() > 0) {

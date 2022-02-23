@@ -30,7 +30,7 @@ function run_test() {
   // Set to allow the cert presented by our H3 server
   do_get_profile();
 
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
   Services.prefs.setBoolPref("network.http.altsvc.enabled", true);
   Services.prefs.setBoolPref("network.http.altsvc.oe", true);
   Services.prefs.setCharPref(
@@ -124,7 +124,7 @@ function h1ServerWK(metadata, response) {
 }
 
 function resetPrefs() {
-  Services.prefs.clearUserPref("network.http.http3.enabled");
+  Services.prefs.clearUserPref("network.http.http3.enable");
   Services.prefs.clearUserPref("network.dns.localDomains");
   Services.prefs.clearUserPref("network.http.altsvc.enabled");
   Services.prefs.clearUserPref("network.http.altsvc.oe");

@@ -37,6 +37,8 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::thread;
 use std::time;
+use url::{Host, Url};
+use webdriver::capabilities::BrowserCapabilities;
 use webdriver::command::WebDriverCommand::{
     AcceptAlert, AddCookie, CloseWindow, DeleteCookie, DeleteCookies, DeleteSession, DismissAlert,
     ElementClear, ElementClick, ElementSendKeys, ExecuteAsyncScript, ExecuteScript, Extension,
@@ -83,6 +85,8 @@ pub(crate) struct MarionetteSettings {
     pub(crate) host: String,
     pub(crate) port: Option<u16>,
     pub(crate) websocket_port: u16,
+    pub(crate) allow_hosts: Vec<Host>,
+    pub(crate) allow_origins: Vec<Url>,
 
     /// Brings up the Browser Toolbox when starting Firefox,
     /// letting you debug internals.
@@ -110,8 +114,8 @@ impl MarionetteHandler {
         session_id: Option<String>,
         new_session_parameters: &NewSessionParameters,
     ) -> WebDriverResult<MarionetteConnection> {
+        let mut fx_capabilities = FirefoxCapabilities::new(self.settings.binary.as_ref());
         let (capabilities, options) = {
-            let mut fx_capabilities = FirefoxCapabilities::new(self.settings.binary.as_ref());
             let mut capabilities = new_session_parameters
                 .match_browser(&mut fx_capabilities)?
                 .ok_or_else(|| {
@@ -122,7 +126,7 @@ impl MarionetteHandler {
                 })?;
 
             let options = FirefoxOptions::from_capabilities(
-                fx_capabilities.chosen_binary,
+                fx_capabilities.chosen_binary.clone(),
                 &self.settings,
                 &mut capabilities,
             )?;
@@ -134,14 +138,38 @@ impl MarionetteHandler {
         }
 
         let marionette_host = self.settings.host.to_owned();
-        let marionette_port = self
-            .settings
-            .port
-            .unwrap_or(get_free_port(&marionette_host)?);
+        let marionette_port = match self.settings.port {
+            Some(port) => port,
+            None => {
+                // If we're launching Firefox Desktop version 95 or later, and there's no port
+                // specified, we can pass 0 as the port and later read it back from
+                // the profile.
+                let can_use_profile: bool = options.android.is_none()
+                    && !self.settings.connect_existing
+                    && fx_capabilities
+                        .browser_version(&capabilities)
+                        .map(|opt_v| {
+                            opt_v
+                                .map(|v| {
+                                    fx_capabilities
+                                        .compare_browser_version(&v, ">=95")
+                                        .unwrap_or(false)
+                                })
+                                .unwrap_or(false)
+                        })
+                        .unwrap_or(false);
+                if can_use_profile {
+                    0
+                } else {
+                    get_free_port(&marionette_host)?
+                }
+            }
+        };
 
-        let websocket_port = match options.use_websocket {
-            true => Some(self.settings.websocket_port),
-            false => None,
+        let websocket_port = if options.use_websocket {
+            Some(self.settings.websocket_port)
+        } else {
+            None
         };
 
         let browser = if options.android.is_some() {
@@ -159,18 +187,22 @@ impl MarionetteHandler {
                 options,
                 marionette_port,
                 websocket_port,
+                self.settings.allow_hosts.to_owned(),
+                self.settings.allow_origins.to_owned(),
             )?)
         } else if !self.settings.connect_existing {
             Browser::Local(LocalBrowser::new(
                 options,
                 marionette_port,
+                self.settings.allow_hosts.to_owned(),
+                self.settings.allow_origins.to_owned(),
                 self.settings.jsdebugger,
             )?)
         } else {
-            Browser::Existing
+            Browser::Existing(marionette_port)
         };
         let session = MarionetteSession::new(session_id, capabilities);
-        MarionetteConnection::new(marionette_host, marionette_port, browser, session)
+        MarionetteConnection::new(marionette_host, browser, session)
     }
 
     fn close_connection(&mut self, wait_for_shutdown: bool) {
@@ -430,13 +462,10 @@ impl MarionetteSession {
                         "Failed to interpret script timeout duration as u64"
                     ),
                 };
-                // Check for the spec-compliant "pageLoad", but also for "page load",
-                // which was sent by Firefox 52 and earlier.
                 let page_load = try_opt!(
                     try_opt!(
                         resp.result
-                            .get("pageLoad")
-                            .or_else(|| resp.result.get("page load")),
+                            .get("pageLoad"),
                         ErrorStatus::UnknownError,
                         "Missing field: pageLoad"
                     )
@@ -740,7 +769,7 @@ fn try_convert_to_marionette_message(
                     flags: vec![AppStatus::eForceQuit],
                 },
             )),
-            Browser::Existing => Some(Command::WebDriver(
+            Browser::Existing(_) => Some(Command::WebDriver(
                 MarionetteWebDriverCommand::DeleteSession,
             )),
         },
@@ -1101,11 +1130,10 @@ struct MarionetteConnection {
 impl MarionetteConnection {
     fn new(
         host: String,
-        port: u16,
         mut browser: Browser,
         session: MarionetteSession,
     ) -> WebDriverResult<MarionetteConnection> {
-        let stream = match MarionetteConnection::connect(&host, port, &mut browser) {
+        let stream = match MarionetteConnection::connect(&host, &mut browser) {
             Ok(stream) => stream,
             Err(e) => {
                 if let Err(e) = browser.close(true) {
@@ -1121,16 +1149,15 @@ impl MarionetteConnection {
         })
     }
 
-    fn connect(host: &str, port: u16, browser: &mut Browser) -> WebDriverResult<TcpStream> {
+    fn connect(host: &str, browser: &mut Browser) -> WebDriverResult<TcpStream> {
         let timeout = time::Duration::from_secs(60);
         let poll_interval = time::Duration::from_millis(100);
         let now = time::Instant::now();
 
         debug!(
-            "Waiting {}s to connect to browser on {}:{}",
+            "Waiting {}s to connect to browser on {}",
             timeout.as_secs(),
             host,
-            port
         );
 
         loop {
@@ -1144,19 +1171,30 @@ impl MarionetteConnection {
                 }
             }
 
-            match MarionetteConnection::try_connect(host, port) {
-                Ok(stream) => {
-                    debug!("Connection to Marionette established on {}:{}.", host, port);
-                    return Ok(stream);
-                }
-                Err(e) => {
-                    if now.elapsed() < timeout {
-                        trace!("{}. Retrying in {:?}", e.to_string(), poll_interval);
-                        thread::sleep(poll_interval);
-                    } else {
-                        return Err(WebDriverError::new(ErrorStatus::Timeout, e.to_string()));
+            let last_err;
+
+            if let Some(port) = browser.marionette_port() {
+                match MarionetteConnection::try_connect(host, port) {
+                    Ok(stream) => {
+                        debug!("Connection to Marionette established on {}:{}.", host, port);
+                        return Ok(stream);
+                    }
+                    Err(e) => {
+                        let err_str = e.to_string();
+                        last_err = Some(err_str);
                     }
                 }
+            } else {
+                last_err = Some("Failed to read marionette port".into());
+            }
+            if now.elapsed() < timeout {
+                trace!("Retrying in {:?}", poll_interval);
+                thread::sleep(poll_interval);
+            } else {
+                return Err(WebDriverError::new(
+                    ErrorStatus::Timeout,
+                    last_err.unwrap_or_else(|| "Unknown error".into()),
+                ));
             }
         }
     }

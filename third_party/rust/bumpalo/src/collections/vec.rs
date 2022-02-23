@@ -1983,26 +1983,23 @@ __impl_slice_eq1! { Vec<'a, A>, &'b [B] }
 __impl_slice_eq1! { Vec<'a, A>, &'b mut [B] }
 // __impl_slice_eq1! { Cow<'a, [A]>, Vec<'b, B>, Clone }
 
-macro_rules! array_impls {
-    ($($N: expr)+) => {
-        $(
-            // NOTE: some less important impls are omitted to reduce code bloat
-            __impl_slice_eq1! { Vec<'a, A>, [B; $N] }
-            __impl_slice_eq1! { Vec<'a, A>, &'b [B; $N] }
-            // __impl_slice_eq1! { Vec<A>, &'b mut [B; $N] }
-            // __impl_slice_eq1! { Cow<'a, [A]>, [B; $N], Clone }
-            // __impl_slice_eq1! { Cow<'a, [A]>, &'b [B; $N], Clone }
-            // __impl_slice_eq1! { Cow<'a, [A]>, &'b mut [B; $N], Clone }
-        )+
-    }
+macro_rules! __impl_slice_eq1_array {
+    ($Lhs: ty, $Rhs: ty) => {
+        impl<'a, 'b, A, B, const N: usize> PartialEq<$Rhs> for $Lhs
+        where
+            A: PartialEq<B>,
+        {
+            #[inline]
+            fn eq(&self, other: &$Rhs) -> bool {
+                self[..] == other[..]
+            }
+        }
+    };
 }
 
-array_impls! {
-     0  1  2  3  4  5  6  7  8  9
-    10 11 12 13 14 15 16 17 18 19
-    20 21 22 23 24 25 26 27 28 29
-    30 31 32
-}
+__impl_slice_eq1_array! { Vec<'a, A>, [B; N] }
+__impl_slice_eq1_array! { Vec<'a, A>, &'b [B; N] }
+__impl_slice_eq1_array! { Vec<'a, A>, &'b mut [B; N] }
 
 /// Implements comparison of vectors, lexicographically.
 impl<'bump, T: 'bump + PartialOrd> PartialOrd for Vec<'bump, T> {
@@ -2070,6 +2067,18 @@ impl<'bump, T: 'bump> BorrowMut<[T]> for Vec<'bump, T> {
     #[inline]
     fn borrow_mut(&mut self) -> &mut [T] {
         &mut self[..]
+    }
+}
+
+impl<'bump, T> Drop for Vec<'bump, T> {
+    fn drop(&mut self) {
+        unsafe {
+            // use drop for [T]
+            // use a raw slice to refer to the elements of the vector as weakest necessary type;
+            // could avoid questions of validity in certain cases
+            ptr::drop_in_place(ptr::slice_from_raw_parts_mut(self.as_mut_ptr(), self.len))
+        }
+        // RawVec handles deallocation
     }
 }
 

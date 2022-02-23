@@ -142,11 +142,14 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   AV_FUNC(av_parser_init, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(av_parser_close, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(av_parser_parse2, AV_FUNC_AVCODEC_ALL)
+  AV_FUNC(avcodec_align_dimensions, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(avcodec_alloc_frame, (AV_FUNC_53 | AV_FUNC_54))
   AV_FUNC(avcodec_get_frame_defaults, (AV_FUNC_53 | AV_FUNC_54))
   AV_FUNC(avcodec_free_frame, AV_FUNC_54)
   AV_FUNC(avcodec_send_packet, AV_FUNC_58)
   AV_FUNC(avcodec_receive_frame, AV_FUNC_58)
+  AV_FUNC(avcodec_default_get_buffer2,
+          (AV_FUNC_55 | AV_FUNC_56 | AV_FUNC_57 | AV_FUNC_58))
   AV_FUNC_OPTION(av_rdft_init, AV_FUNC_AVCODEC_ALL)
   AV_FUNC_OPTION(av_rdft_calc, AV_FUNC_AVCODEC_ALL)
   AV_FUNC_OPTION(av_rdft_end, AV_FUNC_AVCODEC_ALL)
@@ -159,12 +162,24 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                           AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58))
   AV_FUNC(av_frame_unref, (AV_FUNC_AVUTIL_55 | AV_FUNC_AVUTIL_56 |
                            AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58))
+  AV_FUNC(av_image_check_size, AV_FUNC_AVUTIL_ALL)
+  AV_FUNC(av_image_get_buffer_size, AV_FUNC_AVUTIL_ALL)
+  AV_FUNC_OPTION(av_buffer_get_opaque,
+                 (AV_FUNC_AVUTIL_56 | AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58))
+  AV_FUNC(av_buffer_create, (AV_FUNC_AVUTIL_55 | AV_FUNC_AVUTIL_56 |
+                             AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58))
   AV_FUNC_OPTION(av_frame_get_colorspace, AV_FUNC_AVUTIL_ALL)
   AV_FUNC_OPTION(av_frame_get_color_range, AV_FUNC_AVUTIL_ALL)
+
 #ifdef MOZ_WAYLAND
   AV_FUNC_OPTION_SILENT(avcodec_get_hw_config, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_codec_iterate, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_codec_is_decoder, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_hwdevice_ctx_init, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_hwdevice_ctx_alloc, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_hwdevice_hwconfig_alloc, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_hwdevice_get_hwframe_constraints, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_hwframe_constraints_free, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_buffer_ref, AV_FUNC_AVUTIL_58)
   AV_FUNC_OPTION_SILENT(av_buffer_unref, AV_FUNC_AVUTIL_58)
   AV_FUNC_OPTION_SILENT(av_hwframe_transfer_get_formats, AV_FUNC_58)
@@ -172,6 +187,8 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   AV_FUNC_OPTION_SILENT(av_hwframe_ctx_alloc, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_dict_set, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_dict_free, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(avcodec_get_name, AV_FUNC_58)
+  AV_FUNC_OPTION_SILENT(av_get_pix_fmt_string, AV_FUNC_AVUTIL_58)
 #endif
 #undef AV_FUNC
 #undef AV_FUNC_OPTION
@@ -190,17 +207,6 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
     VA_FUNC_OPTION_SILENT(vaTerminate)
   }
 #  undef VA_FUNC_OPTION_SILENT
-
-#  define VAW_FUNC_OPTION_SILENT(func)                                   \
-    if (!(func = (decltype(func))PR_FindSymbol(mVALibWayland, #func))) { \
-      FFMPEG_LOG("Couldn't load function " #func);                       \
-    }
-
-  // mVALibWayland is optional and may not be present.
-  if (mVALibWayland) {
-    VAW_FUNC_OPTION_SILENT(vaGetDisplayWl)
-  }
-#  undef VAW_FUNC_OPTION_SILENT
 
 #  define VAD_FUNC_OPTION_SILENT(func)                               \
     if (!(func = (decltype(func))PR_FindSymbol(mVALibDrm, #func))) { \
@@ -247,9 +253,6 @@ void FFmpegLibWrapper::Unlink() {
   if (mVALib) {
     PR_UnloadLibrary(mVALib);
   }
-  if (mVALibWayland) {
-    PR_UnloadLibrary(mVALibWayland);
-  }
   if (mVALibDrm) {
     PR_UnloadLibrary(mVALibDrm);
   }
@@ -259,40 +262,31 @@ void FFmpegLibWrapper::Unlink() {
 
 #ifdef MOZ_WAYLAND
 void FFmpegLibWrapper::LinkVAAPILibs() {
-  if (widget::GetDMABufDevice()->IsDMABufVAAPIEnabled()) {
-    PRLibSpec lspec;
-    lspec.type = PR_LibSpec_Pathname;
-    const char* libDrm = "libva-drm.so.2";
-    lspec.value.pathname = libDrm;
-    mVALibDrm = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
-    if (!mVALibDrm) {
-      FFMPEG_LOG("VA-API support: Missing or old %s library.\n", libDrm);
-    }
-
-    if (!StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled()) {
-      const char* libWayland = "libva-wayland.so.2";
-      lspec.value.pathname = libWayland;
-      mVALibWayland = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
-      if (!mVALibWayland) {
-        FFMPEG_LOG("VA-API support: Missing or old %s library.\n", libWayland);
-      }
-    }
-
-    if (mVALibWayland || mVALibDrm) {
-      const char* lib = "libva.so.2";
-      lspec.value.pathname = lib;
-      mVALib = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
-      // Don't use libva when it's missing vaExportSurfaceHandle.
-      if (mVALib && !PR_FindSymbol(mVALib, "vaExportSurfaceHandle")) {
-        PR_UnloadLibrary(mVALib);
-        mVALib = nullptr;
-      }
-      if (!mVALib) {
-        FFMPEG_LOG("VA-API support: Missing or old %s library.\n", lib);
-      }
-    }
-  } else {
+  if (!widget::GetDMABufDevice()->IsDMABufVAAPIEnabled()) {
     FFMPEG_LOG("VA-API FFmpeg is disabled by platform");
+    return;
+  }
+
+  PRLibSpec lspec;
+  lspec.type = PR_LibSpec_Pathname;
+  const char* libDrm = "libva-drm.so.2";
+  lspec.value.pathname = libDrm;
+  mVALibDrm = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
+  if (!mVALibDrm) {
+    FFMPEG_LOG("VA-API support: Missing or old %s library.\n", libDrm);
+    return;
+  }
+
+  const char* lib = "libva.so.2";
+  lspec.value.pathname = lib;
+  mVALib = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
+  // Don't use libva when it's missing vaExportSurfaceHandle.
+  if (mVALib && !PR_FindSymbol(mVALib, "vaExportSurfaceHandle")) {
+    PR_UnloadLibrary(mVALib);
+    mVALib = nullptr;
+  }
+  if (!mVALib) {
+    FFMPEG_LOG("VA-API support: Missing or old %s library.\n", lib);
   }
 }
 #endif
@@ -303,15 +297,18 @@ bool FFmpegLibWrapper::IsVAAPIAvailable() {
   return VA_FUNC_LOADED(avcodec_get_hw_config) &&
          VA_FUNC_LOADED(av_hwdevice_ctx_alloc) &&
          VA_FUNC_LOADED(av_hwdevice_ctx_init) &&
+         VA_FUNC_LOADED(av_hwdevice_hwconfig_alloc) &&
+         VA_FUNC_LOADED(av_hwdevice_get_hwframe_constraints) &&
+         VA_FUNC_LOADED(av_hwframe_constraints_free) &&
          VA_FUNC_LOADED(av_buffer_ref) && VA_FUNC_LOADED(av_buffer_unref) &&
          VA_FUNC_LOADED(av_hwframe_transfer_get_formats) &&
          VA_FUNC_LOADED(av_hwdevice_ctx_create_derived) &&
          VA_FUNC_LOADED(av_hwframe_ctx_alloc) && VA_FUNC_LOADED(av_dict_set) &&
-         VA_FUNC_LOADED(av_dict_free) &&
+         VA_FUNC_LOADED(av_dict_free) && VA_FUNC_LOADED(avcodec_get_name) &&
+         VA_FUNC_LOADED(av_get_pix_fmt_string) &&
          VA_FUNC_LOADED(vaExportSurfaceHandle) &&
          VA_FUNC_LOADED(vaSyncSurface) && VA_FUNC_LOADED(vaInitialize) &&
-         VA_FUNC_LOADED(vaTerminate) &&
-         (VA_FUNC_LOADED(vaGetDisplayWl) || VA_FUNC_LOADED(vaGetDisplayDRM));
+         VA_FUNC_LOADED(vaTerminate) && VA_FUNC_LOADED(vaGetDisplayDRM);
 }
 #endif
 

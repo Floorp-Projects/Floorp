@@ -82,7 +82,7 @@ function checkLibraryPaneVisibility(library, selectedPane) {
       "Bookmark/History tree is hidden"
     );
     Assert.ok(
-      !library.document.getElementById("downloadsRichListBox").hidden,
+      !library.document.getElementById("downloadsListBox").hidden,
       "Downloads are shown"
     );
   } else {
@@ -91,7 +91,7 @@ function checkLibraryPaneVisibility(library, selectedPane) {
       "Bookmark/History tree is shown"
     );
     Assert.ok(
-      library.document.getElementById("downloadsRichListBox").hidden,
+      library.document.getElementById("downloadsListBox").hidden,
       "Downloads are hidden"
     );
   }
@@ -522,6 +522,30 @@ async function hideBookmarksPanel(win = window) {
   // Confirm and close the dialog.
   win.document.getElementById("editBookmarkPanelDoneButton").click();
   await hiddenPromise;
+}
+
+// Create a temporary folder, set it as the default folder,
+// then remove the folder. This is used to ensure that the
+// default folder gets reset properly.
+async function createAndRemoveDefaultFolder() {
+  let tempFolder = await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.unfiledGuid,
+    children: [
+      {
+        title: "temp folder",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      },
+    ],
+  });
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.bookmarks.defaultLocation", tempFolder[0].guid]],
+  });
+
+  let defaultGUID = await PlacesUIUtils.defaultParentGuid;
+  is(defaultGUID, tempFolder[0].guid, "check default guid");
+
+  await PlacesUtils.bookmarks.remove(tempFolder);
 }
 
 registerCleanupFunction(() => {

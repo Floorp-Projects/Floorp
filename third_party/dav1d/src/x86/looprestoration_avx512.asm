@@ -875,9 +875,9 @@ ALIGN function_align
     mova           m16, m20
     paddusw        m17, m12
     psraw          m17, 4                ; min(z, 255) - 256
-    vpermt2b       m16, m17, m21         ; sgr_x_by_x[  0..127]
+    vpermt2b       m16, m17, m21         ; sgr_x_by_x[128..255]
     vpmovb2m        k3, m17
-    vpermi2b       m17, m18, m19         ; sgr_x_by_x[128..255]
+    vpermi2b       m17, m18, m19         ; sgr_x_by_x[  0..127]
     vmovdqu8   m17{k3}, m16              ; x
     pandn          m16, m13, m17
     psrld          m17, 16
@@ -936,9 +936,9 @@ ALIGN function_align
     mova           m16, m20
     paddusw        m17, m12
     psraw          m17, 4                ; min(z, 255) - 256
-    vpermt2b       m16, m17, m21         ; sgr_x_by_x[  0..127]
+    vpermt2b       m16, m17, m21         ; sgr_x_by_x[128..255]
     vpmovb2m        k3, m17
-    vpermi2b       m17, m18, m19         ; sgr_x_by_x[128..255]
+    vpermi2b       m17, m18, m19         ; sgr_x_by_x[  0..127]
     vmovdqu8   m17{k3}, m16              ; x
     pandn          m16, m13, m17
     psrld          m17, 16
@@ -1262,9 +1262,9 @@ ALIGN function_align
     mova           m16, m20
     paddusw        m17, m12
     psraw          m17, 4                ; min(z, 255) - 256
-    vpermt2b       m16, m17, m21         ; sgr_x_by_x[  0..127]
+    vpermt2b       m16, m17, m21         ; sgr_x_by_x[128..255]
     vpmovb2m        k3, m17
-    vpermi2b       m17, m18, m19         ; sgr_x_by_x[128..255]
+    vpermi2b       m17, m18, m19         ; sgr_x_by_x[  0..127]
     vmovdqu8   m17{k3}, m16              ; x
     pandn          m16, m13, m17
     psrld          m17, 16
@@ -1312,9 +1312,9 @@ ALIGN function_align
     mova           m16, m20
     paddusw        m17, m12
     psraw          m17, 4                ; min(z, 255) - 256
-    vpermt2b       m16, m17, m21         ; sgr_x_by_x[  0..127]
+    vpermt2b       m16, m17, m21         ; sgr_x_by_x[128..255]
     vpmovb2m        k3, m17
-    vpermi2b       m17, m18, m19         ; sgr_x_by_x[128..255]
+    vpermi2b       m17, m18, m19         ; sgr_x_by_x[  0..127]
     vmovdqu8   m17{k3}, m16              ; x
     pandn          m16, m13, m17
     psrld          m17, 16
@@ -1688,9 +1688,9 @@ ALIGN function_align
     mova           m16, m22
     paddusw        m17, m14
     psraw          m17, 4             ; min(z3, 255) - 256
-    vpermt2b       m16, m17, m23      ; sgr_x_by_x[  0..127]
+    vpermt2b       m16, m17, m23      ; sgr_x_by_x[128..255]
     vpmovb2m        k3, m17
-    vpermi2b       m17, m20, m21      ; sgr_x_by_x[128..255]
+    vpermi2b       m17, m20, m21      ; sgr_x_by_x[  0..127]
     vmovdqu8   m17{k3}, m16           ; x3
     pandn          m16, m24, m17
     psrld          m17, 16
@@ -1799,15 +1799,15 @@ ALIGN function_align
     paddusw        m17, m14
     mova           m16, m22
     psraw          m17, 4             ; min(z3, 255) - 256
-    vpermt2b       m16, m17, m23      ; sgr_x_by_x[  0..127]
+    vpermt2b       m16, m17, m23      ; sgr_x_by_x[128..255]
     vpmovb2m        k3, m17
-    vpermi2b       m17, m20, m21      ; sgr_x_by_x[128..255]
+    vpermi2b       m17, m20, m21      ; sgr_x_by_x[  0..127]
     paddusw        m19, m14
     mova           m18, m22
     psraw          m19, 4             ; min(z5, 255) - 256
-    vpermt2b       m18, m19, m23      ; sgr_x_by_x[  0..127]
+    vpermt2b       m18, m19, m23      ; sgr_x_by_x[128..255]
     vpmovb2m        k4, m19
-    vpermi2b       m19, m20, m21      ; sgr_x_by_x[128..255]
+    vpermi2b       m19, m20, m21      ; sgr_x_by_x[  0..127]
     vmovdqu8   m17{k3}, m16           ; x3
     vmovdqu8   m19{k4}, m18           ; x5
     pandn          m16, m24, m17
@@ -1879,9 +1879,9 @@ ALIGN function_align
     mova           m16, m22
     paddusw        m17, m14
     psraw          m17, 4             ; min(z3, 255) - 256
-    vpermt2b       m16, m17, m23      ; sgr_x_by_x[  0..127]
+    vpermt2b       m16, m17, m23      ; sgr_x_by_x[128..255]
     vpmovb2m        k3, m17
-    vpermi2b       m17, m20, m21      ; sgr_x_by_x[128..255]
+    vpermi2b       m17, m20, m21      ; sgr_x_by_x[  0..127]
     vmovdqu8   m17{k3}, m16           ; x3
     pandn          m16, m24, m17
     psrld          m17, 16
@@ -1955,15 +1955,15 @@ ALIGN function_align
     paddusw        m17, m14
     mova           m16, m22
     psraw          m17, 4             ; min(z3, 255) - 256
-    vpermt2b       m16, m17, m23      ; sgr_x_by_x[  0..127]
+    vpermt2b       m16, m17, m23      ; sgr_x_by_x[128..255]
     vpmovb2m        k3, m17
-    vpermi2b       m17, m20, m21      ; sgr_x_by_x[128..255]
+    vpermi2b       m17, m20, m21      ; sgr_x_by_x[  0..127]
     paddusw        m19, m14
     mova           m18, m22
     psraw          m19, 4             ; min(z5, 255) - 256
-    vpermt2b       m18, m19, m23      ; sgr_x_by_x[  0..127]
+    vpermt2b       m18, m19, m23      ; sgr_x_by_x[128..255]
     vpmovb2m        k4, m19
-    vpermi2b       m19, m20, m21      ; sgr_x_by_x[128..255]
+    vpermi2b       m19, m20, m21      ; sgr_x_by_x[  0..127]
     vmovdqu8   m17{k3}, m16           ; x3
     vmovdqu8   m19{k4}, m18           ; x5
     pandn          m16, m24, m17

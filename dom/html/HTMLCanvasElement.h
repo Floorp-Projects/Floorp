@@ -7,6 +7,7 @@
 #  define mozilla_dom_HTMLCanvasElement_h
 
 #  include "mozilla/Attributes.h"
+#  include "mozilla/StateWatching.h"
 #  include "mozilla/WeakPtr.h"
 #  include "nsIDOMEventListener.h"
 #  include "nsIObserver.h"
@@ -23,6 +24,7 @@ class nsICanvasRenderingContextInternal;
 class nsIInputStream;
 class nsITimerCallback;
 enum class gfxAlphaType;
+enum class FrameCaptureState : uint8_t;
 
 namespace mozilla {
 
@@ -81,23 +83,18 @@ class HTMLCanvasElementObserver final : public nsIObserver {
  * FrameCaptureListener is used by captureStream() as a way of getting video
  * frames from the canvas. On a refresh driver tick after something has been
  * drawn to the canvas since the last such tick, all registered
- * FrameCaptureListeners whose `mFrameCaptureRequested` equals `true`,
- * will be given a copy of the just-painted canvas.
+ * FrameCaptureListeners that report true for FrameCaptureRequested() will be
+ * given a copy of the just-painted canvas.
  * All FrameCaptureListeners get the same copy.
  */
 class FrameCaptureListener : public SupportsWeakPtr {
  public:
-  FrameCaptureListener() : mFrameCaptureRequested(false) {}
-
-  /*
-   * Called when a frame capture is desired on next paint.
-   */
-  void RequestFrameCapture() { mFrameCaptureRequested = true; }
+  FrameCaptureListener() = default;
 
   /*
    * Indicates to the canvas whether or not this listener has requested a frame.
    */
-  bool FrameCaptureRequested() const { return mFrameCaptureRequested; }
+  virtual bool FrameCaptureRequested(const TimeStamp& aTime) const = 0;
 
   /*
    * Interface through which new video frames will be provided while
@@ -108,8 +105,6 @@ class FrameCaptureListener : public SupportsWeakPtr {
 
  protected:
   virtual ~FrameCaptureListener() = default;
-
-  bool mFrameCaptureRequested;
 };
 
 class HTMLCanvasElement final : public nsGenericHTMLElement,
@@ -247,7 +242,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
    * Returns true when there is at least one registered FrameCaptureListener
    * that has requested a frame capture.
    */
-  bool IsFrameCaptureRequested() const;
+  bool IsFrameCaptureRequested(const TimeStamp& aTime) const;
 
   /*
    * Processes destroyed FrameCaptureListeners and removes them if necessary.
@@ -300,8 +295,9 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   // copies for future frames when no drawing has occurred.
   void MarkContextCleanForFrameCapture();
 
-  // Starts returning false when something is drawn.
-  bool IsContextCleanForFrameCapture();
+  // Returns non-null when the current context supports captureStream().
+  // The FrameCaptureState gets set to DIRTY when something is drawn.
+  Watchable<FrameCaptureState>* GetFrameCaptureState();
 
   nsresult GetContext(const nsAString& aContextId, nsISupports** aContext);
 
@@ -334,7 +330,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
                          const JS::Value& aEncoderOptions, nsAString& aDataURL);
   nsresult MozGetAsFileImpl(const nsAString& aName, const nsAString& aType,
                             nsIPrincipal& aSubjectPrincipal, File** aResult);
-  void CallPrintCallback();
+  MOZ_CAN_RUN_SCRIPT void CallPrintCallback();
 
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
@@ -350,6 +346,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   webgpu::CanvasContext* GetWebGPUContext();
 
   bool IsOffscreen() const { return !!mOffscreenCanvas; }
+  OffscreenCanvas* GetOffscreenCanvas() const { return mOffscreenCanvas; }
 
   RefPtr<layers::ImageContainer> GetImageContainer();
 

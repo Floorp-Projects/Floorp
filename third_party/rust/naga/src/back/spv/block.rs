@@ -390,7 +390,7 @@ impl<'w> BlockContext<'w> {
                     crate::BinaryOperator::Modulo => match left_ty_inner.scalar_kind() {
                         Some(crate::ScalarKind::Sint) => spirv::Op::SMod,
                         Some(crate::ScalarKind::Uint) => spirv::Op::UMod,
-                        Some(crate::ScalarKind::Float) => spirv::Op::FMod,
+                        Some(crate::ScalarKind::Float) => spirv::Op::FRem,
                         _ => unimplemented!(),
                     },
                     crate::BinaryOperator::Equal => match left_ty_inner.scalar_kind() {
@@ -433,9 +433,15 @@ impl<'w> BlockContext<'w> {
                         Some(crate::ScalarKind::Float) => spirv::Op::FOrdGreaterThanEqual,
                         _ => unimplemented!(),
                     },
-                    crate::BinaryOperator::And => spirv::Op::BitwiseAnd,
+                    crate::BinaryOperator::And => match left_ty_inner.scalar_kind() {
+                        Some(crate::ScalarKind::Bool) => spirv::Op::LogicalAnd,
+                        _ => spirv::Op::BitwiseAnd,
+                    },
                     crate::BinaryOperator::ExclusiveOr => spirv::Op::BitwiseXor,
-                    crate::BinaryOperator::InclusiveOr => spirv::Op::BitwiseOr,
+                    crate::BinaryOperator::InclusiveOr => match left_ty_inner.scalar_kind() {
+                        Some(crate::ScalarKind::Bool) => spirv::Op::LogicalOr,
+                        _ => spirv::Op::BitwiseOr,
+                    },
                     crate::BinaryOperator::LogicalAnd => spirv::Op::LogicalAnd,
                     crate::BinaryOperator::LogicalOr => spirv::Op::LogicalOr,
                     crate::BinaryOperator::ShiftLeft => spirv::Op::ShiftLeftLogical,
@@ -534,6 +540,8 @@ impl<'w> BlockContext<'w> {
                     Mf::Asinh => MathOp::Ext(spirv::GLOp::Asinh),
                     Mf::Acosh => MathOp::Ext(spirv::GLOp::Acosh),
                     Mf::Atanh => MathOp::Ext(spirv::GLOp::Atanh),
+                    Mf::Radians => MathOp::Ext(spirv::GLOp::Radians),
+                    Mf::Degrees => MathOp::Ext(spirv::GLOp::Degrees),
                     // decomposition
                     Mf::Ceil => MathOp::Ext(spirv::GLOp::Ceil),
                     Mf::Round => MathOp::Ext(spirv::GLOp::RoundEven),
@@ -656,6 +664,12 @@ impl<'w> BlockContext<'w> {
                         arg2_id,
                         arg3_id,
                     )),
+                    Mf::FindLsb => MathOp::Ext(spirv::GLOp::FindILsb),
+                    Mf::FindMsb => MathOp::Ext(match arg_scalar_kind {
+                        Some(crate::ScalarKind::Uint) => spirv::GLOp::FindUMsb,
+                        Some(crate::ScalarKind::Sint) => spirv::GLOp::FindSMsb,
+                        other => unimplemented!("Unexpected findMSB({:?})", other),
+                    }),
                     Mf::Pack4x8unorm => MathOp::Ext(spirv::GLOp::PackUnorm4x8),
                     Mf::Pack4x8snorm => MathOp::Ext(spirv::GLOp::PackSnorm4x8),
                     Mf::Pack2x16float => MathOp::Ext(spirv::GLOp::PackHalf2x16),
@@ -885,6 +899,7 @@ impl<'w> BlockContext<'w> {
             crate::Expression::ImageSample {
                 image,
                 sampler,
+                gather,
                 coordinate,
                 array_index,
                 offset,
@@ -894,6 +909,7 @@ impl<'w> BlockContext<'w> {
                 result_type_id,
                 image,
                 sampler,
+                gather,
                 coordinate,
                 array_index,
                 offset,

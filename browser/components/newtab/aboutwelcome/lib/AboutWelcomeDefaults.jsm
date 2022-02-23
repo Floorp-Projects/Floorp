@@ -30,7 +30,7 @@ const DEFAULT_WELCOME_CONTENT = {
         title: {
           string_id: "mr1-onboarding-pin-header",
         },
-        subtitle: {
+        hero_text: {
           string_id: "mr1-welcome-screen-hero-text",
         },
         help_text: {
@@ -226,6 +226,8 @@ async function getAddonFromRepository(data) {
     name: addonInfo.name,
     url: addonInfo.sourceURI.spec,
     iconURL: addonInfo.icons["64"] || addonInfo.icons["32"],
+    type: addonInfo.type,
+    themePreviewInfo: addonInfo.previews,
   };
 }
 

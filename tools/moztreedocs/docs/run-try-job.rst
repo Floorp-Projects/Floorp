@@ -10,13 +10,13 @@ Documentation has two try jobs associated :
       mach try fuzzy -q "'doc-generate"
 
   - ``doc-upload`` - This uploads documentation to `gecko-l1 bucket <http://gecko-docs.mozilla.org-l1.s3.us-west-2.amazonaws.com/index.html>`__ with the committed changes.
-  
+
    .. code-block:: shell
 
       mach try fuzzy -q "'doc-upload"
 
 .. important::
-   
+
    Running try jobs require the user to have try server access.
 
 .. note::

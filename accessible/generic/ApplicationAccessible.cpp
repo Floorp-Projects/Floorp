@@ -94,7 +94,9 @@ Relation ApplicationAccessible::RelationByType(
   return Relation();
 }
 
-nsIntRect ApplicationAccessible::Bounds() const { return nsIntRect(); }
+mozilla::LayoutDeviceIntRect ApplicationAccessible::Bounds() const {
+  return mozilla::LayoutDeviceIntRect();
+}
 
 nsRect ApplicationAccessible::BoundsInAppUnits() const { return nsRect(); }
 

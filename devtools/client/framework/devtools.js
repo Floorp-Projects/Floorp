@@ -57,6 +57,7 @@ const {
 
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
+const POPUP_DEBUG_PREF = "devtools.popups.debug";
 
 /**
  * DevTools is a class that represents a set of developer tools, it holds a
@@ -583,6 +584,25 @@ DevTools.prototype = {
     tab,
     { toolId, hostType, startTime, raise, reason, hostOptions } = {}
   ) {
+    // Popups are debugged via the toolbox of their opener document/tab.
+    // So avoid opening dedicated toolbox for them.
+    if (
+      tab.linkedBrowser.browsingContext.opener &&
+      Services.prefs.getBoolPref(POPUP_DEBUG_PREF)
+    ) {
+      const openerTab = tab.ownerGlobal.gBrowser.getTabForBrowser(
+        tab.linkedBrowser.browsingContext.opener.embedderElement
+      );
+      const openerDescriptor = await TabDescriptorFactory.getDescriptorForTab(
+        openerTab
+      );
+      if (this.getToolboxForDescriptor(openerDescriptor)) {
+        console.log(
+          "Can't open a toolbox for this document as this is debugged from its opener tab"
+        );
+        return;
+      }
+    }
     const descriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
     return this.showToolbox(descriptor, {
       toolId,

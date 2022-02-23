@@ -21,12 +21,15 @@ const TEST_URI = `
     .shift {
         margin-left: 300px;
     }
+    .has-before::before {
+      content: "-";
+    }
   </style>
   <div id="top" class="parent">
     <div id="child1" class="fixed shift">
         <div id="child2" class="fixed"></div>
     </div>
-    <div id="child3" class="shift">
+    <div id="child3" class="shift has-before">
         <div id="child4" class="fixed"></div>
     </div>
   </div>

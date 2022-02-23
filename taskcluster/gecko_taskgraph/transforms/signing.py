@@ -94,6 +94,23 @@ def add_entitlements_link(config, jobs):
 
 
 @transforms.add
+def add_requirements_link(config, jobs):
+    for job in jobs:
+        requirements_path = evaluate_keyed_by(
+            config.graph_config["mac-notarization"]["mac-requirements"],
+            "mac requirements",
+            {
+                "platform": job["primary-dependency"].attributes.get("build_platform"),
+            },
+        )
+        if requirements_path:
+            job["requirements-plist-url"] = config.params.file_url(
+                requirements_path,
+            )
+        yield job
+
+
+@transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
         dep_job = job["primary-dependency"]
@@ -222,8 +239,9 @@ def make_task_description(config, jobs):
                 " ({} not found in mapping)".format(worker_type_alias)
             )
             worker_type_alias = worker_type_alias_map[worker_type_alias]
-            if job.get("entitlements-url"):
-                task["worker"]["entitlements-url"] = job["entitlements-url"]
+            for attr in ("entitlements-url", "requirements-plist-url"):
+                if job.get(attr):
+                    task["worker"][attr] = job[attr]
 
         task["worker-type"] = worker_type_alias
         if treeherder:

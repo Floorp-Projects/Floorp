@@ -29,13 +29,13 @@ class Promise;
 class WritableStreamDefaultController;
 class WritableStreamDefaultWriter;
 
-class WritableStream final : public nsISupports, public nsWrapperCache {
+class WritableStream : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WritableStream)
 
  protected:
-  ~WritableStream();
+  virtual ~WritableStream();
 
  public:
   explicit WritableStream(const GlobalObject& aGlobal);

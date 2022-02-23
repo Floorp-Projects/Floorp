@@ -2422,6 +2422,11 @@ public class GeckoSessionTestRule implements TestRule {
     return (Boolean) webExtensionApiCall("UsingGpuProcess", null);
   }
 
+  /** Kills the GPU process cleanly with generating a crash report. */
+  public void killGpuProcess() {
+    webExtensionApiCall("KillGpuProcess", null);
+  }
+
   /** Causes the GPU process to crash. */
   public void crashGpuProcess() {
     webExtensionApiCall("CrashGpuProcess", null);

@@ -859,7 +859,7 @@ static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
 
 void* Instance::ensureAndGetIndirectStub(Tier tier, uint32_t funcIndex) {
   const CodeTier& codeTier = code(tier);
-  auto stubs = codeTier.lazyStubs().lock();
+  auto stubs = codeTier.lazyStubs().writeLock();
 
   void* stub_entry = stubs->lookupIndirectStub(funcIndex, tlsData());
   if (stub_entry) {
@@ -885,7 +885,7 @@ bool Instance::createManyIndirectStubs(
   }
 
   const CodeTier& codeTier = code(tier);
-  auto stubs = codeTier.lazyStubs().lock();
+  auto stubs = codeTier.lazyStubs().writeLock();
   return stubs->createManyIndirectStubs(targets, codeTier);
 }
 
@@ -893,7 +893,7 @@ void* Instance::getIndirectStub(uint32_t funcIndex, TlsData* targetTlsData,
                                 const Tier tier) const {
   MOZ_ASSERT(funcIndex != NullFuncIndex);
 
-  auto stubs = code(tier).lazyStubs().lock();
+  auto stubs = code(tier).lazyStubs().readLock();
   return stubs->lookupIndirectStub(funcIndex, targetTlsData);
 }
 
@@ -2148,7 +2148,7 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
   //
   // Also see doc block for stubs in WasmJS.cpp.
 
-  auto stubs = instance.code(tier).lazyStubs().lock();
+  auto stubs = instance.code(tier).lazyStubs().writeLock();
   *interpEntry = stubs->lookupInterpEntry(fe.funcIndex());
   if (*interpEntry) {
     return true;
@@ -2169,7 +2169,7 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
   }
 
   MOZ_RELEASE_ASSERT(prevTier == Tier::Baseline && tier == Tier::Optimized);
-  auto stubs2 = instance.code(tier).lazyStubs().lock();
+  auto stubs2 = instance.code(tier).lazyStubs().writeLock();
 
   // If it didn't have a stub in the first tier, background compilation
   // shouldn't have made one in the second tier.

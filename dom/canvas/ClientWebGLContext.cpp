@@ -1400,11 +1400,13 @@ void ClientWebGLContext::DeleteQuery(WebGLQueryJS* const obj) {
   // Unbind if current
 
   if (obj->mTarget) {
+    // Despite mTarget being set, we may not have called BeginQuery on this
+    // object. QueryCounter may also set mTarget.
     const auto slotTarget = QuerySlotTarget(obj->mTarget);
-    const auto& curForTarget =
-        *MaybeFind(state.mCurrentQueryByTarget, slotTarget);
+    const auto curForTarget =
+        MaybeFind(state.mCurrentQueryByTarget, slotTarget);
 
-    if (curForTarget == obj) {
+    if (curForTarget && *curForTarget == obj) {
       EndQuery(obj->mTarget);
     }
   }
@@ -3849,27 +3851,6 @@ static GLenum JSTypeMatchUnpackTypeError(GLenum unpackType,
   return 0;
 }
 
-static std::string ToString(const js::Scalar::Type type) {
-  switch (type) {
-#define _(X)                \
-  case js::Scalar::Type::X: \
-    return #X;
-    _(Int8)
-    _(Uint8)
-    _(Uint8Clamped)
-    _(Int16)
-    _(Uint16)
-    _(Int32)
-    _(Uint32)
-    _(Float32)
-#undef _
-    default:
-      break;
-  }
-  MOZ_ASSERT(false);
-  return std::string("#") + std::to_string(UnderlyingValue(type));
-}
-
 /////////////////////////////////////////////////
 
 static inline uvec2 CastUvec2(const ivec2& val) {
@@ -3952,6 +3933,10 @@ Maybe<webgl::TexUnpackBlobDesc> FromImageBitmap(
 webgl::TexUnpackBlobDesc FromImageData(GLenum target, uvec3 size,
                                        const dom::ImageData& imageData,
                                        dom::Uint8ClampedArray* const scopedArr);
+
+Maybe<webgl::TexUnpackBlobDesc> FromOffscreenCanvas(
+    const ClientWebGLContext&, GLenum target, uvec3 size,
+    const dom::OffscreenCanvas& src, ErrorResult* const out_error);
 
 Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext&,
                                             GLenum target, uvec3 size,
@@ -4043,7 +4028,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
         case LOCAL_GL_INVALID_OPERATION:
           EnqueueError(LOCAL_GL_INVALID_OPERATION,
                        "ArrayBufferView type %s not compatible with `type` %s.",
-                       ToString(jsType).c_str(), EnumString(pi.type).c_str());
+                       name(jsType), EnumString(pi.type).c_str());
           return {};
         default:
           break;
@@ -4070,6 +4055,12 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     if (src.mImageData) {
       return Some(webgl::FromImageData(imageTarget, explicitSize,
                                        *(src.mImageData), &scopedArr));
+    }
+
+    if (src.mOffscreenCanvas) {
+      return webgl::FromOffscreenCanvas(*this, imageTarget, explicitSize,
+                                        *(src.mOffscreenCanvas),
+                                        src.mOut_error);
     }
 
     if (src.mDomElem) {

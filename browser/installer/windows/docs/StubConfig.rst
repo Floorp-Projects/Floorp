@@ -34,5 +34,3 @@ This is the procedure that determines when one of the two cleanup prompts is sho
 2. Look for an existing installation by searching the registry for any copies of Firefox that are registered for potential file type associations. If none exist, show the reinstall prompt.
 3. Check if the existing installation is for the same channel that's being installed now. If not, don't show either prompt.
 4. Check the version of Firefox that the default profile we found in step 1 was last used with. This information comes from the profile's compatibility.ini file. If that version is more than 2 versions behind the current version, show the paveover prompt. Otherwise, don't show either prompt. Information about the current version is taken from `<https://product-details.mozilla.org/1.0/firefox_versions.json>`_.
-
-

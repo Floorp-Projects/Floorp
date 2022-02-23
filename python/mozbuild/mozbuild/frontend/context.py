@@ -664,6 +664,12 @@ class CompileFlags(TargetCompileFlags):
                 context.config.substs.get("MOZ_FILE_PREFIX_MAP_FLAGS"),
                 ("CXXFLAGS", "CFLAGS"),
             ),
+            (
+                # See bug 414641
+                "NO_STRICT_ALIASING",
+                ["-fno-strict-aliasing"],
+                ("CXXFLAGS", "CFLAGS"),
+            ),
         )
 
         TargetCompileFlags.__init__(self, context)

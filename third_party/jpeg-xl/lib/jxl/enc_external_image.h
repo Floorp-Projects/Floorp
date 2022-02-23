@@ -31,6 +31,11 @@ constexpr size_t RowSize(size_t xsize, size_t channels,
              : xsize * channels * DivCeil(bits_per_sample, kBitsPerByte);
 }
 
+Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
+                           size_t ysize, size_t bits_per_sample,
+                           JxlEndianness endianness, ThreadPool* pool,
+                           ImageF* channel, bool float_in);
+
 // Convert an interleaved pixel buffer to the internal ImageBundle
 // representation. This is the opposite of ConvertToExternal().
 Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
@@ -39,7 +44,9 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
                            size_t bits_per_sample, JxlEndianness endianness,
                            bool flipped_y, ThreadPool* pool, ImageBundle* ib,
                            bool float_in);
-
+Status BufferToImageF(const JxlPixelFormat& pixel_format, size_t xsize,
+                      size_t ysize, const void* buffer, size_t size,
+                      ThreadPool* pool, ImageF* channel);
 Status BufferToImageBundle(const JxlPixelFormat& pixel_format, uint32_t xsize,
                            uint32_t ysize, const void* buffer, size_t size,
                            jxl::ThreadPool* pool,

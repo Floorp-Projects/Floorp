@@ -2,6 +2,8 @@ import json
 
 import pytest
 
+from http.client import HTTPConnection
+
 from tests.support.http_request import HTTPRequest
 from . import using_context
 
@@ -70,3 +72,37 @@ def test_debugger_address_true_fission_override(session):
             session.execute_script("""return Services.appinfo.fissionAutostart""")
             is True
         )
+
+
+@pytest.mark.parametrize("origin", [None, "", "sometext", "http://localhost:1234"])
+@pytest.mark.capabilities(
+    {
+        "moz:debuggerAddress": True,
+        "moz:firefoxOptions": {
+            "prefs": {
+                "remote.active-protocols": 2,
+            }
+        },
+    }
+)
+def test_origin_header_allowed_when_bidi_disabled(session, origin):
+    debugger_address = session.capabilities.get("moz:debuggerAddress")
+    assert debugger_address is not None
+
+    url = f"http://{debugger_address}/json/version"
+
+    conn = HTTPConnection(debugger_address)
+    conn.putrequest("GET", url)
+
+    if origin is not None:
+        conn.putheader("Origin", origin)
+
+    conn.putheader("Connection", "upgrade")
+    conn.putheader("Upgrade", "websocket")
+    conn.putheader("Sec-WebSocket-Key", "dGhlIHNhbXBsZSBub25jZQ==")
+    conn.putheader("Sec-WebSocket-Version", "13")
+    conn.endheaders()
+
+    response = conn.getresponse()
+
+    assert response.status == 200

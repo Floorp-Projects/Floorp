@@ -68,7 +68,7 @@ add_task(async function test_register() {
 
   // Request a new credential and wait for the prompt.
   let active = true;
-  let request = promiseWebAuthnMakeCredential(tab, "indirect", {})
+  let request = promiseWebAuthnMakeCredential(tab, "none", {})
     .then(arrivingHereIsBad)
     .catch(expectAbortError)
     .then(() => (active = false));
@@ -133,7 +133,7 @@ add_task(async function test_tab_switching() {
 
   // Request a new credential and wait for the prompt.
   let active = true;
-  let request = promiseWebAuthnMakeCredential(tab_one, "indirect", {})
+  let request = promiseWebAuthnMakeCredential(tab_one, "none", {})
     .then(arrivingHereIsBad)
     .catch(expectAbortError)
     .then(() => (active = false));
@@ -179,7 +179,7 @@ add_task(async function test_window_switching() {
 
   // Request a new credential and wait for the prompt.
   let active = true;
-  let request = promiseWebAuthnMakeCredential(tab, "indirect", {})
+  let request = promiseWebAuthnMakeCredential(tab, "none", {})
     .then(arrivingHereIsBad)
     .catch(expectAbortError)
     .then(() => (active = false));

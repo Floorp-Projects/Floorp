@@ -27,6 +27,8 @@
 #  include "nsIObserverService.h"
 #endif
 #include "gfxPlatform.h"
+#include "nsAppRunner.h"
+#include "mozilla/XREAppData.h"
 #include "ScreenHelperGTK.h"
 #include "HeadlessScreenHelper.h"
 #include "mozilla/widget/ScreenManager.h"
@@ -257,13 +259,9 @@ nsresult nsAppShell::Init() {
       // See https://bugzilla.gnome.org/show_bug.cgi?id=747634
       //
       // Only bother doing this for the parent process, since it's the one
-      // creating top-level windows. (At this point, a child process hasn't
-      // received the list of registered chrome packages, so the
-      // GetBrandShortName call would fail anyway.)
-      nsAutoString brandName;
-      mozilla::widget::WidgetUtils::GetBrandShortName(brandName);
-      if (!brandName.IsEmpty()) {
-        gdk_set_program_class(NS_ConvertUTF16toUTF8(brandName).get());
+      // creating top-level windows.
+      if (gAppData) {
+        gdk_set_program_class(gAppData->remotingName);
       }
     }
   }
@@ -349,9 +347,20 @@ void nsAppShell::ScheduleNativeEventCallback() {
 }
 
 bool nsAppShell::ProcessNextNativeEvent(bool mayWait) {
-  bool ret = g_main_context_iteration(nullptr, mayWait);
+  bool didProcessEvent = false;
+  if (mayWait) {
+    // Block until we get an event. If g_main_context_iteration returns false,
+    // keep calling it until it returns true. It can return false if it is
+    // interrupted by a signal, for example during profiling, and we want to
+    // ignore such interruptions.
+    while (!didProcessEvent) {
+      didProcessEvent = g_main_context_iteration(nullptr, true);
+    }
+  } else {
+    didProcessEvent = g_main_context_iteration(nullptr, false);
+  }
 #ifdef MOZ_WAYLAND
   mozilla::widget::WaylandDispatchDisplays();
 #endif
-  return ret;
+  return didProcessEvent;
 }

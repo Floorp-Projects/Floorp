@@ -29,6 +29,8 @@ var { ExtensionCommon } = ChromeUtils.import(
   "resource://gre/modules/ExtensionCommon.jsm"
 );
 
+var { ExtensionError } = ExtensionUtils;
+
 global.EventEmitter = ExtensionCommon.EventEmitter;
 global.EventManager = ExtensionCommon.EventManager;
 
@@ -102,4 +104,28 @@ global.isValidCookieStoreId = function(storeId) {
     isPrivateCookieStoreId(storeId) ||
     isContainerCookieStoreId(storeId)
   );
+};
+
+global.getOriginAttributesPatternForCookieStoreId = function(cookieStoreId) {
+  if (isDefaultCookieStoreId(cookieStoreId)) {
+    return {
+      userContextId: Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID,
+      privateBrowsingId:
+        Ci.nsIScriptSecurityManager.DEFAULT_PRIVATE_BROWSING_ID,
+    };
+  }
+  if (isPrivateCookieStoreId(cookieStoreId)) {
+    return {
+      userContextId: Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID,
+      privateBrowsingId: 1,
+    };
+  }
+  if (isContainerCookieStoreId(cookieStoreId)) {
+    let userContextId = getContainerForCookieStoreId(cookieStoreId);
+    if (userContextId !== null) {
+      return { userContextId };
+    }
+  }
+
+  throw new ExtensionError("Invalid cookieStoreId");
 };

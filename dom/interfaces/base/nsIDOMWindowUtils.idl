@@ -127,6 +127,17 @@ interface nsIDOMWindowUtils : nsISupports {
   void getContentViewerSize(out uint32_t aDisplayWidth, out uint32_t aDisplayHeight);
 
   /**
+   * For any scrollable element, this allows you to override the default
+   * scroll behaviour and force autodir (which allows a mousewheel to
+   * horizontally scroll regions that only scroll on that one axis).
+   *
+   * See the documentation for mousewheel.autodir.enabled and
+   * mousewheel.autodir.honourroot for a more thorough explanation of
+   * what these behaviours do.
+   */
+  void setMousewheelAutodir(in Element aElement, in boolean aEnabled, in boolean aHonourRoot);
+
+  /**
    * For any scrollable element, this allows you to override the
    * visible region and draw more than what is visible, which is
    * useful for asynchronous drawing. The "displayport" will be

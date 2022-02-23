@@ -61,7 +61,7 @@ public class GeckoWebExecutor {
     FETCH_FLAGS_PRIVATE,
     FETCH_FLAGS_STREAM_FAILURE_TEST,
   })
-  /* package */ @interface FetchFlags {}
+  public @interface FetchFlags {}
 
   /** No special treatment. */
   public static final int FETCH_FLAGS_NONE = 0;

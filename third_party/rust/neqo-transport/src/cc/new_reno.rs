@@ -12,14 +12,8 @@ use std::fmt::{self, Display};
 use crate::cc::classic_cc::WindowAdjustment;
 use std::time::{Duration, Instant};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct NewReno {}
-
-impl Default for NewReno {
-    fn default() -> Self {
-        Self {}
-    }
-}
 
 impl Display for NewReno {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

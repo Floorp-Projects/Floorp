@@ -184,8 +184,6 @@ mod if_std {
 
     use core::pin::Pin;
     use core::task::{Context, Poll};
-    #[cfg(feature = "read-initializer")]
-    use futures_io::Initializer;
     use futures_io::{
         AsyncBufRead, AsyncRead, AsyncSeek, AsyncWrite, IoSlice, IoSliceMut, Result, SeekFrom,
     };
@@ -195,14 +193,6 @@ mod if_std {
         A: AsyncRead,
         B: AsyncRead,
     {
-        #[cfg(feature = "read-initializer")]
-        unsafe fn initializer(&self) -> Initializer {
-            match self {
-                Either::Left(x) => x.initializer(),
-                Either::Right(x) => x.initializer(),
-            }
-        }
-
         fn poll_read(
             self: Pin<&mut Self>,
             cx: &mut Context<'_>,

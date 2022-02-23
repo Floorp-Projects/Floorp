@@ -428,6 +428,16 @@ nsDOMWindowUtils::GetViewportFitInfo(nsAString& aViewportFit) {
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SetMousewheelAutodir(Element* aElement, bool aEnabled,
+                                       bool aHonourRoot) {
+  aElement->SetProperty(nsGkAtoms::forceMousewheelAutodir,
+                        reinterpret_cast<void*>(aEnabled));
+  aElement->SetProperty(nsGkAtoms::forceMousewheelAutodirHonourRoot,
+                        reinterpret_cast<void*>(aHonourRoot));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
                                            float aWidthPx, float aHeightPx,
                                            Element* aElement,

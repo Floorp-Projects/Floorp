@@ -25523,7 +25523,6 @@
                 "-Wno-shorten-64-to-32"
             ],
             "defines": [
-                "MULTI_MONITOR_SCREENSHARE",
                 "WEBRTC_USE_PIPEWIRE",
                 "USE_GLIB=1",
                 "_FILE_OFFSET_BITS=64",

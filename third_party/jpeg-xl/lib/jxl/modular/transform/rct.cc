@@ -78,9 +78,9 @@ Status InvRCT(Image& input, size_t begin_c, size_t rct_type, ThreadPool* pool) {
   constexpr decltype(&InvRCTRow<0>) inv_rct_row[] = {
       InvRCTRow<0>, InvRCTRow<1>, InvRCTRow<2>, InvRCTRow<3>,
       InvRCTRow<4>, InvRCTRow<5>, InvRCTRow<6>};
-  RunOnPool(
-      pool, 0, h, ThreadPool::SkipInit(),
-      [&](const int task, const int thread) {
+  JXL_RETURN_IF_ERROR(RunOnPool(
+      pool, 0, h, ThreadPool::NoInit,
+      [&](const uint32_t task, size_t /* thread */) {
         const size_t y = task;
         const pixel_type* in0 = input.channel[m].Row(y);
         const pixel_type* in1 = input.channel[m + 1].Row(y);
@@ -92,7 +92,7 @@ Status InvRCT(Image& input, size_t begin_c, size_t rct_type, ThreadPool* pool) {
             input.channel[m + ((permutation + 2 - permutation / 3) % 3)].Row(y);
         inv_rct_row[custom](in0, in1, in2, out0, out1, out2, w);
       },
-      "InvRCT");
+      "InvRCT"));
   return true;
 }
 

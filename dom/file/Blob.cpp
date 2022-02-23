@@ -10,10 +10,14 @@
 #include "MemoryBlobImpl.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/BodyStream.h"
+#ifdef MOZ_DOM_STREAMS
+#  include "mozilla/dom/ReadableStream.h"
+#endif
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "MultipartBlobImpl.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
 #include "nsIInputStream.h"
 #include "nsPIDOMWindow.h"
@@ -310,6 +314,15 @@ class BlobBodyStreamHolder final : public BodyStreamHolder {
 
   void MarkAsRead() override {}
 
+#ifdef MOZ_DOM_STREAMS
+  void SetReadableStreamBody(ReadableStream* aBody) override {
+    mStream = aBody;
+  }
+  ReadableStream* GetReadableStreamBody() override { return mStream; }
+
+ private:
+  RefPtr<ReadableStream> mStream;
+#else
   void SetReadableStreamBody(JSObject* aBody) override {
     MOZ_ASSERT(aBody);
     mStream = aBody;
@@ -319,6 +332,7 @@ class BlobBodyStreamHolder final : public BodyStreamHolder {
 
   // Public to make trace happy.
   JS::Heap<JSObject*> mStream;
+#endif
 
  protected:
   virtual ~BlobBodyStreamHolder() { NullifyStream(); }
@@ -328,16 +342,24 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(BlobBodyStreamHolder)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(BlobBodyStreamHolder,
                                                BodyStreamHolder)
+#ifndef MOZ_DOM_STREAMS
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStream)
+#endif
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BlobBodyStreamHolder,
                                                   BodyStreamHolder)
+#ifdef MOZ_DOM_STREAMS
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStream)
+#endif
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BlobBodyStreamHolder,
                                                 BodyStreamHolder)
   tmp->NullifyStream();
+#ifdef MOZ_DOM_STREAMS
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStream)
+#endif
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(BlobBodyStreamHolder, BodyStreamHolder)
@@ -348,7 +370,31 @@ NS_INTERFACE_MAP_END_INHERITING(BodyStreamHolder)
 
 }  // anonymous namespace
 
-#ifndef MOZ_DOM_STREAMS
+#ifdef MOZ_DOM_STREAMS
+already_AddRefed<ReadableStream> Blob::Stream(JSContext* aCx,
+                                              ErrorResult& aRv) {
+  nsCOMPtr<nsIInputStream> stream;
+  CreateInputStream(getter_AddRefs(stream), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  if (NS_WARN_IF(!mGlobal)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  RefPtr<BlobBodyStreamHolder> holder = new BlobBodyStreamHolder();
+
+  BodyStream::Create(aCx, holder, mGlobal, stream, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<ReadableStream> rStream = holder->GetReadableStreamBody();
+  return rStream.forget();
+}
+#else
 void Blob::Stream(JSContext* aCx, JS::MutableHandle<JSObject*> aStream,
                   ErrorResult& aRv) {
   nsCOMPtr<nsIInputStream> stream;

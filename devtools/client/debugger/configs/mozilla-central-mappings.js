@@ -49,7 +49,6 @@ module.exports = {
   "./source-editor": "devtools/client/sourceeditor/editor",
   "../editor/source-editor": "devtools/client/sourceeditor/editor",
   immutable: "devtools/client/shared/vendor/immutable",
-  lodash: "devtools/client/shared/vendor/lodash",
   react: "devtools/client/shared/vendor/react",
   "react-dom": "devtools/client/shared/vendor/react-dom",
   "react-dom-factories": "devtools/client/shared/vendor/react-dom-factories",

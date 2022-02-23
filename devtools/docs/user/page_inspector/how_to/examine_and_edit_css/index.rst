@@ -472,4 +472,3 @@ See also
 
 - Complete list of Page Inspector :ref:`Keyboard shortcuts <keyboard-shortcuts-page-inspector>`.
 - The Inspector also includes a number of specialized tools for working with particular CSS features, such as colors, fonts, and animations. To read about these see the list of :doc:`how to guides <../../index>`.
-

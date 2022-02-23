@@ -6,8 +6,7 @@
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
 *|*:root {
-  background-color: white;
-  color: black;
+  color-scheme: light dark;
   direction: ltr;
   -moz-control-character-visibility: visible;
   height: 100%;
@@ -45,57 +44,75 @@ span[id]:before {
   font-weight: normal;
   font-style: normal;
 }
-.highlight .start-tag {
- color: purple;
- font-weight: bold;
-}
+.highlight .start-tag,
 .highlight .end-tag {
- color: purple;
- font-weight: bold;
+  color: purple;
+  font-weight: bold;
 }
 .highlight .comment {
- color: green;
- font-style: italic;
+  color: green;
+  font-style: italic;
 }
 .highlight .cdata {
- color: #CC0066;
+  color: #CC0066;
 }
-.highlight .doctype {
- color: steelblue;
- font-style: italic;
+.highlight .doctype,
+.highlight .markupdeclaration {
+  color: steelblue;
+  font-style: italic;
 }
 .highlight .pi {
- color: orchid;
- font-style: italic;
+  color: orchid;
+  font-style: italic;
 }
 .highlight .entity {
- color: #FF4500;
- font-weight: normal;
+  color: #FF4500;
+  font-weight: normal;
 }
 .highlight .text {
   font-weight: normal;
 }
 .highlight .attribute-name {
- color: black;
- font-weight: bold;
+  font-weight: bold;
 }
 .highlight .attribute-value {
- color: blue;
- font-weight: normal;
+  color: blue;
+  font-weight: normal;
 }
-.highlight .markupdeclaration {
- color: steelblue;
- font-style: italic;
-}
-span:not(.error), a:not(.error) {
- unicode-bidi: embed;
+span:not(.error),
+a:not(.error) {
+  unicode-bidi: embed;
 }
 span[id] {
- unicode-bidi: isolate;
+  unicode-bidi: isolate;
 }
-.highlight .error,
-.highlight .error > :is(.start-tag, .end-tag, .comment, .cdata, .doctype,
-                        .pi, .entity, .attribute-name, .attribute-value) {
-  color: red;
+.highlight .error {
+  color: revert;
   font-weight: bold;
+  text-decoration: underline;
+  text-decoration-color: red;
+  text-decoration-style: dotted;
+  text-decoration-skip-ink: none;
+}
+@media (prefers-color-scheme: dark) {
+  .highlight .start-tag,
+  .highlight .end-tag {
+    color: #f55e5e;
+  }
+  .highlight .comment {
+    color: lightgreen;
+  }
+  .highlight .cdata {
+    color: #f068ac;
+  }
+  .highlight .doctype,
+  .highlight .markupdeclaration {
+    color: lightgray;
+  }
+  .highlight .entity {
+    color: #f18a65;
+  }
+  .highlight .attribute-value {
+    color: #97bbff;
+  }
 }

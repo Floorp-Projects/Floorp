@@ -46,6 +46,7 @@
           "samplingallthreads",
           "markersallthreads",
           "unregisteredthreads",
+          "processcpu",
           "responsiveness"
         ]
       },

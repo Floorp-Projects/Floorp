@@ -76,6 +76,11 @@ const WINDOW_HIDEABLE_FEATURES = [
   "scrollbars",
 ];
 
+const WINDOW_OPEN_FEATURES_MAP = {
+  locationbar: "location",
+  statusbar: "status",
+};
+
 // Messages that will be received via the Frame Message Manager.
 const MESSAGES = [
   // The content script sends us data that has been invalidated and needs to
@@ -5141,24 +5146,35 @@ var SessionStoreInternal = {
     argString.data = "";
 
     // Build feature string
-    let features = "chrome,dialog=no,suppressanimation,all";
+    let features = ["chrome", "dialog=no", "suppressanimation"];
     let winState = aState.windows[0];
-    WINDOW_ATTRIBUTES.forEach(function(aFeature) {
+    let hidden = winState.hidden?.split(",") || [];
+    if (!hidden.length) {
+      features.push("all");
+    } else {
+      features.push("resizable");
+      WINDOW_HIDEABLE_FEATURES.forEach(aFeature => {
+        if (!hidden.includes(aFeature)) {
+          features.push(WINDOW_OPEN_FEATURES_MAP[aFeature] || aFeature);
+        }
+      });
+    }
+    WINDOW_ATTRIBUTES.forEach(aFeature => {
       // Use !isNaN as an easy way to ignore sizemode and check for numbers
       if (aFeature in winState && !isNaN(winState[aFeature])) {
-        features += "," + aFeature + "=" + winState[aFeature];
+        features.push(aFeature + "=" + winState[aFeature]);
       }
     });
 
     if (winState.isPrivate) {
-      features += ",private";
+      features.push("private");
     }
 
     var window = Services.ww.openWindow(
       null,
       AppConstants.BROWSER_CHROME_URL,
       "_blank",
-      features,
+      features.join(","),
       argString
     );
 
@@ -5541,7 +5557,7 @@ var SessionStoreInternal = {
 
     if (newCount == 0) {
       this._setWindowStateBusyValue(aWindow, false);
-      this._sendWindowStateEvent(aWindow, "Ready");
+      this._sendWindowStateReadyEvent(aWindow);
     }
   },
 
@@ -5555,18 +5571,27 @@ var SessionStoreInternal = {
 
     if (newCount == 1) {
       this._setWindowStateBusyValue(aWindow, true);
-      this._sendWindowStateEvent(aWindow, "Busy");
+      this._sendWindowStateBusyEvent(aWindow);
     }
   },
 
   /**
-   * Dispatch an SSWindowState_____ event for the given window.
+   * Dispatch an SSWindowStateReady event for the given window.
    * @param aWindow the window
-   * @param aType the type of event, SSWindowState will be prepended to this string
    */
-  _sendWindowStateEvent: function ssi_sendWindowStateEvent(aWindow, aType) {
+  _sendWindowStateReadyEvent: function ssi_sendWindowStateReadyEvent(aWindow) {
     let event = aWindow.document.createEvent("Events");
-    event.initEvent("SSWindowState" + aType, true, false);
+    event.initEvent("SSWindowStateReady", true, false);
+    aWindow.dispatchEvent(event);
+  },
+
+  /**
+   * Dispatch an SSWindowStateBusy event for the given window.
+   * @param aWindow the window
+   */
+  _sendWindowStateBusyEvent: function ssi_sendWindowStateBusyEvent(aWindow) {
+    let event = aWindow.document.createEvent("Events");
+    event.initEvent("SSWindowStateBusy", true, false);
     aWindow.dispatchEvent(event);
   },
 

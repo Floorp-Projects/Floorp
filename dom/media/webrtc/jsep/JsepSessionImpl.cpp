@@ -1127,11 +1127,11 @@ nsresult JsepSessionImpl::MakeNegotiatedTransceiver(
   NS_ENSURE_SUCCESS(rv, rv);
 
   transceiver->mSendTrack.SetActive(sending);
-  transceiver->mSendTrack.Negotiate(answer, remote);
+  transceiver->mSendTrack.Negotiate(answer, remote, local);
 
   JsepTrack& recvTrack = transceiver->mRecvTrack;
   recvTrack.SetActive(receiving);
-  recvTrack.Negotiate(answer, remote);
+  recvTrack.Negotiate(answer, remote, local);
 
   if (transceiver->HasBundleLevel() && recvTrack.GetSsrcs().empty() &&
       recvTrack.GetMediaType() != SdpMediaSection::kApplication) {
@@ -1466,7 +1466,7 @@ nsresult JsepSessionImpl::SetRemoteDescriptionAnswer(JsepSdpType type,
   return NS_OK;
 }
 
-JsepTransceiver* JsepSessionImpl::GetTransceiverForLevel(size_t level) {
+JsepTransceiver* JsepSessionImpl::GetTransceiverForLevel(size_t level) const {
   for (auto& [id, transceiver] : mTransceivers) {
     (void)id;  // Lame, but no better way to do this right now.
     if (transceiver->HasLevel() && (transceiver->GetLevel() == level)) {
@@ -1477,7 +1477,8 @@ JsepTransceiver* JsepSessionImpl::GetTransceiverForLevel(size_t level) {
   return nullptr;
 }
 
-JsepTransceiver* JsepSessionImpl::GetTransceiverForMid(const std::string& mid) {
+JsepTransceiver* JsepSessionImpl::GetTransceiverForMid(
+    const std::string& mid) const {
   for (auto& [id, transceiver] : mTransceivers) {
     (void)id;  // Lame, but no better way to do this right now.
     if (transceiver->IsAssociated() && (transceiver->GetMid() == mid)) {
@@ -1561,7 +1562,7 @@ JsepTransceiver* JsepSessionImpl::GetTransceiverForRemote(
 }
 
 JsepTransceiver* JsepSessionImpl::GetTransceiverWithTransport(
-    const std::string& transportId) {
+    const std::string& transportId) const {
   for (const auto& [id, transceiver] : mTransceivers) {
     (void)id;  // Lame, but no better way to do this right now.
     if (transceiver->HasOwnTransport() &&
@@ -2054,91 +2055,33 @@ nsresult JsepSessionImpl::SetupIds() {
 
 void JsepSessionImpl::SetupDefaultCodecs() {
   // Supported audio codecs.
-  // Per jmspeex on IRC:
-  // For 32KHz sampling, 28 is ok, 32 is good, 40 should be really good
-  // quality.  Note that 1-2Kbps will be wasted on a stereo Opus channel
-  // with mono input compared to configuring it for mono.
-  // If we reduce bitrate enough Opus will low-pass us; 16000 will kill a
-  // 9KHz tone.  This should be adaptive when we're at the low-end of video
-  // bandwidth (say <100Kbps), and if we're audio-only, down to 8 or
-  // 12Kbps.
+  mSupportedCodecs.emplace_back(JsepAudioCodecDescription::CreateDefaultOpus());
+  mSupportedCodecs.emplace_back(JsepAudioCodecDescription::CreateDefaultG722());
+  mSupportedCodecs.emplace_back(JsepAudioCodecDescription::CreateDefaultPCMU());
+  mSupportedCodecs.emplace_back(JsepAudioCodecDescription::CreateDefaultPCMA());
   mSupportedCodecs.emplace_back(
-      new JsepAudioCodecDescription("109", "opus", 48000, 2));
-
-  mSupportedCodecs.emplace_back(
-      new JsepAudioCodecDescription("9", "G722", 8000, 1));
-
-  mSupportedCodecs.emplace_back(
-      new JsepAudioCodecDescription("0", "PCMU", 8000, 1));
-
-  mSupportedCodecs.emplace_back(
-      new JsepAudioCodecDescription("8", "PCMA", 8000, 1));
-
-  mSupportedCodecs.emplace_back(
-      new JsepAudioCodecDescription("101", "telephone-event", 8000, 1));
+      JsepAudioCodecDescription::CreateDefaultTelephoneEvent());
 
   bool useRtx =
       mRtxIsAllowed &&
       Preferences::GetBool("media.peerconnection.video.use_rtx", false);
   // Supported video codecs.
   // Note: order here implies priority for building offers!
-  UniquePtr<JsepVideoCodecDescription> vp8(
-      new JsepVideoCodecDescription("120", "VP8", 90000));
-  // Defaults for mandatory params
-  vp8->mConstraints.maxFs = 12288;  // Enough for 2048x1536
-  vp8->mConstraints.maxFps = 60;
-  if (useRtx) {
-    vp8->EnableRtx("124");
-  }
-  mSupportedCodecs.push_back(std::move(vp8));
+  mSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultVP8(useRtx));
+  mSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultVP9(useRtx));
+  mSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultH264_1(useRtx));
+  mSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultH264_0(useRtx));
+  mSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultUlpFec());
 
-  UniquePtr<JsepVideoCodecDescription> vp9(
-      new JsepVideoCodecDescription("121", "VP9", 90000));
-  // Defaults for mandatory params
-  vp9->mConstraints.maxFs = 12288;  // Enough for 2048x1536
-  vp9->mConstraints.maxFps = 60;
-  if (useRtx) {
-    vp9->EnableRtx("125");
-  }
-  mSupportedCodecs.push_back(std::move(vp9));
+  mSupportedCodecs.emplace_back(
+      JsepApplicationCodecDescription::CreateDefault());
 
-  UniquePtr<JsepVideoCodecDescription> h264_1(
-      new JsepVideoCodecDescription("126", "H264", 90000));
-  h264_1->mPacketizationMode = 1;
-  // Defaults for mandatory params
-  h264_1->mProfileLevelId = 0x42E00D;
-  if (useRtx) {
-    h264_1->EnableRtx("127");
-  }
-  mSupportedCodecs.push_back(std::move(h264_1));
-
-  UniquePtr<JsepVideoCodecDescription> h264_0(
-      new JsepVideoCodecDescription("97", "H264", 90000));
-  h264_0->mPacketizationMode = 0;
-  // Defaults for mandatory params
-  h264_0->mProfileLevelId = 0x42E00D;
-  if (useRtx) {
-    h264_0->EnableRtx("98");
-  }
-  mSupportedCodecs.push_back(std::move(h264_0));
-
-  UniquePtr<JsepVideoCodecDescription> ulpfec(new JsepVideoCodecDescription(
-      "123",     // payload type
-      "ulpfec",  // codec name
-      90000      // clock rate (match other video codecs)
-      ));
-  mSupportedCodecs.push_back(std::move(ulpfec));
-
-  mSupportedCodecs.emplace_back(new JsepApplicationCodecDescription(
-      "webrtc-datachannel", WEBRTC_DATACHANNEL_STREAMS_DEFAULT,
-      WEBRTC_DATACHANNEL_PORT_DEFAULT,
-      WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_LOCAL));
-
-  UniquePtr<JsepVideoCodecDescription> red(new JsepVideoCodecDescription(
-      "122",  // payload type
-      "red",  // codec name
-      90000   // clock rate (match other video codecs)
-      ));
+  auto red = JsepVideoCodecDescription::CreateDefaultRed();
   // Update the redundant encodings for the RED codec with the supported
   // codecs.  Note: only uses the video codecs.
   red->UpdateRedundantEncodings(mSupportedCodecs);

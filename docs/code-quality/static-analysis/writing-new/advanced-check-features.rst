@@ -87,7 +87,7 @@ And in our check() function, we can use it like so:
       const MatchFinder::MatchResult &Result) {
     const auto *MatchedDecl = Result.Nodes.getNodeAs<IfStmt>("node");
     const auto *EnumType = Result.Nodes.getNodeAs<EnumDecl>("enumType");
-  
+
     diag(MatchedDecl->getIfLoc(),
          "Enum comparisons to %0 in an if/else if block without a trailing else.",
          DiagnosticIDs::Warning) << EnumType->getName();

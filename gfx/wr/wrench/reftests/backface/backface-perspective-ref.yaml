@@ -1,0 +1,16 @@
+root:
+  items:
+    - type: stacking-context
+      bounds: 0 0 300 100
+      transform-style: flat
+      perspective: 100
+      items:
+      - type: stacking-context
+        bounds: 0 0 100 100
+        transform-style: flat
+        transform: rotate-y(-120)
+        backface-visible: true
+        items:
+        - type: rect
+          bounds: 0 0 100 100
+          color: red

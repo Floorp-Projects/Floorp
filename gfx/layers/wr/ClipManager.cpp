@@ -8,6 +8,7 @@
 
 #include "DisplayItemClipChain.h"
 #include "FrameMetrics.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -332,9 +333,17 @@ Maybe<wr::WrSpatialId> ClipManager::DefineScrollLayers(
   LayoutDevicePoint scrollOffset = LayoutDevicePoint::FromAppUnitsRounded(
       scrollableFrame->GetScrollPosition(), auPerDevPixel);
 
+  // Currently we track scroll-linked effects at the granularity of documents,
+  // not scroll frames, so we consider a scroll frame to have a scroll-linked
+  // effect whenever its containing document does.
+  const bool hasScrollLinkedEffect =
+      aItem->Frame()->PresContext()->Document()->HasScrollLinkedEffect();
+
   return Some(mBuilder->DefineScrollLayer(
       viewId, parent, wr::ToLayoutRect(contentRect),
       wr::ToLayoutRect(clipBounds), wr::ToLayoutVector2D(scrollOffset),
+      wr::ToWrAPZScrollGeneration(scrollableFrame->ScrollGenerationOnApz()),
+      wr::ToWrHasScrollLinkedEffect(hasScrollLinkedEffect),
       wr::SpatialKey(uint64_t(scrollFrame), 0, wr::SpatialKeyKind::Scroll)));
 }
 

@@ -15,7 +15,7 @@ namespace mozilla::dom {
 class CSSLayerBlockRule final : public css::GroupRule {
  public:
   CSSLayerBlockRule(RefPtr<RawServoLayerBlockRule> aRawRule, StyleSheet* aSheet,
-               css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
+                    css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -31,7 +31,6 @@ class CSSLayerBlockRule final : public css::GroupRule {
   void GetCssText(nsACString& aCssText) const final;
 
   void GetName(nsACString&) const;
-
 
   size_t SizeOfIncludingThis(MallocSizeOf) const override;
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;

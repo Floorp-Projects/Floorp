@@ -153,6 +153,9 @@ class MapObject : public NativeObject {
 
   ValueMap* getData() { return maybePtrFromReservedSlot<ValueMap>(DataSlot); }
 
+  [[nodiscard]] static bool get(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static bool set(JSContext* cx, unsigned argc, Value* vp);
+
  private:
   static const ClassSpec classSpec_;
   static const JSClassOps classOps_;
@@ -178,11 +181,9 @@ class MapObject : public NativeObject {
   [[nodiscard]] static bool size_impl(JSContext* cx, const CallArgs& args);
   [[nodiscard]] static bool size(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool get_impl(JSContext* cx, const CallArgs& args);
-  [[nodiscard]] static bool get(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool has_impl(JSContext* cx, const CallArgs& args);
   [[nodiscard]] static bool has(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool set_impl(JSContext* cx, const CallArgs& args);
-  [[nodiscard]] static bool set(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool delete_impl(JSContext* cx, const CallArgs& args);
   [[nodiscard]] static bool delete_(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool keys_impl(JSContext* cx, const CallArgs& args);

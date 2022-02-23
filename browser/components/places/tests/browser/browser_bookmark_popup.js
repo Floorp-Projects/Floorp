@@ -302,6 +302,18 @@ add_task(async function panel_shown_for_new_bookmark_keypress_no_autoclose() {
   });
 });
 
+add_task(async function bookmark_with_invalid_default_folder() {
+  await createAndRemoveDefaultFolder();
+
+  await test_bookmarks_popup({
+    isNewBookmark: true,
+    shouldAutoClose: true,
+    async popupShowFn(browser) {
+      EventUtils.synthesizeKey("d", { accelKey: true }, window);
+    },
+  });
+});
+
 add_task(
   async function panel_shown_for_new_bookmark_compositionstart_no_autoclose() {
     await test_bookmarks_popup({

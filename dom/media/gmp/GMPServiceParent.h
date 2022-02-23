@@ -7,6 +7,7 @@
 #define GMPServiceParent_h_
 
 #include "GMPService.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/gmp/PGMPServiceParent.h"
 #include "mozIGeckoMediaPluginChromeService.h"
 #include "nsClassHashtable.h"
@@ -16,11 +17,13 @@
 #include "nsIAsyncShutdown.h"
 #include "nsRefPtrHashtable.h"
 #include "nsThreadUtils.h"
+#include "mozilla/gmp/PGMPParent.h"
 #include "mozilla/MozPromise.h"
 #include "GMPStorage.h"
 
 template <class>
 struct already_AddRefed;
+using FlushFOGDataPromise = mozilla::dom::ContentParent::FlushFOGDataPromise;
 
 namespace mozilla {
 class OriginAttributesPattern;
@@ -71,6 +74,15 @@ class GeckoMediaPluginServiceParent final
   void ServiceUserDestroyed(GMPServiceParent* aServiceParent);
 
   void UpdateContentProcessGMPCapabilities();
+
+  void SendFlushFOGData(nsTArray<RefPtr<FlushFOGDataPromise>>& promises);
+
+  /*
+   * ** Test-only Method **
+   *
+   * Trigger GMP-process test metric instrumentation.
+   */
+  RefPtr<PGMPParent::TestTriggerMetricsPromise> TestTriggerMetrics();
 
  private:
   friend class GMPServiceParent;

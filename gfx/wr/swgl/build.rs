@@ -110,10 +110,7 @@ fn translate_shader(shader_key: &str, shader_dir: &str) {
 }
 
 fn main() {
-    let shader_dir = match std::env::var("MOZ_SRC") {
-        Ok(dir) => dir + "/gfx/wr/webrender/res",
-        Err(_) => std::env::var("CARGO_MANIFEST_DIR").unwrap() + "/../webrender/res",
-    };
+    let shader_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap() + "/../webrender/res";
 
     let shader_flags =
         ShaderFeatureFlags::GL |

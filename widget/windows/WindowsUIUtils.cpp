@@ -199,6 +199,20 @@ WindowsUIUtils::SetWindowIcon(mozIDOMWindowProxy* aWindow,
 }
 
 NS_IMETHODIMP
+WindowsUIUtils::SetWindowIconNoData(mozIDOMWindowProxy* aWindow) {
+  NS_ENSURE_ARG(aWindow);
+
+  nsCOMPtr<nsIWidget> widget =
+      nsGlobalWindowOuter::Cast(aWindow)->GetMainWidget();
+  nsWindow* window = static_cast<nsWindow*>(widget.get());
+
+  window->SetSmallIconNoData();
+  window->SetBigIconNoData();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 WindowsUIUtils::GetInTabletMode(bool* aResult) {
   if (mInTabletMode == eTabletModeUnknown) {
     UpdateTabletModeState();

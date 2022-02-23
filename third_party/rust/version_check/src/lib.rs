@@ -6,58 +6,68 @@
 //!
 //! # Examples
 //!
-//! Set a `cfg` flag in `build.rs` if the running compiler was determined to be
-//! at least version `1.13.0`:
+//! * Set a `cfg` flag in `build.rs` if the running compiler was determined to
+//!   be at least version `1.13.0`:
 //!
-//! ```rust
-//! extern crate version_check as rustc;
+//!   ```rust
+//!   extern crate version_check as rustc;
 //!
-//! if rustc::is_min_version("1.13.0").unwrap_or(false) {
-//!     println!("cargo:rustc-cfg=question_mark_operator");
-//! }
-//! ```
+//!   if rustc::is_min_version("1.13.0").unwrap_or(false) {
+//!       println!("cargo:rustc-cfg=question_mark_operator");
+//!   }
+//!   ```
 //!
-//! See [`is_max_version`] or [`is_exact_version`] to check if the compiler
-//! is _at most_ or _exactly_ a certain version.
+//!   See [`is_max_version`] or [`is_exact_version`] to check if the compiler
+//!   is _at most_ or _exactly_ a certain version.
 //!
-//! Check that the running compiler was released on or after `2018-12-18`:
+//! * Check that the running compiler was released on or after `2018-12-18`:
 //!
-//! ```rust
-//! extern crate version_check as rustc;
+//!   ```rust
+//!   extern crate version_check as rustc;
 //!
-//! match rustc::is_min_date("2018-12-18") {
-//!     Some(true) => "Yep! It's recent!",
-//!     Some(false) => "No, it's older.",
-//!     None => "Couldn't determine the rustc version."
-//! };
-//! ```
+//!   match rustc::is_min_date("2018-12-18") {
+//!       Some(true) => "Yep! It's recent!",
+//!       Some(false) => "No, it's older.",
+//!       None => "Couldn't determine the rustc version."
+//!   };
+//!   ```
 //!
-//! See [`is_max_date`] or [`is_exact_date`] to check if the compiler was
-//! released _prior to_ or _exactly on_ a certain date.
+//!   See [`is_max_date`] or [`is_exact_date`] to check if the compiler was
+//!   released _prior to_ or _exactly on_ a certain date.
 //!
-//! Check that the running compiler supports feature flags:
+//! * Check that the running compiler supports feature flags:
 //!
-//! ```rust
-//! extern crate version_check as rustc;
+//!   ```rust
+//!   extern crate version_check as rustc;
 //!
-//! match rustc::is_feature_flaggable() {
-//!     Some(true) => "Yes! It's a dev or nightly release!",
-//!     Some(false) => "No, it's stable or beta.",
-//!     None => "Couldn't determine the rustc version."
-//! };
-//! ```
+//!   match rustc::is_feature_flaggable() {
+//!       Some(true) => "Yes! It's a dev or nightly release!",
+//!       Some(false) => "No, it's stable or beta.",
+//!       None => "Couldn't determine the rustc version."
+//!   };
+//!   ```
 //!
-//! Check that the running compiler is on the stable channel:
+//! * Check that the running compiler supports a specific feature:
 //!
-//! ```rust
-//! extern crate version_check as rustc;
+//!   ```rust
+//!   extern crate version_check as rustc;
 //!
-//! match rustc::Channel::read() {
-//!     Some(c) if c.is_stable() => format!("Yes! It's stable."),
-//!     Some(c) => format!("No, the channel {} is not stable.", c),
-//!     None => format!("Couldn't determine the rustc version.")
-//! };
-//! ```
+//!   if let Some(true) = rustc::supports_feature("doc_cfg") {
+//!      println!("cargo:rustc-cfg=has_doc_cfg");
+//!   }
+//!   ```
+//!
+//! * Check that the running compiler is on the stable channel:
+//!
+//!   ```rust
+//!   extern crate version_check as rustc;
+//!
+//!   match rustc::Channel::read() {
+//!       Some(c) if c.is_stable() => format!("Yes! It's stable."),
+//!       Some(c) => format!("No, the channel {} is not stable.", c),
+//!       None => format!("Couldn't determine the rustc version.")
+//!   };
+//!   ```
 //!
 //! To interact with the version, release date, and release channel as structs,
 //! use [`Version`], [`Date`], and [`Channel`], respectively. The [`triple()`]
@@ -248,22 +258,76 @@ pub fn is_exact_version(version: &str) -> Option<bool> {
 ///
 /// In other words, if the channel is either "nightly" or "dev".
 ///
+/// Note that support for specific `rustc` features can be enabled or disabled
+/// via the `allow-features` compiler flag, which this function _does not_
+/// check. That is, this function _does not_ check whether a _specific_ feature
+/// is supported, but instead whether features are supported at all. To check
+/// for support for a specific feature, use [`supports_feature()`].
+///
 /// If the version could not be determined, returns `None`. Otherwise returns
 /// `true` if the running version supports feature flags and `false` otherwise.
 pub fn is_feature_flaggable() -> Option<bool> {
     Channel::read().map(|c| c.supports_features())
 }
 
+/// Checks whether the running or installed `rustc` supports `feature`.
+///
+/// Returns _true_ _iff_ [`is_feature_flaggable()`] returns `true` _and_ the
+/// feature is not disabled via exclusion in `allow-features` via `RUSTFLAGS` or
+/// `CARGO_ENCODED_RUSTFLAGS`. If the version could not be determined, returns
+/// `None`.
+///
+/// # Example
+///
+/// ```rust
+/// use version_check as rustc;
+///
+/// if let Some(true) = rustc::supports_feature("doc_cfg") {
+///    println!("cargo:rustc-cfg=has_doc_cfg");
+/// }
+/// ```
+pub fn supports_feature(feature: &str) -> Option<bool> {
+    match is_feature_flaggable() {
+        Some(true) => { /* continue */ }
+        Some(false) => return Some(false),
+        None => return None,
+    }
+
+    let env_flags = env::var_os("CARGO_ENCODED_RUSTFLAGS")
+        .map(|flags| (flags, '\x1f'))
+        .or_else(|| env::var_os("RUSTFLAGS").map(|flags| (flags, ' ')));
+
+    if let Some((flags, delim)) = env_flags {
+        const ALLOW_FEATURES: &'static str = "allow-features=";
+
+        let rustflags = flags.to_string_lossy();
+        let allow_features = rustflags.split(delim)
+            .map(|flag| flag.trim_left_matches("-Z").trim())
+            .filter(|flag| flag.starts_with(ALLOW_FEATURES))
+            .map(|flag| &flag[ALLOW_FEATURES.len()..]);
+
+        if let Some(allow_features) = allow_features.last() {
+            return Some(allow_features.split(',').any(|f| f.trim() == feature));
+        }
+    }
+
+    // If there are no `RUSTFLAGS` or `CARGO_ENCODED_RUSTFLAGS` or they don't
+    // contain an `allow-features` flag, assume compiler allows all features.
+    Some(true)
+}
+
 #[cfg(test)]
 mod tests {
+    use std::{env, fs};
+
     use super::version_and_date_from_rustc_version;
     use super::version_and_date_from_rustc_verbose_version;
 
     macro_rules! check_parse {
         (@ $f:expr, $s:expr => $v:expr, $d:expr) => ({
-            if let (Some(v), d) = $f($s) {
+            if let (Some(v), d) = $f(&$s) {
                 let e_d: Option<&str> = $d.into();
-                assert_eq!((v, d), ($v.into(), e_d.map(|s| s.into())));
+                assert_eq!((v, d), ($v.to_string(), e_d.map(|s| s.into())));
             } else {
                 panic!("{:?} didn't parse for version testing.", $s);
             }
@@ -364,5 +428,66 @@ mod tests {
                 host: x86_64-unknown-linux-gnu\n\
                 release: 1.50.0" => "1.50.0", None,
         };
+    }
+
+    fn read_static(verbose: bool, channel: &str, minor: usize) -> String {
+        use std::fs::File;
+        use std::path::Path;
+        use std::io::{BufReader, Read};
+
+        let subdir = if verbose { "verbose" } else { "terse" };
+        let path = Path::new(STATIC_PATH)
+            .join(channel)
+            .join(subdir)
+            .join(format!("rustc-1.{}.0", minor));
+
+        let file = File::open(path).unwrap();
+        let mut buf_reader = BufReader::new(file);
+        let mut contents = String::new();
+        buf_reader.read_to_string(&mut contents).unwrap();
+        contents
+    }
+
+    static STATIC_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/static");
+
+    static DATES: [&'static str; 51] = [
+        "2015-05-13", "2015-06-19", "2015-08-03", "2015-09-15", "2015-10-27",
+        "2015-12-04", "2016-01-19", "2016-02-29", "2016-04-11", "2016-05-18",
+        "2016-07-03", "2016-08-15", "2016-09-23", "2016-11-07", "2016-12-16",
+        "2017-01-19", "2017-03-10", "2017-04-24", "2017-06-06", "2017-07-17",
+        "2017-08-27", "2017-10-09", "2017-11-20", "2018-01-01", "2018-02-12",
+        "2018-03-25", "2018-05-07", "2018-06-19", "2018-07-30", "2018-09-11",
+        "2018-10-24", "2018-12-04", "2019-01-16", "2019-02-28", "2019-04-10",
+        "2019-05-20", "2019-07-03", "2019-08-13", "2019-09-23", "2019-11-04",
+        "2019-12-16", "2020-01-27", "2020-03-09", "2020-04-20", "2020-06-01",
+        "2020-07-13", "2020-08-24", "2020-10-07", "2020-11-16", "2020-12-29",
+        "2021-02-10",
+    ];
+
+    #[test]
+    fn test_stable_compatibility() {
+        if env::var_os("FORCE_STATIC").is_none() && fs::metadata(STATIC_PATH).is_err() {
+            // We exclude `/static` when we package `version_check`, so don't
+            // run if static files aren't present unless we know they should be.
+            return;
+        }
+
+        // Ensure we can parse all output from all Linux stable releases.
+        for v in 0..DATES.len() {
+            let (version, date) = (&format!("1.{}.0", v), Some(DATES[v]));
+            check_terse_parse!(read_static(false, "stable", v) => version, date,);
+            check_verbose_parse!(read_static(true, "stable", v) => version, date,);
+        }
+    }
+
+    #[test]
+    fn test_parse_current() {
+        let (version, channel) = (::Version::read(), ::Channel::read());
+        assert!(version.is_some());
+        assert!(channel.is_some());
+
+        if let Ok(known_channel) = env::var("KNOWN_CHANNEL") {
+            assert_eq!(channel, ::Channel::parse(&known_channel));
+        }
     }
 }

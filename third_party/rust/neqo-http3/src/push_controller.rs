@@ -5,7 +5,7 @@
 
 use crate::client_events::{Http3ClientEvent, Http3ClientEvents};
 use crate::connection::Http3Connection;
-use crate::hframe::HFrame;
+use crate::frames::HFrame;
 use crate::{CloseType, Error, Http3StreamInfo, HttpRecvStreamEvents, RecvStreamEvents, Res};
 use neqo_common::{qerror, qinfo, qtrace, Header};
 use neqo_transport::{Connection, StreamId};

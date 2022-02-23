@@ -422,6 +422,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   friend class js::jit::DebugModeOSRVolatileJitFrameIter;
   friend void js::ReportOutOfMemory(JSContext*);
   friend void js::ReportOverRecursed(JSContext*);
+  friend void js::ReportOversizedAllocation(JSContext*, const unsigned);
 
  public:
   inline JS::Result<> boolToResult(bool ok);
@@ -695,12 +696,13 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   }
 
 #ifdef DEBUG
-  // True if this context has ever called ReportOverRecursed.
-  js::ContextData<bool> hadOverRecursed_;
+  // True if this context has ever called ReportOverRecursed,
+  // ReportOutOfMemory, or ReportOversizedAllocation.
+  js::ContextData<bool> hadNondeterministicException_;
 
  public:
   bool hadNondeterministicException() const {
-    return hadOverRecursed_ || runtime()->hadOutOfMemory ||
+    return hadNondeterministicException_ ||
            js::oom::simulator.isThreadSimulatingAny();
   }
 #endif
@@ -727,6 +729,17 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   }
   const js::AutoCycleDetector::Vector& cycleDetectorVector() const {
     return cycleDetectorVector_.ref();
+  }
+
+ private:
+  js::ContextData<JS::PersistentRooted<JSFunction*>> watchtowerTestingCallback_;
+
+ public:
+  JSFunction*& watchtowerTestingCallbackRef() {
+    if (!watchtowerTestingCallback_.ref().initialized()) {
+      watchtowerTestingCallback_.ref().init(this);
+    }
+    return watchtowerTestingCallback_.ref().get();
   }
 
   /* Client opaque pointer. */

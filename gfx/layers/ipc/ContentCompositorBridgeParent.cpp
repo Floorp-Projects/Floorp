@@ -24,7 +24,6 @@
 #include "mozilla/layers/RemoteContentController.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
-#include "mozilla/webgpu/WebGPUParent.h"
 #include "mozilla/mozalloc.h"  // for operator new, etc
 #include "nsDebug.h"           // for NS_ASSERTION, etc
 #include "nsTArray.h"          // for nsTArray
@@ -205,19 +204,6 @@ bool ContentCompositorBridgeParent::DeallocPWebRenderBridgeParent(
   return true;
 }
 
-webgpu::PWebGPUParent* ContentCompositorBridgeParent::AllocPWebGPUParent() {
-  webgpu::WebGPUParent* parent = new webgpu::WebGPUParent();
-  parent->AddRef();  // IPDL reference
-  return parent;
-}
-
-bool ContentCompositorBridgeParent::DeallocPWebGPUParent(
-    webgpu::PWebGPUParent* aActor) {
-  webgpu::WebGPUParent* parent = static_cast<webgpu::WebGPUParent*>(aActor);
-  parent->Release();  // IPDL reference
-  return true;
-}
-
 mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvNotifyChildCreated(
     const LayersId& child, CompositorOptions* aOptions) {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
@@ -239,6 +225,12 @@ ContentCompositorBridgeParent::RecvMapAndNotifyChildCreated(
     CompositorOptions* aOptions) {
   // This can only be called from the browser process, as the mapping
   // ensures proper window ownership of layer trees.
+  return IPC_FAIL_NO_REASON(this);
+}
+
+mozilla::ipc::IPCResult
+ContentCompositorBridgeParent::RecvNotifyMemoryPressure() {
+  // This can only be called from the browser process.
   return IPC_FAIL_NO_REASON(this);
 }
 

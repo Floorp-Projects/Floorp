@@ -86,7 +86,7 @@ enum class AudioContextState : uint8_t;
  * reprocess it. This is triggered automatically by the MediaTrackGraph.
  */
 
-class AudioInputTrack;
+class AudioProcessingTrack;
 class AudioNodeEngine;
 class AudioNodeExternalInputTrack;
 class AudioNodeTrack;
@@ -101,44 +101,12 @@ class NativeInputTrack;
 class ProcessedMediaTrack;
 class SourceMediaTrack;
 
-// The interleaved audio input data from audio input callbacks
-class AudioInputSamples {
- public:
-  AudioInputSamples() = default;
-  ~AudioInputSamples() = default;
-
-  const AudioDataValue* Data() const;
-  size_t FrameCount() const;
-  TrackRate Rate() const;
-  uint32_t Channels() const;
-
-  bool IsEmpty() const;
-  void Push(const AudioDataValue* aBuffer, size_t aFrames, TrackRate aRate,
-            uint32_t aChannels);
-  void Clear();
-
- private:
-  nsTArray<AudioDataValue> mData;
-  TrackRate mRate = 0;
-  uint32_t mChannels = 0;
-};
-
 class AudioDataListenerInterface {
  protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~AudioDataListenerInterface() = default;
 
  public:
-  /* These are for cubeb audio input & output streams: */
-  /**
-   * Output data to speakers, for use as the "far-end" data for echo
-   * cancellation.  This is not guaranteed to be in any particular size
-   * chunks.
-   */
-  virtual void NotifyOutputData(MediaTrackGraphImpl* aGraph,
-                                AudioDataValue* aBuffer, size_t aFrames,
-                                TrackRate aRate, uint32_t aChannels) = 0;
-
   /**
    * Number of audio input channels.
    */
@@ -384,7 +352,7 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
   friend class MediaInputPort;
   friend class AudioNodeExternalInputTrack;
 
-  virtual AudioInputTrack* AsAudioInputTrack() { return nullptr; }
+  virtual AudioProcessingTrack* AsAudioProcessingTrack() { return nullptr; }
   virtual SourceMediaTrack* AsSourceTrack() { return nullptr; }
   virtual ProcessedMediaTrack* AsProcessedTrack() { return nullptr; }
   virtual AudioNodeTrack* AsAudioNodeTrack() { return nullptr; }
@@ -1062,10 +1030,8 @@ class MediaTrackGraph {
   // Idempotent
   void ForceShutDown();
 
-  virtual nsresult OpenAudioInput(CubebUtils::AudioDeviceID aID,
-                                  AudioDataListener* aListener) = 0;
-  virtual void CloseAudioInput(CubebUtils::AudioDeviceID aID,
-                               AudioDataListener* aListener) = 0;
+  virtual void OpenAudioInput(NativeInputTrack* aTrack) = 0;
+  virtual void CloseAudioInput(NativeInputTrack* aTrack) = 0;
 
   // Control API.
   /**

@@ -413,14 +413,14 @@ bool DebuggerMemory::CallData::takeCensus() {
   }
 
   {
-    Maybe<JS::AutoCheckCannotGC> maybeNoGC;
-    JS::ubi::RootList rootList(cx, maybeNoGC);
-    if (!rootList.init(dbgObj)) {
+    JS::ubi::RootList rootList(cx);
+    auto [ok, nogc] = rootList.init(dbgObj);
+    if (!ok) {
       ReportOutOfMemory(cx);
       return false;
     }
 
-    JS::ubi::CensusTraversal traversal(cx, handler, maybeNoGC.ref());
+    JS::ubi::CensusTraversal traversal(cx, handler, nogc);
     traversal.wantNames = false;
 
     if (!traversal.addStart(JS::ubi::Node(&rootList)) ||

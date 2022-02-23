@@ -176,9 +176,11 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     if (props.template === "return_to_amo") {
       return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_3__["ReturnToAMO"], {
         message_id: props.messageId,
+        type: props.type,
         name: props.name,
         url: props.url,
-        iconURL: props.iconURL
+        iconURL: props.iconURL,
+        metricsFlowUri: this.state.metricsFlowUri
       });
     }
 
@@ -692,20 +694,31 @@ const AboutWelcomeUtils = {
 };
 const DEFAULT_RTAMO_CONTENT = {
   template: "return_to_amo",
+  utm_term: "rtamo",
+  totalNumberOfScreens: 1,
+  order: 0,
   content: {
-    header: {
-      string_id: "onboarding-welcome-header"
+    hero_text: {
+      string_id: "mr1-welcome-screen-hero-text"
     },
-    subtitle: {
+    title: {
       string_id: "return-to-amo-subtitle"
     },
-    text: {
+    subtitle: {
       string_id: "return-to-amo-addon-title"
     },
+    help_text: {
+      text: {
+        string_id: "mr1-onboarding-welcome-image-caption"
+      }
+    },
+    hideLogo: true,
+    background_url: "chrome://activity-stream/content/data/content/assets/proton-bkg.avif",
     primary_button: {
       label: {
         string_id: "return-to-amo-add-extension-label"
       },
+      source_id: "ADD_EXTENSION_BUTTON",
       action: {
         type: "INSTALL_ADDON_FROM_URL",
         data: {
@@ -714,13 +727,26 @@ const DEFAULT_RTAMO_CONTENT = {
         }
       }
     },
-    startButton: {
+    secondary_button: {
       label: {
         string_id: "onboarding-not-now-button-label"
       },
-      message_id: "RTAMO_START_BROWSING_BUTTON",
+      source_id: "RTAMO_START_BROWSING_BUTTON",
       action: {
         type: "OPEN_AWESOME_BAR"
+      }
+    },
+    secondary_button_top: {
+      label: {
+        string_id: "mr1-onboarding-sign-in-button-label"
+      },
+      source_id: "RTAMO_FXA_SIGNIN_BUTTON",
+      action: {
+        data: {
+          entrypoint: "activity-stream-firstrun"
+        },
+        type: "SHOW_FIREFOX_ACCOUNTS",
+        addFlowParams: true
       }
     }
   }
@@ -756,6 +782,7 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
     const {
       autoClose,
       content,
+      isRtamo,
       totalNumberOfScreens: total
     } = this.props;
     const windowObj = this.props.windowObj || window;
@@ -793,7 +820,7 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "spacer-top"
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
-      text: content.subtitle
+      text: content.hero_text
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "spacer-bottom"
     })), content.help_text && content.help_text.text ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
@@ -820,7 +847,13 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
       className: `main-content ${isLastScreen && autoClose ? "no-steps" : ""}`
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: `brand-logo ${content.hideLogo ? "hide" : ""}`
-    }), isLastScreen && content.hasFancyTitle ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: `${isRtamo ? "rtamo-icon" : "hide-rtamo-icon"}`
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
+      src: this.props.iconURL,
+      role: "presentation",
+      alt: ""
+    })), isLastScreen && content.hasFancyTitle ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "confetti"
     }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "main-content-inner"
@@ -830,9 +863,13 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
       text: content.title
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
       id: "mainContentHeader"
-    })), !isWelcomeScreen ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    })), content.subtitle ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: content.subtitle
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null)) : null), content.tiles && content.tiles.type === "colorway" && content.tiles.colorways ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_Colorways__WEBPACK_IMPORTED_MODULE_2__["Colorways"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", {
+      "data-l10n-args": JSON.stringify({
+        "addon-name": this.props.addonName
+      })
+    })) : null), content.tiles && content.tiles.type === "colorway" && content.tiles.colorways ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_Colorways__WEBPACK_IMPORTED_MODULE_2__["Colorways"], {
       content: content,
       activeTheme: this.props.activeTheme,
       handleAction: this.props.handleAction
@@ -1159,107 +1196,115 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
-/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(4);
+/* harmony import */ var _MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6);
+/* harmony import */ var _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
 
+
 class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
   constructor(props) {
     super(props);
-    this.onClickAddExtension = this.onClickAddExtension.bind(this);
-    this.handleStartBtnClick = this.handleStartBtnClick.bind(this);
+    this.fetchFlowParams = this.fetchFlowParams.bind(this);
+    this.handleAction = this.handleAction.bind(this);
   }
 
-  onClickAddExtension() {
-    var _content$primary_butt, _content$primary_butt2;
+  async fetchFlowParams() {
+    if (this.props.metricsFlowUri) {
+      this.setState({
+        flowParams: await _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__["AboutWelcomeUtils"].fetchFlowParams(this.props.metricsFlowUri)
+      });
+    }
+  }
 
+  componentDidUpdate() {
+    this.fetchFlowParams();
+  }
+
+  handleAction(event) {
     const {
       content,
       message_id,
-      url
+      url,
+      utm_term
     } = this.props;
+    let {
+      action,
+      source_id
+    } = content[event.currentTarget.value];
+    let {
+      type,
+      data
+    } = action;
 
-    if (!(content !== null && content !== void 0 && (_content$primary_butt = content.primary_button) !== null && _content$primary_butt !== void 0 && (_content$primary_butt2 = _content$primary_butt.action) !== null && _content$primary_butt2 !== void 0 && _content$primary_butt2.data)) {
-      return;
-    } // Set add-on url in action.data.url property from JSON
+    if (type === "INSTALL_ADDON_FROM_URL") {
+      if (!data) {
+        return;
+      } // Set add-on url in action.data.url property from JSON
 
 
-    content.primary_button.action.data.url = url;
-    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__["AboutWelcomeUtils"].handleUserAction(content.primary_button.action);
-    const ping = {
-      event: "INSTALL",
-      event_context: {
-        source: "ADD_EXTENSION_BUTTON",
-        page: "about:welcome"
-      },
-      message_id
-    };
-    window.AWSendEventTelemetry(ping);
-  }
+      data = { ...data,
+        url
+      };
+    } else if (type === "SHOW_FIREFOX_ACCOUNTS") {
+      let params = { ..._asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__["BASE_PARAMS"],
+        utm_term: `aboutwelcome-${utm_term}-screen`
+      };
 
-  handleStartBtnClick() {
-    const {
-      content,
-      message_id
-    } = this.props;
-    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__["AboutWelcomeUtils"].handleUserAction(content.startButton.action);
-    const ping = {
-      event: "CLICK_BUTTON",
-      event_context: {
-        source: content.startButton.message_id,
-        page: "about:welcome"
-      },
-      message_id
-    };
-    window.AWSendEventTelemetry(ping);
+      if (action.addFlowParams && this.state.flowParams) {
+        params = { ...params,
+          ...this.state.flowParams
+        };
+      }
+
+      data = { ...data,
+        extraParams: params
+      };
+    }
+
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__["AboutWelcomeUtils"].handleUserAction({
+      type,
+      data
+    });
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__["AboutWelcomeUtils"].sendActionTelemetry(message_id, source_id);
   }
 
   render() {
     const {
-      content
+      content,
+      type
     } = this.props;
 
     if (!content) {
       return null;
+    }
+
+    if (content !== null && content !== void 0 && content.primary_button.label) {
+      content.primary_button.label.string_id = type.includes("theme") ? "return-to-amo-add-theme-label" : "return-to-amo-add-extension-label";
     } // For experiments, when needed below rendered UI allows settings hard coded strings
     // directly inside JSON except for ReturnToAMOText which picks add-on name and icon from fluent string
 
 
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "outer-wrapper onboardingContainer rtamo"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
-      className: "screen"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "brand-logo"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "welcome-text"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
-      text: content.subtitle
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
-      text: content.text
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", {
-      "data-l10n-args": this.props.name ? JSON.stringify({
-        "addon-name": this.props.name
-      }) : null
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
-      "data-l10n-name": "icon",
-      src: this.props.iconURL,
-      role: "presentation",
-      alt: ""
-    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
-      text: content.primary_button.label
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
-      onClick: this.onClickAddExtension,
-      className: "primary"
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_2__["Localized"], {
-      text: content.startButton.label
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
-      onClick: this.handleStartBtnClick,
-      className: "secondary"
-    })))));
+      className: "outer-wrapper onboardingContainer proton",
+      style: {
+        backgroundImage: `url(${content.background_url})`
+      }
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_2__["MultiStageProtonScreen"], {
+      content: content,
+      isRtamo: true,
+      id: this.props.messageId,
+      order: this.props.order,
+      totalNumberOfScreens: this.props.totalNumberOfScreens,
+      autoClose: this.props.autoClose,
+      iconURL: this.props.iconURL,
+      addonName: this.props.name,
+      handleAction: this.handleAction,
+      addExtension: this.onClickAddExtension
+    }));
   }
 
 }

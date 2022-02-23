@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* import-globals-from ../../../../toolkit/content/globalOverlay.js */
-/* import-globals-from ../../../../toolkit/content/contentAreaUtils.js */
-/* import-globals-from ../../../../toolkit/content/treeUtils.js */
+/* import-globals-from /toolkit/content/globalOverlay.js */
+/* import-globals-from /toolkit/content/contentAreaUtils.js */
+/* import-globals-from /toolkit/content/treeUtils.js */
 /* import-globals-from ../utilityOverlay.js */
 /* import-globals-from permissions.js */
 /* import-globals-from security.js */
@@ -12,6 +12,19 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
 });
+
+// Inherit color scheme overrides from parent window. This is to inherit the
+// color scheme of dark themed PBM windows.
+{
+  let openerColorSchemeOverride =
+    window.opener?.browsingContext?.top.prefersColorSchemeOverride;
+  if (
+    openerColorSchemeOverride &&
+    window.browsingContext == window.browsingContext.top
+  ) {
+    window.browsingContext.prefersColorSchemeOverride = openerColorSchemeOverride;
+  }
+}
 
 // define a js object to implement nsITreeView
 function pageInfoTreeView(treeid, copycol) {

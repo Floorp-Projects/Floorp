@@ -1,5 +1,4 @@
+// |jit-test| skip-if: !this.hasOwnProperty("ReadableStream")
 load(libdir + "asserts.js");
-if (typeof ReadableStream == "function") {
-    assertThrowsInstanceOf(() => ReadableStream.prototype.tee(),
-                           TypeError);
-}
+assertThrowsInstanceOf(() => ReadableStream.prototype.tee(),
+    TypeError);

@@ -18,6 +18,7 @@
 #include <pango/pango-fontmap.h>
 #include <fontconfig/fontconfig.h>
 
+#include "GRefPtr.h"
 #include "nsGtkUtils.h"
 #include "gfxPlatformGtk.h"
 #include "mozilla/FontPropertyTypes.h"
@@ -68,7 +69,8 @@ static LazyLogModule gLnfLog("LookAndFeel");
                     (int)((c).blue * 255), (int)((c).alpha * 255)))
 
 static bool sIgnoreChangedSettings = false;
-static void settings_changed_cb(GtkSettings*, GParamSpec*, void*) {
+
+static void OnSettingsChange() {
   if (sIgnoreChangedSettings) {
     return;
   }
@@ -78,7 +80,63 @@ static void settings_changed_cb(GtkSettings*, GParamSpec*, void*) {
   widget::IMContextWrapper::OnThemeChanged();
 }
 
+static void settings_changed_cb(GtkSettings*, GParamSpec*, void*) {
+  OnSettingsChange();
+}
+
 static bool sCSDAvailable;
+
+static nsCString GVariantToString(GVariant* aVariant) {
+  nsCString ret;
+  gchar* s = g_variant_print(aVariant, TRUE);
+  if (s) {
+    ret.Assign(s);
+    g_free(s);
+  }
+  return ret;
+}
+
+static nsDependentCString GVariantGetString(GVariant* aVariant) {
+  gsize len = 0;
+  const gchar* v = g_variant_get_string(aVariant, &len);
+  return nsDependentCString(v, len);
+}
+
+// Observed settings for portal.
+static constexpr struct {
+  nsLiteralCString mNamespace;
+  nsLiteralCString mKey;
+} kObservedSettings[] = {
+    {"org.freedesktop.appearance"_ns, "color-scheme"_ns},
+};
+
+static void settings_changed_signal_cb(GDBusProxy* proxy, gchar* sender_name,
+                                       gchar* signal_name, GVariant* parameters,
+                                       gpointer user_data) {
+  LOGLNF("Settings Change sender=%s signal=%s params=%s\n", sender_name,
+         signal_name, GVariantToString(parameters).get());
+  if (strcmp(signal_name, "SettingChanged")) {
+    NS_WARNING("Unknown change signal for settings");
+    return;
+  }
+  RefPtr<GVariant> ns = dont_AddRef(g_variant_get_child_value(parameters, 0));
+  RefPtr<GVariant> key = dont_AddRef(g_variant_get_child_value(parameters, 1));
+  // Third parameter is the value, but we don't care about it.
+  if (!ns || !key || !g_variant_is_of_type(ns, G_VARIANT_TYPE_STRING) ||
+      !g_variant_is_of_type(key, G_VARIANT_TYPE_STRING)) {
+    MOZ_ASSERT(false, "Unexpected setting change signal parameters");
+    return;
+  }
+
+  auto nsStr = GVariantGetString(ns);
+  auto keyStr = GVariantGetString(key);
+  for (const auto& setting : kObservedSettings) {
+    if (setting.mNamespace.Equals(nsStr) && setting.mKey.Equals(keyStr)) {
+      OnSettingsChange();
+      return;
+    }
+  }
+}
 
 nsLookAndFeel::nsLookAndFeel() {
   static constexpr nsLiteralCString kObservedSettings[] = {
@@ -116,9 +174,30 @@ nsLookAndFeel::nsLookAndFeel() {
 
   sCSDAvailable =
       nsWindow::GetSystemGtkWindowDecoration() != nsWindow::GTK_DECORATION_NONE;
+
+  if (ShouldUsePortal(PortalKind::Settings)) {
+    GError* error = nullptr;
+    mDBusSettingsProxy = g_dbus_proxy_new_for_bus_sync(
+        G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr,
+        "org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
+        "org.freedesktop.portal.Settings", nullptr, &error);
+    if (mDBusSettingsProxy) {
+      g_signal_connect(mDBusSettingsProxy, "g-signal",
+                       G_CALLBACK(settings_changed_signal_cb), nullptr);
+    } else {
+      LOGLNF("Can't create DBus proxy for settings: %s\n", error->message);
+      g_error_free(error);
+    }
+  }
 }
 
 nsLookAndFeel::~nsLookAndFeel() {
+  if (mDBusSettingsProxy) {
+    g_signal_handlers_disconnect_by_func(
+        mDBusSettingsProxy, FuncToGpointer(settings_changed_signal_cb),
+        nullptr);
+    g_object_unref(mDBusSettingsProxy);
+  }
   g_signal_handlers_disconnect_by_func(
       gtk_settings_get_default(), FuncToGpointer(settings_changed_cb), nullptr);
 }
@@ -737,7 +816,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = threshold;
     } break;
     case IntID::ScrollArrowStyle: {
-      GtkWidget* scrollbar = GetWidget(MOZ_GTK_SCROLLBAR_HORIZONTAL);
+      GtkWidget* scrollbar = GetWidget(MOZ_GTK_SCROLLBAR_VERTICAL);
       aResult = ConvertGTKStepperStyleToMozillaScrollArrowStyle(scrollbar);
       break;
     }
@@ -819,7 +898,11 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     }
     case IntID::SystemUsesDarkTheme: {
       EnsureInit();
-      aResult = mSystemTheme.mIsDark;
+      if (mColorSchemePreference) {
+        aResult = *mColorSchemePreference == ColorScheme::Dark;
+      } else {
+        aResult = mSystemTheme.mIsDark;
+      }
       break;
     }
     case IntID::GTKCSDMaximizeButtonPosition:
@@ -1077,8 +1160,12 @@ void nsLookAndFeel::ConfigureTheme(const LookAndFeelTheme& aTheme) {
 }
 
 void nsLookAndFeel::RestoreSystemTheme() {
-  LOGLNF("RestoreSystemTheme(%s, %d)\n", mSystemTheme.mName.get(),
-         mSystemTheme.mPreferDarkTheme);
+  LOGLNF("RestoreSystemTheme(%s, %d, %d)\n", mSystemTheme.mName.get(),
+         mSystemTheme.mPreferDarkTheme, mSystemThemeOverridden);
+
+  if (!mSystemThemeOverridden) {
+    return;
+  }
 
   // Available on Gtk 3.20+.
   static auto sGtkSettingsResetProperty =
@@ -1095,10 +1182,15 @@ void nsLookAndFeel::RestoreSystemTheme() {
                  mSystemTheme.mPreferDarkTheme, nullptr);
   }
   moz_gtk_refresh();
+  mSystemThemeOverridden = false;
 }
 
-template <typename Callback>
-void nsLookAndFeel::WithAltThemeConfigured(const Callback& aFn) {
+static bool AnyColorChannelIsDifferent(nscolor aColor) {
+  return NS_GET_R(aColor) != NS_GET_G(aColor) ||
+         NS_GET_R(aColor) != NS_GET_B(aColor);
+}
+
+void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
   GtkSettings* settings = gtk_settings_get_default();
 
   bool fellBackToDefaultTheme = false;
@@ -1148,83 +1240,127 @@ void nsLookAndFeel::WithAltThemeConfigured(const Callback& aFn) {
     fellBackToDefaultTheme = true;
   }
 
-  aFn(fellBackToDefaultTheme);
+  mAltTheme.Init();
 
-  // Restore the system theme.
-  RestoreSystemTheme();
-}
-
-static bool AnyColorChannelIsDifferent(nscolor aColor) {
-  return NS_GET_R(aColor) != NS_GET_G(aColor) ||
-         NS_GET_R(aColor) != NS_GET_B(aColor);
-}
-
-void nsLookAndFeel::InitializeAltTheme() {
-  WithAltThemeConfigured([&](bool aFellBackToDefaultTheme) {
-    mAltTheme.Init();
-    // Some of the alt theme colors we can grab from the system theme, if we
-    // fell back to the default light / dark themes.
-    if (aFellBackToDefaultTheme) {
-      if (StaticPrefs::widget_gtk_alt_theme_selection()) {
-        mAltTheme.mTextSelectedText = mSystemTheme.mTextSelectedText;
-        mAltTheme.mTextSelectedBackground =
-            mSystemTheme.mTextSelectedBackground;
-      }
-
-      if (StaticPrefs::widget_gtk_alt_theme_scrollbar()) {
-        mAltTheme.mThemedScrollbar = mSystemTheme.mThemedScrollbar;
-        mAltTheme.mThemedScrollbarInactive =
-            mSystemTheme.mThemedScrollbarInactive;
-        mAltTheme.mThemedScrollbarThumb = mSystemTheme.mThemedScrollbarThumb;
-        mAltTheme.mThemedScrollbarThumbHover =
-            mSystemTheme.mThemedScrollbarThumbHover;
-        mAltTheme.mThemedScrollbarThumbInactive =
-            mSystemTheme.mThemedScrollbarThumbInactive;
-      }
-
-      if (StaticPrefs::widget_gtk_alt_theme_scrollbar_active()) {
-        mAltTheme.mThemedScrollbarThumbActive =
-            mSystemTheme.mThemedScrollbarThumbActive;
-      }
-
-      if (StaticPrefs::widget_gtk_alt_theme_selection()) {
-        mAltTheme.mAccentColor = mSystemTheme.mAccentColor;
-        mAltTheme.mAccentColorForeground = mSystemTheme.mAccentColorForeground;
-      }
+  // Some of the alt theme colors we can grab from the system theme, if we fell
+  // back to the default light / dark themes.
+  if (fellBackToDefaultTheme) {
+    if (StaticPrefs::widget_gtk_alt_theme_selection()) {
+      mAltTheme.mTextSelectedText = mSystemTheme.mTextSelectedText;
+      mAltTheme.mTextSelectedBackground = mSystemTheme.mTextSelectedBackground;
     }
-  });
-}
 
-void nsLookAndFeel::EnsureInit() {
-  if (mInitialized) {
-    return;
+    if (StaticPrefs::widget_gtk_alt_theme_scrollbar()) {
+      mAltTheme.mThemedScrollbar = mSystemTheme.mThemedScrollbar;
+      mAltTheme.mThemedScrollbarInactive =
+          mSystemTheme.mThemedScrollbarInactive;
+      mAltTheme.mThemedScrollbarThumb = mSystemTheme.mThemedScrollbarThumb;
+      mAltTheme.mThemedScrollbarThumbHover =
+          mSystemTheme.mThemedScrollbarThumbHover;
+      mAltTheme.mThemedScrollbarThumbInactive =
+          mSystemTheme.mThemedScrollbarThumbInactive;
+    }
+
+    if (StaticPrefs::widget_gtk_alt_theme_scrollbar_active()) {
+      mAltTheme.mThemedScrollbarThumbActive =
+          mSystemTheme.mThemedScrollbarThumbActive;
+    }
+
+    if (StaticPrefs::widget_gtk_alt_theme_selection()) {
+      mAltTheme.mAccentColor = mSystemTheme.mAccentColor;
+      mAltTheme.mAccentColorForeground = mSystemTheme.mAccentColorForeground;
+    }
   }
 
-  LOGLNF("nsLookAndFeel::EnsureInit");
+  // Right now we're using the opposite color-scheme theme, make sure to record
+  // it.
+  mSystemThemeOverridden = true;
+}
 
-  AutoRestore<bool> restoreIgnoreSettings(sIgnoreChangedSettings);
-  sIgnoreChangedSettings = true;
+Maybe<ColorScheme> nsLookAndFeel::ComputeColorSchemeSetting() {
+  if (!mDBusSettingsProxy) {
+    return Nothing();
+  }
+  GError* error = nullptr;
+  RefPtr<GVariant> variant = dont_AddRef(g_dbus_proxy_call_sync(
+      mDBusSettingsProxy, "Read",
+      g_variant_new("(ss)", "org.freedesktop.appearance", "color-scheme"),
+      G_DBUS_CALL_FLAGS_NONE, -1, nullptr, &error));
+  if (!variant) {
+    LOGLNF("color-scheme query error: %s\n", error->message);
+    g_error_free(error);
+    return Nothing();
+  }
+  LOGLNF("color-scheme query result: %s\n", GVariantToString(variant).get());
+  variant = dont_AddRef(g_variant_get_child_value(variant, 0));
+  while (variant && g_variant_is_of_type(variant, G_VARIANT_TYPE_VARIANT)) {
+    // Unbox the return value.
+    variant = dont_AddRef(g_variant_get_variant(variant));
+  }
+  if (!variant || !g_variant_is_of_type(variant, G_VARIANT_TYPE_UINT32)) {
+    MOZ_ASSERT(false, "Unexpected color-scheme query return value");
+    return Nothing();
+  }
+  switch (g_variant_get_uint32(variant)) {
+    default:
+      MOZ_FALLTHROUGH_ASSERT("Unexpected color-scheme query return value");
+    case 0:
+      break;
+    case 1:
+      return Some(ColorScheme::Dark);
+    case 2:
+      return Some(ColorScheme::Light);
+  }
+  return Nothing();
+}
 
-  // Gtk manages a screen's CSS in the settings object so we
-  // ask Gtk to create it explicitly. Otherwise we may end up
-  // with wrong color theme, see Bug 972382
+void nsLookAndFeel::Initialize() {
+  LOGLNF("nsLookAndFeel::Initialize");
+  MOZ_DIAGNOSTIC_ASSERT(!mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread(),
+                        "LookAndFeel init should be done on the main thread");
+
+  mInitialized = true;
+
   GtkSettings* settings = gtk_settings_get_default();
   if (MOZ_UNLIKELY(!settings)) {
     NS_WARNING("EnsureInit: No settings");
     return;
   }
 
-  mInitialized = true;
-  if (mSystemThemeOverridden) {
-    // Our current theme may be different from the system theme if we're
-    // matching the firefox theme. Make sure to restore the original system
-    // theme.
-    RestoreSystemTheme();
-    mSystemThemeOverridden = false;
-  }
+  AutoRestore<bool> restoreIgnoreSettings(sIgnoreChangedSettings);
+  sIgnoreChangedSettings = true;
 
-  // gtk does non threadsafe refcounting
-  MOZ_ASSERT(NS_IsMainThread());
+  // Our current theme may be different from the system theme if we're matching
+  // the Firefox theme or using the alt theme intentionally due to the
+  // color-scheme preference. Make sure to restore the original system theme.
+  RestoreSystemTheme();
+
+  // First initialize global settings.
+  InitializeGlobalSettings();
+
+  // Record our system theme settings now.
+  mSystemTheme.Init();
+
+  // Find the alternative-scheme theme (light if the system theme is dark, or
+  // vice versa), configure it and initialize it.
+  ConfigureAndInitializeAltTheme();
+
+  LOGLNF("System Theme: %s. Alt Theme: %s\n", mSystemTheme.mName.get(),
+         mAltTheme.mName.get());
+
+  // Go back to the system theme or keep the alt theme configured, depending on
+  // Firefox theme or user color-scheme preference.
+  ConfigureFinalEffectiveTheme();
+
+  RecordTelemetry();
+}
+
+void nsLookAndFeel::InitializeGlobalSettings() {
+  GtkSettings* settings = gtk_settings_get_default();
+
+  mColorSchemePreference = ComputeColorSchemeSetting();
+
   gboolean enableAnimations = false;
   g_object_get(settings, "gtk-enable-animations", &enableAnimations, nullptr);
   mPrefersReducedMotion = !enableAnimations;
@@ -1251,8 +1387,6 @@ void nsLookAndFeel::EnsureInit() {
   } else {
     mCaretBlinkCount = -1;
   }
-
-  mSystemTheme.Init();
 
   mCSDCloseButton = false;
   mCSDMinimizeButton = false;
@@ -1294,28 +1428,13 @@ void nsLookAndFeel::EnsureInit() {
       *pos = i;
     }
   }
-
-  // Switching themes on startup has some performance cost, so until we use the
-  // dark colors, keep it pref'd off.
-  if (mSystemTheme.mIsDark || StaticPrefs::widget_gtk_alt_theme_dark()) {
-    InitializeAltTheme();
-  } else {
-    mAltTheme = mSystemTheme;
-  }
-
-  LOGLNF("System Theme: %s. Alt Theme: %s\n", mSystemTheme.mName.get(),
-         mAltTheme.mName.get());
-
-  MatchFirefoxThemeIfNeeded();
-
-  RecordTelemetry();
 }
 
-bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
-  AutoRestore<bool> restoreIgnoreSettings(sIgnoreChangedSettings);
-  sIgnoreChangedSettings = true;
+void nsLookAndFeel::ConfigureFinalEffectiveTheme() {
+  MOZ_ASSERT(mSystemThemeOverridden,
+             "By this point, the alt theme should be configured");
 
-  const bool matchesSystem = [&] {
+  const bool shouldUseSystemTheme = [&] {
     // NOTE: We can't call ColorSchemeForChrome directly because this might run
     // while we're computing it.
     switch (ColorSchemeSettingForChrome()) {
@@ -1326,22 +1445,20 @@ bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
       case ChromeColorSchemeSetting::System:
         break;
     };
-    return true;
+    if (!mColorSchemePreference) {
+      return true;
+    }
+    bool preferenceIsDark = *mColorSchemePreference == ColorScheme::Dark;
+    return preferenceIsDark == mSystemTheme.mIsDark;
   }();
 
   const bool usingSystem = !mSystemThemeOverridden;
+  LOGLNF("OverrideSystemThemeIfNeeded(matchesSystem=%d, usingSystem=%d)\n",
+         shouldUseSystemTheme, usingSystem);
 
-  LOGLNF("MatchFirefoxThemeIfNeeded(matchesSystem=%d, usingSystem=%d)\n",
-         matchesSystem, usingSystem);
-
-  if (usingSystem == matchesSystem) {
-    return false;
-  }
-
-  mSystemThemeOverridden = !matchesSystem;
-  if (matchesSystem) {
+  if (shouldUseSystemTheme) {
     RestoreSystemTheme();
-  } else {
+  } else if (usingSystem) {
     LOGLNF("Setting theme %s, %d\n", mAltTheme.mName.get(),
            mAltTheme.mPreferDarkTheme);
 
@@ -1357,8 +1474,8 @@ bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
                    mAltTheme.mPreferDarkTheme, nullptr);
     }
     moz_gtk_refresh();
+    mSystemThemeOverridden = true;
   }
-  return true;
 }
 
 void nsLookAndFeel::GetGtkContentTheme(LookAndFeelTheme& aTheme) {
@@ -1591,8 +1708,9 @@ void nsLookAndFeel::PerThemeData::Init() {
   style = GetStyleContext(MOZ_GTK_MENUITEM);
   gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
   mMenuHoverText = GDK_RGBA_TO_NS_RGBA(color);
-  mMenuHover =
-      GetBackgroundColor(style, mMenuHoverText, GTK_STATE_FLAG_PRELIGHT);
+  mMenuHover = NS_ComposeColors(
+      mMenuBackground,
+      GetBackgroundColor(style, mMenuHoverText, GTK_STATE_FLAG_PRELIGHT));
 
   GtkWidget* parent = gtk_fixed_new();
   GtkWidget* window = gtk_window_new(GTK_WINDOW_POPUP);

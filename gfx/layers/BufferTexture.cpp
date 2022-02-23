@@ -95,6 +95,9 @@ class ShmemTextureData : public BufferTextureData {
 
   virtual size_t GetBufferSize() override { return mShmem.Size<uint8_t>(); }
 
+  bool CropYCbCrPlanes(const gfx::IntSize& aYSize,
+                       const gfx::IntSize& aCbCrSize) override;
+
  protected:
   mozilla::ipc::Shmem mShmem;
 };
@@ -504,6 +507,27 @@ TextureData* ShmemTextureData::CreateSimilar(
 
 void ShmemTextureData::Deallocate(LayersIPCChannel* aAllocator) {
   aAllocator->DeallocShmem(mShmem);
+}
+
+bool ShmemTextureData::CropYCbCrPlanes(const gfx::IntSize& aYSize,
+                                       const gfx::IntSize& aCbCrSize) {
+  if (mDescriptor.type() != BufferDescriptor::TYCbCrDescriptor) {
+    return false;
+  }
+
+  const auto& current = mDescriptor.get_YCbCrDescriptor();
+  if (current.ySize() < aYSize || current.cbCrSize() < aCbCrSize) {
+    NS_WARNING("Cropped size should not exceed the original size!");
+    return false;
+  }
+
+  auto newDescritor = YCbCrDescriptor(
+      current.display(), aYSize, current.yStride(), aCbCrSize,
+      current.cbCrStride(), current.yOffset(), current.cbOffset(),
+      current.crOffset(), current.stereoMode(), current.colorDepth(),
+      current.yUVColorSpace(), current.colorRange());
+  mDescriptor = BufferDescriptor(newDescritor);
+  return true;
 }
 
 }  // namespace layers

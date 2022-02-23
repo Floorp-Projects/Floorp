@@ -100,13 +100,8 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl* parent)
       mTargetForDefaultLocalAddressLookupIsSet(false),
       mDestroyed(false) {
   if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsISerialEventTarget> target =
-        mParent->GetWindow()
-            ? mParent->GetWindow()->EventTargetFor(TaskCategory::Other)
-            : nullptr;
-
     mStunAddrsRequest =
-        new net::StunAddrsRequestChild(new StunAddrsHandler(this), target);
+        new net::StunAddrsRequestChild(new StunAddrsHandler(this));
   }
 }
 
@@ -686,16 +681,6 @@ nsresult PeerConnectionMedia::AddTransceiver(
   *aTransceiverImpl = transceiver;
 
   return NS_OK;
-}
-
-void PeerConnectionMedia::GetTransmitPipelinesMatching(
-    const MediaStreamTrack* aTrack,
-    nsTArray<RefPtr<MediaPipelineTransmit>>* aPipelines) {
-  for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
-    if (transceiver->HasSendTrack(aTrack)) {
-      aPipelines->AppendElement(transceiver->GetSendPipeline());
-    }
-  }
 }
 
 std::string PeerConnectionMedia::GetTransportIdMatchingSendTrack(

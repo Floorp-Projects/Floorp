@@ -5,7 +5,6 @@
 import parseScriptTags from "parse-script-tags";
 import * as babelParser from "@babel/parser";
 import * as t from "@babel/types";
-import isEmpty from "lodash/isEmpty";
 import { getSource } from "../sources";
 
 let ASTs = new Map();
@@ -187,7 +186,7 @@ export function clearASTs() {
 
 export function traverseAst(sourceId, visitor, state) {
   const ast = getAst(sourceId);
-  if (isEmpty(ast)) {
+  if (!ast || Object.keys(ast).length == 0) {
     return null;
   }
 

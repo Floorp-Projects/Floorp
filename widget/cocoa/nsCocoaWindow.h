@@ -264,9 +264,8 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage, uint16_t aDuration,
                                            nsISupports* aData, nsIRunnable* aCallback) override;
   virtual void CleanupFullscreenTransition() override;
-  nsresult MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) final;
-  nsresult MakeFullScreenWithNativeTransition(bool aFullScreen,
-                                              nsIScreen* aTargetScreen = nullptr) final;
+  nsresult MakeFullScreen(bool aFullScreen) final;
+  nsresult MakeFullScreenWithNativeTransition(bool aFullScreen) final;
   NSAnimation* FullscreenTransitionAnimation() const { return mFullscreenTransitionAnimation; }
   void ReleaseFullscreenTransitionAnimation() {
     MOZ_ASSERT(mFullscreenTransitionAnimation, "Should only be called when there is animation");

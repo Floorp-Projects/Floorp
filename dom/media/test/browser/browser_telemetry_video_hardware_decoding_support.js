@@ -14,6 +14,9 @@ add_task(async function setupTestingPref() {
   });
 });
 
+const ALL_SCALAR = "media.video_hardware_decoding_support";
+const HD_SCALAR = "media.video_hd_hardware_decoding_support";
+
 add_task(async function testVideoCodecs() {
   // There are still other video codecs, but we only care about these popular
   // codec types.
@@ -24,8 +27,6 @@ add_task(async function testVideoCodecs() {
     { fileName: "av1.mp4", type: "video/av1" },
     { fileName: "bunny_hd_5s.mp4", type: "video/avc", hd: true },
   ];
-  const ALL_SCALAR = "media.video_hardware_decoding_support";
-  const HD_SCALAR = "media.video_hd_hardware_decoding_support";
 
   for (const file of testFiles) {
     const { fileName, type, hd } = file;
@@ -76,7 +77,12 @@ add_task(async function testAudioCodecs() {
     await audio.play();
     let snapshot = Services.telemetry.getSnapshotForKeyedScalars("main", false)
       .parent;
-    ok(!snapshot, `Did not record scalar for ${file}`);
+    ok(
+      !snapshot ||
+        (!snapshot.hasOwnProperty(ALL_SCALAR) &&
+          !snapshot.hasOwnProperty(HD_SCALAR)),
+      `Did not record scalar for ${file}`
+    );
     audio.src = "";
   }
 });

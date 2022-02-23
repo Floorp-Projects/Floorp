@@ -43,12 +43,6 @@ VRProcessParent::VRProcessParent(Listener* aListener)
 }
 
 VRProcessParent::~VRProcessParent() {
-  // Cancel all tasks. We don't want anything triggering after our caller
-  // expects this to go away.
-  {
-    MonitorAutoLock lock(mMonitor);
-    mTaskFactory.RevokeAll();
-  }
   MOZ_COUNT_DTOR(VRProcessParent);
 }
 
@@ -133,6 +127,13 @@ void VRProcessParent::Shutdown() {
 
 void VRProcessParent::DestroyProcess() {
   if (mLaunchThread) {
+    // Cancel all tasks. We don't want anything triggering after our caller
+    // expects this to go away.
+    {
+      MonitorAutoLock lock(mMonitor);
+      mTaskFactory.RevokeAll();
+    }
+
     mLaunchThread->Dispatch(NS_NewRunnableFunction("DestroyProcessRunnable",
                                                    [this] { Destroy(); }));
   }
@@ -181,7 +182,7 @@ bool VRProcessParent::InitAfterConnect(bool aSucceeded) {
 
 void VRProcessParent::KillHard(const char* aReason) {
   ProcessHandle handle = GetChildProcessHandle();
-  if (!base::KillProcess(handle, base::PROCESS_END_KILLED_BY_USER, false)) {
+  if (!base::KillProcess(handle, base::PROCESS_END_KILLED_BY_USER)) {
     NS_WARNING("failed to kill subprocess!");
   }
 

@@ -11,11 +11,12 @@ const L10N = new LocalizationHelper(
 
 const Editor = require("devtools/client/shared/sourceeditor/editor");
 const beautify = require("devtools/shared/jsbeautify/beautify");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTAINER_WIDTH = 500;
 
-class EventTooltip {
+class EventTooltip extends EventEmitter {
   /**
    * Set the content of a provided HTMLTooltip instance to display a list of event
    * listeners, with their event type, capturing argument and a link to the code
@@ -27,17 +28,26 @@ class EventTooltip {
    *        A list of event listeners
    * @param {Toolbox} toolbox
    *        Toolbox used to select debugger panel
+   * @param {NodeFront} nodeFront
+   *        The nodeFront we're displaying event listeners for.
    */
-  constructor(tooltip, eventListenerInfos, toolbox) {
+  constructor(tooltip, eventListenerInfos, toolbox, nodeFront) {
+    super();
+
     this._tooltip = tooltip;
     this._toolbox = toolbox;
     this._eventEditors = new WeakMap();
+    this._nodeFront = nodeFront;
+    this._eventListenersAbortController = new AbortController();
 
     // Used in tests: add a reference to the EventTooltip instance on the HTMLTooltip.
     this._tooltip.eventTooltip = this;
 
     this._headerClicked = this._headerClicked.bind(this);
-    this._debugClicked = this._debugClicked.bind(this);
+    this._eventToggleCheckboxChanged = this._eventToggleCheckboxChanged.bind(
+      this
+    );
+
     this._subscriptions = [];
 
     const config = {
@@ -109,7 +119,7 @@ class EventTooltip {
                 filename.setAttribute("title", newURI);
 
                 // This is emitted for testing.
-                this._tooltip.emit("event-tooltip-source-map-ready");
+                this._tooltip.emitForTests("event-tooltip-source-map-ready");
               }
             )
           );
@@ -160,6 +170,27 @@ class EventTooltip {
         attributesBox.appendChild(capturing);
       }
 
+      const toggleListenerCheckbox = doc.createElementNS(XHTML_NS, "input");
+      toggleListenerCheckbox.type = "checkbox";
+      toggleListenerCheckbox.className =
+        "event-tooltip-listener-toggle-checkbox";
+      if (listener.eventListenerInfoId) {
+        toggleListenerCheckbox.checked = listener.enabled;
+        toggleListenerCheckbox.setAttribute(
+          "data-event-listener-info-id",
+          listener.eventListenerInfoId
+        );
+        toggleListenerCheckbox.addEventListener(
+          "change",
+          this._eventToggleCheckboxChanged,
+          { signal: this._eventListenersAbortController.signal }
+        );
+      } else {
+        toggleListenerCheckbox.checked = true;
+        toggleListenerCheckbox.setAttribute("disabled", true);
+      }
+      header.appendChild(toggleListenerCheckbox);
+
       // Content
       const editor = new Editor(config);
       this._eventEditors.set(content, {
@@ -182,10 +213,21 @@ class EventTooltip {
   }
 
   _addContentListeners(header) {
-    header.addEventListener("click", this._headerClicked);
+    header.addEventListener("click", this._headerClicked, {
+      signal: this._eventListenersAbortController.signal,
+    });
   }
 
   _headerClicked(event) {
+    // Clicking on the checkbox shouldn't impact the header (checkbox state change is
+    // handled in _eventToggleCheckboxChanged).
+    if (
+      event.target.classList.contains("event-tooltip-listener-toggle-checkbox")
+    ) {
+      event.stopPropagation();
+      return;
+    }
+
     if (event.target.classList.contains("event-tooltip-debugger-icon")) {
       this._debugClicked(event);
       event.stopPropagation();
@@ -241,7 +283,7 @@ class EventTooltip {
           content.scrollIntoView(false);
         }
 
-        this._tooltip.emit("event-tooltip-ready");
+        this._tooltip.emitForTests("event-tooltip-ready");
       });
     }
   }
@@ -264,6 +306,24 @@ class EventTooltip {
         location.id
       );
     }
+  }
+
+  async _eventToggleCheckboxChanged(event) {
+    const checkbox = event.currentTarget;
+    const id = checkbox.getAttribute("data-event-listener-info-id");
+    if (checkbox.checked) {
+      await this._nodeFront.enableEventListener(id);
+    } else {
+      await this._nodeFront.disableEventListener(id);
+    }
+    this.emit("event-tooltip-listener-toggled", {
+      hasDisabledEventListeners:
+        // No need to query the other checkboxes if the handled checkbox is unchecked
+        !checkbox.checked ||
+        this._tooltip.doc.querySelector(
+          `input.event-tooltip-listener-toggle-checkbox:not(:checked)`
+        ) !== null,
+    });
   }
 
   /**
@@ -308,24 +368,17 @@ class EventTooltip {
       this._tooltip.eventTooltip = null;
     }
 
-    const headerNodes = this.container.querySelectorAll(".event-header");
-
-    for (const node of headerNodes) {
-      node.removeEventListener("click", this._headerClicked);
-    }
-
-    const sourceNodes = this.container.querySelectorAll(
-      ".event-tooltip-debugger-icon"
-    );
-    for (const node of sourceNodes) {
-      node.removeEventListener("click", this._debugClicked);
+    this.clearEvents();
+    if (this._eventListenersAbortController) {
+      this._eventListenersAbortController.abort();
+      this._eventListenersAbortController = null;
     }
 
     for (const unsubscribe of this._subscriptions) {
       unsubscribe();
     }
 
-    this._toolbox = this._tooltip = null;
+    this._toolbox = this._tooltip = this._nodeFront = null;
   }
 }
 

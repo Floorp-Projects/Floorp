@@ -24,6 +24,26 @@ import yaml
 if sys.version_info < (3, 7):
     import iso8601  # type: ignore
 
+    def date_fromisoformat(datestr: str) -> datetime.date:
+        try:
+            return iso8601.parse_date(datestr).date()
+        except iso8601.ParseError:
+            raise ValueError()
+
+    def datetime_fromisoformat(datestr: str) -> datetime.datetime:
+        try:
+            return iso8601.parse_date(datestr)
+        except iso8601.ParseError:
+            raise ValueError()
+
+else:
+
+    def date_fromisoformat(datestr: str) -> datetime.date:
+        return datetime.date.fromisoformat(datestr)
+
+    def datetime_fromisoformat(datestr: str) -> datetime.datetime:
+        return datetime.datetime.fromisoformat(datestr)
+
 
 TESTING_MODE = "pytest" in sys.modules
 
@@ -45,7 +65,6 @@ if sys.version_info < (3, 7):
 
     class DictWrapper(OrderedDict):
         pass
-
 
 else:
 
@@ -361,13 +380,7 @@ def parse_expires(expires: str) -> datetime.date:
     Raises a ValueError in case the string is not properly formatted.
     """
     try:
-        if sys.version_info < (3, 7):
-            try:
-                return iso8601.parse_date(expires).date()
-            except iso8601.ParseError:
-                raise ValueError()
-        else:
-            return datetime.date.fromisoformat(expires)
+        return date_fromisoformat(expires)
     except ValueError:
         raise ValueError(
             f"Invalid expiration date '{expires}'. "
@@ -408,16 +421,43 @@ def validate_expires(expires: str) -> None:
         )
 
 
+def build_date(date: Optional[str]) -> datetime.datetime:
+    """
+    Generate the build timestamp.
+
+    If `date` is set to `0` a static unix epoch time will be used.
+    If `date` it is set to a ISO8601 datetime string (e.g. `2022-01-03T17:30:00`)
+    it will use that date.
+    Note that any timezone offset will be ignored and UTC will be used.
+    Otherwise it will throw an error.
+
+    If `date` is `None` it will use the current date & time.
+    """
+
+    if date is not None:
+        date = str(date)
+        if date == "0":
+            ts = datetime.datetime(1970, 1, 1, 0, 0, 0)
+        else:
+            ts = datetime_fromisoformat(date).replace(tzinfo=datetime.timezone.utc)
+    else:
+        ts = datetime.datetime.utcnow()
+
+    return ts
+
+
 def report_validation_errors(all_objects):
     """
     Report any validation errors found to the console.
+
+    Returns the number of errors reported.
     """
-    found_error = False
+    found_errors = 0
     for error in all_objects:
-        found_error = True
+        found_errors += 1
         print("=" * 78, file=sys.stderr)
         print(error, file=sys.stderr)
-    return found_error
+    return found_errors
 
 
 def remove_output_params(d, output_params):

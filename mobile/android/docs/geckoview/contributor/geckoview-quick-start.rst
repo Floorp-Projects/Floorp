@@ -232,9 +232,9 @@ review your patch, put their Phabricator handle against the
 If you don’t know who to tag for a review in the Phabricator submission
 message, leave the field blank and, after submission, follow the link to
 the patch in Phabricator and scroll to the bottom of the screen until
-you see the comment box. 
+you see the comment box.
 
-- Select the ``Add Action`` drop down and pick the ``Change Reviewers`` option. 
+- Select the ``Add Action`` drop down and pick the ``Change Reviewers`` option.
 - In the presented box, add ``geckoview-reviewers``. Selecting this group as the reviewer will notify all the members of the GeckoView team there is a patch to review.
 - Click ``Submit`` to submit the reviewer change request.
 
@@ -270,9 +270,9 @@ Dependency substiting your local GeckoView into a Mozilla project
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Most GeckoView-consuming projects produced by Mozilla support dependency
-substitution via ``local.properties``. These projects include: 
+substitution via ``local.properties``. These projects include:
 
-- `Fenix <https://github.com/mozilla-mobile/fenix>`_ 
+- `Fenix <https://github.com/mozilla-mobile/fenix>`_
 - `reference-browser <https://github.com/mozilla-mobile/reference-browser>`_
 - `android-components <https://github.com/mozilla-mobile/android-components>`_
 - `Firefox Reality <https://github.com/MozillaReality/FirefoxReality>`_

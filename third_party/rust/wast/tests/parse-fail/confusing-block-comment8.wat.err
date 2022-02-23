@@ -1,0 +1,5 @@
+likely-confusing unicode character found '\u{2069}'
+     --> tests/parse-fail/confusing-block-comment8.wat:1:13
+      |
+    1 | (module) (;  ;)
+      |             ^

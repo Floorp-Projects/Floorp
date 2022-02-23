@@ -1,17 +1,17 @@
-error[E0552]: unrecognized representation hint
- --> $DIR/packed-name-value.rs:3:8
+error[E0693]: incorrect `repr(packed)` attribute format
+ --> tests/ui/pin_project/packed-name-value.rs:3:8
   |
 3 | #[repr(packed = "")] //~ ERROR E0552
-  |        ^^^^^^^^^^^
+  |        ^^^^^^^^^^^ help: use parentheses instead: `packed()`
 
-error[E0552]: unrecognized representation hint
- --> $DIR/packed-name-value.rs:9:8
+error[E0693]: incorrect `repr(packed)` attribute format
+ --> tests/ui/pin_project/packed-name-value.rs:9:8
   |
 9 | #[repr(packed = "")] //~ ERROR E0552
-  |        ^^^^^^^^^^^
+  |        ^^^^^^^^^^^ help: use parentheses instead: `packed()`
 
-error[E0552]: unrecognized representation hint
-  --> $DIR/packed-name-value.rs:14:8
+error[E0693]: incorrect `repr(packed)` attribute format
+  --> tests/ui/pin_project/packed-name-value.rs:14:8
    |
 14 | #[repr(packed = "")] //~ ERROR E0552
-   |        ^^^^^^^^^^^
+   |        ^^^^^^^^^^^ help: use parentheses instead: `packed()`

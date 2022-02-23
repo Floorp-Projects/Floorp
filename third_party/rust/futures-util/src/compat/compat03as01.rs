@@ -236,17 +236,7 @@ mod io {
         }
     }
 
-    impl<R: AsyncRead03 + Unpin> AsyncRead01 for Compat<R> {
-        #[cfg(feature = "read-initializer")]
-        unsafe fn prepare_uninitialized_buffer(&self, buf: &mut [u8]) -> bool {
-            let initializer = self.inner.initializer();
-            let does_init = initializer.should_initialize();
-            if does_init {
-                initializer.initialize(buf);
-            }
-            does_init
-        }
-    }
+    impl<R: AsyncRead03 + Unpin> AsyncRead01 for Compat<R> {}
 
     impl<W: AsyncWrite03 + Unpin> std::io::Write for Compat<W> {
         fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {

@@ -17,6 +17,15 @@
 #include <libproc.h>
 #include <sys/sysctl.h>
 #include <mach/mach.h>
+#include <mach/mach_time.h>
+
+static void GetTimeBase(mach_timebase_info_data_t* timebase) {
+  // Expected results are 125/3 on aarch64, and 1/1 on Intel CPUs.
+  if (mach_timebase_info(timebase) != KERN_SUCCESS) {
+    timebase->numer = 1;
+    timebase->denom = 1;
+  }
+}
 
 namespace mozilla {
 
@@ -26,7 +35,12 @@ nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
       PROC_PIDTASKINFO_SIZE) {
     return NS_ERROR_FAILURE;
   }
-  *aResult = (pti.pti_total_user + pti.pti_total_system) / PR_NSEC_PER_MSEC;
+
+  mach_timebase_info_data_t timebase;
+  GetTimeBase(&timebase);
+
+  *aResult = (pti.pti_total_user + pti.pti_total_system) * timebase.numer / timebase.denom /
+             PR_NSEC_PER_MSEC;
   return NS_OK;
 }
 
@@ -53,6 +67,10 @@ ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(nsTArray<ProcInfoRequest>&
     result.SetReject(NS_ERROR_OUT_OF_MEMORY);
     return result;
   }
+
+  mach_timebase_info_data_t timebase;
+  GetTimeBase(&timebase);
+
   for (const auto& request : aRequests) {
     ProcInfo info;
     info.pid = request.pid;
@@ -69,7 +87,7 @@ ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(nsTArray<ProcInfoRequest>&
       // the process has been just been killed. Regardless, skip process.
       continue;
     }
-    info.cpuTime = pti.pti_total_user + pti.pti_total_system;
+    info.cpuTime = (pti.pti_total_user + pti.pti_total_system) * timebase.numer / timebase.denom;
 
     mach_port_t selectedTask;
     // If we did not get a task from a child process, we use mach_task_self()

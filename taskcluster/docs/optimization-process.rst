@@ -75,4 +75,3 @@ outside of the taskgraph (for replacement tasks).
 
 As a side-effect, this phase also expands all ``{"task-reference": ".."}`` and
 ``{"artifact-reference": ".."}`` objects within the task definitions.
-

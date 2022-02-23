@@ -106,6 +106,7 @@ browser.jar:
         content/browser/upgradeDialog.js              (content/upgradeDialog.js)
         content/browser/spotlight.html                (content/spotlight.html)
         content/browser/spotlight.js                  (content/spotlight.js)
+*       content/browser/default-bookmarks.html        (content/default-bookmarks.html)
 
 % override chrome://global/content/netError.xhtml chrome://browser/content/certerror/aboutNetError.xhtml
 

@@ -219,7 +219,7 @@ static int do_main(int argc, char* argv[], char* envp[]) {
 #endif
 
   // Note: keep in sync with LauncherProcessWin.
-  const char* acceptableParams[] = {"url", nullptr};
+  const char* acceptableParams[] = {"url", "private-window", nullptr};
   EnsureCommandlineSafe(argc, argv, acceptableParams);
 
   return gBootstrap->XRE_main(argc, argv, config);

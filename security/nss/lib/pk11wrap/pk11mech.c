@@ -235,7 +235,7 @@ PK11_GetKeyType(CK_MECHANISM_TYPE type, unsigned long len)
         case CKM_CHACHA20_POLY1305:
         case CKM_CHACHA20_KEY_GEN:
         case CKM_CHACHA20:
-            return CKK_NSS_CHACHA20;
+            return CKK_CHACHA20;
         case CKM_AES_ECB:
         case CKM_AES_CBC:
         case CKM_AES_CCM:

@@ -296,26 +296,6 @@ function ParamSubstitution(paramValue, searchTerms, engine) {
           pad(date.getHours())
         );
       }
-
-      // {moz:distributionID} and {moz:official} seem to have little use.
-      if (name == SearchUtils.MOZ_PARAM.DIST_ID) {
-        return Services.prefs.getCharPref(
-          SearchUtils.BROWSER_SEARCH_PREF + "distributionID",
-          Services.appinfo.distributionID || ""
-        );
-      }
-
-      if (name == SearchUtils.MOZ_PARAM.OFFICIAL) {
-        if (
-          Services.prefs.getBoolPref(
-            SearchUtils.BROWSER_SEARCH_PREF + "official",
-            AppConstants.MOZ_OFFICIAL_BRANDING
-          )
-        ) {
-          return "official";
-        }
-        return "unofficial";
-      }
     }
 
     // Handle the less common OpenSearch parameters we're confident about.

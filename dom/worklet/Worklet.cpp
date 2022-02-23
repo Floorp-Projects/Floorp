@@ -164,8 +164,8 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     return promise.forget();
   }
 
-  virtual void ResolvedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override {
+  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override {
     MOZ_ASSERT(NS_IsMainThread());
 
     if (!aValue.isObject()) {
@@ -256,8 +256,8 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     return NS_OK;
   }
 
-  virtual void RejectedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override {
+  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override {
     MOZ_ASSERT(NS_IsMainThread());
     RejectPromises(NS_ERROR_DOM_NETWORK_ERR);
   }

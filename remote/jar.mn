@@ -15,6 +15,7 @@ remote.jar:
   # shared modules (all protocols)
   content/shared/Format.jsm (shared/Format.jsm)
   content/shared/Log.jsm (shared/Log.jsm)
+  content/shared/MobileTabBrowser.jsm (shared/MobileTabBrowser.jsm)
   content/shared/Navigate.jsm (shared/Navigate.jsm)
   content/shared/RecommendedPreferences.jsm (shared/RecommendedPreferences.jsm)
   content/shared/Stack.jsm (shared/Stack.jsm)

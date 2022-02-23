@@ -193,6 +193,14 @@ bool ArgumentsGetterImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
+  // Function.arguments isn't standard (not even Annex B), so it isn't
+  // worth the effort to guarantee that we can always recover it from
+  // an Ion frame. Always return null for differential fuzzing.
+  if (js::SupportDifferentialTesting()) {
+    args.rval().setNull();
+    return true;
+  }
+
   // Return null if this function wasn't found on the stack.
   NonBuiltinScriptFrameIter iter(cx);
   if (!AdvanceToActiveCallLinear(cx, iter, fun)) {

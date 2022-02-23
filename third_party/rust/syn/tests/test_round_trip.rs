@@ -1,4 +1,5 @@
 #![cfg(not(syn_disable_nightly_tests))]
+#![cfg(not(miri))]
 #![recursion_limit = "1024"]
 #![feature(rustc_private)]
 #![allow(clippy::manual_assert)]
@@ -63,7 +64,7 @@ fn test_round_trip() {
             }
         });
 
-    let failed = failed.load(Ordering::SeqCst);
+    let failed = failed.load(Ordering::Relaxed);
     if failed > 0 {
         panic!("{} failures", failed);
     }
@@ -77,7 +78,7 @@ fn test(path: &Path, failed: &AtomicUsize, abort_after: usize) {
         Ok(krate) => (krate, start.elapsed()),
         Err(msg) => {
             errorf!("=== {}: syn failed to parse\n{:?}\n", path.display(), msg);
-            let prev_failed = failed.fetch_add(1, Ordering::SeqCst);
+            let prev_failed = failed.fetch_add(1, Ordering::Relaxed);
             if prev_failed + 1 >= abort_after {
                 process::exit(1);
             }
@@ -146,7 +147,7 @@ fn test(path: &Path, failed: &AtomicUsize, abort_after: usize) {
             }
         };
         if !equal {
-            let prev_failed = failed.fetch_add(1, Ordering::SeqCst);
+            let prev_failed = failed.fetch_add(1, Ordering::Relaxed);
             if prev_failed + 1 >= abort_after {
                 process::exit(1);
             }

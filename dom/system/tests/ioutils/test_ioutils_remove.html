@@ -17,8 +17,7 @@
 
     add_task(async function test_create_and_remove_file() {
       info("Test creating and removing a single file");
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_create_and_remove.tmp");
+      const tmpFileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_create_and_remove.tmp");
       await IOUtils.write(tmpFileName, new Uint8Array(0));
       ok(await fileExists(tmpFileName), `Expected file ${tmpFileName} to exist`);
 
@@ -26,17 +25,16 @@
       ok(!await fileExists(tmpFileName), "IOUtils::remove can remove files");
 
       info("Test creating and removing an empty directory");
-      const tmpDirName = PathUtils.join(tmpDir, "test_ioutils_create_and_remove.tmp.d");
-      await IOUtils.makeDirectory(tmpDirName);
-      ok(await dirExists(tmpDirName), `Expected directory ${tmpDirName} to exist`);
+      const tempDirName = PathUtils.join(PathUtils.tempDir, "test_ioutils_create_and_remove.tmp.d");
+      await IOUtils.makeDirectory(tempDirName);
+      ok(await dirExists(tempDirName), `Expected directory ${tempDirName} to exist`);
 
-      await IOUtils.remove(tmpDirName);
-      ok(!await dirExists(tmpDirName), "IOUtils::remove can remove empty directories");
+      await IOUtils.remove(tempDirName);
+      ok(!await dirExists(tempDirName), "IOUtils::remove can remove empty directories");
     });
 
     add_task(async function test_remove_non_existing() {
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutil_remove_non_existing.tmp");
+      const tmpFileName = PathUtils.join(PathUtils.tempDir, "test_ioutil_remove_non_existing.tmp");
       ok(!await fileExists(tmpFileName), `Expected file ${tmpFileName} not to exist`);
 
       await IOUtils.remove(tmpFileName, { ignoreAbsent: true });
@@ -51,8 +49,7 @@
     });
 
     add_task(async function test_remove_recursive() {
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpParentDir = PathUtils.join(tmpDir, "test_ioutils_remove.tmp.d");
+      const tmpParentDir = PathUtils.join(PathUtils.tempDir, "test_ioutils_remove.tmp.d");
       const tmpChildDir = PathUtils.join(tmpParentDir, "child.tmp.d");
       const tmpTopLevelFileName = PathUtils.join(tmpParentDir, "top.tmp");
       const tmpNestedFileName = PathUtils.join(tmpChildDir, "nested.tmp");

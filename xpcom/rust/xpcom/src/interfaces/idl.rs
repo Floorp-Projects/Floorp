@@ -9,4 +9,4 @@ use crate::*;
 
 // NOTE: This file contains a series of `include!()` invocations, defining all
 // idl interfaces directly within this module.
-include!(concat!(env!("MOZ_TOPOBJDIR"), "/dist/xpcrs/rt/all.rs"));
+include!(mozbuild::objdir_path!("dist/xpcrs/rt/all.rs"));

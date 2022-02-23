@@ -9,13 +9,13 @@ from types import FunctionType
 from collections import namedtuple
 
 from mozbuild.util import memoize
+from taskgraph.parameters import Parameters
 from taskgraph.util import yaml
 
 from gecko_taskgraph import create
 from gecko_taskgraph.config import load_graph_config
 from gecko_taskgraph.util import taskcluster, hash
 from gecko_taskgraph.util.python_path import import_sibling_modules
-from gecko_taskgraph.parameters import Parameters
 
 
 actions = []
@@ -69,7 +69,7 @@ def register_callback_action(
     parameters as follows:
 
     ``parameters``:
-        Decision task parameters, see ``gecko_taskgraph.parameters.Parameters``.
+        Decision task parameters, see ``taskgraph.parameters.Parameters``.
     ``input``:
         Input matching specified JSON schema, ``None`` if no ``schema``
         parameter is given to ``register_callback_action``.
@@ -274,7 +274,7 @@ def render_actions_json(parameters, graph_config, decision_task_id):
 
     Parameters
     ----------
-    parameters : gecko_taskgraph.parameters.Parameters
+    parameters : taskgraph.parameters.Parameters
         Decision task parameters.
 
     Returns

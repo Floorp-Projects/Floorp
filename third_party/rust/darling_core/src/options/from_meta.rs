@@ -1,10 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::ToTokens;
-use syn;
 
-use codegen::FromMetaImpl;
-use options::{Core, ParseAttribute, ParseData};
-use Result;
+use crate::codegen::FromMetaImpl;
+use crate::options::{Core, ParseAttribute, ParseData};
+use crate::Result;
 
 pub struct FromMetaOptions {
     base: Core,
@@ -13,7 +12,7 @@ pub struct FromMetaOptions {
 impl FromMetaOptions {
     pub fn new(di: &syn::DeriveInput) -> Result<Self> {
         (FromMetaOptions {
-            base: Core::start(di),
+            base: Core::start(di)?,
         })
         .parse_attributes(&di.attrs)?
         .parse_body(&di.data)

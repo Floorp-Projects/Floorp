@@ -19,7 +19,7 @@
     const VALUE = new TextEncoder().encode("bogus");
 
     add_task(async function test_macXAttr() {
-      const tmpDir = PathUtils.join(await PathUtils.getTempDir(), "ioutils-macos-xattr.tmp.d");
+      const tmpDir = PathUtils.join(PathUtils.tempDir, "ioutils-macos-xattr.tmp.d");
 
       await createDir(tmpDir);
 

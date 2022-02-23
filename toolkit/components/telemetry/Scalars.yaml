@@ -307,6 +307,27 @@ browser.engagement:
       - 'main'
       - 'account-ecosystem'
 
+  mirror_for_uri_count:
+    bug_numbers:
+      - 1741674
+      - 1752890
+    description: >
+      The count of the total non-unique http(s) URIs visited in a subsession, including
+      page reloads, after the session has been restored. URIs on minimized or background
+      tabs may also be counted towards this. Private browsing is included in this count.
+      Used for comparing with browser.engagement.total_uri_count_normal_and_private_mode
+      as a mirror of Glean's browser.engagement.uri_count.
+    expires: '100'
+    kind: uint
+    notification_emails:
+      - chutten@mozilla.com
+      - loines@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   unfiltered_uri_count:
     bug_numbers:
       - 1304647
@@ -370,6 +391,27 @@ browser.engagement:
     record_into_store:
       - 'main'
       - 'account-ecosystem'
+
+  mirror_for_active_ticks:
+    bug_numbers:
+      - 1741674
+      - 1752890
+    description: >
+      The count of the number of five-second intervals ('ticks') the user
+      was considered 'active' in a subsession. Session activity involves keyboard or mouse
+      interaction with the application. It does not take into account whether or not the window
+      has focus or is in the foreground, only if it is receiving these interaction events.
+      Used for comparing with browser.engagement.active_ticks as a mirror for
+      Glean's browser.engagement.active_ticks
+    expires: '100'
+    kind: uint
+    notification_emails:
+      - chutten@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
   profile_count:
     bug_numbers:
@@ -2047,6 +2089,19 @@ pictureinpicture:
       - 'firefox'
     record_in_processes:
       - main
+  toggle_enabled:
+    bug_numbers:
+      - 1639774
+    description: Whether the user has Picture-in-Picture enabled.
+    expires: "never"
+    kind: boolean
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
 
 preferences:
   created_new_user_prefs_file:
@@ -2308,24 +2363,6 @@ media:
     products:
       - 'firefox'
     record_in_processes:
-      - 'content'
-
-  wmf_process_usage:
-    bug_numbers:
-      - 1690372
-      - 1720616
-    description: >
-      Record whether the WMF decoder module is used in content or chrome process.
-    expires: "99"
-    kind: boolean
-    notification_emails:
-      - alwu@mozilla.com
-      - bvandyk@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
       - 'content'
 
   video_hardware_decoding_support:
@@ -4988,6 +5025,29 @@ update:
     record_in_processes:
       - main
 
+  suppress_prompts:
+    bug_numbers:
+      - 1749155
+    description: >
+      When an update is available and app.update.auto is disabled, a popup is
+      opened prompting the user to download and install the update. The pref
+      app.update.suppressPrompts causes Firefox Nightly to wait up to 7 days
+      before showing the prompt, instead showing a badge and banner in the
+      meantime. It also prevents Nightly from showing update restart prompts,
+      instead showing a badge and banner immediately. This value is set for
+      the users who set this pref to true.
+    expires: never
+    kind: boolean
+    keyed: false
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+      - bytesized@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 # The following section contains search counters.
 browser.search:
   with_ads:
@@ -5779,6 +5839,7 @@ startup:
       - 1522934
       - 1570652
       - 1623406
+      - 1749887
     description: >
       How the profile was selected during startup. One of the following reasons:
         unknown:
@@ -5811,7 +5872,7 @@ startup:
           A first run of the application created a new profile to use.
         default:
           The default profile was selected as normal.
-    expires: "99"
+    expires: "never"
     keyed: false
     kind: string
     notification_emails:
@@ -5820,7 +5881,7 @@ startup:
       - gkaberere@mozilla.com
       - jhollek@mozilla.com
       - echo@mozilla.com
-      - wlachance@mozilla.com
+      - shong@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -7354,6 +7415,58 @@ contextual.services.quicksuggest:
       - main
 
 power:
+  cpu_time_per_process_type_ms:
+    bug_numbers:
+      - 1747138
+    description: >
+      CPU time used by each process type in ms.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'all'
+    keyed: true
+    keys: &per_process_type_keys
+      - parent.active
+      - parent.active.playing-audio
+      - parent.active.playing-video
+      - parent.inactive
+      - parent.inactive.playing-audio
+      - parent.inactive.playing-video
+      - prealloc
+      - privilegedabout
+      - rdd
+      - socket
+      - web.background
+      - web.background-perceivable
+      - web.foreground
+      - extension
+      - gpu
+      - gmplugin
+      - utility
+
+  gpu_time_per_process_type_ms:
+    bug_numbers:
+      - 1747138
+    description: >
+      GPU time used by each process type in ms.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'gpu'
+    keyed: true
+    keys: *per_process_type_keys
+
   total_cpu_time_ms:
     bug_numbers:
       - 1736040
@@ -7571,6 +7684,7 @@ telemetry.test:
     keyed: true
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
     products:
       - 'firefox'
       - 'fennec'

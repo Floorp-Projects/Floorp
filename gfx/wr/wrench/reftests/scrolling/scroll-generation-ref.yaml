@@ -1,0 +1,10 @@
+root:
+  items:
+    - type: scroll-frame
+      bounds: [0, 0, 100, 100]
+      content-size: [100, 1000]
+      external-scroll-offset: [0, 60]
+      items:
+        - type: rect
+          color: green
+          bounds: [0, 60, 100, 100]

@@ -115,6 +115,10 @@ class MediaSessionConduit {
 
   virtual Type type() const = 0;
 
+  // Call thread only
+  virtual Maybe<int> ActiveSendPayloadType() const = 0;
+  virtual Maybe<int> ActiveRecvPayloadType() const = 0;
+
   // Whether transport is currently sending and receiving packets
   virtual void SetTransportActive(bool aActive) = 0;
 

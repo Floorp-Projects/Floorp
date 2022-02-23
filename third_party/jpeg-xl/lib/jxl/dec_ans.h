@@ -235,7 +235,11 @@ class ANSSymbolReader {
     return ReadSymbolWithoutRefill(histo_idx, br);
   }
 
-  bool CheckANSFinalState() { return state_ == (ANS_SIGNATURE << 16u); }
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+  bool CheckANSFinalState() const { return true; }
+#else
+  bool CheckANSFinalState() const { return state_ == (ANS_SIGNATURE << 16u); }
+#endif
 
   template <typename BitReader>
   static JXL_INLINE uint32_t ReadHybridUintConfig(

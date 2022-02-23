@@ -205,4 +205,3 @@ This chart lists colors and CSS variables as implemented in the dark theme and l
 
 .. warning::
   Not yet finalized. See `bug 916766 <https://bugzilla.mozilla.org/show_bug.cgi?id=916766>`_ for progress.
-

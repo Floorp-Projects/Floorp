@@ -21,6 +21,7 @@ SOURCES += [
 LOCAL_INCLUDES += [
     "..",
     "../ffmpeg58/include",
+    "/media/mozva",
 ]
 
 CXXFLAGS += ["-Wno-deprecated-declarations"]
@@ -39,5 +40,8 @@ DEFINES["USING_MOZFFVPX"] = True
 if CONFIG["MOZ_WAYLAND"]:
     CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
     DEFINES["MOZ_WAYLAND_USE_VAAPI"] = 1
+    USE_LIBS += ["mozva"]
+
+include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"

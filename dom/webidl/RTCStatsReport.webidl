@@ -9,6 +9,7 @@
  */
 
 enum RTCStatsType {
+  "codec",
   "inbound-rtp",
   "outbound-rtp",
   "remote-inbound-rtp",
@@ -34,6 +35,22 @@ dictionary RTCRtpStreamStats : RTCStats {
   DOMString mediaType;
   DOMString kind;
   DOMString transportId;
+  DOMString codecId;
+};
+
+dictionary RTCCodecStats : RTCStats {
+  required unsigned long payloadType;
+  RTCCodecType  codecType;
+  required DOMString     transportId;
+  required DOMString     mimeType;
+  unsigned long clockRate;
+  unsigned long channels;
+  DOMString     sdpFmtpLine;
+};
+
+enum RTCCodecType {
+  "encode",
+  "decode",
 };
 
 dictionary RTCReceivedRtpStreamStats: RTCRtpStreamStats {
@@ -199,9 +216,12 @@ dictionary RTCStatsCollection {
   sequence<RTCIceCandidatePairStats>        iceCandidatePairStats = [];
   sequence<RTCIceCandidateStats>            iceCandidateStats = [];
   sequence<RTCIceCandidateStats>            trickledIceCandidateStats = [];
+  sequence<RTCDataChannelStats>             dataChannelStats = [];
+  sequence<RTCCodecStats>                   codecStats = [];
+
+  // For internal use only
   sequence<DOMString>                       rawLocalCandidates = [];
   sequence<DOMString>                       rawRemoteCandidates = [];
-  sequence<RTCDataChannelStats>             dataChannelStats = [];
   sequence<RTCVideoFrameHistoryInternal>    videoFrameHistories = [];
   sequence<RTCBandwidthEstimationInternal>  bandwidthEstimations = [];
 };

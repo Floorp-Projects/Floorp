@@ -875,4 +875,34 @@ void WebrtcAudioConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,
   }
 }
 
+Maybe<int> WebrtcAudioConduit::ActiveSendPayloadType() const {
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+
+  auto stats = GetSenderStats();
+  if (!stats) {
+    return Nothing();
+  }
+
+  if (!stats->codec_payload_type) {
+    return Nothing();
+  }
+
+  return Some(*stats->codec_payload_type);
+}
+
+Maybe<int> WebrtcAudioConduit::ActiveRecvPayloadType() const {
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+
+  auto stats = GetReceiverStats();
+  if (!stats) {
+    return Nothing();
+  }
+
+  if (!stats->codec_payload_type) {
+    return Nothing();
+  }
+
+  return Some(*stats->codec_payload_type);
+}
+
 }  // namespace mozilla

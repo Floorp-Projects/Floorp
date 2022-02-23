@@ -4,7 +4,11 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
+const {
+  createRef,
+  Component,
+  createFactory,
+} = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
@@ -13,27 +17,55 @@ const {
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const Actions = require("devtools/client/netmonitor/src/actions/index");
 const {
-  getSelectedRequest,
+  getClickedRequest,
 } = require("devtools/client/netmonitor/src/selectors/index");
 const {
   getUrlQuery,
   parseQueryString,
-  writeHeaderText,
+  updateTextareaRows,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
-
-const { button, div, input, label, textarea } = dom;
-
-const CUSTOM_HEADERS = L10N.getStr("netmonitor.custom.headers");
-const CUSTOM_NEW_REQUEST_METHOD_LABEL = L10N.getStr(
-  "netmonitor.custom.newRequestMethodLabel"
+const InputMap = createFactory(
+  require("devtools/client/netmonitor/src/components/new-request/InputMap")
 );
+const { button, div, label, textarea, select, option } = dom;
+
+const CUSTOM_HEADERS = L10N.getStr("netmonitor.custom.newRequestHeaders");
 const CUSTOM_NEW_REQUEST_URL_LABEL = L10N.getStr(
   "netmonitor.custom.newRequestUrlLabel"
 );
-const CUSTOM_POSTDATA = L10N.getStr("netmonitor.custom.postData");
-const CUSTOM_QUERY = L10N.getStr("netmonitor.custom.query");
+const CUSTOM_POSTDATA = L10N.getStr("netmonitor.custom.postBody");
+const CUSTOM_POSTDATA_PLACEHOLDER = L10N.getStr(
+  "netmonitor.custom.postBody.placeholder"
+);
+const CUSTOM_QUERY = L10N.getStr("netmonitor.custom.urlParameters");
 const CUSTOM_SEND = L10N.getStr("netmonitor.custom.send");
+const CUSTOM_CLEAR = L10N.getStr("netmonitor.custom.clear");
 
+const FIREFOX_DEFAULT_HEADERS = [
+  "Accept-Charset",
+  "Accept-Encoding",
+  "Access-Control-Request-Headers",
+  "Access-Control-Request-Method",
+  "Connection",
+  "Content-Length",
+  "Cookie",
+  "Cookie2",
+  "Date",
+  "DNT",
+  "Expect",
+  "Feature-Policy",
+  "Host",
+  "Keep-Alive",
+  "Origin",
+  "Proxy-",
+  "Sec-",
+  "Referer",
+  "TE",
+  "Trailer",
+  "Transfer-Encoding",
+  "Upgrade",
+  "Via",
+];
 /*
  * HTTP Custom request panel component
  * A network request panel which enables creating and sending new requests
@@ -42,116 +74,274 @@ const CUSTOM_SEND = L10N.getStr("netmonitor.custom.send");
 class HTTPCustomRequestPanel extends Component {
   static get propTypes() {
     return {
-      connector: PropTypes.object,
+      connector: PropTypes.object.isRequired,
       request: PropTypes.object,
       sendCustomRequest: PropTypes.func.isRequired,
     };
   }
 
+  static createQueryParamsListFromURL(url) {
+    const queryArray = (url ? parseQueryString(getUrlQuery(url)) : []) || [];
+    return queryArray.map(({ name, value }) => {
+      return {
+        checked: true,
+        name,
+        value,
+      };
+    });
+  }
+
+  constructor(props) {
+    super(props);
+
+    const { request } = props;
+
+    this.URLTextareaRef = createRef();
+
+    this.state = {
+      method: request ? request.method : "",
+      url: request ? request.url : "",
+      urlQueryParams: HTTPCustomRequestPanel.createQueryParamsListFromURL(
+        request?.url
+      ),
+      headers: request
+        ? request.requestHeaders.headers
+            .map(({ name, value }) => {
+              return {
+                name,
+                value,
+                checked: true,
+                disabled: !!FIREFOX_DEFAULT_HEADERS.find(i =>
+                  name.startsWith(i)
+                ),
+              };
+            })
+            .sort((a, b) => {
+              if (a.disabled && !b.disabled) {
+                return -1;
+              }
+              if (!a.disabled && b.disabled) {
+                return 1;
+              }
+              return 0;
+            })
+        : [],
+      requestPostData: request
+        ? request.requestPostData?.postData.text || ""
+        : "",
+    };
+
+    this.handleInputChange = this.handleInputChange.bind(this);
+    this.onUpdateQueryParams = this.onUpdateQueryParams.bind(this);
+    this.handleChangeURL = this.handleChangeURL.bind(this);
+    this.updateInputMapItem = this.updateInputMapItem.bind(this);
+    this.addInputMapItem = this.addInputMapItem.bind(this);
+    this.deleteInputMapItem = this.deleteInputMapItem.bind(this);
+    this.checkInputMapItem = this.checkInputMapItem.bind(this);
+    this.handleClear = this.handleClear.bind(this);
+  }
+
+  componentDidMount() {
+    updateTextareaRows(this.URLTextareaRef.current);
+    this.resizeObserver = new ResizeObserver(entries => {
+      updateTextareaRows(this.URLTextareaRef.current);
+    });
+
+    this.resizeObserver.observe(this.URLTextareaRef.current);
+  }
+
+  componentWillUnmount() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
+  }
+
+  handleChangeURL(event) {
+    const { value } = event.target;
+
+    this.setState({
+      url: value,
+      urlQueryParams: HTTPCustomRequestPanel.createQueryParamsListFromURL(
+        value
+      ),
+    });
+  }
+
+  handleInputChange(event) {
+    const { name, value } = event.target;
+
+    this.setState({
+      [name]: value,
+    });
+  }
+
+  updateInputMapItem(stateName, event) {
+    const { name, value } = event.target;
+
+    const [prop, index] = name.split("-");
+
+    const updatedList = [...this.state[stateName]];
+
+    updatedList[Number(index)][prop] = value;
+
+    this.setState({
+      [stateName]: updatedList,
+    });
+  }
+
+  addInputMapItem(stateName, name, value) {
+    this.setState({
+      [stateName]: [
+        ...this.state[stateName],
+        { name, value, checked: true, disabled: false },
+      ],
+    });
+  }
+
+  deleteInputMapItem(stateName, index) {
+    this.setState({
+      [stateName]: this.state[stateName].filter((_, i) => i !== index),
+    });
+  }
+
+  checkInputMapItem(stateName, index, checked, cb) {
+    this.setState(
+      {
+        [stateName]: this.state[stateName].map((item, i) => {
+          if (index === i) {
+            return {
+              ...item,
+              checked: checked,
+            };
+          }
+          return item;
+        }),
+      },
+      cb
+    );
+  }
+
+  onUpdateQueryParams() {
+    const { urlQueryParams, url } = this.state;
+    let queryString = "";
+    for (const { name, value, checked } of urlQueryParams) {
+      if (checked) {
+        queryString += `${name}=${value}&`;
+      }
+    }
+
+    let finalURL = url.split("?")[0];
+
+    if (queryString.length > 0) {
+      finalURL += `?${queryString.substring(0, queryString.length - 1)}`;
+    }
+    this.setState({
+      url: finalURL,
+    });
+  }
+
+  handleClear() {
+    this.setState(
+      {
+        method: "",
+        url: "",
+        urlQueryParams: [],
+        headers: [],
+        requestPostData: "",
+      },
+      () => updateTextareaRows(this.URLTextareaRef.current)
+    );
+  }
+
   render() {
-    const { request = {}, sendCustomRequest } = this.props;
+    const { sendCustomRequest } = this.props;
     const {
       method,
-      customQueryValue,
-      requestHeaders,
+      urlQueryParams,
       requestPostData,
       url,
-    } = request;
+      headers,
+    } = this.state;
 
-    let headers = "";
-    if (requestHeaders) {
-      headers = requestHeaders.customHeadersValue
-        ? requestHeaders.customHeadersValue
-        : writeHeaderText(requestHeaders.headers).trim();
-    }
-    const queryArray = url ? parseQueryString(getUrlQuery(url)) : [];
-    let params = customQueryValue;
-    if (!params) {
-      params = queryArray
-        ? queryArray.map(({ name, value }) => name + "=" + value).join("\n")
-        : "";
-    }
-    const postData = requestPostData?.postData.text
-      ? requestPostData.postData.text
-      : "";
-
+    const methods = [
+      "GET",
+      "HEAD",
+      "POST",
+      "DELETE",
+      "PUT",
+      "CONNECT",
+      "OPTIONS",
+      "TRACE",
+      "PATH",
+    ];
     return div(
       { className: "http-custom-request-panel" },
       div(
         { className: "http-custom-request-panel-content" },
         div(
-          { className: "tabpanel-summary-container http-custom-request" },
-          div(
-            { className: "http-custom-request-button-container" },
-            button(
-              {
-                className: "devtools-button",
-                id: "http-custom-request-send-button",
-                onClick: sendCustomRequest,
-              },
-              CUSTOM_SEND
-            )
-          )
-        ),
-        div(
           {
             className: "tabpanel-summary-container http-custom-method-and-url",
             id: "http-custom-method-and-url",
           },
-          label(
+          select(
             {
-              className:
-                "http-custom-method-value-label http-custom-request-label",
-              htmlFor: "http-custom-method-value",
+              className: "http-custom-method-value",
+              id: "http-custom-method-value",
+              name: "method",
+              onChange: this.handleInputChange,
+              onBlur: this.handleInputChange,
+              value: method,
             },
-            CUSTOM_NEW_REQUEST_METHOD_LABEL
+
+            methods.map(item =>
+              option(
+                {
+                  value: item,
+                  key: item,
+                },
+                item
+              )
+            )
           ),
-          input({
-            className: "http-custom-method-value",
-            id: "http-custom-method-value",
-            onChange: evt => {},
-            onBlur: () => {},
-            value: method,
-          }),
-          label(
-            {
-              className:
-                "http-custom-url-value-label http-custom-request-label",
-              htmlFor: "http-custom-url-value",
-            },
-            CUSTOM_NEW_REQUEST_URL_LABEL
-          ),
-          input({
+          textarea({
             className: "http-custom-url-value",
             id: "http-custom-url-value",
-            onChange: evt => {},
-            value: url || "http://",
+            name: "url",
+            placeholder: CUSTOM_NEW_REQUEST_URL_LABEL,
+            ref: this.URLTextareaRef,
+            onChange: event => {
+              this.handleChangeURL(event);
+              updateTextareaRows(event.target);
+            },
+            onBlur: this.handleTextareaChange,
+            value: url,
+            rows: 1,
           })
         ),
-        // Hide query field when there is no params
-        params
-          ? div(
-              {
-                className: "tabpanel-summary-container http-custom-section",
-                id: "http-custom-query",
-              },
-              label(
-                {
-                  className: "http-custom-request-label",
-                  htmlFor: "http-custom-query-value",
-                },
-                CUSTOM_QUERY
-              ),
-              textarea({
-                className: "tabpanel-summary-input",
-                id: "http-custom-query-value",
-                onChange: evt => {},
-                rows: 4,
-                value: params,
-                wrap: "off",
-              })
-            )
-          : null,
+        div(
+          {
+            className: "tabpanel-summary-container http-custom-section",
+            id: "http-custom-query",
+          },
+          label(
+            {
+              className: "http-custom-request-label",
+              htmlFor: "http-custom-query-value",
+            },
+            CUSTOM_QUERY
+          ),
+          InputMap({
+            list: urlQueryParams,
+            onChecked: (index, checked) => {
+              this.checkInputMapItem(
+                "urlQueryParams",
+                index,
+                checked,
+                this.onUpdateQueryParams
+              );
+            },
+          })
+        ),
         div(
           {
             id: "http-custom-headers",
@@ -164,13 +354,19 @@ class HTTPCustomRequestPanel extends Component {
             },
             CUSTOM_HEADERS
           ),
-          textarea({
-            className: "tabpanel-summary-input",
-            id: "http-custom-headers-value",
-            onChange: evt => {},
-            rows: 8,
-            value: headers,
-            wrap: "off",
+          InputMap({
+            ref: this.headersListRef,
+            resizeable: true,
+            list: headers,
+            onUpdate: event => {
+              this.updateInputMapItem("headers", event);
+            },
+            onAdd: (name, value) =>
+              this.addInputMapItem("headers", name, value),
+            onDelete: index => this.deleteInputMapItem("headers", index),
+            onChecked: (index, checked) => {
+              this.checkInputMapItem("headers", index, checked);
+            },
           })
         ),
         div(
@@ -188,11 +384,42 @@ class HTTPCustomRequestPanel extends Component {
           textarea({
             className: "tabpanel-summary-input",
             id: "http-custom-postdata-value",
-            onChange: evt => {},
+            name: "requestPostData",
+            placeholder: CUSTOM_POSTDATA_PLACEHOLDER,
+            onChange: this.handleInputChange,
             rows: 6,
-            value: postData,
+            value: requestPostData,
             wrap: "off",
           })
+        ),
+        div(
+          { className: "tabpanel-summary-container http-custom-request" },
+          div(
+            { className: "http-custom-request-button-container" },
+            button(
+              {
+                className: "devtools-button",
+                id: "http-custom-request-clear-button",
+                onClick: this.handleClear,
+              },
+              CUSTOM_CLEAR
+            ),
+            button(
+              {
+                className: "devtools-button",
+                id: "http-custom-request-send-button",
+                disabled: !this.state.url,
+                onClick: () =>
+                  sendCustomRequest({
+                    ...this.state,
+                    headers: this.state.headers.filter(
+                      ({ checked }) => checked
+                    ),
+                  }),
+              },
+              CUSTOM_SEND
+            )
+          )
         )
       )
     );
@@ -200,9 +427,9 @@ class HTTPCustomRequestPanel extends Component {
 }
 
 module.exports = connect(
-  state => ({ request: getSelectedRequest(state) }),
+  state => ({ request: getClickedRequest(state) }),
   (dispatch, props) => ({
-    sendCustomRequest: () =>
-      dispatch(Actions.sendCustomRequest(props.connector)),
+    sendCustomRequest: request =>
+      dispatch(Actions.sendHTTPCustomRequest(props.connector, request)),
   })
 )(HTTPCustomRequestPanel);

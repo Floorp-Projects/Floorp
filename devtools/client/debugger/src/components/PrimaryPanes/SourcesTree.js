@@ -6,7 +6,6 @@
 import React, { Component } from "react";
 import classnames from "classnames";
 import { connect } from "../../utils/connect";
-import { difference } from "lodash";
 
 // Selectors
 import {
@@ -18,9 +17,8 @@ import {
   getDisplayedSources,
   getFocusedSourceItem,
   getContext,
+  getGeneratedSourceByURL,
 } from "../../selectors";
-
-import { getGeneratedSourceByURL } from "../../reducers/sources";
 
 // Actions
 import actions from "../../actions";
@@ -190,7 +188,9 @@ class SourcesTree extends Component {
   getSourcesGroups = item => {
     const sourcesAll = getAllSources(this.props);
     const sourcesInside = getSourcesInsideGroup(item, this.props);
-    const sourcesOuside = difference(sourcesAll, sourcesInside);
+    const sourcesOuside = sourcesAll.filter(
+      source => !sourcesInside.includes(source)
+    );
 
     return { sourcesInside, sourcesOuside };
   };

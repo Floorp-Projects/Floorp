@@ -9,6 +9,7 @@
 #  include <stdio.h>
 #  include <stdint.h>
 #  include <nsTArray.h>
+#  include <nsString.h>
 #  include <mozilla/Unused.h>
 #  include <mozilla/Atomics.h>
 #  include <mozilla/DebugOnly.h>
@@ -45,7 +46,12 @@ class WavDumper {
   }
 
   void OpenExplicit(const char* aPath, uint32_t aChannels, uint32_t aRate) {
+#  ifdef XP_WIN
+    nsAutoString widePath = NS_ConvertUTF8toUTF16(aPath);
+    mFile = _wfopen(widePath.get(), L"wb");
+#  else
     mFile = fopen(aPath, "wb");
+#  endif
     if (!mFile) {
       NS_WARNING("Could not open file to DUMP a wav. Is sandboxing disabled?");
       return;

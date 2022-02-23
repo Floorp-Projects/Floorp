@@ -28631,7 +28631,6 @@
                 "-Wunused-lambda-capture"
             ],
             "defines": [
-                "MULTI_MONITOR_SCREENSHARE",
                 "WEBRTC_USE_PIPEWIRE",
                 "USE_UDEV",
                 "USE_AURA=1",

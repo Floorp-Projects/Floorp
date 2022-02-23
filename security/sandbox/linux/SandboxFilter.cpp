@@ -35,6 +35,7 @@
 #include "SandboxLogging.h"
 #include "SandboxOpenedFiles.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/ProcInfo_linux.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/UniquePtr.h"
 #include "prenv.h"
@@ -746,6 +747,8 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         // source).  Those values could be detected by bit masking,
         // but it's simpler to just have a default-deny policy.
         Arg<clockid_t> clk_id(0);
+        clockid_t this_process =
+            MAKE_PROCESS_CPUCLOCK(getpid(), CPUCLOCK_SCHED);
         return If(clk_id == CLOCK_MONOTONIC, Allow())
 #ifdef CLOCK_MONOTONIC_COARSE
             // Used by SandboxReporter, among other things.
@@ -758,9 +761,11 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
 #endif
             .ElseIf(clk_id == CLOCK_THREAD_CPUTIME_ID, Allow())
 #ifdef MOZ_GECKO_PROFILER
+            // Allow clock_gettime on the same process.
+            .ElseIf(clk_id == this_process, Allow())
             // Allow clock_gettime on a thread.
-            // 4 -> CPUCLOCK_PERTHREAD_MASK. 2 -> CPUCLOCK_SCHED.
-            .ElseIf((clk_id & 7u) == (4u | 2u), Allow())
+            .ElseIf((clk_id & 7u) == (CPUCLOCK_PERTHREAD_MASK | CPUCLOCK_SCHED),
+                    Allow())
 #endif
 #ifdef CLOCK_BOOTTIME
             .ElseIf(clk_id == CLOCK_BOOTTIME, Allow())
@@ -1995,6 +2000,48 @@ UniquePtr<sandbox::bpf_dsl::Policy> GetSocketProcessSandboxPolicy(
     SandboxBrokerClient* aMaybeBroker) {
   return UniquePtr<sandbox::bpf_dsl::Policy>(
       new SocketProcessSandboxPolicy(aMaybeBroker));
+}
+
+class UtilitySandboxPolicy final : public SandboxPolicyCommon {
+ public:
+  explicit UtilitySandboxPolicy(SandboxBrokerClient* aBroker)
+      : SandboxPolicyCommon(aBroker, ShmemUsage::MAY_CREATE,
+                            AllowUnsafeSocketPair::NO) {}
+
+  ResultExpr PrctlPolicy() const override {
+    Arg<int> op(0);
+    return Switch(op)
+        .CASES((PR_SET_NAME,      // Thread creation
+                PR_SET_DUMPABLE,  // Crash reporting
+                PR_SET_PTRACER),  // Debug-mode crash handling
+               Allow())
+        .Default(InvalidSyscall());
+  }
+
+  ResultExpr EvaluateSyscall(int sysno) const override {
+    switch (sysno) {
+      case __NR_getrusage:
+        return Allow();
+      case __NR_ioctl: {
+        Arg<unsigned long> request(1);
+        // ffmpeg, and anything else that calls isatty(), will be told
+        // that nothing is a typewriter:
+        return If(request == TCGETS, Error(ENOTTY)).Else(InvalidSyscall());
+      }
+      case __NR_prctl: {
+        return Allow();
+      }
+      // Pass through the common policy.
+      default:
+        return SandboxPolicyCommon::EvaluateSyscall(sysno);
+    }
+  }
+};
+
+UniquePtr<sandbox::bpf_dsl::Policy> GetUtilitySandboxPolicy(
+    SandboxBrokerClient* aMaybeBroker) {
+  return UniquePtr<sandbox::bpf_dsl::Policy>(
+      new UtilitySandboxPolicy(aMaybeBroker));
 }
 
 }  // namespace mozilla

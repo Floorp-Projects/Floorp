@@ -75,7 +75,26 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
     const toolbox = this.markup.toolbox;
 
     // Create the EventTooltip which will populate the tooltip content.
-    const eventTooltip = new EventTooltip(tooltip, listenerInfo, toolbox);
+    const eventTooltip = new EventTooltip(
+      tooltip,
+      listenerInfo,
+      toolbox,
+      this.node
+    );
+
+    // Add specific styling to the "event" badge when at least one event is disabled.
+    // The eventTooltip will take care of clearing the event listener when it's destroyed.
+    eventTooltip.on(
+      "event-tooltip-listener-toggled",
+      ({ hasDisabledEventListeners }) => {
+        const className = "has-disabled-events";
+        if (hasDisabledEventListeners) {
+          this.editor._eventBadge.classList.add(className);
+        } else {
+          this.editor._eventBadge.classList.remove(className);
+        }
+      }
+    );
 
     // Disable the image preview tooltip while we display the event details
     this.markup._disableImagePreviewTooltip();

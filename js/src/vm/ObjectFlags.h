@@ -58,6 +58,9 @@ enum class ObjectFlag : uint16_t {
   // used to invalidate IC/Warp code specializing on specific getter/setter
   // objects. See also the SMDOC comment in vm/GetterSetter.h.
   HadGetterSetterChange = 1 << 10,
+
+  // If set, invoke the watchtower testing callback for changes to this object.
+  UseWatchtowerTestingCallback = 1 << 11,
 };
 
 using ObjectFlags = EnumFlags<ObjectFlag>;

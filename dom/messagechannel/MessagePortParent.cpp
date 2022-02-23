@@ -39,52 +39,69 @@ bool MessagePortParent::Entangle(const nsID& aDestinationUUID,
 
 mozilla::ipc::IPCResult MessagePortParent::RecvPostMessages(
     nsTArray<MessageData>&& aMessages) {
+  if (!mService) {
+    NS_WARNING("PostMessages is called after a shutdown!");
+    // This implies most probably that CloseAndDelete() has been already called
+    // such that we have no better option than to silently ignore this call.
+    return IPC_OK();
+  }
+
+  if (!mEntangled) {
+    // If we were shut down, the above condition already bailed out. So this
+    // should actually never happen and returning a failure is fine.
+    return IPC_FAIL(this, "RecvPostMessages not entangled");
+  }
+
   // This converts the object in a data struct where we have BlobImpls.
   FallibleTArray<RefPtr<SharedMessageBody>> messages;
   if (NS_WARN_IF(!SharedMessageBody::FromMessagesToSharedParent(aMessages,
                                                                 messages))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  if (!mEntangled) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  if (!mService) {
-    NS_WARNING("Entangle is called after a shutdown!");
-    return IPC_FAIL_NO_REASON(this);
+    // FromMessagesToSharedParent() returns false only if the array allocation
+    // failed.
+    // See bug 1750497 for further discussion if this is the wanted behavior.
+    return IPC_FAIL(this, "SharedMessageBody::FromMessagesToSharedParent");
   }
 
   if (messages.IsEmpty()) {
-    return IPC_FAIL_NO_REASON(this);
+    // An empty payload can be safely ignored.
+    return IPC_OK();
   }
 
   if (!mService->PostMessages(this, std::move(messages))) {
-    return IPC_FAIL_NO_REASON(this);
+    // TODO: Verify if all failure conditions of PostMessages() merit an
+    // IPC_FAIL. See bug 1750499.
+    return IPC_FAIL(this, "RecvPostMessages->PostMessages");
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult MessagePortParent::RecvDisentangle(
     nsTArray<MessageData>&& aMessages) {
+  if (!mService) {
+    NS_WARNING("Entangle is called after a shutdown!");
+    // This implies most probably that CloseAndDelete() has been already called
+    // such that we can silently ignore this call.
+    return IPC_OK();
+  }
+
+  if (!mEntangled) {
+    // If we were shut down, the above condition already bailed out. So this
+    // should actually never happen and returning a failure is fine.
+    return IPC_FAIL(this, "RecvDisentangle not entangled");
+  }
+
   // This converts the object in a data struct where we have BlobImpls.
   FallibleTArray<RefPtr<SharedMessageBody>> messages;
   if (NS_WARN_IF(!SharedMessageBody::FromMessagesToSharedParent(aMessages,
                                                                 messages))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  if (!mEntangled) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  if (!mService) {
-    NS_WARNING("Entangle is called after a shutdown!");
-    return IPC_FAIL_NO_REASON(this);
+    // TODO: Verify if failed allocations merit an IPC_FAIL. See bug 1750497.
+    return IPC_FAIL(this, "SharedMessageBody::FromMessagesToSharedParent");
   }
 
   if (!mService->DisentanglePort(this, std::move(messages))) {
-    return IPC_FAIL_NO_REASON(this);
+    // TODO: Verify if all failure conditions of DisentanglePort() merit an
+    // IPC_FAIL. See bug 1750501.
+    return IPC_FAIL(this, "RecvDisentangle->DisentanglePort");
   }
 
   CloseAndDelete();
@@ -106,7 +123,7 @@ mozilla::ipc::IPCResult MessagePortParent::RecvClose() {
     MOZ_ASSERT(mEntangled);
 
     if (!mService->ClosePort(this)) {
-      return IPC_FAIL_NO_REASON(this);
+      return IPC_FAIL(this, "RecvClose->ClosePort");
     }
 
     Close();

@@ -368,7 +368,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
                            nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_POPUPS);
   }
 
-  nsContentUtils::GenerateUUIDInPlace(fields.mHistoryID);
+  fields.mHistoryID = nsID::GenerateUUID();
   fields.mExplicitActive = [&] {
     if (parentBC) {
       // Non-root browsing-contexts inherit their status from its parent.
@@ -3499,13 +3499,21 @@ bool BrowsingContext::IsPopupAllowed() {
 /* static */
 bool BrowsingContext::ShouldAddEntryForRefresh(
     nsIURI* aCurrentURI, const SessionHistoryInfo& aInfo) {
-  if (aInfo.GetPostData()) {
+  return ShouldAddEntryForRefresh(aCurrentURI, aInfo.GetURI(),
+                                  aInfo.GetPostData());
+}
+
+/* static */
+bool BrowsingContext::ShouldAddEntryForRefresh(nsIURI* aCurrentURI,
+                                               nsIURI* aNewURI,
+                                               bool aHasPostData) {
+  if (aHasPostData) {
     return true;
   }
 
   bool equalsURI = false;
   if (aCurrentURI) {
-    aCurrentURI->Equals(aInfo.GetURI(), &equalsURI);
+    aCurrentURI->Equals(aNewURI, &equalsURI);
   }
   return !equalsURI;
 }
@@ -3513,7 +3521,7 @@ bool BrowsingContext::ShouldAddEntryForRefresh(
 void BrowsingContext::SessionHistoryCommit(
     const LoadingSessionHistoryInfo& aInfo, uint32_t aLoadType,
     nsIURI* aCurrentURI, bool aHadActiveEntry, bool aPersist,
-    bool aCloneEntryChildren, bool aChannelExpired) {
+    bool aCloneEntryChildren, bool aChannelExpired, uint32_t aCacheKey) {
   nsID changeID = {};
   if (XRE_IsContentProcess()) {
     RefPtr<ChildSHistory> rootSH = Top()->GetChildSessionHistory();
@@ -3544,11 +3552,11 @@ void BrowsingContext::SessionHistoryCommit(
     ContentChild* cc = ContentChild::GetSingleton();
     mozilla::Unused << cc->SendHistoryCommit(
         this, aInfo.mLoadId, changeID, aLoadType, aPersist, aCloneEntryChildren,
-        aChannelExpired);
+        aChannelExpired, aCacheKey);
   } else {
     Canonical()->SessionHistoryCommit(aInfo.mLoadId, changeID, aLoadType,
                                       aPersist, aCloneEntryChildren,
-                                      aChannelExpired);
+                                      aChannelExpired, aCacheKey);
   }
 }
 

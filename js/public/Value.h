@@ -738,6 +738,10 @@ class alignas(8) Value {
 #endif
   }
 
+  bool isNurseryAllocatableGCThing() const {
+    return hasObjectPayload() || isString() || isBigInt();
+  }
+
   bool isBoolean() const { return toTag() == JSVAL_TAG_BOOLEAN; }
 
   bool isTrue() const {
@@ -771,6 +775,11 @@ class alignas(8) Value {
     if (MOZ_UNLIKELY(isPrivateGCThing())) {
       return JS::GCThingTraceKind(toGCThing());
     }
+#ifdef ENABLE_RECORD_TUPLE
+    if (isExtendedPrimitive()) {
+      return JS::TraceKind::Object;
+    }
+#endif
     return JS::TraceKind(toTag() & 0x03);
   }
 

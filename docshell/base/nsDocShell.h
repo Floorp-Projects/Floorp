@@ -732,6 +732,11 @@ class nsDocShell final : public nsDocLoader,
                 nsIContentSecurityPolicy* aCsp, bool aFireOnLocationChange,
                 bool aAddToGlobalHistory, bool aCloneSHChildren);
 
+  // If wireframe collection is enabled, will attempt to gather the
+  // wireframe for the document and stash it inside of the active history
+  // entry.
+  void CollectWireframe();
+
  public:
   // Helper method that is called when a new document (including any
   // sub-documents - ie. frames) has been completely loaded.
@@ -1088,7 +1093,9 @@ class nsDocShell final : public nsDocLoader,
   // Sets the active entry to the current loading entry. aPersist is used in the
   // case a new session history entry is added to the session history.
   // aExpired is true if the relevant nsIChannel has its cache token expired.
-  void MoveLoadingToActiveEntry(bool aPersist, bool aExpired);
+  // aCacheKey is the channel's cache key.
+  void MoveLoadingToActiveEntry(bool aPersist, bool aExpired,
+                                uint32_t aCacheKey);
 
   void ActivenessMaybeChanged();
 
@@ -1349,6 +1356,12 @@ class nsDocShell final : public nsDocLoader,
   // Whether we have a pending encoding autodetection request from the
   // menu for all encodings.
   bool mForcedAutodetection : 1;
+
+  /*
+   * Set to true if we're checking session history (in the parent process) for
+   * a possible history load. Used only with iframes.
+   */
+  bool mCheckingSessionHistory : 1;
 };
 
 inline nsISupports* ToSupports(nsDocShell* aDocShell) {

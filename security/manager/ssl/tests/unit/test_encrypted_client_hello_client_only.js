@@ -5,8 +5,7 @@
 
 // Public Name = delegated-enabled.example.com
 const ECH_CONFIG_FIXED =
-  "AFL+CgBOTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAEAAwBkAB1kZWxlZ2F0ZWQtZW5hYmxlZC5leGFtcGxlLmNvbQAA";
-
+  "AFD+DQBMTQAgACCKB1Y5SfrGIyk27W82xPpzWTDs3q72c04xSurDWlb9CgAEAAEAA2QdZGVsZWdhdGVkLWVuYWJsZWQuZXhhbXBsZS5jb20AAA==";
 do_get_profile();
 
 // An arbitrary, non-ECH server.

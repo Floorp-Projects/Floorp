@@ -680,8 +680,10 @@ TimeStamp TimerThread::FindNextFireTimeForCurrentThread(TimeStamp aDefault,
 }
 
 // This function must be called from within a lock
+// Also: we hold the mutex for the nsTimerImpl.
 bool TimerThread::AddTimerInternal(nsTimerImpl* aTimer) {
   mMonitor.AssertCurrentThreadOwns();
+  aTimer->mMutex.AssertCurrentThreadOwns();
   if (mShutdown) {
     return false;
   }
@@ -701,8 +703,11 @@ bool TimerThread::AddTimerInternal(nsTimerImpl* aTimer) {
   return true;
 }
 
+// This function must be called from within a lock
+// Also: we hold the mutex for the nsTimerImpl.
 bool TimerThread::RemoveTimerInternal(nsTimerImpl* aTimer) {
   mMonitor.AssertCurrentThreadOwns();
+  aTimer->mMutex.AssertCurrentThreadOwns();
   if (!aTimer || !aTimer->mHolder) {
     return false;
   }
@@ -772,11 +777,16 @@ void TimerThread::PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef) {
     // with the timer API we'll deadlock.
     MonitorAutoUnlock unlock(mMonitor);
     rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
-  }
-
-  if (NS_FAILED(rv)) {
-    timer = event->ForgetTimer();
-    RemoveTimerInternal(timer);
+    if (NS_FAILED(rv)) {
+      timer = event->ForgetTimer();
+      // We do this to avoid possible deadlock by taking the two locks in a
+      // different order than is used in RemoveTimer().  RemoveTimer() has
+      // aTimer->mMutex first.   We use timer.get() to keep static analysis
+      // happy
+      MutexAutoLock lock1(timer.get()->mMutex);
+      MonitorAutoLock lock2(mMonitor);
+      RemoveTimerInternal(timer.get());
+    }
   }
 }
 
@@ -818,6 +828,7 @@ TimerThread::Observe(nsISupports* /* aSubject */, const char* aTopic,
   return NS_OK;
 }
 
-uint32_t TimerThread::AllowedEarlyFiringMicroseconds() const {
+uint32_t TimerThread::AllowedEarlyFiringMicroseconds() {
+  MonitorAutoLock lock(mMonitor);
   return mAllowedEarlyFiringMicroseconds;
 }

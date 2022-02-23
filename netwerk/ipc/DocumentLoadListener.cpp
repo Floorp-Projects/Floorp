@@ -1099,7 +1099,7 @@ void DocumentLoadListener::Disconnect() {
     httpChannelImpl->SetEarlyHintObserver(nullptr);
   }
 
-  mEarlyHintsPreloader.Cancel();
+  mEarlyHintsService.Cancel();
 
   if (auto* ctx = GetDocumentBrowsingContext()) {
     ctx->EndDocumentLoad(mDoingProcessSwitch);
@@ -2285,9 +2285,9 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   if (httpChannel) {
     uint32_t responseStatus;
     Unused << httpChannel->GetResponseStatus(&responseStatus);
-    mEarlyHintsPreloader.FinalResponse(responseStatus);
+    mEarlyHintsService.FinalResponse(responseStatus);
   } else {
-    mEarlyHintsPreloader.Cancel();
+    mEarlyHintsService.Cancel();
   }
 
   // If we're going to be delivering this channel to a remote content
@@ -2665,7 +2665,7 @@ NS_IMETHODIMP DocumentLoadListener::OnStatus(nsIRequest* aRequest,
 NS_IMETHODIMP DocumentLoadListener::EarlyHint(const nsACString& linkHeader) {
   LOG(("DocumentLoadListener::EarlyHint.\n"));
 
-  mEarlyHintsPreloader.EarlyHint(linkHeader);
+  mEarlyHintsService.EarlyHint(linkHeader);
   return NS_OK;
 }
 
