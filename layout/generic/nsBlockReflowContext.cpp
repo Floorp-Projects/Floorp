@@ -213,7 +213,7 @@ void nsBlockReflowContext::ReflowBlock(
     const LogicalRect& aSpace, bool aApplyBStartMargin,
     nsCollapsingMargin& aPrevMargin, nscoord aClearance,
     bool aIsAdjacentWithBStart, nsLineBox* aLine, ReflowInput& aFrameRI,
-    nsReflowStatus& aFrameReflowStatus, BlockReflowInput& aState) {
+    nsReflowStatus& aFrameReflowStatus, BlockReflowState& aState) {
   mFrame = aFrameRI.mFrame;
   mWritingMode = aState.mReflowInput.GetWritingMode();
   mContainerSize = aState.ContainerSize();
