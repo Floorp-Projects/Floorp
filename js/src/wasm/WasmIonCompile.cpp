@@ -5857,23 +5857,23 @@ static bool EmitStoreLaneSimd128(FunctionCompiler& f, uint32_t laneSize) {
 
 #endif
 
-static bool EmitIntrinsic(FunctionCompiler& f, IntrinsicOp op) {
-  const Intrinsic& intrinsic = Intrinsic::getFromOp(op);
+static bool EmitIntrinsic(FunctionCompiler& f) {
+  const Intrinsic* intrinsic;
 
   DefVector params;
-  if (!f.iter().readIntrinsic(intrinsic, &params)) {
+  if (!f.iter().readIntrinsic(&intrinsic, &params)) {
     return false;
   }
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
-  const SymbolicAddressSignature& callee = intrinsic.signature;
+  const SymbolicAddressSignature& callee = intrinsic->signature;
 
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
   }
 
-  if (!f.passArgs(params, intrinsic.params, &args)) {
+  if (!f.passArgs(params, intrinsic->params, &args)) {
     return false;
   }
 
@@ -6385,15 +6385,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       case uint16_t(Op::I64Extend32S):
         CHECK(EmitSignExtend(f, 4, 8));
 
-      case uint16_t(Op::IntrinsicPrefix): {
-        if (!f.moduleEnv().intrinsicsEnabled() ||
-            op.b1 >= uint32_t(IntrinsicOp::Limit)) {
-          return f.iter().unrecognizedOpcode(&op);
-        }
-        CHECK(EmitIntrinsic(f, IntrinsicOp(op.b1)));
-      }
-
-      // Gc operations
+        // Gc operations
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::GcPrefix): {
         return f.iter().unrecognizedOpcode(&op);
@@ -6975,6 +6967,13 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 
       // asm.js-specific operators
       case uint16_t(Op::MozPrefix): {
+        if (op.b1 == uint32_t(MozOp::Intrinsic)) {
+          if (!f.moduleEnv().intrinsicsEnabled()) {
+            return f.iter().unrecognizedOpcode(&op);
+          }
+          CHECK(EmitIntrinsic(f));
+        }
+
         if (!f.moduleEnv().isAsmJS()) {
           return f.iter().unrecognizedOpcode(&op);
         }
