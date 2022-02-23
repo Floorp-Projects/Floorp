@@ -586,12 +586,6 @@ bool WebRenderBridgeParent::UpdateResources(
                                          wr::ToDeviceIntRect(op.area()));
         break;
       }
-      case OpUpdateResource::TOpAddPrivateExternalImage: {
-        const auto& op = cmd.get_OpAddPrivateExternalImage();
-        AddPrivateExternalImage(op.externalImageId(), op.key(), op.descriptor(),
-                                aUpdates);
-        break;
-      }
       case OpUpdateResource::TOpAddSharedExternalImage: {
         const auto& op = cmd.get_OpAddSharedExternalImage();
         // gfxCriticalNote is called on error
@@ -609,12 +603,6 @@ bool WebRenderBridgeParent::UpdateResources(
                                          texture, op.isUpdate(), aUpdates)) {
           success = false;
         }
-        break;
-      }
-      case OpUpdateResource::TOpUpdatePrivateExternalImage: {
-        const auto& op = cmd.get_OpUpdatePrivateExternalImage();
-        UpdatePrivateExternalImage(op.externalImageId(), op.key(),
-                                   op.descriptor(), op.dirtyRect(), aUpdates);
         break;
       }
       case OpUpdateResource::TOpUpdateSharedExternalImage: {
@@ -727,32 +715,6 @@ bool WebRenderBridgeParent::UpdateResources(
 
   MOZ_ASSERT(success);
   return success;
-}
-
-void WebRenderBridgeParent::AddPrivateExternalImage(
-    wr::ExternalImageId aExtId, wr::ImageKey aKey, wr::ImageDescriptor aDesc,
-    wr::TransactionBuilder& aResources) {
-  if (!MatchesNamespace(aKey)) {
-    MOZ_ASSERT_UNREACHABLE("Stale private external image key (add)!");
-    return;
-  }
-
-  aResources.AddExternalImage(aKey, aDesc, aExtId,
-                              wr::ExternalImageType::Buffer(), 0);
-}
-
-void WebRenderBridgeParent::UpdatePrivateExternalImage(
-    wr::ExternalImageId aExtId, wr::ImageKey aKey,
-    const wr::ImageDescriptor& aDesc, const ImageIntRect& aDirtyRect,
-    wr::TransactionBuilder& aResources) {
-  if (!MatchesNamespace(aKey)) {
-    MOZ_ASSERT_UNREACHABLE("Stale private external image key (update)!");
-    return;
-  }
-
-  aResources.UpdateExternalImageWithDirtyRect(
-      aKey, aDesc, aExtId, wr::ExternalImageType::Buffer(),
-      wr::ToDeviceIntRect(aDirtyRect), 0);
 }
 
 bool WebRenderBridgeParent::AddSharedExternalImage(
