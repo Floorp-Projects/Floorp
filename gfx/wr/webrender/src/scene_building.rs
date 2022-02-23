@@ -1057,22 +1057,28 @@ impl<'a> SceneBuilder<'a> {
         let current_offset = self.current_offset(spatial_node_index);
 
         let unsnapped_clip_rect = common.clip_rect.translate(current_offset);
-        let clip_rect = self.snap_rect(
-            &unsnapped_clip_rect,
-            spatial_node_index,
-        );
-
         let unsnapped_rect = bounds.map(|bounds| {
             bounds.translate(current_offset)
         });
 
         // If no bounds rect is given, default to clip rect.
-        let rect = unsnapped_rect.map_or(clip_rect, |bounds| {
-            self.snap_rect(
-                &bounds,
+        let (rect, clip_rect) = if common.flags.contains(PrimitiveFlags::ANTIALISED) {
+            (unsnapped_rect.unwrap_or(unsnapped_clip_rect), unsnapped_clip_rect)
+        } else {
+            let clip_rect = self.snap_rect(
+                &unsnapped_clip_rect,
                 spatial_node_index,
-            )
-        });
+            );
+
+            let rect = unsnapped_rect.map_or(clip_rect, |bounds| {
+                self.snap_rect(
+                    &bounds,
+                    spatial_node_index,
+                )
+            });
+
+            (rect, clip_rect)
+        };
 
         let layout = LayoutPrimitiveInfo {
             rect,
@@ -1836,12 +1842,15 @@ impl<'a> SceneBuilder<'a> {
         P: InternablePrimitive,
         Interners: AsMut<Interner<P>>,
     {
-        let prim_instance = self.create_primitive(
+        let mut prim_instance = self.create_primitive(
             info,
             spatial_node_index,
             clip_chain_id,
             prim,
         );
+        if info.flags.contains(PrimitiveFlags::ANTIALISED) {
+            prim_instance.anti_aliased = true;
+        }
         self.register_chase_primitive_by_rect(
             &info.rect,
             &prim_instance,

@@ -748,7 +748,7 @@ struct DIGroup {
     // cf. Bug 1455422.
     // wr::LayoutRect clip = wr::ToLayoutRect(bounds.Intersect(mVisibleRect));
 
-    aBuilder.PushImage(dest, dest, !backfaceHidden, rendering,
+    aBuilder.PushImage(dest, dest, !backfaceHidden, false, rendering,
                        wr::AsImageKey(*mKey));
   }
 
@@ -2058,7 +2058,8 @@ bool WebRenderCommandBuilder::PushImage(
 
   auto r = wr::ToLayoutRect(aRect);
   auto c = wr::ToLayoutRect(aClip);
-  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), rendering, key.value());
+  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), false, rendering,
+                     key.value());
 
   return true;
 }
@@ -2084,10 +2085,13 @@ bool WebRenderCommandBuilder::PushImageProvider(
     return false;
   }
 
+  bool antialiased = aItem->GetType() == DisplayItemType::TYPE_SVG_GEOMETRY;
+
   auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
   auto r = wr::ToLayoutRect(aRect);
   auto c = wr::ToLayoutRect(aClip);
-  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), rendering, key.value());
+  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), antialiased, rendering,
+                     key.value());
 
   return true;
 }
@@ -2699,7 +2703,7 @@ bool WebRenderCommandBuilder::PushItemAsImage(
 
   wr::LayoutRect dest = wr::ToLayoutRect(imageRect);
   auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
-  aBuilder.PushImage(dest, dest, !aItem->BackfaceIsHidden(), rendering,
+  aBuilder.PushImage(dest, dest, !aItem->BackfaceIsHidden(), false, rendering,
                      fallbackData->GetImageKey().value());
   return true;
 }

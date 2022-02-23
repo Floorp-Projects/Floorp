@@ -52,6 +52,8 @@ bitflags! {
         /// ExternalImageId, and the compositor will use the native image directly.
         /// Used as a further extension on top of PREFER_COMPOSITOR_SURFACE.
         const SUPPORTS_EXTERNAL_COMPOSITOR_SURFACE = 1 << 4;
+        /// This flags disables snapping and forces anti-aliasing even if the primitive is axis-aligned.
+        const ANTIALISED = 1 << 5;
     }
 }
 
