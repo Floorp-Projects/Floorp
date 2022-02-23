@@ -1988,6 +1988,14 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute unsigned long long framesReflowed;
 
   /**
+   * Indicates whether the current frame's refresh driver has a pending tick,
+   * as reported by nsRefreshDriver::HasPendingTick.
+   *
+   * May throw NS_ERROR_NOT_AVAILABLE.
+   */
+  readonly attribute bool refreshDriverHasPendingTick;
+
+  /**
    * Controls the amount of chrome that should be visible on each side of
    * the window. Works like the chromemargin xul:window attribute.
    * This should only be used with non-XUL windows.
