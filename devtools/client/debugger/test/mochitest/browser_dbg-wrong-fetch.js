@@ -10,10 +10,7 @@ add_task(async function() {
 
   // This goop is here to manually clear the HTTP cache because setting response
   // headers in different_html.sjs to not cache the response doesn't work.
-  const cacheStorageSrv = SpecialPowers.Cc[
-    "@mozilla.org/netwerk/cache-storage-service;1"
-  ].getService(Ci.nsICacheStorageService);
-  cacheStorageSrv.clear();
+  Services.cache2.clear();
 
   const toolbox = await openToolboxForTab(gBrowser.selectedTab, "jsdebugger");
   const dbg = createDebuggerContext(toolbox);

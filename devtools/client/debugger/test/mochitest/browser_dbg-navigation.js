@@ -18,7 +18,6 @@ add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
   const {
     selectors: { getSelectedSource, getIsPaused, getCurrentThread },
-    getState,
   } = dbg;
 
   info("Pause in the first document");

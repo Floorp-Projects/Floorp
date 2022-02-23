@@ -11,16 +11,10 @@ add_task(async function() {
   // which is the slowest part of this and make it run faster, but to
   // fix a frequent failure allow a longer timeout.
   const dbg = await initDebugger("doc-scripts.html");
-  const {
-    selectors: { getSelectedSource },
-    getState,
-  } = dbg;
-  const simple1 = findSource(dbg, "simple1.js");
-  const simple2 = findSource(dbg, "simple2.js");
 
   info("Set the initial breakpoint.");
   await selectSource(dbg, "simple1.js");
-  await addBreakpoint(dbg, simple1, 4);
+  await addBreakpoint(dbg, "simple1.js", 4);
 
   info("Call the function that we set a breakpoint in.");
   invokeInTab("main");
