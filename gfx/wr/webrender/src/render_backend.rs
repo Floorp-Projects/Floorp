@@ -31,12 +31,13 @@ use crate::gpu_cache::GpuCache;
 use crate::hit_test::{HitTest, HitTester, SharedHitTester};
 use crate::intern::DataStore;
 #[cfg(any(feature = "capture", feature = "replay"))]
-use crate::internal_types::DebugOutput;
+use crate::internal_types::{DebugOutput};
 use crate::internal_types::{FastHashMap, RenderedDocument, ResultMsg, FrameId, FrameStamp};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
-use crate::picture::{PictureScratchBuffer, SliceId, TileCacheInstance, TileCacheParams};
+use crate::picture::{PictureScratchBuffer, SliceId, TileCacheInstance, TileCacheParams, SurfaceInfo, RasterConfig};
+use crate::picture::{PicturePrimitive};
 use crate::prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
-use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData, PrimitiveStore};
+use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
 use crate::prim_store::interned::*;
 use crate::profiler::{self, TransactionProfile};
 use crate::render_task_graph::RenderTaskGraphBuilder;
@@ -135,12 +136,53 @@ impl DataStores {
     pub fn get_local_prim_rect(
         &self,
         prim_instance: &PrimitiveInstance,
-        prim_store: &PrimitiveStore,
+        pictures: &[PicturePrimitive],
+        surfaces: &[SurfaceInfo],
     ) -> LayoutRect {
         match prim_instance.kind {
             PrimitiveInstanceKind::Picture { pic_index, .. } => {
-                let pic = &prim_store.pictures[pic_index.0];
-                pic.precise_local_rect
+                let pic = &pictures[pic_index.0];
+
+                match pic.raster_config {
+                    Some(RasterConfig { surface_index, ref composite_mode, .. }) => {
+                        let surface = &surfaces[surface_index.0];
+
+                        composite_mode.get_rect(surface, None)
+                    }
+                    None => {
+                        panic!("bug: get_local_prim_rect should not be called for pass-through pictures");
+                    }
+                }
+            }
+            _ => {
+                self.as_common_data(prim_instance).prim_rect
+            }
+        }
+    }
+
+    /// Returns the local coverage (space occupied) for a primitive. For most primitives,
+    /// this is stored in the template. For pictures, this is stored inside the picture
+    /// primitive instance itself, since this is determined during frame building.
+    pub fn get_local_prim_coverage_rect(
+        &self,
+        prim_instance: &PrimitiveInstance,
+        pictures: &[PicturePrimitive],
+        surfaces: &[SurfaceInfo],
+    ) -> LayoutRect {
+        match prim_instance.kind {
+            PrimitiveInstanceKind::Picture { pic_index, .. } => {
+                let pic = &pictures[pic_index.0];
+
+                match pic.raster_config {
+                    Some(RasterConfig { surface_index, ref composite_mode, .. }) => {
+                        let surface = &surfaces[surface_index.0];
+
+                        composite_mode.get_coverage(surface, None)
+                    }
+                    None => {
+                        panic!("bug: get_local_prim_coverage_rect should not be called for pass-through pictures");
+                    }
+                }
             }
             _ => {
                 self.as_common_data(prim_instance).prim_rect
