@@ -101,7 +101,10 @@ void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
     return;
   }
 
-  mozilla::dom::Pref pref(strData, /* isLocked */ false, !dom::ContentParent::ShouldSyncPreference(strData.Data()), Nothing(), Nothing());
+  mozilla::dom::Pref pref(
+      strData, /* isLocked */ false,
+      !dom::ContentParent::ShouldSyncPreference(strData.Data()), Nothing(),
+      Nothing());
   Preferences::GetPreference(&pref);
   if (!!mRDDChild) {
     MOZ_ASSERT(mQueuedPrefs.IsEmpty());
@@ -294,7 +297,8 @@ bool RDDProcessManager::CreateContentBridge(
     return false;
   }
 
-  mRDDChild->SendNewContentRemoteDecoderManager(std::move(parentPipe),
+  mRDDChild->SendNewContentRemoteDecoderManager(
+      std::move(parentPipe),
       /* aAllowHardwareDecoding */ mNumUnexpectedCrashes == 0);
 
   *aOutRemoteDecoderManager = std::move(childPipe);
