@@ -43,6 +43,7 @@ FZF_CURRENT_VERSION = "0.29.0"
 # the line too long and ./mach lint and black can't agree about what to about that.
 # You can get these from the github release, e.g.
 #          https://github.com/junegunn/fzf/releases/download/0.24.1/fzf_0.24.1_checksums.txt
+# However the darwin releases may not be included, so double check you have everything
 FZF_CHECKSUMS = {
     "linux_armv5.tar.gz": "61d3c2aa77b977ba694836fd1134da9272bd97ee490ececaf87959b985820111",
     "linux_armv6.tar.gz": "db6b30fcbbd99ac4cf7e3ff6c5db1d3c0afcbe37d10ec3961bdc43e8c4f2e4f9",
@@ -54,6 +55,8 @@ FZF_CHECKSUMS = {
     "windows_armv7.zip": "c167117b4c08f4f098446291115871ce5f14a8a8b22f0ca70e1b4342452ab5d7",
     "windows_arm64.zip": "0cda7bf68850a3e867224a05949612405e63a4421d52396c1a6c9427d4304d72",
     "windows_amd64.zip": "f0797ceee089017108c80b09086c71b8eec43d4af11ce939b78b1d5cfd202540",
+    "darwin_arm64.zip": "2571b4d381f1fc691e7603bbc8113a67116da2404751ebb844818d512dd62b4b",
+    "darwin_amd64.zip": "bc541e8ae0feb94efa96424bfe0b944f746db04e22f5cccfe00709925839a57f",
     "openbsd_amd64.tar.gz": "b62343827ff83949c09d5e2c8ca0c1198d05f733c9a779ec37edd840541ccdab",
     "freebsd_amd64.tar.gz": "f0367f2321c070d103589c7c7eb6a771bc7520820337a6c2fbb75be37ff783a9",
 }
@@ -243,7 +246,7 @@ def get_fzf_platform():
         print(FZF_NOT_SUPPORTED_X86 % platform.machine())
         sys.exit(1)
 
-    if platform.system() == "Windows":
+    if platform.system().lower() == "windows":
         if platform.machine().lower() in ["x86_64", "amd64"]:
             return "windows_amd64.zip"
         elif platform.machine().lower() == "arm64":
@@ -251,7 +254,15 @@ def get_fzf_platform():
         else:
             print(FZF_COULD_NOT_DETERMINE_MACHINE % platform.machine())
             sys.exit(1)
-    elif platform.system() in ["Darwin", "Linux"]:
+    elif platform.system().lower() == "darwin":
+        if platform.machine().lower() in ["x86_64", "amd64"]:
+            return "darwin_amd64.zip"
+        elif platform.machine().lower() == "arm64":
+            return "darwin_arm64.zip"
+        else:
+            print(FZF_COULD_NOT_DETERMINE_MACHINE % platform.machine())
+            sys.exit(1)
+    elif platform.system().lower() == "linux":
         if platform.machine().lower() in ["x86_64", "amd64"]:
             return "linux_amd64.tar.gz"
         elif platform.machine().lower() == "arm64":
