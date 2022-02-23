@@ -105,8 +105,8 @@ browsertime-tp6m:
         by-app:
             geckoview:
                 by-test-platform:
-                    android-hw-g5.*shippable-qr.*: [trunk, mozilla-beta]
-                    android-hw-p2.*aarch64-shippable-qr.*: [trunk, mozilla-beta]
+                    android-hw-g5.*shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
+                    android-hw-p2.*aarch64-shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
                     default: []
             default: []
 
@@ -128,8 +128,8 @@ browsertime-tp6m-essential:
         by-app:
             geckoview:
                 by-test-platform:
-                    android-hw-g5.*shippable.*: [trunk, mozilla-beta]
-                    android-hw-p2.*aarch64-shippable.*: [trunk, mozilla-beta]
+                    android-hw-g5.*shippable.*: [trunk, mozilla-beta, mozilla-release]
+                    android-hw-p2.*aarch64-shippable.*: [trunk, mozilla-beta, mozilla-release]
                     android-hw-s7-.*: []
                     default: []
             default: []
@@ -190,8 +190,8 @@ browsertime-youtube-playback-mobile:
         by-app:
             geckoview:
                 by-test-platform:
-                    android-hw-g5.*shippable.*: [mozilla-central]
-                    android-hw-p2.*aarch64-shippable.*: [mozilla-central]
+                    android-hw-g5.*shippable.*: [mozilla-central, mozilla-release]
+                    android-hw-p2.*aarch64-shippable.*: [mozilla-central, mozilla-release]
                     default: []
             default: []
     max-run-time: 3600
@@ -293,12 +293,12 @@ browsertime-speedometer-mobile:
             refbrow: []
             geckoview:
                 by-test-platform:
-                    android-hw-g5.*shippable-qr.*: [trunk, mozilla-beta]
-                    android-hw-p2.*aarch64-shippable-qr.*: [trunk, mozilla-beta]
+                    android-hw-g5.*shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
+                    android-hw-p2.*aarch64-shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
                     default: []
             default:
                 by-test-platform:
-                    android-hw-p2-.*aarch64-shippable-qr.*: [mozilla-central]
+                    android-hw-p2-.*aarch64-shippable-qr.*: [mozilla-central, mozilla-release]
                     default: []
     treeherder-symbol: Btime(sp)
     mozharness:
@@ -316,12 +316,12 @@ browsertime-unity-webgl-mobile:
             refbrow: []
             geckoview:
                 by-test-platform:
-                    android-hw-g5.*shippable-qr.*: [trunk, mozilla-beta]
-                    android-hw-p2.*aarch64-shippable-qr.*: [trunk, mozilla-beta]
+                    android-hw-g5.*shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
+                    android-hw-p2.*aarch64-shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
                     default: []
             default:
                 by-test-platform:
-                    android-hw-p2-.*aarch64-shippable-qr.*: [mozilla-central]
+                    android-hw-p2-.*aarch64-shippable-qr.*: [mozilla-central, mozilla-release]
                     default: []
     max-run-time: 900
     mozharness:
