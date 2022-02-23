@@ -56,6 +56,12 @@ def main():
         default=[],
         help="Extra files not to be considered as resources",
     )
+    parser.add_argument(
+        "--minify",
+        action="store_true",
+        default=False,
+        help="Make some files more compact while packaging",
+    )
     args = parser.parse_args()
 
     buildconfig.substs["USE_ELF_HACK"] = False
@@ -66,6 +72,7 @@ def main():
         extra_l10n=dict(args.extra_l10n),
         non_resources=args.non_resource,
         non_chrome=NON_CHROME,
+        minify=args.minify,
     )
 
 
