@@ -44,13 +44,11 @@ TEST(PrefsBasics, Serialize)
 
   nsCString str;
   Preferences::SerializePreferences(
-      str, [](const char* aPref, bool) -> bool { return true; });
-  // Assert everything was marked sanitized
-  ASSERT_EQ(nullptr, strstr(str.Data(), "--:"));
+      str, [](const char* aPref) -> bool { return false; });
+  ASSERT_STREQ(str.Data(), "");
 
-  Preferences::SerializePreferences(str, [](const char* aPref, bool) -> bool {
+  Preferences::SerializePreferences(str, [](const char* aPref) -> bool {
     return strncmp(aPref, "foo.bool", 8) == 0;
   });
-  // Assert the sanitized serializtion was found
-  ASSERT_NE(nullptr, strstr(str.Data(), "B-S:8/foo.bool:T:\n"));
+  ASSERT_STREQ(str.Data(), "B-:8/foo.bool:T:F\n");
 }

@@ -23,7 +23,6 @@ union PrefValue {
 struct Pref {
   nsCString name;
   bool isLocked;
-  bool isSanitized;
   PrefValue? defaultValue;
   PrefValue? userValue;
 };
