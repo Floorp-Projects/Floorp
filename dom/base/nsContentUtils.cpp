@@ -2165,7 +2165,7 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIPrincipal* aPrincipal) {
 }
 
 /* static */
-bool nsContentUtils::ShouldResistFingerprinting(char* aChar) {
+bool nsContentUtils::ShouldResistFingerprinting(const char* aChar) {
   return ShouldResistFingerprinting();
 }
 
